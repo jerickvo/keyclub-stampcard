@@ -1,0 +1,558 @@
+/* ══════════════════════════════════════════════════════════════════
+   KEYSTAMP — VISUAL IDENTITY
+   "Spotted black, screentone, line."
+
+   The design thesis is that this app's materials are already manga's
+   materials. A tankōbon is sumi ink printed on warm kozo pulp. A hanko
+   is pressed in shuniku, the vermilion seal paste. Keystamp is an app
+   about *stamping*. So the palette is not a mood applied on top of the
+   product — it is what the product is physically made of.
+
+   That gives three surfaces and one accent, and a rule for when each
+   is used:
+
+     PAPER   the reading surface. Most of the app lives here.
+     INK     a flooded panel. Used only for impact: the sign-in, the
+             projected code, the scanner, an unlocked reward. In a
+             manga these are the pages where the art goes full bleed.
+     SEAL    vermilion. Reserved for the stamp itself and for the one
+             action that matters on a screen. Never a background.
+
+   The rule is compositional, not decorative: strip every colour out
+   and the identity survives as inversion, gutters and keylines.
+   ══════════════════════════════════════════════════════════════════ */
+
+:root{
+  /* ── LIGHT: ink on warm pulp ──────────────────────────────────── */
+  --kozo:      #F1ECE2;   /* warm pulp. the page                     */
+  --sumi:      #211E1A;   /* warm black. never blue-black            */
+  --shu:       #211E1A;   /* was vermilion. now ink: in a monochrome
+                              system the accent is a spotted black    */
+  --shu-deep:  #0D0B09;   /* the same mark, pressed harder           */
+
+  /* ── the ramp between them ────────────────────────────────────── */
+  --v0:#FBF8F2;           /* page highlight, the raised edge of pulp */
+  --v1:#F1ECE2;           /* paper                                    */
+  --v2:#DED8CB;           /* recessive fill                           */
+  --v3:#B0A99C;           /* screentone body                          */
+  --v4:#6B6459;           /* muted ink                                */
+  --v5:#211E1A;           /* ink                                      */
+  --v6:#0D0B09;           /* flooded ink                              */
+
+  --kozo-2:    #DED8CB;
+  --kage:      #191612;   /* ink panel, one step off pure             */
+
+  --paper:var(--v1);
+  --paper-2:var(--v2);
+  --ink:var(--v5);
+  --ink-2:var(--v4);
+  --tone:var(--v3);
+  --tone-lt:var(--v2);
+
+  /* ── the accent aliases the app already speaks ────────────────────
+     These names exist throughout js/ and the FX layer. They were all
+     remapped to ink, which is exactly why the product read as a
+     black-and-white website. Given real values, the identity appears
+     everywhere at once without touching a line of JavaScript. */
+  --crimson:var(--v6);
+  --burg:var(--v6);
+  --oxblood:var(--v6);
+  --ember:var(--v4);
+  --line-hot:var(--v6);
+
+  --void:var(--v6);  --ink-bg:var(--kage);
+  --lacquer:var(--kage); --lacquer-2:#251E19; --well:var(--v2);
+  --bone:var(--v0);  --chalk:var(--v2);
+  --ash:var(--v3);   --faint:var(--v4);  --beige:var(--v2);
+  --steel:var(--v2); --steel-2:var(--v3);
+  --line:var(--ink); --line-2:var(--v4); --line-3:var(--v3);
+
+  /* ── screentone. one dot field, three densities ───────────────── */
+  --tone-dot:  rgba(23,19,15,.20);
+  --tone-fine: 4px;
+  --tone-mid:  6px;
+  --tone-wide: 9px;
+
+  /* ── motion ───────────────────────────────────────────────────── */
+  --press: cubic-bezier(.2,.9,.25,1);
+}
+
+/* ══ THE PAGE ══════════════════════════════════════════════════════
+   Paper is not flat. Real pulp has tooth, and a printed page has the
+   faint regular grid of the halftone screen under the art. Two very
+   low-contrast layers do that here: a fine dot screen and a warm
+   vignette toward the gutter. Both are cheap and neither moves. */
+body{
+  background-color:var(--kozo);
+  background-image:
+    radial-gradient(var(--tone-dot) .5px, transparent .6px),
+    linear-gradient(180deg, rgba(33,30,26,.05), transparent 26%);
+  background-size:var(--tone-wide) var(--tone-wide), 100% 100%;
+  color:var(--ink);
+}
+
+/* ══ INK PANELS ════════════════════════════════════════════════════
+   sparingly: four screens in the whole app. Inside one, the ramp
+   inverts — paper becomes ink and ink becomes paper — so every child
+   component inherits the flip without needing its own dark variant.
+   That is what keeps this from being a second design system. */
+
+
+/* ══ THE SEAL — the signature element ══════════════════════════════
+   A hanko impression. It is the logo, it is what a stamp looks like
+   when you earn one, and it is the chop in the corner of a finished
+   panel. One bold thing, used in three places, so it reads as a mark
+   rather than as ornament.
+
+   The wobble on the border and the slight rotation matter: a real
+   chop is pressed by hand and never lands square. */
+.chop{
+  --chop-size:clamp(38px,5vw,54px);
+  position:relative;display:inline-grid;place-items:center;
+  width:var(--chop-size);height:var(--chop-size);
+  border:2.5px solid var(--ink);
+  border-radius:3px;
+  color:var(--ink);
+  font-family:var(--f-display);
+  font-size:calc(var(--chop-size) * .34);
+  line-height:1;letter-spacing:.02em;
+  transform:rotate(-4deg);
+  background:
+none;
+}
+.chop::after{                     /* the ink that squeezed out */
+  content:'';position:absolute;inset:-3px;border-radius:4px;
+  border:1px solid var(--ink);opacity:.30;
+  transform:rotate(2.5deg);pointer-events:none;
+}
+.chop--filled{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chop--ghost{border-color:var(--tone);color:var(--tone);opacity:.55;transform:rotate(-1deg)}
+.chop--ghost::after{border-color:transparent}
+
+/* ══ PANELS ════════════════════════════════════════════════════════
+   Manga panels are defined by the gutter, not the border. The white
+   channel between frames is what makes a page read as a page. So the
+   keyline gets heavier and the gutter gets real. */
+.panel{
+  background:var(--paper);
+  border:var(--edge) solid var(--ink);
+  box-shadow:5px 5px 0 rgba(23,19,15,.14);
+  position:relative;
+}
+
+/* a panel that carries the accent: one per screen, maximum */
+.panel--seal{
+  border-width:var(--edge-heavy);
+  box-shadow:4px 4px 0 rgba(33,30,26,.18);
+}
+.panel--seal::before{
+  content:'';position:absolute;left:0;right:0;top:0;height:var(--edge-thin);
+  background:var(--ink);
+}
+
+/* ══ TYPE ══════════════════════════════════════════════════════════
+   Dela Gothic is already the right display face — heavy, Japanese,
+   built for impact. What it lacked was scale contrast. A manga page
+   is loud and quiet in the same frame; the type scale has to be too. */
+.title{
+  letter-spacing:-.02em;
+  line-height:.88;
+  text-wrap:balance;
+}
+.kicker{color:var(--ink-2);letter-spacing:.26em}
+
+
+/* the vertical Japanese marker, now an accent rather than grey noise */
+.jp{color:var(--tone);opacity:.9}
+
+/* ══ ACTION ════════════════════════════════════════════════════════
+   The primary action is the seal being pressed. Ink fill, and on
+   press it deepens rather than lifting — a stamp goes down. */
+.btn--go{
+  background:var(--ink);border-color:var(--ink);color:var(--paper);
+  font-weight:600;
+}
+.btn--go:hover{background:var(--v6);border-color:var(--v6)}
+.btn--go:active{transform:translate(1px,1px)}
+
+/* ══ NAVIGATION ════════════════════════════════════════════════════
+   The active chapter is stamped, not highlighted. */
+.rail__link[aria-current],
+.tab[aria-current]{color:var(--ink)}
+.rail__link[aria-current] .rail__no,
+.tab[aria-current] .tab__no{color:var(--ink)}
+.rail__ind,.tabs__ind{background:var(--ink)}
+
+/* ══ STATE ═════════════════════════════════════════════════════════
+   Status carries meaning, so it carries the accent — but only the
+   live one. Past and upcoming stay in ink, which keeps the red rare
+   enough to mean something. */
+.bstate--open{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.seal--set,.rec--set .rec__node{color:var(--ink)}
+.entry--set .entry__verdict{color:var(--ink)}
+
+/* ══ SCANNER ═══════════════════════════════════════════════════════
+   Verdict on the colour question: the camera image stays desaturated,
+   but the FRAME is vermilion. Keeping the feed monochrome is what
+   makes the overlay legible over an image nobody controls, and it
+   holds the manga register. Putting the accent in the reticle instead
+   gives the screen its colour where colour actually does work —
+   telling you where to aim and whether it worked. */
+.viewer{border-color:var(--ink)}
+.reticle__c{border-color:var(--ink)}
+.reticle--good .reticle__c{border-color:var(--ink)}
+.reticle--bad .reticle__c{background:var(--ink);border-color:var(--ink)}
+.reticle__line{background:var(--ink)}
+.viewer--hit{border-color:var(--ink)}
+.viewer__msg{border-color:var(--ink)}
+.viewer__msg--hot{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* ══ THE QR ════════════════════════════════════════════════════════
+   The code stays pure black on pure white — that is a scanning
+   requirement, not a style choice, and nothing is drawn over it. The
+   personality goes in the frame around it. */
+.qrpanel__code--big{
+  background:#FFFFFF;
+  border:var(--edge) solid var(--sumi);
+  box-shadow:10px 10px 0 var(--ink);
+}
+
+/* ══ SPEED LINES ═══════════════════════════════════════════════════
+   Used once per impact screen, behind the title, at low contrast.
+   A rake of converging lines is the cheapest manga signal there is,
+   and it costs one pseudo-element. */
+.rake{position:absolute;inset:0;pointer-events:none;overflow:hidden;opacity:.10}
+.rake::before{
+  content:'';position:absolute;left:50%;top:50%;
+  width:200%;aspect-ratio:1;transform:translate(-50%,-50%);
+  background:repeating-conic-gradient(from 0deg at 50% 50%,
+    var(--ink) 0deg .35deg, transparent .35deg 3deg);
+  mask-image:radial-gradient(circle, transparent 22%, #000 62%);
+}
+
+
+/* ══ REDUCED MOTION / FOCUS FLOOR ══════════════════════════════════ */
+:focus-visible{outline-color:var(--ink)}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;animation-iteration-count:1!important}
+}
+
+/* ══ SIGN-IN ═══════════════════════════════════════════════════════
+   The first screen has one job: say whose app this is before the form
+   is even read. The chop lands left, the wordmark sits against it,
+   and the speed-line rake sits behind both. */
+.authmark{display:flex;align-items:center;gap:var(--s4);
+  margin-bottom:var(--s5);position:relative;z-index:1}
+.authmark__wm{font-family:var(--f-display);font-size:clamp(19px,2.4vw,26px);
+  line-height:1;letter-spacing:-.01em;color:var(--ink)}
+.authmark__wm b{font-weight:400}
+.authmark__wm em{display:block;margin-top:7px;font:500 9.5px/1 var(--f-mono);
+  letter-spacing:.24em;text-transform:uppercase;color:var(--tone);font-style:normal}
+
+[data-screen="auth"] .view{position:relative}
+[data-screen="auth"] .authp{position:relative;z-index:1}
+
+/* the mark inside the chop is the key device, not a glyph: the display
+   face has no kanji coverage and fell back to a mismatched font */
+.chop__key{width:58%;height:58%;fill:none;stroke:currentColor;
+  stroke-width:5;stroke-linecap:square;stroke-linejoin:miter;
+  vector-effect:non-scaling-stroke}
+.chop--filled .chop__key{stroke:var(--paper)}
+
+/* ══ SIGN-IN COMPOSITION ═══════════════════════════════════════════
+   The form was floating in the top third of a flooded page with two
+   thirds of dead ink under it. Centring the stack and capping its
+   measure makes the page read as a deliberate title card. */
+[data-screen="auth"] .view{
+  min-height:min(100svh, 900px);
+  display:flex;flex-direction:column;justify-content:center;
+  max-width:640px;padding-block:var(--s6);
+}
+[data-screen="auth"] .authp{margin-top:var(--s5)}
+@media(max-width:560px){
+  [data-screen="auth"] .view{min-height:auto;padding-block:var(--s5)}
+}
+
+/* ══ THE SEAL GRID ═════════════════════════════════════════════════
+   An unearned seal was ink-on-ink and effectively invisible, so the
+   record read as an empty black field. A blank seal is now a ghost
+   chop: the outline of the mark waiting to be pressed, which also
+   makes the earned ones land harder by contrast. */
+.seal{border-color:var(--tone)}
+.seal:not(.seal--set){opacity:.34;border-style:dashed}
+.seal--set{border-color:var(--ink);opacity:1;border-style:solid}
+.seal--set .seal__no{color:var(--ink)}
+
+/* ══ INK-FRAME FILL SOURCE ═════════════════════════════════════════
+   07-ink.js draws each panel edge as a filled SVG using currentColor,
+   and the SVG inherits `color` from the panel it sits in. A .strike is
+   `background:ink; color:paper`, so the frame inherited PAPER and
+   flooded the card with light — the Scan action on Home rendered
+   white-on-white. The frame's fill is a structural colour, not the
+   panel's text colour, so it is pinned here. */
+.strike:not(.strike--calm) .inkframe,
+.panel.p-deep .inkframe,
+.panel.p-shout .inkframe{color:var(--ink)}
+
+/* ══ THE CALM STRIKE ═══════════════════════════════════════════════
+   .strike is a dark card with light type. .strike--calm flips the
+   surface to paper but its children kept the colours written for the
+   dark base, so the Scan card on Home rendered light-on-light and was
+   effectively invisible.
+
+   In the three tiers, "no meeting is open" is the SCREENTONE state:
+   present, but not the thing being pointed at. So it gets a tone
+   ground and ink type — recessive, not absent. */
+.strike--calm{
+  background:var(--paper);color:var(--ink);border-color:var(--ink);
+  background-image:radial-gradient(var(--tone-dot) .5px, transparent .6px);
+  background-size:var(--tone-25) var(--tone-25);
+}
+.strike--calm .strike__verb,
+.strike--calm .strike__sub,
+.strike--calm .strike__meta,
+.strike--calm .muted,
+.strike--calm span,
+.strike--calm b,
+.strike--calm em{color:var(--ink)}
+.strike--calm .strike__sub,
+.strike--calm .muted{color:var(--ink-2)}
+.strike--calm .strike__arrow{border-color:var(--ink);color:var(--ink)}
+.strike--calm .strike__arrow svg{stroke:var(--ink)}
+
+/* the live strike stays the spotted black: solid ink, paper type */
+.strike:not(.strike--calm){background:var(--ink);color:var(--paper)}
+.strike:not(.strike--calm) .strike__verb{color:var(--paper)}
+
+/* Home's primary action is always the spotted black — `[data-screen=
+   "home"] .view > .strike` sets that regardless of the calm modifier,
+   and wins on specificity. Its type has to follow the surface it is
+   actually on, not the modifier's assumption. */
+[data-screen="home"] .view > .strike,
+[data-screen="home"] .view > .strike .strike__verb,
+[data-screen="home"] .view > .strike .strike__sub,
+[data-screen="home"] .view > .strike span,
+[data-screen="home"] .view > .strike b{color:var(--paper)}
+[data-screen="home"] .view > .strike .strike__sub{color:var(--tone-lt)}
+[data-screen="home"] .view > .strike .strike__arrow{border-color:var(--paper)}
+[data-screen="home"] .view > .strike .strike__arrow svg{stroke:var(--paper)}
+
+/* ══════════════════════════════════════════════════════════════════
+   RECORD — the page that is literally a record being built
+   ══════════════════════════════════════════════════════════════════
+   The three tiers do the whole job here. A meeting you attended is a
+   spotted black; a meeting you missed is a tone ghost; the structure
+   between them is line. Read down the page and the pattern of solid
+   blocks IS your attendance, before a single number is parsed. */
+[data-screen="record"] .log{gap:var(--edge-thin)}
+
+[data-screen="record"] .entry{
+  border:var(--edge-hair) solid var(--ink);
+  background:var(--paper);
+  padding:var(--s4);
+  position:relative;
+  transition:transform .14s var(--press);
+}
+/* attended: inked in */
+[data-screen="record"] .entry--set{
+  background:var(--ink);color:var(--paper);border-color:var(--ink);
+}
+[data-screen="record"] .entry--set .entry__no,
+[data-screen="record"] .entry--set .entry__verdict{color:var(--paper)}
+[data-screen="record"] .entry--set .entry__meta{color:var(--tone-lt)}
+[data-screen="record"] .entry--set .entry__ghost{color:rgba(255,255,255,.10)}
+
+/* missed: screentone, present but not claimed */
+[data-screen="record"] .entry--miss{
+  background-image:radial-gradient(var(--tone-dot) .5px, transparent .6px);
+  background-size:var(--tone-40) var(--tone-40);
+  border-style:dashed;border-color:var(--tone);
+}
+[data-screen="record"] .entry--miss .entry__no{color:var(--ink-2)}
+[data-screen="record"] .entry--miss .entry__verdict{color:var(--tone)}
+
+/* the big ghost numeral behind each cell is the panel's page number */
+[data-screen="record"] .entry__ghost{
+  font-family:var(--f-display);opacity:1;color:rgba(33,30,26,.07);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   REWARDS — three panels, three states, no store front
+   ══════════════════════════════════════════════════════════════════
+   Locked is line only. Unlocked is screentone with a heavy keyline —
+   it has arrived but is not yet taken. Claimed is the spotted black,
+   the seal pressed. That escalation is the whole reward moment. */
+.tech{
+  border:var(--edge-hair) solid var(--tone);
+  background:var(--paper);
+  position:relative;overflow:hidden;
+}
+.tech--sealed{                       /* locked: recessive line */
+  border-style:dashed;border-color:var(--tone);
+}
+.tech--sealed .tech__name,
+.tech--sealed .tech__req{color:var(--ink-2)}
+.tech--sealed .tech__glyph{opacity:.28}
+
+.tech--open{                         /* unlocked: screentone + weight */
+  border:var(--edge) solid var(--ink);
+  background-image:radial-gradient(var(--tone-dot) .5px, transparent .6px);
+  background-size:var(--tone-40) var(--tone-40);
+}
+.tech--open::before{                 /* the rule that says "ready" */
+  content:'';position:absolute;left:0;top:0;bottom:0;width:var(--edge-heavy);
+  background:var(--ink);
+}
+.tech--claimed{                      /* claimed: the seal is pressed */
+  background:var(--ink);color:var(--paper);border-color:var(--ink);
+  border-width:var(--edge);border-style:solid;
+}
+.tech--claimed .tech__name,
+.tech--claimed .tech__req,
+.tech--claimed .tech__state{color:var(--paper)}
+.tech--claimed .tech__glyph{color:var(--paper);opacity:.9}
+.tech--claimed .tech__req{color:var(--tone-lt)}
+
+/* ══════════════════════════════════════════════════════════════════
+   BOARD — the same book, administrative chapters
+   ══════════════════════════════════════════════════════════════════ */
+/* figures are the subject of Club Tools, so they get display scale and
+   a tone ground rather than four equal boxes in a row */
+.bstats{gap:var(--edge-thin)}
+.bstat{
+  border:var(--edge-hair) solid var(--ink);background:var(--paper);
+  padding:var(--s4) var(--s4) var(--s5);
+}
+.bstat:first-child{
+  background:var(--ink);color:var(--paper);border-color:var(--ink);
+}
+.bstat:first-child b{color:var(--paper)}
+.bstat:first-child span{color:var(--tone-lt)}
+.bstat b{font-size:clamp(26px,3.4vw,40px);line-height:.9}
+.bstat span{color:var(--ink-2)}
+
+/* the next meeting is the subject of the page */
+.bnext{
+  border:var(--edge) solid var(--ink);
+  background-image:radial-gradient(var(--tone-dot) .5px, transparent .6px);
+  background-size:var(--tone-25) var(--tone-25);
+}
+.bnext--live{
+  background:var(--ink);color:var(--paper);border-width:var(--edge-heavy);
+  background-image:none;
+}
+.bnext--live .bactive__no,.bnext--live .muted{color:var(--paper)}
+.bnext--live .bstate--open{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+
+/* milestone bars: fill is a spotted black on a line track */
+.bmile__bar{border:var(--edge-hair) solid var(--ink);background:var(--paper);height:10px}
+.bmile__fill{background:var(--ink)}
+.bmile__no{color:var(--ink)}
+
+/* rows read as a register: hairline rules, no boxes */
+.brow{border-bottom:var(--edge-hair) solid var(--tone)}
+.brow:hover,.brow:focus-visible{background:var(--paper-2)}
+.brow__no{color:var(--ink-2)}
+.brow__n{font-family:var(--f-display)}
+
+/* delete confirmation: inked, so it is unmistakably a different mode */
+.brow--confirm{background:var(--ink);color:var(--paper)}
+.brow--confirm b,.brow--confirm .muted{color:var(--paper)}
+.brow--confirm .btn{background:transparent;color:var(--paper);border-color:var(--paper)}
+.brow--confirm .btn--go{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+.brow__del{border-color:var(--tone);color:var(--ink-2)}
+.brow__del:hover,.brow__del:focus-visible{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* the board form is a panel of the same book */
+.bform{border-bottom:var(--edge) solid var(--ink);padding-bottom:var(--s5)}
+.bsec{border-bottom:var(--edge-thin) solid var(--ink);color:var(--ink)}
+
+/* ── Rewards polish ───────────────────────────────────────────────
+   The "Unlocks at N stamps" line is real information, not a caption,
+   so it sits at ink-2 rather than tone. And removing the old blurb
+   left a hole in the locked cards — they collapse to their content
+   now instead of holding a paragraph's worth of empty. */
+.tech__req{color:var(--ink-2)}
+.tech--sealed .tech__req{color:var(--ink-2)}
+.tech{min-height:0}
+.tech--sealed{padding-bottom:var(--s4)}
+.tech--sealed .tech__body{min-height:0}
+.tech__state{font-family:var(--f-mono);letter-spacing:.16em}
+.tech--open .tech__state{background:var(--ink);color:var(--paper);
+  border-color:var(--ink);padding:5px 9px}
+
+/* ── Record polish ────────────────────────────────────────────────
+   +1 stamp is the payoff on an inked row, so it gets paper weight. */
+[data-screen="record"] .entry--set .entry__verdict{color:var(--paper);font-weight:600}
+
+/* ══ MOBILE ════════════════════════════════════════════════════════
+   Not a shrunk desktop. On a phone the manga page becomes a single
+   column of stacked frames, which is how a tankōbon is read anyway.
+   Panels lose their offset shadow (it costs horizontal room), keylines
+   thin one step so the frames do not eat the content, and every tap
+   target clears 44px. */
+@media (max-width:560px){
+  .panel{box-shadow:none;border-width:var(--edge-thin)}
+  .panel--seal{border-width:var(--edge)}
+
+  [data-screen="record"] .entry{padding:var(--s3)}
+  [data-screen="record"] .entry__meta{font-size:11px}
+
+  .bstats{grid-template-columns:1fr 1fr}
+  .bstat b{font-size:clamp(22px,7vw,30px)}
+
+  .bnext{padding:var(--s4)}
+  .bmile{grid-template-columns:auto 1fr;gap:var(--s3)}
+
+  .brow{padding-block:var(--s3)}
+  .brow__del{min-height:38px;padding:8px 10px}
+
+  .btn,.chip,.link{min-height:44px}
+  .authmark{gap:var(--s3)}
+  .authmark__wm{font-size:19px}
+
+  /* the seal grid stays square and readable rather than shrinking to
+     unreadable chips */
+  .log{gap:var(--edge-thin)}
+}
+@media (max-width:400px){
+  .bstats{grid-template-columns:1fr}
+  .title{font-size:clamp(34px,12vw,48px)}
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   DARK — the same book, printed white on black
+   ══════════════════════════════════════════════════════════════════
+   Not a mechanical inversion. The ramp is authored: warm near-blacks
+   that keep the paper's temperature, a screentone that still reads as
+   dots rather than mud, and text that stops short of pure white
+   because pure white on near-black glares.
+
+   The grammar is unchanged. Emphasis is still the solid mass — it is
+   simply made of the other ink. A "spotted black" becomes a spotted
+   white, and the three tiers keep their exact relationship:
+   solid > screentone > line. */
+
+
+
+
+/* ── the flood, in dark ───────────────────────────────────────────
+   Inverting to paper here would fight the theme the user chose. So a
+   flooded page goes DEEPER instead: the surface drops to a true void
+   and panels lift off it. The composition keeps its meaning — this
+   page is further from the reading surface than the rest of the book —
+   without turning a dark app briefly white. */
+
+
+
+
+/* ══ FLOOD, RESTATED LAST ══════════════════════════════════════════
+   The light+flood ramp was being outranked somewhere in the cascade,
+   which left the flooded screens (sign-in, scan, projected code) with
+   near-paper text on paper — invisible. Restating it here with the
+   element qualifier settles it, and body is set explicitly because it
+   is the surface the reader actually sees. */
+
+
+

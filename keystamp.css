@@ -1,0 +1,1362 @@
+/* ══════════════════════════════════════════════════════════════════
+   KEYSTAMP — v5, "spread"
+
+   v4 called itself a manga spread in its own comments and then drew a
+   dark neon dashboard: one column of equal cards, 1px borders, glow,
+   rounded-off corners. The comments were a design brief nobody built.
+
+   v5 is the brief. The page is paper. Panels are irregular, hard-edged
+   and unequal, separated by white gutters rather than stacked in a
+   column. Two panels per screen break their box — one bleeds off the
+   page edge, one is cut on the diagonal. Callouts are angular balloons
+   with tails, not toasts. Shading is line hatching and dot tone, never
+   a gradient. There is no colour: black, white, and grey that only
+   ever appears as tone.
+
+   One theme: ink on warm paper. Black is manga ink -- spotted
+   blacks, frames and active states -- never a page surface. Set on
+   <html>; the toggle in the topbar writes it.
+   ══════════════════════════════════════════════════════════════════ */
+
+:root{
+  /* ── ink and paper. Everything else is a shade of these two ── */
+  /* ── a real tonal scale, not two colours.
+     A manga page is not black text on white; it is seven values, and
+     the contrast between them is the storytelling. Panels are assigned
+     a value, and the page is composed so that some are nearly empty
+     paper and some are almost solid ink. ── */
+  --v0:#fefdfb;   /* paper — the page itself           */
+  --v1:#f4f1ea;   /* off-white — a quiet panel          */
+  --v2:#ddd9d0;   /* light tone — recessive fill        */
+  --v3:#a8a49c;   /* mid tone — screentone body         */
+  --v4:#6d6a64;   /* dark tone — shadow                 */
+  --v5:#2a2825;   /* ink — borders, type                */
+  --v6:#080807;   /* deep black — the dominant panel    */
+
+  --paper:var(--v0);
+  --paper-2:var(--v1);
+  --ink:var(--v5);
+  --ink-2:var(--v4);
+  --tone:var(--v3);
+  --tone-lt:var(--v2);
+
+  /* ── border hierarchy. A page where every panel has the same edge
+     has no weight to it. Five, used to say how loud a panel is. ── */
+  --edge-hair:1px;
+  --edge-thin:2px;
+  --edge:3px;
+  --edge-heavy:6px;
+  --edge-shout:10px;
+
+  /* v4 names kept alive so the FX layer keeps working, remapped to
+     ink and paper. Nothing in js/ has to change. */
+  --void:var(--paper); --sumi:var(--paper); --ink-bg:var(--paper);
+  --lacquer:var(--paper); --lacquer-2:var(--paper-2); --well:var(--paper-2);
+  --steel:var(--tone-lt); --steel-2:var(--tone);
+  --burg:var(--ink); --oxblood:var(--ink); --crimson:var(--ink); --ember:var(--ink-2);
+  --bone:var(--ink); --chalk:var(--ink-2); --ash:var(--tone); --faint:var(--tone);
+  --beige:var(--tone);
+  --line:var(--ink); --line-2:var(--ink); --line-3:var(--ink); --line-hot:var(--ink);
+
+  --rule:3px;            /* panel border. The single most manga number here */
+  --rule-hair:1.5px;
+
+  /* ── the grid. Every spacing value in this file resolves to one of
+     these; nothing below invents its own number. ──
+     page-max  the content column ceiling
+     gutter    page margin, and the exact distance a bleed may travel
+     gut       between panels inside a tier
+     gut-tier  between tiers, deliberately wider than gut          */
+  --page-max:1320px;
+  --gutter:clamp(14px,2.6vw,44px);
+  --gut:clamp(7px,.85vw,12px);
+  --gut-tier:clamp(11px,1.5vw,20px);
+  --bleed:var(--gutter);
+
+  /* ── fluid type. Tied to vw with a floor and a ceiling so nothing is
+     104px inside a 512px panel the way the fixed clamps were. ── */
+  /* the 34px floor was taller than a 320px screen could hold: "ATTENDANCE"
+     needs ~295px of the ~214px available, so the word ran straight out of
+     its own header panel. The floor now lets the clamp actually shrink on
+     the narrowest phones; 24px is still 2x the body text. */
+  --t-title:clamp(24px,6.5vw,96px);
+  --t-hero:clamp(96px,15vw,230px);
+  --t-verb:clamp(20px,2.6vw,38px);
+  --t-name:clamp(17px,1.5vw,21px);
+  --t-body:15px;
+  --t-caption:clamp(9px,.75vw,11px);
+  --t-sfx:clamp(64px,13vw,190px);
+  --t-meta:13px;
+  --tap:44px;            /* minimum touch target */
+
+  --f-display:'Dela Gothic One',ui-sans-serif,system-ui,sans-serif;
+  --f-body:'Archivo Narrow',ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --f-label:'Oswald',var(--f-body);
+  --f-accent:'CC Wild Words Roman','CCWildWords','Comic Neue',cursive;
+  --f-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --f-jp:'Noto Sans JP',var(--f-body);
+
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px;
+  --s6:28px; --s7:40px; --s8:64px;
+  --rail:clamp(178px,15vw,232px); --pad:var(--gutter);
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+
+
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow-x:clip}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:var(--f-body);font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ══════════════════ TONE — hatching and dots ══════════════════
+   Two shading languages, both flat. Dot tone for large calm fills,
+   line hatching for anything meant to read as shadow. Never both on
+   the same panel — that is what makes a page look muddy. */
+.tone-dot{
+  background-image:radial-gradient(var(--ink) 1px,transparent 1px);
+  background-size:5px 5px;opacity:.17;
+}
+.tone-dot--fine{background-size:3.5px 3.5px;opacity:.13}
+.tone-hatch{
+  background-image:repeating-linear-gradient(72deg,
+    var(--ink) 0 1px,transparent 1px 5px);
+  opacity:.2;
+}
+.tone-hatch--steep{
+  background-image:repeating-linear-gradient(28deg,
+    var(--ink) 0 1.2px,transparent 1.2px 6px);
+}
+
+/* ══════════════════ THE PAGE ══════════════════ */
+.ground{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+  background:var(--paper)}
+.ground__tone{position:absolute;inset:0;opacity:.05;
+  background-image:radial-gradient(var(--ink) 1px,transparent 1px);
+  background-size:6px 6px}
+.ground__vig,.ground__grain{display:none}
+.arena{display:none}
+.backdrop{position:absolute;inset:0;background-repeat:repeat;
+  background-size:340px;opacity:.07;filter:grayscale(1) contrast(1.6)}
+
+.shell{position:relative;z-index:1;display:grid;
+  grid-template-columns:var(--rail) 1fr;min-height:100%}
+
+/* ══════════════════ RAIL — the margin column ══════════════════
+   Held to the left edge with a hard rule, the way a page number and
+   chapter mark sit outside the panel area. */
+.rail{display:flex;flex-direction:column;padding:var(--s5) var(--s4);min-width:0;
+  border-right:var(--rule) solid var(--ink);background:var(--paper);
+  position:sticky;top:0;height:100dvh}
+.rail__brand{padding-bottom:var(--s5);border-bottom:var(--rule-hair) solid var(--ink)}
+.rail__nav{position:relative;display:flex;flex-direction:column;gap:2px;
+  padding-top:var(--s4);flex:1}
+.rail__nav button{display:flex;align-items:center;gap:var(--s3);
+  padding:9px var(--s3);background:none;border:0;cursor:pointer;
+  font:500 12px/1 var(--f-body);letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink);border-radius:0}
+.rail__nav button svg{width:17px;height:17px;stroke-width:1.9}
+.rail__nav button[aria-current="page"]{background:var(--ink);color:var(--paper)}
+.rail__nav button:hover:not([aria-current="page"]){background:var(--paper-2)}
+.rail__ind{display:none}
+.rail__foot{padding-top:var(--s4);border-top:var(--rule-hair) solid var(--ink)}
+
+.topbar{display:none;align-items:center;justify-content:space-between;
+  padding:var(--s3) var(--pad);border-bottom:var(--rule) solid var(--ink);
+  background:var(--paper);position:sticky;top:0;z-index:60;
+  padding-left:calc(var(--pad) + env(safe-area-inset-left, 0px));
+  padding-right:calc(var(--pad) + env(safe-area-inset-right, 0px))}
+.motion-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;
+  background:var(--paper);border:var(--rule-hair) solid var(--ink);
+  color:var(--ink);cursor:pointer;font:500 10px/1 var(--f-body);
+  letter-spacing:.14em;text-transform:uppercase}
+.motion-btn svg{width:14px;height:14px}
+
+main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
+  padding:var(--gut-tier) calc(var(--gutter) + env(safe-area-inset-right, 0px))
+          var(--s8) calc(var(--gutter) + env(safe-area-inset-left, 0px))}
+
+/* ══════════════════ THE SPREAD — irregular panel tiers ══════════════════
+   Six columns, and panels take unequal spans of them. The point is that
+   no two rows are the same shape: a wide establishing panel, then a tall
+   one beside a narrow black one, then a full-width strip. Equal cards in
+   a single column is what made v4 read as a dashboard. */
+.view{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:var(--gut-tier) var(--gut);align-content:start;position:relative}
+.view > *{grid-column:1/-1;min-width:0}
+
+/* Home is placed by hand, because it is the page you look at most */
+[data-screen="home"] .view > .head{grid-area:1/1/2/-1}
+[data-screen="home"] .view > section:nth-of-type(1){grid-area:2/1/3/5}
+[data-screen="home"] .view > .strike{grid-area:2/5/3/-1}
+[data-screen="home"] .view > section:nth-of-type(2){grid-area:3/1/4/-1}
+[data-screen="home"] .view > .duo{grid-area:4/1/5/-1}
+
+/* every other screen alternates spans so tiers stay unequal without
+   knowing what is in them. Record only ever has two sections — the
+   held log and, sometimes, the scheduled log below it — and they are
+   wildly different heights (the held log can run many screens tall).
+   Placing them 4-cols/2-cols side by side (the old rule) put the
+   short "Scheduled" section into the grid's leftover top-row space
+   beside the tall log instead of a fresh row under it, squeezing its
+   cards down to ~80px wide and wrapping/overlapping their own text.
+   Record's sections now always take the full row; the alternating
+   split still applies to Rewards. */
+[data-screen="rewards"] .view > section:nth-of-type(3n+1){grid-column:1/5}
+[data-screen="rewards"] .view > section:nth-of-type(3n+2){grid-column:5/-1}
+
+.duo{display:grid;grid-template-columns:4fr 2fr;gap:var(--gut)}
+
+/* ══════════════════ PANELS ══════════════════ */
+.rig{position:relative;min-width:0}
+/* the offset ghost is now a hard print shadow — no blur exists in ink */
+.rig__ghost{position:absolute;inset:0;transform:translate(6px,6px);
+  background:var(--ink);z-index:0;clip-path:var(--clip)}
+.rig--tr .rig__ghost{transform:translate(6px,-6px)}
+.rig--bl .rig__ghost,.rig__ghost--l{transform:translate(-6px,6px)}
+.rig--br .rig__ghost{transform:translate(6px,6px)}
+
+.panel{position:relative;z-index:1;background:var(--paper);
+  border:var(--rule) solid var(--ink);border-radius:0;height:100%}
+.panel > *:not(.sfx):not(.inkframe){position:relative;z-index:1}
+.panel::after{content:"";position:absolute;inset:0;pointer-events:none;
+  z-index:0;background-image:radial-gradient(var(--ink) 1px,transparent 1px);
+  background-size:5px 5px;opacity:.06}
+.panel--flat::after{opacity:0}
+.panel__rule{display:none}
+
+/* a panel that is cut on the diagonal. The ink layer is the element,
+   the paper layer is the pseudo — that is the only way to keep a black
+   edge on a non-rectangular shape */
+.panel--cut{background:var(--ink);border:0;
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 30px),calc(100% - 30px) 100%,0 100%)}
+.panel--cut::before{content:"";position:absolute;inset:var(--rule);z-index:0;
+  background:var(--paper);
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 27px),calc(100% - 27px) 100%,0 100%)}
+
+/* a panel that runs off the edge of the page */
+.panel--bleed{margin-right:calc(var(--bleed) * -1);border-right:0}
+
+/* panels sit very slightly off-square, the way inked panels do */
+[data-screen="home"] .view > section:nth-of-type(2){transform:rotate(-.35deg)}
+[data-screen="home"] .view > .duo > .rig:last-child{transform:rotate(.4deg)}
+
+/* ══════════════════ LETTERING ══════════════════ */
+.kicker{font:500 10px/1 var(--f-mono);letter-spacing:.22em;
+  text-transform:uppercase;color:var(--tone)}
+.kicker--bone{color:var(--ink)}
+.title{font-family:var(--f-display);font-size:var(--t-title);
+  line-height:.92;letter-spacing:-.02em;text-transform:uppercase;
+  /* last-resort guard: a single word longer than the panel breaks rather
+     than escaping it. Normal titles never reach this. */
+  overflow-wrap:break-word}
+.title--name em{font-style:normal}
+.h2{font:500 13px/1.2 var(--f-body);letter-spacing:.16em;
+  text-transform:uppercase}
+.jp{font-family:var(--f-jp);font-size:12px;letter-spacing:.5em;color:var(--tone);
+  writing-mode:vertical-rl}
+.muted{color:var(--tone)}
+.emph{font-weight:500}
+.emph--hot{background:var(--ink);color:var(--paper);padding:0 5px}
+
+.head{display:flex;align-items:flex-start;justify-content:space-between;
+  gap:var(--s4);padding:var(--s4) var(--s5);border:var(--rule) solid var(--ink);
+  background:var(--paper);position:relative;overflow:hidden}
+.head--bare{align-items:center}
+.head__rake{position:absolute;inset:0;pointer-events:none;
+  background-image:repeating-linear-gradient(72deg,var(--ink) 0 1px,transparent 1px 5px);
+  opacity:.14}
+.head__stack{position:relative}
+
+/* the giant cropped word, now genuinely cropped by the page edge */
+.bleed{position:absolute;font-family:var(--f-display);
+  font-size:clamp(90px,17vw,220px);line-height:.8;text-transform:uppercase;
+  color:var(--ink);opacity:.055;pointer-events:none;white-space:nowrap;z-index:0}
+.bleed--fill{opacity:.05}
+
+/* ══════════════════ HERO ══════════════════ */
+.hero{padding:var(--s5)}
+.hero__top{display:flex;align-items:center;justify-content:space-between;
+  gap:var(--s3);margin-bottom:var(--s5)}
+.hero__core{display:flex;align-items:baseline;gap:var(--s2)}
+.hero__num{font-family:var(--f-display);font-size:var(--t-hero);
+  line-height:.84}
+.hero__of{font:500 13px/1 var(--f-mono);color:var(--tone)}
+.hero__label{font:500 11px/1 var(--f-body);letter-spacing:.2em;
+  text-transform:uppercase;margin-top:var(--s3)}
+.hero__ring{position:absolute;right:var(--s5);top:var(--s5);
+  width:110px;height:110px;opacity:.16}
+.hero__ring circle,.hero__ring polygon,.hero__ring path,.hero__ring line{
+  fill:none;stroke:var(--ink);stroke-width:1.4;vector-effect:non-scaling-stroke}
+.hero__foot{margin-top:var(--s4);font-size:13px;color:var(--tone)}
+
+.gauge{position:relative;height:9px;margin-top:var(--s5);
+  border:var(--rule-hair) solid var(--ink);background:var(--paper);overflow:hidden}
+.gauge__fill{position:absolute;inset:0;transform:scaleX(0);
+  transform-origin:0 50%;background:var(--ink)}
+.gauge__tick{position:absolute;top:0;bottom:0;width:1.5px;background:var(--ink);
+  opacity:.45}
+
+/* ══════════════════ THE STAMP CARD ══════════════════ */
+.seals{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gut);
+  list-style:none;padding:var(--s5)}
+.seal{position:relative;aspect-ratio:1;display:grid;place-items:center;
+  border:var(--rule) solid var(--ink);background:var(--paper)}
+.seal svg{width:62%;height:62%}
+.seal__mark circle,.seal__mark polygon,.seal__mark path,.seal__mark line{
+  fill:none;stroke:var(--ink);stroke-width:2;vector-effect:non-scaling-stroke}
+.seal__no{position:absolute;right:5px;bottom:3px;font:500 9px/1 var(--f-mono);
+  color:var(--tone)}
+/* a landed stamp is solid ink — the strongest thing on the page */
+.seal--set{background:var(--ink)}
+.seal--set .seal__mark circle,.seal--set .seal__mark polygon,
+.seal--set .seal__mark path,.seal--set .seal__mark line{stroke:var(--paper)}
+.seal--set .seal__no{color:var(--paper);opacity:.65}
+.seal--next{border-style:dashed}
+.seal--next .seal__mark circle,.seal--next .seal__mark polygon,
+.seal--next .seal__mark path,.seal--next .seal__mark line{opacity:.35}
+.seal[data-seal="empty"]{background-image:radial-gradient(var(--ink) 1px,transparent 1px);
+  background-size:5px 5px}
+.seal[data-seal="empty"] .seal__mark{opacity:.22}
+
+/* ══════════════════ THE STRIKE — a solid black action panel ══════════════════ */
+.strike{display:flex;align-items:center;justify-content:space-between;gap:var(--s4);
+  width:100%;padding:var(--s5);text-align:left;cursor:pointer;border-radius:0;
+  background:var(--ink);color:var(--paper);border:var(--rule) solid var(--ink);
+  position:relative;overflow:hidden;font-family:var(--f-body)}
+.strike::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:repeating-linear-gradient(72deg,var(--paper) 0 1px,transparent 1px 6px);
+  opacity:.13}
+.strike__verb{display:block;font-family:var(--f-display);font-size:var(--t-verb);
+  line-height:1;text-transform:uppercase}
+.strike__sub{display:block;margin-top:8px;font:500 10px/1.3 var(--f-mono);
+  letter-spacing:.14em;text-transform:uppercase;opacity:.72}
+.strike__arrow{display:grid;place-items:center;width:38px;height:38px;
+  border:var(--rule-hair) solid var(--paper);flex:none}
+.strike__arrow svg{width:17px;height:17px}
+.strike--calm{background:var(--paper);color:var(--ink);border-color:var(--ink)}
+.strike--calm::before{background-image:repeating-linear-gradient(72deg,var(--ink) 0 1px,transparent 1px 6px);opacity:.1}
+.strike--calm .strike__arrow{border-color:var(--ink)}
+.strike:hover{transform:translate(-2px,-2px)}
+.strike{transition:transform .12s var(--ease)}
+
+/* ══════════════════ BUTTONS ══════════════════ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:var(--tap);padding:10px var(--s4);
+  border:var(--rule-hair) solid var(--ink);background:var(--paper);color:var(--ink);
+  cursor:pointer;border-radius:0;font:500 11px/1 var(--f-body);
+  letter-spacing:.16em;text-transform:uppercase;position:relative;overflow:hidden}
+.btn--hot{background:var(--ink);color:var(--paper)}
+.btn--ghost{border-style:dashed}
+.btn--wide{width:100%;justify-content:center}
+.btn:hover{transform:translate(-1px,-1px)}
+.btn__ripple{position:absolute;border-radius:50%;background:currentColor;
+  transform:translate(-50%,-50%);pointer-events:none;opacity:.18}
+.link,.section-link,.board-link{background:none;border:0;cursor:pointer;
+  color:var(--ink);font:500 11px/1 var(--f-body);letter-spacing:.14em;
+  text-transform:uppercase;text-decoration:underline;text-underline-offset:3px}
+
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;
+  border:var(--rule-hair) solid var(--ink);font:500 9.5px/1 var(--f-mono);
+  letter-spacing:.16em;text-transform:uppercase}
+.chip--hot{background:var(--ink);color:var(--paper)}
+.chip--set{border-style:dashed;color:var(--tone)}
+
+/* ══════════════════ BALLOONS ══════════════════
+   Angular, not elliptical, with a tail. Manga balloons are polygons
+   with slightly uneven sides — a perfect ellipse reads as a web tooltip. */
+/* z-index 45 keeps notifications UNDER the tab bar (100) and the rail (60):
+   a message must never cover the control you would use to leave it. It
+   still sits above page content. On mobile it clears the 56px tab bar and
+   the home indicator, and it is capped so a stack can never fill the
+   screen — with LIMIT 3 the worst case is roughly a third of a phone. */
+.toasts{position:fixed;right:var(--s5);bottom:var(--s5);z-index:45;
+  display:flex;flex-direction:column;gap:var(--s3);max-width:330px;
+  pointer-events:none}
+.toasts > *{pointer-events:auto}
+/* The angular silhouette used to be a `clip-path` on the element itself.
+   clip-path clips descendants AND pseudo-elements, and the tail sits at
+   bottom:-15px — outside the polygon — so no tail ever drew, and the
+   polygon sliced the 3px border at every corner into disconnected ticks.
+   Every callout in the app rendered as a plain web toast, which is the
+   one thing the stylesheet's brief says these must not be.
+   The skew now supplies the "not a rectangle" read, the border survives
+   intact, and the tail is a bordered square rotated 45deg with its top
+   two edges hidden behind the balloon's own fill — so the outline runs
+   continuously around balloon and tail together. */
+.bubble,.toast{position:relative;background:var(--paper);
+  border:var(--rule) solid var(--ink);padding:var(--s4) var(--s5);
+  transform:skewX(-1.1deg)}
+.bubble::after,.toast::after{content:"";position:absolute;left:26px;
+  bottom:calc(var(--rule) * -1 - 9px);width:17px;height:17px;
+  background:var(--paper);border:var(--rule) solid var(--ink);
+  border-top:0;border-left:0;transform:rotate(45deg) skewX(1.1deg)}
+[hidden]{display:none!important}
+.bubble p,.toast p{font-family:var(--f-accent);font-size:13.5px;line-height:1.35;
+  text-transform:uppercase;letter-spacing:.01em;text-align:center}
+.toast strong{display:block;font-family:var(--f-accent);font-size:14px;
+  text-transform:uppercase;margin-bottom:4px}
+
+/* ══════════════════ RECORD / LOG ══════════════════ */
+.log{display:flex;flex-direction:column}
+.entry__no{font:500 11px/1 var(--f-mono);color:var(--tone)}
+.entry__meta{font-size:13px;color:var(--tone)}
+.entry__verdict{font:500 10px/1 var(--f-mono);letter-spacing:.14em;
+  text-transform:uppercase}
+.entry__gain{font-family:var(--f-display);font-size:15px}
+.entry__ghost{opacity:.4}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
+  gap:var(--gut)}
+.stat{padding:var(--s4);border:var(--rule-hair) solid var(--ink)}
+/* The stat plate shipped with markup (`<b>07<i>/09</i></b><span>label</span>`)
+   but no rules for its children, so all three stayed inline and ran
+   together — the profile read "07 / 09Meetings attended" with the label
+   welded to the figure. Value and label are separate lines, matching how
+   the hero states its number above its caption. */
+.stat b{display:block;font-family:var(--f-display);font-weight:400;
+  font-size:clamp(24px,2.6vw,32px);line-height:1;letter-spacing:-.02em}
+.stat b i{font-family:var(--f-mono);font-style:normal;font-size:.5em;
+  letter-spacing:0;color:var(--tone);margin-left:.24em}
+.stat span{display:block;font:500 10.5px/1.3 var(--f-label);
+  letter-spacing:.18em;text-transform:uppercase;color:var(--tone);
+  margin-top:var(--s3)}
+.rec__node{width:9px;height:9px;background:var(--ink)}
+.pip{width:6px;height:6px;background:var(--ink)}
+.tick{position:absolute;width:11px;height:11px;border:var(--rule-hair) solid var(--ink)}
+.tick--tl{top:-1px;left:-1px;border-right:0;border-bottom:0}
+.tick--br{right:-1px;bottom:-1px;border-left:0;border-top:0}
+
+/* ══════════════════ REWARDS ══════════════════ */
+.tech__top{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s3)}
+.tech__name{font-family:var(--f-display);font-size:clamp(16px,1.4vw,20px);text-transform:uppercase;line-height:1.05}
+.tech__at{font:500 10px/1 var(--f-mono);letter-spacing:.14em;color:var(--tone)}
+.tech__desc{font-size:13.5px;color:var(--tone);margin-top:var(--s2)}
+.tech__glyph svg{width:52px;height:52px}
+.tech__glyph circle,.tech__glyph polygon,.tech__glyph path,.tech__glyph line{
+  fill:none;stroke:var(--ink);stroke-width:1.6;vector-effect:non-scaling-stroke}
+.tech__legend{font:500 9.5px/1 var(--f-mono);letter-spacing:.16em;
+  text-transform:uppercase;color:var(--tone)}
+.tech--sealed::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:repeating-linear-gradient(28deg,var(--ink) 0 1.2px,transparent 1.2px 6px);
+  opacity:.16}
+.tech__crack{position:absolute;inset:0;pointer-events:none;opacity:0}
+.tech__gauge{height:6px;border:var(--rule-hair) solid var(--ink);margin-top:var(--s3)}
+
+/* ══════════════════ SCAN ══════════════════ */
+.viewer{position:relative;display:grid;place-items:center;overflow:hidden;
+  border:var(--rule) solid var(--ink);aspect-ratio:3/4;max-height:54vh;
+  background:var(--paper-2)}
+@media(min-width:560px){.viewer{aspect-ratio:4/3;max-height:none}}
+.viewer video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  /* Monochrome stays: every accent token in this theme is remapped to
+     ink, so a colour camera would be the one coloured thing in the whole
+     app. But contrast(1.5) crushed the midtones of a live feed until you
+     could not see what you were pointing at -- the code is decoded from
+     the raw frame, not this filtered view, so the filter's only job is
+     legibility for the person aiming. Eased accordingly. */
+  filter:grayscale(1) contrast(1.12)}
+.viewer__scrim{position:absolute;inset:0;
+  background-image:radial-gradient(var(--ink) 1px,transparent 1px);
+  background-size:5px 5px;opacity:.09}     /* screentone, not a veil */
+.viewer__grain{display:none}
+.viewer__status,.viewer__msg{position:relative;font-family:var(--f-accent);
+  text-transform:uppercase;text-align:center}
+.reticle{position:relative;width:64%;aspect-ratio:1;max-width:250px}
+.reticle__c{position:absolute;width:26px;height:26px;border:var(--rule) solid var(--ink)}
+.reticle__c--tl{top:0;left:0;border-right:0;border-bottom:0}
+.reticle__c--tr{top:0;right:0;border-left:0;border-bottom:0}
+.reticle__c--bl{bottom:0;left:0;border-right:0;border-top:0}
+.reticle__c--br{bottom:0;right:0;border-left:0;border-top:0}
+.reticle__line{position:absolute;left:0;right:0;height:2px;background:var(--ink)}
+.reticle__geo,.reticle__mark{position:absolute;inset:-14%;opacity:.3;pointer-events:none}
+.reticle__geo circle,.reticle__geo polygon,.reticle__geo path,.reticle__geo line,
+.reticle__mark circle,.reticle__mark polygon,.reticle__mark path,.reticle__mark line{
+  fill:none;stroke:var(--ink);stroke-width:1.3;vector-effect:non-scaling-stroke}
+.manual{margin-top:var(--gut-tier);padding:var(--s5);border:var(--rule) solid var(--ink)}
+.field{display:flex;gap:var(--s2)}
+.input{flex:1;padding:11px var(--s3);background:var(--paper);color:var(--ink);
+  border:var(--rule-hair) solid var(--ink);border-radius:0;
+  font:500 13px/1 var(--f-mono);letter-spacing:.1em}
+.input:focus{outline:var(--rule-hair) solid var(--ink);outline-offset:2px}
+
+/* ══════════════════ BOARD / QR ══════════════════ */
+.qrpanel{padding:var(--s5);border:var(--rule) solid var(--ink);background:var(--paper)}
+.qrpanel__head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s3)}
+.qrpanel__no{font-family:var(--f-display);font-size:30px;white-space:nowrap}
+.qrpanel__when{font:500 10px/1 var(--f-mono);letter-spacing:.14em;color:var(--tone)}
+/* A 30px display numeral and a letterspaced date cannot sit side by side
+   in ~250px: "MPR 09" broke across two lines and the date wrapped back
+   into it, so the two ran together. Below the phone breakpoint the pair
+   stacks — label above, timestamp beneath — which is the reading order
+   anyway. */
+@media(max-width:560px){
+  .qrpanel__head{flex-direction:column;align-items:flex-start;gap:var(--s2)}
+  .qrpanel__when{line-height:1.4}
+}
+.qrpanel__code{display:grid;place-items:center;padding:var(--s5);background:#fff;
+  margin-top:var(--s4);border:var(--rule) solid var(--ink)}
+.qrpanel__uri{font:500 11px/1.5 var(--f-mono);word-break:break-all;color:var(--tone);
+  margin-top:var(--s3)}
+.qrpanel__roll{font:500 10px/1 var(--f-mono);letter-spacing:.14em;
+  text-transform:uppercase;margin-top:var(--s2)}
+.picker{display:flex;flex-wrap:wrap;gap:var(--s2)}
+
+/* ══════════════════ MEMBER ══════════════════ */
+.who{display:flex;align-items:center;gap:var(--s4);padding:var(--s5)}
+.who__name{font-family:var(--f-display);font-size:var(--t-name);text-transform:uppercase}
+.who__role{font:500 10px/1 var(--f-mono);letter-spacing:.16em;
+  text-transform:uppercase;color:var(--tone);margin-top:6px}
+.who__seal{width:70px;height:70px;flex:none}
+.who__seal circle,.who__seal polygon,.who__seal path,.who__seal line{
+  fill:none;stroke:var(--ink);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.who__seal--img{object-fit:contain}
+.empty{padding:var(--s6);text-align:center;color:var(--tone);
+  border:var(--rule-hair) dashed var(--ink)}
+
+/* ══════════════════ VERDICT — a full-page reaction panel ══════════════════ */
+.verdict{position:fixed;inset:0;z-index:120;display:none;place-items:center;
+  overflow:hidden;background:var(--paper)}
+.verdict.is-on{display:grid}
+.verdict__flare{position:absolute;inset:0;
+  background-image:repeating-conic-gradient(from 0deg at 50% 50%,
+    var(--ink) 0deg 1.4deg,transparent 1.4deg 5deg);opacity:0}
+.verdict__ring{position:absolute;border:var(--rule) solid var(--ink);
+  border-radius:50%;opacity:0}
+.verdict__field{position:absolute;inset:0;margin:auto;width:min(128vmin,820px);opacity:.1}
+.verdict__inner{position:relative;text-align:center;padding:var(--s6)}
+.verdict__seal{width:min(34vmin,190px);height:min(34vmin,190px);margin:0 auto}
+.verdict__seal circle,.verdict__seal polygon,.verdict__seal path,.verdict__seal line{
+  fill:none;stroke:var(--ink);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.verdict__state{font:500 11px/1 var(--f-mono);letter-spacing:.24em;
+  text-transform:uppercase;margin-top:var(--s4)}
+.verdict__jp{font-family:var(--f-jp);font-size:12px;letter-spacing:.6em;color:var(--tone)}
+.verdict__title{font-family:var(--f-display);font-size:clamp(30px,7vw,58px);
+  text-transform:uppercase;line-height:1;margin-top:var(--s3)}
+.verdict__delta{font-family:var(--f-display);font-size:26px;margin-top:var(--s2)}
+.verdict__meet{font:500 10px/1 var(--f-mono);letter-spacing:.16em;
+  text-transform:uppercase;color:var(--tone);margin-top:var(--s3)}
+
+/* ══════════════════ FX LAYER ══════════════════ */
+.fx{position:fixed;inset:0;z-index:125;pointer-events:none;overflow:hidden;
+  contain:layout paint}
+.scrim{position:absolute;inset:0;background:var(--ink);opacity:0}
+.flash{position:absolute;inset:0;background:var(--paper);opacity:0}
+.frameword{position:absolute;inset:0;display:grid;place-items:center;opacity:0;
+  font-family:var(--f-display);font-size:clamp(48px,13vw,150px);
+  text-transform:uppercase;color:var(--ink)}
+.wellflare{display:none}
+.fxdefs{position:absolute;width:0;height:0}
+
+/* ══════════════════ TABS — mobile ══════════════════ */
+/* viewport-fit=cover is set in the document head, which deliberately
+   extends the page under the home indicator. Nothing compensated for it,
+   so the bottom row of tab labels sat in the gesture strip on every
+   notched iPhone. The bar keeps its own height and adds the inset as
+   padding, so the strip is paper rather than a cropped control. */
+.tabs{display:none;position:fixed;left:0;right:0;bottom:0;z-index:100;
+  background:var(--paper);border-top:var(--rule) solid var(--ink);
+  padding-bottom:env(safe-area-inset-bottom, 0px)}
+.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  min-height:52px;padding:9px 0;background:none;border:0;cursor:pointer;color:var(--ink);
+  font:500 9px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase}
+.tabs button svg{width:19px;height:19px;stroke-width:1.9}
+.tabs button[aria-current="page"]{background:var(--ink);color:var(--paper)}
+.tabs__ind{display:none}
+
+/* ══════════════════ BOOT — the title page ══════════════════ */
+.boot{position:fixed;inset:0;z-index:200;background:var(--paper);display:grid;
+  place-items:center;overflow:hidden}
+.boot.is-done{display:none}
+.boot__seal{position:absolute;width:min(44vmin,250px);height:min(44vmin,250px);opacity:0}
+.boot__seal circle,.boot__seal polygon,.boot__seal path,.boot__seal line{
+  fill:none;stroke:var(--ink);stroke-width:1;vector-effect:non-scaling-stroke}
+.boot__mark{position:relative;opacity:0}
+.boot__mark svg,.boot__mark img{width:94px;height:94px;object-fit:contain}
+.boot__mark path{fill:none;stroke:var(--ink);stroke-linecap:round}
+.boot__title{position:absolute;inset:0;display:grid;place-items:center;
+  opacity:0;pointer-events:none}
+.boot__half{grid-area:1/1;font-family:var(--f-display);
+  font-size:clamp(46px,15vw,116px);line-height:1;letter-spacing:-.01em;
+  text-transform:uppercase;color:var(--ink);white-space:nowrap}
+.boot__half--a{clip-path:polygon(-20% -20%,120% -20%,120% 34%,-20% 66%)}
+.boot__half--b{clip-path:polygon(-20% 66%,120% 34%,120% 120%,-20% 120%)}
+.boot__jp{position:absolute;bottom:12vh;font-family:var(--f-jp);font-size:13px;
+  letter-spacing:.66em;color:var(--tone);opacity:0}
+
+/* ══════════════════ RESPONSIVE ══════════════════ */
+@media(max-width:900px){
+  :root{--gut:8px;--gut-tier:12px;--pad:13px;--rule:2.5px}
+  .shell{grid-template-columns:1fr}
+  .rail{display:none}
+  .topbar{display:flex}
+  main#view{padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
+  .tabs{display:flex}
+  .view{grid-template-columns:repeat(2,minmax(0,1fr))}
+  [data-screen="home"] .view > .head{grid-area:auto/1/auto/-1}
+  [data-screen="home"] .view > section:nth-of-type(1){grid-area:auto/1/auto/-1}
+  [data-screen="home"] .view > .strike{grid-area:auto/1/auto/-1}
+  [data-screen="home"] .view > section:nth-of-type(2){grid-area:auto/1/auto/-1}
+  [data-screen="home"] .view > .duo{grid-area:auto/1/auto/-1}
+  [data-screen="record"] .view > section,
+  [data-screen="rewards"] .view > section{grid-column:1/-1}
+  .duo{grid-template-columns:1fr}
+  .panel--bleed{margin-right:calc(var(--pad) * -1);border-right:0}
+  .hero__ring{width:78px;height:78px}
+}
+
+.no-motion *{animation:none!important;transition:none!important}
+
+/* ══════════════════ GUARD BAR ══════════════════ */
+#guardbar{position:fixed;left:0;right:0;bottom:0;z-index:9999;padding:12px 16px;
+  background:var(--ink);color:var(--paper);font-family:var(--f-mono);font-size:12px;
+  line-height:1.5;border-top:var(--rule) solid var(--ink);word-break:break-word}
+
+/* ══════════════════════════════════════════════════════════════════
+   LOG ROWS — the entry grid the v4 sheet carried and this one dropped.
+   Without it every field collapses into one run-on line.
+   ══════════════════════════════════════════════════════════════════ */
+/* min-width:0 overrides the flex/grid-item default of `auto`, which
+   resolves to the item's min-content size. `.rec` sits as a grid item
+   inside `.log`'s `repeat(2,1fr)` (or `repeat(6,1fr)`) columns, and
+   without this its own content's min-content width won capped by the
+   track — that forced both mobile card columns to ~186px each against
+   an available ~170px, pushing the whole grid (and the page) wider
+   than the viewport instead of letting the card text wrap. */
+/* Interior padding belongs on the component, not on one screen. `.rec`
+   is drawn with an ink frame at its box edge, and it is used in two
+   places: the record log (which set its own padding) and the profile's
+   milestone list (which did not). There the frame's top edge was ruled
+   straight through the first line of text — "Club Merch" was cut in
+   half by its own card border. The record screen's own padding rule is
+   more specific and still wins. */
+.rec{display:flex;align-items:stretch;gap:var(--s3);position:relative;
+  padding:var(--s3) var(--s4);min-width:0}
+.rec + .rec{border-top:var(--rule-hair) solid var(--ink);padding-top:var(--s3)}
+.rec__node{width:9px;height:9px;background:var(--ink);flex:none;margin-top:6px}
+.rec--upcoming .rec__node,.rec--miss .rec__node{background:var(--paper);
+  border:var(--rule-hair) solid var(--ink)}
+.entry{flex:1;display:grid;grid-template-columns:1fr auto;
+  grid-template-areas:"no gain" "verdict gain" "meta meta";
+  gap:2px var(--s3);align-items:baseline;text-align:left;background:none;
+  border:0;padding:0;cursor:inherit;color:var(--ink);position:relative;
+  overflow:hidden;font-family:var(--f-body)}
+button.entry{cursor:pointer}
+.entry__no{grid-area:no}
+.entry__verdict{grid-area:verdict;display:flex;align-items:center;gap:6px}
+.entry__meta{grid-area:meta;margin-top:3px}
+.entry__gain{grid-area:gain;align-self:center}
+.entry__ghost{position:absolute;right:-2px;top:-14px;font-family:var(--f-display);
+  font-size:44px;line-height:1;color:var(--ink);opacity:.07;pointer-events:none}
+.entry--open .entry__verdict{background:var(--ink);color:var(--paper);
+  padding:2px 7px;justify-self:start}
+.entry--open .pip{background:var(--paper)}
+.entry--miss{opacity:.55}
+
+/* ══════════════════════════════════════════════════════════════════
+   THE TWO PANELS THAT BREAK THEIR BOX
+
+   A page where every panel is an aligned rectangle is a grid, not a
+   spread. One panel per screen is cut on the diagonal and one runs off
+   the right edge of the paper. Applied here rather than in the markup
+   so the views stay untouched.
+   ══════════════════════════════════════════════════════════════════ */
+[data-screen="home"] .view > section:nth-of-type(1) .panel{
+  --cut:clamp(20px,2.6vw,36px); --cut-in:calc(var(--cut) - var(--rule));
+  background:var(--ink);border:0;
+  clip-path:polygon(0 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%)}
+[data-screen="home"] .view > section:nth-of-type(1) .panel::before{
+  content:"";position:absolute;inset:var(--rule);z-index:0;background:var(--paper);
+  clip-path:polygon(0 0,100% 0,100% calc(100% - var(--cut-in)),calc(100% - var(--cut-in)) 100%,0 100%)}
+[data-screen="home"] .view > section:nth-of-type(1) .rig__ghost{display:none}
+
+/* The right-edge bleed only reads as a bleed when there is page gutter
+   for it to run into. On a phone the gutter IS the safe margin, so the
+   negative margin put the panel's edge exactly on the viewport edge
+   (measured 390.0px at 390px wide) with its right border removed — the
+   panel looked cut off by the browser rather than by the layout, and it
+   was the only element on the page without a margin. Desktop keeps the
+   break; mobile keeps its gutter. */
+@media(min-width:901px){
+  [data-screen="home"] .view > .duo > .rig:last-child .panel{
+    margin-right:calc(var(--bleed) * -1);border-right:0}
+}
+[data-screen="home"] .view > .duo > .rig:last-child .rig__ghost{display:none}
+
+/* tiers are deliberately unequal heights — the establishing panel is
+   short, the stamp card is the tall one, the closers are shallow */
+[data-screen="home"] .view > .head{min-height:clamp(72px,7vw,104px)}
+[data-screen="home"] .view > .strike{align-items:flex-end;min-height:clamp(150px,17vw,240px)}
+[data-screen="home"] .view > .duo{margin-top:calc(var(--gut-tier) * -.35)}
+
+/* ══════════════════ RAIL BRAND ══════════════════ */
+.rail__brand svg,.rail__brand img{width:44px;height:44px;display:block}
+.rail__brand svg *{stroke:var(--ink)!important;fill:none!important}
+.rail__brand,.topbar #barBrand{font-family:var(--f-display);font-size:15px;
+  text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
+#barBrand svg{width:26px;height:26px}
+#barBrand svg *{stroke:var(--ink)!important;fill:none!important}
+.boot__mark svg *{stroke:var(--ink)!important;fill:none!important}
+
+/* ══════════════════ SPEED LINES ══════════════════
+   The FX layer draws these; they only ever appear in ink. */
+.lines line,.lines path,.slash path,.slash rect{stroke:var(--ink);fill:var(--ink)}
+
+/* ══════════════════════════════════════════════════════════════════
+   BREAKPOINTS
+
+   There was one, at 900px, so 1024 and 768 both landed in the same gap:
+   a 214px rail beside a six-column grid, with a 104px hero number inside
+   a 512px panel. Four now, each changing the composition rather than
+   just shrinking it.
+
+     ≥1200   six columns, hero 4 / scan 2
+     1024    six columns, hero 3 / scan 3 — the scan panel stops being a
+             sliver and the hero number stops overpowering its panel
+      900    rail out, tabs in, single column
+      560    stamp card and duo compress; nothing else changes shape
+   ══════════════════════════════════════════════════════════════════ */
+@media(min-width:901px) and (max-width:1200px){
+  [data-screen="home"] .view > section:nth-of-type(1){grid-area:2/1/3/4}
+  [data-screen="home"] .view > .strike{grid-area:2/4/3/-1}
+  .duo{grid-template-columns:3fr 2fr}
+}
+
+@media(min-width:901px) and (max-width:1024px){
+  :root{--rule:2.5px}
+  [data-screen="record"] .view > section:nth-of-type(3n+1),
+  [data-screen="rewards"] .view > section:nth-of-type(3n+1),
+  [data-screen="record"] .view > section:nth-of-type(3n+2),
+  [data-screen="rewards"] .view > section:nth-of-type(3n+2){grid-column:1/-1}
+  .duo{grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:560px){
+  .seals{gap:6px;padding:var(--s4)}
+  .seal__no{font-size:8px;right:3px;bottom:2px}
+  .stats{grid-template-columns:1fr 1fr}
+  .hero__ring{display:none}          /* it sat under the number at this width */
+  /* clear the fixed tab bar (56px) AND the home indicator, so a toast
+     never lands on the navigation or in the gesture strip */
+  .toasts{left:var(--gutter);right:var(--gutter);max-width:none;
+    bottom:calc(56px + var(--s3) + env(safe-area-inset-bottom, 0px))}
+}
+
+/* the giant cropped word is decorative and aria-hidden; it is allowed to
+   run off the page but never to create a scrollbar */
+.bleed{max-width:none;contain:paint}
+html,body{overflow-x:clip;max-width:100%}
+
+/* ══════════════════════════════════════════════════════════════════
+   PANEL VALUE — what tone a panel is printed at.
+
+   Assigned per panel rather than globally, because the point of the
+   tonal scale is contrast between neighbours. A page reads as manga
+   when one panel is nearly empty paper and the one beside it is solid
+   ink; it reads as a website when they are all the same card.
+   ══════════════════════════════════════════════════════════════════ */
+.p-quiet{background:var(--v0);border-width:var(--edge-hair)}
+.p-soft {background:var(--v1);border-width:var(--edge-thin)}
+.p-tone {background:var(--v2);border-width:var(--edge)}
+.p-deep {background:var(--v6);color:var(--v0);border-width:var(--edge-heavy);border-color:var(--v6)}
+.p-shout{background:var(--v6);color:var(--v0);border-width:var(--edge-shout);border-color:var(--v6)}
+.p-open {background:transparent;border:0}
+
+.p-deep .kicker,.p-shout .kicker,.p-deep .muted,.p-shout .muted{color:var(--v3)}
+.p-deep .h2,.p-shout .h2{color:var(--v0)}
+
+/* ══════════════════════════════════════════════════════════════════
+   CONTROLLED IMPERFECTION
+
+   Inked panel edges are not machine-straight. These are small enough
+   that you feel them rather than see them — a fraction of a degree of
+   rotation, an edge that is heavier on one side than the other, a
+   corner that does not quite close. Applied by position so the page
+   stays composed rather than becoming noise.
+   ══════════════════════════════════════════════════════════════════ */
+.ink-a{transform:rotate(-.28deg)}
+.ink-b{transform:rotate(.34deg)}
+.ink-c{transform:rotate(-.15deg) translateY(-2px)}
+/* one side inked heavier, the way a brush loads unevenly */
+.ink-load{border-left-width:calc(var(--edge) * 1.9)}
+.ink-load-t{border-top-width:calc(var(--edge) * 1.7)}
+/* a corner that does not quite close */
+.ink-open-br{border-bottom-right-radius:0;
+  clip-path:polygon(0 0,100% 0,100% 92%,97% 100%,0 100%)}
+
+/* ══════════════════════════════════════════════════════════════════
+   NARRATION BOX — the caption in the corner of a panel, not a card.
+   Hard-cornered, always tight to an edge, always small.
+   ══════════════════════════════════════════════════════════════════ */
+.narr{position:absolute;z-index:6;background:var(--v0);color:var(--v5);
+  border:var(--edge-thin) solid var(--v5);padding:7px 11px 8px;
+  max-width:min(48%,300px);font-family:var(--f-accent);
+  font-size:clamp(10px,.95vw,13px);line-height:1.3;text-transform:uppercase}
+.narr--tl{top:0;left:0;border-top:0;border-left:0}
+.narr--tr{top:0;right:0;border-top:0;border-right:0}
+.narr--bl{bottom:0;left:0;border-bottom:0;border-left:0}
+.narr__ch{display:block;font-family:var(--f-mono);font-size:9px;
+  letter-spacing:.24em;color:var(--v3);margin-bottom:3px}
+
+/* ══════════════════════════════════════════════════════════════════
+   SFX — lettering as artwork. Outlined, rotated, oversized, and always
+   clipped by the panel that contains it. Never a floating decoration.
+   ══════════════════════════════════════════════════════════════════ */
+.sfx{position:absolute;z-index:5;pointer-events:none;font-family:var(--f-display);
+  font-size:var(--t-sfx);line-height:.78;text-transform:uppercase;
+  letter-spacing:-.03em;white-space:nowrap;
+  color:transparent;-webkit-text-stroke:2.5px var(--v5);
+  paint-order:stroke fill}
+.sfx--solid{color:var(--v6);-webkit-text-stroke:0}
+.sfx--knock{color:var(--v0);-webkit-text-stroke:2.5px var(--v0)}
+.sfx--a{right:-4%;bottom:-9%;transform:rotate(-8deg);opacity:.13}
+.sfx--b{left:-3%;top:-7%;transform:rotate(6deg);opacity:.1}
+
+/* ══════════════════════════════════════════════════════════════════
+   CHAPTER RAIL — a volume index, not a navbar.
+   ══════════════════════════════════════════════════════════════════ */
+.rail__vol{font-family:var(--f-mono);font-size:9px;letter-spacing:.26em;
+  color:var(--v3);text-transform:uppercase}
+.rail__link{position:relative}
+.rail__no{font-family:var(--f-mono);font-size:9px;letter-spacing:.14em;
+  color:var(--v3);margin-right:9px;min-width:18px}
+.rail__link[aria-current="page"] .rail__no{color:var(--v0)}
+.pageno{position:fixed;right:calc(var(--gutter) * .5);bottom:var(--s5);z-index:40;
+  font-family:var(--f-mono);font-size:10px;letter-spacing:.2em;color:var(--v3);
+  writing-mode:vertical-rl;pointer-events:none}
+@media(max-width:900px){.pageno{display:none}}
+
+/* ══════════════════════════════════════════════════════════════════
+   PAGE RHYTHM — the tiers are deliberately unequal in height.
+
+   Establishing shot, then the dominant panel beside a loud narrow one,
+   then the wide quiet card, then two small closers. The proportions
+   below are the composition; they are not derived from content.
+   ══════════════════════════════════════════════════════════════════ */
+[data-screen="home"] .view{grid-template-rows:auto minmax(300px,38vh) auto auto}
+[data-screen="home"] .view > .head{min-height:clamp(84px,9vw,132px);
+  display:flex;align-items:flex-end}
+[data-screen="home"] .view > .head .title{margin-bottom:-.12em}
+
+/* the hero is the one thing you look at first: a number cropped by its
+   own panel, printed on near-empty paper */
+[data-screen="home"] .hero{display:flex;flex-direction:column;
+  justify-content:flex-end;overflow:hidden;padding:var(--s5) var(--s5) var(--s4)}
+/* Dela Gothic One's digits overrun their line box: `line-height:.84` on a
+   216px face leaves the glyphs sitting up to 5.6px BELOW the box bottom
+   (measured 1.4px at 375 rising to 5.6px at 1440). A negative margin here
+   subtracted from space the glyphs were already borrowing, so the caption
+   was struck through by the 0 and the 7 — mid-word, which reads as a
+   rendering fault rather than a composed overlap.
+   NOTE: this is invisible unless the real webfont is loaded. With the
+   fallback stack the glyphs stay inside the box and the collision does
+   not reproduce, which is exactly how it survived an earlier pass.
+   A positive .03em reserves the overrun and holds 12-13px of clear space
+   at every width. */
+[data-screen="home"] .hero__num{letter-spacing:-.055em;margin-bottom:.03em}
+[data-screen="home"] .hero__core{align-items:flex-end}
+
+/* and the panel beside it is the loud one — solid ink, heaviest edge */
+[data-screen="home"] .view > .strike{border-width:var(--edge-shout);
+  border-color:var(--v6);background:var(--v6)}
+
+/* the closers are quiet and small — the silence after the impact */
+[data-screen="home"] .view > .duo .panel{background:var(--v1);
+  border-width:var(--edge-thin)}
+[data-screen="home"] .view > .duo .h2{font-size:11px;letter-spacing:.2em}
+
+/* the stamp card is the wide detail panel: light tone, not white */
+[data-screen="home"] .view > section:nth-of-type(2) .panel{background:var(--v1)}
+[data-screen="home"] .seals{gap:clamp(6px,.9vw,13px)}
+
+.head{position:relative;overflow:visible}
+.hero{position:relative}
+.rig{isolation:isolate}
+
+@media(max-width:900px){
+  /* mobile is a vertical page, not a stacked desktop: the hero gets
+     taller and louder, the closers get quieter still */
+  [data-screen="home"] .view{grid-template-rows:none}
+  /* min-height removed: it competed with the 56vh rule further down and
+     both reserved empty air above a bottom-aligned panel. The hero is
+     sized by its content on mobile. */
+  .narr{max-width:70%;font-size:11px}
+  .sfx{font-size:clamp(56px,22vw,140px)}
+}
+
+/* ── corrections after looking at the render ──
+   Type cropped by a panel edge is a manga move, but only when the crop
+   is decisive. Clipped by exactly the border width reads as a bug, so
+   the establishing panel is taller and the name sits clear of the edge
+   with the narration box out of its way. */
+[data-screen="home"] .view > .head{min-height:clamp(104px,11vw,168px);
+  padding-top:calc(var(--s6) + 6px);overflow:hidden}
+[data-screen="home"] .view > .head .title{margin-bottom:-.16em;
+  line-height:.82;max-width:100%}
+.narr--tl{max-width:min(38%,240px)}
+
+/* SFX belongs at a panel corner, cropped by it, behind the content —
+   not floating across the middle of the gauge */
+.sfx{z-index:0}
+/* This needs the same .inkframe exclusion the panel/head/strike/seal
+   rule below already has (line ~837). Without it, this rule's
+   specificity (two classes) beats `.inkframe{position:absolute}`
+   (one class) and pulls the decorative ink SVG into normal flow. As
+   a relatively-positioned replaced element with only a viewBox for
+   sizing, it then renders at its own aspect ratio against whatever
+   width it's given — and since Ink.draw() re-measures the panel's
+   offsetHeight (which now includes the SVG) and rewrites the viewBox
+   to match every redraw, each pass inflates the next. On mobile
+   widths this ran away to thousands of pixels of blank panel. */
+.hero > *:not(.sfx):not(.inkframe){position:relative;z-index:2}
+.sfx--a{right:auto;left:-2%;bottom:-14%;top:auto;transform:rotate(-7deg);
+  opacity:.22;-webkit-text-stroke-width:3px}
+[data-screen="home"] .hero{overflow:hidden}
+
+/* SFX still crossed the gauge and the caption at desktop width. Pushed
+   fully into the corner and cropped hard, which is where lettering sits
+   on a real page — anchored to the panel, not floating in it. */
+.sfx--a{left:auto;right:-3%;bottom:-18%;transform:rotate(-6deg);opacity:.16}
+@media(max-width:900px){.sfx--a{right:-8%;bottom:-12%;opacity:.2}}
+
+/* ══════════════════════════════════════════════════════════════════
+   INK — the drawn edge replaces the CSS border.
+
+   The border stays in the box model so every measurement from the
+   scaling pass still holds; it just stops painting. The SVG band sits
+   behind content and inherits colour, so a panel's edge is whatever
+   value the panel is printed at.
+   ══════════════════════════════════════════════════════════════════ */
+[data-ink]{border-color:transparent!important;position:relative}
+.inkframe{position:absolute;top:0;left:0;right:0;bottom:0;width:auto;height:auto;
+  justify-self:stretch;align-self:stretch;   /* .seal is a centring grid, and
+     a grid container's place-items also lands on absolutely positioned
+     children — without this the ink was centred inside its cell at the
+     wrong size instead of filling it */
+  pointer-events:none;z-index:0;overflow:visible;color:var(--v5)}
+[data-ink="fill"] > .inkframe{color:var(--v6);z-index:-1}
+[data-ink="fill"]{background:transparent!important}
+.p-deep,.p-shout,.strike:not(.strike--calm){background:transparent!important}
+.seal--set{background:transparent!important}
+.seal--set > .inkframe{color:var(--v6);z-index:-1}
+/* `.sfx` is excluded for the same reason `.inkframe` is: it declares
+   position:absolute, but this rule is more specific (0,2,0 vs 0,1,0) and
+   was overriding it, dropping a 72px decorative word into normal flow
+   inside every panel that has one. On the mobile hero that alone added
+   56px of panel height (331px vs 275px) — the layout was reserving space
+   for artwork that is supposed to sit behind the content, which is why
+   the panel still read as mostly empty air after its min-height was
+   removed. Decorative layers must never contribute to layout. */
+.panel > *:not(.inkframe):not(.sfx),.head > *:not(.inkframe):not(.sfx),
+.strike > *:not(.inkframe):not(.sfx),.seal > *:not(.inkframe):not(.sfx){
+  position:relative;z-index:1}
+
+/* ══════════════════════════════════════════════════════════════════
+   TYPOGRAPHY — a graduated scale, not two sizes.
+
+   The critique was that a 230px number sat beside 15px body with
+   nothing between, so the page jumped and then went flat. Six steps
+   now, and the small end is Oswald and Archivo Narrow rather than
+   Inter, which read as product UI at every size it appeared.
+   ══════════════════════════════════════════════════════════════════ */
+.kicker,.chip,.entry__no,.entry__verdict,.tech__at,.tech__legend,
+.who__role,.qrpanel__when,.strike__sub,.rail__vol{font-family:var(--f-mono)}
+.h2,.rail__link span,.tabs button,.btn,.link,.section-link,
+.board-link,.motion-btn,.hero__label{font-family:var(--f-label);font-weight:500}
+body{font-family:var(--f-body);font-size:15.5px;line-height:1.45}
+.title{letter-spacing:-.035em}
+.h2{font-size:clamp(11px,1.05vw,14px);letter-spacing:.22em}
+
+/* ══════════════════════════════════════════════════════════════════
+   CHAPTER SPINE — the sidebar is gone.
+
+   Icon + label + active pill is the SaaS sidebar from every product
+   built since 2015, and it anchored the whole page as "web app". What
+   replaces it is a spine: large rotated numerals down the page edge,
+   the chapter title set small beside them. No icons anywhere.
+   ══════════════════════════════════════════════════════════════════ */
+.rail{padding:var(--s5) 0 var(--s5) var(--s3);border-right:0;overflow:hidden}
+.rail::after{content:"";position:absolute;top:0;bottom:0;right:0;width:2px;
+  background:var(--v5)}
+.rail__brand{padding:0 var(--s3) var(--s5) 0;border-bottom:0}
+.rail__nav{gap:0;padding-top:var(--s5)}
+.rail__link{display:grid!important;grid-template-columns:auto 1fr;
+  align-items:baseline;gap:var(--s3);padding:var(--s3) var(--s3) var(--s3) 0!important;
+  background:none!important;text-align:left;position:relative}
+.rail__link svg{display:none}
+.rail__no{font-family:var(--f-display)!important;font-size:clamp(26px,2.4vw,40px)!important;
+  line-height:.8;color:var(--v2)!important;margin:0!important;min-width:0!important;
+  letter-spacing:-.05em;transition:color .18s}
+.rail__link span:not(.rail__no){font-family:var(--f-label);font-size:11px;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--v4);align-self:center}
+.rail__link[aria-current="page"] .rail__no{color:var(--v6)!important}
+.rail__link[aria-current="page"] span:not(.rail__no){color:var(--v6)}
+.rail__link[aria-current="page"]::before{content:"";position:absolute;
+  right:0;top:50%;width:26px;height:2px;background:var(--v6)}
+.rail__link:hover .rail__no{color:var(--v4)!important}
+
+/* ══════════════════════════════════════════════════════════════════
+   THE STAMP CARD — a composition, not a contact sheet.
+
+   Ten identical cells at identical spacing was the most generic thing
+   on the page and also the largest. The most recent stamp now dominates
+   at roughly three times the area and breaks the top edge of its panel;
+   the rest fall in behind it at reduced weight, and the empty ones
+   recede to tone instead of announcing themselves with dashed boxes.
+   ══════════════════════════════════════════════════════════════════ */
+.seals{grid-template-columns:repeat(6,1fr);grid-auto-flow:dense;
+  gap:clamp(5px,.7vw,10px);padding:var(--s5) var(--s5) var(--s6)}
+.seal{aspect-ratio:1}
+.seal--hero{grid-column:span 2;grid-row:span 2;margin-top:calc(var(--s5) * -1.6);
+  z-index:3}
+.seal--hero svg{width:54%;height:54%}
+.seal--hero .seal__no{font-size:12px;right:8px;bottom:6px}
+.seal--next{grid-column:span 2;grid-row:span 2}
+.seal[data-seal="empty"]{background-image:none;opacity:.5}
+.seal[data-seal="empty"] > .inkframe{color:var(--v2)}
+.seal[data-seal="empty"] .seal__mark{opacity:.3}
+.seal__no{font-family:var(--f-mono)}
+
+/* the panel has to let the hero stamp break its edge */
+[data-screen="home"] .view > section:nth-of-type(2) .panel{overflow:visible}
+[data-screen="home"] .view > section:nth-of-type(2){margin-top:var(--s6)}
+
+/* ══════════════════════════════════════════════════════════════════
+   RECORD — a sequence, not a table.
+
+   Nine rows of equal weight with hairline dividers had no second or
+   third thing to look at; the hierarchy died after the title. The rows
+   are now panels of unequal size: the live meeting takes a full tier,
+   confirmed ones sit small and quiet, and a missed meeting is given
+   deliberate empty space rather than being compressed like the rest.
+   ══════════════════════════════════════════════════════════════════ */
+[data-screen="record"] .log{display:grid;grid-template-columns:repeat(6,1fr);
+  gap:var(--gut) var(--gut)}
+[data-screen="record"] .rec{grid-column:span 3;padding:var(--s4);
+  border-top:0!important;align-items:flex-start}
+[data-screen="record"] .rec + .rec{padding-top:var(--s4)}
+[data-screen="record"] .rec--open{grid-column:1/-1;min-height:clamp(150px,19vw,250px);
+  align-items:flex-end}
+[data-screen="record"] .rec--open .entry__verdict{font-size:13px;padding:5px 11px}
+[data-screen="record"] .rec--open .entry__ghost{font-size:clamp(90px,13vw,190px);
+  opacity:.1;top:-8px;right:8px}
+[data-screen="record"] .rec--miss{grid-column:span 6;min-height:120px;
+  align-items:center;opacity:1}
+[data-screen="record"] .rec--miss .entry{opacity:.42}
+[data-screen="record"] .rec--set:nth-of-type(4n+3){grid-column:span 2}
+[data-screen="record"] .rec--set:nth-of-type(4n){grid-column:span 4}
+[data-screen="record"] .rec--upcoming{grid-column:span 2}
+
+/* ══════════════════════════════════════════════════════════════════
+   SFX — opaque, large, cropped by the panel. Never a watermark.
+   ══════════════════════════════════════════════════════════════════ */
+.sfx{color:var(--v6);-webkit-text-stroke:0;opacity:1;
+  font-size:clamp(72px,15vw,240px);letter-spacing:-.055em}
+.sfx--a{right:-5%;bottom:-16%;left:auto;top:auto;transform:rotate(-7deg);
+  opacity:.09}
+.sfx--out{color:transparent;-webkit-text-stroke:clamp(2px,.35vw,4px) var(--v6);opacity:.5}
+
+/* ══════════════════════════════════════════════════════════════════
+   REWARDS — the glyph had escaped its box and was rendering ~1100px.
+   ══════════════════════════════════════════════════════════════════ */
+.tech__glyph{flex:none;width:clamp(44px,4.5vw,68px);height:clamp(44px,4.5vw,68px)}
+.tech__glyph svg{width:100%!important;height:100%!important;display:block}
+[data-screen="rewards"] .rig .panel{padding:var(--s5);overflow:hidden}
+[data-screen="rewards"] .view > section:nth-of-type(1){grid-column:1/-1}
+[data-screen="rewards"] .view > section:nth-of-type(2n){grid-column:span 4}
+[data-screen="rewards"] .view > section:nth-of-type(2n+3){grid-column:span 2}
+
+/* ══════════════════════════════════════════════════════════════════
+   MOBILE — a vertical manga page, not a stacked desktop.
+
+   The stack was four full-width rectangles of near-identical
+   proportion, which is exactly the failure the desktop grid avoids.
+   Aspect ratio now varies deliberately down the page: a squat
+   establishing panel, a tall dominant one, a wide detail strip, then
+   small closers. The icon tab bar is replaced by a page-turn strip.
+   ══════════════════════════════════════════════════════════════════ */
+@media(max-width:900px){
+  .tabs{border-top:0;background:var(--v0);padding:0}
+  .tabs::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;
+    background:var(--v5)}
+  .tabs button{min-height:56px;gap:2px;padding:8px 0}
+  .tab__no{font-family:var(--f-display);font-size:15px;line-height:1;
+    color:var(--v2);letter-spacing:-.04em}
+  .tabs button span:not(.tab__no){font-family:var(--f-label);font-size:8.5px;
+    letter-spacing:.16em}
+  .tabs button[aria-current="page"]{background:transparent;color:var(--v6)}
+  .tabs button[aria-current="page"] .tab__no{color:var(--v6)}
+  .tabs button[aria-current="page"]::after{content:"";position:absolute;
+    bottom:0;left:22%;right:22%;height:3px;background:var(--v6)}
+
+  /* deliberate aspect variation down the page */
+  [data-screen="home"] .view > .head{min-height:76px}
+  /* 56vh on a phone made the hero 473px tall at 390x844 with 291px (62%)
+     of it empty above the number, because the panel is bottom-aligned and
+     its content is only ~180px. The member had to scroll past a blank
+     rectangle to reach the stamp grid — on the device this product is
+     actually used on. Sized to content with a floor instead of a fixed
+     fraction of the screen: the panel keeps presence without reserving
+     air it never fills. */
+  [data-screen="home"] .hero{min-height:0;padding-top:var(--s7)}
+  [data-screen="home"] .view > .strike{min-height:112px}
+  [data-screen="home"] .view > .duo{margin-top:var(--s7)}   /* the quiet beat */
+  .seals{grid-template-columns:repeat(4,1fr);padding:var(--s4) var(--s4) var(--s5)}
+  .seal--hero{grid-column:span 2;grid-row:span 2;margin-top:calc(var(--s4) * -1.4)}
+  .seal--next{grid-column:span 1;grid-row:span 1}
+  [data-screen="record"] .log{grid-template-columns:repeat(2,1fr)}
+  /* Two columns stop fitting once a card drops under ~190px: the entry's
+     `1fr auto` row can no longer seat the date and the gain side by
+     side, and `overflow:hidden` cropped the gain mid-word — the log read
+     "+1 stan". Phones get one column, which is the right reading order
+     for the page anyway. */
+  @media(max-width:430px){
+    [data-screen="record"] .log{grid-template-columns:1fr}
+  }
+  [data-screen="record"] .rec{grid-column:span 1}
+  [data-screen="record"] .rec--open,[data-screen="record"] .rec--miss{grid-column:1/-1}
+  [data-screen="record"] .rec--set:nth-of-type(4n+3),
+  [data-screen="record"] .rec--set:nth-of-type(4n){grid-column:span 1}
+  [data-screen="rewards"] .view > section{grid-column:1/-1!important}
+}
+
+/* ── corrections after review ── */
+
+/* the name had drifted to the right edge: space-between was pushing it
+   off the vertical Japanese. It anchors left, where a title belongs. */
+[data-screen="home"] .view > .head{justify-content:flex-start;
+  align-items:flex-end;padding-left:var(--s6)}
+/* The JP mark is position:absolute in the header's top-right, and nothing
+   in the flow reserved room for it — so the chapter title's box (and, on
+   Home, the narration balloon) ran underneath it. Titles are left-aligned
+   so short ones looked fine, but "Attendance QR" and the narration box hit
+   it, and the balloon is opaque with a border, so it sliced 出席 in half at
+   six of seven viewports. Padding on the header reserves the lane for
+   every page at once; the mark itself is positioned against the padding
+   box, so it does not move with it. */
+:root{--jp-lane:calc(var(--s4) + 22px)}
+.view > .head{padding-right:calc(var(--s4) + var(--jp-lane))}
+[data-screen="home"] .view > .head .narr--tl{right:var(--jp-lane)}
+
+[data-screen="home"] .view > .head .jp{position:absolute;right:var(--s4);
+  top:var(--s4);bottom:auto}
+.narr--tl{top:auto;bottom:0;left:0;border:var(--edge-thin) solid var(--v5);
+  border-left:0;border-bottom:0;max-width:min(46%,330px)}
+
+/* the stamp grid: six columns with two 2×2 cells could not resolve and
+   sprawled. Five columns, one hero cell, everything else single. */
+.seals{grid-template-columns:repeat(5,1fr)}
+.seal--next{grid-column:span 1;grid-row:span 1}
+.seal--hero{grid-column:span 2;grid-row:span 2;margin-top:calc(var(--s6) * -1)}
+[data-screen="home"] .seals{padding-top:var(--s7)}
+
+/* SFX was still reading as a watermark at 9% */
+.sfx--a{opacity:.16}
+
+/* Record rows need real interior space now that they are panels */
+[data-screen="record"] .rec{padding:var(--s4) var(--s4) var(--s5)}
+[data-screen="record"] .rec--open{padding:var(--s5)}
+
+@media(max-width:900px){
+  .seals{grid-template-columns:repeat(4,1fr)}
+  .seal--hero{margin-top:calc(var(--s5) * -1)}
+  [data-screen="home"] .view > .head{padding-left:var(--s4)}
+}
+
+/* `.seal svg` (0,0,1,1) out-specified `.inkframe` (0,0,1,0), so the ink
+   was being sized to 62% and centred like the glyph instead of filling
+   the cell. Scoped selectors for every element whose own rules match a
+   bare `svg`. */
+.seal > svg.inkframe,.hero > svg.inkframe,.panel > svg.inkframe,
+.head > svg.inkframe,.strike > svg.inkframe,.rec > svg.inkframe,
+.narr > svg.inkframe,.stat > svg.inkframe{width:auto;height:auto;
+  top:0;left:0;right:0;bottom:0}
+
+/* Stamp 07 is the 2x2 cell. It used to break the panel's top edge, which
+   notched the row above; that was traded for a leftward break on the
+   assumption that "nothing sits behind it". Cell 06 sits immediately to
+   its left and empty cell 10 sits below that, so the pull merged 06 and
+   07 into one unbroken black mass (11.2px at 1440, 8.1px at 1024) and
+   buried 14.4px of cell 10 underneath it — the grid stopped reading as
+   ten discrete marks, which is the whole mechanic. Its 2x2 footprint is
+   already the emphasis; it does not also need to break the column. */
+.seal--hero{margin-top:0;margin-left:0}
+
+/* ══════════════════════════════════════════════════════════════════
+   SPACING SYSTEM
+
+   Measured before writing this: tier gaps were 19px and 47px on the
+   same desktop page, 12/46/12/46 on mobile, and panels carried three
+   different padding values (20px, 20px 20px 16px, and 0) because some
+   were set in CSS and some inline in the view templates. Every one of
+   those was an arbitrary local decision.
+
+   One scale now, named by relationship rather than size, so the value
+   is chosen by what two things are to each other and not by eye.
+   ══════════════════════════════════════════════════════════════════ */
+:root{
+  --space-hair:4px;                          /* label → its own value   */
+  --space-tight:8px;                         /* items in a row          */
+  --space-stack-sm:clamp(10px,1vw,14px);     /* heading → its content   */
+  --space-stack:clamp(14px,1.5vw,22px);      /* block → block in a panel*/
+  --space-panel:clamp(16px,1.7vw,26px);      /* inside a panel          */
+  --space-panel-lg:clamp(20px,2.4vw,38px);   /* inside a dominant panel */
+  --space-tier:clamp(14px,1.7vw,26px);       /* panel → panel, one tier */
+  --space-chapter:clamp(30px,4vw,68px);      /* tier → tier, a new beat */
+}
+
+/* tier rhythm: even gaps within a tier, a wider one between tiers */
+.view{gap:var(--space-chapter) var(--space-tier)}
+.duo{gap:var(--space-tier)}
+.seals{gap:var(--space-tight)}
+
+/* one padding value for every panel, plus a larger one where a panel is
+   carrying the dominant moment */
+.panel,.qrpanel,.manual,.narr-block{padding:var(--space-panel)}
+[data-screen="home"] .hero,
+[data-screen="home"] .view > .strike,
+[data-screen="record"] .rec--open{padding:var(--space-panel-lg)}
+.seals{padding:var(--space-panel)}
+.head{padding:var(--space-panel) var(--space-panel-lg)}
+.who{padding:var(--space-panel)}
+
+/* typographic rhythm */
+.h2 + *{margin-top:var(--space-stack-sm)}
+.kicker + *{margin-top:var(--space-hair)}
+.log{gap:var(--space-tight)}
+.stack-lg{margin-top:var(--space-stack)}
+.stack-xl{margin-top:var(--space-chapter)}
+.picker{gap:var(--space-tight);margin-bottom:var(--space-tier)}
+.field{gap:var(--space-tight)}
+.stats{gap:var(--space-tier)}
+.stat{padding:var(--space-panel)}
+
+/* the board QR was rendering at the full panel width (~870px), which is
+   far larger than any camera needs and pushed everything below the fold */
+.qrpanel__code{max-width:min(420px,58vw);margin-inline:auto;
+  padding:var(--space-stack)}
+.qrpanel__code canvas,.qrpanel__code img,.qrpanel__code svg{
+  width:100%;height:auto;display:block;image-rendering:pixelated}
+@media(max-width:560px){.qrpanel__code{max-width:none;width:100%}}
+
+/* nav → content, and content → the end of the page */
+main#view{padding-top:var(--space-tier);padding-bottom:var(--space-chapter)}
+@media(max-width:900px){
+  /* clears the tab strip AND the home indicator beneath it */
+  main#view{padding-bottom:calc(var(--space-chapter) + 68px + env(safe-area-inset-bottom, 0px))}
+}
+
+/* Text links were 11px tall — under any reasonable touch target. The
+   hit area grows without the underline moving, so nothing shifts
+   visually; only the tappable box changes. */
+.link,.section-link,.board-link{display:inline-flex;align-items:center;
+  min-height:32px;padding-block:6px}
+@media(pointer:coarse){
+  .link,.section-link,.board-link{min-height:44px;padding-block:11px}
+  .motion-btn{min-height:40px}
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   SVG SIZING — the root cause of the blown-up graphics.
+
+   Every inline icon is <svg viewBox="0 0 24 24"> with no width or
+   height attribute. An SVG without intrinsic dimensions fills its
+   container, so any icon dropped into a large box expands to fill it:
+   the camera on Scan rendered ~500px tall, the reward glyph ~1100px.
+   Both were "fixed" individually before, which was treating instances
+   of a general fault. A default cap here, with explicit opt-outs for
+   the few SVGs that are genuinely meant to be large.
+   ══════════════════════════════════════════════════════════════════ */
+svg:not(.inkframe):not(.fxdefs):not([width]){width:22px;height:22px;flex:none}
+
+.hero__ring,.who__seal,.verdict__seal,.boot__seal,.reticle__geo,.reticle__mark,
+.arena svg,.seal svg,.tech__glyph svg,.viewer svg,.slash,.lines,
+.verdict__field,.tech__crack svg,.qrpanel__code svg{width:100%;height:100%}
+.hero__ring{width:clamp(70px,8vw,120px);height:clamp(70px,8vw,120px)}
+.who__seal{width:clamp(52px,5vw,74px);height:clamp(52px,5vw,74px)}
+.tech__glyph svg{width:100%;height:100%}
+.strike__arrow svg,.btn svg,.motion-btn svg{width:16px;height:16px}
+.rail__nav button svg,.tabs button svg{width:18px;height:18px}
+.boot__mark svg{width:88px;height:88px}
+.verdict__seal{width:min(30vmin,170px);height:min(30vmin,170px)}
+.boot__seal{width:min(40vmin,230px);height:min(40vmin,230px)}
+
+/* the "no camera" state was one enormous icon and two lines of text */
+/* `.viewer .stack` is here because the scanner's fallback states render
+   `<div class="stack">`, and nothing in the stylesheet ever matched that
+   class — so the padding and max-width below were written but never
+   applied. The copy ran the full width of the viewer and the drawn frame
+   cut through it ("NO CAMERA FOUND" lost its N; the body text ran off the
+   right edge). */
+.viewer__msg,.viewer .stack{display:flex;flex-direction:column;align-items:center;
+  gap:var(--space-stack-sm);text-align:center;padding:var(--space-panel-lg);
+  max-width:46ch;margin-inline:auto}
+.viewer__msg svg,.viewer .stack__icon svg{width:clamp(38px,4vw,56px)!important;
+  height:clamp(38px,4vw,56px)!important;opacity:.5}
+.viewer{max-height:min(56vh,520px)}
+
+/* ══════════════════════════════════════════════════════════════════
+   CHAPTER HEADS — every screen but Home was rendering its title
+   centred in a tall, almost empty panel. Same left anchor and same
+   proportion as Home, so the pages read as one book.
+   ══════════════════════════════════════════════════════════════════ */
+.view > .head{justify-content:flex-start;align-items:flex-end;
+  min-height:clamp(84px,9vw,132px);position:relative}
+.view > .head .head__stack{max-width:100%}
+.view > .head .jp{position:absolute;right:var(--space-panel);
+  top:var(--space-panel);bottom:auto}
+.view > .head .kicker{position:absolute;left:var(--space-panel-lg);
+  top:var(--space-panel)}
+
+/* ══════════════════════════════════════════════════════════════════
+   REWARDS — three full-width bars with content stranded in one corner.
+   They are panels now, proportioned and filled.
+   ══════════════════════════════════════════════════════════════════ */
+[data-screen="rewards"] .view > section{grid-column:span 2!important}
+[data-screen="rewards"] .view > section:nth-of-type(1){grid-column:1/-1!important}
+[data-screen="rewards"] .rig .panel{display:flex;flex-direction:column;
+  gap:var(--space-stack-sm);min-height:clamp(180px,20vw,260px)}
+.tech__top{align-items:center;gap:var(--space-stack-sm)}
+.tech__desc{flex:1}
+.tech__gauge{margin-top:auto}
+@media(max-width:900px){
+  [data-screen="rewards"] .view > section{grid-column:1/-1!important}
+  [data-screen="rewards"] .rig .panel{min-height:0}
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   The reward panels are wrapped in .stack-panels, so every rule
+   written against `.view > section` matched nothing at all — which is
+   why they stayed full-width bars through three attempts. Targeting
+   the actual wrapper.
+   ══════════════════════════════════════════════════════════════════ */
+.stack-panels{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:var(--space-tier);align-content:start}
+.stack-panels > section{grid-column:span 3;min-width:0}
+.stack-panels > section:first-child{grid-column:span 4}   /* the near one leads */
+.stack-panels > section:nth-child(3n){grid-column:span 2}
+.stack-panels > section > .panel{height:100%}
+@media(max-width:900px){
+  .stack-panels{grid-template-columns:1fr}
+  .stack-panels > section,
+  .stack-panels > section:first-child,
+  .stack-panels > section:nth-child(3n){grid-column:1/-1}
+}
+
+/* The kicker was absolutely positioned and landed on top of the title —
+   text over text, which is what "text overlaps the borders" was. It
+   stacks above the title in normal flow instead. */
+.view > .head .kicker{position:static}
+.view > .head{flex-direction:column;align-items:flex-start;
+  justify-content:flex-end;gap:var(--space-hair)}
+.view > .head .head__stack{width:100%}
+.view > .head .jp{position:absolute}
+
+/* the ink band and the panel background were drawn on different boxes,
+   so the offset ghost showed as a doubled edge on the right and bottom.
+   The ghost belongs behind the panel, not beside it. */
+.stack-panels > section .rig__ghost{display:none}
+[data-screen="rewards"] .rig .panel{background:var(--v1)}
+.kicker{display:inline-block}

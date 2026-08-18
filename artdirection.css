@@ -1,0 +1,585 @@
+/* ══════════════════════════════════════════════════════════════════
+   KEYSTAMP — ART DIRECTION LAYER
+   loaded last: it composes the page, it does not re-plumb it.
+
+   The brief: stop decorating a dashboard with manga elements and
+   design the interface as a manga page. The difference in practice is
+   that a dashboard is a grid of equal cards and a manga page is a
+   composition of unequal panels — one panel dominates, the rest
+   support it, and the gutters between them are as designed as the
+   panels. Everything below serves that, and nothing below changes
+   layout mechanics that the responsive pass established: no fixed
+   widths, no desktop-only positioning, no new overflow.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────────
+   1. SCREENTONE AS MATERIAL
+
+   Tone in manga is not a background texture, it is something you cut
+   to a shape and lay into a panel. So these are defined as reusable
+   *fills* with real dot geometry (60-line and 85-line equivalents,
+   at the two densities a tone sheet actually comes in), and they get
+   applied to shaped regions — wedges, bands, cropped corners — not
+   to whole rectangles.
+   ───────────────────────────────────────────────────────────────── */
+:root{
+  --tone-dot-a:radial-gradient(circle at 50% 50%, var(--ink) 0 1.05px, transparent 1.15px);
+  --tone-dot-b:radial-gradient(circle at 50% 50%, var(--ink) 0 1.6px, transparent 1.7px);
+  --tone-line:repeating-linear-gradient(72deg, var(--ink) 0 1px, transparent 1px 5px);
+  --tone-cell-a:5px 5px;
+  --tone-cell-b:7px 7px;
+}
+
+.tone{position:absolute;pointer-events:none;z-index:0;
+  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
+.tone--coarse{background-image:var(--tone-dot-b);background-size:var(--tone-cell-b)}
+.tone--line{background-image:var(--tone-line)}
+
+/* a tone that fades out, the way a sheet is scraped back with a blade
+   rather than stopping on a hard line */
+.tone--fade{-webkit-mask-image:linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%);
+  mask-image:linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%)}
+.tone--fade-r{-webkit-mask-image:linear-gradient(to left, #000 0%, #000 30%, transparent 92%);
+  mask-image:linear-gradient(to left, #000 0%, #000 30%, transparent 92%)}
+
+/* ─────────────────────────────────────────────────────────────────
+   2. PANEL HIERARCHY
+
+   Three weights of edge, assigned by a panel's rank on the page, so
+   that "which panel matters" is legible before a word is read. The
+   ink SVG already varies line weight along each edge; this varies it
+   BETWEEN panels, which is the part that carries hierarchy.
+   ───────────────────────────────────────────────────────────────── */
+[data-rank="lead"]{--ink-w:4.4}
+[data-rank="mid"]{--ink-w:2.8}
+[data-rank="quiet"]{--ink-w:1.6}
+
+/* A clipped corner reads as a panel cut with a blade. Applied to a
+   few panels only — a page where every panel is chamfered is just a
+   different uniform. */
+.cut-br{clip-path:polygon(0 0, 100% 0, 100% calc(100% - 26px), calc(100% - 26px) 100%, 0 100%)}
+.cut-tl{clip-path:polygon(26px 0, 100% 0, 100% 100%, 0 100%, 0 26px)}
+
+/* ─────────────────────────────────────────────────────────────────
+   3. TYPOGRAPHY ROLES
+
+   Four jobs, four treatments, so type carries structure instead of
+   size alone: display (the number), utility (metadata), narrative
+   (sentences), graphic (type used as artwork).
+   ───────────────────────────────────────────────────────────────── */
+.t-utility{font:500 10px/1 var(--f-mono);letter-spacing:.2em;
+  text-transform:uppercase;color:var(--tone)}
+.t-narrative{font-family:var(--f-body);font-size:13.5px;line-height:1.55;
+  max-width:52ch}
+
+/* Graphic type: a word used as a mark. Set solid, cropped by its
+   panel, tonal rather than black so it sits behind the reading. */
+.t-graphic{font-family:var(--f-display);line-height:.76;
+  letter-spacing:-.055em;text-transform:uppercase;
+  color:var(--v6);opacity:.085;white-space:nowrap;
+  pointer-events:none;user-select:none}
+
+/* ─────────────────────────────────────────────────────────────────
+   4. THE STAMP PANEL — the page's hero
+
+   The number is the subject of the whole product, so it is treated
+   as artwork: oversized, sitting ON a wedge of tone, with the target
+   stated once beside it and the travel toward that target shown as a
+   ruled bar rather than a rounded meter. The number is allowed to
+   overshoot its own tone block — a figure escaping its panel is the
+   asymmetry the brief asks for, and it costs nothing in layout
+   because the tone is absolutely positioned behind it.
+   ───────────────────────────────────────────────────────────────── */
+[data-screen="home"] .hero{position:relative;isolation:isolate}
+
+/* The tone wedge the number stands on.
+   ::after, NOT ::before — the home hero's ::before is already spoken
+   for: the stylesheet paints the panel dark and lays a paper-coloured
+   ::before inside it, which is what produces the diagonal-cut corner.
+   Overriding it turned the whole panel black. */
+[data-screen="home"] .hero::after{content:"";position:absolute;
+  left:0;bottom:0;width:min(62%,340px);height:58%;
+  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
+  opacity:.5;z-index:0;
+  -webkit-mask-image:linear-gradient(to top, #000 0%, #000 46%, transparent 100%);
+  mask-image:linear-gradient(to top, #000 0%, #000 46%, transparent 100%);
+  clip-path:polygon(0 14%, 100% 0, 100% 100%, 0 100%)}
+
+[data-screen="home"] .hero__core{position:relative;z-index:2;align-items:flex-end}
+[data-screen="home"] .hero__num{position:relative;z-index:2}
+
+/* "/ 10" stops being a faint denominator and becomes the target the
+   composition moves toward */
+[data-screen="home"] .hero__of{align-self:flex-end;
+  font-family:var(--f-display);font-size:clamp(20px,2.6vw,34px);
+  line-height:1;color:var(--v4);letter-spacing:-.02em;
+  margin-bottom:.12em}
+
+[data-screen="home"] .hero__label{font:500 10px/1 var(--f-mono);
+  letter-spacing:.24em;color:var(--tone)}
+
+/* the travel bar: ruled, not rounded, with the remaining distance
+   drawn as tone rather than empty grey */
+[data-screen="home"] .gauge{height:12px;border:0;position:relative;z-index:2;
+  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
+  box-shadow:inset 0 0 0 1.5px var(--ink)}
+[data-screen="home"] .gauge__fill{background:var(--ink)}
+
+/* ─────────────────────────────────────────────────────────────────
+   5. THE SCAN PANEL — the action panel
+
+   Given the treatment an action beat gets: the solid black frame,
+   the word set large and tight, speed lines raking across it, and a
+   single directional mark. It is the only black-filled panel on the
+   page, which is what makes it read as the thing to do.
+   ───────────────────────────────────────────────────────────────── */
+.strike{position:relative;overflow:hidden}
+.strike__title,.strike .strike__label{letter-spacing:-.035em}
+
+/* speed lines: convergent rake, cropped by the panel */
+.strike::after{content:"";position:absolute;inset:-20% -10%;
+  background-image:repeating-linear-gradient(74deg,
+    var(--paper) 0 1.4px, transparent 1.4px 9px);
+  opacity:.14;transform:rotate(-4deg);pointer-events:none;z-index:1}
+/* the base stylesheet pins strike children to z-index:1 with a
+   two-class selector, so the speed lines (also 1, painted later) were
+   covering the word. Same specificity, later in the cascade, so the
+   content wins — and the rake stays behind it. */
+.strike > *:not(.inkframe):not(.sfx){position:relative;z-index:2}
+
+/* ─────────────────────────────────────────────────────────────────
+   6. GUTTERS AND RHYTHM
+
+   A manga page's gutters are unequal on purpose: a wide gutter is a
+   beat of silence, a tight one means two panels belong together. The
+   responsive pass established the spacing scale; this only varies it
+   between specific joins so the page reads as phrased rather than
+   evenly spaced.
+   ───────────────────────────────────────────────────────────────── */
+[data-screen="home"] .view > .strike{margin-top:calc(var(--space-tier) * .45)}
+[data-screen="home"] .view > .duo{margin-top:var(--space-chapter)}
+
+/* ─────────────────────────────────────────────────────────────────
+   7. MOBILE — a narrow manga page, not a squeezed spread
+
+   Same compositional logic at a different aspect: the hero still
+   dominates, the tone wedge still anchors the number, but panels run
+   full-measure and the rhythm is carried by gutter size rather than
+   by column width. Nothing here introduces a fixed width.
+   ───────────────────────────────────────────────────────────────── */
+@media(max-width:900px){
+  [data-screen="home"] .hero::after{width:min(78%,300px);height:64%}
+  .cut-br{clip-path:polygon(0 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%)}
+  .cut-tl{clip-path:polygon(18px 0, 100% 0, 100% 100%, 0 100%, 0 18px)}
+  [data-rank="lead"]{--ink-w:3.6}
+  .strike::after{opacity:.11}
+}
+
+/* clipped corners are a desktop-and-up flourish on the smallest
+   screens — at 320px a 26px bite removes real estate the content
+   needs, and a chamfer that eats a word is not art direction */
+@media(max-width:400px){
+  .cut-br,.cut-tl{clip-path:none}
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   8. RANK ASSIGNMENT
+
+   Which panel is the lead on each page. Done here rather than in the
+   view functions so the markup stays markup — and so the hierarchy
+   can be re-art-directed without touching logic.
+
+   A page gets ONE lead. That is the whole point: if two panels shout,
+   neither does.
+   ───────────────────────────────────────────────────────────────── */
+:root{--ink-w:2.8}                       /* default: mid */
+
+[data-screen="home"] .hero{--ink-w:4.4}          /* the stamp count leads */
+[data-screen="home"] .view > .head{--ink-w:1.6}  /* the nameplate is quiet */
+[data-screen="home"] .view > .duo .panel{--ink-w:1.6}
+[data-screen="home"] .seals{--ink-w:2.8}
+
+[data-screen="record"] .rec--open{--ink-w:4.2}   /* the one you can act on */
+[data-screen="record"] .rec--set{--ink-w:2}
+[data-screen="record"] .rec--miss,
+[data-screen="record"] .rec--upcoming{--ink-w:1.4}
+
+[data-screen="scan"] .viewer{--ink-w:4.2}
+[data-screen="scan"] .manual{--ink-w:2.4}
+
+[data-screen="board"] .qrpanel{--ink-w:4.2}
+
+[data-screen="profile"] .stat{--ink-w:1.6}
+
+/* ─────────────────────────────────────────────────────────────────
+   9. CROPPED TONE IN THE SUPPORTING PANELS
+
+   Tone laid into a corner and cut on the diagonal, so the supporting
+   panels have material in them without competing with the lead. The
+   wedge is absolutely positioned and masked, so it adds no height and
+   cannot push anything out of the viewport.
+   ───────────────────────────────────────────────────────────────── */
+.seals{position:relative;isolation:isolate}
+.seals::after{content:"";position:absolute;right:0;top:0;
+  width:min(46%,300px);height:74%;
+  background-image:var(--tone-dot-b);background-size:var(--tone-cell-b);
+  opacity:.32;z-index:0;
+  clip-path:polygon(22% 0, 100% 0, 100% 100%, 0 100%);
+  -webkit-mask-image:linear-gradient(to bottom left, #000 0%, transparent 78%);
+  mask-image:linear-gradient(to bottom left, #000 0%, transparent 78%)}
+/* :not(.inkframe):not(.sfx) is mandatory on every `> *` rule in this
+   file. The ink border and the SFX word are absolutely positioned by
+   design; a two-class descendant selector outranks their own one-class
+   rule and drags them into flow. On a flex parent that makes the ink
+   SVG a flex item, which is exactly what happened here — it ate 322 of
+   362px and pushed the entry out of the viewport at every width. */
+.seals > *:not(.inkframe):not(.sfx){position:relative;z-index:1}
+
+/* the record page's live row gets a tone band so the actionable entry
+   reads as figure against the confirmed rows' ground */
+[data-screen="record"] .rec--open{position:relative;isolation:isolate}
+[data-screen="record"] .rec--open::after{content:"";position:absolute;
+  inset:0 0 0 auto;width:min(52%,420px);
+  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
+  opacity:.4;z-index:0;
+  -webkit-mask-image:linear-gradient(to left, #000 0%, transparent 88%);
+  mask-image:linear-gradient(to left, #000 0%, transparent 88%)}
+[data-screen="record"] .rec--open > *:not(.inkframe):not(.sfx){position:relative;z-index:1}
+
+/* ─────────────────────────────────────────────────────────────────
+   10. THE CHAPTER NAMEPLATE
+
+   Chapter openings in manga are a rule and a number, not a boxed
+   header. The panel border is dropped in favour of a heavy baseline
+   rule that the title sits on, which also frees the vertical space
+   the old boxed header was spending on nothing.
+   ───────────────────────────────────────────────────────────────── */
+.view > .head{border-bottom:0}
+.view > .head::after{content:"";position:absolute;left:0;right:0;bottom:0;
+  height:3px;background:var(--ink);z-index:1}
+[data-screen="home"] .view > .head::after{height:2px}
+
+/* ─────────────────────────────────────────────────────────────────
+   11. AUTH PANEL
+
+   Built from the page's own parts — panel, rule, screentone, ink —
+   so signing in reads as the first page of the book rather than a
+   form bolted onto the front of it. No new colour: the only values
+   here are ink, paper and the greys already in the scale.
+   ───────────────────────────────────────────────────────────────── */
+[data-screen="auth"] .view{max-width:640px}
+[data-screen="auth"] .authp{--ink-w:4.2;position:relative;isolation:isolate;
+  padding:var(--s6) var(--s5) var(--s5)}
+[data-screen="auth"] .authp::after{content:"";position:absolute;
+  right:0;top:0;width:min(38%,190px);height:44%;z-index:0;
+  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
+  opacity:.26;clip-path:polygon(26% 0, 100% 0, 100% 100%, 0 100%);
+  -webkit-mask-image:linear-gradient(to bottom left, #000 0%, transparent 76%);
+  mask-image:linear-gradient(to bottom left, #000 0%, transparent 76%)}
+[data-screen="auth"] .authp > *:not(.inkframe):not(.sfx){position:relative;z-index:1}
+
+.authp__f{display:block;margin-bottom:var(--s4)}
+.authp__f .kicker{display:block;margin-bottom:6px}
+.authp .input{width:100%;box-sizing:border-box;min-width:0}
+
+.authp__err{margin:0 0 var(--s4);padding:9px 12px;
+  border-left:4px solid var(--ink);background:var(--v1);
+  font:500 12.5px/1.45 var(--f-body);color:var(--ink)}
+
+.authp__act{display:flex;align-items:center;gap:var(--s4);flex-wrap:wrap}
+.authp__act .btn--go{min-height:44px;padding:0 var(--s5)}
+.authp__act .btn--go[disabled]{opacity:.55;cursor:progress}
+.authp__note{margin:var(--s5) 0 0}
+
+@media(max-width:560px){
+  [data-screen="auth"] .authp{padding:var(--s5) var(--s4) var(--s4)}
+  .authp__act{gap:var(--s3)}
+  .authp__act .btn--go{width:100%;justify-content:center}
+}
+
+/* Signed out there is nothing to navigate to — every chapter bounces
+   straight back to this screen — so the rail and tab bar are hidden
+   rather than offered and refused. The auth spread becomes the whole
+   page, which is also why it reads as the first page of the book. */
+[data-screen="auth"] .rail__nav,
+[data-screen="auth"] #railInd,
+[data-screen="auth"] .tabs,
+[data-screen="auth"] .pageno{display:none}
+[data-screen="auth"] main#view{padding-bottom:var(--space-chapter)}
+
+/* ─────────────────────────────────────────────────────────────────
+   12. BOARD
+
+   Administration built from the same parts as the member spreads:
+   panels, rules, screentone, ink. State is carried by weight, case
+   and a rule — never by a coloured badge, because there is no colour
+   in this system to spend on it.
+   ───────────────────────────────────────────────────────────────── */
+.bpanel{--ink-w:3.2;position:relative;padding:var(--s5)}
+.bpanel--wait{opacity:.7}
+.bempty{margin:var(--s4) 0;font-size:13px}
+.bsec{margin:var(--s6) 0 var(--s3);padding-bottom:6px;
+  border-bottom:2px solid var(--ink)}
+
+/* figures first: the numbers are the point of the overview */
+.bstats{display:grid;gap:var(--s3);
+  grid-template-columns:repeat(auto-fit,minmax(128px,1fr))}
+.bstats--tight{grid-template-columns:repeat(auto-fit,minmax(108px,1fr))}
+.bstat{padding:var(--s4);border:var(--rule-hair) solid var(--ink)}
+.bstat b{display:block;font-family:var(--f-display);font-weight:400;
+  font-size:clamp(22px,2.4vw,30px);line-height:1;letter-spacing:-.02em}
+.bstat span{display:block;margin-top:var(--s3);font:500 10px/1.3 var(--f-label);
+  letter-spacing:.18em;text-transform:uppercase;color:var(--tone)}
+
+.bactive{margin-top:var(--s6);padding-top:var(--s5);border-top:2px solid var(--ink)}
+.bactive__no{font-family:var(--f-display);font-size:clamp(30px,4vw,52px);
+  line-height:1;margin:6px 0 4px}
+.bactive__no--off{color:var(--v3)}
+
+/* rows, not table cells: they restack on a phone without a scrollbar */
+.blist{list-style:none;margin:0;padding:0}
+.brow{display:grid;align-items:center;gap:var(--s3);
+  grid-template-columns:auto 1fr auto auto;
+  padding:var(--s3) 0;border-bottom:var(--rule-hair) solid var(--v2);
+  cursor:pointer;min-width:0}
+.brow--reward{cursor:default}
+.brow:last-child{border-bottom:0}
+.brow:hover,.brow:focus-visible{background:var(--v1);outline:0}
+.brow__no{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;
+  color:var(--tone);white-space:nowrap}
+.brow__mid{min-width:0}
+.brow__mid b{display:block;font-size:14px}
+.brow__mid .muted{display:block;font-size:12px;margin-top:2px}
+.brow__n{font-family:var(--f-display);font-size:19px;line-height:1;text-align:right}
+.brow__sub{font-size:11px;font-family:var(--f-mono)}
+
+/* state without colour: filled, outlined, or quiet */
+.bstate{font:500 9.5px/1 var(--f-mono);letter-spacing:.16em;
+  padding:5px 8px;white-space:nowrap;border:1.5px solid var(--ink)}
+.bstate--open{background:var(--ink);color:var(--paper)}
+.bstate--upcoming{background:none;color:var(--ink)}
+.bstate--ended,.bstate--past{background:none;color:var(--v3);border-color:var(--v3)}
+
+.bdetail__name{font-family:var(--f-display);font-size:clamp(26px,3.4vw,42px);
+  line-height:1;margin:4px 0 var(--s5);text-transform:uppercase;letter-spacing:-.03em}
+
+.bfilters{display:grid;gap:var(--s3);grid-template-columns:2fr 1fr;
+  margin-bottom:var(--s4)}
+.bfilters .input{width:100%;box-sizing:border-box;min-width:0}
+.bpage{display:flex;align-items:center;justify-content:space-between;
+  gap:var(--s3);margin-top:var(--s5);padding-top:var(--s4);
+  border-top:2px solid var(--ink);flex-wrap:wrap;font-size:12px}
+
+.bform{margin-bottom:var(--s6);padding-bottom:var(--s5);
+  border-bottom:2px solid var(--ink)}
+.bform__rule{font-size:12.5px;margin:0 0 var(--s4)}
+.bform__grid{display:grid;gap:var(--s3);
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.bform .field{display:block;min-width:0}
+.bform .kicker{display:block;margin-bottom:5px}
+.bform .input{width:100%;box-sizing:border-box;min-width:0}
+.bform .btn{margin-top:var(--s4)}
+
+.bcount{display:flex;align-items:baseline;gap:var(--s3);margin:var(--s5) 0 var(--s3)}
+.bcount b{font-family:var(--f-display);font-size:clamp(28px,3.6vw,44px);line-height:1}
+.picker--sub{margin-bottom:0}
+
+/* mobile: dense rows become stacked blocks rather than a sideways table */
+@media(max-width:640px){
+  .bpanel{padding:var(--s4)}
+  .bfilters{grid-template-columns:1fr}
+  .brow{grid-template-columns:1fr auto;row-gap:4px}
+  .brow__no{grid-column:1/-1}
+  .bstate{grid-column:1/-1;justify-self:start}
+  .bform__grid{grid-template-columns:1fr 1fr}
+  .bpage{justify-content:center}
+}
+@media(max-width:400px){
+  .bform__grid{grid-template-columns:1fr}
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   13. SETUP NOTICE
+
+   A developer-facing message, built from the same parts as everything
+   else so it does not look like a browser error dropped into the page.
+   Screentone marks it as an aside rather than content.
+   ───────────────────────────────────────────────────────────────── */
+.setupbox{margin-top:var(--s5);padding:var(--s4);
+  border:var(--rule-hair) solid var(--ink);position:relative;isolation:isolate;
+  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
+.setupbox > *{position:relative;z-index:1}
+.setupbox p{margin:0 0 8px;font-size:12.5px;line-height:1.55;
+  background:var(--paper);display:inline-block;padding:1px 3px}
+.setupbox p:last-child{margin-bottom:0}
+.setupbox__hint{color:var(--tone)}
+.setupbox code{font-family:var(--f-mono);font-size:11.5px;
+  border-bottom:1px solid var(--v3)}
+/* a failed connection is a heavier statement than a missing one */
+.setupbox--warn{border-width:var(--rule);background-image:none}
+
+/* ── BOARD: club information hub ──────────────────────────────────
+   The board is another page of the same manga, so everything below
+   reuses the panel rules, the display face and the two inks. No new
+   palette, no cards, no gradients. */
+.bident{padding-bottom:var(--s5);border-bottom:2px solid var(--ink)}
+.bident__mark{font-family:var(--f-display);font-weight:400;line-height:.95;
+  font-size:clamp(34px,5.2vw,58px);margin:var(--s3) 0 0;letter-spacing:-.01em}
+.bident__say{margin:var(--s4) 0 0;font-size:14px;max-width:54ch}
+.bident__when{margin:var(--s3) 0 0;font:500 11px/1.5 var(--f-mono);
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+
+.bnext{padding:var(--s5);border:var(--rule-hair) solid var(--ink)}
+/* live state is carried by the heavier rule and the filled tag, not by
+   colour alone — the tag still reads CHECK-IN OPEN in monochrome */
+.bnext--live{border-width:var(--rule);box-shadow:4px 4px 0 var(--v1)}
+.bnext__state{display:flex;align-items:center;gap:var(--s3);
+  flex-wrap:wrap;margin-top:var(--s4)}
+.bnext__state .muted{font-size:12px}
+
+.bnote{margin-top:var(--s4);font-size:11.5px;line-height:1.5;max-width:56ch}
+
+.bmiles{margin-top:var(--s2)}
+.bmile{display:grid;grid-template-columns:auto 1fr;align-items:start;
+  gap:var(--s4);padding:var(--s4) 0;border-bottom:var(--rule-hair) solid var(--tone)}
+.bmile:last-child{border-bottom:0}
+.bmile__no{font-family:var(--f-display);font-size:clamp(24px,3vw,34px);
+  line-height:1;min-width:2.2ch;text-align:right}
+.bmile__mid{min-width:0}
+.bmile__mid b{display:block;font-size:14px}
+.bmile__mid .muted{display:block;font-size:12px;margin-top:2px}
+.bmile__bar{display:block;height:8px;margin-top:var(--s3);
+  border:var(--rule-hair) solid var(--ink);background:var(--paper)}
+.bmile__fill{display:block;height:100%;background:var(--ink)}
+
+@media (max-width:520px){
+  .bmile{gap:var(--s3)}
+  .bnext{padding:var(--s4)}
+  .bident__say{font-size:13.5px}
+}
+
+/* ── QR: one static code per meeting, sized to be scanned ─────────
+   The code is now the page. It is bigger than the old rotating one
+   because it has to read from the back of the MPR, and the quiet zone
+   around it is padding on a white field — a QR needs that margin to
+   decode reliably, so it is not decoration to trim. */
+.qrpanel__code--big{max-width:min(660px,86vw);padding:var(--s6)}
+/* The base rule is `display:grid; place-items:center`, which sizes the
+   grid track to the SVG's own intrinsic width. `width:100%` on the SVG
+   then resolves against a track that is itself sized by the SVG -- so it
+   collapses to the intrinsic 43-unit viewBox instead of filling the
+   panel. Switching to block layout gives the percentage a real box to
+   resolve against. */
+.qrpanel__code--big{display:block}
+.qrpanel__code--big svg,
+.qrpanel__code--big canvas,
+.qrpanel__code--big img{width:100%!important;height:auto!important;
+  aspect-ratio:1/1;display:block;margin-inline:auto}
+@media(max-width:560px){
+  .qrpanel__code--big{max-width:none;width:100%;padding:var(--s5)}
+}
+
+/* ── delete a meeting ─────────────────────────────────────────────
+   The action sits in the row it affects and confirms in place, so no
+   modal layer is introduced and nothing is dismissed by a stray tap
+   outside it. Only rows with zero attendance render the control. */
+.brow__del{border:var(--rule-hair) solid var(--ink);background:none;
+  color:var(--ink);font:500 9.5px/1 var(--f-mono);letter-spacing:.14em;
+  text-transform:uppercase;padding:6px 9px;cursor:pointer}
+.brow__del:hover,.brow__del:focus-visible{background:var(--ink);color:var(--paper)}
+.brow__del--off{display:block;width:1px}
+.brow--confirm{background:var(--v1)}
+.bconfirm{display:flex;gap:var(--s3);align-items:center;flex-wrap:wrap}
+.bconfirm .btn{padding:8px 14px;font-size:11px}
+@media(max-width:520px){
+  .bconfirm{width:100%;margin-top:var(--s3)}
+  .bconfirm .btn{flex:1}
+}
+
+/* ── SCANNER STATES ───────────────────────────────────────────────
+   These classes were toggled in JS and styled nowhere, so a successful
+   scan and a rejected one looked identical -- the scanner read as
+   unfinished rather than as monochrome. Distinction is carried by
+   weight, fill and inversion rather than by hue, because this theme has
+   no hue to spend: every accent token resolves to ink. That also
+   satisfies "not by colour alone" for free. */
+.reticle--live .reticle__c{border-width:var(--edge-thin)}
+.reticle__line{top:50%}
+.reticle--live .reticle__line{animation:retSweep 2.4s ease-in-out infinite}
+
+.reticle--good .reticle__c{border-width:var(--edge-heavy)}
+.reticle--good .reticle__geo,
+.reticle--good .reticle__mark{opacity:.85}
+.reticle--good .reticle__line{opacity:0}
+
+/* refused: the corners close into a solid block and the sweep stops */
+.reticle--bad .reticle__c{border-width:var(--edge-thin);background:var(--ink)}
+.reticle--bad .reticle__geo,
+.reticle--bad .reticle__mark{opacity:.12}
+.reticle--bad .reticle__line{opacity:0}
+
+/* the frame itself answers: ink border thickens on a hit */
+.viewer--hit{border-width:var(--edge-shout)}
+
+.viewer__msg{padding:6px 12px;transition:background .18s,color .18s}
+.viewer__msg--hot{background:var(--ink);color:var(--paper)}
+.viewer__msg--soft{background:var(--paper);color:var(--ink);
+  border:var(--rule-hair) solid var(--ink)}
+
+@keyframes retSweep{
+  0%,100%{top:6%;opacity:.35}
+  50%    {top:94%;opacity:.9}
+}
+@media (prefers-reduced-motion:reduce){
+  .reticle--live .reticle__line{animation:none}
+}
+
+/* ── BUTTON HIERARCHY AND STATES ──────────────────────────────────
+   .btn--go is the primary action everywhere in the app, but outside the
+   auth screen it had no treatment at all -- "Open check-in" and "Delete"
+   rendered identically to "Cancel". Filling it with ink is the same move
+   .btn--hot already makes, so this adds hierarchy without adding a new
+   visual language.
+
+   :active and :focus-visible were missing entirely. The hover lift had
+   nothing to press back down into, and keyboard users got no ring. */
+.btn--go{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn--go:hover{background:var(--ink-2);border-color:var(--ink-2)}
+
+.btn:active{transform:translate(0,0)}
+.btn--go:active{background:var(--ink);border-color:var(--ink)}
+
+.btn:focus-visible,
+.chip:focus-visible,
+.link:focus-visible,
+.brow__del:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px}
+.btn--go:focus-visible{outline-color:var(--ink);outline-offset:3px}
+
+/* the destructive action reads as destructive through weight, not hue:
+   this theme has no red to spend */
+.bconfirm .btn--go{background:var(--ink);border-width:var(--edge-thin)}
+
+/* ── SCANNER LEGIBILITY OVER AN ARBITRARY CAMERA IMAGE ────────────
+   Verdict on the black-and-white question: monochrome STAYS. Every
+   accent token in this theme resolves to ink, so a colour scanner would
+   be the single coloured element in the whole app -- colour for its own
+   sake, which is the thing to avoid.
+
+   What actually made it look unpolished is that the overlay was ink
+   drawn straight onto live video. That reads fine over a bright wall and
+   disappears over a dark one, and the camera image is the one thing here
+   nobody controls. So the overlay now carries its own contrast: the
+   status is a paper chip in every state, and the reticle gets a paper
+   halo so its edges hold against a dark scene. */
+.viewer__msg{background:var(--paper);color:var(--ink);
+  padding:7px 14px;border:var(--rule-hair) solid var(--ink)}
+
+/* drop-shadow follows the painted L of each corner; box-shadow would
+   ring the whole element box and turn the brackets into solid squares */
+.reticle__c,
+.reticle__line{filter:drop-shadow(0 0 1.6px var(--paper))
+                      drop-shadow(0 0 1.6px var(--paper))}
+.reticle__geo,
+.reticle__mark{opacity:.42;filter:drop-shadow(0 0 1.5px var(--paper))}
+.reticle--good .reticle__geo,
+.reticle--good .reticle__mark{opacity:.9}

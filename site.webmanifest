@@ -1,0 +1,15 @@
+{
+  "name": "Keystamp",
+  "short_name": "Keystamp",
+  "description": "Key Club MPR attendance and rewards.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fefdfb",
+  "theme_color": "#080807",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "assets/icons/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
