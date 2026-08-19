@@ -2553,6 +2553,119 @@ none;
 
 
 
+/* ══════════════════════════════════════════════════════════════════
+   POLISH PASS — consistency, touch, and mobile composition
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── 1. A single control size ─────────────────────────────────────
+   Buttons, chips, links and inputs were landing anywhere between 32px
+   and 40px tall. One floor, one rhythm, and 44px on touch so nothing
+   in the app needs a careful finger. */
+.btn,.chip,.motion-btn,.input,.brow__del,.section-link{
+  min-height:38px;
+}
+.motion-btn{padding:0 var(--s4)}
+.section-link{padding:0 var(--s3)}
+
+/* ── 2. A type floor ──────────────────────────────────────────────
+   Secondary information was sitting at 9–10px, which is legible on a
+   1200px monitor and not on a phone held at arm's length. The mono
+   labels keep their wide tracking — that is what makes them read as
+   manga captions — but they stop shrinking below 11px. */
+.kicker{font-size:11px}
+.rail__vol{font-size:10px;line-height:1.5}
+.entry__meta,.brow__mid .muted,.bstat span{font-size:12px}
+
+/* ── 3. Grid children that cannot shrink ──────────────────────────
+   `.duo` and `.rig` reported horizontal clipping: a grid child's
+   default min-width is auto, so a long unbreakable string pushes the
+   track wider than its column instead of wrapping. */
+.duo > *,.rig > *,.entry,.brow__mid,.bmile__mid{min-width:0}
+.entry__meta,.brow__mid b,.bident__say{overflow-wrap:anywhere}
+
+/* ══ MOBILE ════════════════════════════════════════════════════════ */
+@media (max-width:560px){
+
+  /* every control clears the touch floor */
+  .btn,.chip,.motion-btn,.input,.link,.section-link,.brow__del,
+  .tab,select,.theme-btn{min-height:44px}
+  .input{padding-inline:var(--s4)}
+  .btn{padding-inline:var(--s5)}
+
+  /* ── Record: one frame, not two ─────────────────────────────────
+     Each row was an outer light panel wrapping an inner ink block —
+     two borders and two paddings for one piece of information, which
+     on a 390px screen is most of the horizontal budget. The inked
+     entry becomes the frame itself. */
+  [data-screen="record"] .rec{
+    border:0;padding:0;background:none;box-shadow:none;
+  }
+  [data-screen="record"] .rec__node{display:none}
+  [data-screen="record"] .entry{
+    padding:var(--s4);
+    border:var(--edge-thin) solid var(--ink);
+  }
+  [data-screen="record"] .entry--set{border-color:var(--ink)}
+  /* the gain moves under the verdict rather than fighting it for the
+     same baseline in a 390px column */
+  [data-screen="record"] .entry{
+    grid-template-columns:1fr;
+    grid-template-areas:"no" "verdict" "meta" "gain";
+    gap:3px;
+  }
+  [data-screen="record"] .entry__gain{
+    grid-area:gain;margin-top:var(--s3);
+    font-family:var(--f-display);font-size:15px;
+  }
+  [data-screen="record"] .entry__ghost{font-size:44px;top:var(--s3);right:var(--s3)}
+
+  /* ── Rewards: locked cards stop reserving a paragraph of air ──── */
+  .tech{padding:var(--s4)}
+  .tech__name{font-size:17px}
+
+  /* ── Board: the register reads as rows, not a squeezed table ──── */
+  .brow{grid-template-columns:auto 1fr auto;gap:var(--s3);padding:var(--s4) 0}
+  .brow__n{font-size:17px}
+  .bstat{padding:var(--s4)}
+
+  /* ── panels breathe ─────────────────────────────────────────── */
+  .panel{padding:var(--s4)}
+  .bsec{margin-top:var(--s5)}
+
+  /* the scanner frame keeps its weight — it is the one place a heavy
+     keyline is doing real work, telling you where to aim */
+  .viewer{border-width:var(--edge)}
+}
+
+/* ── 4. States, applied once, everywhere ──────────────────────────
+   Hover and active were defined per-component and drifted. One rule
+   each, so a control anywhere in the app answers the same way. */
+.btn:hover,.chip:hover,.motion-btn:hover{background:var(--paper-2)}
+.btn:active,.chip:active,.motion-btn:active{transform:translate(1px,1px)}
+.chip--on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.link:hover{text-decoration-thickness:2px}
+:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px}
+
+/* ── 5. Two measured misalignments ────────────────────────────────
+   The scanner sat 8px off-centre (L=14 R=22) and the timeline entry on
+   Home and Member carried a 16px phantom inset on its right (R=48
+   against a log at 32). Both read as "slightly wrong" without being
+   obviously broken, which is exactly the kind of thing that makes a
+   layout feel unfinished. */
+.viewer{width:100%;margin-inline:0}
+.rec .entry{padding-right:0}
+
+/* ── 6. Reward requirement legibility ─────────────────────────────
+   "Unlocks at 20 stamps" is the single most useful line on a locked
+   card — it is the answer to "how far am I?" — and it was sitting at
+   secondary weight on top of screentone, which eats contrast. It gets
+   full ink and mono tracking so it reads as a spec, not a whisper. */
+.tech__req{color:var(--ink);font-size:11.5px;letter-spacing:.08em;opacity:1}
+.tech--sealed .tech__req{color:var(--ink)}
+.tech--sealed .tech__name{color:var(--ink)}
+/* the badge is the state, so it carries a keyline rather than floating */
+.tech__state{border:var(--edge-hair) solid var(--ink);padding:6px 10px}
+
 </style>
 </head>
 <body>
