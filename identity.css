@@ -177,6 +177,12 @@ none;
 
 /* ══ NAVIGATION ════════════════════════════════════════════════════
    The active chapter is stamped, not highlighted. */
+/* The chapter numerals are a page-number device: the label beside each
+   one carries the meaning, and the numeral marks the rhythm. They sat
+   at --v2, a step off the paper itself, which read as half-rendered
+   rather than quiet. One ramp step down is still clearly recessive
+   against the active numeral's full ink. */
+.rail__no,.tab__no{color:var(--v3)}
 .rail__link[aria-current],
 .tab[aria-current]{color:var(--ink)}
 .rail__link[aria-current] .rail__no,
@@ -246,8 +252,12 @@ none;
 .authmark__wm{font-family:var(--f-display);font-size:clamp(19px,2.4vw,26px);
   line-height:1;letter-spacing:-.01em;color:var(--ink)}
 .authmark__wm b{font-weight:400}
-.authmark__wm em{display:block;margin-top:7px;font:500 9.5px/1 var(--f-mono);
-  letter-spacing:.24em;text-transform:uppercase;color:var(--tone);font-style:normal}
+/* 9.5px of --tone under the wordmark was the least readable text in the
+   application, and it is the line that says what the product is. It
+   joins the 11px floor and the ink-2 ramp like every other caption. */
+.authmark__wm em{display:block;margin-top:7px;
+  font:500 clamp(11px,2.8vw,12px)/1.3 var(--f-mono);
+  letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2);font-style:normal}
 
 [data-screen="auth"] .view{position:relative}
 [data-screen="auth"] .authp{position:relative;z-index:1}
@@ -263,15 +273,25 @@ none;
    The form was floating in the top third of a flooded page with two
    thirds of dead ink under it. Centring the stack and capping its
    measure makes the page read as a deliberate title card. */
+/* svh, not vh: on iOS the address bar makes `100vh` taller than the
+   screen actually is, so a centred form is pushed under the fold on
+   first paint and jumps when the bar collapses. `min-height` (never
+   `height`) so a short landscape phone scrolls instead of cropping the
+   form, and the cap keeps the card from floating in the middle of a
+   1440px-tall monitor. */
 [data-screen="auth"] .view{
   min-height:min(100svh, 900px);
   display:flex;flex-direction:column;justify-content:center;
-  max-width:640px;padding-block:var(--s6);
+  max-width:min(640px, 100%);
+  margin-inline:auto;
+  padding-block:var(--s6);
 }
-[data-screen="auth"] .authp{margin-top:var(--s5)}
-@media(max-width:560px){
-  [data-screen="auth"] .view{min-height:auto;padding-block:var(--s5)}
-}
+/* The margin belongs to the section, not to the panel inside it. On
+   the panel it opened an 18px gap between the registration ghost
+   (which is `inset:0` on the section) and the panel the ghost is
+   supposed to sit behind — so the ghost painted as a solid ink bar
+   above and below the sign-in form at every viewport. */
+[data-screen="auth"] .view > .rig{margin-top:var(--s5)}
 
 /* ══ THE SEAL GRID ═════════════════════════════════════════════════
    An unearned seal was ink-on-ink and effectively invisible, so the
@@ -281,7 +301,10 @@ none;
 .seal{border-color:var(--tone)}
 .seal:not(.seal--set){opacity:.34;border-style:dashed}
 .seal--set{border-color:var(--ink);opacity:1;border-style:solid}
-.seal--set .seal__no{color:var(--ink)}
+/* A landed stamp is solid ink, so its ordinal has to be paper. This
+   said `--ink`, which put an ink numeral on an ink cell — 1.18:1, i.e.
+   the count was invisible on exactly the stamps that had been earned. */
+.seal--set .seal__no{color:var(--paper)}
 
 /* ══ INK-FRAME FILL SOURCE ═════════════════════════════════════════
    07-ink.js draws each panel edge as a filled SVG using currentColor,
@@ -472,8 +495,14 @@ none;
    so it sits at ink-2 rather than tone. And removing the old blurb
    left a hole in the locked cards — they collapse to their content
    now instead of holding a paragraph's worth of empty. */
-.tech__req{color:var(--ink-2)}
-.tech--sealed .tech__req{color:var(--ink-2)}
+/* The requirement line is rendered as `.tech__at`, not `.tech__req` —
+   the older class was left over from a previous markup pass, so every
+   rule written for it matched nothing and the line stayed at --tone
+   (#B0A99C) on a hatched ground: under 2:1 against the paper, on the
+   one sentence that answers "how far am I?". Both names are set, so
+   whichever the view renders is legible. */
+.tech__req,.tech__at{color:var(--ink-2);letter-spacing:.08em}
+.tech--sealed .tech__req,.tech--sealed .tech__at{color:var(--ink-2)}
 .tech{min-height:0}
 .tech--sealed{padding-bottom:var(--s4)}
 .tech--sealed .tech__body{min-height:0}
@@ -485,39 +514,43 @@ none;
    +1 stamp is the payoff on an inked row, so it gets paper weight. */
 [data-screen="record"] .entry--set .entry__verdict{color:var(--paper);font-weight:600}
 
-/* ══ MOBILE ════════════════════════════════════════════════════════
-   Not a shrunk desktop. On a phone the manga page becomes a single
-   column of stacked frames, which is how a tankōbon is read anyway.
-   Panels lose their offset shadow (it costs horizontal room), keylines
-   thin one step so the frames do not eat the content, and every tap
-   target clears 44px. */
-@media (max-width:560px){
-  .panel{box-shadow:none;border-width:var(--edge-thin)}
-  .panel--seal{border-width:var(--edge)}
+/* ══ NARROW — the base, not an exception ═════════════════════════════
+   A phone page is a single column of stacked frames, which is how a
+   tankōbon is read anyway. Panels lose their offset shadow (it costs
+   horizontal room), keylines thin one step so the frames do not eat
+   the content, and every tap target clears 44px.
 
-  [data-screen="record"] .entry{padding:var(--s3)}
-  [data-screen="record"] .entry__meta{font-size:11px}
+   This used to be a `max-width:560px` block with a second
+   `max-width:400px` block under it that made the title BIGGER on the
+   narrowest screens (a 34px floor against a 24px default) and dropped
+   the board figures to one per row at 390px — the width most phones
+   actually are. Both were device-specific corrections fighting the
+   scale rather than setting it. Written as the base state instead,
+   with the shadows and weights returning once there is room. */
+.panel{box-shadow:none;border-width:var(--edge-thin)}
+.panel--seal{border-width:var(--edge)}
 
-  .bstats{grid-template-columns:1fr 1fr}
-  .bstat b{font-size:clamp(22px,7vw,30px)}
+[data-screen="record"] .entry{padding:var(--s3)}
+[data-screen="record"] .entry__meta{font-size:clamp(11.5px,3vw,13px)}
 
-  .bnext{padding:var(--s4)}
-  .bmile{grid-template-columns:auto 1fr;gap:var(--s3)}
+.bstat b{font-size:clamp(22px,6vw,30px)}
+.bnext{padding:var(--s4)}
+.bmile{grid-template-columns:auto 1fr;gap:var(--s3)}
 
-  .brow{padding-block:var(--s3)}
-  .brow__del{min-height:38px;padding:8px 10px}
+.brow{padding-block:var(--s3)}
+.brow__del{min-height:38px;padding:8px 10px}
 
-  .btn,.chip,.link{min-height:44px}
-  .authmark{gap:var(--s3)}
-  .authmark__wm{font-size:19px}
+.btn,.chip,.link{min-height:44px}
+.authmark{gap:var(--s3);flex-wrap:wrap}
+.authmark__wm{font-size:clamp(19px,5vw,26px)}
 
-  /* the seal grid stays square and readable rather than shrinking to
-     unreadable chips */
-  .log{gap:var(--edge-thin)}
-}
-@media (max-width:400px){
-  .bstats{grid-template-columns:1fr}
-  .title{font-size:clamp(34px,12vw,48px)}
+.log{gap:var(--edge-thin)}
+
+@media (min-width:768px){
+  .panel{box-shadow:5px 5px 0 rgba(23,19,15,.14);border-width:var(--edge)}
+  .panel--seal{border-width:var(--edge-heavy)}
+  [data-screen="record"] .entry{padding:var(--s4)}
+  .bnext{padding:var(--s5)}
 }
 
 
@@ -556,3 +589,180 @@ none;
 
 
 
+
+/* ══════════════════════════════════════════════════════════════════
+   POLISH PASS — consistency, touch, and mobile composition
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── 1. A single control size ─────────────────────────────────────
+   Buttons, chips, links and inputs were landing anywhere between 32px
+   and 40px tall. One floor, one rhythm, and 44px on touch so nothing
+   in the app needs a careful finger. */
+.btn,.chip,.motion-btn,.input,.brow__del,.section-link{
+  min-height:38px;
+}
+.motion-btn{padding:0 var(--s4)}
+.section-link{padding:0 var(--s3)}
+
+/* ── 2. A type floor ──────────────────────────────────────────────
+   Secondary information was sitting at 9–10px, which is legible on a
+   1200px monitor and not on a phone held at arm's length. The mono
+   labels keep their wide tracking — that is what makes them read as
+   manga captions — but they stop shrinking below 11px. */
+.kicker{font-size:clamp(11px,.55vw + 9.2px,13px)}
+/* the volume line is a sentence, so it takes the type floor and the
+   ink ramp like every other sentence in the app */
+.rail__vol{font-size:11px;line-height:1.5;color:var(--ink-2)}
+/* an unearned seal's ordinal was tone-on-paper (1.98:1) — the cell is
+   recessive through its dashed keyline and reduced opacity, which is
+   the tier language; the number itself still has to be readable */
+.seal:not(.seal--set) .seal__no{color:var(--ink-2)}
+/* the scanner's fallback copy sits on the viewer's tone fill, not on
+   paper, which costs it the last of its contrast */
+.viewer .stack .muted,.viewer__msg{color:var(--ink)}
+.entry__meta,.brow__mid .muted,.bstat span{font-size:clamp(12px,.45vw + 10.6px,13.5px)}
+/* Nothing in the application is allowed under 11px. The mono labels
+   keep their wide tracking — that is what makes them read as manga
+   captions — they simply stop shrinking. */
+.chip,.bstate,.brow__del,.tech__legend,.tech__at,.entry__verdict,
+.entry__no,.qrpanel__roll,.strike__sub,.who__role,.narr__ch,
+.t-utility,.brow__no,.brow__sub{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
+
+/* ══════════════════════════════════════════════════════════════════
+   MUTED TEXT IS INK, NOT TONE
+
+   --tone is the screentone BODY: a fill, used for dot fields, ghost
+   keylines and unearned seals. It is #B0A99C — 1.65:1 against the
+   paper, below the 3:1 floor for large text and about a third of the
+   4.5:1 body copy needs. It had drifted into being the colour of most
+   secondary WORDS in the application: log metadata, the "/ 10" target
+   beside the count, reward requirements, the member's own milestone
+   names, empty-state copy, board timestamps. On a phone held at arm's
+   length in daylight those lines were not dim, they were gone.
+
+   They move to --ink-2 (#6B6459, 4.9:1) — the ramp step that exists
+   for exactly this job. Fills, borders and unearned seals keep --tone,
+   so the page's value structure is unchanged: this is a contrast fix,
+   not a palette change. Panels that are printed in ink keep their own
+   lighter overrides, which are more specific and still win.
+   ══════════════════════════════════════════════════════════════════ */
+.muted,.hero__of,.hero__foot,.entry__no,.entry__meta,.entry__verdict,
+.stat span,.stat b i,.tech__at,.tech__desc,.tech__legend,.chip--set,
+.qrpanel__when,.qrpanel__uri,.qrpanel__roll,.who__role,.empty,
+.verdict__meet,.narr__ch,.t-utility,.setupbox__hint,.bstat span,
+.brow__no,.brow__sub,.bactive__no--off,.bstate--ended,.bstate--past,
+.hero__state,.tech__state,.bnote,.bident__when,.bmile__mid .muted,
+.brow__mid .muted{color:var(--ink-2)}
+/* the record's missed rows are recessive by opacity and a dashed
+   keyline, which is the tier language — not by unreadable type */
+[data-screen="record"] .entry--miss .entry__verdict{color:var(--ink-2)}
+
+/* ── 3. Grid children that cannot shrink ──────────────────────────
+   `.duo` and `.rig` reported horizontal clipping: a grid child's
+   default min-width is auto, so a long unbreakable string pushes the
+   track wider than its column instead of wrapping. */
+.duo > *,.rig > *,.entry,.brow__mid,.bmile__mid{min-width:0}
+.entry__meta,.brow__mid b,.bident__say{overflow-wrap:anywhere}
+
+/* ══ TOUCH ═════════════════════════════════════════════════════════
+   Keyed to the input device, not to the screen width. A 1024px
+   touchscreen laptop and a 320px phone are both operated with a
+   finger; a 380px browser window on a desktop is not. Width was
+   standing in for this and got both cases wrong. */
+@media (pointer:coarse){
+  .btn,.chip,.motion-btn,.input,.link,.section-link,.brow__del,
+  .tab,select,.theme-btn{min-height:44px}
+  .input{padding-inline:var(--s4)}
+  .btn{padding-inline:var(--s5)}
+}
+
+/* ══ THE SINGLE-COLUMN RECORD ══════════════════════════════════════
+   Each row was an outer light panel wrapping an inner ink block — two
+   borders and two paddings for one piece of information, which in a
+   narrow column is most of the horizontal budget. The inked entry
+   becomes the frame itself, and the gain moves under the verdict
+   rather than fighting it for the same baseline.
+
+   This is a property of the COLUMN, not of the device: it applies
+   wherever the log is running one card per row, which the log's own
+   auto-fill rule decides. Container queries let the card ask that
+   question directly instead of guessing from the viewport. */
+[data-screen="record"] .log{container-type:inline-size;container-name:log}
+
+@container log (max-width: 380px){
+  [data-screen="record"] .rec{
+    border:0;padding:0;background:none;box-shadow:none;
+  }
+  [data-screen="record"] .rec__node{display:none}
+  [data-screen="record"] .entry{
+    padding:var(--s4);
+    border:var(--edge-thin) solid var(--ink);
+    grid-template-columns:1fr;
+    grid-template-areas:"no" "verdict" "meta" "gain";
+    gap:3px;
+  }
+  [data-screen="record"] .entry--set{border-color:var(--ink)}
+  [data-screen="record"] .entry__gain{
+    grid-area:gain;margin-top:var(--s3);
+    font-family:var(--f-display);font-size:15px;
+  }
+  [data-screen="record"] .entry__ghost{font-size:44px;top:var(--s3);right:var(--s3)}
+}
+/* Browsers without container query support keep the two-frame row,
+   which is legible everywhere — it is denser, not broken. */
+
+/* ══ NARROW COMPONENT PADDING ══════════════════════════════════════
+   Interior padding is the first thing to give when the column gets
+   tight and the first thing to return when it does not. Expressed as
+   the base with a lift at the tablet tier, so there is one direction
+   of travel rather than a stack of exceptions. */
+.tech{padding:var(--s4)}
+.tech__name{font-size:clamp(17px,4vw,20px)}
+.brow__n{font-size:clamp(17px,4vw,19px)}
+.bstat{padding:var(--s4)}
+.bsec{margin-top:var(--s5)}
+/* the scanner frame keeps its weight — it is the one place a heavy
+   keyline is doing real work, telling you where to aim */
+.viewer{border-width:var(--edge)}
+
+@media (min-width:768px){
+  .tech{padding:var(--s5)}
+  .bstat{padding:var(--s4) var(--s4) var(--s5)}
+}
+
+/* ── 4. States, applied once, everywhere ──────────────────────────
+   Hover and active were defined per-component and drifted. One rule
+   each, so a control anywhere in the app answers the same way. */
+.btn:hover,.chip:hover,.motion-btn:hover{background:var(--paper-2)}
+.btn:active,.chip:active,.motion-btn:active{transform:translate(1px,1px)}
+.chip--on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.link:hover{text-decoration-thickness:2px}
+:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px}
+/* The router gives main#view tabindex="-1" and focuses it after every
+   navigation so a screen reader announces the new chapter. It is a
+   landmark, not a control, and the global ring above was therefore
+   drawing a 2px ink rule right across the page — 3px under the end of
+   the content, full bleed, on every screen after every tap. Focus still
+   moves; only the ring is suppressed, and every real control keeps
+   its own. */
+main#view:focus,main#view:focus-visible{outline:none}
+
+/* ── 5. Two measured misalignments ────────────────────────────────
+   The scanner sat 8px off-centre (L=14 R=22) and the timeline entry on
+   Home and Member carried a 16px phantom inset on its right (R=48
+   against a log at 32). Both read as "slightly wrong" without being
+   obviously broken, which is exactly the kind of thing that makes a
+   layout feel unfinished. */
+.viewer{width:100%;margin-inline:0}
+.rec .entry{padding-right:0}
+
+/* ── 6. Reward requirement legibility ─────────────────────────────
+   "Unlocks at 20 stamps" is the single most useful line on a locked
+   card — it is the answer to "how far am I?" — and it was sitting at
+   secondary weight on top of screentone, which eats contrast. It gets
+   full ink and mono tracking so it reads as a spec, not a whisper. */
+.tech__req{color:var(--ink);font-size:11.5px;letter-spacing:.08em;opacity:1}
+.tech--sealed .tech__req{color:var(--ink)}
+.tech--sealed .tech__name{color:var(--ink)}
+/* the badge is the state, so it carries a keyline rather than floating */
+.tech__state{border:var(--edge-hair) solid var(--ink);padding:6px 10px}

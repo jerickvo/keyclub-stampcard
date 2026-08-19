@@ -101,6 +101,9 @@ const Scanner = {
     const video = $('#cam');
     if (!video) return;
     this.locked = false;
+    /* a fresh attempt is not a stalled panel — clear the state the
+       previous one may have left on the frame */
+    $('#viewer')?.classList.remove('viewer--stalled');
     this.setState('boot', 'Starting camera');
     this.showLoader();
 
@@ -177,8 +180,14 @@ const Scanner = {
       <div><h2 class="h2">${copy.title}</h2>
         <p class="muted" style="margin-top:9px;font-size:13.5px;line-height:1.6">${copy.body}</p></div>
     </div>`;
-    viewer.style.aspectRatio = 'auto';
-    viewer.style.minHeight = '230px';
+    /* A state class, not inline geometry. `style.minHeight = '230px'`
+       is the strongest declaration in the cascade, so the stalled
+       panel kept a fixed 230px box at every viewport — a wide
+       letterbox with a small icon marooned in it on a laptop, and a
+       box taller than it needs to be on a short phone in landscape.
+       The class lets the stylesheet size this state the same way it
+       sizes every other panel. */
+    viewer.classList.add('viewer--stalled');
     $('#manualInput')?.focus({ preventScroll:true });
   },
 

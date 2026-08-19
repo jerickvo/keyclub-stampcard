@@ -97,12 +97,34 @@
    for: the stylesheet paints the panel dark and lays a paper-coloured
    ::before inside it, which is what produces the diagonal-cut corner.
    Overriding it turned the whole panel black. */
+/* The wedge is scraped back on BOTH edges. It used to fade only toward
+   the top, so its right-hand edge stopped on a hard vertical line — a
+   tone sheet with a ruled edge reads as an unfinished rectangle sitting
+   behind the number rather than as tone laid into the panel. The
+   composite mask fades up and to the right, which is what a blade
+   actually leaves. */
 [data-screen="home"] .hero::after{content:"";position:absolute;
+  /* top/right MUST be reset. `.panel::after` sets `inset:0` for the
+     panel's own screentone, and this rule reuses that pseudo-element —
+     so without clearing them, `top:0` survives, and an absolutely
+     positioned box with top, bottom AND height set simply ignores
+     `bottom`. The wedge was therefore anchored to the TOP of the panel:
+     a dotted rectangle laid across the number and straight through
+     "STAMPS ACQUIRED", which is what made the caption read as struck
+     out. It belongs low and left, under the figure. */
+  top:auto;right:auto;
   left:0;bottom:0;width:min(62%,340px);height:58%;
   background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
-  opacity:.5;z-index:0;
-  -webkit-mask-image:linear-gradient(to top, #000 0%, #000 46%, transparent 100%);
-  mask-image:linear-gradient(to top, #000 0%, #000 46%, transparent 100%);
+  /* A short panel puts three lines of type inside the same 58% the tall
+     one gives to the figure alone, so the tone has to sit further back
+     where the column is narrow. It is material behind the number, not a
+     field the caption has to be read through. */
+  opacity:.3;z-index:0;
+  -webkit-mask-image:linear-gradient(to top, #000 0%, #000 46%, transparent 100%),
+              linear-gradient(to right, #000 0%, #000 62%, transparent 100%);
+  mask-image:linear-gradient(to top, #000 0%, #000 46%, transparent 100%),
+             linear-gradient(to right, #000 0%, #000 62%, transparent 100%);
+  -webkit-mask-composite:source-in;mask-composite:intersect;
   clip-path:polygon(0 14%, 100% 0, 100% 100%, 0 100%)}
 
 [data-screen="home"] .hero__core{position:relative;z-index:2;align-items:flex-end}
@@ -115,8 +137,16 @@
   line-height:1;color:var(--v4);letter-spacing:-.02em;
   margin-bottom:.12em}
 
-[data-screen="home"] .hero__label{font:500 10px/1 var(--f-mono);
-  letter-spacing:.24em;color:var(--tone)}
+/* This was 10px of --tone (#B0A99C) set on the dotted tone wedge — a
+   contrast ratio under 2:1, on top of a screentone that eats what is
+   left. It reads as a struck-through smudge rather than a caption at
+   every viewport, and it is the label for the one number the whole
+   product is about. Ink-2 on the same ground clears 4.5:1, and the
+   size joins the 11px floor the rest of the app keeps. */
+[data-screen="home"] .hero__label{font:500 clamp(11px,2.9vw,12.5px)/1.3 var(--f-mono);
+  letter-spacing:.2em;color:var(--ink-2)}
+/* the target beside the count is one figure and never wraps */
+[data-screen="home"] .hero__of{white-space:nowrap}
 
 /* the travel bar: ruled, not rounded, with the remaining distance
    drawn as tone rather than empty grey */
@@ -167,19 +197,25 @@
    full-measure and the rhythm is carried by gutter size rather than
    by column width. Nothing here introduces a fixed width.
    ───────────────────────────────────────────────────────────────── */
-@media(max-width:900px){
-  [data-screen="home"] .hero::after{width:min(78%,300px);height:64%}
-  .cut-br{clip-path:polygon(0 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%)}
-  .cut-tl{clip-path:polygon(18px 0, 100% 0, 100% 100%, 0 100%, 0 18px)}
-  [data-rank="lead"]{--ink-w:3.6}
-  .strike::after{opacity:.11}
-}
+/* The chamfer is a proportion of the panel, not a fixed bite. At 320px
+   a 26px corner removes real estate the content needs; at 1440px the
+   same 26px is invisible. One fluid value replaces the three states
+   this used to have (26px / 18px / none), and it scales continuously
+   instead of snapping at 400px and 900px. */
+:root{--chamfer:clamp(12px,2.2vw,30px)}
+.cut-br{clip-path:polygon(0 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%)}
+.cut-tl{clip-path:polygon(var(--chamfer) 0, 100% 0, 100% 100%, 0 100%, 0 var(--chamfer))}
 
-/* clipped corners are a desktop-and-up flourish on the smallest
-   screens — at 320px a 26px bite removes real estate the content
-   needs, and a chamfer that eats a word is not art direction */
-@media(max-width:400px){
-  .cut-br,.cut-tl{clip-path:none}
+/* the tone wedge under the number follows the panel's aspect, so it
+   anchors the figure on a tall narrow panel and on a wide one alike */
+[data-screen="home"] .hero::after{width:min(78%,300px);height:64%}
+[data-rank="lead"]{--ink-w:3.6}
+.strike::after{opacity:.11}
+
+@media(min-width:1024px){
+  [data-screen="home"] .hero::after{width:min(62%,340px);height:58%;opacity:.45}
+  [data-rank="lead"]{--ink-w:4.4}
+  .strike::after{opacity:.14}
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -291,10 +327,16 @@
 .authp__act .btn--go[disabled]{opacity:.55;cursor:progress}
 .authp__note{margin:var(--s5) 0 0}
 
-@media(max-width:560px){
-  [data-screen="auth"] .authp{padding:var(--s5) var(--s4) var(--s4)}
-  .authp__act{gap:var(--s3)}
-  .authp__act .btn--go{width:100%;justify-content:center}
+/* The action row is full-width where a thumb reaches for it and
+   natural-width where a cursor does — and it wraps rather than
+   overflowing in between. */
+[data-screen="auth"] .authp{padding:var(--s5) var(--s4) var(--s4)}
+.authp__act{gap:var(--s3)}
+.authp__act .btn--go{flex:1 1 100%;justify-content:center}
+@media(min-width:768px){
+  [data-screen="auth"] .authp{padding:var(--s6) var(--s5) var(--s5)}
+  .authp__act{gap:var(--s4)}
+  .authp__act .btn--go{flex:0 0 auto;min-width:12ch}
 }
 
 /* Signed out there is nothing to navigate to — every chapter bounces
@@ -323,8 +365,8 @@
 
 /* figures first: the numbers are the point of the overview */
 .bstats{display:grid;gap:var(--s3);
-  grid-template-columns:repeat(auto-fit,minmax(128px,1fr))}
-.bstats--tight{grid-template-columns:repeat(auto-fit,minmax(108px,1fr))}
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,128px),1fr))}
+.bstats--tight{grid-template-columns:repeat(auto-fit,minmax(min(100%,108px),1fr))}
 .bstat{padding:var(--s4);border:var(--rule-hair) solid var(--ink)}
 .bstat b{display:block;font-family:var(--f-display);font-weight:400;
   font-size:clamp(22px,2.4vw,30px);line-height:1;letter-spacing:-.02em}
@@ -336,12 +378,41 @@
   line-height:1;margin:6px 0 4px}
 .bactive__no--off{color:var(--v3)}
 
-/* rows, not table cells: they restack on a phone without a scrollbar */
+/* THE REGISTER.
+
+   One component, four row shapes: a meeting (id, when, state, count,
+   delete), a member (who, stamps, rewards), a reward (name, state) and
+   a delete confirmation (what, the two buttons). It was a four-column
+   grid with per-shape column overrides in two different files, which
+   fought each other — the meeting row ended up with its identifier,
+   its date and its state each on a line of their own and the count
+   stranded beside an empty box.
+
+   A wrapping flex row describes all four without knowing which one it
+   has: the middle block takes the slack, everything else takes its own
+   width, and the identifier leads its own line while the column is
+   narrow. */
 .blist{list-style:none;margin:0;padding:0}
-.brow{display:grid;align-items:center;gap:var(--s3);
-  grid-template-columns:auto 1fr auto auto;
-  padding:var(--s3) 0;border-bottom:var(--rule-hair) solid var(--v2);
+.brow{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2) var(--s3);
+  padding:var(--s4) 0;border-bottom:var(--rule-hair) solid var(--v2);
   cursor:pointer;min-width:0}
+.brow > *{flex:none;min-width:0}
+.brow__no{flex:1 0 100%}
+.brow__mid{flex:1 1 12ch}
+@media(min-width:768px){
+  .brow{flex-wrap:nowrap;padding:var(--s3) 0}
+  .brow__no{flex:none}
+}
+/* Both halves of a register row are declared `role="button"` in the
+   markup, and the identifier is a single 16px line of mono. A pointer
+   gets the 24px floor that keeps it a real target without changing how
+   the row looks; a finger gets the same 44px floor every other control
+   in the app takes. */
+.brow__no,.brow__mid{display:flex;flex-direction:column;justify-content:center;
+  min-height:24px}
+@media (pointer:coarse){
+  .brow__no,.brow__mid{min-height:var(--tap)}
+}
 .brow--reward{cursor:default}
 .brow:last-child{border-bottom:0}
 .brow:hover,.brow:focus-visible{background:var(--v1);outline:0}
@@ -384,18 +455,24 @@
 .bcount b{font-family:var(--f-display);font-size:clamp(28px,3.6vw,44px);line-height:1}
 .picker--sub{margin-bottom:0}
 
-/* mobile: dense rows become stacked blocks rather than a sideways table */
-@media(max-width:640px){
-  .bpanel{padding:var(--s4)}
-  .bfilters{grid-template-columns:1fr}
-  .brow{grid-template-columns:1fr auto;row-gap:4px}
-  .brow__no{grid-column:1/-1}
-  .bstate{grid-column:1/-1;justify-self:start}
-  .bform__grid{grid-template-columns:1fr 1fr}
-  .bpage{justify-content:center}
-}
-@media(max-width:400px){
-  .bform__grid{grid-template-columns:1fr}
+/* A register of dense rows is a sideways table on a narrow column and a
+   readable table on a wide one. The base is the stacked block; the
+   columns come back at the tablet tier.
+
+   The form grid was `repeat(auto-fit,minmax(150px,1fr))` with two
+   width overrides fighting it. auto-fit already answers the question —
+   the floor just has to be one the narrowest column can hold, and
+   `min(100%,...)` stops a 150px floor from overflowing a 140px
+   column, which is what forced the 400px exception. */
+.bpanel{padding:var(--s4)}
+.bfilters{grid-template-columns:1fr}
+.bform__grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr))}
+.bpage{justify-content:center}
+
+@media(min-width:768px){
+  .bpanel{padding:var(--s5)}
+  .bfilters{grid-template-columns:2fr 1fr}
+  .bpage{justify-content:space-between}
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -452,11 +529,9 @@
   border:var(--rule-hair) solid var(--ink);background:var(--paper)}
 .bmile__fill{display:block;height:100%;background:var(--ink)}
 
-@media (max-width:520px){
-  .bmile{gap:var(--s3)}
-  .bnext{padding:var(--s4)}
-  .bident__say{font-size:13.5px}
-}
+.bmile{gap:var(--s3)}
+.bident__say{font-size:clamp(13.5px,3.4vw,15px)}
+@media (min-width:768px){.bmile{gap:var(--s4)}}
 
 /* ── QR: one static code per meeting, sized to be scanned ─────────
    The code is now the page. It is bigger than the old rotating one
@@ -475,8 +550,9 @@
 .qrpanel__code--big canvas,
 .qrpanel__code--big img{width:100%!important;height:auto!important;
   aspect-ratio:1/1;display:block;margin-inline:auto}
-@media(max-width:560px){
-  .qrpanel__code--big{max-width:none;width:100%;padding:var(--s5)}
+.qrpanel__code--big{max-width:100%;padding:var(--s5)}
+@media(min-width:768px){
+  .qrpanel__code--big{max-width:min(660px,86vw);padding:var(--s6)}
 }
 
 /* ── delete a meeting ─────────────────────────────────────────────
@@ -487,13 +563,23 @@
   color:var(--ink);font:500 9.5px/1 var(--f-mono);letter-spacing:.14em;
   text-transform:uppercase;padding:6px 9px;cursor:pointer}
 .brow__del:hover,.brow__del:focus-visible{background:var(--ink);color:var(--paper)}
-.brow__del--off{display:block;width:1px}
+/* Rows without a delete control still reserve its width, so the count
+   column stays true down the register. `visibility:hidden` keeps the
+   box and its generated text out of the accessibility tree and off the
+   page while still taking up exactly as much room as the real
+   control — a 1px stub left the counts stepping in and out. */
+.brow__del--off{visibility:hidden}
+.brow__del--off::before{content:"Delete"}
 .brow--confirm{background:var(--v1)}
 .bconfirm{display:flex;gap:var(--s3);align-items:center;flex-wrap:wrap}
 .bconfirm .btn{padding:8px 14px;font-size:11px}
-@media(max-width:520px){
-  .bconfirm{width:100%;margin-top:var(--s3)}
-  .bconfirm .btn{flex:1}
+/* The confirm pair wraps to its own line when the row cannot hold it,
+   which is a question about the row rather than about the device. */
+.bconfirm{flex:1 1 100%;margin-top:var(--s3)}
+.bconfirm .btn{flex:1 1 auto}
+@media(min-width:768px){
+  .bconfirm{flex:0 1 auto;margin-top:0}
+  .bconfirm .btn{flex:0 0 auto}
 }
 
 /* ── SCANNER STATES ───────────────────────────────────────────────
