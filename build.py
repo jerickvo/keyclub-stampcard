@@ -47,10 +47,21 @@ OUT = ROOT / "index.html"
 
 
 def read(rel):
-    p = ROOT / rel
-    if not p.exists():
-        sys.exit(f"build: missing {rel}")
-    return p.read_text(encoding="utf-8")
+    """Resolve a subresource path from dev.html.
+
+    dev.html writes the paths the *served* layout uses (css/, js/,
+    vendor/), because that is what a browser loading it directly has to
+    follow. This repository keeps the same files flat at the root, so a
+    literal lookup finds nothing and the build dies on the first
+    stylesheet. Try the written path first — it is authoritative when
+    the subdirectories exist — then fall back to the bare filename, so
+    one dev.html serves both layouts and `python3 build.py` works as
+    the README says it does.
+    """
+    for cand in (ROOT / rel, ROOT / pathlib.Path(rel).name):
+        if cand.exists():
+            return cand.read_text(encoding="utf-8")
+    sys.exit(f"build: missing {rel}")
 
 
 def apply_config(html):
