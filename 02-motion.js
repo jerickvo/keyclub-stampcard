@@ -96,16 +96,12 @@ const Motion = {
    observer expected — would stay invisible forever. Six seconds and
    it shows itself regardless.
    ══════════════════════════════════════════════════════════════════ */
-/* The entrance offsets an element and slides it home. The X component is
-   the problem on a phone: it parks every not-yet-revealed panel 12px to
-   the right of where it belongs, which on a 390px screen pushes content
-   past the edge (the last Home panel measured 403.7px in a 390px
-   viewport). Below the tab-bar breakpoint the entrance is vertical only —
-   nothing ever travels horizontally out of the viewport — which also
-   suits the single-column mobile reading order better than a sideways
-   drift. Desktop keeps the diagonal. */
-const enterDX = () => (innerWidth <= 900 ? 0 : 12);
-const enterSkew = () => (innerWidth <= 900 ? 0 : 1.4);
+/* The entrance used to offset a panel 12px right with a 1.4deg skew and
+   slide it home, and the X component had to be zeroed below the tab-bar
+   breakpoint because it parked every unrevealed panel past the right
+   edge of a 390px screen. Nothing travels now — a panel cuts into place
+   and its type is driven down after it — so the offset that needed
+   guarding no longer exists to guard. */
 
 /* anime.js leaves its final values inline. A residual
    `transform:translate(0px,0px)` outranks every stylesheet :hover
@@ -121,13 +117,16 @@ const releaseTransform = els => {
 const Reveal = {
   io: null,
 
+  /* Below the fold and above it are the same event, so they are the
+     same motion: the panel cuts in, then its heavy type is driven down
+     after it. This used to drift and skew on an eased curve while the
+     top of the page cut — two different entrances for one page. */
   enter(el){
     clearTimeout(el._revealFuse);
     if (el.dataset.revealed) return;
     el.dataset.revealed = '1';
-    animate(el, { opacity:[0, 1], translateX:[enterDX(), 0], translateY:[10, 0],
-            skewX:[enterSkew(), 0], duration:440, ease:Motion.E,
-            onComplete:() => releaseTransform(el) });
+    animate(el, { opacity:[0, 1], duration:MECH.CUT, ease:STEP(1) });
+    FX.slamType(el, MECH.BEAT);
   },
 
   watch(el){

@@ -29,6 +29,32 @@
    gaps between them (cut · silence · impact), so an audio cue can be
    dropped on any beat later without re-timing anything.
    ══════════════════════════════════════════════════════════════════ */
+/* The entrance's whole timing vocabulary, in one place and in
+   milliseconds, because every value in it is a cut rather than a curve
+   and the only thing left to tune is when each cut happens. */
+const MECH = {
+  CUT:  1,     /* a panel does not fade in; it is there            */
+  LEAD: 40,    /* before the first panel lands                     */
+  GAP:  46,    /* between panels — flat, not eased                 */
+  BEAT: 90,    /* frame lands, then the type follows               */
+  SLAM: 130,   /* the drive itself                                 */
+};
+
+/* anime v4 dropped the STRING form of ease. A quoted steps() is not an
+   error — it warns and falls back to linear, which is what a frame
+   trace of the entrance caught it doing: the type glided down
+   -14 to -11.9 to -8.3 to -4.7 to 0 instead of dropping in three cuts.
+   The factory is the only form that binds — and it is a TOP-LEVEL
+   export, not a member of the eases table, which is the second way to
+   write this and get the same silent fallback. Guarded because these
+   tables are evaluated at load and anime may not be there at all. */
+const STEP = n => (typeof steps === 'function' ? steps(n) : undefined);
+
+/* The type heavy enough to be driven rather than revealed. Everything
+   else on a panel is structure and arrives with the frame. */
+const SLAM_SEL = '.title,.hero__num,.strike__verb,.tech__name,.who__name,'
+               + '.stat b,.qrpanel__no,.entry__gain';
+
 const EASE = {
   CUT:    cubicBezier(.03,.9,.1,1),      /* near-instant travel */
   ENERGY: cubicBezier(.4,0,.2,1),
@@ -371,10 +397,19 @@ const FX = {
      it has already happened, so the page below the fold always looks
      static. Everything past the fold gets parked and handed to Reveal.
 
-     The stagger has its own easing curve. anime.js lets the delay be
-     eased as well as the property, so the first panels land in quick
-     succession and the tail slows down. A flat 42ms gap reads
-     mechanical; this reads like a hand turning pages. */
+     TWO PHASES (§16). The old entrance was one gesture: every panel
+     drifted in from 12px right with a 1.4deg skew on an eased curve,
+     which is a card sliding onto a screen — the vocabulary of an app,
+     and the one soft motion left in a system that otherwise cuts.
+
+     Structure lands first: the panel CUTS in, one step, no travel and
+     no fade, the way a plate drops into register. Its heavy type is
+     held back and slams down a beat later in three hard steps. What
+     you read is the frame arriving and then the word hitting it.
+
+     The stagger is flat for the same reason. An eased one was chosen
+     to read "like a hand turning pages"; a hand is exactly what this
+     system is not. */
   pageEntrance(scope){
     const els = [...scope.querySelectorAll('[data-enter]')];
     if (Motion.off || !els.length) return;
@@ -383,12 +418,28 @@ const FX = {
     const near = els.filter(el => el.getBoundingClientRect().top < fold);
     const far  = els.filter(el => !near.includes(el));
 
-    const dx = enterDX(), sk = enterSkew();
-    aset(els, { opacity:0, translateX:dx, translateY:6, skewX:sk });
-    animate(near, { opacity:[0, 1], translateX:[dx, 0], translateY:[6, 0], skewX:[sk, 0],
-            duration:460, delay:stagger(52, { start:30, ease:'outQuad' }),
-            ease:EASE.CALM, onComplete:() => releaseTransform(near) });
+    aset(els, { opacity:0 });
+    animate(near, { opacity:[0, 1], duration:MECH.CUT,
+            delay:stagger(MECH.GAP, { start:MECH.LEAD }), ease:STEP(1) });
+    near.forEach((el, i) => FX.slamType(el, MECH.LEAD + i * MECH.GAP + MECH.BEAT));
     far.forEach(el => Reveal.watch(el));
+  },
+
+  /* THE SLAM. The display type inside a panel starts a short way above
+     where it belongs and arrives in three cuts. Three, not one: a
+     single jump is a swap, and three is a thing being driven down.
+
+     Held to the panel's own heavy type — the sizes that carry the
+     page. Body copy and labels are structure and come in with the
+     frame. */
+  slamType(panel, at){
+    if (!panel || Motion.off) return;
+    const marks = [...panel.querySelectorAll(SLAM_SEL)];
+    if (!marks.length) return;
+    aset(marks, { opacity:0, translateY:-14 });
+    animate(marks, { opacity:[0, 1], translateY:[-14, 0],
+            duration:MECH.SLAM, delay:stagger(MECH.BEAT / 3, { start:at }),
+            ease:STEP(3), onComplete:() => releaseTransform(marks) });
   },
 
   /* The ten cells of the stamp card, rippling out across the grid rather
