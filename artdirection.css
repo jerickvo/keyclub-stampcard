@@ -120,9 +120,14 @@
      where the column is narrow. It is material behind the number, not a
      field the caption has to be read through. */
   opacity:.3;z-index:0;
-  -webkit-mask-image:linear-gradient(to top, #000 0%, #000 46%, transparent 100%),
+  /* The tone is a band behind the FIGURE, not a field under the whole
+     lower half of the panel. Fading it out at the bottom as well as
+     the top clears the caption and the travel bar entirely — nothing
+     in this system is read through a texture — while leaving the
+     number standing on it, which is the only job it ever had. */
+  -webkit-mask-image:linear-gradient(to top, transparent 0%, #000 30%, #000 66%, transparent 100%),
               linear-gradient(to right, #000 0%, #000 62%, transparent 100%);
-  mask-image:linear-gradient(to top, #000 0%, #000 46%, transparent 100%),
+  mask-image:linear-gradient(to top, transparent 0%, #000 30%, #000 66%, transparent 100%),
              linear-gradient(to right, #000 0%, #000 62%, transparent 100%);
   -webkit-mask-composite:source-in;mask-composite:intersect;
   clip-path:polygon(0 14%, 100% 0, 100% 100%, 0 100%)}
@@ -175,7 +180,7 @@
    two-class selector, so the speed lines (also 1, painted later) were
    covering the word. Same specificity, later in the cascade, so the
    content wins — and the rake stays behind it. */
-.strike > *:not(.inkframe):not(.sfx){position:relative;z-index:2}
+.strike > *:not(.sfx):not(.chamber__c){position:relative;z-index:2}
 
 /* ─────────────────────────────────────────────────────────────────
    6. GUTTERS AND RHYTHM
@@ -263,13 +268,10 @@
   clip-path:polygon(22% 0, 100% 0, 100% 100%, 0 100%);
   -webkit-mask-image:linear-gradient(to bottom left, #000 0%, transparent 78%);
   mask-image:linear-gradient(to bottom left, #000 0%, transparent 78%)}
-/* :not(.inkframe):not(.sfx) is mandatory on every `> *` rule in this
-   file. The ink border and the SFX word are absolutely positioned by
-   design; a two-class descendant selector outranks their own one-class
-   rule and drags them into flow. On a flex parent that makes the ink
-   SVG a flex item, which is exactly what happened here — it ate 322 of
-   362px and pushed the entry out of the viewport at every width. */
-.seals > *:not(.inkframe):not(.sfx){position:relative;z-index:1}
+/* `.sfx` must stay excluded from every `> *` rule in this file: it is
+   absolutely positioned by design, and a two-class descendant selector
+   outranks its own one-class rule and drags it into flow. */
+.seals > *:not(.sfx){position:relative;z-index:1}
 
 /* the record page's live row gets a tone band so the actionable entry
    reads as figure against the confirmed rows' ground */
@@ -280,7 +282,7 @@
   opacity:.4;z-index:0;
   -webkit-mask-image:linear-gradient(to left, #000 0%, transparent 88%);
   mask-image:linear-gradient(to left, #000 0%, transparent 88%)}
-[data-screen="record"] .rec--open > *:not(.inkframe):not(.sfx){position:relative;z-index:1}
+[data-screen="record"] .rec--open > *:not(.sfx){position:relative;z-index:1}
 
 /* ─────────────────────────────────────────────────────────────────
    10. THE CHAPTER NAMEPLATE
@@ -312,7 +314,7 @@
   opacity:.26;clip-path:polygon(26% 0, 100% 0, 100% 100%, 0 100%);
   -webkit-mask-image:linear-gradient(to bottom left, #000 0%, transparent 76%);
   mask-image:linear-gradient(to bottom left, #000 0%, transparent 76%)}
-[data-screen="auth"] .authp > *:not(.inkframe):not(.sfx){position:relative;z-index:1}
+[data-screen="auth"] .authp > *:not(.sfx){position:relative;z-index:1}
 
 .authp__f{display:block;margin-bottom:var(--s4)}
 .authp__f .kicker{display:block;margin-bottom:6px}
@@ -509,7 +511,7 @@
 .bnext{padding:var(--s5);border:var(--rule-hair) solid var(--ink)}
 /* live state is carried by the heavier rule and the filled tag, not by
    colour alone — the tag still reads CHECK-IN OPEN in monochrome */
-.bnext--live{border-width:var(--rule);box-shadow:4px 4px 0 var(--v1)}
+.bnext--live{border-width:var(--edge-heavy)}
 .bnext__state{display:flex;align-items:center;gap:var(--s3);
   flex-wrap:wrap;margin-top:var(--s4)}
 .bnext__state .muted{font-size:12px}
@@ -607,7 +609,7 @@
 /* the frame itself answers: ink border thickens on a hit */
 .viewer--hit{border-width:var(--edge-shout)}
 
-.viewer__msg{padding:6px 12px;transition:background .18s,color .18s}
+.viewer__msg{padding:6px 12px;transition:background var(--snap) linear,color var(--snap) linear}
 .viewer__msg--hot{background:var(--ink);color:var(--paper)}
 .viewer__msg--soft{background:var(--paper);color:var(--ink);
   border:var(--rule-hair) solid var(--ink)}

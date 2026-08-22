@@ -99,10 +99,22 @@ const C = {
     </section>`;
   },
 
+  /* THE ACTION CHAMBER.
+
+     The primary action is not a card — it is a marked-off area of the
+     page with the target inside it. The four corner marks are the
+     signature device of this system (a barrier, a viewfinder, a seal's
+     registration marks) and they are what makes this read as somewhere
+     to aim rather than as another panel. They are decorative spans,
+     not borders, so they can move independently on hover: the chamber
+     locks onto the target when you reach for it. */
   strike({ verb, sub, go, live = false, calm = false }){
+    const corners = ['tl','tr','bl','br']
+      .map(c => `<span class="chamber__c chamber__c--${c}" aria-hidden="true"></span>`).join('');
     return `<button class="strike ${live ? 'strike--live' : ''} ${calm ? 'strike--calm' : ''}"
       data-enter data-go="${go}">
-      <span><span class="strike__verb">${esc(verb)}</span>
+      ${corners}
+      <span class="strike__body"><span class="strike__verb">${esc(verb)}</span>
         <span class="strike__sub">${esc(sub)}</span></span>
       <span class="strike__arrow" aria-hidden="true">${ICON.arrow}</span>
     </button>`;
@@ -141,9 +153,13 @@ const C = {
     const total = Store.totalStamps();
     const open = total >= r.required;
     const pct = Math.min(100, Math.round(total / r.required * 100));
+    /* The tier's own vocabulary. A locked reward is SEALED — not
+       "1 to go", which reads as a progress widget. The distance is
+       still stated, in the legend under the track where the rest of
+       the figures live, so nothing is lost. */
     const chip = r.claimed ? '<span class="chip chip--set">Claimed</span>'
       : open ? '<span class="chip chip--hot">Ready</span>'
-             : `<span class="chip">${r.required - total} to go</span>`;
+             : `<span class="chip chip--sealed">Sealed</span>`;
 
     return `<section class="rig ${open ? '' : 'rig--tr'}" data-enter data-reward="${r.id}">
       <span class="rig__ghost" aria-hidden="true"></span>
@@ -158,11 +174,15 @@ const C = {
           </div>${chip}
         </div>
 
-        <div class="tech__gauge">
+        <!-- --slots is the tier size, so the meter draws as that many
+             discrete stamp cells rather than as a continuous bar. The
+             fill element and its data-pct are untouched, so whatever
+             animates the meter keeps working. -->
+        <div class="tech__gauge" style="--slots:${r.required}">
           <div class="gauge"><span class="gauge__fill" data-pct="${pct}"></span></div>
           <div class="tech__legend">
             <span class="kicker">${Math.min(total, r.required)} / ${r.required} stamps</span>
-            <span class="kicker">${pct}%</span>
+            <span class="kicker">${open ? 'Unlocked' : (r.required - total) + ' to go'}</span>
           </div>
         </div>
 
@@ -299,7 +319,9 @@ const Views = {
       ${held.length ? `<section data-enter class="stack-lg">
         <div class="log">${held.map(m => C.entry(m)).join('')}</div>
       </section>`
-      : C.empty(ICON.blank, 'No general meetings yet')}
+      : C.empty(ICON.blank, 'No general meetings yet',
+                'Your record fills itself: every meeting you scan into is '
+                + 'written here automatically. Nothing to do until the first one.')}
 
       ${upcoming.length ? `<section data-enter class="stack-xl">
         <h2 class="h2" style="color:var(--faint)">Scheduled</h2>

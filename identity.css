@@ -25,19 +25,26 @@
 :root{
   /* ── LIGHT: ink on warm pulp ──────────────────────────────────── */
   --kozo:      #F1ECE2;   /* warm pulp. the page                     */
-  --sumi:      #211E1A;   /* warm black. never blue-black            */
-  --shu:       #211E1A;   /* was vermilion. now ink: in a monochrome
-                              system the accent is a spotted black    */
-  --shu-deep:  #0D0B09;   /* the same mark, pressed harder           */
+  --sumi:      #12100D;   /* warm black. never blue-black            */
+  --shu:       #E53935;   /* CINNABAR. the seal paste                */
+  --shu-deep:  #C62828;   /* the same mark, pressed harder           */
 
-  /* ── the ramp between them ────────────────────────────────────── */
+  /* ── the ramp between them ──────────────────────────────────────
+     The ink end of the ramp was #211E1A — a warm black, but a soft
+     one. "Absolute contrast" is the first principle of this system,
+     and a 12.9:1 ink was doing the work of a 16.8:1 one. The two ink
+     steps are deepened toward absolute while keeping their warmth
+     (they are still red-shifted, never blue-black), which is what
+     makes the paper read as paper rather than as grey. Everything
+     between them is unchanged: the tonal structure of the page and
+     the whole responsive pass that depends on it still hold. */
   --v0:#FBF8F2;           /* page highlight, the raised edge of pulp */
   --v1:#F1ECE2;           /* paper                                    */
   --v2:#DED8CB;           /* recessive fill                           */
   --v3:#B0A99C;           /* screentone body                          */
   --v4:#6B6459;           /* muted ink                                */
-  --v5:#211E1A;           /* ink                                      */
-  --v6:#0D0B09;           /* flooded ink                              */
+  --v5:#12100D;           /* ink                                      */
+  --v6:#0A0806;           /* flooded ink — absolute                   */
 
   --kozo-2:    #DED8CB;
   --kage:      #191612;   /* ink panel, one step off pure             */
@@ -49,11 +56,21 @@
   --tone:var(--v3);
   --tone-lt:var(--v2);
 
-  /* ── the accent aliases the app already speaks ────────────────────
-     These names exist throughout js/ and the FX layer. They were all
-     remapped to ink, which is exactly why the product read as a
-     black-and-white website. Given real values, the identity appears
-     everywhere at once without touching a line of JavaScript. */
+  /* ══ THE SEAL ═══════════════════════════════════════════════════
+     One colour, and it is not a theme — it is shuniku, the vermilion
+     paste a hanko is pressed in. It appears where something has been
+     VERIFIED or where the system is asking you to aim, and nowhere
+     else. If you can see two red things on a screen at once, one of
+     them is wrong.
+
+     Deliberately NOT wired into --crimson / --burg / --oxblood /
+     --line-hot. Those aliases exist for the FX layer and currently
+     resolve to ink; giving them red would put the accent in a dozen
+     places at once, which is exactly how an accent stops meaning
+     anything. Every use of --seal below is written out by hand. */
+  --seal:var(--shu);
+  --seal-deep:var(--shu-deep);
+
   --crimson:var(--v6);
   --burg:var(--v6);
   --oxblood:var(--v6);
@@ -136,14 +153,12 @@ none;
 .panel{
   background:var(--paper);
   border:var(--edge) solid var(--ink);
-  box-shadow:5px 5px 0 rgba(23,19,15,.14);
   position:relative;
 }
 
 /* a panel that carries the accent: one per screen, maximum */
 .panel--seal{
   border-width:var(--edge-heavy);
-  box-shadow:4px 4px 0 rgba(33,30,26,.18);
 }
 .panel--seal::before{
   content:'';position:absolute;left:0;right:0;top:0;height:var(--edge-thin);
@@ -189,6 +204,24 @@ none;
 .tab[aria-current] .tab__no{color:var(--ink)}
 .rail__ind,.tabs__ind{background:var(--ink)}
 
+/* ══ THE SEAL, APPLIED ══════════════════════════════════════════════
+   The only places cinnabar is allowed to appear.
+
+   1. A verdict — the moment attendance becomes a stamp.
+   2. The scanner's frame, when it is asking you to aim.
+   3. A field you are typing into.
+   4. A destructive confirmation.
+
+   That is the entire list. Everything else in this application is ink
+   on paper, which is what makes these four read as loud. */
+.verdict__state{color:var(--seal);font-weight:700}
+.verdict__seal circle,.verdict__seal polygon,
+.verdict__seal path,.verdict__seal line{stroke:var(--seal)}
+/* the confirmation lands slightly off-axis, the way a hand-pressed
+   chop never lands square */
+.verdict__title{transform:rotate(-1.2deg)}
+.verdict__delta{color:var(--seal)}
+
 /* ══ STATE ═════════════════════════════════════════════════════════
    Status carries meaning, so it carries the accent — but only the
    live one. Past and upcoming stay in ink, which keeps the red rare
@@ -204,12 +237,17 @@ none;
    holds the manga register. Putting the accent in the reticle instead
    gives the screen its colour where colour actually does work —
    telling you where to aim and whether it worked. */
+/* The frame is ink; the TARGET is cinnabar. Aiming is the one moment
+   the app asks for the accent, and the sweep line that reads the code
+   carries it too — over an arbitrary camera image a red line is the
+   only mark guaranteed to be visible against both a bright wall and a
+   dark one. */
 .viewer{border-color:var(--ink)}
-.reticle__c{border-color:var(--ink)}
-.reticle--good .reticle__c{border-color:var(--ink)}
+.reticle__c{border-color:var(--seal)}
+.reticle--good .reticle__c{border-color:var(--seal);background:var(--seal)}
 .reticle--bad .reticle__c{background:var(--ink);border-color:var(--ink)}
-.reticle__line{background:var(--ink)}
-.viewer--hit{border-color:var(--ink)}
+.reticle__line{background:var(--seal)}
+.viewer--hit{border-color:var(--seal)}
 .viewer__msg{border-color:var(--ink)}
 .viewer__msg--hot{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
@@ -217,10 +255,12 @@ none;
    The code stays pure black on pure white — that is a scanning
    requirement, not a style choice, and nothing is drawn over it. The
    personality goes in the frame around it. */
+/* The code stays pure black on pure white — a scanning requirement,
+   not a style choice. The frame around it is a heavy rule, not a
+   shadow: nothing in this system floats. */
 .qrpanel__code--big{
   background:#FFFFFF;
-  border:var(--edge) solid var(--sumi);
-  box-shadow:10px 10px 0 var(--ink);
+  border:var(--edge-heavy) solid var(--sumi);
 }
 
 /* ══ SPEED LINES ═══════════════════════════════════════════════════
@@ -298,24 +338,23 @@ none;
    record read as an empty black field. A blank seal is now a ghost
    chop: the outline of the mark waiting to be pressed, which also
    makes the earned ones land harder by contrast. */
-.seal{border-color:var(--tone)}
-.seal:not(.seal--set){opacity:.34;border-style:dashed}
-.seal--set{border-color:var(--ink);opacity:1;border-style:solid}
+/* An unearned slot is an empty box waiting to be pressed: a hairline
+   of muted ink, solid (never dashed — dashed reads as "disabled form
+   field", and these are not controls). An earned one is the stamp
+   itself: absolute ink, edge to edge. The difference between the two
+   is the whole mechanic of the product, so it is the largest contrast
+   on the page. */
+.seal{border-color:var(--v3);border-style:solid;background:transparent}
+.seal:not(.seal--set){opacity:1;border-width:var(--edge-hair)}
+.seal:not(.seal--set) .seal__mark{opacity:.3}
+.seal--set{border-color:var(--v6);background:var(--v6);opacity:1;
+  border-style:solid;border-width:var(--edge-hair)}
 /* A landed stamp is solid ink, so its ordinal has to be paper. This
    said `--ink`, which put an ink numeral on an ink cell — 1.18:1, i.e.
    the count was invisible on exactly the stamps that had been earned. */
 .seal--set .seal__no{color:var(--paper)}
 
-/* ══ INK-FRAME FILL SOURCE ═════════════════════════════════════════
-   07-ink.js draws each panel edge as a filled SVG using currentColor,
-   and the SVG inherits `color` from the panel it sits in. A .strike is
-   `background:ink; color:paper`, so the frame inherited PAPER and
-   flooded the card with light — the Scan action on Home rendered
-   white-on-white. The frame's fill is a structural colour, not the
-   panel's text colour, so it is pinned here. */
-.strike:not(.strike--calm) .inkframe,
-.panel.p-deep .inkframe,
-.panel.p-shout .inkframe{color:var(--ink)}
+
 
 /* ══ THE CALM STRIKE ═══════════════════════════════════════════════
    .strike is a dark card with light type. .strike--calm flips the
@@ -326,39 +365,16 @@ none;
    In the three tiers, "no meeting is open" is the SCREENTONE state:
    present, but not the thing being pointed at. So it gets a tone
    ground and ink type — recessive, not absent. */
-.strike--calm{
-  background:var(--paper);color:var(--ink);border-color:var(--ink);
-  background-image:radial-gradient(var(--tone-dot) .5px, transparent .6px);
-  background-size:var(--tone-25) var(--tone-25);
-}
-.strike--calm .strike__verb,
-.strike--calm .strike__sub,
-.strike--calm .strike__meta,
-.strike--calm .muted,
-.strike--calm span,
-.strike--calm b,
-.strike--calm em{color:var(--ink)}
-.strike--calm .strike__sub,
-.strike--calm .muted{color:var(--ink-2)}
-.strike--calm .strike__arrow{border-color:var(--ink);color:var(--ink)}
-.strike--calm .strike__arrow svg{stroke:var(--ink)}
+.strike--calm{border-color:var(--ink-2)}
+.strike--calm .strike__arrow{background:var(--ink-2);border-color:var(--ink-2)}
 
-/* the live strike stays the spotted black: solid ink, paper type */
-.strike:not(.strike--calm){background:var(--ink);color:var(--paper)}
-.strike:not(.strike--calm) .strike__verb{color:var(--paper)}
-
-/* Home's primary action is always the spotted black — `[data-screen=
-   "home"] .view > .strike` sets that regardless of the calm modifier,
-   and wins on specificity. Its type has to follow the surface it is
-   actually on, not the modifier's assumption. */
-[data-screen="home"] .view > .strike,
-[data-screen="home"] .view > .strike .strike__verb,
-[data-screen="home"] .view > .strike .strike__sub,
-[data-screen="home"] .view > .strike span,
-[data-screen="home"] .view > .strike b{color:var(--paper)}
-[data-screen="home"] .view > .strike .strike__sub{color:var(--tone-lt)}
-[data-screen="home"] .view > .strike .strike__arrow{border-color:var(--paper)}
-[data-screen="home"] .view > .strike .strike__arrow svg{stroke:var(--paper)}
+/* The chamber is paper, so its type is ink. The only inverted surface
+   is the target block inside it, which carries its own colours. */
+.strike,.strike .strike__verb{color:var(--ink)}
+.strike .strike__sub{color:var(--ink-2)}
+.strike .strike__arrow svg{stroke:var(--paper)}
+.strike:hover .strike__arrow svg,
+.strike:focus-visible .strike__arrow svg{stroke:var(--ink)}
 
 /* ══════════════════════════════════════════════════════════════════
    RECORD — the page that is literally a record being built
@@ -374,7 +390,7 @@ none;
   background:var(--paper);
   padding:var(--s4);
   position:relative;
-  transition:transform .14s var(--press);
+  transition:transform var(--snap) linear;
 }
 /* attended: inked in */
 [data-screen="record"] .entry--set{
@@ -405,27 +421,31 @@ none;
    Locked is line only. Unlocked is screentone with a heavy keyline —
    it has arrived but is not yet taken. Claimed is the spotted black,
    the seal pressed. That escalation is the whole reward moment. */
+/* ══ REWARDS — THREE STATES, THREE WEIGHTS ═════════════════════════
+   A dossier that is sealed, one that is ready to be opened, and one
+   that has been claimed. The escalation is carried entirely by edge
+   weight and ink coverage — no textures, no fills laid across type. */
 .tech{
-  border:var(--edge-hair) solid var(--tone);
+  border:var(--edge-hair) solid var(--v3);
   background:var(--paper);
   position:relative;overflow:hidden;
 }
-.tech--sealed{                       /* locked: recessive line */
-  border-style:dashed;border-color:var(--tone);
-}
-.tech--sealed .tech__name,
-.tech--sealed .tech__req{color:var(--ink-2)}
-.tech--sealed .tech__glyph{opacity:.28}
+/* SEALED: a hairline and muted type. Present, closed, quiet. */
+.tech--sealed{border-style:solid;border-color:var(--v3)}
+.tech--sealed .tech__name{color:var(--ink-2)}
+.tech--sealed .tech__glyph{opacity:.34}
 
-.tech--open{                         /* unlocked: screentone + weight */
+/* READY: the heaviest keyline in the list, and a solid ink bar down
+   the leading edge — the tab of a file that is ready to be pulled. */
+.tech--open{
   border:var(--edge) solid var(--ink);
-  background-image:radial-gradient(var(--tone-dot) .5px, transparent .6px);
-  background-size:var(--tone-40) var(--tone-40);
+  background:var(--paper);
 }
-.tech--open::before{                 /* the rule that says "ready" */
-  content:'';position:absolute;left:0;top:0;bottom:0;width:var(--edge-heavy);
-  background:var(--ink);
+.tech--open::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:var(--edge-shout);
+  background:var(--seal);
 }
+.tech--open{padding-left:calc(var(--s5) + var(--edge-shout))}
 .tech--claimed{                      /* claimed: the seal is pressed */
   background:var(--ink);color:var(--paper);border-color:var(--ink);
   border-width:var(--edge);border-style:solid;
@@ -509,6 +529,9 @@ none;
 .tech__state{font-family:var(--f-mono);letter-spacing:.16em}
 .tech--open .tech__state{background:var(--ink);color:var(--paper);
   border-color:var(--ink);padding:5px 9px}
+/* the sealed chip is a stamped label, not a status pill */
+.chip--sealed{border-style:solid;border-color:var(--v3);color:var(--ink-2);
+  letter-spacing:.22em}
 
 /* ── Record polish ────────────────────────────────────────────────
    +1 stamp is the payoff on an inked row, so it gets paper weight. */
@@ -547,7 +570,7 @@ none;
 .log{gap:var(--edge-thin)}
 
 @media (min-width:768px){
-  .panel{box-shadow:5px 5px 0 rgba(23,19,15,.14);border-width:var(--edge)}
+  .panel{border-width:var(--edge)}
   .panel--seal{border-width:var(--edge-heavy)}
   [data-screen="record"] .entry{padding:var(--s4)}
   .bnext{padding:var(--s5)}
@@ -733,8 +756,13 @@ none;
 /* ── 4. States, applied once, everywhere ──────────────────────────
    Hover and active were defined per-component and drifted. One rule
    each, so a control anywhere in the app answers the same way. */
-.btn:hover,.chip:hover,.motion-btn:hover{background:var(--paper-2)}
-.btn:active,.chip:active,.motion-btn:active{transform:translate(1px,1px)}
+/* One answer for every control in the app: invert on the spot, press
+   2px down and right. No colour fade, no lift, no easing — the
+   element behaves like a key being struck. */
+.btn:hover,.chip:hover,.motion-btn:hover{
+  background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn:active,.chip:active,.motion-btn:active{transform:translate(2px,2px)}
+.motion-btn:hover svg{stroke:var(--paper)}
 .chip--on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .link:hover{text-decoration-thickness:2px}
 :focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px}

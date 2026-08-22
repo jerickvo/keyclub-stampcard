@@ -446,7 +446,9 @@ const FX = {
                 ring:$('#vRing'), ring2:$('#vRing2') };
 
     P.seal.innerHTML = seal(3);
-    P.state.textContent = 'Verified';
+    /* SEALED, not "Verified": the product's own word for what just
+       happened. A stamp was pressed and it is permanent. */
+    P.state.textContent = 'Sealed';
     P.meet.textContent = `GM ${pad(meeting.no)} · Wed ${fmtDay(meeting.date)} · MPR`;
     $('#verdictField')?.remove();
     box.insertAdjacentHTML('afterbegin', fieldSVG());
