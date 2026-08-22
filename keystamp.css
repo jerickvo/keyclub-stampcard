@@ -1428,8 +1428,12 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
   align-items:baseline;gap:var(--s3);padding:var(--s3) var(--s3) var(--s3) 0!important;
   background:none!important;text-align:left;position:relative}
 .rail__link svg{display:none}
+/* --ink-2, not --v3, and the !important is why identity.css could not
+   correct this from outside: the rail numeral measured 1.98:1 against
+   a 3:1 requirement at 26px. The hover and current states below are
+   unchanged, so the three-way distinction still reads. */
 .rail__no{font-family:var(--f-display)!important;font-size:clamp(26px,2.4vw,40px)!important;
-  line-height:.8;color:var(--v3)!important;margin:0!important;min-width:0!important;
+  line-height:.8;color:var(--ink-2)!important;margin:0!important;min-width:0!important;
   letter-spacing:-.05em;transition:color var(--snap) linear}
 .rail__link span:not(.rail__no){font-family:var(--f-label);font-size:11px;
   letter-spacing:.24em;text-transform:uppercase;color:var(--v4);align-self:center}
@@ -1437,7 +1441,11 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .rail__link[aria-current="page"] span:not(.rail__no){color:var(--v6)}
 .rail__link[aria-current="page"]::before{content:"";position:absolute;
   right:0;top:50%;width:26px;height:2px;background:var(--v6)}
-.rail__link:hover .rail__no{color:var(--v4)!important}
+/* Hover was --v4, which is exactly what --ink-2 resolves to — so once
+   the resting numeral moved off tone, hovering a rail item changed
+   nothing at all. It darkens to full ink now: resting quiet, hovered
+   ink, current ink plus the rule mark on the right. */
+.rail__link:hover .rail__no{color:var(--ink)!important}
 
 /* ══════════════════════════════════════════════════════════════════
    THE STAMP CARD — a composition, not a contact sheet.
