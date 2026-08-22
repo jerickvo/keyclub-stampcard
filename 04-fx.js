@@ -534,40 +534,60 @@ const FX = {
     const sealStrokes  = P.seal.querySelectorAll('path,circle,polygon,line');
     const fieldStrokes = field.querySelectorAll('path,circle,polygon,line');
     aset(sealStrokes, { opacity:1 });
-    aset([P.state, P.jp, P.title, P.delta, P.meet], { opacity:0, translateY:8 });
+    aset([P.state, P.jp, P.title, P.delta, P.meet], { opacity:0 });
     aset(box, { opacity:0 });
 
-    createTimeline({ onComplete:() => setTimeout(finish, 200) })
-      .add(box, { opacity:[0, 1], duration:90, ease:'linear' }, 0)
-      /* the structure builds quietly underneath everything else */
-      .add(field, { opacity:[0, .62], scale:[.3, 1], rotate:[-30, 0],
-             duration:740, ease:EASE.ENERGY }, 60)
-      .add(createDrawable(fieldStrokes), { draw:['0 0', '0 1'],
-             duration:580, delay:stagger(5), ease:EASE.OUT }, 90)
-      .add(createDrawable(sealStrokes), { draw:['0 0', '0 1'],
-             duration:440, delay:stagger(16), ease:EASE.OUT }, 120)
-      .add(P.seal, { rotate:[-14, 0], scale:[.8, 1], duration:520, ease:EASE.ENERGY }, 120)
-      .add(P.state, { opacity:[0, 1], translateY:[8, 0], duration:170, ease:EASE.CALM }, 280)
-      .add(P.jp, { opacity:[0, .85], translateY:[8, 0], duration:200, ease:EASE.CALM }, 330)
-      /* impact */
-      .add(P.flare, { scale:[.2, 1.5], opacity:[0, .75, 0], duration:480, ease:EASE.OUT }, 470)
-      .add(P.ring, { scale:[.3, 3.1], opacity:[.65, 0], duration:600, ease:EASE.OUT }, 480)
-      .add(P.ring2, { scale:[.3, 2.1], opacity:[.45, 0], duration:680, ease:EASE.OUT }, 560)
-      .add(field, { scale:[1, 1.1], opacity:[.62, .2], duration:420, ease:EASE.OUT }, 500)
-      /* 590–720ms: nothing new lands. That hole is the impact frame. */
-      .add(P.title, { opacity:[0, 1], translateY:[16, 0], scale:[.88, 1],
-             duration:240, ease:EASE.IMPACT }, 720)
-      .add(P.delta, { opacity:[0, 1], scale:[.45, 1], duration:300, ease:EASE.IMPACT }, 800)
-      .add(P.meet, { opacity:[0, 1], translateY:[8, 0], duration:220, ease:EASE.CALM }, 880)
-      .add(P.seal, { opacity:[1, .18], duration:280, ease:EASE.CALM }, 910)
-      .add(field, { opacity:[.2, 0], duration:300, ease:EASE.CALM }, 910);
+    /* THE STAMP LANDS.
 
-    /* the cuts run on their own clocks so the timeline can't smooth them out */
-    setTimeout(() => Slash.create({ type:'B', angle:-24 }), 450);
-    setTimeout(() => Slash.cross({ angle:-58 }), 500);
-    setTimeout(() => Lines.burst({ count:26, reach:400, hot:true, dur:320 }), 470);
-    setTimeout(() => Impact.flash(.26, { dur:56 }), 476);
-    setTimeout(() => Impact.shake($('.verdict__inner'), 6, 120), 500);
+       This used to be a 900ms build: the structure eased up over
+       740ms, the word faded in with a translate, the title arrived on
+       an overshoot curve. Read as a sequence of animations rather than
+       as an event — and a stamp is not a sequence. It is one impact
+       with consequences.
+
+       Now: the structure draws (that part is a press being aligned),
+       then at 300ms everything stops for one frame, and SEALED is
+       simply THERE — no fade, no travel, full size, off square. The
+       marks around it snap in after, in steps, like the register
+       settling. Nothing in the impact eases. */
+    createTimeline({ onComplete:() => setTimeout(finish, 200) })
+      .add(box, { opacity:[0, 1], duration:1, ease:STEP(1) }, 0)
+      /* alignment: the press coming down. This is the only part of the
+         sequence allowed a curve, and it is under the word, not on it */
+      .add(field, { opacity:[0, .5], scale:[.42, 1], rotate:[-22, 0],
+             duration:300, ease:EASE.ENERGY }, 40)
+      .add(createDrawable(fieldStrokes), { draw:['0 0', '0 1'],
+             duration:260, delay:stagger(3), ease:'linear' }, 60)
+      .add(createDrawable(sealStrokes), { draw:['0 0', '0 1'],
+             duration:200, delay:stagger(7), ease:'linear' }, 90)
+      .add(P.seal, { rotate:[-10, 0], scale:[.86, 1], duration:240, ease:EASE.ENERGY }, 90)
+
+      /* 300ms: THE PRESS. Full size, instantly, nothing to watch. */
+      /* opacity ONLY. Animating scale here writes an inline transform,
+         and that silently overrode the -3.2deg the stamp is struck at
+         — the mark landed square, which is the one thing a hand-
+         pressed seal never does. */
+      .add(P.state, { opacity:[0, 1], duration:1, ease:STEP(1) }, 300)
+      .add(P.flare, { scale:[.4, 1.6], opacity:[.8, 0], duration:150, ease:STEP(3) }, 300)
+      .add(P.ring, { scale:[.4, 3.2], opacity:[.7, 0], duration:210, ease:STEP(4) }, 302)
+      .add(P.ring2, { scale:[.4, 2.2], opacity:[.5, 0], duration:250, ease:STEP(4) }, 316)
+      .add(field, { scale:[1, 1.08], opacity:[.5, .16], duration:120, ease:STEP(2) }, 306)
+
+      /* the register settling — each mark a cut, not a fade */
+      .add(P.jp,    { opacity:[0, .85], duration:1, ease:STEP(1) }, 380)
+      .add(P.title, { opacity:[0, 1], duration:1, ease:STEP(1) }, 430)
+      .add(P.delta, { opacity:[0, 1], duration:1, ease:STEP(1) }, 480)
+      .add(P.meet,  { opacity:[0, 1], duration:1, ease:STEP(1) }, 530)
+      .add(P.seal,  { opacity:[1, .16], duration:160, ease:STEP(3) }, 560)
+      .add(field,   { opacity:[.16, 0], duration:160, ease:STEP(3) }, 560);
+
+    /* the cuts run on their own clocks so the timeline can't smooth
+       them out, and all of them land ON the press rather than around it */
+    setTimeout(() => Impact.flash(.3, { dur:44 }), 298);
+    setTimeout(() => Slash.create({ type:'B', angle:-24 }), 300);
+    setTimeout(() => Slash.cross({ angle:-58 }), 336);
+    setTimeout(() => Lines.burst({ count:26, reach:400, hot:true, dur:260 }), 304);
+    setTimeout(() => Impact.shake($('.verdict__inner'), 7, 90), 300);
   },
 
   /* the stamp landing on the grid, once the dashboard is back */

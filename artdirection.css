@@ -585,6 +585,37 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════
+   THE NAVIGATION PILLAR
+
+   The numeral leads and the label sits under it on its own baseline,
+   so the column reads as a contents page rather than as a menu. The
+   active state is a STRUCTURAL LINE that runs from the numeral out
+   through the pillar's edge and into the canvas — the chapter you are
+   in is physically connected to the sheet, which is a thing a grey
+   pill can never say.
+   ══════════════════════════════════════════════════════════════════ */
+@media(min-width:1024px){
+  .rail__link{grid-template-columns:1fr!important;
+    align-items:start!important;gap:2px!important;
+    padding:clamp(10px,1.1vw,16px) var(--s3) clamp(10px,1.1vw,16px) 0!important}
+  .rail__no{font-size:clamp(30px,2.9vw,50px)!important;
+    justify-self:start;width:max-content}
+  .rail__link span:not(.rail__no){font-size:clamp(9.5px,.72vw,11px);
+    letter-spacing:.3em;align-self:start}
+  /* the connector: out of the numeral, through the rule, into the page */
+  /* the connector leaves the pillar at the numeral's own baseline */
+  .rail__link[aria-current="page"]::before{
+    right:calc(var(--s3) * -1 - 2px);top:auto;
+    bottom:calc(100% - clamp(30px,2.9vw,50px) - clamp(10px,1.1vw,16px));
+    width:calc(var(--s3) + 40px);height:var(--edge)}
+  /* No underline on the numeral: it landed exactly where the label
+     sits and the two collided. The connector out to the canvas is the
+     active mark, and it is a better one — it says which chapter the
+     sheet belongs to rather than just which item is selected. */
+  .rail__link span:not(.rail__no){margin-top:3px}
+}
+
+/* ══════════════════════════════════════════════════════════════════
    MEMBER — THE FIGURES ARE NOT FOUR CARDS
 
    Four bordered plates in a 2x2 grid is an admin dashboard, and it is
@@ -1327,6 +1358,11 @@ select.input:focus-visible{outline:none}
 .viewer__msg--hot{background:var(--ink);color:var(--paper)}
 .viewer__msg--soft{background:var(--paper);color:var(--ink);
   border:var(--rule-hair) solid var(--ink)}
+/* the refusal states a fault code, and it states it in the one place
+   red is allowed on this screen — the target has just refused */
+.reticle--bad ~ .viewer__status .viewer__msg,
+.viewer--bad .viewer__msg{background:var(--paper);color:var(--seal);
+  border:var(--edge-thin) solid var(--seal);font-weight:700;letter-spacing:.2em}
 
 @keyframes retSweep{
   from{top:6%;opacity:.4}

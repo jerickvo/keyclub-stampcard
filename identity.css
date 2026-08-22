@@ -237,10 +237,23 @@ none;
    what the stamp did, and a record is written in ink. */
 .verdict__seal circle,.verdict__seal polygon,
 .verdict__seal path,.verdict__seal line{stroke:var(--seal)}
-.verdict__state{color:var(--seal);font-weight:700}
+/* SEALED IS THE MARK.
+
+   It was an 11px mono label above a 58px "Stamp acquired" — the
+   product's own word for what just happened, set smaller than the
+   sentence describing it. It is the graphic now: display size,
+   cinnabar, struck a few degrees off square because a stamp pressed
+   by hand never lands true. The sentence becomes the caption it
+   always was. */
+.verdict__state{color:var(--seal);font-family:var(--f-display);font-weight:400;
+  font-size:clamp(46px,13vw,132px);line-height:.82;letter-spacing:-.03em;
+  text-transform:uppercase;transform:rotate(-3.2deg);margin-top:clamp(6px,1.4vw,14px)}
+.verdict__title{font-family:var(--f-body);font-weight:500;
+  font-size:clamp(13px,1.5vw,17px);letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ink);margin-top:clamp(10px,1.6vw,18px)}
 /* the confirmation lands slightly off-axis, the way a hand-pressed
    chop never lands square */
-.verdict__title{transform:rotate(-1.2deg)}
+.verdict__title{transform:none}
 .verdict__delta{color:var(--ink)}
 
 /* ══ STATE ═════════════════════════════════════════════════════════

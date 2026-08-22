@@ -124,7 +124,11 @@
   --s6:clamp(22px,2.4vw,32px);
   --s7:clamp(28px,3.4vw,44px);
   --s8:clamp(40px,5vw,72px);
-  --rail:clamp(196px,15vw,268px); --pad:var(--gutter);
+  /* THE PILLAR. 15vw put the navigation at a seventh of a wide screen
+     and left the numerals cramped against their labels. A fifth is
+     the brief's proportion and it is also the one that lets the
+     numeral run at display size with the label on its own baseline. */
+  --rail:clamp(208px,20vw,340px); --pad:var(--gutter);
   /* Mechanical, not eased. A stamp does not accelerate into the paper
      and glide out again — it lands. Every state change in this system
      is either instantaneous or one 60ms step; the choreography that

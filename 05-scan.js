@@ -276,7 +276,7 @@ async function submitSeal(raw, fromCamera){
   if (!QRFormat.looksLikeKeystamp(raw)){
     const [t, d] = scanMessage('INVALID_TOKEN');
     toast({ key:'scan', title:t, detail:d, bad:true });
-    if (fromCamera) rejectVisual('Seal rejected');
+    if (fromCamera) rejectVisual('INVALID_TOKEN');
     return;
   }
 
@@ -289,7 +289,7 @@ async function submitSeal(raw, fromCamera){
     const [t, d] = scanMessage(code);
     /* keyed: rapid rescans of a bad code replace, never pile up */
     toast({ key:'scan', title:t, detail:d, bad:true });
-    if (fromCamera) rejectVisual(code === 'EXPIRED_TOKEN' ? 'Seal expired' : 'Seal rejected');
+    if (fromCamera) rejectVisual(code);
     return;
   }
 
@@ -310,8 +310,24 @@ async function submitSeal(raw, fromCamera){
   FX.stampAcquire(meeting, () => go('home'));
 }
 
-function rejectVisual(label){
-  Scanner.setState('bad', label);
+/* A refusal is a SYSTEM EVENT, so it is reported the way this system
+   reports one: a fault code, not a sentence in small red type. The
+   frame flashes and kicks (see .viewer--bad), the status chip states
+   the code, and the retry is explicit — the frame says it is looking
+   again rather than leaving the member to guess whether it is still
+   on. The human sentence is not lost; it is in the toast beside it. */
+const REJECT_CODE = {
+  INVALID_TOKEN:'REJ.FORMAT',      EXPIRED_TOKEN:'REJ.EXPIRED',
+  MEETING_NOT_FOUND:'REJ.NOMEET',  MEETING_NOT_ACTIVE:'REJ.CLOSED',
+  ATTENDANCE_CLOSED:'REJ.CLOSED',  WRONG_DAY:'REJ.DATE',
+  ALREADY_CHECKED_IN:'REJ.DUP',    PROFILE_NOT_READY:'REJ.ACCT',
+  NOT_AUTHENTICATED:'REJ.AUTH',    NOT_AUTHORIZED:'REJ.AUTH',
+  NETWORK_ERROR:'ERR.NET',         VERIFIER_UNAVAILABLE:'ERR.SVC',
+  SERVER_ERROR:'ERR.SRV',          NO_BACKEND:'ERR.CFG',
+};
+
+function rejectVisual(code){
+  Scanner.setState('bad', REJECT_CODE[code] || 'REJ.CODE');
   FX.scanReject();
   setTimeout(() => {
     if (!$('#reticle')) return;

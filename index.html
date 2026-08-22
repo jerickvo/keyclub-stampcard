@@ -167,7 +167,11 @@
   --s6:clamp(22px,2.4vw,32px);
   --s7:clamp(28px,3.4vw,44px);
   --s8:clamp(40px,5vw,72px);
-  --rail:clamp(196px,15vw,268px); --pad:var(--gutter);
+  /* THE PILLAR. 15vw put the navigation at a seventh of a wide screen
+     and left the numerals cramped against their labels. A fifth is
+     the brief's proportion and it is also the one that lets the
+     numeral run at display size with the label on its own baseline. */
+  --rail:clamp(208px,20vw,340px); --pad:var(--gutter);
   /* Mechanical, not eased. A stamp does not accelerate into the paper
      and glide out again — it lands. Every state change in this system
      is either instantaneous or one 60ms step; the choreography that
@@ -2586,6 +2590,37 @@ main#view{padding-top:var(--space-tier);
 }
 
 /* ══════════════════════════════════════════════════════════════════
+   THE NAVIGATION PILLAR
+
+   The numeral leads and the label sits under it on its own baseline,
+   so the column reads as a contents page rather than as a menu. The
+   active state is a STRUCTURAL LINE that runs from the numeral out
+   through the pillar's edge and into the canvas — the chapter you are
+   in is physically connected to the sheet, which is a thing a grey
+   pill can never say.
+   ══════════════════════════════════════════════════════════════════ */
+@media(min-width:1024px){
+  .rail__link{grid-template-columns:1fr!important;
+    align-items:start!important;gap:2px!important;
+    padding:clamp(10px,1.1vw,16px) var(--s3) clamp(10px,1.1vw,16px) 0!important}
+  .rail__no{font-size:clamp(30px,2.9vw,50px)!important;
+    justify-self:start;width:max-content}
+  .rail__link span:not(.rail__no){font-size:clamp(9.5px,.72vw,11px);
+    letter-spacing:.3em;align-self:start}
+  /* the connector: out of the numeral, through the rule, into the page */
+  /* the connector leaves the pillar at the numeral's own baseline */
+  .rail__link[aria-current="page"]::before{
+    right:calc(var(--s3) * -1 - 2px);top:auto;
+    bottom:calc(100% - clamp(30px,2.9vw,50px) - clamp(10px,1.1vw,16px));
+    width:calc(var(--s3) + 40px);height:var(--edge)}
+  /* No underline on the numeral: it landed exactly where the label
+     sits and the two collided. The connector out to the canvas is the
+     active mark, and it is a better one — it says which chapter the
+     sheet belongs to rather than just which item is selected. */
+  .rail__link span:not(.rail__no){margin-top:3px}
+}
+
+/* ══════════════════════════════════════════════════════════════════
    MEMBER — THE FIGURES ARE NOT FOUR CARDS
 
    Four bordered plates in a 2x2 grid is an admin dashboard, and it is
@@ -3328,6 +3363,11 @@ select.input:focus-visible{outline:none}
 .viewer__msg--hot{background:var(--ink);color:var(--paper)}
 .viewer__msg--soft{background:var(--paper);color:var(--ink);
   border:var(--rule-hair) solid var(--ink)}
+/* the refusal states a fault code, and it states it in the one place
+   red is allowed on this screen — the target has just refused */
+.reticle--bad ~ .viewer__status .viewer__msg,
+.viewer--bad .viewer__msg{background:var(--paper);color:var(--seal);
+  border:var(--edge-thin) solid var(--seal);font-weight:700;letter-spacing:.2em}
 
 @keyframes retSweep{
   from{top:6%;opacity:.4}
@@ -3641,10 +3681,23 @@ none;
    what the stamp did, and a record is written in ink. */
 .verdict__seal circle,.verdict__seal polygon,
 .verdict__seal path,.verdict__seal line{stroke:var(--seal)}
-.verdict__state{color:var(--seal);font-weight:700}
+/* SEALED IS THE MARK.
+
+   It was an 11px mono label above a 58px "Stamp acquired" — the
+   product's own word for what just happened, set smaller than the
+   sentence describing it. It is the graphic now: display size,
+   cinnabar, struck a few degrees off square because a stamp pressed
+   by hand never lands true. The sentence becomes the caption it
+   always was. */
+.verdict__state{color:var(--seal);font-family:var(--f-display);font-weight:400;
+  font-size:clamp(46px,13vw,132px);line-height:.82;letter-spacing:-.03em;
+  text-transform:uppercase;transform:rotate(-3.2deg);margin-top:clamp(6px,1.4vw,14px)}
+.verdict__title{font-family:var(--f-body);font-weight:500;
+  font-size:clamp(13px,1.5vw,17px);letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ink);margin-top:clamp(10px,1.6vw,18px)}
 /* the confirmation lands slightly off-axis, the way a hand-pressed
    chop never lands square */
-.verdict__title{transform:rotate(-1.2deg)}
+.verdict__title{transform:none}
 .verdict__delta{color:var(--ink)}
 
 /* ══ STATE ═════════════════════════════════════════════════════════
@@ -19772,40 +19825,60 @@ const FX = {
     const sealStrokes  = P.seal.querySelectorAll('path,circle,polygon,line');
     const fieldStrokes = field.querySelectorAll('path,circle,polygon,line');
     aset(sealStrokes, { opacity:1 });
-    aset([P.state, P.jp, P.title, P.delta, P.meet], { opacity:0, translateY:8 });
+    aset([P.state, P.jp, P.title, P.delta, P.meet], { opacity:0 });
     aset(box, { opacity:0 });
 
-    createTimeline({ onComplete:() => setTimeout(finish, 200) })
-      .add(box, { opacity:[0, 1], duration:90, ease:'linear' }, 0)
-      /* the structure builds quietly underneath everything else */
-      .add(field, { opacity:[0, .62], scale:[.3, 1], rotate:[-30, 0],
-             duration:740, ease:EASE.ENERGY }, 60)
-      .add(createDrawable(fieldStrokes), { draw:['0 0', '0 1'],
-             duration:580, delay:stagger(5), ease:EASE.OUT }, 90)
-      .add(createDrawable(sealStrokes), { draw:['0 0', '0 1'],
-             duration:440, delay:stagger(16), ease:EASE.OUT }, 120)
-      .add(P.seal, { rotate:[-14, 0], scale:[.8, 1], duration:520, ease:EASE.ENERGY }, 120)
-      .add(P.state, { opacity:[0, 1], translateY:[8, 0], duration:170, ease:EASE.CALM }, 280)
-      .add(P.jp, { opacity:[0, .85], translateY:[8, 0], duration:200, ease:EASE.CALM }, 330)
-      /* impact */
-      .add(P.flare, { scale:[.2, 1.5], opacity:[0, .75, 0], duration:480, ease:EASE.OUT }, 470)
-      .add(P.ring, { scale:[.3, 3.1], opacity:[.65, 0], duration:600, ease:EASE.OUT }, 480)
-      .add(P.ring2, { scale:[.3, 2.1], opacity:[.45, 0], duration:680, ease:EASE.OUT }, 560)
-      .add(field, { scale:[1, 1.1], opacity:[.62, .2], duration:420, ease:EASE.OUT }, 500)
-      /* 590–720ms: nothing new lands. That hole is the impact frame. */
-      .add(P.title, { opacity:[0, 1], translateY:[16, 0], scale:[.88, 1],
-             duration:240, ease:EASE.IMPACT }, 720)
-      .add(P.delta, { opacity:[0, 1], scale:[.45, 1], duration:300, ease:EASE.IMPACT }, 800)
-      .add(P.meet, { opacity:[0, 1], translateY:[8, 0], duration:220, ease:EASE.CALM }, 880)
-      .add(P.seal, { opacity:[1, .18], duration:280, ease:EASE.CALM }, 910)
-      .add(field, { opacity:[.2, 0], duration:300, ease:EASE.CALM }, 910);
+    /* THE STAMP LANDS.
 
-    /* the cuts run on their own clocks so the timeline can't smooth them out */
-    setTimeout(() => Slash.create({ type:'B', angle:-24 }), 450);
-    setTimeout(() => Slash.cross({ angle:-58 }), 500);
-    setTimeout(() => Lines.burst({ count:26, reach:400, hot:true, dur:320 }), 470);
-    setTimeout(() => Impact.flash(.26, { dur:56 }), 476);
-    setTimeout(() => Impact.shake($('.verdict__inner'), 6, 120), 500);
+       This used to be a 900ms build: the structure eased up over
+       740ms, the word faded in with a translate, the title arrived on
+       an overshoot curve. Read as a sequence of animations rather than
+       as an event — and a stamp is not a sequence. It is one impact
+       with consequences.
+
+       Now: the structure draws (that part is a press being aligned),
+       then at 300ms everything stops for one frame, and SEALED is
+       simply THERE — no fade, no travel, full size, off square. The
+       marks around it snap in after, in steps, like the register
+       settling. Nothing in the impact eases. */
+    createTimeline({ onComplete:() => setTimeout(finish, 200) })
+      .add(box, { opacity:[0, 1], duration:1, ease:STEP(1) }, 0)
+      /* alignment: the press coming down. This is the only part of the
+         sequence allowed a curve, and it is under the word, not on it */
+      .add(field, { opacity:[0, .5], scale:[.42, 1], rotate:[-22, 0],
+             duration:300, ease:EASE.ENERGY }, 40)
+      .add(createDrawable(fieldStrokes), { draw:['0 0', '0 1'],
+             duration:260, delay:stagger(3), ease:'linear' }, 60)
+      .add(createDrawable(sealStrokes), { draw:['0 0', '0 1'],
+             duration:200, delay:stagger(7), ease:'linear' }, 90)
+      .add(P.seal, { rotate:[-10, 0], scale:[.86, 1], duration:240, ease:EASE.ENERGY }, 90)
+
+      /* 300ms: THE PRESS. Full size, instantly, nothing to watch. */
+      /* opacity ONLY. Animating scale here writes an inline transform,
+         and that silently overrode the -3.2deg the stamp is struck at
+         — the mark landed square, which is the one thing a hand-
+         pressed seal never does. */
+      .add(P.state, { opacity:[0, 1], duration:1, ease:STEP(1) }, 300)
+      .add(P.flare, { scale:[.4, 1.6], opacity:[.8, 0], duration:150, ease:STEP(3) }, 300)
+      .add(P.ring, { scale:[.4, 3.2], opacity:[.7, 0], duration:210, ease:STEP(4) }, 302)
+      .add(P.ring2, { scale:[.4, 2.2], opacity:[.5, 0], duration:250, ease:STEP(4) }, 316)
+      .add(field, { scale:[1, 1.08], opacity:[.5, .16], duration:120, ease:STEP(2) }, 306)
+
+      /* the register settling — each mark a cut, not a fade */
+      .add(P.jp,    { opacity:[0, .85], duration:1, ease:STEP(1) }, 380)
+      .add(P.title, { opacity:[0, 1], duration:1, ease:STEP(1) }, 430)
+      .add(P.delta, { opacity:[0, 1], duration:1, ease:STEP(1) }, 480)
+      .add(P.meet,  { opacity:[0, 1], duration:1, ease:STEP(1) }, 530)
+      .add(P.seal,  { opacity:[1, .16], duration:160, ease:STEP(3) }, 560)
+      .add(field,   { opacity:[.16, 0], duration:160, ease:STEP(3) }, 560);
+
+    /* the cuts run on their own clocks so the timeline can't smooth
+       them out, and all of them land ON the press rather than around it */
+    setTimeout(() => Impact.flash(.3, { dur:44 }), 298);
+    setTimeout(() => Slash.create({ type:'B', angle:-24 }), 300);
+    setTimeout(() => Slash.cross({ angle:-58 }), 336);
+    setTimeout(() => Lines.burst({ count:26, reach:400, hot:true, dur:260 }), 304);
+    setTimeout(() => Impact.shake($('.verdict__inner'), 7, 90), 300);
   },
 
   /* the stamp landing on the grid, once the dashboard is back */
@@ -20243,7 +20316,7 @@ async function submitSeal(raw, fromCamera){
   if (!QRFormat.looksLikeKeystamp(raw)){
     const [t, d] = scanMessage('INVALID_TOKEN');
     toast({ key:'scan', title:t, detail:d, bad:true });
-    if (fromCamera) rejectVisual('Seal rejected');
+    if (fromCamera) rejectVisual('INVALID_TOKEN');
     return;
   }
 
@@ -20256,7 +20329,7 @@ async function submitSeal(raw, fromCamera){
     const [t, d] = scanMessage(code);
     /* keyed: rapid rescans of a bad code replace, never pile up */
     toast({ key:'scan', title:t, detail:d, bad:true });
-    if (fromCamera) rejectVisual(code === 'EXPIRED_TOKEN' ? 'Seal expired' : 'Seal rejected');
+    if (fromCamera) rejectVisual(code);
     return;
   }
 
@@ -20277,8 +20350,24 @@ async function submitSeal(raw, fromCamera){
   FX.stampAcquire(meeting, () => go('home'));
 }
 
-function rejectVisual(label){
-  Scanner.setState('bad', label);
+/* A refusal is a SYSTEM EVENT, so it is reported the way this system
+   reports one: a fault code, not a sentence in small red type. The
+   frame flashes and kicks (see .viewer--bad), the status chip states
+   the code, and the retry is explicit — the frame says it is looking
+   again rather than leaving the member to guess whether it is still
+   on. The human sentence is not lost; it is in the toast beside it. */
+const REJECT_CODE = {
+  INVALID_TOKEN:'REJ.FORMAT',      EXPIRED_TOKEN:'REJ.EXPIRED',
+  MEETING_NOT_FOUND:'REJ.NOMEET',  MEETING_NOT_ACTIVE:'REJ.CLOSED',
+  ATTENDANCE_CLOSED:'REJ.CLOSED',  WRONG_DAY:'REJ.DATE',
+  ALREADY_CHECKED_IN:'REJ.DUP',    PROFILE_NOT_READY:'REJ.ACCT',
+  NOT_AUTHENTICATED:'REJ.AUTH',    NOT_AUTHORIZED:'REJ.AUTH',
+  NETWORK_ERROR:'ERR.NET',         VERIFIER_UNAVAILABLE:'ERR.SVC',
+  SERVER_ERROR:'ERR.SRV',          NO_BACKEND:'ERR.CFG',
+};
+
+function rejectVisual(code){
+  Scanner.setState('bad', REJECT_CODE[code] || 'REJ.CODE');
   FX.scanReject();
   setTimeout(() => {
     if (!$('#reticle')) return;
