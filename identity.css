@@ -506,8 +506,11 @@ none;
 .bstat:first-child{
   background:var(--ink);color:var(--paper);border-color:var(--ink);
 }
-.bstat:first-child b{color:var(--paper)}
-.bstat:first-child span{color:var(--tone-lt)}
+/* the lead figure was paper-on-ink when the plate had an ink
+   background; the plate is a ruled division now, so the type has to
+   come back to ink or the number disappears into the page */
+.bstat:first-child b{color:var(--ink)}
+.bstat:first-child span{color:var(--ink-2)}
 .bstat b{font-size:clamp(26px,3.4vw,40px);line-height:.9}
 .bstat span{color:var(--ink-2)}
 

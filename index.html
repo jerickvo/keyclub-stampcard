@@ -2590,6 +2590,41 @@ main#view{padding-top:var(--space-tier);
 }
 
 /* ══════════════════════════════════════════════════════════════════
+   CLUB TOOLS — THE SAME SHEET
+
+   The board account keeps its own chapters and its own routing; what
+   it does not get is a different design system. Its outer panel was a
+   frame around the whole page and its figures were four plates, which
+   is the member dashboard's old problem wearing a different hat.
+   Registered divisions and a ruled figure strip, same as everywhere.
+
+   The one thing kept framed is the live meeting, because on this
+   screen that IS the lead — it floods to ink and carries the code.
+   ══════════════════════════════════════════════════════════════════ */
+[data-screen^="b"] #boardPane > .bpanel,
+[data-screen="board"] #boardPane > .bpanel{border:0;background:none;
+  padding:0}
+.bsec{position:relative;padding-top:clamp(14px,2vw,22px);margin-top:clamp(18px,2.6vw,30px)}
+.bsec::before{content:"";position:absolute;left:0;right:0;top:0;
+  height:var(--edge-thin);background:var(--ink)}
+
+/* the figures: a ruled strip, one leading */
+.bstats{display:grid;gap:0;grid-template-columns:repeat(2,minmax(0,1fr));
+  border-top:var(--edge) solid var(--ink)}
+.bstat{border:0!important;background:none!important;
+  padding:clamp(13px,1.8vw,20px) clamp(12px,1.6vw,18px) clamp(13px,1.8vw,20px) 0;
+  border-bottom:var(--rule-hair) solid var(--v3)!important}
+.bstat + .bstat{padding-left:clamp(12px,1.6vw,18px);
+  border-left:var(--rule-hair) solid var(--v3)!important}
+.bstat:first-child b{font-size:clamp(38px,5.2vw,72px);line-height:.86}
+.bstat:first-child{grid-column:1/-1;padding-left:0;
+  border-left:0!important;border-bottom-color:var(--ink)!important}
+@media(min-width:768px){
+  .bstats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .bstat:nth-child(2){padding-left:0;border-left:0!important}
+}
+
+/* ══════════════════════════════════════════════════════════════════
    THE NAVIGATION PILLAR
 
    The numeral leads and the label sits under it on its own baseline,
@@ -2772,6 +2807,10 @@ main#view{padding-top:var(--space-tier);
 .dossier--sealed .tech__name{color:var(--ink-2)}
 
 /* ── READY: the one frame and the one red mark on the page ── */
+/* (0,3,0) to clear the [data-screen="rewards"] .dossier .panel reset
+   above — the ready tier is the one framed thing on the page and it
+   was losing its frame to my own border:0. */
+[data-screen="rewards"] .dossier--ready .panel,
 .dossier--ready .panel{border:var(--edge-heavy) solid var(--ink);
   background:var(--paper);
   padding:clamp(18px,2.4vw,30px) clamp(18px,2.4vw,30px) clamp(20px,2.6vw,32px)}
@@ -2779,6 +2818,7 @@ main#view{padding-top:var(--space-tier);
 .dossier--ready .dslot--set{background:var(--ink)}
 
 /* ── CLAIMED: flooded. this is where the screen spends its black ── */
+[data-screen="rewards"] .dossier--claimed .panel,
 .dossier--claimed .panel{background:var(--v6);color:var(--paper);
   padding:clamp(18px,2.4vw,30px)}
 .dossier--claimed .tech__name,
@@ -2864,7 +2904,7 @@ main#view{padding-top:var(--space-tier);
 .strike:hover .strike__go,
 .strike:focus-visible .strike__go{background:var(--paper);color:var(--ink);
   box-shadow:inset 0 0 0 var(--edge-thin) var(--ink)}
-.strike--live .strike__head .anno{color:var(--seal)}
+.strike--live .strike__head .anno{color:var(--seal-deep)}
 
 /* ══════════════════════════════════════════════════════════════════
    HOME — ONE SHEET, FOUR CHAMBERS
@@ -2965,9 +3005,15 @@ main#view{padding-top:var(--space-tier);
   font-size:var(--t-name-hero)}
 .nameplate__rule{position:absolute;left:0;right:0;top:0;
   height:var(--edge-heavy);background:var(--ink);z-index:0}
+/* The name is set at line-height .82, so its descenders — the period
+   in "JERICK." above all — hang below the text box and were landing
+   on the annotation at 768, 820 and 1536. The meta row clears the
+   descender instead of guessing a gap. */
 .nameplate__meta{position:relative;z-index:2;
   display:flex;flex-wrap:wrap;align-items:baseline;
-  gap:6px clamp(12px,2vw,26px);margin-top:clamp(8px,1.2vw,14px)}
+  gap:6px clamp(12px,2vw,26px);
+  margin-top:max(clamp(8px,1.2vw,14px), .16em)}
+.nameplate .title--name{padding-bottom:.1em}
 .nameplate__line{font:500 clamp(11px,1.05vw,13px)/1.3 var(--f-mono);
   letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
 
@@ -3045,7 +3091,12 @@ main#view{padding-top:var(--space-tier);
   letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
 .anno::before{content:"";width:clamp(10px,1.4vw,20px);height:var(--rule-hair);
   background:currentColor;flex:none}
-.anno--seal{color:var(--seal)}
+/* The bright cinnabar is a MARK colour, not a text colour: #E53935 on
+   this paper is 3.94:1, and an annotation is 9.5px, which needs 4.5.
+   The pressed-harder step of the same ink is 5.15:1 and reads as the
+   same seal — so small red type uses it and the big struck marks keep
+   the bright one. */
+.anno--seal{color:var(--seal-deep)}
 
 /* ── INDEX. The numeral that says where a thing sits in a series. */
 .idx{font-family:var(--f-display);line-height:.8;letter-spacing:-.04em;
@@ -3950,8 +4001,11 @@ none;
 .bstat:first-child{
   background:var(--ink);color:var(--paper);border-color:var(--ink);
 }
-.bstat:first-child b{color:var(--paper)}
-.bstat:first-child span{color:var(--tone-lt)}
+/* the lead figure was paper-on-ink when the plate had an ink
+   background; the plate is a ruled division now, so the type has to
+   come back to ink or the number disappears into the page */
+.bstat:first-child b{color:var(--ink)}
+.bstat:first-child span{color:var(--ink-2)}
 .bstat b{font-size:clamp(26px,3.4vw,40px);line-height:.9}
 .bstat span{color:var(--ink-2)}
 
