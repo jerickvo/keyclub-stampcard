@@ -647,10 +647,18 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
      camera image reads as instrument housing and leaves the red to the
      thing that earns it.
 
+     INK is the default, because the box's own ground is paper. Paper
+     brackets were keyed to the absence of .viewer--stalled, which is
+     only one of the states with no picture in it: while the browser is
+     asking for camera permission, and for as long as the feed takes to
+     start, the frame is paper and the brackets were painted paper on
+     top of it. .viewer--feed is set when a video is actually playing,
+     which is the real question being asked.
+
      Declared HERE and not on ::after: a custom property re-declared on
      the pseudo-element wins over whatever the element passes down, so
-     the stalled state could never override it from the outside. */
-  --bracket-c:var(--paper);
+     no state could override it from the outside. */
+  --bracket-c:var(--ink);
   /* The camera frame is the one panel that has to answer to viewport
      HEIGHT: it is the thing you hold up, and on a phone in landscape,
      or a short laptop, a 3/4 box taller than the screen puts the
@@ -669,12 +677,9 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
    message with a floor for presence, so it is a panel on a phone and a
    panel on a monitor rather than a 230px letterbox on both. */
 .viewer--stalled{aspect-ratio:auto;min-height:clamp(200px,32dvh,320px);
-  max-height:none;
-  /* The brackets are paper because the camera image behind them is
-     dark. Once the video is gone the box is back to its own light
-     ground and paper-on-paper is nothing at all, so the frame
-     furniture goes to ink with it. */
-  --bracket-c:var(--ink)}
+  max-height:none}
+/* a picture is playing: the housing goes paper so it holds against it */
+.viewer--feed{--bracket-c:var(--paper)}
 .viewer video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
   /* Monochrome stays: every accent token in this theme is remapped to
      ink, so a colour camera would be the one coloured thing in the whole
@@ -726,6 +731,22 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .viewer--hit .viewer__grain{inset:6px}
 .viewer__status,.viewer__msg{position:relative;font-family:var(--f-accent);
   text-transform:uppercase;text-align:center}
+/* THE WAITING MARK. `.loader` was applied in JS and styled in no
+   stylesheet, so the only thing sizing it was an inline
+   `inset:0;margin:auto` and the SVG's own default of filling its box.
+   It is a mark now: sized like the reticle's inner ring, centred in
+   it, and turning in twelve discrete steps because nothing in this
+   system eases. */
+.loader{position:absolute;top:50%;left:50%;
+  width:clamp(54px,42%,116px);aspect-ratio:1;
+  transform:translate(-50%,-50%);
+  color:var(--ink);pointer-events:none;z-index:4;
+  animation:loaderTurn 1.2s steps(12,end) infinite}
+.loader svg{width:100%;height:100%;display:block}
+@keyframes loaderTurn{from{transform:translate(-50%,-50%) rotate(0deg)}
+                      to  {transform:translate(-50%,-50%) rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){ .loader{animation:none} }
+
 .reticle{position:relative;width:64%;aspect-ratio:1;max-width:250px}
 .reticle__c{position:absolute;width:26px;height:26px;border:var(--rule) solid var(--ink)}
 .reticle__c--tl{top:0;left:0;border-right:0;border-bottom:0}
@@ -2734,12 +2755,24 @@ select.input:focus-visible{outline:none}
    no hue to spend: every accent token resolves to ink. That also
    satisfies "not by colour alone" for free. */
 .reticle--live .reticle__c{border-width:var(--edge-thin)}
-.reticle__line{top:50%}
+/* The sweep line reads as "something is being scanned", so it is drawn
+   only while something is. It used to be visible in every state that
+   did not explicitly hide it — including `boot`, where a cinnabar line
+   sat across the frame while the browser was still asking for camera
+   permission and there was nothing behind it at all. */
+.reticle__line{top:50%;opacity:0}
+.reticle--live .reticle__line{opacity:.9}
 /* steps(), not ease-in-out. Everything else in this system cuts; a
    sweep that accelerates and decelerates was the one soft gesture left
    on the screen, and it read as an app animation rather than as a
    mechanism ticking down the frame. */
 .reticle--live .reticle__line{animation:retSweep 2.4s steps(14,end) infinite}
+
+/* ── WAITING FOR THE CAMERA ───────────────────────────────────────
+   The frame's own marks recede while the loader turns, so the moving
+   mark is the one thing there is to look at. */
+.reticle--wait .reticle__geo,
+.reticle--wait .reticle__mark{opacity:.16}
 
 /* ── WORKING ──────────────────────────────────────────────────────
    The code is read and the server has not answered yet. The corners
@@ -19488,7 +19521,7 @@ const Scanner = {
     this.locked = false;
     /* a fresh attempt is not a stalled panel — clear the state the
        previous one may have left on the frame */
-    $('#viewer')?.classList.remove('viewer--stalled');
+    $('#viewer')?.classList.remove('viewer--stalled', 'viewer--feed');
     this.setState('boot', 'Starting camera');
     this.showLoader();
 
@@ -19505,6 +19538,9 @@ const Scanner = {
     this.hideLoader();
     video.srcObject = this.stream;
     try { await video.play(); } catch (_) {}
+    /* Only from here is there a camera image behind the overlay, and
+       only from here are paper brackets the readable choice. */
+    $('#viewer')?.classList.add('viewer--feed');
 
     this.cv = document.createElement('canvas');
     this.ctx = this.cv.getContext('2d', { willReadFrequently:true });
@@ -19512,18 +19548,36 @@ const Scanner = {
     this.loop(video);
   },
 
+  /* The waiting mark, shown while the browser asks for camera
+     permission and while the feed spins up.
+
+     Its two circles carried a stroke-dasharray and nothing else — no
+     fill, no stroke. An SVG shape with no fill declared defaults to
+     BLACK and to no stroke at all, so the dash pattern described an
+     outline that was never drawn and both circles painted as solid
+     discs: one black blob over the whole reticle, which is what a
+     member saw while deciding whether to grant camera access. Every
+     other mark in this app is built by SVG() or seal(), which set
+     fill:none and stroke:currentColor; this one was hand-rolled and
+     inherited neither. It had no CSS either — .loader is styled
+     nowhere — so nothing constrained its size. */
   showLoader(){
     const ret = $('#reticle');
     if (!ret || $('#camLoader')) return;
     const l = document.createElement('div');
     l.className = 'loader'; l.id = 'camLoader';
-    l.style.cssText = 'position:absolute;inset:0;margin:auto';
-    l.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true">
-      <circle cx="50" cy="50" r="42" stroke-dasharray="52 220" stroke-linecap="round"/>
-      <circle cx="50" cy="50" r="30" stroke-dasharray="28 160" stroke-linecap="round" opacity=".5"/></svg>`;
+    /* the reticle's compass marks step back while the mark is turning,
+       so the one moving thing on the frame is the one you look at */
+    ret.classList.add('reticle--wait');
+    /* two opposed arcs per ring rather than one, so the mark reads as a
+       thing that is turning instead of as a stray scratch on the frame */
+    l.innerHTML = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor"
+        stroke-width="3" aria-hidden="true">
+      <circle cx="50" cy="50" r="42" stroke-dasharray="42 90"/>
+      <circle cx="50" cy="50" r="30" stroke-dasharray="24 70" opacity=".5"/></svg>`;
     ret.appendChild(l);
   },
-  hideLoader(){ $('#camLoader')?.remove(); },
+  hideLoader(){ $('#camLoader')?.remove(); $('#reticle')?.classList.remove('reticle--wait'); },
 
   loop(video){
     const step = () => {
@@ -19551,6 +19605,7 @@ const Scanner = {
     const viewer = $('#viewer');
     if (!viewer) return;
     this.hideLoader();
+    viewer.classList.remove('viewer--feed');
     /* A fault code, then the sentence. The three dead ends used to be
        told apart by a padlock, a camera and a keypad glyph — three
        pictures doing a job this page does with words in brackets
@@ -19585,6 +19640,7 @@ const Scanner = {
     cancelAnimationFrame(this.raf); this.raf = null;
     this.stream?.getTracks().forEach(t => t.stop());
     this.stream = null; this.locked = false;
+    $('#viewer')?.classList.remove('viewer--feed');
   },
 };
 

@@ -604,10 +604,18 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
      camera image reads as instrument housing and leaves the red to the
      thing that earns it.
 
+     INK is the default, because the box's own ground is paper. Paper
+     brackets were keyed to the absence of .viewer--stalled, which is
+     only one of the states with no picture in it: while the browser is
+     asking for camera permission, and for as long as the feed takes to
+     start, the frame is paper and the brackets were painted paper on
+     top of it. .viewer--feed is set when a video is actually playing,
+     which is the real question being asked.
+
      Declared HERE and not on ::after: a custom property re-declared on
      the pseudo-element wins over whatever the element passes down, so
-     the stalled state could never override it from the outside. */
-  --bracket-c:var(--paper);
+     no state could override it from the outside. */
+  --bracket-c:var(--ink);
   /* The camera frame is the one panel that has to answer to viewport
      HEIGHT: it is the thing you hold up, and on a phone in landscape,
      or a short laptop, a 3/4 box taller than the screen puts the
@@ -626,12 +634,9 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
    message with a floor for presence, so it is a panel on a phone and a
    panel on a monitor rather than a 230px letterbox on both. */
 .viewer--stalled{aspect-ratio:auto;min-height:clamp(200px,32dvh,320px);
-  max-height:none;
-  /* The brackets are paper because the camera image behind them is
-     dark. Once the video is gone the box is back to its own light
-     ground and paper-on-paper is nothing at all, so the frame
-     furniture goes to ink with it. */
-  --bracket-c:var(--ink)}
+  max-height:none}
+/* a picture is playing: the housing goes paper so it holds against it */
+.viewer--feed{--bracket-c:var(--paper)}
 .viewer video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
   /* Monochrome stays: every accent token in this theme is remapped to
      ink, so a colour camera would be the one coloured thing in the whole
@@ -683,6 +688,22 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .viewer--hit .viewer__grain{inset:6px}
 .viewer__status,.viewer__msg{position:relative;font-family:var(--f-accent);
   text-transform:uppercase;text-align:center}
+/* THE WAITING MARK. `.loader` was applied in JS and styled in no
+   stylesheet, so the only thing sizing it was an inline
+   `inset:0;margin:auto` and the SVG's own default of filling its box.
+   It is a mark now: sized like the reticle's inner ring, centred in
+   it, and turning in twelve discrete steps because nothing in this
+   system eases. */
+.loader{position:absolute;top:50%;left:50%;
+  width:clamp(54px,42%,116px);aspect-ratio:1;
+  transform:translate(-50%,-50%);
+  color:var(--ink);pointer-events:none;z-index:4;
+  animation:loaderTurn 1.2s steps(12,end) infinite}
+.loader svg{width:100%;height:100%;display:block}
+@keyframes loaderTurn{from{transform:translate(-50%,-50%) rotate(0deg)}
+                      to  {transform:translate(-50%,-50%) rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){ .loader{animation:none} }
+
 .reticle{position:relative;width:64%;aspect-ratio:1;max-width:250px}
 .reticle__c{position:absolute;width:26px;height:26px;border:var(--rule) solid var(--ink)}
 .reticle__c--tl{top:0;left:0;border-right:0;border-bottom:0}
