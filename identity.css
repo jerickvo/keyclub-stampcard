@@ -252,7 +252,10 @@ none;
 .viewer{border-color:var(--ink)}
 .reticle__c{border-color:var(--seal)}
 .reticle--good .reticle__c{border-color:var(--seal);background:var(--seal)}
-.reticle--bad .reticle__c{background:var(--ink);border-color:var(--ink)}
+/* Refused: the target fills solid. Ink-on-black was a state change you
+   could not see; the same element that aims in cinnabar refuses in it,
+   which spends no new colour. */
+.reticle--bad .reticle__c{background:var(--seal);border-color:var(--seal)}
 .reticle__line{background:var(--seal)}
 .viewer--hit{border-color:var(--seal)}
 .viewer__msg{border-color:var(--ink)}

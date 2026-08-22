@@ -87,12 +87,18 @@ const Scanner = {
     if (el){
       el.textContent = msg;
       el.classList.toggle('viewer__msg--hot', state === 'hit' || state === 'good');
-      el.classList.toggle('viewer__msg--soft', state === 'bad' || state === 'boot');
+      el.classList.toggle('viewer__msg--soft',
+        state === 'bad' || state === 'boot' || state === 'busy');
     }
     if (ret){
       ret.classList.toggle('reticle--live', state === 'live');
       ret.classList.toggle('reticle--good', state === 'good' || state === 'hit');
       ret.classList.toggle('reticle--bad',  state === 'bad');
+      /* 'busy' is the wait on the server, and it used to toggle
+         nothing at all: the sweep stopped, the corners fell back to
+         their default weight, and the frame read as a scanner that had
+         given up rather than one that was working. It has a look now. */
+      ret.classList.toggle('reticle--busy', state === 'busy');
     }
     viewer?.classList.toggle('viewer--hit', state === 'good' || state === 'hit');
     /* A refusal is not a small red sentence under the frame. The frame

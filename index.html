@@ -690,12 +690,19 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   pointer-events:none;z-index:6;
   --bracket:clamp(20px,3.2vw,40px);
   --bracket-w:var(--edge);
+  /* Frame furniture, not a target. These brackets are fixed to the box
+     and never change; the reticle inside is the mark that aims and
+     reacts, and it is the one that carries cinnabar. Two red bracket
+     sets on one screen was the accent spent twice — paper on the black
+     field reads as instrument housing and leaves the red to the thing
+     that earns it. */
+  --bracket-c:var(--paper);
   background-repeat:no-repeat;
   background-image:
-    linear-gradient(var(--seal) 0 0),linear-gradient(var(--seal) 0 0),
-    linear-gradient(var(--seal) 0 0),linear-gradient(var(--seal) 0 0),
-    linear-gradient(var(--seal) 0 0),linear-gradient(var(--seal) 0 0),
-    linear-gradient(var(--seal) 0 0),linear-gradient(var(--seal) 0 0);
+    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
+    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
+    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
+    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0);
   background-size:
     var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket),
     var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket),
@@ -2527,7 +2534,32 @@ main#view{padding-top:var(--space-tier);
    satisfies "not by colour alone" for free. */
 .reticle--live .reticle__c{border-width:var(--edge-thin)}
 .reticle__line{top:50%}
-.reticle--live .reticle__line{animation:retSweep 2.4s ease-in-out infinite}
+/* steps(), not ease-in-out. Everything else in this system cuts; a
+   sweep that accelerates and decelerates was the one soft gesture left
+   on the screen, and it read as an app animation rather than as a
+   mechanism ticking down the frame. */
+.reticle--live .reticle__line{animation:retSweep 2.4s steps(14,end) infinite}
+
+/* ── WORKING ──────────────────────────────────────────────────────
+   The code is read and the server has not answered yet. The corners
+   hold at full weight — the frame has hold of something — and blink on
+   a two-step cycle, while the sweep line parks dead centre. Held plus
+   blinking cannot be confused with the searching state (sweeping, thin)
+   or with the refusal (filled, still). */
+.reticle--busy .reticle__c{border-width:var(--edge-heavy);
+  animation:busyHold 260ms steps(1,end) infinite alternate}
+.reticle--busy .reticle__line{top:50%;opacity:.9;
+  animation:busyBar 520ms steps(4,end) infinite}
+.reticle--busy .reticle__geo,
+.reticle--busy .reticle__mark{opacity:.5}
+@keyframes busyHold{
+  from{border-color:var(--ink)}
+  to  {border-color:var(--v3)}
+}
+@keyframes busyBar{
+  from{transform:scaleX(.12);transform-origin:left}
+  to  {transform:scaleX(1);transform-origin:left}
+}
 
 .reticle--good .reticle__c{border-width:var(--edge-heavy)}
 .reticle--good .reticle__geo,
@@ -2543,9 +2575,13 @@ main#view{padding-top:var(--space-tier);
    in between. You cannot miss it and you cannot mistake it for the
    success state, which tightens quietly instead. */
 .viewer--bad{animation:refuse 90ms steps(1,end) 3,refuseKick 60ms steps(2,end) 2}
+/* Floods to PAPER, not ink. The viewfinder is already a black box, so
+   an ink flash over it was a change nobody could see — the loud move
+   on a dark field is inversion. Three white cuts over the camera feed
+   in 270ms. */
 @keyframes refuse{
-  0%,100%{box-shadow:inset 0 0 0 0 var(--ink)}
-  50%    {box-shadow:inset 0 0 0 100vmax var(--ink)}
+  0%,100%{box-shadow:inset 0 0 0 0 var(--paper)}
+  50%    {box-shadow:inset 0 0 0 100vmax var(--paper)}
 }
 @keyframes refuseKick{
   0%  {transform:translateX(0)}
@@ -2567,14 +2603,19 @@ main#view{padding-top:var(--space-tier);
   border:var(--rule-hair) solid var(--ink)}
 
 @keyframes retSweep{
-  0%,100%{top:6%;opacity:.35}
-  50%    {top:94%;opacity:.9}
+  from{top:6%;opacity:.4}
+  to  {top:94%;opacity:.9}
 }
 @media (prefers-reduced-motion:reduce){
   .reticle--live .reticle__line{animation:none}
+  /* working still has to be distinguishable from stopped, so the
+     corners simply hold heavy and the bar holds half-drawn */
+  .reticle--busy .reticle__c{animation:none}
+  .reticle--busy .reticle__line{animation:none;
+    transform:scaleX(.55);transform-origin:left}
   /* the refusal still has to be unmistakable without motion, so the
      flash becomes a held state rather than being dropped */
-  .viewer--bad{animation:none;border-color:var(--ink);
+  .viewer--bad{animation:none;border-color:var(--seal);
     border-width:var(--edge-shout)}
 }
 
@@ -2620,9 +2661,13 @@ main#view{padding-top:var(--space-tier);
 
 /* drop-shadow follows the painted L of each corner; box-shadow would
    ring the whole element box and turn the brackets into solid squares */
+/* Two paper passes over a 2.5px cinnabar stroke bleached the target
+   to white — the halo swallowed the mark it was meant to protect. One
+   tight paper ring, then a dark one outside it: the red core survives,
+   and the pair holds against a bright wall and a dark room alike. */
 .reticle__c,
-.reticle__line{filter:drop-shadow(0 0 1.6px var(--paper))
-                      drop-shadow(0 0 1.6px var(--paper))}
+.reticle__line{filter:drop-shadow(0 0 1.1px var(--paper))
+                      drop-shadow(0 0 2px rgba(0,0,0,.65))}
 .reticle__geo,
 .reticle__mark{opacity:.42;filter:drop-shadow(0 0 1.5px var(--paper))}
 .reticle--good .reticle__geo,
@@ -2884,7 +2929,10 @@ none;
 .viewer{border-color:var(--ink)}
 .reticle__c{border-color:var(--seal)}
 .reticle--good .reticle__c{border-color:var(--seal);background:var(--seal)}
-.reticle--bad .reticle__c{background:var(--ink);border-color:var(--ink)}
+/* Refused: the target fills solid. Ink-on-black was a state change you
+   could not see; the same element that aims in cinnabar refuses in it,
+   which spends no new colour. */
+.reticle--bad .reticle__c{background:var(--seal);border-color:var(--seal)}
 .reticle__line{background:var(--seal)}
 .viewer--hit{border-color:var(--seal)}
 .viewer__msg{border-color:var(--ink)}
@@ -19027,12 +19075,18 @@ const Scanner = {
     if (el){
       el.textContent = msg;
       el.classList.toggle('viewer__msg--hot', state === 'hit' || state === 'good');
-      el.classList.toggle('viewer__msg--soft', state === 'bad' || state === 'boot');
+      el.classList.toggle('viewer__msg--soft',
+        state === 'bad' || state === 'boot' || state === 'busy');
     }
     if (ret){
       ret.classList.toggle('reticle--live', state === 'live');
       ret.classList.toggle('reticle--good', state === 'good' || state === 'hit');
       ret.classList.toggle('reticle--bad',  state === 'bad');
+      /* 'busy' is the wait on the server, and it used to toggle
+         nothing at all: the sweep stopped, the corners fell back to
+         their default weight, and the frame read as a scanner that had
+         given up rather than one that was working. It has a look now. */
+      ret.classList.toggle('reticle--busy', state === 'busy');
     }
     viewer?.classList.toggle('viewer--hit', state === 'good' || state === 'hit');
     /* A refusal is not a small red sentence under the frame. The frame

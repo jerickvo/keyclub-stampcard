@@ -647,12 +647,19 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   pointer-events:none;z-index:6;
   --bracket:clamp(20px,3.2vw,40px);
   --bracket-w:var(--edge);
+  /* Frame furniture, not a target. These brackets are fixed to the box
+     and never change; the reticle inside is the mark that aims and
+     reacts, and it is the one that carries cinnabar. Two red bracket
+     sets on one screen was the accent spent twice — paper on the black
+     field reads as instrument housing and leaves the red to the thing
+     that earns it. */
+  --bracket-c:var(--paper);
   background-repeat:no-repeat;
   background-image:
-    linear-gradient(var(--seal) 0 0),linear-gradient(var(--seal) 0 0),
-    linear-gradient(var(--seal) 0 0),linear-gradient(var(--seal) 0 0),
-    linear-gradient(var(--seal) 0 0),linear-gradient(var(--seal) 0 0),
-    linear-gradient(var(--seal) 0 0),linear-gradient(var(--seal) 0 0);
+    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
+    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
+    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
+    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0);
   background-size:
     var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket),
     var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket),
