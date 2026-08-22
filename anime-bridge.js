@@ -30,6 +30,7 @@
   if (missing){
     console.warn('[keystamp] anime.js did not load; starting without animation.');
     window.cubicBezier  = function(){ return undefined; };
+    window.steps        = function(){ return undefined; };
     window.createSpring = function(){ return undefined; };
     window.spring      = function(){ return undefined; };
     return;
@@ -44,6 +45,10 @@
   window.spring         = A.spring;
   window.createSpring   = A.spring;
   window.stagger        = A.stagger;
+  /* steps() is a top-level export, NOT a member of eases — reaching for
+     eases.steps returns undefined, anime falls back to its default
+     out-curve, and a motion written to cut arrives eased instead. */
+  window.steps          = A.steps;
   window.onScroll       = A.onScroll;
   window.splitText      = A.text.splitText;
   window.aset           = A.utils.set;

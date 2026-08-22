@@ -182,7 +182,6 @@ async function go(id){
   view.innerHTML = Views[id]();
   paintNav();
   try { scrollTo({ top:0, behavior:Motion.off ? 'auto' : 'smooth' }); } catch (_) { scrollTo(0, 0); }
-  Ink.apply(view);                       /* draw the edges of whatever just rendered */
   if (booted) FX.pageEntrance(view);
   afterRender(id);
   view.focus({ preventScroll:true });
@@ -545,7 +544,6 @@ async function loadBoard(){
   BoardUI.loading = false;
   if (pane()){
     pane().innerHTML = BoardUI.pane();
-    Ink.apply(pane());
   }
   /* the QR and the live count only exist on the session pane */
   if (BoardUI.tab === 'session' && !BoardUI.error && $('#qrBox')){
@@ -609,7 +607,6 @@ addEventListener('resize', () => {
   paintIdentity();
   paintMotionBtn();
   buildArena();
-  Ink.apply(document);
   applyBackdrop();
   go(hashRoute());                       /* renders behind the boot curtain */
 })();

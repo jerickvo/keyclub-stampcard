@@ -42,12 +42,12 @@ const C = {
     const ticks = [20, 40, 60, 80].map(v => `<span class="gauge__tick" style="left:${v}%"></span>`).join('');
 
     return `<section class="rig ${live ? '' : 'rig--br'}" data-enter aria-labelledby="heroLbl">
-      <span class="rig__ghost" aria-hidden="true"></span>
+      <span class="rig__ghost" data-layer aria-hidden="true"></span>
       <div class="panel ${live ? 'panel--live' : ''} hero p-quiet ink-load">
-        <span class="sfx sfx--a" aria-hidden="true">${live ? 'OPEN' : 'HOLD'}</span>
-        <span class="panel__rule" aria-hidden="true"></span>
-        <span class="tick tick--tl" aria-hidden="true"></span>
-        <span class="tick tick--br" aria-hidden="true"></span>
+        <span class="sfx sfx--a" data-layer aria-hidden="true">${live ? 'OPEN' : 'HOLD'}</span>
+        <span class="panel__rule" data-layer aria-hidden="true"></span>
+        <span class="tick tick--tl" data-layer aria-hidden="true"></span>
+        <span class="tick tick--br" data-layer aria-hidden="true"></span>
 
         <div class="hero__top">
           ${live
@@ -80,29 +80,66 @@ const C = {
      stamp snaps flat, which is what makes the grid feel struck by hand ── */
   sealGrid(){
     const p = Rules.progress();
+    /* THE SLOT DOSSIER (§26).
+
+       A landed stamp was a black square and nothing else: the record of
+       WHICH meeting it came from lived only on another screen. Every
+       filled slot now carries the docket for the check-in it represents,
+       revealed on hover or focus.
+
+       Sorted chronologically here rather than trusted from the backend,
+       which returns newest first: slot N of the card is the Nth stamp
+       ever earned, so the grid reads left-to-right as history. */
+    const chrono = [...Store.scans]
+      .sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
+
     const cells = Array.from({ length:p.span }, (_, i) => {
       const state = i < p.filled ? 'set' : i === p.filled ? 'next' : '';
       const last = state === 'set' && i === p.filled - 1 ? ' seal--last seal--hero' : '';
       const tilt = state === 'set' ? '' :
         `transform:rotate(${[-1.7, 1.2, .6, -1.1, 1.6][i % 5]}deg)`;
-      return `<li class="seal ${state ? 'seal--' + state : ''}${last}" data-seal="${state || 'empty'}" style="${tilt}">
+
+      const rec = state === 'set' ? chrono[p.floor + i] : null;
+      const mtg = rec ? Store.meetings.find(m => m.id === rec.meetingId) : null;
+      /* The dossier is only offered when there is something in it. A
+         stamp whose meeting has since been deleted still counts — it
+         just has no docket to show, so it does not become a tab stop
+         that opens an empty card. */
+      const dossier = rec && mtg ? C.sealMeta(rec, mtg) : '';
+
+      return `<li class="seal ${state ? 'seal--' + state : ''}${last}" data-seal="${state || 'empty'}" style="${tilt}"${
+        dossier ? ` tabindex="0" aria-label="Stamp ${pad(p.floor + i + 1)}: general meeting ${
+          mtg.no}, ${fmtDate(mtg.date)}, checked in at ${fmtTime(rec.at)}"` : ''}>
         <svg viewBox="0 0 100 100" aria-hidden="true"><g class="seal__mark">${seal(state === 'set' ? 2 : 1)}</g></svg>
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
+        ${dossier}
       </li>`;
     }).join('');
 
     return `<section class="rig rig--bl ink-a" data-enter>
-      <span class="rig__ghost rig__ghost--l" aria-hidden="true"></span>
+      <span class="rig__ghost rig__ghost--l" data-layer aria-hidden="true"></span>
       <div class="panel panel--flat">
         <ul class="seals" id="seals" aria-label="${p.filled} of ${p.span} stamps in this tier">${cells}</ul>
       </div>
     </section>`;
   },
 
+  /* THE ACTION CHAMBER.
+
+     The primary action is not a card — it is a marked-off area of the
+     page with the target inside it. The four corner marks are the
+     signature device of this system (a barrier, a viewfinder, a seal's
+     registration marks) and they are what makes this read as somewhere
+     to aim rather than as another panel. They are decorative spans,
+     not borders, so they can move independently on hover: the chamber
+     locks onto the target when you reach for it. */
   strike({ verb, sub, go, live = false, calm = false }){
+    const corners = ['tl','tr','bl','br']
+      .map(c => `<span class="chamber__c chamber__c--${c}" data-layer aria-hidden="true"></span>`).join('');
     return `<button class="strike ${live ? 'strike--live' : ''} ${calm ? 'strike--calm' : ''}"
       data-enter data-go="${go}">
-      <span><span class="strike__verb">${esc(verb)}</span>
+      ${corners}
+      <span class="strike__body"><span class="strike__verb">${esc(verb)}</span>
         <span class="strike__sub">${esc(sub)}</span></span>
       <span class="strike__arrow" aria-hidden="true">${ICON.arrow}</span>
     </button>`;
@@ -141,14 +178,18 @@ const C = {
     const total = Store.totalStamps();
     const open = total >= r.required;
     const pct = Math.min(100, Math.round(total / r.required * 100));
+    /* The tier's own vocabulary. A locked reward is SEALED — not
+       "1 to go", which reads as a progress widget. The distance is
+       still stated, in the legend under the track where the rest of
+       the figures live, so nothing is lost. */
     const chip = r.claimed ? '<span class="chip chip--set">Claimed</span>'
       : open ? '<span class="chip chip--hot">Ready</span>'
-             : `<span class="chip">${r.required - total} to go</span>`;
+             : `<span class="chip chip--sealed">Sealed</span>`;
 
     return `<section class="rig ${open ? '' : 'rig--tr'}" data-enter data-reward="${r.id}">
-      <span class="rig__ghost" aria-hidden="true"></span>
+      <span class="rig__ghost" data-layer aria-hidden="true"></span>
       <div class="panel tech ${open && !r.claimed ? 'tech--open' : ''} ${r.claimed ? 'tech--claimed' : ''} ${open ? '' : 'tech--sealed'}">
-        <span class="panel__rule" aria-hidden="true"></span>
+        <span class="panel__rule" data-layer aria-hidden="true"></span>
         <svg class="tech__glyph" viewBox="0 0 100 100" aria-hidden="true">${seal(3)}</svg>
 
         <div class="tech__top">
@@ -158,11 +199,15 @@ const C = {
           </div>${chip}
         </div>
 
-        <div class="tech__gauge">
+        <!-- --slots is the tier size, so the meter draws as that many
+             discrete stamp cells rather than as a continuous bar. The
+             fill element and its data-pct are untouched, so whatever
+             animates the meter keeps working. -->
+        <div class="tech__gauge" style="--slots:${r.required}">
           <div class="gauge"><span class="gauge__fill" data-pct="${pct}"></span></div>
           <div class="tech__legend">
             <span class="kicker">${Math.min(total, r.required)} / ${r.required} stamps</span>
-            <span class="kicker">${pct}%</span>
+            <span class="kicker">${open ? 'Unlocked' : (r.required - total) + ' to go'}</span>
           </div>
         </div>
 
@@ -178,13 +223,27 @@ const C = {
     </section>`;
   },
 
-  stat(value, label, sub){
-    return `<div class="stat">
+  /* Four figures at identical weight is four figures nobody reads
+     first. A plate can now be ranked, and exactly one per page is. */
+  stat(value, label, sub, rank){
+    return `<div class="stat"${rank ? ` data-rank="${rank}"` : ''}>
       <b>${esc(value)}${sub ? `<i> / ${esc(sub)}</i>` : ''}</b><span>${esc(label)}</span></div>`;
   },
 
+  /* Structured, monospaced, in the page's own technical voice: a
+     docket, not a tooltip. aria-hidden because the slot already carries
+     the same facts as a label — this is the sighted view of them. */
+  sealMeta(rec, m){
+    return `<span class="sealmeta" data-layer aria-hidden="true">
+      <b class="sealmeta__no">GM ${pad(m.no)}</b>
+      <span>${fmtDate(m.date)}</span>
+      <span>${fmtTime(rec.at)} / ${esc((rec.method || 'qr').toUpperCase())}</span>
+      <span>${esc(m.place)}</span>
+    </span>`;
+  },
+
   empty(icon, title, body){
-    return `<section class="rig" data-enter><span class="rig__ghost" aria-hidden="true"></span>
+    return `<section class="rig" data-enter><span class="rig__ghost" data-layer aria-hidden="true"></span>
       <div class="panel empty">${icon}<h3 class="h2">${esc(title)}</h3>${
         body ? `<p>${esc(body)}</p>` : ''}</div>
     </section>`;
@@ -207,7 +266,7 @@ const Views = {
     return `<div class="view">
       ${C.head('Keystamp', title, jp)}
       <section class="rig" data-enter>
-        <span class="rig__ghost" aria-hidden="true"></span>
+        <span class="rig__ghost" data-layer aria-hidden="true"></span>
         <div class="panel bpanel">
           <p class="kicker">Could not load</p>
           <p style="margin-top:8px">Keystamp could not reach the club records, so your
@@ -253,6 +312,13 @@ const Views = {
         <div class="head__stack">
           <h1 class="title title--name">${esc(memberName())}<em>.</em></h1>
         </div>
+        <!-- The edge rune. Small vertical technical text framing the
+             nameplate — and it states something true rather than
+             decorating: whether the room is taking check-ins right
+             now. Metadata that is real is the whole difference between
+             a technical look and a technical instrument. -->
+        <span class="rune" data-layer aria-hidden="true">SYS.${
+          open && !done ? 'ACTIVE' : 'STANDBY'}</span>
         <span class="jp" aria-hidden="true">出席</span>
       </header>
 
@@ -262,7 +328,7 @@ const Views = {
 
       <div class="duo">
       <section class="rig rig--tr" data-enter>
-        <span class="rig__ghost" aria-hidden="true"></span>
+        <span class="rig__ghost" data-layer aria-hidden="true"></span>
         <div class="panel">
           <div style="display:flex;align-items:baseline;justify-content:space-between;gap:var(--s3)">
             <h2 class="h2">${open ? 'Happening now' : 'Next meeting'}</h2>
@@ -276,7 +342,7 @@ const Views = {
       </section>
 
       ${recent ? `<section class="rig rig--bl" data-enter>
-        <span class="rig__ghost rig__ghost--l" aria-hidden="true"></span>
+        <span class="rig__ghost rig__ghost--l" data-layer aria-hidden="true"></span>
         <div class="panel panel--flat">
           <h2 class="h2">Last stamped</h2>
           <div class="log" style="margin-top:var(--s4)">${C.entry(recent, { link:false })}</div>
@@ -299,7 +365,9 @@ const Views = {
       ${held.length ? `<section data-enter class="stack-lg">
         <div class="log">${held.map(m => C.entry(m)).join('')}</div>
       </section>`
-      : C.empty(ICON.blank, 'No general meetings yet')}
+      : C.empty(ICON.blank, 'No general meetings yet',
+                'Your record fills itself: every meeting you scan into is '
+                + 'written here automatically. Nothing to do until the first one.')}
 
       ${upcoming.length ? `<section data-enter class="stack-xl">
         <h2 class="h2" style="color:var(--faint)">Scheduled</h2>
@@ -380,7 +448,7 @@ const Views = {
       ${C.bleed(bleed, 'top:-10px;right:-9vw')}
       ${C.head(kicker, title, jp)}
       <section class="rig" data-enter style="margin-top:var(--gut)">
-        <span class="rig__ghost" aria-hidden="true"></span>
+        <span class="rig__ghost" data-layer aria-hidden="true"></span>
         <div id="boardPane">${BoardUI.pane()}</div>
       </section>
     </div>`;
@@ -391,52 +459,72 @@ const Views = {
   bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Code',   'Key Club', 'Check-In',   '受付'); },
   bmembers(){  BoardUI.tab = 'progress'; return this.boardSpread('Roster', 'Key Club', 'Members',    '会員'); },
 
+  /* ── MEMBER — the credential page (§38) ───────────────────────────
+     This was the one spread that did not belong to the system. It
+     opened with the member's name at 20px inside a mostly empty panel
+     while every other chapter opened with a display-size nameplate; its
+     four figures were rendered at identical weight, so the page had no
+     headline; and its Milestones list was a THIRD card design for
+     content the Rewards chapter already owns.
+
+     It is a chapter now. Same nameplate as Record, Rewards and Club
+     Tools; one figure carrying the page and three supporting it; and
+     the milestones reduced to a register — the Rewards chapter holds
+     the full treatment, this one holds the ledger of it. */
   profile(){
     if (Store.failed) return this.loadFailure('Member', '会員');
     const held = Store.heldMeetings();
     const attended = held.filter(m => Store.attended(m.id)).length;
     const p = Rules.progress();
+    const total = Store.totalStamps();
 
     return `<div class="view">
       ${C.bleed('Member', 'top:-10px;right:-9vw', 'bleed--fill')}
-      <section class="rig" data-enter class="stack-lg">
-        <span class="rig__ghost" aria-hidden="true"></span>
-        <div class="panel who">
-          <span class="panel__rule" aria-hidden="true"></span>
+      ${C.head(Store.isBoard ? 'Board' : 'Member', esc(memberName()), '会員')}
+
+      <section class="rig stack-lg" data-enter>
+        <span class="rig__ghost" data-layer aria-hidden="true"></span>
+        <div class="panel who" data-rank="quiet">
+          <span class="panel__rule" data-layer aria-hidden="true"></span>
           ${ASSETS.schoolSeal
             ? `<img class="who__seal who__seal--img" src="${ASSETS.schoolSeal}" alt="" aria-hidden="true">`
             : `<svg class="who__seal" viewBox="0 0 100 100" aria-hidden="true">${seal(4)}</svg>`}
-          <p class="who__role">${Store.isBoard ? 'Board' : 'Member'}</p>
-          <h1 class="who__name">${esc(memberName())}</h1>
+          <div class="who__id">
+            <p class="who__role">${Store.isBoard ? 'Board' : 'Member'} / ${
+              esc(Store.user && Store.user.username ? Store.user.username : memberName())}</p>
+            <p class="who__line">${
+              total === 0 ? 'No stamps on this card yet.'
+              : `${pad(total)} stamps struck across ${attended} of ${held.length} meetings held.`}</p>
+          </div>
+          <span class="rune" data-layer aria-hidden="true">CARD ${
+            p.next ? 'TIER ' + p.next : 'COMPLETE'}</span>
         </div>
       </section>
 
-      <div class="stats">
-        ${C.stat(pad(Store.totalStamps()), 'Total stamps')}
+      <div class="stats stack-lg">
+        ${C.stat(pad(total), 'Total stamps', null, 'lead')}
         ${C.stat(pad(attended), 'Meetings attended', pad(held.length))}
         ${C.stat(pad(Store.rewardsUnlocked()), 'Rewards unlocked', pad(Store.rewards.length))}
         ${C.stat(Store.attendanceRate() + '%', 'Attendance rate')}
       </div>
 
-      <section class="rig rig--bl" data-enter class="stack-xl">
-        <span class="rig__ghost rig__ghost--l" aria-hidden="true"></span>
-        <div class="panel panel--flat">
+      <section class="rig rig--bl stack-xl" data-enter>
+        <span class="rig__ghost rig__ghost--l" data-layer aria-hidden="true"></span>
+        <div class="panel panel--flat" data-rank="quiet">
           <h2 class="h2">Milestones</h2>
-          <div class="log" style="margin-top:var(--s4)">
+          <ol class="ledger">
             ${Store.rewards.map(r => {
-              const open = Store.totalStamps() >= r.required;
-              return `<div class="rec ${open ? 'rec--set' : 'rec--miss'}">
-                <span class="rec__node" aria-hidden="true"></span>
-                <div class="entry ${open ? 'entry--set' : 'entry--miss'}">
-                <span class="entry__ghost" aria-hidden="true">${r.required}</span>
-                <span class="entry__no">${esc(r.name)}</span>
-                <span class="entry__verdict">${r.claimed ? 'Claimed' : open ? 'Unlocked' : 'Sealed'}</span>
-                <span class="entry__meta">${r.required} stamps${open ? '' : ` · ${r.required - Store.totalStamps()} to go`}</span>
-                </div>
-              </div>`;
+              const open = total >= r.required;
+              const state = r.claimed ? 'Claimed' : open ? 'Ready' : 'Sealed';
+              return `<li class="ledger__row ledger__row--${state.toLowerCase()}">
+                <span class="ledger__at">${pad(r.required)}</span>
+                <span class="ledger__name">${esc(r.name)}</span>
+                <span class="ledger__state">${state}</span>
+                <span class="ledger__gap">${open ? '—' : (r.required - total) + ' to go'}</span>
+              </li>`;
             }).join('')}
-          </div>
-          <p class="muted" style="margin-top:var(--s4);font-size:13px">
+          </ol>
+          <p class="muted ledger__foot">
             ${p.next ? `${p.remaining} more ${p.remaining === 1 ? 'stamp' : 'stamps'} until the next one unlocks.`
                      : 'Every milestone is unlocked.'}</p>
         </div>
@@ -471,9 +559,9 @@ const Views = {
                up ? '登録' : '入場')}
 
       <section class="rig" data-enter>
-        <span class="rig__ghost" aria-hidden="true"></span>
+        <span class="rig__ghost" data-layer aria-hidden="true"></span>
         <form class="panel authp" id="authForm" novalidate>
-          <span class="panel__rule" aria-hidden="true"></span>
+          <span class="panel__rule" data-layer aria-hidden="true"></span>
 
           <div class="field authp__f">
             <label class="kicker" for="authUser">Username</label>

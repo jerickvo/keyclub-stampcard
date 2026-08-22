@@ -120,9 +120,14 @@
      where the column is narrow. It is material behind the number, not a
      field the caption has to be read through. */
   opacity:.3;z-index:0;
-  -webkit-mask-image:linear-gradient(to top, #000 0%, #000 46%, transparent 100%),
+  /* The tone is a band behind the FIGURE, not a field under the whole
+     lower half of the panel. Fading it out at the bottom as well as
+     the top clears the caption and the travel bar entirely — nothing
+     in this system is read through a texture — while leaving the
+     number standing on it, which is the only job it ever had. */
+  -webkit-mask-image:linear-gradient(to top, transparent 0%, #000 30%, #000 66%, transparent 100%),
               linear-gradient(to right, #000 0%, #000 62%, transparent 100%);
-  mask-image:linear-gradient(to top, #000 0%, #000 46%, transparent 100%),
+  mask-image:linear-gradient(to top, transparent 0%, #000 30%, #000 66%, transparent 100%),
              linear-gradient(to right, #000 0%, #000 62%, transparent 100%);
   -webkit-mask-composite:source-in;mask-composite:intersect;
   clip-path:polygon(0 14%, 100% 0, 100% 100%, 0 100%)}
@@ -175,7 +180,7 @@
    two-class selector, so the speed lines (also 1, painted later) were
    covering the word. Same specificity, later in the cascade, so the
    content wins — and the rake stays behind it. */
-.strike > *:not(.inkframe):not(.sfx){position:relative;z-index:2}
+.strike > *:not([data-layer]){position:relative;z-index:2}
 
 /* ─────────────────────────────────────────────────────────────────
    6. GUTTERS AND RHYTHM
@@ -263,13 +268,10 @@
   clip-path:polygon(22% 0, 100% 0, 100% 100%, 0 100%);
   -webkit-mask-image:linear-gradient(to bottom left, #000 0%, transparent 78%);
   mask-image:linear-gradient(to bottom left, #000 0%, transparent 78%)}
-/* :not(.inkframe):not(.sfx) is mandatory on every `> *` rule in this
-   file. The ink border and the SFX word are absolutely positioned by
-   design; a two-class descendant selector outranks their own one-class
-   rule and drags them into flow. On a flex parent that makes the ink
-   SVG a flex item, which is exactly what happened here — it ate 322 of
-   362px and pushed the entry out of the viewport at every width. */
-.seals > *:not(.inkframe):not(.sfx){position:relative;z-index:1}
+/* `.sfx` must stay excluded from every `> *` rule in this file: it is
+   absolutely positioned by design, and a two-class descendant selector
+   outranks its own one-class rule and drags it into flow. */
+.seals > *:not([data-layer]){position:relative;z-index:1}
 
 /* the record page's live row gets a tone band so the actionable entry
    reads as figure against the confirmed rows' ground */
@@ -280,7 +282,7 @@
   opacity:.4;z-index:0;
   -webkit-mask-image:linear-gradient(to left, #000 0%, transparent 88%);
   mask-image:linear-gradient(to left, #000 0%, transparent 88%)}
-[data-screen="record"] .rec--open > *:not(.inkframe):not(.sfx){position:relative;z-index:1}
+[data-screen="record"] .rec--open > *:not([data-layer]){position:relative;z-index:1}
 
 /* ─────────────────────────────────────────────────────────────────
    10. THE CHAPTER NAMEPLATE
@@ -312,7 +314,7 @@
   opacity:.26;clip-path:polygon(26% 0, 100% 0, 100% 100%, 0 100%);
   -webkit-mask-image:linear-gradient(to bottom left, #000 0%, transparent 76%);
   mask-image:linear-gradient(to bottom left, #000 0%, transparent 76%)}
-[data-screen="auth"] .authp > *:not(.inkframe):not(.sfx){position:relative;z-index:1}
+[data-screen="auth"] .authp > *:not([data-layer]){position:relative;z-index:1}
 
 .authp__f{display:block;margin-bottom:var(--s4)}
 .authp__f .kicker{display:block;margin-bottom:6px}
@@ -509,7 +511,7 @@
 .bnext{padding:var(--s5);border:var(--rule-hair) solid var(--ink)}
 /* live state is carried by the heavier rule and the filled tag, not by
    colour alone — the tag still reads CHECK-IN OPEN in monochrome */
-.bnext--live{border-width:var(--rule);box-shadow:4px 4px 0 var(--v1)}
+.bnext--live{border-width:var(--edge-heavy)}
 .bnext__state{display:flex;align-items:center;gap:var(--s3);
   flex-wrap:wrap;margin-top:var(--s4)}
 .bnext__state .muted{font-size:12px}
@@ -582,6 +584,174 @@
   .bconfirm .btn{flex:0 0 auto}
 }
 
+/* ── BOARD: THE SAME INSTRUMENT (§38) ──────────────────────────────
+   The member's reward gauges were rebuilt as discrete stamp tracks —
+   a struck register, not a filling tube. The board's milestone bars
+   went on being smooth fills, so the club's two audiences were reading
+   the same figure off two different instruments. Ten divisions, the
+   same overlay technique, keyed to tenths because this bar is a share
+   of members rather than a count of stamps. */
+.bmile__bar{position:relative;overflow:hidden}
+.bmile__bar::after{content:"";position:absolute;inset:0;
+  pointer-events:none;z-index:2;
+  background-image:repeating-linear-gradient(to right,
+    transparent 0 calc(10% - 1px),
+    var(--ink) calc(10% - 1px) 10%)}
+
+/* The one piece of OS chrome left in the app: a native select, with a
+   system chevron and a system focus ring, sitting inside a page where
+   every other control is a ruled line. Same rule, same mono, and a
+   mitred mark drawn in CSS instead of the platform's glyph. */
+select.input{appearance:none;-webkit-appearance:none;
+  padding-right:calc(var(--s4) + 14px);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ink) 50%),
+    linear-gradient(135deg, var(--ink) 50%, transparent 50%);
+  background-size:7px 7px,7px 7px;
+  background-position:right 8px center, right 1px center;
+  background-repeat:no-repeat}
+select.input:focus-visible{outline:none}
+
+/* ── THE MEMBER CHAPTER (§38) ──────────────────────────────────────
+   The credential strip: the seal, who this is, and one sentence of
+   real state. It used to be a 70px mark and a 20px name in a panel
+   tall enough for a headline, which is why the page opened on nothing.
+   The nameplate above it now carries the name, so this panel can be
+   what it always should have been — a quiet identification band. */
+.who{align-items:center}
+.who__id{min-width:0}
+.who__line{font-size:clamp(12.5px,.95vw,14.5px);color:var(--ink-2);
+  margin-top:4px}
+.who .rune{color:var(--ink-2)}
+@media(min-width:1024px){ .who .rune{display:block} }
+
+/* ── THE MILESTONE LEDGER ──────────────────────────────────────────
+   The same three milestones the Rewards chapter renders in full. This
+   is the ledger of them, not a second card design: a ruled monospace
+   register, one line each, reading tier / name / state / distance.
+   One design system, two levels of detail. */
+.ledger{list-style:none;margin-top:var(--space-stack);
+  border-top:var(--edge-thin) solid var(--ink)}
+.ledger__row{display:grid;align-items:baseline;
+  grid-template-columns:auto 1fr auto;
+  grid-template-areas:"at name state" ". gap gap";
+  gap:2px var(--s3);padding:var(--s3) 0;
+  border-bottom:var(--rule-hair) solid var(--v3);
+  font-family:var(--f-mono);font-size:clamp(11px,1vw,12.5px);
+  letter-spacing:.1em;text-transform:uppercase}
+.ledger__at{grid-area:at;font-family:var(--f-display);
+  font-size:clamp(17px,1.9vw,26px);line-height:.9;color:var(--ink-2);
+  letter-spacing:-.03em}
+.ledger__name{grid-area:name;color:var(--ink);letter-spacing:.14em}
+.ledger__state{grid-area:state;color:var(--ink-2);justify-self:end}
+/* Muted text is INK at a lower weight, not tone — this file's own
+   rule, and the tier numeral and the distance both broke it at 1.98:1.
+   --ink-2 on paper is 5.3:1 and still recedes. */
+.ledger__gap{grid-area:gap;color:var(--ink-2)}
+/* the tier that is actually reachable is the one carrying weight */
+.ledger__row--ready .ledger__at{color:var(--ink)}
+.ledger__row--ready .ledger__state{color:var(--seal)}
+.ledger__row--claimed .ledger__at{color:var(--ink)}
+.ledger__row--claimed .ledger__name{text-decoration:line-through;
+  text-decoration-thickness:1.5px;color:var(--ink-2)}
+.ledger__foot{margin-top:var(--space-stack);font-size:13px}
+@media(min-width:768px){
+  .ledger__row{grid-template-columns:auto 1fr auto auto;
+    grid-template-areas:"at name gap state";gap:var(--s4)}
+  .ledger__gap{justify-self:end;min-width:7ch;text-align:right}
+}
+
+/* ── ONE FIGURE LEADS ──────────────────────────────────────────────
+   Four plates at identical weight is four figures nobody reads first.
+   The ranked one takes the ink weight and the display size; the other
+   three stay quiet and support it. */
+/* [data-screen="profile"] .stat sets --ink-w at (0,2,0), so a bare
+   [data-rank] could never outrank it. Matched here at the same weight
+   and later in the file. */
+.stat[data-rank="lead"]{--ink-w:3.2;background:var(--v1)}
+.stat[data-rank="lead"] b{font-size:clamp(38px,4.6vw,64px);line-height:.86}
+.stat[data-rank="lead"] span{color:var(--ink)}
+
+/* ── THE SLOT DOSSIER (§26) ────────────────────────────────────────
+   Hover or focus a landed stamp and the check-in behind it is stated:
+   meeting number, date, time, method, room. It is a docket rather than
+   a tooltip — no radius, no shadow, no arrow, no fade. It is either
+   there or it is not, on the same 60ms cut as everything else.
+
+   Anchored to the slot and drawn OVER the grid rather than inside it,
+   so a 5-column card does not have to reserve room for a panel that is
+   almost never visible. It flips to the left half of the card and up
+   from the bottom row by asking where the slot is via :nth-child, not
+   by measuring anything at runtime. */
+.sealmeta{position:absolute;left:calc(100% - 2px);top:-2px;z-index:40;
+  display:none;width:max-content;min-width:132px;
+  padding:9px 11px;background:var(--paper);
+  border:var(--edge-thin) solid var(--ink);
+  font:400 10.5px/1.55 var(--f-mono);letter-spacing:.06em;
+  color:var(--ink-2);text-align:left;text-transform:uppercase;
+  pointer-events:none}
+.sealmeta > *{display:block}
+.sealmeta__no{font-weight:700;color:var(--ink);letter-spacing:.14em;
+  padding-bottom:5px;margin-bottom:5px;
+  border-bottom:var(--rule-hair) solid var(--ink)}
+/* the one cinnabar mark the docket is allowed: the corner that says
+   which slot it belongs to */
+.sealmeta::before{content:"";position:absolute;left:-1px;top:-1px;
+  width:10px;height:10px;border:var(--rule) solid var(--seal);
+  border-right:0;border-bottom:0}
+
+.seal:hover .sealmeta,
+.seal:focus-visible .sealmeta,
+.seal:focus-within .sealmeta{display:block}
+/* The slot has to come forward with its docket. Every slot sits at
+   z-index 1, so at equal depth the later ones in the grid paint over
+   the card — the dossier for slot 2 was appearing underneath slots 4
+   and 5. */
+.seal:hover,.seal:focus-within{z-index:60}
+.seal:focus-visible{outline:var(--rule) solid var(--seal);outline-offset:3px}
+
+/* The last two columns would push the docket off the card, so those
+   slots hang it to the left instead. Column count differs by tier, and
+   each tier states its own rule — asking the grid, not the viewport. */
+.seals > .seal:nth-child(5n) .sealmeta,
+.seals > .seal:nth-child(5n - 1) .sealmeta{left:auto;right:calc(100% - 2px)}
+.seals > .seal:nth-child(5n) .sealmeta::before,
+.seals > .seal:nth-child(5n - 1) .sealmeta::before{left:auto;right:-1px;
+  border-right:var(--rule) solid var(--seal);border-left:0}
+@media(min-width:1024px){
+  .seals > .seal:nth-child(5n) .sealmeta,
+  .seals > .seal:nth-child(5n - 1) .sealmeta{left:calc(100% - 2px);right:auto}
+  .seals > .seal:nth-child(5n) .sealmeta::before,
+  .seals > .seal:nth-child(5n - 1) .sealmeta::before{left:-1px;right:auto;
+    border-left:var(--rule) solid var(--seal);border-right:0}
+  .seals > .seal:nth-child(6n) .sealmeta,
+  .seals > .seal:nth-child(6n - 1) .sealmeta{left:auto;right:calc(100% - 2px)}
+  .seals > .seal:nth-child(6n) .sealmeta::before,
+  .seals > .seal:nth-child(6n - 1) .sealmeta::before{left:auto;right:-1px;
+    border-right:var(--rule) solid var(--seal);border-left:0}
+}
+
+/* A pointer that cannot hover has nothing to reveal on the way past, so
+   the docket opens on tap — which is a focus — and needs to sit where a
+   thumb is not already covering it. */
+@media(pointer:coarse){
+  .sealmeta{font-size:11px;padding:10px 12px}
+}
+
+/* ── FAULT CODE ───────────────────────────────────────────────────
+   A bracketed monospace token, drawn in CSS so the brackets are the
+   system's targeting marks rather than characters that would set in
+   whatever the mono face happens to have. Cinnabar, because a dead
+   scanner is the one place on this screen the target never lights. */
+.codemark{display:inline-block;position:relative;
+  font:500 clamp(11px,1.4vw,13px)/1 var(--f-mono);letter-spacing:.22em;
+  text-transform:uppercase;color:var(--seal);
+  padding:8px 14px}
+.codemark::before,.codemark::after{content:"";position:absolute;
+  width:11px;height:11px;border:var(--rule-hair) solid var(--seal)}
+.codemark::before{left:0;top:0;border-right:0;border-bottom:0}
+.codemark::after{right:0;bottom:0;border-left:0;border-top:0}
+
 /* ── SCANNER STATES ───────────────────────────────────────────────
    These classes were toggled in JS and styled nowhere, so a successful
    scan and a rejected one looked identical -- the scanner read as
@@ -591,13 +761,60 @@
    satisfies "not by colour alone" for free. */
 .reticle--live .reticle__c{border-width:var(--edge-thin)}
 .reticle__line{top:50%}
-.reticle--live .reticle__line{animation:retSweep 2.4s ease-in-out infinite}
+/* steps(), not ease-in-out. Everything else in this system cuts; a
+   sweep that accelerates and decelerates was the one soft gesture left
+   on the screen, and it read as an app animation rather than as a
+   mechanism ticking down the frame. */
+.reticle--live .reticle__line{animation:retSweep 2.4s steps(14,end) infinite}
+
+/* ── WORKING ──────────────────────────────────────────────────────
+   The code is read and the server has not answered yet. The corners
+   hold at full weight — the frame has hold of something — and blink on
+   a two-step cycle, while the sweep line parks dead centre. Held plus
+   blinking cannot be confused with the searching state (sweeping, thin)
+   or with the refusal (filled, still). */
+.reticle--busy .reticle__c{border-width:var(--edge-heavy);
+  animation:busyHold 260ms steps(1,end) infinite alternate}
+.reticle--busy .reticle__line{top:50%;opacity:.9;
+  animation:busyBar 520ms steps(4,end) infinite}
+.reticle--busy .reticle__geo,
+.reticle--busy .reticle__mark{opacity:.5}
+@keyframes busyHold{
+  from{border-color:var(--ink)}
+  to  {border-color:var(--v3)}
+}
+@keyframes busyBar{
+  from{transform:scaleX(.12);transform-origin:left}
+  to  {transform:scaleX(1);transform-origin:left}
+}
 
 .reticle--good .reticle__c{border-width:var(--edge-heavy)}
 .reticle--good .reticle__geo,
 .reticle--good .reticle__mark{opacity:.85}
 .reticle--good .reticle__line{opacity:0}
 
+/* ── REFUSED ──────────────────────────────────────────────────────
+   "The UI shouldn't just show a small red error text; the central
+   frame should snap violently and flash starkly."
+
+   So it does. The frame floods to solid ink three times in 270ms and
+   kicks sideways — `steps()`, so every change is a cut with nothing
+   in between. You cannot miss it and you cannot mistake it for the
+   success state, which tightens quietly instead. */
+.viewer--bad{animation:refuse 90ms steps(1,end) 3,refuseKick 60ms steps(2,end) 2}
+/* Floods to PAPER, not ink. The viewfinder is already a black box, so
+   an ink flash over it was a change nobody could see — the loud move
+   on a dark field is inversion. Three white cuts over the camera feed
+   in 270ms. */
+@keyframes refuse{
+  0%,100%{box-shadow:inset 0 0 0 0 var(--paper)}
+  50%    {box-shadow:inset 0 0 0 100vmax var(--paper)}
+}
+@keyframes refuseKick{
+  0%  {transform:translateX(0)}
+  50% {transform:translateX(-7px)}
+  100%{transform:translateX(7px)}
+}
 /* refused: the corners close into a solid block and the sweep stops */
 .reticle--bad .reticle__c{border-width:var(--edge-thin);background:var(--ink)}
 .reticle--bad .reticle__geo,
@@ -607,17 +824,26 @@
 /* the frame itself answers: ink border thickens on a hit */
 .viewer--hit{border-width:var(--edge-shout)}
 
-.viewer__msg{padding:6px 12px;transition:background .18s,color .18s}
+.viewer__msg{padding:6px 12px;transition:background var(--snap) linear,color var(--snap) linear}
 .viewer__msg--hot{background:var(--ink);color:var(--paper)}
 .viewer__msg--soft{background:var(--paper);color:var(--ink);
   border:var(--rule-hair) solid var(--ink)}
 
 @keyframes retSweep{
-  0%,100%{top:6%;opacity:.35}
-  50%    {top:94%;opacity:.9}
+  from{top:6%;opacity:.4}
+  to  {top:94%;opacity:.9}
 }
 @media (prefers-reduced-motion:reduce){
   .reticle--live .reticle__line{animation:none}
+  /* working still has to be distinguishable from stopped, so the
+     corners simply hold heavy and the bar holds half-drawn */
+  .reticle--busy .reticle__c{animation:none}
+  .reticle--busy .reticle__line{animation:none;
+    transform:scaleX(.55);transform-origin:left}
+  /* the refusal still has to be unmistakable without motion, so the
+     flash becomes a held state rather than being dropped */
+  .viewer--bad{animation:none;border-color:var(--seal);
+    border-width:var(--edge-shout)}
 }
 
 /* ── BUTTON HIERARCHY AND STATES ──────────────────────────────────
@@ -662,9 +888,13 @@
 
 /* drop-shadow follows the painted L of each corner; box-shadow would
    ring the whole element box and turn the brackets into solid squares */
+/* Two paper passes over a 2.5px cinnabar stroke bleached the target
+   to white — the halo swallowed the mark it was meant to protect. One
+   tight paper ring, then a dark one outside it: the red core survives,
+   and the pair holds against a bright wall and a dark room alike. */
 .reticle__c,
-.reticle__line{filter:drop-shadow(0 0 1.6px var(--paper))
-                      drop-shadow(0 0 1.6px var(--paper))}
+.reticle__line{filter:drop-shadow(0 0 1.1px var(--paper))
+                      drop-shadow(0 0 2px rgba(0,0,0,.65))}
 .reticle__geo,
 .reticle__mark{opacity:.42;filter:drop-shadow(0 0 1.5px var(--paper))}
 .reticle--good .reticle__geo,

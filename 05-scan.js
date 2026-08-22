@@ -87,14 +87,28 @@ const Scanner = {
     if (el){
       el.textContent = msg;
       el.classList.toggle('viewer__msg--hot', state === 'hit' || state === 'good');
-      el.classList.toggle('viewer__msg--soft', state === 'bad' || state === 'boot');
+      el.classList.toggle('viewer__msg--soft',
+        state === 'bad' || state === 'boot' || state === 'busy');
     }
     if (ret){
       ret.classList.toggle('reticle--live', state === 'live');
       ret.classList.toggle('reticle--good', state === 'good' || state === 'hit');
       ret.classList.toggle('reticle--bad',  state === 'bad');
+      /* 'busy' is the wait on the server, and it used to toggle
+         nothing at all: the sweep stopped, the corners fell back to
+         their default weight, and the frame read as a scanner that had
+         given up rather than one that was working. It has a look now. */
+      ret.classList.toggle('reticle--busy', state === 'busy');
     }
     viewer?.classList.toggle('viewer--hit', state === 'good' || state === 'hit');
+    /* A refusal is not a small red sentence under the frame. The frame
+       itself answers — see .viewer--bad. The class is removed and
+       re-added so a second bad scan in a row replays the reaction
+       instead of sitting on a finished animation. */
+    if (viewer){
+      viewer.classList.remove('viewer--bad');
+      if (state === 'bad'){ void viewer.offsetWidth; viewer.classList.add('viewer--bad'); }
+    }
   },
 
   async start(){
@@ -166,17 +180,22 @@ const Scanner = {
     const viewer = $('#viewer');
     if (!viewer) return;
     this.hideLoader();
+    /* A fault code, then the sentence. The three dead ends used to be
+       told apart by a padlock, a camera and a keypad glyph — three
+       pictures doing a job this page does with words in brackets
+       everywhere else. The code names the fault; the sentence says what
+       to do about it. */
     const copy = {
-      denied:{ icon:ICON.lock, title:'Camera permission is off',
+      denied:{ code:'ERR.PERM', title:'Camera permission is off',
         body:'Allow camera access for this page in your browser settings, then reload. Or type the code below.' },
-      unavailable:{ icon:ICON.camera, title:'No camera found',
+      unavailable:{ code:'ERR.CAM', title:'No camera found',
         body:'Nothing on this device is reporting a camera. Type the code printed under the seal instead.' },
-      unsupported:{ icon:ICON.keypad, title:'Scanning needs a secure page',
+      unsupported:{ code:'ERR.HTTPS', title:'Scanning needs a secure page',
         body:'Camera access only works over https. Type the code printed under the seal instead.' },
     }[kind];
 
     viewer.innerHTML = `<div class="stack">
-      <div class="stack__icon">${copy.icon}</div>
+      ${codeMark(copy.code)}
       <div><h2 class="h2">${copy.title}</h2>
         <p class="muted" style="margin-top:9px;font-size:13.5px;line-height:1.6">${copy.body}</p></div>
     </div>`;

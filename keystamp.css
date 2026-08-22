@@ -125,7 +125,13 @@
   --s7:clamp(28px,3.4vw,44px);
   --s8:clamp(40px,5vw,72px);
   --rail:clamp(196px,15vw,268px); --pad:var(--gutter);
-  --ease:cubic-bezier(.22,.61,.36,1);
+  /* Mechanical, not eased. A stamp does not accelerate into the paper
+     and glide out again — it lands. Every state change in this system
+     is either instantaneous or one 60ms step; the choreography that
+     genuinely deserves duration (the verdict sequence) still owns it
+     in the FX layer, where it is composed rather than interpolated. */
+  --ease:linear;
+  --snap:60ms;
 }
 
 
@@ -246,16 +252,20 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
    panel inside the ghost. */
 .rig{position:relative;min-width:0}
 .rig > .panel{margin-block:0}
-/* the offset ghost is now a hard print shadow — no blur exists in ink */
-.rig__ghost{position:absolute;inset:0;transform:translate(6px,6px);
-  background:var(--ink);z-index:0;clip-path:var(--clip)}
-.rig--tr .rig__ghost{transform:translate(6px,-6px)}
-.rig--bl .rig__ghost,.rig__ghost--l{transform:translate(-6px,6px)}
-.rig--br .rig__ghost{transform:translate(6px,6px)}
+/* THE GHOST IS GONE.
+
+   `.rig__ghost` was a solid ink rectangle offset 6px behind every
+   panel — a hard-edged print shadow. However it is drawn, a shape
+   sitting behind another shape to imply lift is a drop shadow, and a
+   drop shadow says "this card floats above the page". This system says
+   the opposite: there is one sheet of paper, and structure is ruled
+   onto it. The element stays in the markup (every view emits it) and
+   simply stops painting, so no view template has to change. */
+.rig__ghost{display:none}
 
 .panel{position:relative;z-index:1;background:var(--paper);
   border:var(--rule) solid var(--ink);border-radius:0;height:100%}
-.panel > *:not(.sfx):not(.inkframe){position:relative;z-index:1}
+.panel > *:not([data-layer]){position:relative;z-index:1}
 .panel::after{content:"";position:absolute;inset:0;pointer-events:none;
   z-index:0;background-image:radial-gradient(var(--ink) 1px,transparent 1px);
   background-size:5px 5px;opacity:.06}
@@ -292,6 +302,36 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   text-transform:uppercase}
 .jp{font-family:var(--f-jp);font-size:12px;letter-spacing:.5em;color:var(--tone);
   writing-mode:vertical-rl}
+
+/* ══════════════════ THE EDGE RUNE ══════════════════
+   Microscopic vertical monospace running up the right edge of a
+   container. It is the counterweight to the display type: the whole
+   composition is one enormous word and one line you have to lean in to
+   read, and the tension between those two scales is the system.
+
+   Hidden below the laptop tier — a phone has no spare edge to spend,
+   and a rune squeezed against a 320px viewport is decoration rather
+   than framing. */
+.rune{display:none;position:absolute;
+  /* Its own column in the right lane, INSIDE the one already reserved
+     for the Japanese mark — two parallel vertical rules, not one mark
+     fighting another. `.jp` is anchored to the top of that lane, the
+     rune is centred in it, so the two can never meet however tall the
+     container grows. */
+  right:calc(var(--space-panel) + 17px);
+  top:50%;transform:translateY(-50%);
+  writing-mode:vertical-rl;
+  /* Sized from the viewport, not fixed: at 1024 the nameplate is only
+     about 130px tall and a 9.5px rune with this tracking overran it. */
+  font:500 clamp(8px,.62vw,10px)/1 var(--f-mono);letter-spacing:.24em;
+  /* Muted ink, not screentone. At 8-10px a --v3 rune is a smudge you
+     have to hunt for; --ink-2 is quiet without being illegible, which
+     is the whole point of a mark you are meant to lean in and read. */
+  text-transform:uppercase;color:var(--ink-2);
+  white-space:nowrap;pointer-events:none;user-select:none}
+@media(min-width:1024px){
+  .rune{display:block}
+}
 .muted{color:var(--tone)}
 .emph{font-weight:500}
 .emph--hot{background:var(--ink);color:var(--paper);padding:0 5px}
@@ -356,26 +396,71 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   background-size:5px 5px}
 .seal[data-seal="empty"] .seal__mark{opacity:.22}
 
-/* ══════════════════ THE STRIKE — a solid black action panel ══════════════════ */
-.strike{display:flex;align-items:center;justify-content:space-between;gap:var(--s4);
-  width:100%;padding:var(--s5);text-align:left;cursor:pointer;border-radius:0;
-  background:var(--ink);color:var(--paper);border:var(--rule) solid var(--ink);
-  position:relative;overflow:hidden;font-family:var(--f-body)}
+/* ══════════════════ THE ACTION CHAMBER ══════════════════
+   This was a solid black card with a pinstripe fill — the one dark
+   surface in a light application, which read as a widget borrowed from
+   a different product. It is now a chamber: a marked-off region of the
+   same paper, filled with a dense diagonal rake (speed lines, drawn
+   in tone rather than ink so type stays readable on it) and pinned at
+   the corners by four heavy targeting marks.
+
+   It still dominates the page — but by being AIMED AT rather than by
+   being the only dark thing on the screen. */
+/* A column, not a row: the label reads from the top-left the way a
+   heading does, and the target block lands in the opposite corner —
+   the diagonal is what gives an otherwise square chamber its tension.
+   Both ends stay clear of the corner marks. */
+.strike{display:flex;flex-direction:column;align-items:flex-start;
+  justify-content:space-between;gap:var(--s5);
+  width:100%;padding:var(--s6);text-align:left;cursor:pointer;
+  border-radius:0;background:var(--paper);color:var(--ink);
+  border:var(--edge-thin) solid var(--ink);
+  position:relative;overflow:hidden;font-family:var(--f-body);
+  transition:none}
+.strike__arrow{align-self:flex-end}
+/* the rake: 1px diagonal hatch, tone not ink, so it is texture and
+   never competes with the words sitting on it */
 .strike::before{content:"";position:absolute;inset:0;pointer-events:none;
-  background-image:repeating-linear-gradient(72deg,var(--paper) 0 1px,transparent 1px 6px);
-  opacity:.13}
+  background-image:repeating-linear-gradient(74deg,var(--v3) 0 1px,transparent 1px 7px);
+  opacity:.38}
+
+/* ── the corner marks ─────────────────────────────────────────────
+   Four painted Ls, one per corner, drawn as spans rather than as a
+   border so they can move on their own. */
+.chamber__c{position:absolute;width:clamp(16px,2.6vw,28px);
+  height:clamp(16px,2.6vw,28px);border:var(--edge) solid var(--ink);
+  pointer-events:none;z-index:3;transition:none}
+/* flush at 0, not -1px: the chamber clips its own rake with
+   `overflow:hidden`, which would take a bite out of any mark that
+   hangs outside the box */
+.chamber__c--tl{top:0;left:0;border-right:0;border-bottom:0}
+.chamber__c--tr{top:0;right:0;border-left:0;border-bottom:0}
+.chamber__c--bl{bottom:0;left:0;border-right:0;border-top:0}
+.chamber__c--br{bottom:0;right:0;border-left:0;border-top:0}
+/* LOCK ON. The marks step inward and the keyline snaps to the seal.
+   No transition property is set, so this is instantaneous — the whole
+   point of the gesture is that it is mechanical, not eased. */
+.strike:hover .chamber__c,.strike:focus-visible .chamber__c{
+  margin:5px;border-color:var(--seal)}
+.strike:hover,.strike:focus-visible{border-color:var(--seal)}
+.strike:active{transform:translate(2px,2px)}
+.strike__body{position:relative;z-index:2;min-width:0}
 .strike__verb{display:block;font-family:var(--f-display);font-size:var(--t-verb);
   line-height:1;text-transform:uppercase}
 .strike__sub{display:block;margin-top:8px;font:500 10px/1.3 var(--f-mono);
   letter-spacing:.14em;text-transform:uppercase;opacity:.72}
-.strike__arrow{display:grid;place-items:center;width:38px;height:38px;
-  border:var(--rule-hair) solid var(--paper);flex:none}
-.strike__arrow svg{width:17px;height:17px}
-.strike--calm{background:var(--paper);color:var(--ink);border-color:var(--ink)}
-.strike--calm::before{background-image:repeating-linear-gradient(72deg,var(--ink) 0 1px,transparent 1px 6px);opacity:.1}
-.strike--calm .strike__arrow{border-color:var(--ink)}
-.strike:hover{transform:translate(-2px,-2px)}
-.strike{transition:transform .12s var(--ease)}
+/* the target itself: a solid stamped block, inverted on approach */
+.strike__arrow{display:grid;place-items:center;
+  width:clamp(48px,7vw,68px);height:clamp(48px,7vw,68px);
+  background:var(--ink);color:var(--paper);border:var(--edge-thin) solid var(--ink);
+  flex:none;position:relative;z-index:2;transition:none}
+.strike__arrow svg{width:44%;height:44%}
+.strike:hover .strike__arrow,.strike:focus-visible .strike__arrow{
+  background:var(--paper);color:var(--ink);border-color:var(--seal)}
+/* "no meeting is open" is the screentone state: present, but not the
+   thing being pointed at, so the rake thins and the corners quieten */
+.strike--calm::before{opacity:.28}
+.strike--calm .chamber__c{border-color:var(--ink-2)}
 
 /* ══════════════════ BUTTONS ══════════════════ */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
@@ -421,18 +506,21 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
    intact, and the tail is a bordered square rotated 45deg with its top
    two edges hidden behind the balloon's own fill — so the outline runs
    continuously around balloon and tail together. */
+/* A CALLOUT IS A NOTICE, NOT A SPEECH BUBBLE.
+
+   These carried a 1.1deg skew and a rotated square tail — the comic
+   balloon. In an editorial system a message is a ruled notice: square,
+   flush, with a heavy rule down its leading edge marking it as an
+   aside rather than body copy. No skew, no tail, no rotation. */
 .bubble,.toast{position:relative;background:var(--paper);
-  border:var(--rule) solid var(--ink);padding:var(--s4) var(--s5);
-  transform:skewX(-1.1deg)}
-.bubble::after,.toast::after{content:"";position:absolute;left:26px;
-  bottom:calc(var(--rule) * -1 - 9px);width:17px;height:17px;
-  background:var(--paper);border:var(--rule) solid var(--ink);
-  border-top:0;border-left:0;transform:rotate(45deg) skewX(1.1deg)}
+  border:var(--rule-hair) solid var(--ink);
+  border-left:var(--edge-heavy) solid var(--ink);
+  padding:var(--s4) var(--s5)}
 [hidden]{display:none!important}
-.bubble p,.toast p{font-family:var(--f-accent);font-size:13.5px;line-height:1.35;
-  text-transform:uppercase;letter-spacing:.01em;text-align:center}
-.toast strong{display:block;font-family:var(--f-accent);font-size:14px;
-  text-transform:uppercase;margin-bottom:4px}
+.bubble p,.toast p{font-family:var(--f-mono);font-size:12.5px;line-height:1.45;
+  letter-spacing:.02em;text-align:left;color:var(--ink-2)}
+.toast strong{display:block;font-family:var(--f-label);font-size:13px;
+  letter-spacing:.14em;text-transform:uppercase;margin-bottom:5px;color:var(--ink)}
 
 /* ══════════════════ RECORD / LOG ══════════════════ */
 .log{display:flex;flex-direction:column}
@@ -473,9 +561,11 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   fill:none;stroke:var(--ink);stroke-width:1.6;vector-effect:non-scaling-stroke}
 .tech__legend{font:500 9.5px/1 var(--f-mono);letter-spacing:.16em;
   text-transform:uppercase;color:var(--tone)}
-.tech--sealed::before{content:"";position:absolute;inset:0;pointer-events:none;
-  background-image:repeating-linear-gradient(28deg,var(--ink) 0 1.2px,transparent 1.2px 6px);
-  opacity:.16}
+/* The locked state was a diagonal CSS hatch laid over the whole card —
+   the single most generic treatment in the old build, and it fought
+   every word printed on it. A sealed reward is now stated by weight
+   and by its label, not by a texture: hairline keyline, muted type,
+   and the word SEALED. Nothing is drawn across the content. */
 .tech__crack{position:absolute;inset:0;pointer-events:none;opacity:0}
 /* This was `height:6px` — a hard height on a wrapper that contains a
    9px track, its 20px top margin, and a two-item legend. Everything
@@ -483,8 +573,22 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
    `overflow:hidden`, so the "9 / 10 stamps · 90%" legend was invisible
    on every reward card at every viewport. The wrapper is a stack; its
    height is its content. */
+/* ── THE STAMP TRACK ──────────────────────────────────────────────
+   A reward's progress is a count of stamps, so it is drawn as stamp
+   cells: the meter is divided into exactly `--slots` compartments by
+   hairline rules laid over the fill. It reads as "9 of 10 pressed"
+   rather than as "90% of a bar", and it scales to any tier size
+   without the markup knowing the width. */
 .tech__gauge{margin-top:var(--s3)}
-.tech__gauge .gauge{margin-top:0}
+.tech__gauge .gauge{margin-top:0;height:clamp(14px,1.5vw,20px);
+  border:var(--edge-hair) solid var(--ink);background:transparent;
+  position:relative;overflow:hidden}
+.tech__gauge .gauge::after{content:"";position:absolute;inset:0;
+  pointer-events:none;z-index:2;
+  background-image:repeating-linear-gradient(to right,
+    transparent 0 calc(100% / var(--slots, 10) - 1px),
+    var(--ink) calc(100% / var(--slots, 10) - 1px) calc(100% / var(--slots, 10)))}
+.tech__gauge .gauge__fill{background:var(--v6)}
 .tech__legend{display:flex;align-items:baseline;justify-content:space-between;
   gap:var(--s3);flex-wrap:wrap;margin-top:var(--s2)}
 .tech__top > div{min-width:0}
@@ -493,6 +597,17 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 /* ══════════════════ SCAN ══════════════════ */
 .viewer{position:relative;display:grid;place-items:center;overflow:hidden;
   border:var(--rule) solid var(--ink);aspect-ratio:3/4;
+  /* Frame furniture, not a target. These brackets are fixed to the box
+     and never change; the reticle inside is the mark that aims and
+     reacts, and it is the one that carries cinnabar. Two red bracket
+     sets on one screen was the accent spent twice — paper on the dark
+     camera image reads as instrument housing and leaves the red to the
+     thing that earns it.
+
+     Declared HERE and not on ::after: a custom property re-declared on
+     the pseudo-element wins over whatever the element passes down, so
+     the stalled state could never override it from the outside. */
+  --bracket-c:var(--paper);
   /* The camera frame is the one panel that has to answer to viewport
      HEIGHT: it is the thing you hold up, and on a phone in landscape,
      or a short laptop, a 3/4 box taller than the screen puts the
@@ -511,7 +626,12 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
    message with a floor for presence, so it is a panel on a phone and a
    panel on a monitor rather than a 230px letterbox on both. */
 .viewer--stalled{aspect-ratio:auto;min-height:clamp(200px,32dvh,320px);
-  max-height:none}
+  max-height:none;
+  /* The brackets are paper because the camera image behind them is
+     dark. Once the video is gone the box is back to its own light
+     ground and paper-on-paper is nothing at all, so the frame
+     furniture goes to ink with it. */
+  --bracket-c:var(--ink)}
 .viewer video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
   /* Monochrome stays: every accent token in this theme is remapped to
      ink, so a colour camera would be the one coloured thing in the whole
@@ -523,7 +643,44 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .viewer__scrim{position:absolute;inset:0;
   background-image:radial-gradient(var(--ink) 1px,transparent 1px);
   background-size:5px 5px;opacity:.09}     /* screentone, not a veil */
+/* ── THE VIEWFINDER FRAME ─────────────────────────────────────────
+   Four heavy right-angle brackets in cinnabar, pinned to the corners
+   of the camera frame. This is one of the four sanctioned uses of the
+   seal colour: the system is asking you to aim.
+
+   It has to be a PSEUDO-ELEMENT. The scanner rewrites `viewer.innerHTML`
+   wholesale on every state change (no camera, permission refused,
+   insecure page), so any child element carrying the frame is destroyed
+   the first time the state changes — which is exactly when a user most
+   needs the screen to still look like a viewfinder. A pseudo-element
+   belongs to the box, not to its contents, and survives every rewrite.
+
+   Eight gradients: a horizontal and a vertical arm per corner. They
+   sit at the corners and never across the middle, so they cannot
+   obscure what the camera is pointed at. */
 .viewer__grain{display:none}
+.viewer::after{content:"";position:absolute;inset:clamp(6px,1vw,12px);
+  pointer-events:none;z-index:6;
+  --bracket:clamp(20px,3.2vw,40px);
+  --bracket-w:var(--edge);
+  background-repeat:no-repeat;
+  background-image:
+    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
+    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
+    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
+    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0);
+  background-size:
+    var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket),
+    var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket),
+    var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket),
+    var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket);
+  background-position:
+    left top,left top, right top,right top,
+    left bottom,left bottom, right bottom,right bottom}
+/* a hit tightens the brackets inward — the frame closing on the code */
+.viewer--hit::after{inset:clamp(12px,2vw,22px)}
+
+.viewer--hit .viewer__grain{inset:6px}
 .viewer__status,.viewer__msg{position:relative;font-family:var(--f-accent);
   text-transform:uppercase;text-align:center}
 .reticle{position:relative;width:64%;aspect-ratio:1;max-width:250px}
@@ -562,11 +719,28 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
    a breakpoint deciding which. */
 .field > .btn{flex:1 1 auto;min-width:max-content}
 .field > .input{flex:999 1 min(100%,13ch)}
-.input{flex:1 1 min(100%,13ch);min-width:0;padding:11px var(--s3);
-  background:var(--paper);color:var(--ink);
-  border:var(--rule-hair) solid var(--ink);border-radius:0;
-  font:500 13px/1 var(--f-mono);letter-spacing:.1em}
-.input:focus{outline:var(--rule-hair) solid var(--ink);outline-offset:2px}
+/* ══════════════════ INPUTS ══════════════════
+   A precision data-entry field, not a rounded box. There is no
+   bounding rectangle: the field is a ruled line you write on, which is
+   what a form on paper actually is. Focus is the one place the seal
+   appears on an otherwise idle screen — the rule turns cinnabar and a
+   terminal caret marks the entry point. */
+.input{flex:1 1 min(100%,13ch);min-width:0;
+  padding:11px var(--s2) 9px;
+  background:transparent;color:var(--ink);
+  border:0;border-bottom:var(--edge-thin) solid var(--ink);border-radius:0;
+  font:500 clamp(13px,.4vw + 11.7px,14.5px)/1.2 var(--f-mono);
+  letter-spacing:.08em;transition:none}
+.input::placeholder{color:var(--tone);letter-spacing:.06em}
+.input:focus{outline:0;border-bottom-color:var(--seal);
+  border-bottom-width:var(--edge)}
+/* The caret marker rides on the field wrapper, not on the input, so it
+   cannot shift the text it is marking. */
+.field{position:relative}
+.field:focus-within::before{content:">";position:absolute;left:2px;bottom:11px;
+  font:700 13px/1 var(--f-mono);color:var(--seal);pointer-events:none;z-index:2}
+.field:focus-within > .input{padding-left:var(--s4)}
+select.input{padding-right:var(--s4)}
 
 /* ══════════════════ BOARD / QR ══════════════════ */
 .qrpanel{padding:var(--s5);border:var(--rule) solid var(--ink);background:var(--paper)}
@@ -598,8 +772,36 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .who__seal circle,.who__seal polygon,.who__seal path,.who__seal line{
   fill:none;stroke:var(--ink);stroke-width:1.5;vector-effect:non-scaling-stroke}
 .who__seal--img{object-fit:contain}
-.empty{padding:var(--s6);text-align:center;color:var(--tone);
-  border:var(--rule-hair) dashed var(--ink)}
+/* ══════════════════ EMPTY STATES ══════════════════
+   Centred text in a dashed box is a placeholder, not a state. An empty
+   state here is a blank seal: the mark that would have been pressed,
+   drawn faint and large behind a technical line of copy explaining
+   what would fill it. The geometry comes from the app's own seal
+   glyph, so an empty screen still looks like Keystamp. */
+.panel.empty{position:relative;isolation:isolate;
+  padding:var(--s8) var(--s5);text-align:left;color:var(--ink-2);
+  border:0;border-top:var(--edge) solid var(--ink);
+  display:flex;flex-direction:column;align-items:flex-start;
+  gap:var(--space-stack-sm);min-height:clamp(180px,26vh,280px);
+  justify-content:center;overflow:hidden}
+/* the unpressed seal: concentric geometry, tone weight, cropped by
+   the panel so it reads as a watermark rather than as an icon */
+.panel.empty::before{content:"";position:absolute;z-index:0;pointer-events:none;
+  right:calc(var(--s5) * -1);top:50%;transform:translateY(-50%);
+  width:clamp(140px,22vw,240px);aspect-ratio:1;
+  border:var(--edge-thin) solid var(--v3);border-radius:50%;
+  background:
+    radial-gradient(circle, transparent 0 38%, var(--v3) 38% 39%, transparent 39%),
+    repeating-conic-gradient(from 0deg at 50% 50%,
+      var(--v3) 0deg 1deg, transparent 1deg 22.5deg);
+  opacity:.5}
+.panel.empty > *{position:relative;z-index:1;max-width:46ch}
+.panel.empty .h2{color:var(--ink);font-size:clamp(13px,1.2vw,16px)}
+.panel.empty p{font-size:clamp(12.5px,.9vw,14px);line-height:1.55;color:var(--ink-2)}
+.panel.empty svg{width:clamp(30px,3vw,40px)!important;height:clamp(30px,3vw,40px)!important;
+  /* it is a drawn mark now rather than a stock glyph, so it can hold
+     its own weight — .55 had it dissolving into the watermark behind */
+  opacity:.75;margin-bottom:var(--s2)}
 
 /* ══════════════════ VERDICT — a full-page reaction panel ══════════════════ */
 .verdict{position:fixed;inset:0;z-index:120;display:none;place-items:center;
@@ -879,7 +1081,12 @@ button.entry{cursor:pointer}
 /* tiers are deliberately unequal heights — the establishing panel is
    short, the stamp card is the tall one, the closers are shallow */
 [data-screen="home"] .view > .head{min-height:clamp(72px,7vw,104px)}
-[data-screen="home"] .view > .strike{align-items:flex-end;min-height:clamp(150px,17vw,240px)}
+/* `align-items:flex-end` dated from when the chamber was a horizontal
+   black card and the value meant "bottom". The chamber is a column
+   now, so that same declaration meant "right" and pushed the label
+   off its own left margin. The label reads from the top-left corner,
+   which is where a heading starts. */
+[data-screen="home"] .view > .strike{align-items:flex-start}
 [data-screen="home"] .view > .duo{margin-top:calc(var(--gut-tier) * -.35)}
 
 /* ══════════════════ RAIL BRAND ══════════════════ */
@@ -1069,9 +1276,10 @@ html,body{overflow-x:clip;max-width:100%}
 .hero__foot .kicker{min-width:0;flex:1 1 auto;line-height:1.35}
 .hero__foot .jp{flex:none}
 
-/* and the panel beside it is the loud one — solid ink, heaviest edge */
-[data-screen="home"] .view > .strike{border-width:var(--edge-shout);
-  border-color:var(--v6);background:var(--v6)}
+/* and the chamber beside it is the loud one — heaviest edge on paper,
+   not a black card. The weight comes from the keyline and the corner
+   marks; the darkness is spent on the target block inside it. */
+[data-screen="home"] .view > .strike{border-width:var(--edge)}
 
 /* the closers are quiet and small — the silence after the impact */
 [data-screen="home"] .view > .duo .panel{background:var(--v1);
@@ -1123,17 +1331,11 @@ html,body{overflow-x:clip;max-width:100%}
 /* SFX belongs at a panel corner, cropped by it, behind the content —
    not floating across the middle of the gauge */
 .sfx{z-index:0}
-/* This needs the same .inkframe exclusion the panel/head/strike/seal
-   rule below already has (line ~837). Without it, this rule's
-   specificity (two classes) beats `.inkframe{position:absolute}`
-   (one class) and pulls the decorative ink SVG into normal flow. As
-   a relatively-positioned replaced element with only a viewBox for
-   sizing, it then renders at its own aspect ratio against whatever
-   width it's given — and since Ink.draw() re-measures the panel's
-   offsetHeight (which now includes the SVG) and rewrites the viewBox
-   to match every redraw, each pass inflates the next. On mobile
-   widths this ran away to thousands of pixels of blank panel. */
-.hero > *:not(.sfx):not(.inkframe){position:relative;z-index:2}
+/* `.sfx` is excluded so the decorative word stays absolutely
+   positioned behind the content instead of being pulled into flow by
+   this rule's higher specificity — on the mobile hero that alone added
+   56px of empty panel height. */
+.hero > *:not([data-layer]){position:relative;z-index:2}
 .sfx--a{right:auto;left:-2%;bottom:-14%;top:auto;transform:rotate(-7deg);
   opacity:.22;-webkit-text-stroke-width:3px}
 [data-screen="home"] .hero{overflow:hidden}
@@ -1146,35 +1348,51 @@ html,body{overflow-x:clip;max-width:100%}
 @media(min-width:1024px){.sfx--a{right:-3%;bottom:-18%;opacity:.16}}
 
 /* ══════════════════════════════════════════════════════════════════
-   INK — the drawn edge replaces the CSS border.
+   THE EDGE — a ruled line, not a drawn one.
 
-   The border stays in the box model so every measurement from the
-   scaling pass still holds; it just stops painting. The SVG band sits
-   behind content and inherits colour, so a panel's edge is whatever
-   value the panel is printed at.
+   Every panel edge used to be a filled SVG band with two independently
+   wobbling contours, drawn by 07-ink.js: the CSS border stayed in the
+   box model and turned transparent so the drawing could take its
+   place. The intent was "a person drew this". The result read as a
+   generic rough-border effect, and — more damagingly for this system —
+   it softened every edge in the application, removing exactly the
+   tension the composition depends on.
+
+   The drawing layer is gone. The borders that were always there in the
+   box model simply paint again, which is why removing ~200 lines of
+   SVG changed no geometry at all: every measurement from the
+   responsive pass still holds.
+
+   What the ink layer got right was that panels should not all carry
+   the same edge. That survives as --ink-w, which is now a real border
+   width in px rather than a stroke weight, assigned by rank in the art
+   direction layer. A lead panel is 4px of absolute ink; a quiet one is
+   a hairline.
    ══════════════════════════════════════════════════════════════════ */
-[data-ink]{border-color:transparent!important;position:relative}
-.inkframe{position:absolute;top:0;left:0;right:0;bottom:0;width:auto;height:auto;
-  justify-self:stretch;align-self:stretch;   /* .seal is a centring grid, and
-     a grid container's place-items also lands on absolutely positioned
-     children — without this the ink was centred inside its cell at the
-     wrong size instead of filling it */
-  pointer-events:none;z-index:0;overflow:visible;color:var(--v5)}
-[data-ink="fill"] > .inkframe{color:var(--v6);z-index:-1}
-[data-ink="fill"]{background:transparent!important}
-.p-deep,.p-shout,.strike:not(.strike--calm){background:transparent!important}
-.seal--set{background:transparent!important}
-.seal--set > .inkframe{color:var(--v6);z-index:-1}
-/* `.sfx` is excluded for the same reason `.inkframe` is: it declares
-   position:absolute, but this rule is more specific (0,2,0 vs 0,1,0) and
-   was overriding it, dropping a 72px decorative word into normal flow
-   inside every panel that has one. On the mobile hero that alone added
-   56px of panel height (331px vs 275px) — the layout was reserving space
-   for artwork that is supposed to sit behind the content, which is why
-   the panel still read as mostly empty air after its min-height was
-   removed. Decorative layers must never contribute to layout. */
-.panel > *:not(.inkframe):not(.sfx),.head > *:not(.inkframe):not(.sfx),
-.strike > *:not(.inkframe):not(.sfx),.seal > *:not(.inkframe):not(.sfx){
+.panel,.head,.strike,.seal,.narr,.qrpanel,.manual,.viewer,.stat,.rec,
+.authp,.bpanel,.bnext,.tech{
+  border-width:calc(var(--ink-w, 2.8) * 1px);
+  border-style:solid;
+  border-radius:0;
+}
+/* Decorative layers must never contribute to layout.
+
+   These `> *` rules exist so a panel's real content stacks above its
+   background art. The trouble is that `.panel > *` outranks the single
+   class an absolutely-positioned child declares itself with, so every
+   new out-of-flow element was silently dragged back into the layout —
+   .chamber__c bunched into a corner, .rune doubled the nameplate's
+   height, .sealmeta stretched its slot to twice its size, and the
+   hero's .tick corner marks have been in flow this whole time.
+
+   Chasing that with a growing list of :not() class names was the
+   defect: it only ever excluded the ones somebody had already been
+   bitten by. The exclusion is one MARKER now — `data-layer`, written
+   on the element that positions itself — so an out-of-flow child
+   declares its own status at the point it is created and no stylesheet
+   has to be told about it afterwards. */
+.panel > *:not([data-layer]),.head > *:not([data-layer]),
+.strike > *:not([data-layer]),.seal > *:not([data-layer]){
   position:relative;z-index:1}
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1210,16 +1428,24 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
   align-items:baseline;gap:var(--s3);padding:var(--s3) var(--s3) var(--s3) 0!important;
   background:none!important;text-align:left;position:relative}
 .rail__link svg{display:none}
+/* --ink-2, not --v3, and the !important is why identity.css could not
+   correct this from outside: the rail numeral measured 1.98:1 against
+   a 3:1 requirement at 26px. The hover and current states below are
+   unchanged, so the three-way distinction still reads. */
 .rail__no{font-family:var(--f-display)!important;font-size:clamp(26px,2.4vw,40px)!important;
-  line-height:.8;color:var(--v3)!important;margin:0!important;min-width:0!important;
-  letter-spacing:-.05em;transition:color .18s}
+  line-height:.8;color:var(--ink-2)!important;margin:0!important;min-width:0!important;
+  letter-spacing:-.05em;transition:color var(--snap) linear}
 .rail__link span:not(.rail__no){font-family:var(--f-label);font-size:11px;
   letter-spacing:.24em;text-transform:uppercase;color:var(--v4);align-self:center}
 .rail__link[aria-current="page"] .rail__no{color:var(--v6)!important}
 .rail__link[aria-current="page"] span:not(.rail__no){color:var(--v6)}
 .rail__link[aria-current="page"]::before{content:"";position:absolute;
   right:0;top:50%;width:26px;height:2px;background:var(--v6)}
-.rail__link:hover .rail__no{color:var(--v4)!important}
+/* Hover was --v4, which is exactly what --ink-2 resolves to — so once
+   the resting numeral moved off tone, hovering a rail item changed
+   nothing at all. It darkens to full ink now: resting quiet, hovered
+   ink, current ink plus the rule mark on the right. */
+.rail__link:hover .rail__no{color:var(--ink)!important}
 
 /* ══════════════════════════════════════════════════════════════════
    THE STAMP CARD — a composition, not a contact sheet.
@@ -1239,7 +1465,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .seal--hero .seal__no{font-size:12px;right:8px;bottom:6px}
 .seal--next{grid-column:span 2;grid-row:span 2}
 .seal[data-seal="empty"]{background-image:none;opacity:.5}
-.seal[data-seal="empty"] > .inkframe{color:var(--v2)}
 .seal[data-seal="empty"] .seal__mark{opacity:.3}
 .seal__no{font-family:var(--f-mono)}
 
@@ -1351,10 +1576,32 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .tabs button[aria-current="page"]::after{content:"";position:absolute;
   bottom:0;left:22%;right:22%;height:3px;background:var(--v6)}
 
-/* deliberate aspect variation down the page */
-[data-screen="home"] .view > .head{min-height:clamp(76px,17vw,104px)}
+/* ── THE HELD-DEVICE COMPOSITION ──────────────────────────────────
+   On a phone the person using this is standing in the MPR with one
+   hand free and thirty seconds to check in. Scanning is not one of
+   five things on the page — it is the page. So the chamber is pulled
+   up directly under the nameplate and given real height, and the
+   record drops below it.
+
+   Done with `order` on the view grid, so the DOM stays in reading
+   order for a screen reader and no view template changes. At the
+   laptop tier the home items are placed by explicit grid-area, which
+   ignores `order` outright — the desktop spread is untouched. */
+[data-screen="home"] .view > .head{order:1;min-height:clamp(76px,17vw,104px)}
+[data-screen="home"] .view > .strike{order:2}
+[data-screen="home"] .view > section:nth-of-type(1){order:3}
+[data-screen="home"] .view > section:nth-of-type(2){order:4}
+[data-screen="home"] .view > .duo{order:5}
+
 [data-screen="home"] .hero{min-height:0;padding-top:var(--s7)}
-[data-screen="home"] .view > .strike{min-height:clamp(112px,26vw,168px)}
+/* the chamber takes roughly half the fold: unmissable, and a target
+   you can hit without looking */
+[data-screen="home"] .view > .strike{min-height:clamp(230px,44dvh,400px)}
+[data-screen="home"] .view > .strike .strike__verb{font-size:var(--t-title)}
+@media(min-width:1024px){
+  [data-screen="home"] .view > .strike{min-height:clamp(150px,17vw,240px)}
+  [data-screen="home"] .view > .strike .strike__verb{font-size:var(--t-verb)}
+}
 [data-screen="home"] .view > .duo{margin-top:var(--s7)}   /* the quiet beat */
 .seal--next{grid-column:span 1;grid-row:span 1}
 
@@ -1376,7 +1623,23 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
    box, so it does not move with it. */
 :root{--jp-lane:calc(var(--s4) + 22px)}
 .view > .head{padding-right:calc(var(--s4) + var(--jp-lane))}
-[data-screen="home"] .view > .head .narr--tl{right:var(--jp-lane)}
+/* THE NARRATION IS A STANDFIRST, NOT A FLOATING BALLOON.
+
+   It was absolutely positioned inside the nameplate, so it reserved no
+   space and collided with the title's own descender at every width
+   between 768 and 1366. In an editorial system the line above a
+   headline is exactly that — a line above the headline. Putting it in
+   normal flow makes the collision structurally impossible rather than
+   avoided by a magic number, and it reads better: metadata, rule,
+   name. */
+[data-screen="home"] .view > .head{display:flex;flex-direction:column;
+  align-items:flex-start;justify-content:flex-end;gap:var(--space-stack-sm)}
+[data-screen="home"] .view > .head .narr--tl{position:static;
+  order:-1;max-width:min(100%,52ch);
+  border:0;border-left:var(--edge-heavy) solid var(--ink);
+  padding:2px 0 2px var(--s3);background:none;
+  font-family:var(--f-mono);font-size:clamp(10.5px,1vw,12px);
+  letter-spacing:.14em;color:var(--ink-2);text-transform:uppercase}
 
 [data-screen="home"] .view > .head .jp{position:absolute;right:var(--s4);
   top:var(--s4);bottom:auto}
@@ -1431,7 +1694,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
    inside the cell, which costs no layout at all. */
 .seal--hero{grid-column:span 1;grid-row:span 1;margin-top:0}
 .seal--hero svg{width:74%;height:74%}
-.seal--hero > .inkframe{color:var(--v6)}
 [data-screen="home"] .seals{padding-top:var(--s7)}
 
 /* SFX was still reading as a watermark at 9% */
@@ -1444,16 +1706,10 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 [data-screen="home"] .view > .head{padding-left:var(--space-panel)}
 @media(min-width:1024px){
   [data-screen="home"] .view > .head{padding-left:var(--space-panel-lg)}
+  /* the right lane now carries two vertical marks, so it is wider */
+  :root{--jp-lane:calc(var(--s4) + 42px)}
 }
 
-/* `.seal svg` (0,0,1,1) out-specified `.inkframe` (0,0,1,0), so the ink
-   was being sized to 62% and centred like the glyph instead of filling
-   the cell. Scoped selectors for every element whose own rules match a
-   bare `svg`. */
-.seal > svg.inkframe,.hero > svg.inkframe,.panel > svg.inkframe,
-.head > svg.inkframe,.strike > svg.inkframe,.rec > svg.inkframe,
-.narr > svg.inkframe,.stat > svg.inkframe{width:auto;height:auto;
-  top:0;left:0;right:0;bottom:0}
 
 /* Stamp 07 is the 2x2 cell. It used to break the panel's top edge, which
    notched the row above; that was traded for a leftward break on the
@@ -1567,7 +1823,7 @@ main#view{padding-top:var(--space-tier);
    artwork. A default has to be the weakest rule in the room, not the
    strongest; :where() makes it so, and every explicit rule below now
    does what it says. */
-:where(svg:not(.inkframe):not(.fxdefs):not([width])){width:22px;height:22px;flex:none}
+:where(svg:not(.fxdefs):not([width])){width:22px;height:22px;flex:none}
 
 .hero__ring,.who__seal,.verdict__seal,.boot__seal,.reticle__geo,.reticle__mark,
 .arena svg,.seal svg,.tech__glyph svg,.viewer svg,.slash,.lines,
