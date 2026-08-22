@@ -95,6 +95,14 @@ const Scanner = {
       ret.classList.toggle('reticle--bad',  state === 'bad');
     }
     viewer?.classList.toggle('viewer--hit', state === 'good' || state === 'hit');
+    /* A refusal is not a small red sentence under the frame. The frame
+       itself answers — see .viewer--bad. The class is removed and
+       re-added so a second bad scan in a row replays the reaction
+       instead of sitting on a finished animation. */
+    if (viewer){
+      viewer.classList.remove('viewer--bad');
+      if (state === 'bad'){ void viewer.offsetWidth; viewer.classList.add('viewer--bad'); }
+    }
   },
 
   async start(){

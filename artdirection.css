@@ -180,7 +180,7 @@
    two-class selector, so the speed lines (also 1, painted later) were
    covering the word. Same specificity, later in the cascade, so the
    content wins — and the rake stays behind it. */
-.strike > *:not(.sfx):not(.chamber__c){position:relative;z-index:2}
+.strike > *:not(.sfx,.chamber__c,.rune){position:relative;z-index:2}
 
 /* ─────────────────────────────────────────────────────────────────
    6. GUTTERS AND RHYTHM
@@ -271,7 +271,7 @@
 /* `.sfx` must stay excluded from every `> *` rule in this file: it is
    absolutely positioned by design, and a two-class descendant selector
    outranks its own one-class rule and drags it into flow. */
-.seals > *:not(.sfx){position:relative;z-index:1}
+.seals > *:not(.sfx,.chamber__c,.rune){position:relative;z-index:1}
 
 /* the record page's live row gets a tone band so the actionable entry
    reads as figure against the confirmed rows' ground */
@@ -282,7 +282,7 @@
   opacity:.4;z-index:0;
   -webkit-mask-image:linear-gradient(to left, #000 0%, transparent 88%);
   mask-image:linear-gradient(to left, #000 0%, transparent 88%)}
-[data-screen="record"] .rec--open > *:not(.sfx){position:relative;z-index:1}
+[data-screen="record"] .rec--open > *:not(.sfx,.chamber__c,.rune){position:relative;z-index:1}
 
 /* ─────────────────────────────────────────────────────────────────
    10. THE CHAPTER NAMEPLATE
@@ -314,7 +314,7 @@
   opacity:.26;clip-path:polygon(26% 0, 100% 0, 100% 100%, 0 100%);
   -webkit-mask-image:linear-gradient(to bottom left, #000 0%, transparent 76%);
   mask-image:linear-gradient(to bottom left, #000 0%, transparent 76%)}
-[data-screen="auth"] .authp > *:not(.sfx){position:relative;z-index:1}
+[data-screen="auth"] .authp > *:not(.sfx,.chamber__c,.rune){position:relative;z-index:1}
 
 .authp__f{display:block;margin-bottom:var(--s4)}
 .authp__f .kicker{display:block;margin-bottom:6px}
@@ -600,6 +600,24 @@
 .reticle--good .reticle__mark{opacity:.85}
 .reticle--good .reticle__line{opacity:0}
 
+/* ── REFUSED ──────────────────────────────────────────────────────
+   "The UI shouldn't just show a small red error text; the central
+   frame should snap violently and flash starkly."
+
+   So it does. The frame floods to solid ink three times in 270ms and
+   kicks sideways — `steps()`, so every change is a cut with nothing
+   in between. You cannot miss it and you cannot mistake it for the
+   success state, which tightens quietly instead. */
+.viewer--bad{animation:refuse 90ms steps(1,end) 3,refuseKick 60ms steps(2,end) 2}
+@keyframes refuse{
+  0%,100%{box-shadow:inset 0 0 0 0 var(--ink)}
+  50%    {box-shadow:inset 0 0 0 100vmax var(--ink)}
+}
+@keyframes refuseKick{
+  0%  {transform:translateX(0)}
+  50% {transform:translateX(-7px)}
+  100%{transform:translateX(7px)}
+}
 /* refused: the corners close into a solid block and the sweep stops */
 .reticle--bad .reticle__c{border-width:var(--edge-thin);background:var(--ink)}
 .reticle--bad .reticle__geo,
@@ -620,6 +638,10 @@
 }
 @media (prefers-reduced-motion:reduce){
   .reticle--live .reticle__line{animation:none}
+  /* the refusal still has to be unmistakable without motion, so the
+     flash becomes a held state rather than being dropped */
+  .viewer--bad{animation:none;border-color:var(--ink);
+    border-width:var(--edge-shout)}
 }
 
 /* ── BUTTON HIERARCHY AND STATES ──────────────────────────────────

@@ -308,7 +308,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 
 .panel{position:relative;z-index:1;background:var(--paper);
   border:var(--rule) solid var(--ink);border-radius:0;height:100%}
-.panel > *:not(.sfx){position:relative;z-index:1}
+.panel > *:not(.sfx,.chamber__c,.rune){position:relative;z-index:1}
 .panel::after{content:"";position:absolute;inset:0;pointer-events:none;
   z-index:0;background-image:radial-gradient(var(--ink) 1px,transparent 1px);
   background-size:5px 5px;opacity:.06}
@@ -345,6 +345,36 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   text-transform:uppercase}
 .jp{font-family:var(--f-jp);font-size:12px;letter-spacing:.5em;color:var(--tone);
   writing-mode:vertical-rl}
+
+/* ══════════════════ THE EDGE RUNE ══════════════════
+   Microscopic vertical monospace running up the right edge of a
+   container. It is the counterweight to the display type: the whole
+   composition is one enormous word and one line you have to lean in to
+   read, and the tension between those two scales is the system.
+
+   Hidden below the laptop tier — a phone has no spare edge to spend,
+   and a rune squeezed against a 320px viewport is decoration rather
+   than framing. */
+.rune{display:none;position:absolute;
+  /* Its own column in the right lane, INSIDE the one already reserved
+     for the Japanese mark — two parallel vertical rules, not one mark
+     fighting another. `.jp` is anchored to the top of that lane, the
+     rune is centred in it, so the two can never meet however tall the
+     container grows. */
+  right:calc(var(--space-panel) + 17px);
+  top:50%;transform:translateY(-50%);
+  writing-mode:vertical-rl;
+  /* Sized from the viewport, not fixed: at 1024 the nameplate is only
+     about 130px tall and a 9.5px rune with this tracking overran it. */
+  font:500 clamp(8px,.62vw,10px)/1 var(--f-mono);letter-spacing:.24em;
+  /* Muted ink, not screentone. At 8-10px a --v3 rune is a smudge you
+     have to hunt for; --ink-2 is quiet without being illegible, which
+     is the whole point of a mark you are meant to lean in and read. */
+  text-transform:uppercase;color:var(--ink-2);
+  white-space:nowrap;pointer-events:none;user-select:none}
+@media(min-width:1024px){
+  .rune{display:block}
+}
 .muted{color:var(--tone)}
 .emph{font-weight:500}
 .emph--hot{background:var(--ink);color:var(--paper);padding:0 5px}
@@ -1330,7 +1360,7 @@ html,body{overflow-x:clip;max-width:100%}
    positioned behind the content instead of being pulled into flow by
    this rule's higher specificity — on the mobile hero that alone added
    56px of empty panel height. */
-.hero > *:not(.sfx){position:relative;z-index:2}
+.hero > *:not(.sfx,.chamber__c,.rune){position:relative;z-index:2}
 .sfx--a{right:auto;left:-2%;bottom:-14%;top:auto;transform:rotate(-7deg);
   opacity:.22;-webkit-text-stroke-width:3px}
 [data-screen="home"] .hero{overflow:hidden}
@@ -1372,8 +1402,8 @@ html,body{overflow-x:clip;max-width:100%}
 }
 /* Decorative layers must never contribute to layout: `.sfx` declares
    position:absolute, and a two-class `> *` rule outranks it. */
-.panel > *:not(.sfx):not(.chamber__c),.head > *:not(.sfx):not(.chamber__c),
-.strike > *:not(.sfx):not(.chamber__c),.seal > *:not(.sfx):not(.chamber__c){
+.panel > *:not(.sfx,.chamber__c,.rune),.head > *:not(.sfx,.chamber__c,.rune),
+.strike > *:not(.sfx,.chamber__c,.rune),.seal > *:not(.sfx,.chamber__c,.rune){
   position:relative;z-index:1}
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1679,6 +1709,8 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 [data-screen="home"] .view > .head{padding-left:var(--space-panel)}
 @media(min-width:1024px){
   [data-screen="home"] .view > .head{padding-left:var(--space-panel-lg)}
+  /* the right lane now carries two vertical marks, so it is wider */
+  :root{--jp-lane:calc(var(--s4) + 42px)}
 }
 
 
@@ -2082,7 +2114,7 @@ main#view{padding-top:var(--space-tier);
    two-class selector, so the speed lines (also 1, painted later) were
    covering the word. Same specificity, later in the cascade, so the
    content wins — and the rake stays behind it. */
-.strike > *:not(.sfx):not(.chamber__c){position:relative;z-index:2}
+.strike > *:not(.sfx,.chamber__c,.rune){position:relative;z-index:2}
 
 /* ─────────────────────────────────────────────────────────────────
    6. GUTTERS AND RHYTHM
@@ -2173,7 +2205,7 @@ main#view{padding-top:var(--space-tier);
 /* `.sfx` must stay excluded from every `> *` rule in this file: it is
    absolutely positioned by design, and a two-class descendant selector
    outranks its own one-class rule and drags it into flow. */
-.seals > *:not(.sfx){position:relative;z-index:1}
+.seals > *:not(.sfx,.chamber__c,.rune){position:relative;z-index:1}
 
 /* the record page's live row gets a tone band so the actionable entry
    reads as figure against the confirmed rows' ground */
@@ -2184,7 +2216,7 @@ main#view{padding-top:var(--space-tier);
   opacity:.4;z-index:0;
   -webkit-mask-image:linear-gradient(to left, #000 0%, transparent 88%);
   mask-image:linear-gradient(to left, #000 0%, transparent 88%)}
-[data-screen="record"] .rec--open > *:not(.sfx){position:relative;z-index:1}
+[data-screen="record"] .rec--open > *:not(.sfx,.chamber__c,.rune){position:relative;z-index:1}
 
 /* ─────────────────────────────────────────────────────────────────
    10. THE CHAPTER NAMEPLATE
@@ -2216,7 +2248,7 @@ main#view{padding-top:var(--space-tier);
   opacity:.26;clip-path:polygon(26% 0, 100% 0, 100% 100%, 0 100%);
   -webkit-mask-image:linear-gradient(to bottom left, #000 0%, transparent 76%);
   mask-image:linear-gradient(to bottom left, #000 0%, transparent 76%)}
-[data-screen="auth"] .authp > *:not(.sfx){position:relative;z-index:1}
+[data-screen="auth"] .authp > *:not(.sfx,.chamber__c,.rune){position:relative;z-index:1}
 
 .authp__f{display:block;margin-bottom:var(--s4)}
 .authp__f .kicker{display:block;margin-bottom:6px}
@@ -2502,6 +2534,24 @@ main#view{padding-top:var(--space-tier);
 .reticle--good .reticle__mark{opacity:.85}
 .reticle--good .reticle__line{opacity:0}
 
+/* ── REFUSED ──────────────────────────────────────────────────────
+   "The UI shouldn't just show a small red error text; the central
+   frame should snap violently and flash starkly."
+
+   So it does. The frame floods to solid ink three times in 270ms and
+   kicks sideways — `steps()`, so every change is a cut with nothing
+   in between. You cannot miss it and you cannot mistake it for the
+   success state, which tightens quietly instead. */
+.viewer--bad{animation:refuse 90ms steps(1,end) 3,refuseKick 60ms steps(2,end) 2}
+@keyframes refuse{
+  0%,100%{box-shadow:inset 0 0 0 0 var(--ink)}
+  50%    {box-shadow:inset 0 0 0 100vmax var(--ink)}
+}
+@keyframes refuseKick{
+  0%  {transform:translateX(0)}
+  50% {transform:translateX(-7px)}
+  100%{transform:translateX(7px)}
+}
 /* refused: the corners close into a solid block and the sweep stops */
 .reticle--bad .reticle__c{border-width:var(--edge-thin);background:var(--ink)}
 .reticle--bad .reticle__geo,
@@ -2522,6 +2572,10 @@ main#view{padding-top:var(--space-tier);
 }
 @media (prefers-reduced-motion:reduce){
   .reticle--live .reticle__line{animation:none}
+  /* the refusal still has to be unmistakable without motion, so the
+     flash becomes a held state rather than being dropped */
+  .viewer--bad{animation:none;border-color:var(--ink);
+    border-width:var(--edge-shout)}
 }
 
 /* ── BUTTON HIERARCHY AND STATES ──────────────────────────────────
@@ -17531,6 +17585,13 @@ const Views = {
         <div class="head__stack">
           <h1 class="title title--name">${esc(memberName())}<em>.</em></h1>
         </div>
+        <!-- The edge rune. Small vertical technical text framing the
+             nameplate — and it states something true rather than
+             decorating: whether the room is taking check-ins right
+             now. Metadata that is real is the whole difference between
+             a technical look and a technical instrument. -->
+        <span class="rune" aria-hidden="true">SYS.${
+          open && !done ? 'ACTIVE' : 'STANDBY'}</span>
         <span class="jp" aria-hidden="true">出席</span>
       </header>
 
@@ -18974,6 +19035,14 @@ const Scanner = {
       ret.classList.toggle('reticle--bad',  state === 'bad');
     }
     viewer?.classList.toggle('viewer--hit', state === 'good' || state === 'hit');
+    /* A refusal is not a small red sentence under the frame. The frame
+       itself answers — see .viewer--bad. The class is removed and
+       re-added so a second bad scan in a row replays the reaction
+       instead of sitting on a finished animation. */
+    if (viewer){
+      viewer.classList.remove('viewer--bad');
+      if (state === 'bad'){ void viewer.offsetWidth; viewer.classList.add('viewer--bad'); }
+    }
   },
 
   async start(){

@@ -273,6 +273,13 @@ const Views = {
         <div class="head__stack">
           <h1 class="title title--name">${esc(memberName())}<em>.</em></h1>
         </div>
+        <!-- The edge rune. Small vertical technical text framing the
+             nameplate — and it states something true rather than
+             decorating: whether the room is taking check-ins right
+             now. Metadata that is real is the whole difference between
+             a technical look and a technical instrument. -->
+        <span class="rune" aria-hidden="true">SYS.${
+          open && !done ? 'ACTIVE' : 'STANDBY'}</span>
         <span class="jp" aria-hidden="true">出席</span>
       </header>
 

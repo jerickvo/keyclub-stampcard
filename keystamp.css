@@ -265,7 +265,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 
 .panel{position:relative;z-index:1;background:var(--paper);
   border:var(--rule) solid var(--ink);border-radius:0;height:100%}
-.panel > *:not(.sfx){position:relative;z-index:1}
+.panel > *:not(.sfx,.chamber__c,.rune){position:relative;z-index:1}
 .panel::after{content:"";position:absolute;inset:0;pointer-events:none;
   z-index:0;background-image:radial-gradient(var(--ink) 1px,transparent 1px);
   background-size:5px 5px;opacity:.06}
@@ -302,6 +302,36 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   text-transform:uppercase}
 .jp{font-family:var(--f-jp);font-size:12px;letter-spacing:.5em;color:var(--tone);
   writing-mode:vertical-rl}
+
+/* ══════════════════ THE EDGE RUNE ══════════════════
+   Microscopic vertical monospace running up the right edge of a
+   container. It is the counterweight to the display type: the whole
+   composition is one enormous word and one line you have to lean in to
+   read, and the tension between those two scales is the system.
+
+   Hidden below the laptop tier — a phone has no spare edge to spend,
+   and a rune squeezed against a 320px viewport is decoration rather
+   than framing. */
+.rune{display:none;position:absolute;
+  /* Its own column in the right lane, INSIDE the one already reserved
+     for the Japanese mark — two parallel vertical rules, not one mark
+     fighting another. `.jp` is anchored to the top of that lane, the
+     rune is centred in it, so the two can never meet however tall the
+     container grows. */
+  right:calc(var(--space-panel) + 17px);
+  top:50%;transform:translateY(-50%);
+  writing-mode:vertical-rl;
+  /* Sized from the viewport, not fixed: at 1024 the nameplate is only
+     about 130px tall and a 9.5px rune with this tracking overran it. */
+  font:500 clamp(8px,.62vw,10px)/1 var(--f-mono);letter-spacing:.24em;
+  /* Muted ink, not screentone. At 8-10px a --v3 rune is a smudge you
+     have to hunt for; --ink-2 is quiet without being illegible, which
+     is the whole point of a mark you are meant to lean in and read. */
+  text-transform:uppercase;color:var(--ink-2);
+  white-space:nowrap;pointer-events:none;user-select:none}
+@media(min-width:1024px){
+  .rune{display:block}
+}
 .muted{color:var(--tone)}
 .emph{font-weight:500}
 .emph--hot{background:var(--ink);color:var(--paper);padding:0 5px}
@@ -1287,7 +1317,7 @@ html,body{overflow-x:clip;max-width:100%}
    positioned behind the content instead of being pulled into flow by
    this rule's higher specificity — on the mobile hero that alone added
    56px of empty panel height. */
-.hero > *:not(.sfx){position:relative;z-index:2}
+.hero > *:not(.sfx,.chamber__c,.rune){position:relative;z-index:2}
 .sfx--a{right:auto;left:-2%;bottom:-14%;top:auto;transform:rotate(-7deg);
   opacity:.22;-webkit-text-stroke-width:3px}
 [data-screen="home"] .hero{overflow:hidden}
@@ -1329,8 +1359,8 @@ html,body{overflow-x:clip;max-width:100%}
 }
 /* Decorative layers must never contribute to layout: `.sfx` declares
    position:absolute, and a two-class `> *` rule outranks it. */
-.panel > *:not(.sfx):not(.chamber__c),.head > *:not(.sfx):not(.chamber__c),
-.strike > *:not(.sfx):not(.chamber__c),.seal > *:not(.sfx):not(.chamber__c){
+.panel > *:not(.sfx,.chamber__c,.rune),.head > *:not(.sfx,.chamber__c,.rune),
+.strike > *:not(.sfx,.chamber__c,.rune),.seal > *:not(.sfx,.chamber__c,.rune){
   position:relative;z-index:1}
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1636,6 +1666,8 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 [data-screen="home"] .view > .head{padding-left:var(--space-panel)}
 @media(min-width:1024px){
   [data-screen="home"] .view > .head{padding-left:var(--space-panel-lg)}
+  /* the right lane now carries two vertical marks, so it is wider */
+  :root{--jp-lane:calc(var(--s4) + 42px)}
 }
 
 
