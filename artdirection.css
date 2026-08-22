@@ -584,6 +584,63 @@
   .bconfirm .btn{flex:0 0 auto}
 }
 
+/* ── THE MEMBER CHAPTER (§38) ──────────────────────────────────────
+   The credential strip: the seal, who this is, and one sentence of
+   real state. It used to be a 70px mark and a 20px name in a panel
+   tall enough for a headline, which is why the page opened on nothing.
+   The nameplate above it now carries the name, so this panel can be
+   what it always should have been — a quiet identification band. */
+.who{align-items:center}
+.who__id{min-width:0}
+.who__line{font-size:clamp(12.5px,.95vw,14.5px);color:var(--ink-2);
+  margin-top:4px}
+.who .rune{color:var(--v3)}
+@media(min-width:1024px){ .who .rune{display:block} }
+
+/* ── THE MILESTONE LEDGER ──────────────────────────────────────────
+   The same three milestones the Rewards chapter renders in full. This
+   is the ledger of them, not a second card design: a ruled monospace
+   register, one line each, reading tier / name / state / distance.
+   One design system, two levels of detail. */
+.ledger{list-style:none;margin-top:var(--space-stack);
+  border-top:var(--edge-thin) solid var(--ink)}
+.ledger__row{display:grid;align-items:baseline;
+  grid-template-columns:auto 1fr auto;
+  grid-template-areas:"at name state" ". gap gap";
+  gap:2px var(--s3);padding:var(--s3) 0;
+  border-bottom:var(--rule-hair) solid var(--v3);
+  font-family:var(--f-mono);font-size:clamp(11px,1vw,12.5px);
+  letter-spacing:.1em;text-transform:uppercase}
+.ledger__at{grid-area:at;font-family:var(--f-display);
+  font-size:clamp(17px,1.9vw,26px);line-height:.9;color:var(--v3);
+  letter-spacing:-.03em}
+.ledger__name{grid-area:name;color:var(--ink);letter-spacing:.14em}
+.ledger__state{grid-area:state;color:var(--ink-2);justify-self:end}
+.ledger__gap{grid-area:gap;color:var(--v3)}
+/* the tier that is actually reachable is the one carrying weight */
+.ledger__row--ready .ledger__at{color:var(--ink)}
+.ledger__row--ready .ledger__state{color:var(--seal)}
+.ledger__row--claimed .ledger__at{color:var(--ink)}
+.ledger__row--claimed .ledger__name{text-decoration:line-through;
+  text-decoration-thickness:1.5px;color:var(--ink-2)}
+.ledger__foot{margin-top:var(--space-stack);font-size:13px}
+@media(min-width:768px){
+  .ledger__row{grid-template-columns:auto 1fr auto auto;
+    grid-template-areas:"at name gap state";gap:var(--s4)}
+  .ledger__gap{justify-self:end;min-width:7ch;text-align:right}
+}
+
+/* ── ONE FIGURE LEADS ──────────────────────────────────────────────
+   Four plates at identical weight is four figures nobody reads first.
+   The ranked one takes the ink weight and the display size; the other
+   three stay quiet and support it. */
+/* [data-screen="profile"] .stat sets --ink-w at (0,2,0), so a bare
+   [data-rank] could never outrank it. Matched here at the same weight
+   and later in the file. */
+.stat[data-rank="lead"]{--ink-w:3.2;background:var(--v1)}
+.stat[data-rank="lead"] b{font-size:clamp(38px,4.6vw,64px);line-height:.86}
+.stat[data-rank="lead"] span{color:var(--ink)}
+
 /* ── THE SLOT DOSSIER (§26) ────────────────────────────────────────
    Hover or focus a landed stamp and the check-in behind it is stated:
    meeting number, date, time, method, room. It is a docket rather than

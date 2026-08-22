@@ -223,8 +223,10 @@ const C = {
     </section>`;
   },
 
-  stat(value, label, sub){
-    return `<div class="stat">
+  /* Four figures at identical weight is four figures nobody reads
+     first. A plate can now be ranked, and exactly one per page is. */
+  stat(value, label, sub, rank){
+    return `<div class="stat"${rank ? ` data-rank="${rank}"` : ''}>
       <b>${esc(value)}${sub ? `<i> / ${esc(sub)}</i>` : ''}</b><span>${esc(label)}</span></div>`;
   },
 
@@ -457,52 +459,72 @@ const Views = {
   bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Code',   'Key Club', 'Check-In',   '受付'); },
   bmembers(){  BoardUI.tab = 'progress'; return this.boardSpread('Roster', 'Key Club', 'Members',    '会員'); },
 
+  /* ── MEMBER — the credential page (§38) ───────────────────────────
+     This was the one spread that did not belong to the system. It
+     opened with the member's name at 20px inside a mostly empty panel
+     while every other chapter opened with a display-size nameplate; its
+     four figures were rendered at identical weight, so the page had no
+     headline; and its Milestones list was a THIRD card design for
+     content the Rewards chapter already owns.
+
+     It is a chapter now. Same nameplate as Record, Rewards and Club
+     Tools; one figure carrying the page and three supporting it; and
+     the milestones reduced to a register — the Rewards chapter holds
+     the full treatment, this one holds the ledger of it. */
   profile(){
     if (Store.failed) return this.loadFailure('Member', '会員');
     const held = Store.heldMeetings();
     const attended = held.filter(m => Store.attended(m.id)).length;
     const p = Rules.progress();
+    const total = Store.totalStamps();
 
     return `<div class="view">
       ${C.bleed('Member', 'top:-10px;right:-9vw', 'bleed--fill')}
-      <section class="rig" data-enter class="stack-lg">
+      ${C.head(Store.isBoard ? 'Board' : 'Member', esc(memberName()), '会員')}
+
+      <section class="rig stack-lg" data-enter>
         <span class="rig__ghost" data-layer aria-hidden="true"></span>
-        <div class="panel who">
+        <div class="panel who" data-rank="quiet">
           <span class="panel__rule" data-layer aria-hidden="true"></span>
           ${ASSETS.schoolSeal
             ? `<img class="who__seal who__seal--img" src="${ASSETS.schoolSeal}" alt="" aria-hidden="true">`
             : `<svg class="who__seal" viewBox="0 0 100 100" aria-hidden="true">${seal(4)}</svg>`}
-          <p class="who__role">${Store.isBoard ? 'Board' : 'Member'}</p>
-          <h1 class="who__name">${esc(memberName())}</h1>
+          <div class="who__id">
+            <p class="who__role">${Store.isBoard ? 'Board' : 'Member'} / ${
+              esc(Store.user && Store.user.username ? Store.user.username : memberName())}</p>
+            <p class="who__line">${
+              total === 0 ? 'No stamps on this card yet.'
+              : `${pad(total)} stamps struck across ${attended} of ${held.length} meetings held.`}</p>
+          </div>
+          <span class="rune" data-layer aria-hidden="true">CARD ${
+            p.next ? 'TIER ' + p.next : 'COMPLETE'}</span>
         </div>
       </section>
 
-      <div class="stats">
-        ${C.stat(pad(Store.totalStamps()), 'Total stamps')}
+      <div class="stats stack-lg">
+        ${C.stat(pad(total), 'Total stamps', null, 'lead')}
         ${C.stat(pad(attended), 'Meetings attended', pad(held.length))}
         ${C.stat(pad(Store.rewardsUnlocked()), 'Rewards unlocked', pad(Store.rewards.length))}
         ${C.stat(Store.attendanceRate() + '%', 'Attendance rate')}
       </div>
 
-      <section class="rig rig--bl" data-enter class="stack-xl">
+      <section class="rig rig--bl stack-xl" data-enter>
         <span class="rig__ghost rig__ghost--l" data-layer aria-hidden="true"></span>
-        <div class="panel panel--flat">
+        <div class="panel panel--flat" data-rank="quiet">
           <h2 class="h2">Milestones</h2>
-          <div class="log" style="margin-top:var(--s4)">
+          <ol class="ledger">
             ${Store.rewards.map(r => {
-              const open = Store.totalStamps() >= r.required;
-              return `<div class="rec ${open ? 'rec--set' : 'rec--miss'}">
-                <span class="rec__node" aria-hidden="true"></span>
-                <div class="entry ${open ? 'entry--set' : 'entry--miss'}">
-                <span class="entry__ghost" aria-hidden="true">${r.required}</span>
-                <span class="entry__no">${esc(r.name)}</span>
-                <span class="entry__verdict">${r.claimed ? 'Claimed' : open ? 'Unlocked' : 'Sealed'}</span>
-                <span class="entry__meta">${r.required} stamps${open ? '' : ` · ${r.required - Store.totalStamps()} to go`}</span>
-                </div>
-              </div>`;
+              const open = total >= r.required;
+              const state = r.claimed ? 'Claimed' : open ? 'Ready' : 'Sealed';
+              return `<li class="ledger__row ledger__row--${state.toLowerCase()}">
+                <span class="ledger__at">${pad(r.required)}</span>
+                <span class="ledger__name">${esc(r.name)}</span>
+                <span class="ledger__state">${state}</span>
+                <span class="ledger__gap">${open ? '—' : (r.required - total) + ' to go'}</span>
+              </li>`;
             }).join('')}
-          </div>
-          <p class="muted" style="margin-top:var(--s4);font-size:13px">
+          </ol>
+          <p class="muted ledger__foot">
             ${p.next ? `${p.remaining} more ${p.remaining === 1 ? 'stamp' : 'stamps'} until the next one unlocks.`
                      : 'Every milestone is unlocked.'}</p>
         </div>

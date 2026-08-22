@@ -152,13 +152,19 @@ none;
    keyline gets heavier and the gutter gets real. */
 .panel{
   background:var(--paper);
-  border:var(--edge) solid var(--ink);
+  /* style and colour only. The shorthand used to carry a width, and a
+     width declared in the LAST stylesheet beats the calc() that
+     --ink-w drives from an earlier one — so every panel on every
+     screen measured var(--edge) and no panel could ever be ranked
+     heavier or quieter than any other. The width comes from --ink-w. */
+  border-style:solid;
+  border-color:var(--ink);
   position:relative;
 }
 
 /* a panel that carries the accent: one per screen, maximum */
-.panel--seal{
-  border-width:var(--edge-heavy);
+:where(.panel--seal){
+  --ink-w:6;
 }
 .panel--seal::before{
   content:'';position:absolute;left:0;right:0;top:0;height:var(--edge-thin);
@@ -560,8 +566,26 @@ none;
    actually are. Both were device-specific corrections fighting the
    scale rather than setting it. Written as the base state instead,
    with the shadows and weights returning once there is room. */
-.panel{box-shadow:none;border-width:var(--edge-thin)}
-.panel--seal{border-width:var(--edge)}
+/* These set the DEFAULT weight; they must not set THE weight.
+
+   Written as `border-width`, they made every panel one thickness
+   whatever its rank — identity.css is the last stylesheet, so a fixed
+   border-width here beat the calc() that --ink-w drives, and the
+   entire data-rank hierarchy was inert on panels. A lead panel and a
+   quiet one measured the same 3px. `--ink-w` is the dial; this only
+   says where it rests, and :not([data-rank]) keeps it from touching a
+   panel that has stated its own rank. */
+.panel{box-shadow:none}
+/* :where(), so this is a DEFAULT and not a decision.
+   `.panel:not([data-rank])` looked like a default but carried (0,2,0)
+   from the last stylesheet in the chain, which is more than every rank
+   rule in artdirection.css — `[data-screen="home"] .hero{--ink-w:4.4}`
+   is (0,2,0) too and loses on order. So the hero, the viewfinder, the
+   auth panel and the QR panel all still measured the base weight. At
+   zero specificity anything that has an opinion wins, which is what a
+   default is for. */
+:where(.panel){--ink-w:2}
+:where(.panel--seal){--ink-w:3}
 
 [data-screen="record"] .entry{padding:var(--s3)}
 [data-screen="record"] .entry__meta{font-size:clamp(11.5px,3vw,13px)}
@@ -580,8 +604,8 @@ none;
 .log{gap:var(--edge-thin)}
 
 @media (min-width:768px){
-  .panel{border-width:var(--edge)}
-  .panel--seal{border-width:var(--edge-heavy)}
+  :where(.panel){--ink-w:3}
+  :where(.panel--seal){--ink-w:6}
   [data-screen="record"] .entry{padding:var(--s4)}
   .bnext{padding:var(--s5)}
 }
@@ -754,9 +778,12 @@ none;
 .brow__n{font-size:clamp(17px,4vw,19px)}
 .bstat{padding:var(--s4)}
 .bsec{margin-top:var(--s5)}
-/* the scanner frame keeps its weight — it is the one place a heavy
-   keyline is doing real work, telling you where to aim */
-.viewer{border-width:var(--edge)}
+/* The scanner frame keeps its weight — it is the one place a heavy
+   keyline does real work, telling you where to aim. Said through the
+   rank system now (scan's .viewer is --ink-w:4.2) rather than pinned
+   here, where a fixed width in the last stylesheet was quietly
+   capping it three steps lighter than the rank asked for. */
+:where(.viewer){border-width:var(--edge)}
 
 @media (min-width:768px){
   .tech{padding:var(--s5)}

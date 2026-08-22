@@ -2550,6 +2550,63 @@ main#view{padding-top:var(--space-tier);
   .bconfirm .btn{flex:0 0 auto}
 }
 
+/* ── THE MEMBER CHAPTER (§38) ──────────────────────────────────────
+   The credential strip: the seal, who this is, and one sentence of
+   real state. It used to be a 70px mark and a 20px name in a panel
+   tall enough for a headline, which is why the page opened on nothing.
+   The nameplate above it now carries the name, so this panel can be
+   what it always should have been — a quiet identification band. */
+.who{align-items:center}
+.who__id{min-width:0}
+.who__line{font-size:clamp(12.5px,.95vw,14.5px);color:var(--ink-2);
+  margin-top:4px}
+.who .rune{color:var(--v3)}
+@media(min-width:1024px){ .who .rune{display:block} }
+
+/* ── THE MILESTONE LEDGER ──────────────────────────────────────────
+   The same three milestones the Rewards chapter renders in full. This
+   is the ledger of them, not a second card design: a ruled monospace
+   register, one line each, reading tier / name / state / distance.
+   One design system, two levels of detail. */
+.ledger{list-style:none;margin-top:var(--space-stack);
+  border-top:var(--edge-thin) solid var(--ink)}
+.ledger__row{display:grid;align-items:baseline;
+  grid-template-columns:auto 1fr auto;
+  grid-template-areas:"at name state" ". gap gap";
+  gap:2px var(--s3);padding:var(--s3) 0;
+  border-bottom:var(--rule-hair) solid var(--v3);
+  font-family:var(--f-mono);font-size:clamp(11px,1vw,12.5px);
+  letter-spacing:.1em;text-transform:uppercase}
+.ledger__at{grid-area:at;font-family:var(--f-display);
+  font-size:clamp(17px,1.9vw,26px);line-height:.9;color:var(--v3);
+  letter-spacing:-.03em}
+.ledger__name{grid-area:name;color:var(--ink);letter-spacing:.14em}
+.ledger__state{grid-area:state;color:var(--ink-2);justify-self:end}
+.ledger__gap{grid-area:gap;color:var(--v3)}
+/* the tier that is actually reachable is the one carrying weight */
+.ledger__row--ready .ledger__at{color:var(--ink)}
+.ledger__row--ready .ledger__state{color:var(--seal)}
+.ledger__row--claimed .ledger__at{color:var(--ink)}
+.ledger__row--claimed .ledger__name{text-decoration:line-through;
+  text-decoration-thickness:1.5px;color:var(--ink-2)}
+.ledger__foot{margin-top:var(--space-stack);font-size:13px}
+@media(min-width:768px){
+  .ledger__row{grid-template-columns:auto 1fr auto auto;
+    grid-template-areas:"at name gap state";gap:var(--s4)}
+  .ledger__gap{justify-self:end;min-width:7ch;text-align:right}
+}
+
+/* ── ONE FIGURE LEADS ──────────────────────────────────────────────
+   Four plates at identical weight is four figures nobody reads first.
+   The ranked one takes the ink weight and the display size; the other
+   three stay quiet and support it. */
+/* [data-screen="profile"] .stat sets --ink-w at (0,2,0), so a bare
+   [data-rank] could never outrank it. Matched here at the same weight
+   and later in the file. */
+.stat[data-rank="lead"]{--ink-w:3.2;background:var(--v1)}
+.stat[data-rank="lead"] b{font-size:clamp(38px,4.6vw,64px);line-height:.86}
+.stat[data-rank="lead"] span{color:var(--ink)}
+
 /* ── THE SLOT DOSSIER (§26) ────────────────────────────────────────
    Hover or focus a landed stamp and the check-in behind it is stated:
    meeting number, date, time, method, room. It is a docket rather than
@@ -2934,13 +2991,19 @@ none;
    keyline gets heavier and the gutter gets real. */
 .panel{
   background:var(--paper);
-  border:var(--edge) solid var(--ink);
+  /* style and colour only. The shorthand used to carry a width, and a
+     width declared in the LAST stylesheet beats the calc() that
+     --ink-w drives from an earlier one — so every panel on every
+     screen measured var(--edge) and no panel could ever be ranked
+     heavier or quieter than any other. The width comes from --ink-w. */
+  border-style:solid;
+  border-color:var(--ink);
   position:relative;
 }
 
 /* a panel that carries the accent: one per screen, maximum */
-.panel--seal{
-  border-width:var(--edge-heavy);
+:where(.panel--seal){
+  --ink-w:6;
 }
 .panel--seal::before{
   content:'';position:absolute;left:0;right:0;top:0;height:var(--edge-thin);
@@ -3342,8 +3405,26 @@ none;
    actually are. Both were device-specific corrections fighting the
    scale rather than setting it. Written as the base state instead,
    with the shadows and weights returning once there is room. */
-.panel{box-shadow:none;border-width:var(--edge-thin)}
-.panel--seal{border-width:var(--edge)}
+/* These set the DEFAULT weight; they must not set THE weight.
+
+   Written as `border-width`, they made every panel one thickness
+   whatever its rank — identity.css is the last stylesheet, so a fixed
+   border-width here beat the calc() that --ink-w drives, and the
+   entire data-rank hierarchy was inert on panels. A lead panel and a
+   quiet one measured the same 3px. `--ink-w` is the dial; this only
+   says where it rests, and :not([data-rank]) keeps it from touching a
+   panel that has stated its own rank. */
+.panel{box-shadow:none}
+/* :where(), so this is a DEFAULT and not a decision.
+   `.panel:not([data-rank])` looked like a default but carried (0,2,0)
+   from the last stylesheet in the chain, which is more than every rank
+   rule in artdirection.css — `[data-screen="home"] .hero{--ink-w:4.4}`
+   is (0,2,0) too and loses on order. So the hero, the viewfinder, the
+   auth panel and the QR panel all still measured the base weight. At
+   zero specificity anything that has an opinion wins, which is what a
+   default is for. */
+:where(.panel){--ink-w:2}
+:where(.panel--seal){--ink-w:3}
 
 [data-screen="record"] .entry{padding:var(--s3)}
 [data-screen="record"] .entry__meta{font-size:clamp(11.5px,3vw,13px)}
@@ -3362,8 +3443,8 @@ none;
 .log{gap:var(--edge-thin)}
 
 @media (min-width:768px){
-  .panel{border-width:var(--edge)}
-  .panel--seal{border-width:var(--edge-heavy)}
+  :where(.panel){--ink-w:3}
+  :where(.panel--seal){--ink-w:6}
   [data-screen="record"] .entry{padding:var(--s4)}
   .bnext{padding:var(--s5)}
 }
@@ -3536,9 +3617,12 @@ none;
 .brow__n{font-size:clamp(17px,4vw,19px)}
 .bstat{padding:var(--s4)}
 .bsec{margin-top:var(--s5)}
-/* the scanner frame keeps its weight — it is the one place a heavy
-   keyline is doing real work, telling you where to aim */
-.viewer{border-width:var(--edge)}
+/* The scanner frame keeps its weight — it is the one place a heavy
+   keyline does real work, telling you where to aim. Said through the
+   rank system now (scan's .viewer is --ink-w:4.2) rather than pinned
+   here, where a fixed width in the last stylesheet was quietly
+   capping it three steps lighter than the rank asked for. */
+:where(.viewer){border-width:var(--edge)}
 
 @media (min-width:768px){
   .tech{padding:var(--s5)}
@@ -17730,8 +17814,10 @@ const C = {
     </section>`;
   },
 
-  stat(value, label, sub){
-    return `<div class="stat">
+  /* Four figures at identical weight is four figures nobody reads
+     first. A plate can now be ranked, and exactly one per page is. */
+  stat(value, label, sub, rank){
+    return `<div class="stat"${rank ? ` data-rank="${rank}"` : ''}>
       <b>${esc(value)}${sub ? `<i> / ${esc(sub)}</i>` : ''}</b><span>${esc(label)}</span></div>`;
   },
 
@@ -17964,52 +18050,72 @@ const Views = {
   bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Code',   'Key Club', 'Check-In',   '受付'); },
   bmembers(){  BoardUI.tab = 'progress'; return this.boardSpread('Roster', 'Key Club', 'Members',    '会員'); },
 
+  /* ── MEMBER — the credential page (§38) ───────────────────────────
+     This was the one spread that did not belong to the system. It
+     opened with the member's name at 20px inside a mostly empty panel
+     while every other chapter opened with a display-size nameplate; its
+     four figures were rendered at identical weight, so the page had no
+     headline; and its Milestones list was a THIRD card design for
+     content the Rewards chapter already owns.
+
+     It is a chapter now. Same nameplate as Record, Rewards and Club
+     Tools; one figure carrying the page and three supporting it; and
+     the milestones reduced to a register — the Rewards chapter holds
+     the full treatment, this one holds the ledger of it. */
   profile(){
     if (Store.failed) return this.loadFailure('Member', '会員');
     const held = Store.heldMeetings();
     const attended = held.filter(m => Store.attended(m.id)).length;
     const p = Rules.progress();
+    const total = Store.totalStamps();
 
     return `<div class="view">
       ${C.bleed('Member', 'top:-10px;right:-9vw', 'bleed--fill')}
-      <section class="rig" data-enter class="stack-lg">
+      ${C.head(Store.isBoard ? 'Board' : 'Member', esc(memberName()), '会員')}
+
+      <section class="rig stack-lg" data-enter>
         <span class="rig__ghost" data-layer aria-hidden="true"></span>
-        <div class="panel who">
+        <div class="panel who" data-rank="quiet">
           <span class="panel__rule" data-layer aria-hidden="true"></span>
           ${ASSETS.schoolSeal
             ? `<img class="who__seal who__seal--img" src="${ASSETS.schoolSeal}" alt="" aria-hidden="true">`
             : `<svg class="who__seal" viewBox="0 0 100 100" aria-hidden="true">${seal(4)}</svg>`}
-          <p class="who__role">${Store.isBoard ? 'Board' : 'Member'}</p>
-          <h1 class="who__name">${esc(memberName())}</h1>
+          <div class="who__id">
+            <p class="who__role">${Store.isBoard ? 'Board' : 'Member'} / ${
+              esc(Store.user && Store.user.username ? Store.user.username : memberName())}</p>
+            <p class="who__line">${
+              total === 0 ? 'No stamps on this card yet.'
+              : `${pad(total)} stamps struck across ${attended} of ${held.length} meetings held.`}</p>
+          </div>
+          <span class="rune" data-layer aria-hidden="true">CARD ${
+            p.next ? 'TIER ' + p.next : 'COMPLETE'}</span>
         </div>
       </section>
 
-      <div class="stats">
-        ${C.stat(pad(Store.totalStamps()), 'Total stamps')}
+      <div class="stats stack-lg">
+        ${C.stat(pad(total), 'Total stamps', null, 'lead')}
         ${C.stat(pad(attended), 'Meetings attended', pad(held.length))}
         ${C.stat(pad(Store.rewardsUnlocked()), 'Rewards unlocked', pad(Store.rewards.length))}
         ${C.stat(Store.attendanceRate() + '%', 'Attendance rate')}
       </div>
 
-      <section class="rig rig--bl" data-enter class="stack-xl">
+      <section class="rig rig--bl stack-xl" data-enter>
         <span class="rig__ghost rig__ghost--l" data-layer aria-hidden="true"></span>
-        <div class="panel panel--flat">
+        <div class="panel panel--flat" data-rank="quiet">
           <h2 class="h2">Milestones</h2>
-          <div class="log" style="margin-top:var(--s4)">
+          <ol class="ledger">
             ${Store.rewards.map(r => {
-              const open = Store.totalStamps() >= r.required;
-              return `<div class="rec ${open ? 'rec--set' : 'rec--miss'}">
-                <span class="rec__node" aria-hidden="true"></span>
-                <div class="entry ${open ? 'entry--set' : 'entry--miss'}">
-                <span class="entry__ghost" aria-hidden="true">${r.required}</span>
-                <span class="entry__no">${esc(r.name)}</span>
-                <span class="entry__verdict">${r.claimed ? 'Claimed' : open ? 'Unlocked' : 'Sealed'}</span>
-                <span class="entry__meta">${r.required} stamps${open ? '' : ` · ${r.required - Store.totalStamps()} to go`}</span>
-                </div>
-              </div>`;
+              const open = total >= r.required;
+              const state = r.claimed ? 'Claimed' : open ? 'Ready' : 'Sealed';
+              return `<li class="ledger__row ledger__row--${state.toLowerCase()}">
+                <span class="ledger__at">${pad(r.required)}</span>
+                <span class="ledger__name">${esc(r.name)}</span>
+                <span class="ledger__state">${state}</span>
+                <span class="ledger__gap">${open ? '—' : (r.required - total) + ' to go'}</span>
+              </li>`;
             }).join('')}
-          </div>
-          <p class="muted" style="margin-top:var(--s4);font-size:13px">
+          </ol>
+          <p class="muted ledger__foot">
             ${p.next ? `${p.remaining} more ${p.remaining === 1 ? 'stamp' : 'stamps'} until the next one unlocks.`
                      : 'Every milestone is unlocked.'}</p>
         </div>
