@@ -584,6 +584,34 @@
   .bconfirm .btn{flex:0 0 auto}
 }
 
+/* ── BOARD: THE SAME INSTRUMENT (§38) ──────────────────────────────
+   The member's reward gauges were rebuilt as discrete stamp tracks —
+   a struck register, not a filling tube. The board's milestone bars
+   went on being smooth fills, so the club's two audiences were reading
+   the same figure off two different instruments. Ten divisions, the
+   same overlay technique, keyed to tenths because this bar is a share
+   of members rather than a count of stamps. */
+.bmile__bar{position:relative;overflow:hidden}
+.bmile__bar::after{content:"";position:absolute;inset:0;
+  pointer-events:none;z-index:2;
+  background-image:repeating-linear-gradient(to right,
+    transparent 0 calc(10% - 1px),
+    var(--ink) calc(10% - 1px) 10%)}
+
+/* The one piece of OS chrome left in the app: a native select, with a
+   system chevron and a system focus ring, sitting inside a page where
+   every other control is a ruled line. Same rule, same mono, and a
+   mitred mark drawn in CSS instead of the platform's glyph. */
+select.input{appearance:none;-webkit-appearance:none;
+  padding-right:calc(var(--s4) + 14px);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ink) 50%),
+    linear-gradient(135deg, var(--ink) 50%, transparent 50%);
+  background-size:7px 7px,7px 7px;
+  background-position:right 8px center, right 1px center;
+  background-repeat:no-repeat}
+select.input:focus-visible{outline:none}
+
 /* ── THE MEMBER CHAPTER (§38) ──────────────────────────────────────
    The credential strip: the seal, who this is, and one sentence of
    real state. It used to be a 70px mark and a 20px name in a panel
