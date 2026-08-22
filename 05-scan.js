@@ -117,7 +117,7 @@ const Scanner = {
     this.locked = false;
     /* a fresh attempt is not a stalled panel — clear the state the
        previous one may have left on the frame */
-    $('#viewer')?.classList.remove('viewer--stalled');
+    $('#viewer')?.classList.remove('viewer--stalled', 'viewer--feed');
     this.setState('boot', 'Starting camera');
     this.showLoader();
 
@@ -134,6 +134,9 @@ const Scanner = {
     this.hideLoader();
     video.srcObject = this.stream;
     try { await video.play(); } catch (_) {}
+    /* Only from here is there a camera image behind the overlay, and
+       only from here are paper brackets the readable choice. */
+    $('#viewer')?.classList.add('viewer--feed');
 
     this.cv = document.createElement('canvas');
     this.ctx = this.cv.getContext('2d', { willReadFrequently:true });
@@ -141,18 +144,36 @@ const Scanner = {
     this.loop(video);
   },
 
+  /* The waiting mark, shown while the browser asks for camera
+     permission and while the feed spins up.
+
+     Its two circles carried a stroke-dasharray and nothing else — no
+     fill, no stroke. An SVG shape with no fill declared defaults to
+     BLACK and to no stroke at all, so the dash pattern described an
+     outline that was never drawn and both circles painted as solid
+     discs: one black blob over the whole reticle, which is what a
+     member saw while deciding whether to grant camera access. Every
+     other mark in this app is built by SVG() or seal(), which set
+     fill:none and stroke:currentColor; this one was hand-rolled and
+     inherited neither. It had no CSS either — .loader is styled
+     nowhere — so nothing constrained its size. */
   showLoader(){
     const ret = $('#reticle');
     if (!ret || $('#camLoader')) return;
     const l = document.createElement('div');
     l.className = 'loader'; l.id = 'camLoader';
-    l.style.cssText = 'position:absolute;inset:0;margin:auto';
-    l.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true">
-      <circle cx="50" cy="50" r="42" stroke-dasharray="52 220" stroke-linecap="round"/>
-      <circle cx="50" cy="50" r="30" stroke-dasharray="28 160" stroke-linecap="round" opacity=".5"/></svg>`;
+    /* the reticle's compass marks step back while the mark is turning,
+       so the one moving thing on the frame is the one you look at */
+    ret.classList.add('reticle--wait');
+    /* two opposed arcs per ring rather than one, so the mark reads as a
+       thing that is turning instead of as a stray scratch on the frame */
+    l.innerHTML = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor"
+        stroke-width="3" aria-hidden="true">
+      <circle cx="50" cy="50" r="42" stroke-dasharray="42 90"/>
+      <circle cx="50" cy="50" r="30" stroke-dasharray="24 70" opacity=".5"/></svg>`;
     ret.appendChild(l);
   },
-  hideLoader(){ $('#camLoader')?.remove(); },
+  hideLoader(){ $('#camLoader')?.remove(); $('#reticle')?.classList.remove('reticle--wait'); },
 
   loop(video){
     const step = () => {
@@ -180,6 +201,7 @@ const Scanner = {
     const viewer = $('#viewer');
     if (!viewer) return;
     this.hideLoader();
+    viewer.classList.remove('viewer--feed');
     /* A fault code, then the sentence. The three dead ends used to be
        told apart by a padlock, a camera and a keypad glyph — three
        pictures doing a job this page does with words in brackets
@@ -214,6 +236,7 @@ const Scanner = {
     cancelAnimationFrame(this.raf); this.raf = null;
     this.stream?.getTracks().forEach(t => t.stop());
     this.stream = null; this.locked = false;
+    $('#viewer')?.classList.remove('viewer--feed');
   },
 };
 

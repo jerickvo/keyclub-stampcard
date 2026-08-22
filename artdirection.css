@@ -760,12 +760,24 @@ select.input:focus-visible{outline:none}
    no hue to spend: every accent token resolves to ink. That also
    satisfies "not by colour alone" for free. */
 .reticle--live .reticle__c{border-width:var(--edge-thin)}
-.reticle__line{top:50%}
+/* The sweep line reads as "something is being scanned", so it is drawn
+   only while something is. It used to be visible in every state that
+   did not explicitly hide it — including `boot`, where a cinnabar line
+   sat across the frame while the browser was still asking for camera
+   permission and there was nothing behind it at all. */
+.reticle__line{top:50%;opacity:0}
+.reticle--live .reticle__line{opacity:.9}
 /* steps(), not ease-in-out. Everything else in this system cuts; a
    sweep that accelerates and decelerates was the one soft gesture left
    on the screen, and it read as an app animation rather than as a
    mechanism ticking down the frame. */
 .reticle--live .reticle__line{animation:retSweep 2.4s steps(14,end) infinite}
+
+/* ── WAITING FOR THE CAMERA ───────────────────────────────────────
+   The frame's own marks recede while the loader turns, so the moving
+   mark is the one thing there is to look at. */
+.reticle--wait .reticle__geo,
+.reticle--wait .reticle__mark{opacity:.16}
 
 /* ── WORKING ──────────────────────────────────────────────────────
    The code is read and the server has not answered yet. The corners
