@@ -265,7 +265,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 
 .panel{position:relative;z-index:1;background:var(--paper);
   border:var(--rule) solid var(--ink);border-radius:0;height:100%}
-.panel > *:not(.sfx,.chamber__c,.rune){position:relative;z-index:1}
+.panel > *:not([data-layer]){position:relative;z-index:1}
 .panel::after{content:"";position:absolute;inset:0;pointer-events:none;
   z-index:0;background-image:radial-gradient(var(--ink) 1px,transparent 1px);
   background-size:5px 5px;opacity:.06}
@@ -1335,7 +1335,7 @@ html,body{overflow-x:clip;max-width:100%}
    positioned behind the content instead of being pulled into flow by
    this rule's higher specificity — on the mobile hero that alone added
    56px of empty panel height. */
-.hero > *:not(.sfx,.chamber__c,.rune){position:relative;z-index:2}
+.hero > *:not([data-layer]){position:relative;z-index:2}
 .sfx--a{right:auto;left:-2%;bottom:-14%;top:auto;transform:rotate(-7deg);
   opacity:.22;-webkit-text-stroke-width:3px}
 [data-screen="home"] .hero{overflow:hidden}
@@ -1375,10 +1375,24 @@ html,body{overflow-x:clip;max-width:100%}
   border-style:solid;
   border-radius:0;
 }
-/* Decorative layers must never contribute to layout: `.sfx` declares
-   position:absolute, and a two-class `> *` rule outranks it. */
-.panel > *:not(.sfx,.chamber__c,.rune),.head > *:not(.sfx,.chamber__c,.rune),
-.strike > *:not(.sfx,.chamber__c,.rune),.seal > *:not(.sfx,.chamber__c,.rune){
+/* Decorative layers must never contribute to layout.
+
+   These `> *` rules exist so a panel's real content stacks above its
+   background art. The trouble is that `.panel > *` outranks the single
+   class an absolutely-positioned child declares itself with, so every
+   new out-of-flow element was silently dragged back into the layout —
+   .chamber__c bunched into a corner, .rune doubled the nameplate's
+   height, .sealmeta stretched its slot to twice its size, and the
+   hero's .tick corner marks have been in flow this whole time.
+
+   Chasing that with a growing list of :not() class names was the
+   defect: it only ever excluded the ones somebody had already been
+   bitten by. The exclusion is one MARKER now — `data-layer`, written
+   on the element that positions itself — so an out-of-flow child
+   declares its own status at the point it is created and no stylesheet
+   has to be told about it afterwards. */
+.panel > *:not([data-layer]),.head > *:not([data-layer]),
+.strike > *:not([data-layer]),.seal > *:not([data-layer]){
   position:relative;z-index:1}
 
 /* ══════════════════════════════════════════════════════════════════

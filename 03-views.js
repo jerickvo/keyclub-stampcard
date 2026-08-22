@@ -42,12 +42,12 @@ const C = {
     const ticks = [20, 40, 60, 80].map(v => `<span class="gauge__tick" style="left:${v}%"></span>`).join('');
 
     return `<section class="rig ${live ? '' : 'rig--br'}" data-enter aria-labelledby="heroLbl">
-      <span class="rig__ghost" aria-hidden="true"></span>
+      <span class="rig__ghost" data-layer aria-hidden="true"></span>
       <div class="panel ${live ? 'panel--live' : ''} hero p-quiet ink-load">
-        <span class="sfx sfx--a" aria-hidden="true">${live ? 'OPEN' : 'HOLD'}</span>
-        <span class="panel__rule" aria-hidden="true"></span>
-        <span class="tick tick--tl" aria-hidden="true"></span>
-        <span class="tick tick--br" aria-hidden="true"></span>
+        <span class="sfx sfx--a" data-layer aria-hidden="true">${live ? 'OPEN' : 'HOLD'}</span>
+        <span class="panel__rule" data-layer aria-hidden="true"></span>
+        <span class="tick tick--tl" data-layer aria-hidden="true"></span>
+        <span class="tick tick--br" data-layer aria-hidden="true"></span>
 
         <div class="hero__top">
           ${live
@@ -80,19 +80,44 @@ const C = {
      stamp snaps flat, which is what makes the grid feel struck by hand ── */
   sealGrid(){
     const p = Rules.progress();
+    /* THE SLOT DOSSIER (§26).
+
+       A landed stamp was a black square and nothing else: the record of
+       WHICH meeting it came from lived only on another screen. Every
+       filled slot now carries the docket for the check-in it represents,
+       revealed on hover or focus.
+
+       Sorted chronologically here rather than trusted from the backend,
+       which returns newest first: slot N of the card is the Nth stamp
+       ever earned, so the grid reads left-to-right as history. */
+    const chrono = [...Store.scans]
+      .sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
+
     const cells = Array.from({ length:p.span }, (_, i) => {
       const state = i < p.filled ? 'set' : i === p.filled ? 'next' : '';
       const last = state === 'set' && i === p.filled - 1 ? ' seal--last seal--hero' : '';
       const tilt = state === 'set' ? '' :
         `transform:rotate(${[-1.7, 1.2, .6, -1.1, 1.6][i % 5]}deg)`;
-      return `<li class="seal ${state ? 'seal--' + state : ''}${last}" data-seal="${state || 'empty'}" style="${tilt}">
+
+      const rec = state === 'set' ? chrono[p.floor + i] : null;
+      const mtg = rec ? Store.meetings.find(m => m.id === rec.meetingId) : null;
+      /* The dossier is only offered when there is something in it. A
+         stamp whose meeting has since been deleted still counts — it
+         just has no docket to show, so it does not become a tab stop
+         that opens an empty card. */
+      const dossier = rec && mtg ? C.sealMeta(rec, mtg) : '';
+
+      return `<li class="seal ${state ? 'seal--' + state : ''}${last}" data-seal="${state || 'empty'}" style="${tilt}"${
+        dossier ? ` tabindex="0" aria-label="Stamp ${pad(p.floor + i + 1)}: general meeting ${
+          mtg.no}, ${fmtDate(mtg.date)}, checked in at ${fmtTime(rec.at)}"` : ''}>
         <svg viewBox="0 0 100 100" aria-hidden="true"><g class="seal__mark">${seal(state === 'set' ? 2 : 1)}</g></svg>
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
+        ${dossier}
       </li>`;
     }).join('');
 
     return `<section class="rig rig--bl ink-a" data-enter>
-      <span class="rig__ghost rig__ghost--l" aria-hidden="true"></span>
+      <span class="rig__ghost rig__ghost--l" data-layer aria-hidden="true"></span>
       <div class="panel panel--flat">
         <ul class="seals" id="seals" aria-label="${p.filled} of ${p.span} stamps in this tier">${cells}</ul>
       </div>
@@ -110,7 +135,7 @@ const C = {
      locks onto the target when you reach for it. */
   strike({ verb, sub, go, live = false, calm = false }){
     const corners = ['tl','tr','bl','br']
-      .map(c => `<span class="chamber__c chamber__c--${c}" aria-hidden="true"></span>`).join('');
+      .map(c => `<span class="chamber__c chamber__c--${c}" data-layer aria-hidden="true"></span>`).join('');
     return `<button class="strike ${live ? 'strike--live' : ''} ${calm ? 'strike--calm' : ''}"
       data-enter data-go="${go}">
       ${corners}
@@ -162,9 +187,9 @@ const C = {
              : `<span class="chip chip--sealed">Sealed</span>`;
 
     return `<section class="rig ${open ? '' : 'rig--tr'}" data-enter data-reward="${r.id}">
-      <span class="rig__ghost" aria-hidden="true"></span>
+      <span class="rig__ghost" data-layer aria-hidden="true"></span>
       <div class="panel tech ${open && !r.claimed ? 'tech--open' : ''} ${r.claimed ? 'tech--claimed' : ''} ${open ? '' : 'tech--sealed'}">
-        <span class="panel__rule" aria-hidden="true"></span>
+        <span class="panel__rule" data-layer aria-hidden="true"></span>
         <svg class="tech__glyph" viewBox="0 0 100 100" aria-hidden="true">${seal(3)}</svg>
 
         <div class="tech__top">
@@ -203,8 +228,20 @@ const C = {
       <b>${esc(value)}${sub ? `<i> / ${esc(sub)}</i>` : ''}</b><span>${esc(label)}</span></div>`;
   },
 
+  /* Structured, monospaced, in the page's own technical voice: a
+     docket, not a tooltip. aria-hidden because the slot already carries
+     the same facts as a label — this is the sighted view of them. */
+  sealMeta(rec, m){
+    return `<span class="sealmeta" data-layer aria-hidden="true">
+      <b class="sealmeta__no">GM ${pad(m.no)}</b>
+      <span>${fmtDate(m.date)}</span>
+      <span>${fmtTime(rec.at)} / ${esc((rec.method || 'qr').toUpperCase())}</span>
+      <span>${esc(m.place)}</span>
+    </span>`;
+  },
+
   empty(icon, title, body){
-    return `<section class="rig" data-enter><span class="rig__ghost" aria-hidden="true"></span>
+    return `<section class="rig" data-enter><span class="rig__ghost" data-layer aria-hidden="true"></span>
       <div class="panel empty">${icon}<h3 class="h2">${esc(title)}</h3>${
         body ? `<p>${esc(body)}</p>` : ''}</div>
     </section>`;
@@ -227,7 +264,7 @@ const Views = {
     return `<div class="view">
       ${C.head('Keystamp', title, jp)}
       <section class="rig" data-enter>
-        <span class="rig__ghost" aria-hidden="true"></span>
+        <span class="rig__ghost" data-layer aria-hidden="true"></span>
         <div class="panel bpanel">
           <p class="kicker">Could not load</p>
           <p style="margin-top:8px">Keystamp could not reach the club records, so your
@@ -278,7 +315,7 @@ const Views = {
              decorating: whether the room is taking check-ins right
              now. Metadata that is real is the whole difference between
              a technical look and a technical instrument. -->
-        <span class="rune" aria-hidden="true">SYS.${
+        <span class="rune" data-layer aria-hidden="true">SYS.${
           open && !done ? 'ACTIVE' : 'STANDBY'}</span>
         <span class="jp" aria-hidden="true">出席</span>
       </header>
@@ -289,7 +326,7 @@ const Views = {
 
       <div class="duo">
       <section class="rig rig--tr" data-enter>
-        <span class="rig__ghost" aria-hidden="true"></span>
+        <span class="rig__ghost" data-layer aria-hidden="true"></span>
         <div class="panel">
           <div style="display:flex;align-items:baseline;justify-content:space-between;gap:var(--s3)">
             <h2 class="h2">${open ? 'Happening now' : 'Next meeting'}</h2>
@@ -303,7 +340,7 @@ const Views = {
       </section>
 
       ${recent ? `<section class="rig rig--bl" data-enter>
-        <span class="rig__ghost rig__ghost--l" aria-hidden="true"></span>
+        <span class="rig__ghost rig__ghost--l" data-layer aria-hidden="true"></span>
         <div class="panel panel--flat">
           <h2 class="h2">Last stamped</h2>
           <div class="log" style="margin-top:var(--s4)">${C.entry(recent, { link:false })}</div>
@@ -409,7 +446,7 @@ const Views = {
       ${C.bleed(bleed, 'top:-10px;right:-9vw')}
       ${C.head(kicker, title, jp)}
       <section class="rig" data-enter style="margin-top:var(--gut)">
-        <span class="rig__ghost" aria-hidden="true"></span>
+        <span class="rig__ghost" data-layer aria-hidden="true"></span>
         <div id="boardPane">${BoardUI.pane()}</div>
       </section>
     </div>`;
@@ -429,9 +466,9 @@ const Views = {
     return `<div class="view">
       ${C.bleed('Member', 'top:-10px;right:-9vw', 'bleed--fill')}
       <section class="rig" data-enter class="stack-lg">
-        <span class="rig__ghost" aria-hidden="true"></span>
+        <span class="rig__ghost" data-layer aria-hidden="true"></span>
         <div class="panel who">
-          <span class="panel__rule" aria-hidden="true"></span>
+          <span class="panel__rule" data-layer aria-hidden="true"></span>
           ${ASSETS.schoolSeal
             ? `<img class="who__seal who__seal--img" src="${ASSETS.schoolSeal}" alt="" aria-hidden="true">`
             : `<svg class="who__seal" viewBox="0 0 100 100" aria-hidden="true">${seal(4)}</svg>`}
@@ -448,7 +485,7 @@ const Views = {
       </div>
 
       <section class="rig rig--bl" data-enter class="stack-xl">
-        <span class="rig__ghost rig__ghost--l" aria-hidden="true"></span>
+        <span class="rig__ghost rig__ghost--l" data-layer aria-hidden="true"></span>
         <div class="panel panel--flat">
           <h2 class="h2">Milestones</h2>
           <div class="log" style="margin-top:var(--s4)">
@@ -500,9 +537,9 @@ const Views = {
                up ? '登録' : '入場')}
 
       <section class="rig" data-enter>
-        <span class="rig__ghost" aria-hidden="true"></span>
+        <span class="rig__ghost" data-layer aria-hidden="true"></span>
         <form class="panel authp" id="authForm" novalidate>
-          <span class="panel__rule" aria-hidden="true"></span>
+          <span class="panel__rule" data-layer aria-hidden="true"></span>
 
           <div class="field authp__f">
             <label class="kicker" for="authUser">Username</label>

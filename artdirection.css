@@ -180,7 +180,7 @@
    two-class selector, so the speed lines (also 1, painted later) were
    covering the word. Same specificity, later in the cascade, so the
    content wins — and the rake stays behind it. */
-.strike > *:not(.sfx,.chamber__c,.rune){position:relative;z-index:2}
+.strike > *:not([data-layer]){position:relative;z-index:2}
 
 /* ─────────────────────────────────────────────────────────────────
    6. GUTTERS AND RHYTHM
@@ -271,7 +271,7 @@
 /* `.sfx` must stay excluded from every `> *` rule in this file: it is
    absolutely positioned by design, and a two-class descendant selector
    outranks its own one-class rule and drags it into flow. */
-.seals > *:not(.sfx,.chamber__c,.rune){position:relative;z-index:1}
+.seals > *:not([data-layer]){position:relative;z-index:1}
 
 /* the record page's live row gets a tone band so the actionable entry
    reads as figure against the confirmed rows' ground */
@@ -282,7 +282,7 @@
   opacity:.4;z-index:0;
   -webkit-mask-image:linear-gradient(to left, #000 0%, transparent 88%);
   mask-image:linear-gradient(to left, #000 0%, transparent 88%)}
-[data-screen="record"] .rec--open > *:not(.sfx,.chamber__c,.rune){position:relative;z-index:1}
+[data-screen="record"] .rec--open > *:not([data-layer]){position:relative;z-index:1}
 
 /* ─────────────────────────────────────────────────────────────────
    10. THE CHAPTER NAMEPLATE
@@ -314,7 +314,7 @@
   opacity:.26;clip-path:polygon(26% 0, 100% 0, 100% 100%, 0 100%);
   -webkit-mask-image:linear-gradient(to bottom left, #000 0%, transparent 76%);
   mask-image:linear-gradient(to bottom left, #000 0%, transparent 76%)}
-[data-screen="auth"] .authp > *:not(.sfx,.chamber__c,.rune){position:relative;z-index:1}
+[data-screen="auth"] .authp > *:not([data-layer]){position:relative;z-index:1}
 
 .authp__f{display:block;margin-bottom:var(--s4)}
 .authp__f .kicker{display:block;margin-bottom:6px}
@@ -582,6 +582,72 @@
 @media(min-width:768px){
   .bconfirm{flex:0 1 auto;margin-top:0}
   .bconfirm .btn{flex:0 0 auto}
+}
+
+/* ── THE SLOT DOSSIER (§26) ────────────────────────────────────────
+   Hover or focus a landed stamp and the check-in behind it is stated:
+   meeting number, date, time, method, room. It is a docket rather than
+   a tooltip — no radius, no shadow, no arrow, no fade. It is either
+   there or it is not, on the same 60ms cut as everything else.
+
+   Anchored to the slot and drawn OVER the grid rather than inside it,
+   so a 5-column card does not have to reserve room for a panel that is
+   almost never visible. It flips to the left half of the card and up
+   from the bottom row by asking where the slot is via :nth-child, not
+   by measuring anything at runtime. */
+.sealmeta{position:absolute;left:calc(100% - 2px);top:-2px;z-index:40;
+  display:none;width:max-content;min-width:132px;
+  padding:9px 11px;background:var(--paper);
+  border:var(--edge-thin) solid var(--ink);
+  font:400 10.5px/1.55 var(--f-mono);letter-spacing:.06em;
+  color:var(--ink-2);text-align:left;text-transform:uppercase;
+  pointer-events:none}
+.sealmeta > *{display:block}
+.sealmeta__no{font-weight:700;color:var(--ink);letter-spacing:.14em;
+  padding-bottom:5px;margin-bottom:5px;
+  border-bottom:var(--rule-hair) solid var(--ink)}
+/* the one cinnabar mark the docket is allowed: the corner that says
+   which slot it belongs to */
+.sealmeta::before{content:"";position:absolute;left:-1px;top:-1px;
+  width:10px;height:10px;border:var(--rule) solid var(--seal);
+  border-right:0;border-bottom:0}
+
+.seal:hover .sealmeta,
+.seal:focus-visible .sealmeta,
+.seal:focus-within .sealmeta{display:block}
+/* The slot has to come forward with its docket. Every slot sits at
+   z-index 1, so at equal depth the later ones in the grid paint over
+   the card — the dossier for slot 2 was appearing underneath slots 4
+   and 5. */
+.seal:hover,.seal:focus-within{z-index:60}
+.seal:focus-visible{outline:var(--rule) solid var(--seal);outline-offset:3px}
+
+/* The last two columns would push the docket off the card, so those
+   slots hang it to the left instead. Column count differs by tier, and
+   each tier states its own rule — asking the grid, not the viewport. */
+.seals > .seal:nth-child(5n) .sealmeta,
+.seals > .seal:nth-child(5n - 1) .sealmeta{left:auto;right:calc(100% - 2px)}
+.seals > .seal:nth-child(5n) .sealmeta::before,
+.seals > .seal:nth-child(5n - 1) .sealmeta::before{left:auto;right:-1px;
+  border-right:var(--rule) solid var(--seal);border-left:0}
+@media(min-width:1024px){
+  .seals > .seal:nth-child(5n) .sealmeta,
+  .seals > .seal:nth-child(5n - 1) .sealmeta{left:calc(100% - 2px);right:auto}
+  .seals > .seal:nth-child(5n) .sealmeta::before,
+  .seals > .seal:nth-child(5n - 1) .sealmeta::before{left:-1px;right:auto;
+    border-left:var(--rule) solid var(--seal);border-right:0}
+  .seals > .seal:nth-child(6n) .sealmeta,
+  .seals > .seal:nth-child(6n - 1) .sealmeta{left:auto;right:calc(100% - 2px)}
+  .seals > .seal:nth-child(6n) .sealmeta::before,
+  .seals > .seal:nth-child(6n - 1) .sealmeta::before{left:auto;right:-1px;
+    border-right:var(--rule) solid var(--seal);border-left:0}
+}
+
+/* A pointer that cannot hover has nothing to reveal on the way past, so
+   the docket opens on tap — which is a focus — and needs to sit where a
+   thumb is not already covering it. */
+@media(pointer:coarse){
+  .sealmeta{font-size:11px;padding:10px 12px}
 }
 
 /* ── FAULT CODE ───────────────────────────────────────────────────
