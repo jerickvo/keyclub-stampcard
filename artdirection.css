@@ -584,6 +584,20 @@
   .bconfirm .btn{flex:0 0 auto}
 }
 
+/* ── FAULT CODE ───────────────────────────────────────────────────
+   A bracketed monospace token, drawn in CSS so the brackets are the
+   system's targeting marks rather than characters that would set in
+   whatever the mono face happens to have. Cinnabar, because a dead
+   scanner is the one place on this screen the target never lights. */
+.codemark{display:inline-block;position:relative;
+  font:500 clamp(11px,1.4vw,13px)/1 var(--f-mono);letter-spacing:.22em;
+  text-transform:uppercase;color:var(--seal);
+  padding:8px 14px}
+.codemark::before,.codemark::after{content:"";position:absolute;
+  width:11px;height:11px;border:var(--rule-hair) solid var(--seal)}
+.codemark::before{left:0;top:0;border-right:0;border-bottom:0}
+.codemark::after{right:0;bottom:0;border-left:0;border-top:0}
+
 /* ── SCANNER STATES ───────────────────────────────────────────────
    These classes were toggled in JS and styled nowhere, so a successful
    scan and a rejected one looked identical -- the scanner read as

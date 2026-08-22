@@ -72,23 +72,61 @@ function seal(level = 3){
     ${ticks(36, 44, 47.5, 9)}`;
 }
 
+/* Geometric marks, not app icons.
+
+   The set these replace was the standard tray — a house, a bookmark, a
+   star, a person, a rounded padlock — drawn with round caps and round
+   joins. That vocabulary is an operating system's, and it read as one
+   however the rest of the page was set: soft terminals on a page where
+   nothing else is soft, and a metaphor (house = home) where everything
+   else is a label.
+
+   These are drawn the way the rest of the system is drawn: 1.5px,
+   butt caps, mitre joins, right angles and 45s, no radius anywhere. A
+   line that ends, ends. */
 const SVG = (b) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-  stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${b}</svg>`;
+  stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true">${b}</svg>`;
 
 const ICON = {
-  home:   SVG('<path d="M3.5 10.5 12 4l8.5 6.5V20h-6v-6h-5v6h-6z"/>'),
+  /* the five below are the rail's, and the rail hides them in favour of
+     its chapter numerals — kept as the fallback the markup still asks
+     for, redrawn so the fallback is not the odd one out */
+  home:   SVG('<path d="M3.5 11 12 4l8.5 7"/><path d="M6 11v9h12v-9"/><path d="M10 20v-5h4v5"/>'),
   record: SVG('<path d="M5 3.5h14v17l-7-3.5-7 3.5z"/><path d="M9 9h6M9 12.5h4"/>'),
-  scan:   SVG('<path d="M4 8.5V6a2 2 0 0 1 2-2h2.5M15.5 4H18a2 2 0 0 1 2 2v2.5M20 15.5V18a2 2 0 0 1-2 2h-2.5M8.5 20H6a2 2 0 0 1-2-2v-2.5"/><path d="M4 12h16"/>'),
-  reward: SVG('<path d="M12 3.5 14.6 9l6 .85-4.35 4.2 1.05 5.95L12 17.2 6.7 20l1.05-5.95L3.4 9.85 9.4 9z"/>'),
-  member: SVG('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>'),
-  camera: SVG('<path d="M3 8.5h3.2L8 6h8l1.8 2.5H21v11H3z"/><circle cx="12" cy="14" r="3.4"/>'),
-  lock:   SVG('<rect x="4.5" y="10.5" width="15" height="10"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/>'),
-  keypad: SVG('<rect x="3.5" y="5.5" width="17" height="13"/><path d="M7.5 9.5h.01M12 9.5h.01M16.5 9.5h.01M7.5 14.5h.01M12 14.5h9"/>'),
-  blank:  SVG('<circle cx="12" cy="12" r="8.5" stroke-dasharray="3 3.5"/><path d="M12 8.2v4.2M12 15.6h.01"/>'),
-  arrow:  SVG('<path d="M5 12h13M13 6.5 18.5 12 13 17.5"/>'),
-  waves:  SVG('<path d="M3 12h3l2.5-6 3.5 13 3-9 2 4h4"/>'),
-  still:  SVG('<path d="M3 12h18"/><circle cx="12" cy="12" r="8.5"/>'),
+  scan:   SVG('<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><path d="M4 12h16"/>'),
+  reward: SVG('<path d="M12 3 20 12l-8 9-8-9z"/><path d="M12 7.5 16 12l-4 4.5L8 12z"/>'),
+  member: SVG('<path d="M8 4h8v7H8z"/><path d="M4.5 20.5v-3h15v3"/>'),
+
+  /* a camera is a box with an aperture, drawn square */
+  camera: SVG('<path d="M3 8h18v12H3z"/><path d="M8.5 8V5h7v3"/>'
+            + '<path d="M12 10.5 15.5 14 12 17.5 8.5 14z"/>'),
+  /* a lock is a bolt in a housing — a square shackle standing clear of
+     the body, no bent wire and no radius */
+  lock:   SVG('<path d="M4.5 11.5h15v9h-15z"/><path d="M8.5 11.5V5.5h7v6"/>'
+            + '<path d="M12 14.5v3"/>'),
+  /* the keypad is the dot grid the whole system is registered to.
+     The dots are squares: with butt caps a zero-length segment paints
+     nothing, which is how nine of them turned into nine smudges. */
+  keypad: SVG('<path d="M3.5 8V4h4M16.5 4h4v4M20.5 16v4h-4M7.5 20h-4v-4"/>'
+            + [8,12,16].flatMap(y => [7,11.5,16].map(x =>
+                `<rect x="${x}" y="${y}" width="2" height="2" fill="currentColor" stroke="none"/>`
+              )).join('')),
+  /* AN UNSTRUCK SEAL. The empty state is not a question mark in a
+     dashed circle — it is the stamp that has not landed yet: the
+     silhouette present, the mark inside it missing. */
+  blank:  SVG('<path d="M12 2.5 21.5 12 12 21.5 2.5 12z"/>'
+            + '<path d="M12 7.5 16.5 12 12 16.5 7.5 12z" stroke-dasharray="1.6 3.4"/>'),
+  /* an engineering arrow: a rule that terminates in a solid head */
+  arrow:  SVG('<path d="M3.5 12h11"/><path d="M14 7.5 20.5 12 14 16.5z" fill="currentColor"/>'),
+  /* motion on: a square wave. motion off: a rule between two stops. */
+  waves:  SVG('<path d="M2.5 16h4v-8h5v8h5v-8h5"/>'),
+  still:  SVG('<path d="M4 12h16"/><path d="M4 8v8M20 8v8"/>'),
 };
+
+/* A bracketed monospace token — the fault codes on the scanner's dead
+   ends. `[ERR.CAM]` says the same thing a padlock glyph says and says
+   it in the page's own voice, which is words in brackets, not pictures. */
+const codeMark = (s) => `<span class="codemark" aria-hidden="true">${s}</span>`;
 
 /* If ASSETS.logo is set, your image is used; otherwise this vector mark
    is drawn. Both render at the same size, so swapping is safe. */

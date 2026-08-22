@@ -640,6 +640,17 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 /* ══════════════════ SCAN ══════════════════ */
 .viewer{position:relative;display:grid;place-items:center;overflow:hidden;
   border:var(--rule) solid var(--ink);aspect-ratio:3/4;
+  /* Frame furniture, not a target. These brackets are fixed to the box
+     and never change; the reticle inside is the mark that aims and
+     reacts, and it is the one that carries cinnabar. Two red bracket
+     sets on one screen was the accent spent twice — paper on the dark
+     camera image reads as instrument housing and leaves the red to the
+     thing that earns it.
+
+     Declared HERE and not on ::after: a custom property re-declared on
+     the pseudo-element wins over whatever the element passes down, so
+     the stalled state could never override it from the outside. */
+  --bracket-c:var(--paper);
   /* The camera frame is the one panel that has to answer to viewport
      HEIGHT: it is the thing you hold up, and on a phone in landscape,
      or a short laptop, a 3/4 box taller than the screen puts the
@@ -658,7 +669,12 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
    message with a floor for presence, so it is a panel on a phone and a
    panel on a monitor rather than a 230px letterbox on both. */
 .viewer--stalled{aspect-ratio:auto;min-height:clamp(200px,32dvh,320px);
-  max-height:none}
+  max-height:none;
+  /* The brackets are paper because the camera image behind them is
+     dark. Once the video is gone the box is back to its own light
+     ground and paper-on-paper is nothing at all, so the frame
+     furniture goes to ink with it. */
+  --bracket-c:var(--ink)}
 .viewer video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
   /* Monochrome stays: every accent token in this theme is remapped to
      ink, so a colour camera would be the one coloured thing in the whole
@@ -690,13 +706,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   pointer-events:none;z-index:6;
   --bracket:clamp(20px,3.2vw,40px);
   --bracket-w:var(--edge);
-  /* Frame furniture, not a target. These brackets are fixed to the box
-     and never change; the reticle inside is the mark that aims and
-     reacts, and it is the one that carries cinnabar. Two red bracket
-     sets on one screen was the accent spent twice — paper on the black
-     field reads as instrument housing and leaves the red to the thing
-     that earns it. */
-  --bracket-c:var(--paper);
   background-repeat:no-repeat;
   background-image:
     linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
@@ -833,7 +842,9 @@ select.input{padding-right:var(--s4)}
 .panel.empty .h2{color:var(--ink);font-size:clamp(13px,1.2vw,16px)}
 .panel.empty p{font-size:clamp(12.5px,.9vw,14px);line-height:1.55;color:var(--ink-2)}
 .panel.empty svg{width:clamp(30px,3vw,40px)!important;height:clamp(30px,3vw,40px)!important;
-  opacity:.55;margin-bottom:var(--s2)}
+  /* it is a drawn mark now rather than a stock glyph, so it can hold
+     its own weight — .55 had it dissolving into the watermark behind */
+  opacity:.75;margin-bottom:var(--s2)}
 
 /* ══════════════════ VERDICT — a full-page reaction panel ══════════════════ */
 .verdict{position:fixed;inset:0;z-index:120;display:none;place-items:center;
@@ -2524,6 +2535,20 @@ main#view{padding-top:var(--space-tier);
   .bconfirm{flex:0 1 auto;margin-top:0}
   .bconfirm .btn{flex:0 0 auto}
 }
+
+/* ── FAULT CODE ───────────────────────────────────────────────────
+   A bracketed monospace token, drawn in CSS so the brackets are the
+   system's targeting marks rather than characters that would set in
+   whatever the mono face happens to have. Cinnabar, because a dead
+   scanner is the one place on this screen the target never lights. */
+.codemark{display:inline-block;position:relative;
+  font:500 clamp(11px,1.4vw,13px)/1 var(--f-mono);letter-spacing:.22em;
+  text-transform:uppercase;color:var(--seal);
+  padding:8px 14px}
+.codemark::before,.codemark::after{content:"";position:absolute;
+  width:11px;height:11px;border:var(--rule-hair) solid var(--seal)}
+.codemark::before{left:0;top:0;border-right:0;border-bottom:0}
+.codemark::after{right:0;bottom:0;border-left:0;border-top:0}
 
 /* ── SCANNER STATES ───────────────────────────────────────────────
    These classes were toggled in JS and styled nowhere, so a successful
@@ -16801,23 +16826,61 @@ function seal(level = 3){
     ${ticks(36, 44, 47.5, 9)}`;
 }
 
+/* Geometric marks, not app icons.
+
+   The set these replace was the standard tray — a house, a bookmark, a
+   star, a person, a rounded padlock — drawn with round caps and round
+   joins. That vocabulary is an operating system's, and it read as one
+   however the rest of the page was set: soft terminals on a page where
+   nothing else is soft, and a metaphor (house = home) where everything
+   else is a label.
+
+   These are drawn the way the rest of the system is drawn: 1.5px,
+   butt caps, mitre joins, right angles and 45s, no radius anywhere. A
+   line that ends, ends. */
 const SVG = (b) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-  stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${b}</svg>`;
+  stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true">${b}</svg>`;
 
 const ICON = {
-  home:   SVG('<path d="M3.5 10.5 12 4l8.5 6.5V20h-6v-6h-5v6h-6z"/>'),
+  /* the five below are the rail's, and the rail hides them in favour of
+     its chapter numerals — kept as the fallback the markup still asks
+     for, redrawn so the fallback is not the odd one out */
+  home:   SVG('<path d="M3.5 11 12 4l8.5 7"/><path d="M6 11v9h12v-9"/><path d="M10 20v-5h4v5"/>'),
   record: SVG('<path d="M5 3.5h14v17l-7-3.5-7 3.5z"/><path d="M9 9h6M9 12.5h4"/>'),
-  scan:   SVG('<path d="M4 8.5V6a2 2 0 0 1 2-2h2.5M15.5 4H18a2 2 0 0 1 2 2v2.5M20 15.5V18a2 2 0 0 1-2 2h-2.5M8.5 20H6a2 2 0 0 1-2-2v-2.5"/><path d="M4 12h16"/>'),
-  reward: SVG('<path d="M12 3.5 14.6 9l6 .85-4.35 4.2 1.05 5.95L12 17.2 6.7 20l1.05-5.95L3.4 9.85 9.4 9z"/>'),
-  member: SVG('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>'),
-  camera: SVG('<path d="M3 8.5h3.2L8 6h8l1.8 2.5H21v11H3z"/><circle cx="12" cy="14" r="3.4"/>'),
-  lock:   SVG('<rect x="4.5" y="10.5" width="15" height="10"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/>'),
-  keypad: SVG('<rect x="3.5" y="5.5" width="17" height="13"/><path d="M7.5 9.5h.01M12 9.5h.01M16.5 9.5h.01M7.5 14.5h.01M12 14.5h9"/>'),
-  blank:  SVG('<circle cx="12" cy="12" r="8.5" stroke-dasharray="3 3.5"/><path d="M12 8.2v4.2M12 15.6h.01"/>'),
-  arrow:  SVG('<path d="M5 12h13M13 6.5 18.5 12 13 17.5"/>'),
-  waves:  SVG('<path d="M3 12h3l2.5-6 3.5 13 3-9 2 4h4"/>'),
-  still:  SVG('<path d="M3 12h18"/><circle cx="12" cy="12" r="8.5"/>'),
+  scan:   SVG('<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><path d="M4 12h16"/>'),
+  reward: SVG('<path d="M12 3 20 12l-8 9-8-9z"/><path d="M12 7.5 16 12l-4 4.5L8 12z"/>'),
+  member: SVG('<path d="M8 4h8v7H8z"/><path d="M4.5 20.5v-3h15v3"/>'),
+
+  /* a camera is a box with an aperture, drawn square */
+  camera: SVG('<path d="M3 8h18v12H3z"/><path d="M8.5 8V5h7v3"/>'
+            + '<path d="M12 10.5 15.5 14 12 17.5 8.5 14z"/>'),
+  /* a lock is a bolt in a housing — a square shackle standing clear of
+     the body, no bent wire and no radius */
+  lock:   SVG('<path d="M4.5 11.5h15v9h-15z"/><path d="M8.5 11.5V5.5h7v6"/>'
+            + '<path d="M12 14.5v3"/>'),
+  /* the keypad is the dot grid the whole system is registered to.
+     The dots are squares: with butt caps a zero-length segment paints
+     nothing, which is how nine of them turned into nine smudges. */
+  keypad: SVG('<path d="M3.5 8V4h4M16.5 4h4v4M20.5 16v4h-4M7.5 20h-4v-4"/>'
+            + [8,12,16].flatMap(y => [7,11.5,16].map(x =>
+                `<rect x="${x}" y="${y}" width="2" height="2" fill="currentColor" stroke="none"/>`
+              )).join('')),
+  /* AN UNSTRUCK SEAL. The empty state is not a question mark in a
+     dashed circle — it is the stamp that has not landed yet: the
+     silhouette present, the mark inside it missing. */
+  blank:  SVG('<path d="M12 2.5 21.5 12 12 21.5 2.5 12z"/>'
+            + '<path d="M12 7.5 16.5 12 12 16.5 7.5 12z" stroke-dasharray="1.6 3.4"/>'),
+  /* an engineering arrow: a rule that terminates in a solid head */
+  arrow:  SVG('<path d="M3.5 12h11"/><path d="M14 7.5 20.5 12 14 16.5z" fill="currentColor"/>'),
+  /* motion on: a square wave. motion off: a rule between two stops. */
+  waves:  SVG('<path d="M2.5 16h4v-8h5v8h5v-8h5"/>'),
+  still:  SVG('<path d="M4 12h16"/><path d="M4 8v8M20 8v8"/>'),
 };
+
+/* A bracketed monospace token — the fault codes on the scanner's dead
+   ends. `[ERR.CAM]` says the same thing a padlock glyph says and says
+   it in the page's own voice, which is words in brackets, not pictures. */
+const codeMark = (s) => `<span class="codemark" aria-hidden="true">${s}</span>`;
 
 /* If ASSETS.logo is set, your image is used; otherwise this vector mark
    is drawn. Both render at the same size, so swapping is safe. */
@@ -19168,17 +19231,22 @@ const Scanner = {
     const viewer = $('#viewer');
     if (!viewer) return;
     this.hideLoader();
+    /* A fault code, then the sentence. The three dead ends used to be
+       told apart by a padlock, a camera and a keypad glyph — three
+       pictures doing a job this page does with words in brackets
+       everywhere else. The code names the fault; the sentence says what
+       to do about it. */
     const copy = {
-      denied:{ icon:ICON.lock, title:'Camera permission is off',
+      denied:{ code:'ERR.PERM', title:'Camera permission is off',
         body:'Allow camera access for this page in your browser settings, then reload. Or type the code below.' },
-      unavailable:{ icon:ICON.camera, title:'No camera found',
+      unavailable:{ code:'ERR.CAM', title:'No camera found',
         body:'Nothing on this device is reporting a camera. Type the code printed under the seal instead.' },
-      unsupported:{ icon:ICON.keypad, title:'Scanning needs a secure page',
+      unsupported:{ code:'ERR.HTTPS', title:'Scanning needs a secure page',
         body:'Camera access only works over https. Type the code printed under the seal instead.' },
     }[kind];
 
     viewer.innerHTML = `<div class="stack">
-      <div class="stack__icon">${copy.icon}</div>
+      ${codeMark(copy.code)}
       <div><h2 class="h2">${copy.title}</h2>
         <p class="muted" style="margin-top:9px;font-size:13.5px;line-height:1.6">${copy.body}</p></div>
     </div>`;

@@ -180,17 +180,22 @@ const Scanner = {
     const viewer = $('#viewer');
     if (!viewer) return;
     this.hideLoader();
+    /* A fault code, then the sentence. The three dead ends used to be
+       told apart by a padlock, a camera and a keypad glyph — three
+       pictures doing a job this page does with words in brackets
+       everywhere else. The code names the fault; the sentence says what
+       to do about it. */
     const copy = {
-      denied:{ icon:ICON.lock, title:'Camera permission is off',
+      denied:{ code:'ERR.PERM', title:'Camera permission is off',
         body:'Allow camera access for this page in your browser settings, then reload. Or type the code below.' },
-      unavailable:{ icon:ICON.camera, title:'No camera found',
+      unavailable:{ code:'ERR.CAM', title:'No camera found',
         body:'Nothing on this device is reporting a camera. Type the code printed under the seal instead.' },
-      unsupported:{ icon:ICON.keypad, title:'Scanning needs a secure page',
+      unsupported:{ code:'ERR.HTTPS', title:'Scanning needs a secure page',
         body:'Camera access only works over https. Type the code printed under the seal instead.' },
     }[kind];
 
     viewer.innerHTML = `<div class="stack">
-      <div class="stack__icon">${copy.icon}</div>
+      ${codeMark(copy.code)}
       <div><h2 class="h2">${copy.title}</h2>
         <p class="muted" style="margin-top:9px;font-size:13.5px;line-height:1.6">${copy.body}</p></div>
     </div>`;
