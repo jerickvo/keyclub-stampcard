@@ -2792,13 +2792,20 @@ none;
 
    That is the entire list. Everything else in this application is ink
    on paper, which is what makes these four read as loud. */
-.verdict__state{color:var(--seal);font-weight:700}
+/* ONE mark, not three. The rule this file states is that two red
+   things on a screen means one of them is wrong — and the first pass
+   put the chop, its caption AND the "+1" in cinnabar, which is three.
+
+   The impression and its legend are a single object: a hanko and the
+   word under it. That is the red. Everything below is the record of
+   what the stamp did, and a record is written in ink. */
 .verdict__seal circle,.verdict__seal polygon,
 .verdict__seal path,.verdict__seal line{stroke:var(--seal)}
+.verdict__state{color:var(--seal);font-weight:700}
 /* the confirmation lands slightly off-axis, the way a hand-pressed
    chop never lands square */
 .verdict__title{transform:rotate(-1.2deg)}
-.verdict__delta{color:var(--seal)}
+.verdict__delta{color:var(--ink)}
 
 /* ══ STATE ═════════════════════════════════════════════════════════
    Status carries meaning, so it carries the accent — but only the
