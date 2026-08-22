@@ -201,9 +201,12 @@ none;
 /* The chapter numerals are a page-number device: the label beside each
    one carries the meaning, and the numeral marks the rhythm. They sat
    at --v2, a step off the paper itself, which read as half-rendered
-   rather than quiet. One ramp step down is still clearly recessive
-   against the active numeral's full ink. */
-.rail__no,.tab__no{color:var(--v3)}
+   rather than quiet; then at --v3, which measured 1.98:1 in the rail
+   and 2.2:1 in the tab bar — recessive past the point of being
+   readable, on the one control every screen depends on. --ink-2 is
+   4.97:1 and still plainly the quiet state beside the active
+   numeral's full ink. Muted text is ink at a lower value, not tone. */
+.rail__no,.tab__no{color:var(--ink-2)}
 .rail__link[aria-current],
 .tab[aria-current]{color:var(--ink)}
 .rail__link[aria-current] .rail__no,

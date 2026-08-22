@@ -594,7 +594,7 @@
 .who__id{min-width:0}
 .who__line{font-size:clamp(12.5px,.95vw,14.5px);color:var(--ink-2);
   margin-top:4px}
-.who .rune{color:var(--v3)}
+.who .rune{color:var(--ink-2)}
 @media(min-width:1024px){ .who .rune{display:block} }
 
 /* ── THE MILESTONE LEDGER ──────────────────────────────────────────
@@ -612,11 +612,14 @@
   font-family:var(--f-mono);font-size:clamp(11px,1vw,12.5px);
   letter-spacing:.1em;text-transform:uppercase}
 .ledger__at{grid-area:at;font-family:var(--f-display);
-  font-size:clamp(17px,1.9vw,26px);line-height:.9;color:var(--v3);
+  font-size:clamp(17px,1.9vw,26px);line-height:.9;color:var(--ink-2);
   letter-spacing:-.03em}
 .ledger__name{grid-area:name;color:var(--ink);letter-spacing:.14em}
 .ledger__state{grid-area:state;color:var(--ink-2);justify-self:end}
-.ledger__gap{grid-area:gap;color:var(--v3)}
+/* Muted text is INK at a lower weight, not tone — this file's own
+   rule, and the tier numeral and the distance both broke it at 1.98:1.
+   --ink-2 on paper is 5.3:1 and still recedes. */
+.ledger__gap{grid-area:gap;color:var(--ink-2)}
 /* the tier that is actually reachable is the one carrying weight */
 .ledger__row--ready .ledger__at{color:var(--ink)}
 .ledger__row--ready .ledger__state{color:var(--seal)}
