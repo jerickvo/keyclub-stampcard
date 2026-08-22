@@ -459,6 +459,17 @@ const FX = {
             ease:spring({ mass:1, stiffness:94, damping:13, velocity:0 }) });
   },
 
+  /* The dossier's cells land one after another, each an instant cut —
+     a sheet being stamped, not a bar filling. */
+  slotStrike(list, at){
+    if (!list || Motion.off) return;
+    const lit = list.querySelectorAll('.dslot--set');
+    if (!lit.length) return;
+    aset(lit, { opacity:0 });
+    animate(lit, { opacity:[0, 1], duration:1,
+            delay:stagger(34, { start:at }), ease:STEP(1) });
+  },
+
   hoverCut(btn){
     if (Motion.off || btn.dataset.cutting) return;
     btn.dataset.cutting = '1';

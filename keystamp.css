@@ -469,11 +469,12 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   cursor:pointer;border-radius:0;font:500 11px/1 var(--f-body);
   letter-spacing:.16em;text-transform:uppercase;position:relative;overflow:hidden}
 .btn--hot{background:var(--ink);color:var(--paper)}
+/* the strike: the control's whole face inverts for two frames */
+.btn__strike{position:absolute;inset:0;background:currentColor;
+  mix-blend-mode:difference;pointer-events:none}
 .btn--ghost{border-style:dashed}
 .btn--wide{width:100%;justify-content:center}
 .btn:hover{transform:translate(-1px,-1px)}
-.btn__ripple{position:absolute;border-radius:50%;background:currentColor;
-  transform:translate(-50%,-50%);pointer-events:none;opacity:.18}
 .link,.section-link,.board-link{background:none;border:0;cursor:pointer;
   color:var(--ink);font:500 11px/1 var(--f-body);letter-spacing:.14em;
   text-transform:uppercase;text-decoration:underline;text-underline-offset:3px}
@@ -753,13 +754,18 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   font:500 clamp(13px,.4vw + 11.7px,14.5px)/1.2 var(--f-mono);
   letter-spacing:.08em;transition:none}
 .input::placeholder{color:var(--tone);letter-spacing:.06em}
-.input:focus{outline:0;border-bottom-color:var(--seal);
-  border-bottom-width:var(--edge)}
+/* Focus thickens the rule; it does not colour it. Cinnabar belongs to
+   the TARGET, and on the scan screen a red underline meant the page
+   could show three red marks at once — the reticle, the rule and the
+   prompt — which is three more than this system allows. Weight is the
+   signal, and weight reads for someone who cannot see the hue. */
+.input:focus{outline:0;border-bottom-color:var(--ink);
+  border-bottom-width:var(--edge-heavy)}
 /* The caret marker rides on the field wrapper, not on the input, so it
    cannot shift the text it is marking. */
 .field{position:relative}
 .field:focus-within::before{content:">";position:absolute;left:2px;bottom:11px;
-  font:700 13px/1 var(--f-mono);color:var(--seal);pointer-events:none;z-index:2}
+  font:700 13px/1 var(--f-mono);color:var(--ink);pointer-events:none;z-index:2}
 .field:focus-within > .input{padding-left:var(--s4)}
 select.input{padding-right:var(--s4)}
 
@@ -1901,11 +1907,11 @@ main#view{padding-top:var(--space-tier);
    paper between its title and its meter. Cards size to their content;
    the grid row stretches them to match their neighbour, which is what
    makes a row look level without any of them being padded out. */
-[data-screen="rewards"] .rig .panel{display:flex;flex-direction:column;
-  gap:var(--space-stack-sm)}
-.tech__top{align-items:center;gap:var(--space-stack-sm)}
-.tech__desc{flex:1}
-.tech__gauge{margin-top:auto}
+/* The dossier lays itself out — a numeral column beside a content
+   column — so this flex-column rule (0,3,0) was flattening it back to
+   a stack and collapsing the slot array to zero width. The dossier
+   owns its own layout now; what stays here is only the min-height
+   reset, which is still wanted. */
 [data-screen="rewards"] .rig .panel{min-height:0}
 
 /* ══════════════════════════════════════════════════════════════════

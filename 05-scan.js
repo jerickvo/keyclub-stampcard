@@ -216,10 +216,14 @@ const Scanner = {
         body:'Camera access only works over https. Type the code printed under the seal instead.' },
     }[kind];
 
-    viewer.innerHTML = `<div class="stack">
+    /* The dead-end reads like the rest of the system now: a fault code
+       set as an annotation, the sentence at reading size, and the
+       whole thing anchored to the left of the frame instead of
+       floating in the middle of a grey box. */
+    viewer.innerHTML = `<div class="stall">
       ${codeMark(copy.code)}
-      <div><h2 class="h2">${copy.title}</h2>
-        <p class="muted" style="margin-top:9px;font-size:13.5px;line-height:1.6">${copy.body}</p></div>
+      <h2 class="stall__title">${copy.title}</h2>
+      <p class="stall__note">${copy.body}</p>
     </div>`;
     /* A state class, not inline geometry. `style.minHeight = '230px'`
        is the strongest declaration in the cascade, so the stalled

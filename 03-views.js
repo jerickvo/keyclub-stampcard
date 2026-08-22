@@ -39,7 +39,6 @@ const C = {
     const line = !p.next ? 'Every reward unlocked'
       : p.remaining === 0 ? `${next.name} is ready to claim`
       : `${p.remaining} more until ${next.name.toLowerCase()}`;
-    const ticks = [20, 40, 60, 80].map(v => `<span class="gauge__tick" style="left:${v}%"></span>`).join('');
 
     return `<section class="rig ${live ? '' : 'rig--br'}" data-enter aria-labelledby="heroLbl">
       <span class="rig__ghost" data-layer aria-hidden="true"></span>
@@ -67,10 +66,13 @@ const C = {
         </div>
         <p class="hero__label">Stamps acquired</p>
 
-        <div class="gauge"><span class="gauge__fill" id="heroGauge"></span>${ticks}</div>
+        <!-- The bar is gone. The stamp array immediately below IS the
+             progress — ten slots, filling — so a horizontal fill bar
+             restated it in the one visual form this system has no use
+             for. What remains is the reading: how far to the next
+             seal, set as an annotation rather than a caption. -->
         <div class="hero__foot">
-          <p class="kicker kicker--bone">${esc(line)}</p>
-          <span class="jp" style="font-size:10px;writing-mode:horizontal-tb" aria-hidden="true">記録</span>
+          <span class="anno">${esc(line)}</span>
         </div>
       </div>
     </section>`;
@@ -136,12 +138,25 @@ const C = {
   strike({ verb, sub, go, live = false, calm = false }){
     const corners = ['tl','tr','bl','br']
       .map(c => `<span class="chamber__c chamber__c--${c}" data-layer aria-hidden="true"></span>`).join('');
+    /* The chamber was a hatched rectangle with a title in one corner
+       and a small arrow in the other — 370px of texture with nothing
+       in the middle of it, which is the emptiest element in the app on
+       the screen where the user is standing in a room trying to check
+       in. It is a target now: speed lines running toward a crosshair
+       at the centre, the verb underneath, and the commit set as
+       [ SCAN ] because that is the vocabulary the rest of the page
+       already speaks. */
     return `<button class="strike ${live ? 'strike--live' : ''} ${calm ? 'strike--calm' : ''}"
       data-enter data-go="${go}">
       ${corners}
+      <span class="strike__head" data-layer aria-hidden="true">
+        <span class="anno">${live ? 'TARGET LIVE' : 'TARGET IDLE'}</span></span>
+      <span class="strike__core" aria-hidden="true">
+        <span class="xhair"></span>
+      </span>
       <span class="strike__body"><span class="strike__verb">${esc(verb)}</span>
         <span class="strike__sub">${esc(sub)}</span></span>
-      <span class="strike__arrow" aria-hidden="true">${ICON.arrow}</span>
+      <span class="strike__go" aria-hidden="true">[ SCAN ]</span>
     </button>`;
   },
 
@@ -174,48 +189,61 @@ const C = {
   },
 
   /* ── a reward: sealed until the count reaches it ── */
+  /* ── THE DOSSIER ─────────────────────────────────────────────────
+     Three identical cards with three identical progress bars, which
+     is the single most generic arrangement an interface can arrive
+     at — and it said nothing about the difference between a reward
+     one stamp away and one twenty-one away.
+
+     A dossier now, and its STATE is its design:
+
+       sealed   quiet, unframed, the tier numeral in tone, the array
+                barely struck — a document you have not earned
+       ready    full ink frame, cinnabar mark, CLAIM across the
+                measure — the one thing on the page to act on
+       claimed  flooded ink — the concentrated black mass, and it
+                means something: this one is taken
+
+     The bar is gone. Progress is the same slot array the card on
+     Home uses, so the two screens are reading the same instrument. */
   tech(r){
     const total = Store.totalStamps();
     const open = total >= r.required;
-    const pct = Math.min(100, Math.round(total / r.required * 100));
-    /* The tier's own vocabulary. A locked reward is SEALED — not
-       "1 to go", which reads as a progress widget. The distance is
-       still stated, in the legend under the track where the rest of
-       the figures live, so nothing is lost. */
-    const chip = r.claimed ? '<span class="chip chip--set">Claimed</span>'
-      : open ? '<span class="chip chip--hot">Ready</span>'
-             : `<span class="chip chip--sealed">Sealed</span>`;
+    const ready = open && !r.claimed;
+    const state = r.claimed ? 'claimed' : open ? 'ready' : 'sealed';
+    const done = Math.min(total, r.required);
 
-    return `<section class="rig ${open ? '' : 'rig--tr'}" data-enter data-reward="${r.id}">
+    /* the array is capped so a 30-stamp tier does not draw 30 cells on
+       a phone; past the cap it steps in fives and says so */
+    const step = r.required > 12 ? Math.ceil(r.required / 12) : 1;
+    const cells = Math.ceil(r.required / step);
+    const litCells = Math.floor(done / step);
+    const slots = Array.from({ length:cells }, (_, i) =>
+      `<span class="dslot${i < litCells ? ' dslot--set' : ''}"></span>`).join('');
+
+    return `<section class="rig dossier dossier--${state}" data-enter data-reward="${r.id}">
       <span class="rig__ghost" data-layer aria-hidden="true"></span>
-      <div class="panel tech ${open && !r.claimed ? 'tech--open' : ''} ${r.claimed ? 'tech--claimed' : ''} ${open ? '' : 'tech--sealed'}">
-        <span class="panel__rule" data-layer aria-hidden="true"></span>
-        <svg class="tech__glyph" viewBox="0 0 100 100" aria-hidden="true">${seal(3)}</svg>
+      <div class="panel tech tech--${state}">
+        <span class="dossier__idx idx${open ? ' idx--on' : ''}" aria-hidden="true">${pad(r.required)}</span>
+        <div class="dossier__head">
+          <h3 class="tech__name">${esc(r.name)}</h3>
+          <span class="anno${ready ? ' anno--seal' : ''}">${
+            r.claimed ? 'CLAIMED' : open ? 'READY' : 'SEALED'}</span>
+        </div>
+        <p class="dossier__at">Unlocks at ${r.required} stamps</p>
 
-        <div class="tech__top">
-          <div>
-            <h3 class="tech__name">${esc(r.name)}</h3>
-            <span class="tech__at">Unlocks at ${r.required} stamps</span>
-          </div>${chip}
+        <div class="dslots" style="--dcells:${cells}" role="img"
+             aria-label="${done} of ${r.required} stamps">${slots}</div>
+        <div class="dossier__legend">
+          <span class="kicker">${done} / ${r.required} stamps</span>
+          <span class="kicker">${open ? 'Unlocked' : (r.required - total) + ' to go'}</span>
         </div>
 
-        <!-- --slots is the tier size, so the meter draws as that many
-             discrete stamp cells rather than as a continuous bar. The
-             fill element and its data-pct are untouched, so whatever
-             animates the meter keeps working. -->
-        <div class="tech__gauge" style="--slots:${r.required}">
-          <div class="gauge"><span class="gauge__fill" data-pct="${pct}"></span></div>
-          <div class="tech__legend">
-            <span class="kicker">${Math.min(total, r.required)} / ${r.required} stamps</span>
-            <span class="kicker">${open ? 'Unlocked' : (r.required - total) + ' to go'}</span>
-          </div>
-        </div>
-
-        ${open && !r.claimed
-          ? `<div class="tech__act"><button class="btn btn--hot btn--wide" data-claim="${r.id}">Claim reward</button></div>`
+        ${ready
+          ? `<button class="btn btn--hot btn--wide dossier__claim" data-claim="${r.id}">Claim reward</button>`
           : ''}
 
-        ${open && !r.claimed ? `<svg class="tech__crack" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        ${ready ? `<svg class="tech__crack" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             <path d="M-2 44 22 40 38 52 61 43 79 55 102 47"/>
             <path d="M30 -2 34 26 26 44 40 68 33 102"/>
             <path d="M70 -2 64 30 76 52 62 74 71 102"/></svg>` : ''}
@@ -242,10 +270,25 @@ const C = {
     </span>`;
   },
 
-  empty(icon, title, body){
-    return `<section class="rig" data-enter><span class="rig__ghost" data-layer aria-hidden="true"></span>
-      <div class="panel empty">${icon}<h3 class="h2">${esc(title)}</h3>${
-        body ? `<p>${esc(body)}</p>` : ''}</div>
+  /* ── THE UNSTRUCK SEAL ───────────────────────────────────────────
+     An empty state was a grey box with an icon and a centred
+     paragraph in it, which is the placeholder every framework ships
+     with. This one is drawn: the seal that has NOT been pressed, at
+     real size, with the record it would carry stated as technical
+     metadata beside it. Nothing is centred and nothing is boxed. */
+  empty(icon, title, body, code = 'NIL'){
+    return `<section class="rig empty-reg" data-enter>
+      <div class="empty">
+        <div class="empty__seal" aria-hidden="true">
+          <svg viewBox="0 0 100 100">${seal(1)}</svg>
+          <span class="empty__void"></span>
+        </div>
+        <div class="empty__body">
+          <span class="anno">REC.${esc(code)} // NOT PRESSED</span>
+          <h3 class="empty__title">${esc(title)}</h3>
+          ${body ? `<p class="empty__note">${esc(body)}</p>` : ''}
+        </div>
+      </div>
     </section>`;
   },
 };
@@ -302,23 +345,27 @@ const Views = {
       ${ASSETS.homeHeader ? `<div class="banner" data-enter>
         <img src="${ASSETS.homeHeader}" alt="">
       </div>` : ''}
-      <header class="head head--bare p-quiet ink-c" data-enter>
-        ${(() => { const p = Rules.progress(); const o = Store.openMeeting();
-     const line = o && !Store.attended(o.id) ? 'The room is already filling up.'
-       : p.remaining === 0 ? 'That was the last one.'
-       : p.remaining === 1 ? 'One more. Just one.'
-       : `${p.remaining} more before it means anything.`;
-     return `<span class="narr narr--tl">${line}</span>`; })()}
+      <!-- THE NAMEPLATE. No frame. The name is bled off the left edge
+           of the canvas and sits ON the register rule rather than
+           inside a box, so it interrupts the sheet instead of being
+           placed on it. The state line and the two metadata marks are
+           set in the margin the name leaves. -->
+      <header class="head head--bare nameplate" data-enter>
+        <span class="nameplate__rule" data-layer aria-hidden="true"></span>
         <div class="head__stack">
           <h1 class="title title--name">${esc(memberName())}<em>.</em></h1>
         </div>
-        <!-- The edge rune. Small vertical technical text framing the
-             nameplate — and it states something true rather than
-             decorating: whether the room is taking check-ins right
-             now. Metadata that is real is the whole difference between
-             a technical look and a technical instrument. -->
-        <span class="rune" data-layer aria-hidden="true">SYS.${
-          open && !done ? 'ACTIVE' : 'STANDBY'}</span>
+        <div class="nameplate__meta">
+          <span class="anno${open && !done ? ' anno--seal' : ''}">SYS.${
+            open && !done ? 'ACTIVE' : 'STANDBY'}</span>
+          ${(() => { const p = Rules.progress(); const o = Store.openMeeting();
+       const line = o && !Store.attended(o.id) ? 'The room is already filling up.'
+         : p.remaining === 0 ? 'That was the last one.'
+         : p.remaining === 1 ? 'One more. Just one.'
+         : `${p.remaining} more before it means anything.`;
+       return `<p class="nameplate__line">${line}</p>`; })()}
+        </div>
+        <span class="rune" data-layer aria-hidden="true">VOL.01 // CH.01</span>
         <span class="jp" aria-hidden="true">出席</span>
       </header>
 

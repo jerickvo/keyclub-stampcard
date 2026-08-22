@@ -38,16 +38,16 @@
      makes the paper read as paper rather than as grey. Everything
      between them is unchanged: the tonal structure of the page and
      the whole responsive pass that depends on it still hold. */
-  --v0:#FBF8F2;           /* page highlight, the raised edge of pulp */
-  --v1:#F1ECE2;           /* paper                                    */
-  --v2:#DED8CB;           /* recessive fill                           */
-  --v3:#B0A99C;           /* screentone body                          */
-  --v4:#6B6459;           /* muted ink                                */
-  --v5:#12100D;           /* ink                                      */
-  --v6:#0A0806;           /* flooded ink — absolute                   */
+  --v0:#FDFDFC;           /* page highlight, the raised edge of pulp */
+  --v1:#F7F7F5;           /* paper                                    */
+  --v2:#E6E5E1;           /* recessive fill                           */
+  --v3:#A9A8A2;           /* screentone body                          */
+  --v4:#5E5D58;           /* muted ink                                */
+  --v5:#0A0A0A;           /* ink — structural                         */
+  --v6:#000000;           /* flooded ink — absolute                   */
 
-  --kozo-2:    #DED8CB;
-  --kage:      #191612;   /* ink panel, one step off pure             */
+  --kozo-2:    #E6E5E1;
+  --kage:      #111111;   /* ink panel, one step off pure             */
 
   --paper:var(--v1);
   --paper-2:var(--v2);
@@ -100,11 +100,16 @@
    low-contrast layers do that here: a fine dot screen and a warm
    vignette toward the gutter. Both are cheap and neither moves. */
 body{
-  background-color:var(--kozo);
-  background-image:
-    radial-gradient(var(--tone-dot) .5px, transparent .6px),
-    linear-gradient(180deg, rgba(33,30,26,.05), transparent 26%);
-  background-size:var(--tone-wide) var(--tone-wide), 100% 100%;
+  /* ONE sheet. The page used to carry a --kozo tone and a top-down
+     vignette, so the area below the rail read as a second, warmer
+     surface butted against the first — a visible seam across every
+     screen once the paper moved to #F7F7F5. There is one paper now,
+     edge to edge, and the only thing on it is the dot screen that
+     establishes scale. The vignette is gone: a soft directional wash
+     is the one gradient this system has no use for. */
+  background-color:var(--paper);
+  background-image:radial-gradient(var(--tone-dot) .5px, transparent .6px);
+  background-size:var(--tone-wide) var(--tone-wide);
   color:var(--ink);
 }
 
@@ -128,7 +133,7 @@ body{
   position:relative;display:inline-grid;place-items:center;
   width:var(--chop-size);height:var(--chop-size);
   border:2.5px solid var(--ink);
-  border-radius:3px;
+  border-radius:0;
   color:var(--ink);
   font-family:var(--f-display);
   font-size:calc(var(--chop-size) * .34);
@@ -138,7 +143,7 @@ body{
 none;
 }
 .chop::after{                     /* the ink that squeezed out */
-  content:'';position:absolute;inset:-3px;border-radius:4px;
+  content:'';position:absolute;inset:-3px;border-radius:0;
   border:1px solid var(--ink);opacity:.30;
   transform:rotate(2.5deg);pointer-events:none;
 }

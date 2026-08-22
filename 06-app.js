@@ -194,7 +194,7 @@ function playViewIntro(id){
   if (id === 'home'){
     const p = Rules.progress();
     Motion.countUp($('#heroNum'), p.total);
-    Motion.meter($('#heroGauge'), Math.round(p.filled / p.span * 100));
+    /* the home gauge is gone — the stamp array is the progress now */
     setTimeout(() => FX.sealReveal($('.hero__ring'), { dur:620, spin:-20 }), 220);
     FX.sealGrid($('#seals'));
 
@@ -206,10 +206,12 @@ function playViewIntro(id){
   }
 
   if (id === 'rewards'){
-    $$('[data-pct]').forEach((el, i) => Motion.meter(el, +el.dataset.pct, 240 + i * 80));
+    /* the meter is gone with the bar: a dossier's progress is its slot
+       array, and the cells strike in rather than filling */
+    $$('.dslots').forEach((el, i) => FX.slotStrike(el, 200 + i * 90));
     /* the unlock plays once per reward per session, not on every visit */
     $$('[data-reward]').forEach(rig => {
-      if (!rig.querySelector('.tech--open')) return;
+      if (!rig.querySelector('.tech--ready')) return;
       const rid = rig.dataset.reward;
       if (seenUnlocked.has(rid)) return;
       seenUnlocked.add(rid);
