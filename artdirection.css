@@ -974,6 +974,11 @@
   text-transform:uppercase;color:var(--ink-2)}
 .view > .head:not(.nameplate) .kicker::before{content:"";
   width:clamp(10px,1.4vw,20px);height:var(--rule-hair);background:currentColor}
+/* Auth radiates speed lines from behind the whole spread, and with
+   the masthead frameless they were running straight through SIGN IN —
+   the title sat on a hatched band and read as an artefact. The
+   masthead keeps its own paper under it there; the lines belong
+   around the composition, not across its loudest word. */
 :root{--t-chapter:clamp(38px,10vw,84px)}
 @media(min-width:1024px){ :root{--t-chapter:clamp(56px,6.4vw,112px)} }
 

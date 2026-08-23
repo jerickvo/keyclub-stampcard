@@ -32,7 +32,8 @@ const C = {
         <h1 class="title">${title}</h1>
         ${note ? `<p class="muted">${esc(note)}</p>` : ''}
       </div>
-      ${ch ? `<span class="rune" data-layer aria-hidden="true">VOL.01 // CH.${ch.ch}</span>` : ''}
+      ${ch && ch.ch !== '—'
+        ? `<span class="rune" data-layer aria-hidden="true">VOL.01 // CH.${ch.ch}</span>` : ''}
       <span class="jp" aria-hidden="true">${jp}</span>
     </header>`;
   },
@@ -287,7 +288,7 @@ const C = {
     return `<section class="rig empty-reg" data-enter>
       <div class="empty">
         <div class="empty__seal" aria-hidden="true">
-          <svg viewBox="0 0 100 100">${seal(1)}</svg>
+          <svg viewBox="0 0 100 100">${seal(2)}</svg>
           <span class="empty__void"></span>
         </div>
         <div class="empty__body">

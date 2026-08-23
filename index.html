@@ -377,9 +377,19 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   gap:var(--s4);padding:var(--s4) var(--s5);border:var(--rule) solid var(--ink);
   background:var(--paper);position:relative;overflow:hidden}
 .head--bare{align-items:center}
-.head__rake{position:absolute;inset:0;pointer-events:none;
-  background-image:repeating-linear-gradient(72deg,var(--ink) 0 1px,transparent 1px 5px);
-  opacity:.14}
+/* THE RAKE. It filled the entire masthead with a flat 72-degree hatch
+   at .14 — a texture with no job, which the frameless masthead turned
+   into a band of visible noise behind every chapter title.
+
+   It has a job now: a wedge of motion entering from the trailing
+   corner at the system's own 60 degrees, masked so it fades out
+   before it reaches the title. Direction, not fill. */
+.head__rake{position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:repeating-linear-gradient(var(--run-a,60deg),
+    var(--ink) 0 1px,transparent 1px 7px);
+  opacity:.16;
+  -webkit-mask-image:linear-gradient(255deg,#000 0 12%,transparent 58%);
+          mask-image:linear-gradient(255deg,#000 0 12%,transparent 58%)}
 .head__stack{position:relative}
 
 /* the giant cropped word, now genuinely cropped by the page edge */
@@ -2935,6 +2945,11 @@ main#view{padding-top:var(--space-tier);
   text-transform:uppercase;color:var(--ink-2)}
 .view > .head:not(.nameplate) .kicker::before{content:"";
   width:clamp(10px,1.4vw,20px);height:var(--rule-hair);background:currentColor}
+/* Auth radiates speed lines from behind the whole spread, and with
+   the masthead frameless they were running straight through SIGN IN —
+   the title sat on a hatched band and read as an artefact. The
+   masthead keeps its own paper under it there; the lines belong
+   around the composition, not across its loudest word. */
 :root{--t-chapter:clamp(38px,10vw,84px)}
 @media(min-width:1024px){ :root{--t-chapter:clamp(56px,6.4vw,112px)} }
 
@@ -18576,7 +18591,8 @@ const C = {
         <h1 class="title">${title}</h1>
         ${note ? `<p class="muted">${esc(note)}</p>` : ''}
       </div>
-      ${ch ? `<span class="rune" data-layer aria-hidden="true">VOL.01 // CH.${ch.ch}</span>` : ''}
+      ${ch && ch.ch !== '—'
+        ? `<span class="rune" data-layer aria-hidden="true">VOL.01 // CH.${ch.ch}</span>` : ''}
       <span class="jp" aria-hidden="true">${jp}</span>
     </header>`;
   },
@@ -18831,7 +18847,7 @@ const C = {
     return `<section class="rig empty-reg" data-enter>
       <div class="empty">
         <div class="empty__seal" aria-hidden="true">
-          <svg viewBox="0 0 100 100">${seal(1)}</svg>
+          <svg viewBox="0 0 100 100">${seal(2)}</svg>
           <span class="empty__void"></span>
         </div>
         <div class="empty__body">
