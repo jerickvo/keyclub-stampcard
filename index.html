@@ -144,7 +144,6 @@
   --t-name:clamp(16px,1.4vw,21px);
   --t-body:clamp(14.5px,.32vw + 13.5px,17px);
   --t-caption:clamp(10px,.75vw,12px);
-  --t-sfx:clamp(64px,15vw,200px);
   --t-meta:clamp(12px,.85vw,14px);
   --tap:44px;            /* minimum touch target */
   --tabs-h:56px;         /* the bottom bar owns exactly this much */
@@ -299,16 +298,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
    panel inside the ghost. */
 .rig{position:relative;min-width:0}
 .rig > .panel{margin-block:0}
-/* THE GHOST IS GONE.
-
-   `.rig__ghost` was a solid ink rectangle offset 6px behind every
-   panel — a hard-edged print shadow. However it is drawn, a shape
-   sitting behind another shape to imply lift is a drop shadow, and a
-   drop shadow says "this card floats above the page". This system says
-   the opposite: there is one sheet of paper, and structure is ruled
-   onto it. The element stays in the markup (every view emits it) and
-   simply stops painting, so no view template has to change. */
-.rig__ghost{display:none}
 
 .panel{position:relative;z-index:1;background:var(--paper);
   border:var(--rule) solid var(--ink);border-radius:0;height:100%}
@@ -387,9 +376,19 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   gap:var(--s4);padding:var(--s4) var(--s5);border:var(--rule) solid var(--ink);
   background:var(--paper);position:relative;overflow:hidden}
 .head--bare{align-items:center}
-.head__rake{position:absolute;inset:0;pointer-events:none;
-  background-image:repeating-linear-gradient(72deg,var(--ink) 0 1px,transparent 1px 5px);
-  opacity:.14}
+/* THE RAKE. It filled the entire masthead with a flat 72-degree hatch
+   at .14 — a texture with no job, which the frameless masthead turned
+   into a band of visible noise behind every chapter title.
+
+   It has a job now: a wedge of motion entering from the trailing
+   corner at the system's own 60 degrees, masked so it fades out
+   before it reaches the title. Direction, not fill. */
+.head__rake{position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:repeating-linear-gradient(var(--run-a,60deg),
+    var(--ink) 0 1px,transparent 1px 7px);
+  opacity:.16;
+  -webkit-mask-image:linear-gradient(255deg,#000 0 12%,transparent 58%);
+          mask-image:linear-gradient(255deg,#000 0 12%,transparent 58%)}
 .head__stack{position:relative}
 
 /* the giant cropped word, now genuinely cropped by the page edge */
@@ -413,13 +412,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .hero__ring circle,.hero__ring polygon,.hero__ring path,.hero__ring line{
   fill:none;stroke:var(--ink);stroke-width:1.4;vector-effect:non-scaling-stroke}
 .hero__foot{margin-top:var(--s4);font-size:13px;color:var(--tone)}
-
-.gauge{position:relative;height:9px;margin-top:var(--s5);
-  border:var(--rule-hair) solid var(--ink);background:var(--paper);overflow:hidden}
-.gauge__fill{position:absolute;inset:0;transform:scaleX(0);
-  transform-origin:0 50%;background:var(--ink)}
-.gauge__tick{position:absolute;top:0;bottom:0;width:1.5px;background:var(--ink);
-  opacity:.45}
 
 /* ══════════════════ THE STAMP CARD ══════════════════ */
 .seals{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gut);
@@ -468,7 +460,9 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 /* the rake: 1px diagonal hatch, tone not ink, so it is texture and
    never competes with the words sitting on it */
 .strike::before{content:"";position:absolute;inset:0;pointer-events:none;
-  background-image:repeating-linear-gradient(74deg,var(--v3) 0 1px,transparent 1px 7px);
+  /* angle from --run-a (the mark's 60 degrees); artdirection.css
+     paints the real gradient, this is the fallback shape */
+  background-image:repeating-linear-gradient(var(--run-a,60deg),var(--v3) 0 1px,transparent 1px 7px);
   opacity:.38}
 
 /* ── the corner marks ─────────────────────────────────────────────
@@ -598,12 +592,8 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .tick{position:absolute;width:11px;height:11px;border:var(--rule-hair) solid var(--ink)}
 .tick--tl{top:-1px;left:-1px;border-right:0;border-bottom:0}
 .tick--br{right:-1px;bottom:-1px;border-left:0;border-top:0}
-
-/* ══════════════════ REWARDS ══════════════════ */
-.tech__top{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s3)}
 .tech__name{font-family:var(--f-display);font-size:clamp(16px,1.4vw,20px);text-transform:uppercase;line-height:1.05}
 .tech__at{font:500 10px/1 var(--f-mono);letter-spacing:.14em;color:var(--tone)}
-.tech__desc{font-size:13.5px;color:var(--tone);margin-top:var(--s2)}
 .tech__glyph svg{width:52px;height:52px}
 .tech__glyph circle,.tech__glyph polygon,.tech__glyph path,.tech__glyph line{
   fill:none;stroke:var(--ink);stroke-width:1.6;vector-effect:non-scaling-stroke}
@@ -615,31 +605,8 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
    and by its label, not by a texture: hairline keyline, muted type,
    and the word SEALED. Nothing is drawn across the content. */
 .tech__crack{position:absolute;inset:0;pointer-events:none;opacity:0}
-/* This was `height:6px` — a hard height on a wrapper that contains a
-   9px track, its 20px top margin, and a two-item legend. Everything
-   past 6px fell out of the card and was cut off by the panel's
-   `overflow:hidden`, so the "9 / 10 stamps · 90%" legend was invisible
-   on every reward card at every viewport. The wrapper is a stack; its
-   height is its content. */
-/* ── THE STAMP TRACK ──────────────────────────────────────────────
-   A reward's progress is a count of stamps, so it is drawn as stamp
-   cells: the meter is divided into exactly `--slots` compartments by
-   hairline rules laid over the fill. It reads as "9 of 10 pressed"
-   rather than as "90% of a bar", and it scales to any tier size
-   without the markup knowing the width. */
-.tech__gauge{margin-top:var(--s3)}
-.tech__gauge .gauge{margin-top:0;height:clamp(14px,1.5vw,20px);
-  border:var(--edge-hair) solid var(--ink);background:transparent;
-  position:relative;overflow:hidden}
-.tech__gauge .gauge::after{content:"";position:absolute;inset:0;
-  pointer-events:none;z-index:2;
-  background-image:repeating-linear-gradient(to right,
-    transparent 0 calc(100% / var(--slots, 10) - 1px),
-    var(--ink) calc(100% / var(--slots, 10) - 1px) calc(100% / var(--slots, 10)))}
-.tech__gauge .gauge__fill{background:var(--v6)}
 .tech__legend{display:flex;align-items:baseline;justify-content:space-between;
   gap:var(--s3);flex-wrap:wrap;margin-top:var(--s2)}
-.tech__top > div{min-width:0}
 .tech__name{overflow-wrap:break-word}
 
 /* ══════════════════ SCAN ══════════════════ */
@@ -1137,7 +1104,6 @@ button.entry{cursor:pointer}
 [data-screen="home"] .view > section:nth-of-type(1) .panel::before{
   content:"";position:absolute;inset:var(--rule);z-index:0;background:var(--paper);
   clip-path:polygon(0 0,100% 0,100% calc(100% - var(--cut-in)),calc(100% - var(--cut-in)) 100%,0 100%)}
-[data-screen="home"] .view > section:nth-of-type(1) .rig__ghost{display:none}
 
 /* The right-edge bleed only reads as a bleed when there is page gutter
    for it to run into. On a phone the gutter IS the safe margin, so the
@@ -1150,7 +1116,6 @@ button.entry{cursor:pointer}
   [data-screen="home"] .view > .duo > .rig:last-child .panel{
     margin-right:calc(var(--bleed) * -1);border-right:0}
 }
-[data-screen="home"] .view > .duo > .rig:last-child .rig__ghost{display:none}
 
 /* tiers are deliberately unequal heights — the establishing panel is
    short, the stamp card is the tall one, the closers are shallow */
@@ -1257,15 +1222,6 @@ html,body{overflow-x:clip;max-width:100%}
    SFX — lettering as artwork. Outlined, rotated, oversized, and always
    clipped by the panel that contains it. Never a floating decoration.
    ══════════════════════════════════════════════════════════════════ */
-.sfx{position:absolute;z-index:5;pointer-events:none;font-family:var(--f-display);
-  font-size:var(--t-sfx);line-height:.78;text-transform:uppercase;
-  letter-spacing:-.03em;white-space:nowrap;
-  color:transparent;-webkit-text-stroke:2.5px var(--v5);
-  paint-order:stroke fill}
-.sfx--solid{color:var(--v6);-webkit-text-stroke:0}
-.sfx--knock{color:var(--v0);-webkit-text-stroke:2.5px var(--v0)}
-.sfx--a{right:-4%;bottom:-9%;transform:rotate(-8deg);opacity:.13}
-.sfx--b{left:-3%;top:-7%;transform:rotate(6deg);opacity:.1}
 
 /* ══════════════════════════════════════════════════════════════════
    CHAPTER RAIL — a volume index, not a navbar.
@@ -1375,7 +1331,6 @@ html,body{overflow-x:clip;max-width:100%}
    mostly-empty rectangle on a phone. */
 [data-screen="home"] .view{grid-template-rows:none}
 .narr{max-width:min(70%,320px);font-size:clamp(10.5px,2.8vw,13px)}
-.sfx{font-size:clamp(56px,22vw,140px)}
 
 /* ── corrections after looking at the render ──
    Type cropped by a panel edge is a manga move, but only when the crop
@@ -1402,24 +1357,16 @@ html,body{overflow-x:clip;max-width:100%}
 .title--name{font-size:clamp(24px,7.2vw,92px);overflow-wrap:break-word}
 .narr--tl{max-width:min(38%,240px)}
 
-/* SFX belongs at a panel corner, cropped by it, behind the content —
-   not floating across the middle of the gauge */
-.sfx{z-index:0}
-/* `.sfx` is excluded so the decorative word stays absolutely
+/* [data-layer] is excluded so decorative children stay absolutely
    positioned behind the content instead of being pulled into flow by
    this rule's higher specificity — on the mobile hero that alone added
    56px of empty panel height. */
 .hero > *:not([data-layer]){position:relative;z-index:2}
-.sfx--a{right:auto;left:-2%;bottom:-14%;top:auto;transform:rotate(-7deg);
-  opacity:.22;-webkit-text-stroke-width:3px}
 [data-screen="home"] .hero{overflow:hidden}
 
 /* SFX still crossed the gauge and the caption at desktop width. Pushed
    fully into the corner and cropped hard, which is where lettering sits
    on a real page — anchored to the panel, not floating in it. */
-.sfx--a{left:auto;right:-3%;bottom:-18%;transform:rotate(-6deg);opacity:.16}
-.sfx--a{right:-8%;bottom:-12%;opacity:.2}
-@media(min-width:1024px){.sfx--a{right:-3%;bottom:-18%;opacity:.16}}
 
 /* ══════════════════════════════════════════════════════════════════
    THE EDGE — a ruled line, not a drawn one.
@@ -1614,11 +1561,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 /* ══════════════════════════════════════════════════════════════════
    SFX — opaque, large, cropped by the panel. Never a watermark.
    ══════════════════════════════════════════════════════════════════ */
-.sfx{color:var(--v6);-webkit-text-stroke:0;opacity:1;
-  font-size:clamp(72px,15vw,240px);letter-spacing:-.055em}
-.sfx--a{right:-5%;bottom:-16%;left:auto;top:auto;transform:rotate(-7deg);
-  opacity:.09}
-.sfx--out{color:transparent;-webkit-text-stroke:clamp(2px,.35vw,4px) var(--v6);opacity:.5}
 
 /* ══════════════════════════════════════════════════════════════════
    REWARDS — the glyph had escaped its box and was rendering ~1100px.
@@ -1775,8 +1717,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .seal--hero svg{width:74%;height:74%}
 [data-screen="home"] .seals{padding-top:var(--s7)}
 
-/* SFX was still reading as a watermark at 9% */
-.sfx--a{opacity:.16}
 
 /* Record rows need real interior space now that they are panels */
 [data-screen="record"] .rec{padding:var(--s4) var(--s4) var(--s5)}
@@ -1998,11 +1938,6 @@ main#view{padding-top:var(--space-tier);
   justify-content:flex-end;gap:var(--space-hair)}
 .view > .head .head__stack{width:100%}
 .view > .head .jp{position:absolute}
-
-/* the ink band and the panel background were drawn on different boxes,
-   so the offset ghost showed as a doubled edge on the right and bottom.
-   The ghost belongs behind the panel, not beside it. */
-.stack-panels > section .rig__ghost{display:none}
 [data-screen="rewards"] .rig .panel{background:var(--v1)}
 .kicker{display:inline-block}
 
@@ -2102,46 +2037,22 @@ main#view{padding-top:var(--space-tier);
    ───────────────────────────────────────────────────────────────── */
 [data-screen="home"] .hero{position:relative;isolation:isolate}
 
-/* The tone wedge the number stands on.
-   ::after, NOT ::before — the home hero's ::before is already spoken
-   for: the stylesheet paints the panel dark and lays a paper-coloured
-   ::before inside it, which is what produces the diagonal-cut corner.
-   Overriding it turned the whole panel black. */
-/* The wedge is scraped back on BOTH edges. It used to fade only toward
-   the top, so its right-hand edge stopped on a hard vertical line — a
-   tone sheet with a ruled edge reads as an unfinished rectangle sitting
-   behind the number rather than as tone laid into the panel. The
-   composite mask fades up and to the right, which is what a blade
-   actually leaves. */
-[data-screen="home"] .hero::after{content:"";position:absolute;
-  /* top/right MUST be reset. `.panel::after` sets `inset:0` for the
-     panel's own screentone, and this rule reuses that pseudo-element —
-     so without clearing them, `top:0` survives, and an absolutely
-     positioned box with top, bottom AND height set simply ignores
-     `bottom`. The wedge was therefore anchored to the TOP of the panel:
-     a dotted rectangle laid across the number and straight through
-     "STAMPS ACQUIRED", which is what made the caption read as struck
-     out. It belongs low and left, under the figure. */
-  top:auto;right:auto;
-  left:0;bottom:0;width:min(62%,340px);height:58%;
-  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
-  /* A short panel puts three lines of type inside the same 58% the tall
-     one gives to the figure alone, so the tone has to sit further back
-     where the column is narrow. It is material behind the number, not a
-     field the caption has to be read through. */
-  opacity:.3;z-index:0;
-  /* The tone is a band behind the FIGURE, not a field under the whole
-     lower half of the panel. Fading it out at the bottom as well as
-     the top clears the caption and the travel bar entirely — nothing
-     in this system is read through a texture — while leaving the
-     number standing on it, which is the only job it ever had. */
-  -webkit-mask-image:linear-gradient(to top, transparent 0%, #000 30%, #000 66%, transparent 100%),
-              linear-gradient(to right, #000 0%, #000 62%, transparent 100%);
-  mask-image:linear-gradient(to top, transparent 0%, #000 30%, #000 66%, transparent 100%),
-             linear-gradient(to right, #000 0%, #000 62%, transparent 100%);
-  -webkit-mask-composite:source-in;mask-composite:intersect;
-  clip-path:polygon(0 14%, 100% 0, 100% 100%, 0 100%)}
+/* THE TONE WEDGE HAD NOTHING TO BE CROPPED BY, SO IT GOES.
 
+   It started under the count, where a screentone behind 11px mono
+   made the label unreadable. I moved it beside the figure; that fixed
+   the legibility and created a worse problem. Once the hero lost its
+   panel border there was no edge anywhere near it, and masking it
+   into a soft corner just produced a rectangle of grey dots hanging
+   in open paper with two hard sides — a rendering fault, not
+   pressure.
+
+   Screentone in manga is always bounded: by a panel edge, by a
+   figure, by a field of speed lines. This one is bounded by nothing
+   and there is no honest edge to give it here. What the count needs
+   beside it is air. Tone is still used where it has a boundary — the
+   chamber's rake, the live record row's band.
+   ───────────────────────────────────────────────────────────────── */
 [data-screen="home"] .hero__core{position:relative;z-index:2;align-items:flex-end}
 [data-screen="home"] .hero__num{position:relative;z-index:2}
 
@@ -2162,13 +2073,6 @@ main#view{padding-top:var(--space-tier);
   letter-spacing:.2em;color:var(--ink-2)}
 /* the target beside the count is one figure and never wraps */
 [data-screen="home"] .hero__of{white-space:nowrap}
-
-/* the travel bar: ruled, not rounded, with the remaining distance
-   drawn as tone rather than empty grey */
-[data-screen="home"] .gauge{height:12px;border:0;position:relative;z-index:2;
-  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
-  box-shadow:inset 0 0 0 1.5px var(--ink)}
-[data-screen="home"] .gauge__fill{background:var(--ink)}
 
 /* ─────────────────────────────────────────────────────────────────
    5. THE SCAN PANEL — the action panel
@@ -2221,14 +2125,10 @@ main#view{padding-top:var(--space-tier);
 .cut-br{clip-path:polygon(0 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%)}
 .cut-tl{clip-path:polygon(var(--chamfer) 0, 100% 0, 100% 100%, 0 100%, 0 var(--chamfer))}
 
-/* the tone wedge under the number follows the panel's aspect, so it
-   anchors the figure on a tall narrow panel and on a wide one alike */
-[data-screen="home"] .hero::after{width:min(78%,300px);height:64%}
 [data-rank="lead"]{--ink-w:3.6}
 .strike::after{opacity:.11}
 
 @media(min-width:1024px){
-  [data-screen="home"] .hero::after{width:min(62%,340px);height:58%;opacity:.45}
   [data-rank="lead"]{--ink-w:4.4}
   .strike::after{opacity:.14}
 }
@@ -2278,9 +2178,10 @@ main#view{padding-top:var(--space-tier);
   clip-path:polygon(22% 0, 100% 0, 100% 100%, 0 100%);
   -webkit-mask-image:linear-gradient(to bottom left, #000 0%, transparent 78%);
   mask-image:linear-gradient(to bottom left, #000 0%, transparent 78%)}
-/* `.sfx` must stay excluded from every `> *` rule in this file: it is
-   absolutely positioned by design, and a two-class descendant selector
-   outranks its own one-class rule and drags it into flow. */
+/* [data-layer] children must stay excluded from every `> *` rule in
+   this file: they are absolutely positioned by design, and a two-class
+   descendant selector outranks their own one-class rule and drags them
+   into flow. */
 .seals > *:not([data-layer]){position:relative;z-index:1}
 
 /* the record page's live row gets a tone band so the actionable entry
@@ -2318,8 +2219,19 @@ main#view{padding-top:var(--space-tier);
 [data-screen="auth"] .view{max-width:640px}
 [data-screen="auth"] .authp{--ink-w:4.2;position:relative;isolation:isolate;
   padding:var(--s6) var(--s5) var(--s5)}
+/* the tone was 44% of the panel's height, which on a phone put a
+   screentone straight over the USERNAME and PASSWORD labels — the one
+   thing this system says never to do. It stays in the corner above
+   the first field. */
 [data-screen="auth"] .authp::after{content:"";position:absolute;
-  right:0;top:0;width:min(38%,190px);height:44%;z-index:0;
+  /* left MUST be cleared. `.panel::after` sets inset:0 for the panel's
+     own screentone and this rule reuses that pseudo-element, so left:0
+     survives — and with left, right AND width all set, the browser
+     drops `right`. The wedge was therefore pinned to the LEFT edge,
+     which is exactly where the first field label sits. The same trap
+     as the home hero's tone, in the same file, for the same reason. */
+  left:auto;bottom:auto;
+  right:0;top:0;width:min(30%,150px);height:22%;z-index:0;
   background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
   opacity:.26;clip-path:polygon(26% 0, 100% 0, 100% 100%, 0 100%);
   -webkit-mask-image:linear-gradient(to bottom left, #000 0%, transparent 76%);
@@ -2604,6 +2516,30 @@ main#view{padding-top:var(--space-tier);
 [data-screen="home"] .view > .duo .entry--set .entry__verdict{color:var(--paper)}
 [data-screen="home"] .view > .duo .entry--set .entry__meta{color:var(--v3)}
 
+/* ── THE CLOSERS ARE NOT THE SAME OBJECT TWICE ────────────────────
+   Two registered blocks with identical rules and identical weight,
+   stacked. The live meeting is something you can act on; the last
+   stamp is a receipt. Ranked accordingly — the live one keeps the
+   heavy rule and a cinnabar tick, the receipt drops to a hairline. */
+[data-screen="home"] .view > .duo > .rig:first-child::before{height:var(--edge)}
+[data-screen="home"] .view > .duo > .rig:first-child::after{
+  background:var(--seal);width:var(--edge);height:clamp(14px,1.9vw,24px)}
+[data-screen="home"] .view > .duo > .rig:last-child::before{
+  height:var(--rule-hair);background:var(--v3)}
+[data-screen="home"] .view > .duo > .rig:last-child::after{
+  background:var(--v3);width:var(--rule-hair)}
+[data-screen="home"] .view > .duo > .rig:last-child .h2{color:var(--ink-2)}
+
+/* ── HIERARCHY INSIDE THE SMALL TYPE ──────────────────────────────
+   Every piece of 10-11px mono on the page sat at one weight, so the
+   reading in the corner, the label under the figure and the
+   annotations all competed. The label is the quiet one; the reading
+   is the loud one. */
+[data-screen="home"] .hero__label{font-size:clamp(9.5px,.9vw,11px);
+  letter-spacing:.26em;color:var(--v3)}
+[data-screen="home"] .hero__state{font-weight:700;color:var(--ink);
+  letter-spacing:.18em}
+
 /* ── EDGE METADATA ON EVERY CHAPTER ────────────────────────────────
    The rune existed on Home alone, so the one primitive that says
    "this is an instrument reporting its own state" appeared on one
@@ -2663,8 +2599,8 @@ main#view{padding-top:var(--space-tier);
   inset:0;z-index:0;pointer-events:none;
   background-image:repeating-linear-gradient(64deg,
     var(--ink) 0 1px, transparent 1px 10px);opacity:.12;
-  -webkit-mask-image:linear-gradient(118deg,#000 0 6%,transparent 46%);
-          mask-image:linear-gradient(118deg,#000 0 6%,transparent 46%)}
+  -webkit-mask-image:linear-gradient(calc(var(--run-a) + 60deg),#000 0 6%,transparent 46%);
+          mask-image:linear-gradient(calc(var(--run-a) + 60deg),#000 0 6%,transparent 46%)}
 /* :not([data-layer]) — without it this forces .entry__ghost, an
    absolutely-positioned 190px display numeral, back into normal flow,
    and the lead row inherits its height. That is the third time a
@@ -2814,6 +2750,93 @@ main#view{padding-top:var(--space-tier);
 .stall__note{font-size:clamp(12.5px,1vw,14.5px);line-height:1.55;color:var(--ink-2)}
 
 /* ══════════════════════════════════════════════════════════════════
+   THE RIG — the viewfinder is mounted, not placed
+
+   Scan was a bordered rectangle with a camera in it, stacked above a
+   bordered rectangle with a field in it. Two blocks, no tension, and
+   nothing anywhere saying what the instrument was doing.
+
+   The frame is a rig now: a reading bar ruled across the top edge, a
+   vertical rune down the side, and the viewfinder held between them.
+   The readings are real — the optics the camera opened, the code
+   format the reader accepts, and the live status, which is the one
+   cinnabar mark on the screen while the target is armed.
+   ══════════════════════════════════════════════════════════════════ */
+.rig-scan{position:relative;display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-rows:auto auto;
+  column-gap:clamp(8px,1.2vw,16px)}
+.rig-scan__bar{grid-column:1/-1;display:flex;flex-wrap:wrap;
+  align-items:center;gap:clamp(10px,2vw,28px);
+  padding-bottom:clamp(8px,1.1vw,13px);margin-bottom:clamp(8px,1.1vw,13px);
+  border-bottom:var(--edge-thin) solid var(--ink)}
+.rig-scan__bar .anno:last-child{margin-left:auto}
+.rig-scan > .viewer{grid-column:1;grid-row:2}
+.rig-scan__rune{grid-column:2;grid-row:2;align-self:start;
+  writing-mode:vertical-rl;
+  font:500 clamp(8.5px,.66vw,10.5px)/1 var(--f-mono);letter-spacing:.26em;
+  text-transform:uppercase;color:var(--ink-2);
+  padding-top:clamp(4px,.8vw,10px);white-space:nowrap;
+  pointer-events:none;user-select:none}
+
+/* ══════════════════════════════════════════════════════════════════
+   ACTIVATION AND INTERRUPTION
+
+   The rig looked the same whether the camera was tracking or dead.
+   Two states now change the COMPOSITION, not just a label.
+
+   TRACKING. Speed lines rake in from both sides of the frame at the
+   system's 60 degrees, and the reading bar's rule thickens. The
+   viewfinder stops being a picture in a box and becomes the thing
+   everything else is pointing at.
+
+   REFUSED. A hard diagonal cut is thrown across the rig and the
+   reading bar's rule breaks. This is the interruption the failure
+   state was missing — the frame flashing was an event inside the
+   viewfinder, but nothing around it registered that anything had
+   happened. Both are drawn, not animated, so reduced motion keeps
+   them.
+   ══════════════════════════════════════════════════════════════════ */
+.rig-scan{position:relative}
+.rig-scan::before,.rig-scan::after{content:"";position:absolute;
+  top:0;bottom:0;width:14vw;max-width:210px;z-index:0;
+  pointer-events:none;opacity:0;transition:opacity .18s steps(3,end);
+  background-image:repeating-linear-gradient(var(--run-a),
+    var(--ink) 0 1.5px, transparent 1.5px 7px,
+    var(--ink) 7px 8px, transparent 8px 19px)}
+.rig-scan::before{left:0;
+  -webkit-mask-image:linear-gradient(90deg,#000,transparent);
+          mask-image:linear-gradient(90deg,#000,transparent)}
+.rig-scan::after{right:0;
+  -webkit-mask-image:linear-gradient(270deg,#000,transparent);
+          mask-image:linear-gradient(270deg,#000,transparent)}
+.rig-scan:has(.viewer--feed)::before,
+.rig-scan:has(.viewer--feed)::after{opacity:.3}
+.rig-scan:has(.viewer--feed) .rig-scan__bar{border-bottom-width:var(--edge)}
+
+/* THE CUT. Refusal tears the rig open along the system diagonal: a
+   band of bare paper thrown across the frame with an ink edge on each
+   side, as if the panel itself had been slashed. It is drawn in paper
+   and ink, not cinnabar — the one red mark on a refused screen stays
+   the status reading, so the interruption reads as damage rather than
+   as another alarm. */
+.rig-scan:has(.viewer--bad)::before,
+.rig-scan:has(.viewer--bad)::after{opacity:0}
+.rig-scan__cut{position:absolute;inset:-2px;z-index:8;pointer-events:none;
+  display:none;--cw:clamp(11px,1.5vw,20px);--cy:44%;
+  --cmask:linear-gradient(180deg,#000 0 27%,transparent 27% 33%,
+    #000 33% 64%,transparent 64%);
+  -webkit-mask-image:var(--cmask);mask-image:var(--cmask);
+  background:linear-gradient(calc(var(--run-a) * -1),
+    transparent calc(var(--cy) - var(--cw) - 2px),
+    var(--ink)   calc(var(--cy) - var(--cw) - 2px), var(--ink)  calc(var(--cy) - var(--cw)),
+    var(--paper) calc(var(--cy) - var(--cw)),       var(--paper) calc(var(--cy) + var(--cw)),
+    var(--ink)   calc(var(--cy) + var(--cw)),       var(--ink)  calc(var(--cy) + var(--cw) + 2px),
+    transparent  calc(var(--cy) + var(--cw) + 2px))}
+.rig-scan:has(.viewer--bad) .rig-scan__cut{display:block}
+.rig-scan:has(.viewer--bad) .rig-scan__bar{border-bottom-color:var(--seal)}
+
+/* ══════════════════════════════════════════════════════════════════
    SCAN — THE VIEWFINDER AND THE TERMINAL
 
    The frame reads as an instrument now rather than as a panel with a
@@ -2882,6 +2905,44 @@ main#view{padding-top:var(--space-tier);
   box-shadow:inset 0 0 0 var(--rule-hair) var(--v3)}
 .dslot--set{background:var(--ink);box-shadow:none}
 
+/* ══════════════════════════════════════════════════════════════════
+   PANEL ROLE — HERO, SUPPORT, MICRO
+
+   Three sealed tiers were three of the same object drawn at the same
+   size: the one you are a single stamp away from and the one you are
+   twenty-one away from occupied identical space. State was doing the
+   work but SCALE was not, so the page read as a list.
+
+   The nearest tier is the hero of the spread — its numeral is set at
+   masthead scale, its slot array is tall enough to be a mass rather
+   than a legend, and it holds the measure alone. The rest are micro:
+   half the width, a third of the height, numerals in tone. That is
+   the difference between a manga page and a table of rows.
+   ══════════════════════════════════════════════════════════════════ */
+.dossier[data-rank="hero"] .dossier__idx{
+  --idx-size:clamp(58px,10vw,148px);
+  padding-right:clamp(16px,2.4vw,34px);
+  margin-right:clamp(16px,2.4vw,34px);
+  border-right-color:var(--ink)}
+.dossier[data-rank="hero"] .dslot{height:clamp(30px,4.4vw,64px)}
+.dossier[data-rank="hero"] .tech__name{font-size:clamp(20px,2.4vw,34px)}
+.dossier[data-rank="hero"] .panel{padding-block:clamp(24px,3.4vw,46px)}
+
+.dossier[data-rank="far"] .dossier__idx{--idx-size:clamp(24px,3vw,40px)}
+.dossier[data-rank="far"] .dslot{height:clamp(9px,1.1vw,14px)}
+.dossier[data-rank="far"] .tech__name{font-size:clamp(14px,1.3vw,17px)}
+.dossier[data-rank="far"] .panel{padding-block:clamp(12px,1.5vw,18px)}
+.dossier[data-rank="far"] .dossier__at{display:none}
+
+/* the hero takes the full measure; the micro tiers pair off beside it.
+   Placement is by RANK, not by source order — the tier that is next is
+   not always the first one in the list once earlier ones are claimed. */
+@media(min-width:768px){
+  [data-screen="rewards"] .stack-panels > .dossier[data-rank="hero"],
+  [data-screen="rewards"] .stack-panels > .dossier[data-rank="past"]{grid-column:1/-1}
+  [data-screen="rewards"] .stack-panels > .dossier[data-rank="far"]{grid-column:span 1}
+}
+
 /* ── SEALED: a division of the sheet, nothing more ── */
 .dossier--sealed{position:relative}
 .dossier--sealed::before{content:"";position:absolute;left:0;right:0;top:0;
@@ -2937,6 +2998,11 @@ main#view{padding-top:var(--space-tier);
   text-transform:uppercase;color:var(--ink-2)}
 .view > .head:not(.nameplate) .kicker::before{content:"";
   width:clamp(10px,1.4vw,20px);height:var(--rule-hair);background:currentColor}
+/* Auth radiates speed lines from behind the whole spread, and with
+   the masthead frameless they were running straight through SIGN IN —
+   the title sat on a hatched band and read as an artefact. The
+   masthead keeps its own paper under it there; the lines belong
+   around the composition, not across its loudest word. */
 :root{--t-chapter:clamp(38px,10vw,84px)}
 @media(min-width:1024px){ :root{--t-chapter:clamp(56px,6.4vw,112px)} }
 
@@ -2956,7 +3022,22 @@ main#view{padding-top:var(--space-tier);
 .strike{display:grid;grid-template-rows:auto 1fr auto auto;
   gap:clamp(10px,1.6vw,18px);align-items:stretch;
   min-height:clamp(220px,30vw,340px);
-  padding:clamp(16px,2.4vw,30px)}
+  padding:clamp(16px,2.4vw,30px);
+  /* Cut on the diagonal at the top-left, opposing the cut on the
+     stamp sheet's bottom-right. Two diagonals, facing each other
+     across the spread, is the one thing this composition had none of:
+     the page was entirely orthogonal, and a page with no diagonal in
+     it cannot read as manga however black it is. Repeated on both
+     lead panels so it is a motif rather than an accident. */
+  clip-path:polygon(var(--sheet-cut) 0, 100% 0, 100% 100%,
+                    0 100%, 0 var(--sheet-cut))}
+/* The cut takes the panel's own top-left corner, so the mark that used
+   to sit there is now the diagonal itself. The other three step inside
+   the edge far enough that the clip cannot bite them. */
+.strike .chamber__c{margin:clamp(5px,.7vw,9px)}
+.strike .chamber__c--tl{display:none}
+.strike:hover .chamber__c,.strike:focus-visible .chamber__c{
+  margin:clamp(10px,1.3vw,15px)}
 /* speed lines, converging on the crosshair rather than filling a box */
 .strike::before{
   background-image:repeating-linear-gradient(68deg,
@@ -2988,6 +3069,220 @@ main#view{padding-top:var(--space-tier);
   box-shadow:inset 0 0 0 var(--edge-thin) var(--ink)}
 .strike--live .strike__head .anno{color:var(--seal-deep)}
 
+/* ── THE SEALED PAIR IS NOT A BALANCED SPREAD ─────────────────────
+   Two sealed tiers at exactly half the measure each is a symmetric
+   two-column grid — perfectly balanced and therefore perfectly inert.
+   The nearer tier is the one a member is walking toward, so it takes
+   more of the page: five parts to three. The asymmetry is the
+   tension. */
+@media(min-width:768px){ .stack-panels{grid-template-columns:5fr 3fr} }
+
+/* ── THE SCREEN VARIES IN DENSITY ─────────────────────────────────
+   One dot size at one spacing across every surface is a texture doing
+   no work. It tightens under the chapters that carry a lot of
+   structure and opens up where the page is meant to breathe, so the
+   paper itself has a grain that changes between chapters. */
+[data-screen="record"] body,[data-screen="board"] body{--tone-wide:16px}
+[data-screen="home"] body{--tone-wide:22px}
+[data-screen="scan"] body{--tone-wide:26px}
+
+/* ── THE GHOST WORD IS CROPPED, NOT PLACED ────────────────────────
+   The sound effect behind each masthead sat inside the measure with
+   air around it, which makes it an illustration rather than a layer.
+   It is cropped now — pushed off the right edge and up under the
+   rule, so the page interrupts the word.
+
+   Raising its opacity was the wrong lever and I tried it first: at
+   .55 the ghost competed with the masthead in front of it and the
+   chapter title stopped being the loudest thing on the page.
+   Position is what makes it read as a layer; value keeps it behind. */
+/* ══════════════════════════════════════════════════════════════════
+   SOUND EFFECTS — SCALE AND CROP, NOT OPACITY
+
+   Every chapter carries ONE impact word in the vocabulary of what
+   happens there: STAMP, LOG, LOCK, UNSEAL, IDENT, ENTER. It is not a
+   caption and not a watermark.
+
+   What makes it read as a manga sound effect is that it is far too
+   big for the space and the page cuts it off. Roughly a third of the
+   word is outside the viewport; the letters that remain are taller
+   than the chapter title. Value stays low, because I established the
+   hard way that brightening a ghost word makes it compete with the
+   masthead instead of sitting behind it — the loudness has to come
+   from size and from the crop, not from ink.
+
+   Scan's tilts to the system's 60 degrees, because that page is the
+   one about direction. */
+.sfxw{position:absolute;z-index:0;pointer-events:none;user-select:none;
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(150px,31vw,520px);line-height:.74;
+  letter-spacing:-.055em;white-space:nowrap;
+  /* DRAWN, NOT TINTED. Filled at low value the word became a pale
+     grey wash the size of the page — a watermark, which is the exact
+     SaaS move this is supposed to replace. A manga sound effect is
+     INKED: hard outline, no tone. Knocking the fill out and drawing
+     the letterform in line gives it real presence at the size it
+     wants to be, and costs the composition no tonal mass, so the
+     masthead in front of it still wins. */
+  color:transparent;
+  -webkit-text-stroke:clamp(1.4px,.19vw,2.6px) var(--ink);
+  opacity:.22;
+  top:calc(clamp(10px,2vw,30px) * -1)}
+/* and cropped hard — a third of the word is off the page */
+.sfxw--r{right:-19vw;left:auto}
+.sfxw--l{left:-21vw;right:auto}
+/* Scan's word runs on the diagonal the page already owns. Rotating
+   about the leading corner threw all but a corner of it off-canvas,
+   so at 1440 the page carried three stray outline fragments in the
+   top-left and no readable word at all. It is pulled back onto the
+   sheet and rotated about its own centre, so the letters cross the
+   spread at 60 degrees and the crop lands on the word rather than on
+   everything except the word. */
+.sfxw--tilt{left:-7vw;right:auto;top:auto;bottom:-6vw;
+  transform:rotate(calc(var(--run-a,60deg) - 90deg));
+  transform-origin:center}
+@media(min-width:1024px){
+  .sfxw{opacity:.17}
+}
+
+/* ── THE CREDENTIAL BAND ──────────────────────────────────────────
+   A wide thin strip with a small seal marooned at one end — the
+   weakest composition left in the app. The seal is the subject: real
+   size, cropped by the top of its own division, identification set
+   against it. */
+[data-screen="profile"] .who{display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:center;gap:clamp(14px,2.4vw,32px);overflow:hidden}
+[data-screen="profile"] .who__seal{width:clamp(64px,9vw,124px);
+  height:clamp(64px,9vw,124px);
+  margin-top:calc(clamp(10px,1.6vw,22px) * -1);opacity:.9}
+[data-screen="profile"] .who .rune{position:static;writing-mode:horizontal-tb;
+  display:block;margin-top:6px;letter-spacing:.24em}
+
+/* ══════════════════════════════════════════════════════════════════
+   THE HEXAGON IS THE GEOMETRY
+
+   The mark is a hexagon. Until now that lived only inside the seal
+   glyph drawn in each stamp — a picture of the logo, not a system
+   built from it. A hexagon's edges meet at 60 degrees, so 60 is the
+   angle this product cuts and moves at, everywhere:
+
+     --cut-a   the diagonal that takes a panel's corner
+     --run-a   the angle every set of speed lines runs at
+
+   Both were arbitrary before — 64, 68 and 74 degrees in three
+   different places. One angle, taken from the mark, is what makes a
+   cut on Record and a wedge on Home look like the same hand.
+
+   And the CUT is a motif carried by every chapter's lead panel now,
+   not a thing that happens on Home: whatever leads a screen is the
+   thing with a corner taken out of it.
+   ══════════════════════════════════════════════════════════════════ */
+:root{--cut-a:60deg; --run-a:60deg}
+
+.strike::before,
+[data-screen="record"] .rec--open .entry::after{
+  background-image:repeating-linear-gradient(var(--run-a),
+    var(--ink) 0 1px, transparent 1px 9px)}
+
+[data-screen="record"] .rec--open .entry,
+[data-screen="rewards"] .dossier--ready .panel,
+[data-screen="profile"] .stat[data-rank="lead"],
+[data-screen="board"] .bnext{
+  clip-path:polygon(var(--sheet-cut) 0, 100% 0, 100% 100%,
+                    0 100%, 0 var(--sheet-cut))}
+/* a clipped panel cannot show a border on the cut corner, so the
+   weight moves inside where the clip cannot reach it */
+[data-screen="rewards"] .dossier--ready .panel,
+[data-screen="record"] .rec--open .entry{
+  border:0;box-shadow:inset 0 0 0 var(--edge-heavy) var(--ink)}
+[data-screen="profile"] .stat[data-rank="lead"]{
+  border-bottom:0;box-shadow:inset 0 calc(var(--edge-thin) * -1) 0 var(--ink)}
+
+/* ══════════════════════════════════════════════════════════════════
+   PANEL RHYTHM — UNEQUAL TIERS, INTERLOCKING
+
+   Home was three full-width bands stacked down the page. Every tier
+   the same width, every tier the same weight, and a dead half-screen
+   of paper beside the stamp sheet that read as the page running out
+   rather than as space anybody chose.
+
+   It is a spread now. Two tiers, each split into a WIDE panel and a
+   NARROW one, and the split lands in a different place in each — so
+   the vertical seam between panels breaks rather than running
+   straight down the page, which is the difference between a manga
+   spread and a two-column grid.
+
+     tier 2:  the count, wide          |  the target, narrow and tall
+     tier 3:  the stamp sheet, ink     |  the log, narrow and stacked
+   ══════════════════════════════════════════════════════════════════ */
+@media(min-width:1024px){
+  [data-screen="home"] .view > section:nth-of-type(2){grid-area:3/1/4/4}
+  [data-screen="home"] .view > .duo{grid-area:3/4/4/-1;
+    display:flex;flex-direction:column;gap:clamp(18px,2.4vw,34px);
+    align-self:start}
+  [data-screen="home"] .view > .duo > .rig{width:100%}
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   THE STAMP SHEET — ONE INK MASS, NOT NINE SQUARES
+
+   Nine black cells with a paper gutter between each pair is nine small
+   black UI elements, which is exactly the "scattered ink" the whole
+   system is supposed to avoid. It also read as a contact sheet: ten
+   identical tiles in a straight line, a data display rather than a
+   composition.
+
+   The gutter between cells is gone. Earned stamps now abut, so they
+   fuse into ONE solid black field with the unearned slots punched out
+   of it — the eye gets a single ink mass whose SHAPE is the record.
+   A hairline of paper inside each filled cell keeps them countable.
+
+   The sheet is also cut on the diagonal at its trailing corner. That
+   is the one structural diagonal on the page and it is doing a job:
+   the record is unfinished, so the sheet is not a closed rectangle.
+   ══════════════════════════════════════════════════════════════════ */
+[data-screen="home"] .seals{
+  gap:0;padding:0;max-width:none;margin-inline:0;
+  --seal-cols:5;
+  border:var(--edge-heavy) solid var(--ink);
+  background:var(--paper);
+  /* A BLOCK, not a strip. Ten cells in a line is 10:1 — a filmstrip,
+     no presence, and nothing for the composition to push against. Two
+     rows of five is the proportion of the physical card this whole
+     product is about, and it leaves paper beside it, which is what
+     makes the tier read as a panel on a spread rather than a rule
+     across it. */
+  /* fills the measure below the laptop tier — a 272px block floating
+     in a 358px column reads as a bug, not a decision */
+  width:100%;
+  --seal-cell:clamp(52px,8.4vw,124px);
+  clip-path:polygon(0 0, 100% 0,
+    100% calc(100% - var(--sheet-cut)), calc(100% - var(--sheet-cut)) 100%, 0 100%)}
+:root{--sheet-cut:clamp(22px,3.4vw,54px)}
+
+[data-screen="home"] .seal{border:0;background:none;aspect-ratio:1;
+  box-shadow:inset 0 0 0 var(--rule-hair) var(--v2)}
+/* earned: solid, abutting, with a hairline of paper holding the count */
+[data-screen="home"] .seal--set{background:var(--v6);
+  box-shadow:inset -1px 0 0 rgba(247,247,245,.22),
+             inset 0 -1px 0 rgba(247,247,245,.22)}
+/* THE UNSTRUCK SLOT. It was a blank white square — the one element in
+   the sheet with nothing to say. It carries the seal outline at low
+   weight now, so an empty slot reads as an impression waiting to be
+   pressed rather than as a hole. */
+[data-screen="home"] .seal[data-seal="empty"]{background:var(--paper);
+  background-image:none}
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark circle,
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark polygon,
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark path,
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark line{stroke:var(--v3)}
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark{opacity:.55}
+[data-screen="home"] .seal--next{
+  box-shadow:inset 0 0 0 var(--edge-thin) var(--ink)}
+[data-screen="home"] .seal__no{opacity:.5}
+[data-screen="home"] .seal--set .seal__no{color:var(--paper);opacity:.42}
+
 /* ══════════════════════════════════════════════════════════════════
    HOME — ONE SHEET, FOUR CHAMBERS
 
@@ -3013,22 +3308,12 @@ main#view{padding-top:var(--space-tier);
 [data-screen="home"] .view > section:nth-of-type(1){
   padding:clamp(20px,3vw,44px) 0 clamp(14px,2vw,26px)}
 
-/* the tone wedge sat UNDER the count and its label, and at these
-   sizes a screentone behind 11px mono makes the label unreadable —
-   texture has to have a job, and "sit behind the words" is not one.
-   It moves out to the right of the figure, where it reads as the
-   pressure the number is under rather than as noise on it. */
-[data-screen="home"] .hero::after{left:auto;right:0;width:min(30%,200px);
-  height:46%;top:auto;bottom:0;opacity:.42}
 /* the reading in the top-right corner is a fact, so it gets clear
    paper to sit on rather than sharing it with the screentone */
 [data-screen="home"] .hero__state{position:relative;z-index:3;
   background:var(--paper);padding-left:6px}
 [data-screen="home"] .hero__label{color:var(--ink-2);position:relative;z-index:3}
 [data-screen="home"] .hero__foot{margin-top:clamp(12px,1.8vw,20px)}
-/* the sound effect is a layer, not a collision: it sits behind the
-   figure and is cropped by the chamber's own bottom edge */
-[data-screen="home"] .sfx--a{bottom:-6%;opacity:.11}
 /* the ring, the dot wedge and the sound effect were all landing in
    the same square inch to the right of the figure. The ring is the
    one that says least — the stamp array below states the same thing
@@ -3573,6 +3858,343 @@ select.input:focus-visible{outline:none}
 .reticle--good .reticle__geo,
 .reticle--good .reticle__mark{opacity:.9}
 
+
+/* ══════════════════════════════════════════════════════════════════
+   THE CHAPTER CLOSE
+
+   Rewards ended two-thirds down a tall viewport with a third of the
+   page left blank and nothing bounding it, which does not read as a
+   rest — it reads as a page that stopped. Manga leaves plenty of
+   space empty, but a beat is always enclosed by something.
+
+   This is the bottom rule of the spread. It is pushed to the foot of
+   the canvas, so the empty area above it becomes a panel with nothing
+   in it rather than an unfinished page, and it carries the two facts
+   a chapter ends on: where the reader stands, and which chapter this
+   was.
+   ══════════════════════════════════════════════════════════════════ */
+.close{position:relative;display:flex;align-items:baseline;
+  justify-content:space-between;gap:var(--s3);flex-wrap:wrap;
+  padding-top:clamp(12px,1.6vw,18px)}
+.close__rule{position:absolute;left:0;right:0;top:0;
+  height:var(--edge-heavy);background:var(--ink)}
+.close__b{color:var(--ink-2)}
+/* the chapter mark hangs off the rule at the leading corner, the same
+   registration tick the closers on Home use */
+.close::after{content:"";position:absolute;left:0;top:0;
+  width:var(--edge-heavy);height:clamp(12px,1.6vw,20px);background:var(--ink)}
+
+/* The rest before it is a FIXED beat, not whatever the viewport has
+   left over. Stretching the close to the foot of the canvas ties the
+   size of the pause to the height of the window, which means the same
+   page reads as a considered rest on one screen and as an abandoned
+   one on another. A bounded gap is the same beat everywhere. */
+.close{margin-top:clamp(44px,9vh,116px)}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   HOME — WHAT THE CLOSERS DO AND DO NOT SAY
+
+   The meeting numeral behind the closing entries rendered at 44px and
+   7% — too small to read as a layer and too faint to read as a fact,
+   which makes it the one thing on the page doing no job at all. On
+   Record it is a real device, set at display scale and cropped by the
+   row it belongs to. Here it just produced a grey smudge that looked
+   like a rendering fault. It goes.
+
+   The two closers also stop being the same object: what is happening
+   now is the support panel and keeps full type; what was last stamped
+   is the micro panel and is set down to a footnote.
+   ══════════════════════════════════════════════════════════════════ */
+[data-screen="home"] .entry__ghost{display:none}
+[data-screen="home"] .view > .duo > .rig:last-child .h2{
+  font-size:clamp(11px,.86vw,12.5px);letter-spacing:.2em}
+[data-screen="home"] .view > .duo > .rig:last-child .panel{
+  padding-top:clamp(11px,1.5vw,17px)}
+@media(min-width:1024px){
+  [data-screen="home"] .view > .duo > .rig:last-child{
+    font-size:.92em}
+}
+
+/* ── THE NAME MUST NOT BREAK MID-WORD ─────────────────────────────
+   At 390 a long username wrapped to "MEMBERUS / ER." — a hyphenless
+   break in the middle of a person's own name, which reads as a bug
+   and not as a bleed. The nameplate steps down a size on narrow
+   screens so ordinary names hold one line, and long ones break at a
+   size where the second line is not a two-letter orphan. */
+@media(max-width:479px){
+  :root{--t-name-hero:clamp(34px,10.4vw,58px)}
+  .nameplate .title--name{letter-spacing:-.03em}
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   MOBILE IS ITS OWN COMPOSITION, NOT THE DESKTOP ONE STACKED
+
+   On a phone the action chamber was 371px tall with a 34px crosshair
+   floating in the middle of it: three quarters of the tallest element
+   on the page was empty, which is not a rest — a rest has an edge.
+   The desktop chamber can afford that air because it sits BESIDE the
+   count and the two hold each other up. Stacked, it has nothing to
+   hold.
+
+   So the phone gets its own arrangement: the target reads across the
+   band instead of down it. The crosshair moves to the leading edge at
+   real size, the verb sets against it, and the commit takes the full
+   measure underneath. Same three layers, same vocabulary, a
+   proportion that belongs to the device.
+   ══════════════════════════════════════════════════════════════════ */
+@media(max-width:767px){
+  /* (0,1,1) to clear [data-screen="home"] .view > .strike, which
+     reserved 44dvh for the chamber back when it was a mostly-empty
+     box and needed the size to be unmissable. The band arrangement
+     below is unmissable at a third of that. */
+  [data-screen="home"] .view > .strike,
+  .strike{min-height:0;
+    grid-template-columns:auto minmax(0,1fr);
+    grid-template-rows:auto auto auto;
+    column-gap:clamp(14px,4vw,22px);row-gap:clamp(10px,2.4vw,16px)}
+  .strike__head{grid-column:1/-1;grid-row:1}
+  .strike__core{grid-column:1;grid-row:2;min-height:0;align-self:center}
+  .strike__core .xhair{--xh:clamp(46px,14vw,64px)}
+  .strike__body{grid-column:2;grid-row:2;align-self:center;justify-self:start}
+  .strike__go{grid-column:1/-1;grid-row:3}
+  /* the speed lines converge on the crosshair where it actually is now */
+  .strike::before{
+    -webkit-mask-image:radial-gradient(circle at 18% 52%, #000 0 10%, transparent 66%);
+            mask-image:radial-gradient(circle at 18% 52%, #000 0 10%, transparent 66%)}
+}
+
+/* ── the name gets the whole measure on a phone ───────────────────
+   The nameplate inherits the chapter masthead's reserved lane for the
+   vertical Japanese mark, which on a 390 screen took 70px off a 356px
+   measure and wrapped "MEMBERUSER." to a two-letter orphan. The
+   nameplate has no title in that lane to protect, so it takes the
+   measure back. */
+@media(max-width:479px){
+  [data-screen="home"] .view > .nameplate{padding-right:0}
+  :root{--t-name-hero:clamp(32px,9.4vw,58px)}
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   THE VERDICT IS ONE FRAME, NOT A DIALOG
+
+   Everything about the moment was right except its ARRANGEMENT: seal
+   centred, word centred under it, three lines of centred metadata
+   under that, all inside a 46ch measure with even air on both sides.
+   That is a centred modal — the single most generic composition an
+   interface has, and putting a manga sound effect inside one does not
+   make it a manga panel.
+
+   So the frame is composed. The word runs past the measure and is
+   CROPPED by the edge of the screen, which is what makes it read as
+   too loud for the space it is in rather than as large type placed in
+   a box. The block sits off-centre and everything under the word is
+   set flush to its leading edge, so the metadata reads as a caption
+   registered to the impact instead of as a stack of centred labels.
+   The seal is pushed up and out of the measure to the trailing side —
+   the impression the word came out of, not a logo above a heading.
+   ══════════════════════════════════════════════════════════════════ */
+/* (0,2,0) throughout: identity.css sets the verdict's type and colour
+   and loads after this file, so a single-class rule here loses every
+   tie. Scoping to the panel keeps the two files' jobs separate — that
+   one still owns what the mark IS, this one owns where it sits. */
+.verdict .verdict__inner{text-align:left;max-width:min(42ch,100%);
+  margin-inline:0 auto;
+  padding-left:max(var(--s6), 6vw)}
+.verdict .verdict__state{white-space:nowrap;
+  font-size:clamp(68px,23vw,380px);
+  /* CROPPED ON BOTH SIDES. The word starts outside the measure and
+     runs past the trailing edge; the fixed panel clips, so the crop
+     is the frame's own edge. A word that fits is a word that was
+     placed — this one is too loud for the space it landed in. */
+  margin-left:min(-2vw,-14px);margin-right:-46vw;
+  transform:rotate(-2.4deg);transform-origin:left center}
+.verdict .verdict__seal{margin:0 0 0 auto;margin-right:min(6vw,90px);
+  width:min(26vmin,150px);height:min(26vmin,150px)}
+.verdict .verdict__jp{display:block;margin-top:clamp(6px,1vw,12px);letter-spacing:.5em}
+.verdict .verdict__title,
+.verdict .verdict__delta,
+.verdict .verdict__meet{text-align:left}
+.verdict .verdict__delta{font-size:clamp(22px,3.4vw,44px)}
+/* the rule the caption is registered to — the one structural line in
+   the frame, and it starts where the word starts */
+.verdict .verdict__title{position:relative;padding-top:clamp(10px,1.4vw,16px);
+  margin-top:clamp(12px,1.8vw,22px)}
+.verdict .verdict__title::before{content:"";position:absolute;left:0;top:0;
+  width:min(52%,320px);height:var(--edge-heavy);background:var(--ink)}
+
+/* THE FIELD BEHIND THE IMPACT IS A FIGURE, NOT A BLOB.
+
+   It draws seal(4) at the full height of the screen, and the seal's
+   strokes are specified in a 100-unit viewBox — so at 844px the 5.5
+   unit arms scale to 46px each and the six of them fuse into a soft
+   grey disc covering half the frame. Behind a manga impact there is a
+   drawn figure or there is nothing; there is never a blur.
+
+   Non-scaling strokes keep it a LINE drawing at any size, so the mark
+   the whole product is built on reads as itself, enormous, behind the
+   word that just landed. */
+.verdict .verdict__field path,
+.verdict .verdict__field circle,
+.verdict .verdict__field line,
+.verdict .verdict__field polygon{
+  fill:none;stroke:var(--ink);stroke-width:1.25;
+  vector-effect:non-scaling-stroke}
+
+@media(max-width:479px){
+  .verdict .verdict__inner{padding-left:var(--s5);max-width:100%}
+  .verdict .verdict__state{margin-right:-52vw}
+  .verdict .verdict__seal{margin-right:min(4vw,40px)}
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   PHASE 30 SELF-CRITIQUE — WHAT THE RENDERS SHOWED
+
+   Seven things the composition passes above did not reach.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── 1. THE THIRD STAT ORPHANED ───────────────────────────────────
+   Four readings in a two-column grid on a phone: the lead takes the
+   full measure, two pair off, and the fourth sits alone in the left
+   half with the right half empty — an orphan, and it reads as a cell
+   that failed to load. It takes the measure instead, so the tier goes
+   wide / narrow-narrow / wide. Irregular on purpose. */
+@media(max-width:479px){
+  [data-screen="profile"] .stats > .stat:last-child{grid-column:1/-1}
+}
+
+/* ── 2. WHAT HAS NOT HAPPENED YET ─────────────────────────────────
+   Record's scheduled meetings had a heading in --faint set with an
+   inline style, no rule, and a full chapter gap above it. It read as
+   an unfinished section rather than as the part of the record that
+   is still ahead. It is a division now: a rule, a heading at section
+   weight, and a count. */
+.ahead{position:relative;padding-top:clamp(14px,2vw,22px);
+  margin-top:clamp(26px,4vw,56px)}
+.ahead__rule{position:absolute;left:0;right:0;top:0;
+  height:var(--edge-thin);background:var(--ink)}
+.ahead__head{display:flex;align-items:baseline;justify-content:space-between;
+  gap:var(--s3);flex-wrap:wrap;margin-bottom:clamp(12px,1.8vw,20px)}
+.ahead .h2{color:var(--ink)}
+/* the entries ahead are the quiet half of the page: they are records
+   of nothing yet, so they hold the smaller weight */
+.ahead .entry{font-size:.94em}
+
+/* ── 3. THE SOUND EFFECT LANDED IN THE SAME PLACE FIVE TIMES ──────
+   Every chapter's impact word sat at the top edge, cropped by the
+   same corner. Five differently-composed spreads carrying one
+   identical layer is a template, and a template is the thing this
+   was supposed to stop being. Each chapter now places its word where
+   that page has room for it: Home behind the nameplate, Record low
+   and leading (the log runs down the page and the word runs with
+   it), Rewards high and trailing, Member across the middle, Scan on
+   the diagonal it already owns. */
+[data-screen="record"] .sfxw{top:auto;bottom:-4vw}
+[data-screen="profile"] .sfxw{top:16vw}
+[data-screen="board"] .sfxw{top:auto;bottom:-2vw}
+[data-screen="auth"] .sfxw{top:9vw}
+
+/* ── 4. THE MICRO TIER STILL SAID "UNLOCKS AT N" NOWHERE ──────────
+   Hiding the line was the lazy way to make the far tiers small: the
+   number of stamps a reward costs is the whole point of the row.
+   It comes back as an annotation on the same line as the name, which
+   is where a fact of that size belongs. */
+.dossier[data-rank="far"] .dossier__at{display:block;
+  grid-column:2;margin-top:-2px;
+  font-size:clamp(9px,.85vw,10.5px);color:var(--v4)}
+
+/* ── 5. THE UNSTRUCK SLOT WAS TOO PALE TO BE AN IMPRESSION ────────
+   It carries the mark at --v3 and .55, which on paper is a smudge —
+   the slot reads as blank, which is exactly what it was before the
+   outline was added. An impression waiting to be pressed has to be
+   visible as a shape. */
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark circle,
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark polygon,
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark path,
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark line{stroke:var(--v4)}
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark{opacity:.8}
+
+/* ── 6. THE CLOSING PAIR ON HOME WAS ONE OBJECT TWICE ─────────────
+   I set the trailing closer to .92em and called it a hierarchy. At
+   that difference the two panels are still the same object, and the
+   page ends on two equal-weight footnotes. What is happening NOW is
+   the support panel and keeps its rule and its full type; what was
+   last stamped is the micro panel — no rule, indented off the
+   register, set down to a marginal note. */
+[data-screen="home"] .view > .duo > .rig:last-child::before{
+  left:auto;width:clamp(28px,4vw,56px)}
+[data-screen="home"] .view > .duo > .rig:last-child{font-size:.86em}
+[data-screen="home"] .view > .duo > .rig:last-child .h2{
+  font-size:clamp(10px,.8vw,11.5px);letter-spacing:.24em;color:var(--ink-2)}
+
+/* ── 7. THE BOARD'S LIVE PANEL WAS INK WITH NOTHING IN IT ─────────
+   A full-measure black field with the meeting, the state and both
+   controls stacked in the left third and 60% of the ink empty. The
+   concentrated black on this page has to be carrying something. The
+   panel reads across now: the meeting numeral at figure scale on the
+   leading edge, the state and the control registered to the trailing
+   one, so the mass is spanned rather than filled at one end. */
+@media(min-width:768px){
+  [data-screen="board"] .bnext{display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:start;column-gap:clamp(24px,5vw,80px)}
+  [data-screen="board"] .bnext > :not(.btn){grid-column:1}
+  /* the control carries an inline margin-top from the markup, which
+     is right in the stacked arrangement and wrong here — it is beside
+     the meeting now, not under it */
+  [data-screen="board"] .bnext > .btn{grid-column:2;grid-row:1/-1;
+    align-self:center;justify-self:end;margin-top:0!important;
+    min-width:clamp(150px,16vw,220px)}
+  /* the numeral is the figure this mass is carrying */
+  [data-screen="board"] .bnext .bactive__no{font-size:clamp(44px,6.4vw,96px);
+    line-height:.9}
+}
+
+
+/* ── 8. THE CLOSING TIER ON HOME WAS ENTIRELY ORTHOGONAL ──────────
+   The spread carries two opposed diagonals — the chamber's leading
+   corner and the stamp sheet's trailing one — and then the whole
+   bottom third of the page is rules and rectangles. A motif that
+   appears twice at the top and never again is an accident, not a
+   system. The last stamped entry is the one ink mass down there, so
+   it takes the same cut the sheet takes, on the same corner. */
+[data-screen="home"] .view > .duo > .rig:last-child .entry--set{
+  clip-path:polygon(0 0, 100% 0,
+    100% calc(100% - var(--sheet-cut)), calc(100% - var(--sheet-cut)) 100%, 0 100%)}
+
+/* ── 9. THE RIG HAD NO FLANKS FOR THE TRACKING LINES TO RUN IN ────
+   Activation rakes speed lines in from both sides of the frame, and
+   the viewfinder was 1015 of the rig's 1040 pixels — so the lines
+   were drawn into a 12px margin and read as nothing. The trailing
+   column opens up on a large screen: the rune gets a real margin to
+   sit in, the frame gains the asymmetry it was missing, and there is
+   somewhere for the rig to show that it is tracking. */
+@media(min-width:1024px){
+  .rig-scan{grid-template-columns:minmax(0,1fr) clamp(20px,7vw,120px)}
+  .rig-scan__rune{justify-self:center}
+  .rig-scan::after{width:clamp(20px,7vw,120px);max-width:none}
+}
+
+/* ── 10. THE LIVE ROW ON RECORD WAS A FRAME AROUND NOTHING ────────
+   The meeting taking check-ins is the one framed panel on the page
+   and two thirds of it was empty paper to the right of three short
+   lines. The row reads across now: what it is on the leading edge,
+   the control registered to the trailing one. Same correction the
+   board's live panel needed, and for the same reason — a heavy frame
+   has to be carrying something across its whole width or it is just
+   a big box. */
+@media(min-width:768px){
+  [data-screen="record"] .rec--open .entry{display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:center;column-gap:clamp(20px,4vw,64px)}
+  [data-screen="record"] .rec--open .entry > .entry__verdict,
+  [data-screen="record"] .rec--open .entry .entry__go{
+    grid-column:2;grid-row:1/-1;align-self:center;justify-self:end}
+}
+
 </style>
 <style>
 /* ══════════════════════════════════════════════════════════════════
@@ -3881,13 +4503,18 @@ none;
    Used once per impact screen, behind the title, at low contrast.
    A rake of converging lines is the cheapest manga signal there is,
    and it costs one pseudo-element. */
-.rake{position:absolute;inset:0;pointer-events:none;overflow:hidden;opacity:.10}
+.rake{position:absolute;inset:0;pointer-events:none;overflow:hidden;opacity:.16}
 .rake::before{
   content:'';position:absolute;left:50%;top:50%;
   width:200%;aspect-ratio:1;transform:translate(-50%,-50%);
+  /* 120 rays at a third of a degree is not a burst of concentration
+     lines — at any real size it is a grey wash with a texture. Manga
+     draws FEWER, HEAVIER lines: you have to be able to see that each
+     one is a line. 51 rays at nearly a degree each read as radiating
+     strokes on a phone and on a monitor alike. */
   background:repeating-conic-gradient(from 0deg at 50% 50%,
-    var(--ink) 0deg .35deg, transparent .35deg 3deg);
-  mask-image:radial-gradient(circle, transparent 22%, #000 62%);
+    var(--ink) 0deg .9deg, transparent .9deg 7deg);
+  mask-image:radial-gradient(circle, transparent 20%, #000 48%, #000 72%, transparent 88%);
 }
 
 
@@ -4154,12 +4781,6 @@ none;
 .tech{min-height:0}
 .tech--sealed{padding-bottom:var(--s4)}
 .tech--sealed .tech__body{min-height:0}
-.tech__state{font-family:var(--f-mono);letter-spacing:.16em}
-.tech--open .tech__state{background:var(--ink);color:var(--paper);
-  border-color:var(--ink);padding:5px 9px}
-/* the sealed chip is a stamped label, not a status pill */
-.chip--sealed{border-style:solid;border-color:var(--v3);color:var(--ink-2);
-  letter-spacing:.22em}
 
 /* ── Record polish ────────────────────────────────────────────────
    +1 stamp is the payoff on an inked row, so it gets paper weight. */
@@ -4441,8 +5062,6 @@ main#view:focus,main#view:focus-visible{outline:none}
 .tech__req{color:var(--ink);font-size:11.5px;letter-spacing:.08em;opacity:1}
 .tech--sealed .tech__req{color:var(--ink)}
 .tech--sealed .tech__name{color:var(--ink)}
-/* the badge is the state, so it carries a keyline rather than floating */
-.tech__state{border:var(--edge-hair) solid var(--ink);padding:6px 10px}
 </style>
 </head>
 <body>
@@ -4494,30 +5113,42 @@ main#view:focus,main#view:focus-visible{outline:none}
 
 <svg class="fxdefs" aria-hidden="true">
   <defs>
-    <!-- heavy cut: charcoal body, one razor of bone, burgundy tail -->
+    <!-- THE CUTS ARE INK.
+
+         These were built for a dark ground: charcoal-lavender body
+         (#1d1a25 → #4a4553), a white razor at the centre, a burgundy
+         tail. Laid over paper they render as soft grey-violet smears
+         with no edge — a blur, which is the one thing a manga cut is
+         not. A cut on paper is solid black with a hard tip; the taper
+         is in the SHAPE, not in the opacity ramp, so every stop below
+         is doubled to a hard step. -->
     <linearGradient id="cutHeavy" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0"   stop-color="#08070c" stop-opacity="0"/>
-      <stop offset=".13" stop-color="#1d1a25" stop-opacity=".72"/>
-      <stop offset=".37" stop-color="#4a4553" stop-opacity=".94"/>
-      <stop offset=".485" stop-color="#ffffff" stop-opacity="1"/>
-      <stop offset=".55" stop-color="#8b8598" stop-opacity=".9"/>
-      <stop offset=".72" stop-color="#3f1119" stop-opacity=".82"/>
-      <stop offset=".89" stop-color="#141119" stop-opacity=".45"/>
-      <stop offset="1"   stop-color="#08070c" stop-opacity="0"/>
+      <stop offset="0"    stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset=".04"  stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset=".04"  stop-color="#0A0A0A" stop-opacity="1"/>
+      <stop offset=".86"  stop-color="#0A0A0A" stop-opacity="1"/>
+      <stop offset=".86"  stop-color="#0A0A0A" stop-opacity=".38"/>
+      <stop offset=".96"  stop-color="#0A0A0A" stop-opacity=".38"/>
+      <stop offset=".96"  stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset="1"    stop-color="#0A0A0A" stop-opacity="0"/>
     </linearGradient>
-    <!-- thin cut: mostly grey, barely there -->
+    <!-- the second cut of a cross: the same blade, less pressure -->
     <linearGradient id="cutThin" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0"   stop-color="#08070c" stop-opacity="0"/>
-      <stop offset=".3"  stop-color="#332f3d" stop-opacity=".6"/>
-      <stop offset=".52" stop-color="#e6e2ea" stop-opacity=".96"/>
-      <stop offset=".74" stop-color="#28242f" stop-opacity=".5"/>
-      <stop offset="1"   stop-color="#08070c" stop-opacity="0"/>
+      <stop offset="0"    stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset=".07"  stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset=".07"  stop-color="#0A0A0A" stop-opacity=".9"/>
+      <stop offset=".8"   stop-color="#0A0A0A" stop-opacity=".9"/>
+      <stop offset=".8"   stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset="1"    stop-color="#0A0A0A" stop-opacity="0"/>
     </linearGradient>
-    <!-- afterimage: a grey ghost trailing the blade -->
+    <!-- the afterimage: the same blade one frame behind, in tone -->
     <linearGradient id="cutGhost" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0"   stop-color="#08070c" stop-opacity="0"/>
-      <stop offset=".5"  stop-color="#6b6577" stop-opacity=".45"/>
-      <stop offset="1"   stop-color="#08070c" stop-opacity="0"/>
+      <stop offset="0"    stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset=".1"   stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset=".1"   stop-color="#0A0A0A" stop-opacity=".3"/>
+      <stop offset=".78"  stop-color="#0A0A0A" stop-opacity=".3"/>
+      <stop offset=".78"  stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset="1"    stop-color="#0A0A0A" stop-opacity="0"/>
     </linearGradient>
   </defs>
 </svg>
@@ -17750,22 +18381,60 @@ function ticks(n, r1, r2, hotEvery){
   return out;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   THE VORTEX — Keystamp's seal
+
+   Six logarithmic-spiral arms turning out of a solid centre into a
+   closed ring. It replaces the hexagon-and-key sigil everywhere a
+   seal is drawn: the stamp slots, the reticle, the verdict, the boot
+   screen, the credential band and the empty states.
+
+   Drawn as geometry rather than dropped in as an image, so it takes
+   the ink or paper of whatever it lands on, stays sharp at any size,
+   and can be struck stroke by stroke by the FX layer the way the old
+   sigil was.
+
+   The stroke weight is set INLINE on purpose. Every place a seal is
+   used already carries a rule pinning `stroke-width:2` with
+   `vector-effect:non-scaling-stroke` — sized for a thin technical
+   sigil. This mark is a bold one: it has to scale with the glyph, so
+   it overrides both, and only an inline style beats a stylesheet. */
+const VX_ARMS = [
+  'M50.00 50.00 L52.40 50.00 L52.62 50.28 L52.82 50.61 L53.00 51.00 L53.15 51.44 L53.26 51.93 L53.33 52.49 L53.34 53.10 L53.28 53.77 L53.13 54.49 L52.89 55.26 L52.53 56.07 L52.05 56.91 L51.42 57.77 L50.64 58.63 L49.69 59.48 L48.55 60.29 L47.22 61.04 L45.68 61.71 L43.92 62.26 L41.95 62.64 L39.74 62.84 L37.32 62.79 L34.69 62.45 L31.86 61.78 L28.86 60.71 L25.71 59.20 L22.46 57.19 L19.15 54.61 L15.84 51.42 L12.61 47.55 L9.55 42.96 L6.74 37.60',
+  'M50.00 50.00 L51.20 52.08 L51.06 52.41 L50.88 52.75 L50.64 53.09 L50.33 53.45 L49.96 53.79 L49.51 54.13 L48.98 54.44 L48.37 54.72 L47.68 54.96 L46.89 55.13 L46.01 55.22 L45.04 55.23 L43.99 55.11 L42.85 54.87 L41.64 54.47 L40.36 53.89 L39.05 53.12 L37.70 52.11 L36.35 50.86 L35.02 49.35 L33.76 47.54 L32.59 45.42 L31.56 42.97 L30.73 40.18 L30.15 37.05 L29.89 33.57 L30.00 29.74 L30.58 25.59 L31.69 21.13 L33.43 16.40 L35.87 11.45 L39.11 6.34',
+  'M50.00 50.00 L48.80 52.08 L48.45 52.12 L48.06 52.13 L47.64 52.10 L47.18 52.01 L46.69 51.86 L46.18 51.64 L45.65 51.34 L45.10 50.95 L44.55 50.47 L44.00 49.87 L43.48 49.16 L42.99 48.32 L42.56 47.35 L42.21 46.24 L41.95 44.99 L41.81 43.60 L41.82 42.07 L42.02 40.40 L42.43 38.61 L43.08 36.70 L44.01 34.70 L45.26 32.63 L46.87 30.52 L48.87 28.40 L51.29 26.34 L54.17 24.36 L57.55 22.55 L61.43 20.98 L65.85 19.71 L70.82 18.85 L76.32 18.49 L82.37 18.74',
+  'M50.00 50.00 L47.60 50.00 L47.38 49.72 L47.18 49.39 L47.00 49.00 L46.85 48.56 L46.74 48.07 L46.67 47.51 L46.66 46.90 L46.72 46.23 L46.87 45.51 L47.11 44.74 L47.47 43.93 L47.95 43.09 L48.58 42.23 L49.36 41.37 L50.31 40.52 L51.45 39.71 L52.78 38.96 L54.32 38.29 L56.08 37.74 L58.05 37.36 L60.26 37.16 L62.68 37.21 L65.31 37.55 L68.14 38.22 L71.14 39.29 L74.29 40.80 L77.54 42.81 L80.85 45.39 L84.16 48.58 L87.39 52.45 L90.45 57.04 L93.26 62.40',
+  'M50.00 50.00 L48.80 47.92 L48.94 47.59 L49.12 47.25 L49.36 46.91 L49.67 46.55 L50.04 46.21 L50.49 45.87 L51.02 45.56 L51.63 45.28 L52.32 45.04 L53.11 44.87 L53.99 44.78 L54.96 44.77 L56.01 44.89 L57.15 45.13 L58.36 45.53 L59.64 46.11 L60.95 46.88 L62.30 47.89 L63.65 49.14 L64.98 50.65 L66.24 52.46 L67.41 54.58 L68.44 57.03 L69.27 59.82 L69.85 62.95 L70.11 66.43 L70.00 70.26 L69.42 74.41 L68.31 78.87 L66.57 83.60 L64.13 88.55 L60.89 93.66',
+  'M50.00 50.00 L51.20 47.92 L51.55 47.88 L51.94 47.87 L52.36 47.90 L52.82 47.99 L53.31 48.14 L53.82 48.36 L54.35 48.66 L54.90 49.05 L55.45 49.53 L56.00 50.13 L56.52 50.84 L57.01 51.68 L57.44 52.65 L57.79 53.76 L58.05 55.01 L58.19 56.40 L58.18 57.93 L57.98 59.60 L57.57 61.39 L56.92 63.30 L55.99 65.30 L54.74 67.37 L53.13 69.48 L51.13 71.60 L48.71 73.66 L45.83 75.64 L42.45 77.45 L38.57 79.02 L34.15 80.29 L29.18 81.15 L23.68 81.51 L17.63 81.26'
+];
+
+/* w is the arm weight in viewBox units.
+
+   There is no separate centre element. Every arm starts AT the centre
+   point and spirals out, so the six strokes overlap there and BUILD
+   the core — which is how
+   the mark is actually constructed, and it means the core can never
+   be a different colour from the arms or leave a seam between itself
+   and them. Two earlier attempts had that seam: a circle stroked
+   wider than twice its radius leaves a hairline at the exact centre
+   that reads as a pinhole punched through the core, and a
+   zero-length capped path did not paint at all. */
+function vortex(w, ring){
+  const S = `style="fill:none;vector-effect:none;stroke-width:${w};stroke-linecap:butt"`;
+  return VX_ARMS.map(d => `<path d="${d}" ${S}/>`).join('')
+    + (ring ? `<circle cx="50" cy="50" r="45" ${S}/>` : '')
+    + '';
+}
+
 /* level 1 slot glyph · 2 medium · 3 full sigil · 4 the arena structure */
 function seal(level = 3){
-  if (level === 1) return KEY;
-  if (level === 2) return `<polygon points="${HEX}"/><circle cx="50" cy="50" r="45"/>${KEY}`;
-  if (level === 3) return `
-    <circle cx="50" cy="50" r="47"/><circle cx="50" cy="50" r="41" stroke-dasharray="2 6"/>
-    <polygon points="${HEX}"/><circle cx="50" cy="50" r="24" class="r"/>
-    ${KEY}${ticks(24, 41, 46, 6)}
-    <path d="M50 1v6M50 93v6M1 50h6M93 50h6"/>`;
-  return `
-    <circle cx="50" cy="50" r="49"/><circle cx="50" cy="50" r="44"/>
-    <circle cx="50" cy="50" r="36" stroke-dasharray="10 6"/>
-    <circle cx="50" cy="50" r="21" class="r"/>
-    <polygon points="${HEX}"/><polygon points="50,10 90,50 50,90 10,50"/>
-    <path d="M50 4a46 46 0 0 1 39.8 23"/><path d="M50 96a46 46 0 0 1-39.8-23"/>
-    ${ticks(36, 44, 47.5, 9)}`;
+  if (level === 1) return vortex(8, false);
+  if (level === 2) return vortex(7, true);
+  if (level === 3) return `${vortex(6, true)}
+    <circle cx="50" cy="50" r="49"/>${ticks(24, 46.5, 48.5, 6)}`;
+  return `${vortex(5.5, true)}
+    <circle cx="50" cy="50" r="49"/><circle cx="50" cy="50" r="47"/>
+    ${ticks(36, 46, 48.4, 9)}`;
 }
 
 /* Geometric marks, not app icons.
@@ -18403,9 +19072,29 @@ const C = {
         <h1 class="title">${title}</h1>
         ${note ? `<p class="muted">${esc(note)}</p>` : ''}
       </div>
-      ${ch ? `<span class="rune" data-layer aria-hidden="true">VOL.01 // CH.${ch.ch}</span>` : ''}
+      ${ch && ch.ch !== '—'
+        ? `<span class="rune" data-layer aria-hidden="true">VOL.01 // CH.${ch.ch}</span>` : ''}
       <span class="jp" aria-hidden="true">${jp}</span>
     </header>`;
+  },
+
+  /* THE CHAPTER CLOSE.
+
+     A short chapter used to simply stop two-thirds down the viewport
+     and leave the rest blank, which reads as a page that failed to
+     load rather than as a rest. Manga uses empty space constantly,
+     but it is always BOUNDED — a panel with nothing in it is a beat;
+     an unclosed page is a mistake. This is the bottom rule of the
+     spread: the chapter mark, the reading it closes on, and the
+     volume position. It also gives the empty area above it a job. */
+  close(reading){
+    const ch = (typeof chapterOf === 'function' && typeof current === 'string')
+      ? chapterOf(current) : null;
+    return `<footer class="close" data-enter aria-hidden="true">
+      <span class="close__rule" data-layer></span>
+      <span class="anno close__a">${esc(reading)}</span>
+      <span class="anno close__b">END OF CHAPTER${ch && ch.ch !== '—' ? ' ' + ch.ch : ''}</span>
+    </footer>`;
   },
 
   /* ── the stat plate: a character status readout, not a summary card ── */
@@ -18421,7 +19110,6 @@ const C = {
     return `<section class="rig ${live ? '' : 'rig--br'}" data-enter aria-labelledby="heroLbl">
       <span class="rig__ghost" data-layer aria-hidden="true"></span>
       <div class="panel ${live ? 'panel--live' : ''} hero p-quiet ink-load">
-        <span class="sfx sfx--a" data-layer aria-hidden="true">${live ? 'OPEN' : 'HOLD'}</span>
         <span class="panel__rule" data-layer aria-hidden="true"></span>
         <span class="tick tick--tl" data-layer aria-hidden="true"></span>
         <span class="tick tick--br" data-layer aria-hidden="true"></span>
@@ -18588,6 +19276,15 @@ const C = {
     const total = Store.totalStamps();
     const open = total >= r.required;
     const ready = open && !r.claimed;
+    /* PANEL ROLE. Three sealed tiers rendered identically is three of
+       the same object again — the thing this dossier was built to
+       stop. The nearest one you have not reached is the hero of the
+       page whether or not it is claimable, because it is the only one
+       that is about to happen; the rest are micro. */
+    const near = Store.rewards.filter(x => total < x.required)
+                   .sort((a, b) => a.required - b.required)[0];
+    const rank = r.claimed ? 'past' : ready ? 'hero'
+               : (near && near.id === r.id) ? 'hero' : 'far';
     const state = r.claimed ? 'claimed' : open ? 'ready' : 'sealed';
     const done = Math.min(total, r.required);
 
@@ -18599,7 +19296,7 @@ const C = {
     const slots = Array.from({ length:cells }, (_, i) =>
       `<span class="dslot${i < litCells ? ' dslot--set' : ''}"></span>`).join('');
 
-    return `<section class="rig dossier dossier--${state}" data-enter data-reward="${r.id}">
+    return `<section class="rig dossier dossier--${state}" data-rank="${rank}" data-enter data-reward="${r.id}">
       <span class="rig__ghost" data-layer aria-hidden="true"></span>
       <div class="panel tech tech--${state}">
         <span class="dossier__idx idx${open ? ' idx--on' : ''}" aria-hidden="true">${pad(r.required)}</span>
@@ -18658,7 +19355,7 @@ const C = {
     return `<section class="rig empty-reg" data-enter>
       <div class="empty">
         <div class="empty__seal" aria-hidden="true">
-          <svg viewBox="0 0 100 100">${seal(1)}</svg>
+          <svg viewBox="0 0 100 100">${seal(2)}</svg>
           <span class="empty__void"></span>
         </div>
         <div class="empty__body">
@@ -18719,7 +19416,7 @@ const Views = {
       action = C.strike({ verb:'Scan code', sub:'No general meeting is taking check-ins', go:'scan', calm:true });
 
     return `<div class="view">
-      ${C.bleed('Keystamp', 'top:-14px;right:-6vw', 'bleed--fill')}
+      ${C.bleed('STAMP', '', 'sfxw sfxw--r')}
       ${ASSETS.homeHeader ? `<div class="banner" data-enter>
         <img src="${ASSETS.homeHeader}" alt="">
       </div>` : ''}
@@ -18784,7 +19481,7 @@ const Views = {
     const upcoming = Store.meetings.filter(m => m.upcoming).reverse();
 
     return `<div class="view">
-      ${C.bleed('Record', 'top:-10px;left:-8vw')}
+      ${C.bleed('LOG', '', 'sfxw sfxw--l')}
       ${C.head('Attendance', 'Record', '記録')}
 
       ${held.length ? `<section data-enter class="stack-lg">
@@ -18794,29 +19491,56 @@ const Views = {
                 'Your record fills itself: every meeting you scan into is '
                 + 'written here automatically. Nothing to do until the first one.')}
 
-      ${upcoming.length ? `<section data-enter class="stack-xl">
-        <h2 class="h2" style="color:var(--faint)">Scheduled</h2>
-        <div class="log" style="margin-top:var(--s4)">${upcoming.map(m => C.entry(m)).join('')}</div>
+      <!-- WHAT HAS NOT HAPPENED YET is a division of the same sheet,
+           not a leftover at the bottom of it. It was set in --faint
+           with an inline style and no rule of its own, which read as
+           a section someone forgot to finish. It gets the register
+           rule the rest of the document uses and states what it is. -->
+      ${upcoming.length ? `<section data-enter class="ahead">
+        <span class="ahead__rule" data-layer aria-hidden="true"></span>
+        <div class="ahead__head">
+          <h2 class="h2">Scheduled</h2>
+          <span class="anno">${upcoming.length} AHEAD</span>
+        </div>
+        <div class="log">${upcoming.map(m => C.entry(m)).join('')}</div>
       </section>` : ''}
+      ${C.close(held.length
+        ? `${held.filter(m => Store.attended(m.id)).length} OF ${held.length} HELD`
+        : 'NOTHING PRESSED YET')}
     </div>`;
   },
 
   rewards(){
     if (Store.failed) return this.loadFailure('Rewards', '解放');
     return `<div class="view">
-      ${C.bleed('Reward', 'top:-12px;right:-10vw', 'bleed--blood')}
+      ${C.bleed('UNSEAL', '', 'sfxw sfxw--r')}
       ${C.head('Milestones', 'Rewards', '解放')}
       <div class="stack-panels">
         ${Store.rewards.map(C.tech).join('')}
       </div>
+      ${C.close(`${Store.totalStamps()} STAMPS ON RECORD`)}
     </div>`;
   },
 
   scan(){
     return `<div class="view">
-      ${C.bleed('Seal', 'bottom:-4vw;left:-7vw')}
+      ${C.bleed('LOCK', '', 'sfxw sfxw--l sfxw--tilt')}
       ${C.head('Check in', 'Scan code', '読取')}
 
+      <!-- THE RIG. The viewfinder is not a component sitting on a
+           page; it is an instrument mounted in a frame, and the frame
+           states what it is doing. Technical readings run along the
+           top edge and a rune runs down the side — real state, not
+           decoration: the optics label, the code format the reader
+           accepts, and the live status. -->
+      <div class="rig-scan" data-enter>
+        <div class="rig-scan__bar" aria-hidden="true">
+          <span class="anno">OPT.CAM // 1280</span>
+          <span class="anno">FMT.M##/XXXXXX</span>
+          <span class="anno anno--seal" id="rigState">SYS.ARMED</span>
+        </div>
+        <span class="rig-scan__rune" aria-hidden="true">読取 // TARGETING</span>
+        <span class="rig-scan__cut" aria-hidden="true"></span>
       <div class="viewer" id="viewer" data-enter>
         <video id="cam" playsinline muted autoplay></video>
         <div class="viewer__scrim" aria-hidden="true"></div>
@@ -18836,6 +19560,7 @@ const Views = {
           <span class="reticle__line"></span>
         </div>
         <div class="viewer__status"><span class="viewer__msg" id="scanMsg">Starting camera</span></div>
+      </div>
       </div>
 
       <div class="manual" data-enter>
@@ -18870,7 +19595,7 @@ const Views = {
      of tabs for four screens was one level too many. */
   boardSpread(bleed, kicker, title, jp){
     return `<div class="view">
-      ${C.bleed(bleed, 'top:-10px;right:-9vw')}
+      ${C.bleed(bleed.toUpperCase(), '', 'sfxw sfxw--r')}
       ${C.head(kicker, title, jp)}
       <section class="rig" data-enter style="margin-top:var(--gut)">
         <span class="rig__ghost" data-layer aria-hidden="true"></span>
@@ -18904,7 +19629,7 @@ const Views = {
     const total = Store.totalStamps();
 
     return `<div class="view">
-      ${C.bleed('Member', 'top:-10px;right:-9vw', 'bleed--fill')}
+      ${C.bleed('IDENT', '', 'sfxw sfxw--r')}
       ${C.head(Store.isBoard ? 'Board' : 'Member', esc(memberName()), '会員')}
 
       <section class="rig stack-lg" data-enter>
@@ -18954,6 +19679,7 @@ const Views = {
                      : 'Every milestone is unlocked.'}</p>
         </div>
       </section>
+      ${C.close(`${Store.attendanceRate()}% ATTENDANCE`)}
     </div>`;
   },
 
@@ -18967,7 +19693,7 @@ const Views = {
     const up = mode === 'up';
     return `<div class="view view--auth">
       <span class="rake" aria-hidden="true"></span>
-      ${C.bleed(up ? 'Join' : 'Enter', 'top:-6px;right:-8vw', 'bleed--fill')}
+      ${C.bleed(up ? 'JOIN' : 'ENTER', '', 'sfxw sfxw--r')}
 
       <div class="authmark" data-enter>
         <span class="chop chop--filled" aria-hidden="true">
@@ -19552,14 +20278,16 @@ const Slash = {
       `<path d="${tear}" fill="url(#${P.grad})"/>` +
       /* the lit side, offset a hair so the blade has an edge and a body */
       `<path d="${tear}" fill="url(#cutGhost)" opacity=".55" transform="translate(0,-3)"/>` +
-      /* black fragments riding the cut */
+      /* Fragments riding the cut. These were black-on-black inside the
+         blade and invisible; on an ink cut over paper the fragments
+         that read are the ones the blade MISSES — bare paper punched
+         out of the stroke, which is how a break is drawn. */
       (type !== 'E' && type !== 'A'
-        ? `<rect x="${180 + (seq % 4) * 90}" y="17" width="${18 + (seq % 3) * 9}" height="7" fill="var(--v6, #111)" opacity=".8"/>
-           <rect x="${430 + (seq % 5) * 70}" y="16" width="${11 + (seq % 2) * 8}" height="9" fill="var(--v6, #111)" opacity=".7"/>` : '') +
-      /* the only accent in the shape: one short tick toward the tail */
+        ? `<rect x="${180 + (seq % 4) * 90}" y="15" width="${18 + (seq % 3) * 9}" height="11" fill="var(--paper, #F7F7F5)"/>
+           <rect x="${430 + (seq % 5) * 70}" y="14" width="${11 + (seq % 2) * 8}" height="13" fill="var(--paper, #F7F7F5)"/>` : '') +
       (hot && type !== 'E'
-        ? `<rect x="${640 + (seq % 5) * 20}" y="16" width="${30 + (seq % 3) * 14}" height="9"
-                 fill="var(--v4, #666)" opacity=".62"/>` : '');
+        ? `<rect x="${640 + (seq % 5) * 20}" y="15" width="${30 + (seq % 3) * 14}" height="11"
+                 fill="var(--paper, #F7F7F5)"/>` : '');
 
     parent.appendChild(el);
 
@@ -19738,8 +20466,23 @@ const Lines = {
 };
 
 /* ── the structure that forms behind the biggest moments ── */
+/* THE FIELD BEHIND THE IMPACT.
+
+   This drew seal(4) — the full-weight mark — at the height of the
+   screen. The seal's strokes are specified in a 100-unit viewBox, so
+   at 844px its 5.5-unit arms scaled to 46px each and the six of them
+   fused into a soft grey disc covering half the frame. Behind a manga
+   impact there is a drawn figure or there is nothing; there is never
+   a blur.
+
+   The width is passed in rather than inherited, because vortex()
+   writes stroke-width inline and no stylesheet can reach past that.
+   At 0.7 units it stays a fine line drawing at any size — the mark
+   the whole product is built on, enormous, behind the word. */
 const fieldSVG = () =>
-  `<svg class="verdict__field" id="verdictField" viewBox="0 0 100 100" aria-hidden="true">${seal(4)}</svg>`;
+  `<svg class="verdict__field" id="verdictField" viewBox="0 0 100 100" aria-hidden="true">${
+    vortex(0.7, true)}<circle cx="50" cy="50" r="49"/><circle cx="50" cy="50" r="47"/>${
+    ticks(36, 46, 48.4, 9)}</svg>`;
 
 const Ambient = {
   /* silence: pull the environment down so the impact lands in a quiet room */
@@ -20273,6 +21016,12 @@ function paintAttendanceCount(meetingId){
 /* ══════════════════════════════════════════════════════════════════
    11. SCANNER — an explicit state machine, so every outcome has a look.
    ══════════════════════════════════════════════════════════════════ */
+/* what the rig reports, per scanner state */
+const RIG_STATE = {
+  boot:'SYS.ARMING', live:'SYS.TRACKING', hit:'SYS.LOCK',
+  busy:'SYS.VERIFY', good:'SYS.SEALED',  bad:'SYS.REFUSED',
+};
+
 const Scanner = {
   stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0,
 
@@ -20293,6 +21042,15 @@ const Scanner = {
          their default weight, and the frame read as a scanner that had
          given up rather than one that was working. It has a look now. */
       ret.classList.toggle('reticle--busy', state === 'busy');
+    }
+    /* The rig's own readout. It said SYS.ARMED in cinnabar whatever
+       had happened, so a frame showing a fault code showed two red
+       marks at once — and the second one was lying. */
+    const rs = $('#rigState');
+    if (rs){
+      rs.textContent = RIG_STATE[state] || 'SYS.ARMED';
+      rs.classList.toggle('anno--seal',
+        state === 'live' || state === 'hit' || state === 'busy');
     }
     viewer?.classList.toggle('viewer--hit', state === 'good' || state === 'hit');
     /* A refusal is not a small red sentence under the frame. The frame
@@ -20396,6 +21154,8 @@ const Scanner = {
     if (!viewer) return;
     this.hideLoader();
     viewer.classList.remove('viewer--feed');
+    const rs = $('#rigState');
+    if (rs){ rs.textContent = 'SYS.OFFLINE'; rs.classList.remove('anno--seal'); }
     /* A fault code, then the sentence. The three dead ends used to be
        told apart by a padlock, a camera and a keypad glyph — three
        pictures doing a job this page does with words in brackets

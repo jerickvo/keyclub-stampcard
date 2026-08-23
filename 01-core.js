@@ -54,22 +54,60 @@ function ticks(n, r1, r2, hotEvery){
   return out;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   THE VORTEX — Keystamp's seal
+
+   Six logarithmic-spiral arms turning out of a solid centre into a
+   closed ring. It replaces the hexagon-and-key sigil everywhere a
+   seal is drawn: the stamp slots, the reticle, the verdict, the boot
+   screen, the credential band and the empty states.
+
+   Drawn as geometry rather than dropped in as an image, so it takes
+   the ink or paper of whatever it lands on, stays sharp at any size,
+   and can be struck stroke by stroke by the FX layer the way the old
+   sigil was.
+
+   The stroke weight is set INLINE on purpose. Every place a seal is
+   used already carries a rule pinning `stroke-width:2` with
+   `vector-effect:non-scaling-stroke` — sized for a thin technical
+   sigil. This mark is a bold one: it has to scale with the glyph, so
+   it overrides both, and only an inline style beats a stylesheet. */
+const VX_ARMS = [
+  'M50.00 50.00 L52.40 50.00 L52.62 50.28 L52.82 50.61 L53.00 51.00 L53.15 51.44 L53.26 51.93 L53.33 52.49 L53.34 53.10 L53.28 53.77 L53.13 54.49 L52.89 55.26 L52.53 56.07 L52.05 56.91 L51.42 57.77 L50.64 58.63 L49.69 59.48 L48.55 60.29 L47.22 61.04 L45.68 61.71 L43.92 62.26 L41.95 62.64 L39.74 62.84 L37.32 62.79 L34.69 62.45 L31.86 61.78 L28.86 60.71 L25.71 59.20 L22.46 57.19 L19.15 54.61 L15.84 51.42 L12.61 47.55 L9.55 42.96 L6.74 37.60',
+  'M50.00 50.00 L51.20 52.08 L51.06 52.41 L50.88 52.75 L50.64 53.09 L50.33 53.45 L49.96 53.79 L49.51 54.13 L48.98 54.44 L48.37 54.72 L47.68 54.96 L46.89 55.13 L46.01 55.22 L45.04 55.23 L43.99 55.11 L42.85 54.87 L41.64 54.47 L40.36 53.89 L39.05 53.12 L37.70 52.11 L36.35 50.86 L35.02 49.35 L33.76 47.54 L32.59 45.42 L31.56 42.97 L30.73 40.18 L30.15 37.05 L29.89 33.57 L30.00 29.74 L30.58 25.59 L31.69 21.13 L33.43 16.40 L35.87 11.45 L39.11 6.34',
+  'M50.00 50.00 L48.80 52.08 L48.45 52.12 L48.06 52.13 L47.64 52.10 L47.18 52.01 L46.69 51.86 L46.18 51.64 L45.65 51.34 L45.10 50.95 L44.55 50.47 L44.00 49.87 L43.48 49.16 L42.99 48.32 L42.56 47.35 L42.21 46.24 L41.95 44.99 L41.81 43.60 L41.82 42.07 L42.02 40.40 L42.43 38.61 L43.08 36.70 L44.01 34.70 L45.26 32.63 L46.87 30.52 L48.87 28.40 L51.29 26.34 L54.17 24.36 L57.55 22.55 L61.43 20.98 L65.85 19.71 L70.82 18.85 L76.32 18.49 L82.37 18.74',
+  'M50.00 50.00 L47.60 50.00 L47.38 49.72 L47.18 49.39 L47.00 49.00 L46.85 48.56 L46.74 48.07 L46.67 47.51 L46.66 46.90 L46.72 46.23 L46.87 45.51 L47.11 44.74 L47.47 43.93 L47.95 43.09 L48.58 42.23 L49.36 41.37 L50.31 40.52 L51.45 39.71 L52.78 38.96 L54.32 38.29 L56.08 37.74 L58.05 37.36 L60.26 37.16 L62.68 37.21 L65.31 37.55 L68.14 38.22 L71.14 39.29 L74.29 40.80 L77.54 42.81 L80.85 45.39 L84.16 48.58 L87.39 52.45 L90.45 57.04 L93.26 62.40',
+  'M50.00 50.00 L48.80 47.92 L48.94 47.59 L49.12 47.25 L49.36 46.91 L49.67 46.55 L50.04 46.21 L50.49 45.87 L51.02 45.56 L51.63 45.28 L52.32 45.04 L53.11 44.87 L53.99 44.78 L54.96 44.77 L56.01 44.89 L57.15 45.13 L58.36 45.53 L59.64 46.11 L60.95 46.88 L62.30 47.89 L63.65 49.14 L64.98 50.65 L66.24 52.46 L67.41 54.58 L68.44 57.03 L69.27 59.82 L69.85 62.95 L70.11 66.43 L70.00 70.26 L69.42 74.41 L68.31 78.87 L66.57 83.60 L64.13 88.55 L60.89 93.66',
+  'M50.00 50.00 L51.20 47.92 L51.55 47.88 L51.94 47.87 L52.36 47.90 L52.82 47.99 L53.31 48.14 L53.82 48.36 L54.35 48.66 L54.90 49.05 L55.45 49.53 L56.00 50.13 L56.52 50.84 L57.01 51.68 L57.44 52.65 L57.79 53.76 L58.05 55.01 L58.19 56.40 L58.18 57.93 L57.98 59.60 L57.57 61.39 L56.92 63.30 L55.99 65.30 L54.74 67.37 L53.13 69.48 L51.13 71.60 L48.71 73.66 L45.83 75.64 L42.45 77.45 L38.57 79.02 L34.15 80.29 L29.18 81.15 L23.68 81.51 L17.63 81.26'
+];
+
+/* w is the arm weight in viewBox units.
+
+   There is no separate centre element. Every arm starts AT the centre
+   point and spirals out, so the six strokes overlap there and BUILD
+   the core — which is how
+   the mark is actually constructed, and it means the core can never
+   be a different colour from the arms or leave a seam between itself
+   and them. Two earlier attempts had that seam: a circle stroked
+   wider than twice its radius leaves a hairline at the exact centre
+   that reads as a pinhole punched through the core, and a
+   zero-length capped path did not paint at all. */
+function vortex(w, ring){
+  const S = `style="fill:none;vector-effect:none;stroke-width:${w};stroke-linecap:butt"`;
+  return VX_ARMS.map(d => `<path d="${d}" ${S}/>`).join('')
+    + (ring ? `<circle cx="50" cy="50" r="45" ${S}/>` : '')
+    + '';
+}
+
 /* level 1 slot glyph · 2 medium · 3 full sigil · 4 the arena structure */
 function seal(level = 3){
-  if (level === 1) return KEY;
-  if (level === 2) return `<polygon points="${HEX}"/><circle cx="50" cy="50" r="45"/>${KEY}`;
-  if (level === 3) return `
-    <circle cx="50" cy="50" r="47"/><circle cx="50" cy="50" r="41" stroke-dasharray="2 6"/>
-    <polygon points="${HEX}"/><circle cx="50" cy="50" r="24" class="r"/>
-    ${KEY}${ticks(24, 41, 46, 6)}
-    <path d="M50 1v6M50 93v6M1 50h6M93 50h6"/>`;
-  return `
-    <circle cx="50" cy="50" r="49"/><circle cx="50" cy="50" r="44"/>
-    <circle cx="50" cy="50" r="36" stroke-dasharray="10 6"/>
-    <circle cx="50" cy="50" r="21" class="r"/>
-    <polygon points="${HEX}"/><polygon points="50,10 90,50 50,90 10,50"/>
-    <path d="M50 4a46 46 0 0 1 39.8 23"/><path d="M50 96a46 46 0 0 1-39.8-23"/>
-    ${ticks(36, 44, 47.5, 9)}`;
+  if (level === 1) return vortex(8, false);
+  if (level === 2) return vortex(7, true);
+  if (level === 3) return `${vortex(6, true)}
+    <circle cx="50" cy="50" r="49"/>${ticks(24, 46.5, 48.5, 6)}`;
+  return `${vortex(5.5, true)}
+    <circle cx="50" cy="50" r="49"/><circle cx="50" cy="50" r="47"/>
+    ${ticks(36, 46, 48.4, 9)}`;
 }
 
 /* Geometric marks, not app icons.

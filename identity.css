@@ -304,13 +304,18 @@ none;
    Used once per impact screen, behind the title, at low contrast.
    A rake of converging lines is the cheapest manga signal there is,
    and it costs one pseudo-element. */
-.rake{position:absolute;inset:0;pointer-events:none;overflow:hidden;opacity:.10}
+.rake{position:absolute;inset:0;pointer-events:none;overflow:hidden;opacity:.16}
 .rake::before{
   content:'';position:absolute;left:50%;top:50%;
   width:200%;aspect-ratio:1;transform:translate(-50%,-50%);
+  /* 120 rays at a third of a degree is not a burst of concentration
+     lines — at any real size it is a grey wash with a texture. Manga
+     draws FEWER, HEAVIER lines: you have to be able to see that each
+     one is a line. 51 rays at nearly a degree each read as radiating
+     strokes on a phone and on a monitor alike. */
   background:repeating-conic-gradient(from 0deg at 50% 50%,
-    var(--ink) 0deg .35deg, transparent .35deg 3deg);
-  mask-image:radial-gradient(circle, transparent 22%, #000 62%);
+    var(--ink) 0deg .9deg, transparent .9deg 7deg);
+  mask-image:radial-gradient(circle, transparent 20%, #000 48%, #000 72%, transparent 88%);
 }
 
 
@@ -577,12 +582,6 @@ none;
 .tech{min-height:0}
 .tech--sealed{padding-bottom:var(--s4)}
 .tech--sealed .tech__body{min-height:0}
-.tech__state{font-family:var(--f-mono);letter-spacing:.16em}
-.tech--open .tech__state{background:var(--ink);color:var(--paper);
-  border-color:var(--ink);padding:5px 9px}
-/* the sealed chip is a stamped label, not a status pill */
-.chip--sealed{border-style:solid;border-color:var(--v3);color:var(--ink-2);
-  letter-spacing:.22em}
 
 /* ── Record polish ────────────────────────────────────────────────
    +1 stamp is the payoff on an inked row, so it gets paper weight. */
@@ -864,5 +863,3 @@ main#view:focus,main#view:focus-visible{outline:none}
 .tech__req{color:var(--ink);font-size:11.5px;letter-spacing:.08em;opacity:1}
 .tech--sealed .tech__req{color:var(--ink)}
 .tech--sealed .tech__name{color:var(--ink)}
-/* the badge is the state, so it carries a keyline rather than floating */
-.tech__state{border:var(--edge-hair) solid var(--ink);padding:6px 10px}

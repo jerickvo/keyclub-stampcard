@@ -107,14 +107,16 @@ const Slash = {
       `<path d="${tear}" fill="url(#${P.grad})"/>` +
       /* the lit side, offset a hair so the blade has an edge and a body */
       `<path d="${tear}" fill="url(#cutGhost)" opacity=".55" transform="translate(0,-3)"/>` +
-      /* black fragments riding the cut */
+      /* Fragments riding the cut. These were black-on-black inside the
+         blade and invisible; on an ink cut over paper the fragments
+         that read are the ones the blade MISSES — bare paper punched
+         out of the stroke, which is how a break is drawn. */
       (type !== 'E' && type !== 'A'
-        ? `<rect x="${180 + (seq % 4) * 90}" y="17" width="${18 + (seq % 3) * 9}" height="7" fill="var(--v6, #111)" opacity=".8"/>
-           <rect x="${430 + (seq % 5) * 70}" y="16" width="${11 + (seq % 2) * 8}" height="9" fill="var(--v6, #111)" opacity=".7"/>` : '') +
-      /* the only accent in the shape: one short tick toward the tail */
+        ? `<rect x="${180 + (seq % 4) * 90}" y="15" width="${18 + (seq % 3) * 9}" height="11" fill="var(--paper, #F7F7F5)"/>
+           <rect x="${430 + (seq % 5) * 70}" y="14" width="${11 + (seq % 2) * 8}" height="13" fill="var(--paper, #F7F7F5)"/>` : '') +
       (hot && type !== 'E'
-        ? `<rect x="${640 + (seq % 5) * 20}" y="16" width="${30 + (seq % 3) * 14}" height="9"
-                 fill="var(--v4, #666)" opacity=".62"/>` : '');
+        ? `<rect x="${640 + (seq % 5) * 20}" y="15" width="${30 + (seq % 3) * 14}" height="11"
+                 fill="var(--paper, #F7F7F5)"/>` : '');
 
     parent.appendChild(el);
 
@@ -293,8 +295,23 @@ const Lines = {
 };
 
 /* ── the structure that forms behind the biggest moments ── */
+/* THE FIELD BEHIND THE IMPACT.
+
+   This drew seal(4) — the full-weight mark — at the height of the
+   screen. The seal's strokes are specified in a 100-unit viewBox, so
+   at 844px its 5.5-unit arms scaled to 46px each and the six of them
+   fused into a soft grey disc covering half the frame. Behind a manga
+   impact there is a drawn figure or there is nothing; there is never
+   a blur.
+
+   The width is passed in rather than inherited, because vortex()
+   writes stroke-width inline and no stylesheet can reach past that.
+   At 0.7 units it stays a fine line drawing at any size — the mark
+   the whole product is built on, enormous, behind the word. */
 const fieldSVG = () =>
-  `<svg class="verdict__field" id="verdictField" viewBox="0 0 100 100" aria-hidden="true">${seal(4)}</svg>`;
+  `<svg class="verdict__field" id="verdictField" viewBox="0 0 100 100" aria-hidden="true">${
+    vortex(0.7, true)}<circle cx="50" cy="50" r="49"/><circle cx="50" cy="50" r="47"/>${
+    ticks(36, 46, 48.4, 9)}</svg>`;
 
 const Ambient = {
   /* silence: pull the environment down so the impact lands in a quiet room */

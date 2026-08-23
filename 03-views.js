@@ -32,9 +32,29 @@ const C = {
         <h1 class="title">${title}</h1>
         ${note ? `<p class="muted">${esc(note)}</p>` : ''}
       </div>
-      ${ch ? `<span class="rune" data-layer aria-hidden="true">VOL.01 // CH.${ch.ch}</span>` : ''}
+      ${ch && ch.ch !== '—'
+        ? `<span class="rune" data-layer aria-hidden="true">VOL.01 // CH.${ch.ch}</span>` : ''}
       <span class="jp" aria-hidden="true">${jp}</span>
     </header>`;
+  },
+
+  /* THE CHAPTER CLOSE.
+
+     A short chapter used to simply stop two-thirds down the viewport
+     and leave the rest blank, which reads as a page that failed to
+     load rather than as a rest. Manga uses empty space constantly,
+     but it is always BOUNDED — a panel with nothing in it is a beat;
+     an unclosed page is a mistake. This is the bottom rule of the
+     spread: the chapter mark, the reading it closes on, and the
+     volume position. It also gives the empty area above it a job. */
+  close(reading){
+    const ch = (typeof chapterOf === 'function' && typeof current === 'string')
+      ? chapterOf(current) : null;
+    return `<footer class="close" data-enter aria-hidden="true">
+      <span class="close__rule" data-layer></span>
+      <span class="anno close__a">${esc(reading)}</span>
+      <span class="anno close__b">END OF CHAPTER${ch && ch.ch !== '—' ? ' ' + ch.ch : ''}</span>
+    </footer>`;
   },
 
   /* ── the stat plate: a character status readout, not a summary card ── */
@@ -50,7 +70,6 @@ const C = {
     return `<section class="rig ${live ? '' : 'rig--br'}" data-enter aria-labelledby="heroLbl">
       <span class="rig__ghost" data-layer aria-hidden="true"></span>
       <div class="panel ${live ? 'panel--live' : ''} hero p-quiet ink-load">
-        <span class="sfx sfx--a" data-layer aria-hidden="true">${live ? 'OPEN' : 'HOLD'}</span>
         <span class="panel__rule" data-layer aria-hidden="true"></span>
         <span class="tick tick--tl" data-layer aria-hidden="true"></span>
         <span class="tick tick--br" data-layer aria-hidden="true"></span>
@@ -217,6 +236,15 @@ const C = {
     const total = Store.totalStamps();
     const open = total >= r.required;
     const ready = open && !r.claimed;
+    /* PANEL ROLE. Three sealed tiers rendered identically is three of
+       the same object again — the thing this dossier was built to
+       stop. The nearest one you have not reached is the hero of the
+       page whether or not it is claimable, because it is the only one
+       that is about to happen; the rest are micro. */
+    const near = Store.rewards.filter(x => total < x.required)
+                   .sort((a, b) => a.required - b.required)[0];
+    const rank = r.claimed ? 'past' : ready ? 'hero'
+               : (near && near.id === r.id) ? 'hero' : 'far';
     const state = r.claimed ? 'claimed' : open ? 'ready' : 'sealed';
     const done = Math.min(total, r.required);
 
@@ -228,7 +256,7 @@ const C = {
     const slots = Array.from({ length:cells }, (_, i) =>
       `<span class="dslot${i < litCells ? ' dslot--set' : ''}"></span>`).join('');
 
-    return `<section class="rig dossier dossier--${state}" data-enter data-reward="${r.id}">
+    return `<section class="rig dossier dossier--${state}" data-rank="${rank}" data-enter data-reward="${r.id}">
       <span class="rig__ghost" data-layer aria-hidden="true"></span>
       <div class="panel tech tech--${state}">
         <span class="dossier__idx idx${open ? ' idx--on' : ''}" aria-hidden="true">${pad(r.required)}</span>
@@ -287,7 +315,7 @@ const C = {
     return `<section class="rig empty-reg" data-enter>
       <div class="empty">
         <div class="empty__seal" aria-hidden="true">
-          <svg viewBox="0 0 100 100">${seal(1)}</svg>
+          <svg viewBox="0 0 100 100">${seal(2)}</svg>
           <span class="empty__void"></span>
         </div>
         <div class="empty__body">
@@ -348,7 +376,7 @@ const Views = {
       action = C.strike({ verb:'Scan code', sub:'No general meeting is taking check-ins', go:'scan', calm:true });
 
     return `<div class="view">
-      ${C.bleed('Keystamp', 'top:-14px;right:-6vw', 'bleed--fill')}
+      ${C.bleed('STAMP', '', 'sfxw sfxw--r')}
       ${ASSETS.homeHeader ? `<div class="banner" data-enter>
         <img src="${ASSETS.homeHeader}" alt="">
       </div>` : ''}
@@ -413,7 +441,7 @@ const Views = {
     const upcoming = Store.meetings.filter(m => m.upcoming).reverse();
 
     return `<div class="view">
-      ${C.bleed('Record', 'top:-10px;left:-8vw')}
+      ${C.bleed('LOG', '', 'sfxw sfxw--l')}
       ${C.head('Attendance', 'Record', '記録')}
 
       ${held.length ? `<section data-enter class="stack-lg">
@@ -423,29 +451,56 @@ const Views = {
                 'Your record fills itself: every meeting you scan into is '
                 + 'written here automatically. Nothing to do until the first one.')}
 
-      ${upcoming.length ? `<section data-enter class="stack-xl">
-        <h2 class="h2" style="color:var(--faint)">Scheduled</h2>
-        <div class="log" style="margin-top:var(--s4)">${upcoming.map(m => C.entry(m)).join('')}</div>
+      <!-- WHAT HAS NOT HAPPENED YET is a division of the same sheet,
+           not a leftover at the bottom of it. It was set in --faint
+           with an inline style and no rule of its own, which read as
+           a section someone forgot to finish. It gets the register
+           rule the rest of the document uses and states what it is. -->
+      ${upcoming.length ? `<section data-enter class="ahead">
+        <span class="ahead__rule" data-layer aria-hidden="true"></span>
+        <div class="ahead__head">
+          <h2 class="h2">Scheduled</h2>
+          <span class="anno">${upcoming.length} AHEAD</span>
+        </div>
+        <div class="log">${upcoming.map(m => C.entry(m)).join('')}</div>
       </section>` : ''}
+      ${C.close(held.length
+        ? `${held.filter(m => Store.attended(m.id)).length} OF ${held.length} HELD`
+        : 'NOTHING PRESSED YET')}
     </div>`;
   },
 
   rewards(){
     if (Store.failed) return this.loadFailure('Rewards', '解放');
     return `<div class="view">
-      ${C.bleed('Reward', 'top:-12px;right:-10vw', 'bleed--blood')}
+      ${C.bleed('UNSEAL', '', 'sfxw sfxw--r')}
       ${C.head('Milestones', 'Rewards', '解放')}
       <div class="stack-panels">
         ${Store.rewards.map(C.tech).join('')}
       </div>
+      ${C.close(`${Store.totalStamps()} STAMPS ON RECORD`)}
     </div>`;
   },
 
   scan(){
     return `<div class="view">
-      ${C.bleed('Seal', 'bottom:-4vw;left:-7vw')}
+      ${C.bleed('LOCK', '', 'sfxw sfxw--l sfxw--tilt')}
       ${C.head('Check in', 'Scan code', '読取')}
 
+      <!-- THE RIG. The viewfinder is not a component sitting on a
+           page; it is an instrument mounted in a frame, and the frame
+           states what it is doing. Technical readings run along the
+           top edge and a rune runs down the side — real state, not
+           decoration: the optics label, the code format the reader
+           accepts, and the live status. -->
+      <div class="rig-scan" data-enter>
+        <div class="rig-scan__bar" aria-hidden="true">
+          <span class="anno">OPT.CAM // 1280</span>
+          <span class="anno">FMT.M##/XXXXXX</span>
+          <span class="anno anno--seal" id="rigState">SYS.ARMED</span>
+        </div>
+        <span class="rig-scan__rune" aria-hidden="true">読取 // TARGETING</span>
+        <span class="rig-scan__cut" aria-hidden="true"></span>
       <div class="viewer" id="viewer" data-enter>
         <video id="cam" playsinline muted autoplay></video>
         <div class="viewer__scrim" aria-hidden="true"></div>
@@ -465,6 +520,7 @@ const Views = {
           <span class="reticle__line"></span>
         </div>
         <div class="viewer__status"><span class="viewer__msg" id="scanMsg">Starting camera</span></div>
+      </div>
       </div>
 
       <div class="manual" data-enter>
@@ -499,7 +555,7 @@ const Views = {
      of tabs for four screens was one level too many. */
   boardSpread(bleed, kicker, title, jp){
     return `<div class="view">
-      ${C.bleed(bleed, 'top:-10px;right:-9vw')}
+      ${C.bleed(bleed.toUpperCase(), '', 'sfxw sfxw--r')}
       ${C.head(kicker, title, jp)}
       <section class="rig" data-enter style="margin-top:var(--gut)">
         <span class="rig__ghost" data-layer aria-hidden="true"></span>
@@ -533,7 +589,7 @@ const Views = {
     const total = Store.totalStamps();
 
     return `<div class="view">
-      ${C.bleed('Member', 'top:-10px;right:-9vw', 'bleed--fill')}
+      ${C.bleed('IDENT', '', 'sfxw sfxw--r')}
       ${C.head(Store.isBoard ? 'Board' : 'Member', esc(memberName()), '会員')}
 
       <section class="rig stack-lg" data-enter>
@@ -583,6 +639,7 @@ const Views = {
                      : 'Every milestone is unlocked.'}</p>
         </div>
       </section>
+      ${C.close(`${Store.attendanceRate()}% ATTENDANCE`)}
     </div>`;
   },
 
@@ -596,7 +653,7 @@ const Views = {
     const up = mode === 'up';
     return `<div class="view view--auth">
       <span class="rake" aria-hidden="true"></span>
-      ${C.bleed(up ? 'Join' : 'Enter', 'top:-6px;right:-8vw', 'bleed--fill')}
+      ${C.bleed(up ? 'JOIN' : 'ENTER', '', 'sfxw sfxw--r')}
 
       <div class="authmark" data-enter>
         <span class="chop chop--filled" aria-hidden="true">
