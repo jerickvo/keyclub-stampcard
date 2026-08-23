@@ -3957,6 +3957,79 @@ select.input:focus-visible{outline:none}
   :root{--t-name-hero:clamp(32px,9.4vw,58px)}
 }
 
+
+/* ══════════════════════════════════════════════════════════════════
+   THE VERDICT IS ONE FRAME, NOT A DIALOG
+
+   Everything about the moment was right except its ARRANGEMENT: seal
+   centred, word centred under it, three lines of centred metadata
+   under that, all inside a 46ch measure with even air on both sides.
+   That is a centred modal — the single most generic composition an
+   interface has, and putting a manga sound effect inside one does not
+   make it a manga panel.
+
+   So the frame is composed. The word runs past the measure and is
+   CROPPED by the edge of the screen, which is what makes it read as
+   too loud for the space it is in rather than as large type placed in
+   a box. The block sits off-centre and everything under the word is
+   set flush to its leading edge, so the metadata reads as a caption
+   registered to the impact instead of as a stack of centred labels.
+   The seal is pushed up and out of the measure to the trailing side —
+   the impression the word came out of, not a logo above a heading.
+   ══════════════════════════════════════════════════════════════════ */
+/* (0,2,0) throughout: identity.css sets the verdict's type and colour
+   and loads after this file, so a single-class rule here loses every
+   tie. Scoping to the panel keeps the two files' jobs separate — that
+   one still owns what the mark IS, this one owns where it sits. */
+.verdict .verdict__inner{text-align:left;max-width:min(42ch,100%);
+  margin-inline:0 auto;
+  padding-left:max(var(--s6), 6vw)}
+.verdict .verdict__state{white-space:nowrap;
+  font-size:clamp(68px,23vw,380px);
+  /* CROPPED ON BOTH SIDES. The word starts outside the measure and
+     runs past the trailing edge; the fixed panel clips, so the crop
+     is the frame's own edge. A word that fits is a word that was
+     placed — this one is too loud for the space it landed in. */
+  margin-left:min(-2vw,-14px);margin-right:-46vw;
+  transform:rotate(-2.4deg);transform-origin:left center}
+.verdict .verdict__seal{margin:0 0 0 auto;margin-right:min(6vw,90px);
+  width:min(26vmin,150px);height:min(26vmin,150px)}
+.verdict .verdict__jp{display:block;margin-top:clamp(6px,1vw,12px);letter-spacing:.5em}
+.verdict .verdict__title,
+.verdict .verdict__delta,
+.verdict .verdict__meet{text-align:left}
+.verdict .verdict__delta{font-size:clamp(22px,3.4vw,44px)}
+/* the rule the caption is registered to — the one structural line in
+   the frame, and it starts where the word starts */
+.verdict .verdict__title{position:relative;padding-top:clamp(10px,1.4vw,16px);
+  margin-top:clamp(12px,1.8vw,22px)}
+.verdict .verdict__title::before{content:"";position:absolute;left:0;top:0;
+  width:min(52%,320px);height:var(--edge-heavy);background:var(--ink)}
+
+/* THE FIELD BEHIND THE IMPACT IS A FIGURE, NOT A BLOB.
+
+   It draws seal(4) at the full height of the screen, and the seal's
+   strokes are specified in a 100-unit viewBox — so at 844px the 5.5
+   unit arms scale to 46px each and the six of them fuse into a soft
+   grey disc covering half the frame. Behind a manga impact there is a
+   drawn figure or there is nothing; there is never a blur.
+
+   Non-scaling strokes keep it a LINE drawing at any size, so the mark
+   the whole product is built on reads as itself, enormous, behind the
+   word that just landed. */
+.verdict .verdict__field path,
+.verdict .verdict__field circle,
+.verdict .verdict__field line,
+.verdict .verdict__field polygon{
+  fill:none;stroke:var(--ink);stroke-width:1.25;
+  vector-effect:non-scaling-stroke}
+
+@media(max-width:479px){
+  .verdict .verdict__inner{padding-left:var(--s5);max-width:100%}
+  .verdict .verdict__state{margin-right:-52vw}
+  .verdict .verdict__seal{margin-right:min(4vw,40px)}
+}
+
 </style>
 <style>
 /* ══════════════════════════════════════════════════════════════════
@@ -4870,30 +4943,42 @@ main#view:focus,main#view:focus-visible{outline:none}
 
 <svg class="fxdefs" aria-hidden="true">
   <defs>
-    <!-- heavy cut: charcoal body, one razor of bone, burgundy tail -->
+    <!-- THE CUTS ARE INK.
+
+         These were built for a dark ground: charcoal-lavender body
+         (#1d1a25 → #4a4553), a white razor at the centre, a burgundy
+         tail. Laid over paper they render as soft grey-violet smears
+         with no edge — a blur, which is the one thing a manga cut is
+         not. A cut on paper is solid black with a hard tip; the taper
+         is in the SHAPE, not in the opacity ramp, so every stop below
+         is doubled to a hard step. -->
     <linearGradient id="cutHeavy" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0"   stop-color="#08070c" stop-opacity="0"/>
-      <stop offset=".13" stop-color="#1d1a25" stop-opacity=".72"/>
-      <stop offset=".37" stop-color="#4a4553" stop-opacity=".94"/>
-      <stop offset=".485" stop-color="#ffffff" stop-opacity="1"/>
-      <stop offset=".55" stop-color="#8b8598" stop-opacity=".9"/>
-      <stop offset=".72" stop-color="#3f1119" stop-opacity=".82"/>
-      <stop offset=".89" stop-color="#141119" stop-opacity=".45"/>
-      <stop offset="1"   stop-color="#08070c" stop-opacity="0"/>
+      <stop offset="0"    stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset=".04"  stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset=".04"  stop-color="#0A0A0A" stop-opacity="1"/>
+      <stop offset=".86"  stop-color="#0A0A0A" stop-opacity="1"/>
+      <stop offset=".86"  stop-color="#0A0A0A" stop-opacity=".38"/>
+      <stop offset=".96"  stop-color="#0A0A0A" stop-opacity=".38"/>
+      <stop offset=".96"  stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset="1"    stop-color="#0A0A0A" stop-opacity="0"/>
     </linearGradient>
-    <!-- thin cut: mostly grey, barely there -->
+    <!-- the second cut of a cross: the same blade, less pressure -->
     <linearGradient id="cutThin" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0"   stop-color="#08070c" stop-opacity="0"/>
-      <stop offset=".3"  stop-color="#332f3d" stop-opacity=".6"/>
-      <stop offset=".52" stop-color="#e6e2ea" stop-opacity=".96"/>
-      <stop offset=".74" stop-color="#28242f" stop-opacity=".5"/>
-      <stop offset="1"   stop-color="#08070c" stop-opacity="0"/>
+      <stop offset="0"    stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset=".07"  stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset=".07"  stop-color="#0A0A0A" stop-opacity=".9"/>
+      <stop offset=".8"   stop-color="#0A0A0A" stop-opacity=".9"/>
+      <stop offset=".8"   stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset="1"    stop-color="#0A0A0A" stop-opacity="0"/>
     </linearGradient>
-    <!-- afterimage: a grey ghost trailing the blade -->
+    <!-- the afterimage: the same blade one frame behind, in tone -->
     <linearGradient id="cutGhost" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0"   stop-color="#08070c" stop-opacity="0"/>
-      <stop offset=".5"  stop-color="#6b6577" stop-opacity=".45"/>
-      <stop offset="1"   stop-color="#08070c" stop-opacity="0"/>
+      <stop offset="0"    stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset=".1"   stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset=".1"   stop-color="#0A0A0A" stop-opacity=".3"/>
+      <stop offset=".78"  stop-color="#0A0A0A" stop-opacity=".3"/>
+      <stop offset=".78"  stop-color="#0A0A0A" stop-opacity="0"/>
+      <stop offset="1"    stop-color="#0A0A0A" stop-opacity="0"/>
     </linearGradient>
   </defs>
 </svg>
@@ -20010,14 +20095,16 @@ const Slash = {
       `<path d="${tear}" fill="url(#${P.grad})"/>` +
       /* the lit side, offset a hair so the blade has an edge and a body */
       `<path d="${tear}" fill="url(#cutGhost)" opacity=".55" transform="translate(0,-3)"/>` +
-      /* black fragments riding the cut */
+      /* Fragments riding the cut. These were black-on-black inside the
+         blade and invisible; on an ink cut over paper the fragments
+         that read are the ones the blade MISSES — bare paper punched
+         out of the stroke, which is how a break is drawn. */
       (type !== 'E' && type !== 'A'
-        ? `<rect x="${180 + (seq % 4) * 90}" y="17" width="${18 + (seq % 3) * 9}" height="7" fill="var(--v6, #111)" opacity=".8"/>
-           <rect x="${430 + (seq % 5) * 70}" y="16" width="${11 + (seq % 2) * 8}" height="9" fill="var(--v6, #111)" opacity=".7"/>` : '') +
-      /* the only accent in the shape: one short tick toward the tail */
+        ? `<rect x="${180 + (seq % 4) * 90}" y="15" width="${18 + (seq % 3) * 9}" height="11" fill="var(--paper, #F7F7F5)"/>
+           <rect x="${430 + (seq % 5) * 70}" y="14" width="${11 + (seq % 2) * 8}" height="13" fill="var(--paper, #F7F7F5)"/>` : '') +
       (hot && type !== 'E'
-        ? `<rect x="${640 + (seq % 5) * 20}" y="16" width="${30 + (seq % 3) * 14}" height="9"
-                 fill="var(--v4, #666)" opacity=".62"/>` : '');
+        ? `<rect x="${640 + (seq % 5) * 20}" y="15" width="${30 + (seq % 3) * 14}" height="11"
+                 fill="var(--paper, #F7F7F5)"/>` : '');
 
     parent.appendChild(el);
 
@@ -20196,8 +20283,23 @@ const Lines = {
 };
 
 /* ── the structure that forms behind the biggest moments ── */
+/* THE FIELD BEHIND THE IMPACT.
+
+   This drew seal(4) — the full-weight mark — at the height of the
+   screen. The seal's strokes are specified in a 100-unit viewBox, so
+   at 844px its 5.5-unit arms scaled to 46px each and the six of them
+   fused into a soft grey disc covering half the frame. Behind a manga
+   impact there is a drawn figure or there is nothing; there is never
+   a blur.
+
+   The width is passed in rather than inherited, because vortex()
+   writes stroke-width inline and no stylesheet can reach past that.
+   At 0.7 units it stays a fine line drawing at any size — the mark
+   the whole product is built on, enormous, behind the word. */
 const fieldSVG = () =>
-  `<svg class="verdict__field" id="verdictField" viewBox="0 0 100 100" aria-hidden="true">${seal(4)}</svg>`;
+  `<svg class="verdict__field" id="verdictField" viewBox="0 0 100 100" aria-hidden="true">${
+    vortex(0.7, true)}<circle cx="50" cy="50" r="49"/><circle cx="50" cy="50" r="47"/>${
+    ticks(36, 46, 48.4, 9)}</svg>`;
 
 const Ambient = {
   /* silence: pull the environment down so the impact lands in a quiet room */

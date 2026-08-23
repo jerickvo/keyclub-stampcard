@@ -2011,3 +2011,76 @@ select.input:focus-visible{outline:none}
   [data-screen="home"] .view > .nameplate{padding-right:0}
   :root{--t-name-hero:clamp(32px,9.4vw,58px)}
 }
+
+
+/* ══════════════════════════════════════════════════════════════════
+   THE VERDICT IS ONE FRAME, NOT A DIALOG
+
+   Everything about the moment was right except its ARRANGEMENT: seal
+   centred, word centred under it, three lines of centred metadata
+   under that, all inside a 46ch measure with even air on both sides.
+   That is a centred modal — the single most generic composition an
+   interface has, and putting a manga sound effect inside one does not
+   make it a manga panel.
+
+   So the frame is composed. The word runs past the measure and is
+   CROPPED by the edge of the screen, which is what makes it read as
+   too loud for the space it is in rather than as large type placed in
+   a box. The block sits off-centre and everything under the word is
+   set flush to its leading edge, so the metadata reads as a caption
+   registered to the impact instead of as a stack of centred labels.
+   The seal is pushed up and out of the measure to the trailing side —
+   the impression the word came out of, not a logo above a heading.
+   ══════════════════════════════════════════════════════════════════ */
+/* (0,2,0) throughout: identity.css sets the verdict's type and colour
+   and loads after this file, so a single-class rule here loses every
+   tie. Scoping to the panel keeps the two files' jobs separate — that
+   one still owns what the mark IS, this one owns where it sits. */
+.verdict .verdict__inner{text-align:left;max-width:min(42ch,100%);
+  margin-inline:0 auto;
+  padding-left:max(var(--s6), 6vw)}
+.verdict .verdict__state{white-space:nowrap;
+  font-size:clamp(68px,23vw,380px);
+  /* CROPPED ON BOTH SIDES. The word starts outside the measure and
+     runs past the trailing edge; the fixed panel clips, so the crop
+     is the frame's own edge. A word that fits is a word that was
+     placed — this one is too loud for the space it landed in. */
+  margin-left:min(-2vw,-14px);margin-right:-46vw;
+  transform:rotate(-2.4deg);transform-origin:left center}
+.verdict .verdict__seal{margin:0 0 0 auto;margin-right:min(6vw,90px);
+  width:min(26vmin,150px);height:min(26vmin,150px)}
+.verdict .verdict__jp{display:block;margin-top:clamp(6px,1vw,12px);letter-spacing:.5em}
+.verdict .verdict__title,
+.verdict .verdict__delta,
+.verdict .verdict__meet{text-align:left}
+.verdict .verdict__delta{font-size:clamp(22px,3.4vw,44px)}
+/* the rule the caption is registered to — the one structural line in
+   the frame, and it starts where the word starts */
+.verdict .verdict__title{position:relative;padding-top:clamp(10px,1.4vw,16px);
+  margin-top:clamp(12px,1.8vw,22px)}
+.verdict .verdict__title::before{content:"";position:absolute;left:0;top:0;
+  width:min(52%,320px);height:var(--edge-heavy);background:var(--ink)}
+
+/* THE FIELD BEHIND THE IMPACT IS A FIGURE, NOT A BLOB.
+
+   It draws seal(4) at the full height of the screen, and the seal's
+   strokes are specified in a 100-unit viewBox — so at 844px the 5.5
+   unit arms scale to 46px each and the six of them fuse into a soft
+   grey disc covering half the frame. Behind a manga impact there is a
+   drawn figure or there is nothing; there is never a blur.
+
+   Non-scaling strokes keep it a LINE drawing at any size, so the mark
+   the whole product is built on reads as itself, enormous, behind the
+   word that just landed. */
+.verdict .verdict__field path,
+.verdict .verdict__field circle,
+.verdict .verdict__field line,
+.verdict .verdict__field polygon{
+  fill:none;stroke:var(--ink);stroke-width:1.25;
+  vector-effect:non-scaling-stroke}
+
+@media(max-width:479px){
+  .verdict .verdict__inner{padding-left:var(--s5);max-width:100%}
+  .verdict .verdict__state{margin-right:-52vw}
+  .verdict .verdict__seal{margin-right:min(4vw,40px)}
+}
