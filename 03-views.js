@@ -451,10 +451,20 @@ const Views = {
                 'Your record fills itself: every meeting you scan into is '
                 + 'written here automatically. Nothing to do until the first one.')}
 
-      ${upcoming.length ? `<section data-enter class="stack-xl">
-        <h2 class="h2" style="color:var(--faint)">Scheduled</h2>
-        <div class="log" style="margin-top:var(--s4)">${upcoming.map(m => C.entry(m)).join('')}</div>
+      <!-- WHAT HAS NOT HAPPENED YET is a division of the same sheet,
+           not a leftover at the bottom of it. It was set in --faint
+           with an inline style and no rule of its own, which read as
+           a section someone forgot to finish. It gets the register
+           rule the rest of the document uses and states what it is. -->
+      ${upcoming.length ? `<section data-enter class="ahead">
+        <span class="ahead__rule" data-layer aria-hidden="true"></span>
+        <div class="ahead__head">
+          <h2 class="h2">Scheduled</h2>
+          <span class="anno">${upcoming.length} AHEAD</span>
+        </div>
+        <div class="log">${upcoming.map(m => C.entry(m)).join('')}</div>
       </section>` : ''}
+      ${C.close(`${held.filter(m => Store.attended(m.id)).length} OF ${held.length} HELD`)}
     </div>`;
   },
 
@@ -627,6 +637,7 @@ const Views = {
                      : 'Every milestone is unlocked.'}</p>
         </div>
       </section>
+      ${C.close(`${Store.attendanceRate()}% ATTENDANCE`)}
     </div>`;
   },
 

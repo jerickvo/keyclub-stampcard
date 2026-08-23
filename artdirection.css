@@ -1175,8 +1175,16 @@
 /* and cropped hard — a third of the word is off the page */
 .sfxw--r{right:-19vw;left:auto}
 .sfxw--l{left:-21vw;right:auto}
-.sfxw--tilt{transform:rotate(calc(var(--run-a,60deg) - 90deg));
-  transform-origin:left top;top:8vw}
+/* Scan's word runs on the diagonal the page already owns. Rotating
+   about the leading corner threw all but a corner of it off-canvas,
+   so at 1440 the page carried three stray outline fragments in the
+   top-left and no readable word at all. It is pulled back onto the
+   sheet and rotated about its own centre, so the letters cross the
+   spread at 60 degrees and the crop lands on the word rather than on
+   everything except the word. */
+.sfxw--tilt{left:-7vw;right:auto;top:auto;bottom:-6vw;
+  transform:rotate(calc(var(--run-a,60deg) - 90deg));
+  transform-origin:center}
 @media(min-width:1024px){
   .sfxw{opacity:.17}
 }
@@ -2083,4 +2091,150 @@ select.input:focus-visible{outline:none}
   .verdict .verdict__inner{padding-left:var(--s5);max-width:100%}
   .verdict .verdict__state{margin-right:-52vw}
   .verdict .verdict__seal{margin-right:min(4vw,40px)}
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   PHASE 30 SELF-CRITIQUE — WHAT THE RENDERS SHOWED
+
+   Seven things the composition passes above did not reach.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── 1. THE THIRD STAT ORPHANED ───────────────────────────────────
+   Four readings in a two-column grid on a phone: the lead takes the
+   full measure, two pair off, and the fourth sits alone in the left
+   half with the right half empty — an orphan, and it reads as a cell
+   that failed to load. It takes the measure instead, so the tier goes
+   wide / narrow-narrow / wide. Irregular on purpose. */
+@media(max-width:479px){
+  [data-screen="profile"] .stats > .stat:last-child{grid-column:1/-1}
+}
+
+/* ── 2. WHAT HAS NOT HAPPENED YET ─────────────────────────────────
+   Record's scheduled meetings had a heading in --faint set with an
+   inline style, no rule, and a full chapter gap above it. It read as
+   an unfinished section rather than as the part of the record that
+   is still ahead. It is a division now: a rule, a heading at section
+   weight, and a count. */
+.ahead{position:relative;padding-top:clamp(14px,2vw,22px);
+  margin-top:clamp(26px,4vw,56px)}
+.ahead__rule{position:absolute;left:0;right:0;top:0;
+  height:var(--edge-thin);background:var(--ink)}
+.ahead__head{display:flex;align-items:baseline;justify-content:space-between;
+  gap:var(--s3);flex-wrap:wrap;margin-bottom:clamp(12px,1.8vw,20px)}
+.ahead .h2{color:var(--ink)}
+/* the entries ahead are the quiet half of the page: they are records
+   of nothing yet, so they hold the smaller weight */
+.ahead .entry{font-size:.94em}
+
+/* ── 3. THE SOUND EFFECT LANDED IN THE SAME PLACE FIVE TIMES ──────
+   Every chapter's impact word sat at the top edge, cropped by the
+   same corner. Five differently-composed spreads carrying one
+   identical layer is a template, and a template is the thing this
+   was supposed to stop being. Each chapter now places its word where
+   that page has room for it: Home behind the nameplate, Record low
+   and leading (the log runs down the page and the word runs with
+   it), Rewards high and trailing, Member across the middle, Scan on
+   the diagonal it already owns. */
+[data-screen="record"] .sfxw{top:auto;bottom:-4vw}
+[data-screen="profile"] .sfxw{top:16vw}
+[data-screen="board"] .sfxw{top:auto;bottom:-2vw}
+[data-screen="auth"] .sfxw{top:9vw}
+
+/* ── 4. THE MICRO TIER STILL SAID "UNLOCKS AT N" NOWHERE ──────────
+   Hiding the line was the lazy way to make the far tiers small: the
+   number of stamps a reward costs is the whole point of the row.
+   It comes back as an annotation on the same line as the name, which
+   is where a fact of that size belongs. */
+.dossier[data-rank="far"] .dossier__at{display:block;
+  grid-column:2;margin-top:-2px;
+  font-size:clamp(9px,.85vw,10.5px);color:var(--v4)}
+
+/* ── 5. THE UNSTRUCK SLOT WAS TOO PALE TO BE AN IMPRESSION ────────
+   It carries the mark at --v3 and .55, which on paper is a smudge —
+   the slot reads as blank, which is exactly what it was before the
+   outline was added. An impression waiting to be pressed has to be
+   visible as a shape. */
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark circle,
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark polygon,
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark path,
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark line{stroke:var(--v4)}
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark{opacity:.8}
+
+/* ── 6. THE CLOSING PAIR ON HOME WAS ONE OBJECT TWICE ─────────────
+   I set the trailing closer to .92em and called it a hierarchy. At
+   that difference the two panels are still the same object, and the
+   page ends on two equal-weight footnotes. What is happening NOW is
+   the support panel and keeps its rule and its full type; what was
+   last stamped is the micro panel — no rule, indented off the
+   register, set down to a marginal note. */
+[data-screen="home"] .view > .duo > .rig:last-child::before{
+  left:auto;width:clamp(28px,4vw,56px)}
+[data-screen="home"] .view > .duo > .rig:last-child{font-size:.86em}
+[data-screen="home"] .view > .duo > .rig:last-child .h2{
+  font-size:clamp(10px,.8vw,11.5px);letter-spacing:.24em;color:var(--ink-2)}
+
+/* ── 7. THE BOARD'S LIVE PANEL WAS INK WITH NOTHING IN IT ─────────
+   A full-measure black field with the meeting, the state and both
+   controls stacked in the left third and 60% of the ink empty. The
+   concentrated black on this page has to be carrying something. The
+   panel reads across now: the meeting numeral at figure scale on the
+   leading edge, the state and the control registered to the trailing
+   one, so the mass is spanned rather than filled at one end. */
+@media(min-width:768px){
+  [data-screen="board"] .bnext{display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:start;column-gap:clamp(24px,5vw,80px)}
+  [data-screen="board"] .bnext > :not(.btn){grid-column:1}
+  /* the control carries an inline margin-top from the markup, which
+     is right in the stacked arrangement and wrong here — it is beside
+     the meeting now, not under it */
+  [data-screen="board"] .bnext > .btn{grid-column:2;grid-row:1/-1;
+    align-self:center;justify-self:end;margin-top:0!important;
+    min-width:clamp(150px,16vw,220px)}
+  /* the numeral is the figure this mass is carrying */
+  [data-screen="board"] .bnext .bactive__no{font-size:clamp(44px,6.4vw,96px);
+    line-height:.9}
+}
+
+
+/* ── 8. THE CLOSING TIER ON HOME WAS ENTIRELY ORTHOGONAL ──────────
+   The spread carries two opposed diagonals — the chamber's leading
+   corner and the stamp sheet's trailing one — and then the whole
+   bottom third of the page is rules and rectangles. A motif that
+   appears twice at the top and never again is an accident, not a
+   system. The last stamped entry is the one ink mass down there, so
+   it takes the same cut the sheet takes, on the same corner. */
+[data-screen="home"] .view > .duo > .rig:last-child .entry--set{
+  clip-path:polygon(0 0, 100% 0,
+    100% calc(100% - var(--sheet-cut)), calc(100% - var(--sheet-cut)) 100%, 0 100%)}
+
+/* ── 9. THE RIG HAD NO FLANKS FOR THE TRACKING LINES TO RUN IN ────
+   Activation rakes speed lines in from both sides of the frame, and
+   the viewfinder was 1015 of the rig's 1040 pixels — so the lines
+   were drawn into a 12px margin and read as nothing. The trailing
+   column opens up on a large screen: the rune gets a real margin to
+   sit in, the frame gains the asymmetry it was missing, and there is
+   somewhere for the rig to show that it is tracking. */
+@media(min-width:1024px){
+  .rig-scan{grid-template-columns:minmax(0,1fr) clamp(20px,7vw,120px)}
+  .rig-scan__rune{justify-self:center}
+  .rig-scan::after{width:clamp(20px,7vw,120px);max-width:none}
+}
+
+/* ── 10. THE LIVE ROW ON RECORD WAS A FRAME AROUND NOTHING ────────
+   The meeting taking check-ins is the one framed panel on the page
+   and two thirds of it was empty paper to the right of three short
+   lines. The row reads across now: what it is on the leading edge,
+   the control registered to the trailing one. Same correction the
+   board's live panel needed, and for the same reason — a heavy frame
+   has to be carrying something across its whole width or it is just
+   a big box. */
+@media(min-width:768px){
+  [data-screen="record"] .rec--open .entry{display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:center;column-gap:clamp(20px,4vw,64px)}
+  [data-screen="record"] .rec--open .entry > .entry__verdict,
+  [data-screen="record"] .rec--open .entry .entry__go{
+    grid-column:2;grid-row:1/-1;align-self:center;justify-self:end}
 }
