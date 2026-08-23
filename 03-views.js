@@ -138,7 +138,7 @@ const C = {
       return `<li class="seal ${state ? 'seal--' + state : ''}${last}" data-seal="${state || 'empty'}" style="${tilt}"${
         dossier ? ` tabindex="0" aria-label="Stamp ${pad(p.floor + i + 1)}: general meeting ${
           mtg.no}, ${fmtDate(mtg.date)}, checked in at ${fmtTime(rec.at)}"` : ''}>
-        <svg viewBox="0 0 100 100" aria-hidden="true"><g class="seal__mark">${seal(state === 'set' ? 2 : 1)}</g></svg>
+        <svg viewBox="0 0 32 32" aria-hidden="true"><g class="seal__mark">${TALLY(state === 'set')}</g></svg>
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
         ${dossier}
       </li>`;
@@ -385,7 +385,8 @@ const Views = {
            inside a box, so it interrupts the sheet instead of being
            placed on it. The state line and the two metadata marks are
            set in the margin the name leaves. -->
-      <header class="head head--bare nameplate" data-enter>
+      <header class="head head--bare nameplate" data-enter
+              style="--name-len:${Math.max(6, memberName().length + 1)}">
         <span class="nameplate__rule" data-layer aria-hidden="true"></span>
         <div class="head__stack">
           <h1 class="title title--name">${esc(memberName())}<em>.</em></h1>
@@ -639,6 +640,25 @@ const Views = {
                      : 'Every milestone is unlocked.'}</p>
         </div>
       </section>
+      <!-- THE ACCOUNT BLOCK.
+
+           Sign out lived only in the desktop rail, and the rail is
+           gone below 1024 — so on every phone and every tablet there
+           was no way to sign out at all. Member is chapter 05, the
+           account chapter, and it is on the tab bar at every width, so
+           the control belongs here rather than behind a drawer or
+           hidden under an icon. It hides itself once the rail is back
+           and carrying the same control. -->
+      <section class="acct" data-enter>
+        <span class="acct__rule" data-layer aria-hidden="true"></span>
+        <div class="acct__row">
+          <div class="acct__who">
+            <p class="kicker">Signed in · ${Store.isBoard ? 'Board' : 'Member'}</p>
+            <p class="acct__name">${esc(memberName())}</p>
+          </div>
+          <button class="btn btn--out" data-signout type="button">Sign out</button>
+        </div>
+      </section>
       ${C.close(`${Store.attendanceRate()}% ATTENDANCE`)}
     </div>`;
   },
@@ -651,28 +671,39 @@ const Views = {
   auth(){
     const mode = AuthUI.mode;                 /* 'in' | 'up' */
     const up = mode === 'up';
+    /* THE AUTHENTICATION CARD.
+
+       This page used to run the dashboard's furniture: a chapter
+       masthead at display size, a chop with the mark in it, a wordmark
+       beside the chop, a full-height radiating rake and a sound effect
+       the height of the screen — six things all shouting, with the
+       form last in the reading order.
+
+       It is one card now. The brand is stated once, at the top, and
+       IS the page's title — there is no second masthead repeating it.
+       The action is an annotation, not a 96px headline, because on a
+       sign-in screen the fields are the subject and the word "Sign in"
+       is a label on them. The atmosphere stays, cropped hard and put
+       behind the card where it belongs. */
     return `<div class="view view--auth">
       <span class="rake" aria-hidden="true"></span>
       ${C.bleed(up ? 'JOIN' : 'ENTER', '', 'sfxw sfxw--r')}
 
-      <div class="authmark" data-enter>
-        <span class="chop chop--filled" aria-hidden="true">
-          <svg viewBox="0 0 100 100" class="chop__key">${KEY}</svg>
-        </span>
-        <span class="authmark__wm">
-          <b>KEY</b>STAMP
-          <em>Key Club attendance</em>
-        </span>
-      </div>
+      <div class="authcard" data-enter>
+        <header class="authcard__brand">
+          ${logoMark('authcard__logo')}
+          <span class="authcard__wm">
+            <b>Key</b>stamp
+            <em>Key Club attendance</em>
+          </span>
+        </header>
 
-      ${C.head(up ? 'New member' : 'Key Club',
-               up ? 'Join' : 'Sign in',
-               up ? '登録' : '入場')}
+        <div class="authcard__lead">
+          <span class="anno">${up ? 'REG.NEW // ACCOUNT' : 'AUTH.REQ // ACCESS'}</span>
+          <h1 class="authcard__title">${up ? 'Join' : 'Sign in'}</h1>
+        </div>
 
-      <section class="rig" data-enter>
-        <span class="rig__ghost" data-layer aria-hidden="true"></span>
-        <form class="panel authp" id="authForm" novalidate>
-          <span class="panel__rule" data-layer aria-hidden="true"></span>
+        <form class="authp" id="authForm" novalidate>
 
           <div class="field authp__f">
             <label class="kicker" for="authUser">Username</label>
@@ -708,7 +739,7 @@ const Views = {
 
           ${AuthUI.setupNotice()}
         </form>
-      </section>
+      </div>
     </div>`;
   },
 };

@@ -326,55 +326,82 @@ none;
   *{animation-duration:.01ms!important;animation-iteration-count:1!important}
 }
 
-/* ══ SIGN-IN ═══════════════════════════════════════════════════════
-   The first screen has one job: say whose app this is before the form
-   is even read. The chop lands left, the wordmark sits against it,
-   and the speed-line rake sits behind both. */
-.authmark{display:flex;align-items:center;gap:var(--s4);
-  margin-bottom:var(--s5);position:relative;z-index:1}
-.authmark__wm{font-family:var(--f-display);font-size:clamp(19px,2.4vw,26px);
-  line-height:1;letter-spacing:-.01em;color:var(--ink)}
-.authmark__wm b{font-weight:400}
-/* 9.5px of --tone under the wordmark was the least readable text in the
-   application, and it is the line that says what the product is. It
-   joins the 11px floor and the ink-2 ramp like every other caption. */
-.authmark__wm em{display:block;margin-top:7px;
-  font:500 clamp(11px,2.8vw,12px)/1.3 var(--f-mono);
-  letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2);font-style:normal}
 
 [data-screen="auth"] .view{position:relative}
 [data-screen="auth"] .authp{position:relative;z-index:1}
 
 /* the mark inside the chop is the key device, not a glyph: the display
    face has no kanji coverage and fell back to a mismatched font */
-.chop__key{width:58%;height:58%;fill:none;stroke:currentColor;
-  stroke-width:5;stroke-linecap:square;stroke-linejoin:miter;
-  vector-effect:non-scaling-stroke}
-.chop--filled .chop__key{stroke:var(--paper)}
+.chop__key{width:62%;height:62%;fill:currentColor;stroke:none}
+.chop--filled .chop__key{fill:var(--paper)}
 
-/* ══ SIGN-IN COMPOSITION ═══════════════════════════════════════════
-   The form was floating in the top third of a flooded page with two
-   thirds of dead ink under it. Centring the stack and capping its
-   measure makes the page read as a deliberate title card. */
-/* svh, not vh: on iOS the address bar makes `100vh` taller than the
-   screen actually is, so a centred form is pushed under the fold on
-   first paint and jumps when the bar collapses. `min-height` (never
-   `height`) so a short landscape phone scrolls instead of cropping the
-   form, and the cap keeps the card from floating in the middle of a
-   1440px-tall monitor. */
+/* ══ SIGN-IN ═══════════════════════════════════════════════════════
+   ONE CARD, ONE VOICE.
+
+   The old page ran six competing things: a chapter masthead at display
+   size, a chop holding the mark, a wordmark beside it, a full-height
+   radiating rake, a screen-tall sound effect, and the form underneath
+   all of it. Nothing led, so it read as broken rather than composed.
+
+   The card is the page now. The brand states itself once at the top
+   and doubles as the title; the action is an annotation over the
+   fields, because on this screen the fields are the subject. The
+   atmosphere is still there — it just sits behind the card and gets
+   cropped by it.
+
+   svh, not vh: on iOS the address bar makes 100vh taller than the
+   screen actually is, so a centred card is pushed under the fold on
+   first paint and jumps when the bar collapses. min-height (never
+   height) so a short landscape phone scrolls instead of cropping the
+   form, and the cap stops the card floating in the middle of a tall
+   monitor.
+   ═════════════════════════════════════════════════════════════════ */
 [data-screen="auth"] .view{
-  min-height:min(100svh, 900px);
-  display:flex;flex-direction:column;justify-content:center;
-  max-width:min(640px, 100%);
+  position:relative;
+  min-height:min(100svh, 860px);
+  display:grid;place-content:center;justify-items:stretch;
+  width:min(100%, 30rem);
   margin-inline:auto;
-  padding-block:var(--s6);
+  padding-block:clamp(20px,5vh,56px);
 }
-/* The margin belongs to the section, not to the panel inside it. On
-   the panel it opened an 18px gap between the registration ghost
-   (which is `inset:0` on the section) and the panel the ghost is
-   supposed to sit behind — so the ghost painted as a solid ink bar
-   above and below the sign-in form at every viewport. */
-[data-screen="auth"] .view > .rig{margin-top:var(--s5)}
+.authcard{position:relative;z-index:1;
+  display:grid;gap:clamp(16px,3.4vw,26px);
+  background:var(--paper);
+  border:var(--edge-heavy) solid var(--ink);
+  padding:clamp(20px,5.5vw,38px);
+  /* the leading corner taken off at the system angle, same cut the
+     action chamber and the stamp sheet carry */
+  clip-path:polygon(var(--sheet-cut,26px) 0, 100% 0, 100% 100%,
+                    0 100%, 0 var(--sheet-cut,26px))}
+
+.authcard__brand{display:flex;align-items:center;
+  gap:clamp(10px,3vw,18px);min-width:0}
+.authcard__logo{width:clamp(38px,9vw,52px);height:clamp(38px,9vw,52px);
+  flex:none;fill:var(--ink)}
+.authcard__logo *{fill:var(--ink);stroke:none}
+.authcard__wm{font-family:var(--f-display);
+  font-size:clamp(21px,5.6vw,30px);line-height:1;
+  letter-spacing:-.01em;color:var(--ink);min-width:0}
+.authcard__wm b{font-weight:400}
+.authcard__wm em{display:block;margin-top:7px;
+  font:500 clamp(10px,2.6vw,11.5px)/1.3 var(--f-mono);
+  letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);
+  font-style:normal;overflow-wrap:anywhere}
+
+/* the action is a label on the fields, not a headline over them */
+.authcard__lead{display:grid;gap:6px;
+  padding-top:clamp(12px,2.6vw,18px);
+  border-top:var(--edge-thin) solid var(--ink)}
+.authcard__title{font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(26px,7.5vw,40px);line-height:.98;letter-spacing:-.02em;
+  margin:0;color:var(--ink)}
+
+/* the atmosphere sits behind the card and is cropped by the viewport,
+   not laid over the fields */
+[data-screen="auth"] .rake{opacity:.1;z-index:0}
+[data-screen="auth"] .sfxw{z-index:0;opacity:.13;
+  font-size:clamp(120px,30vw,300px);top:auto;bottom:2vh;right:-16vw}
+@media(min-width:1024px){ [data-screen="auth"] .sfxw{opacity:.1} }
 
 /* ══ THE SEAL GRID ═════════════════════════════════════════════════
    An unearned seal was ink-on-ink and effectively invisible, so the
@@ -633,8 +660,7 @@ none;
 .brow__del{min-height:38px;padding:8px 10px}
 
 .btn,.chip,.link{min-height:44px}
-.authmark{gap:var(--s3);flex-wrap:wrap}
-.authmark__wm{font-size:clamp(19px,5vw,26px)}
+
 
 .log{gap:var(--edge-thin)}
 
@@ -704,7 +730,10 @@ none;
 .kicker{font-size:clamp(11px,.55vw + 9.2px,13px)}
 /* the volume line is a sentence, so it takes the type floor and the
    ink ramp like every other sentence in the app */
-.rail__vol{font-size:11px;line-height:1.5;color:var(--ink-2)}
+.rail__vol{font-size:clamp(9.5px,1.05vw,11px);line-height:1.5;color:var(--ink-2)}
+/* the brand block must be able to shrink inside the rail track */
+.rail,.rail__brand,.rail__nav,.rail__foot{min-width:0}
+.rail__brand .mark,.rail__brand .mark__word{min-width:0;overflow-wrap:anywhere}
 /* an unearned seal's ordinal was tone-on-paper (1.98:1) — the cell is
    recessive through its dashed keyline and reduced opacity, which is
    the tier language; the number itself still has to be readable */
@@ -864,3 +893,45 @@ main#view:focus,main#view:focus-visible{outline:none}
 .tech__req{color:var(--ink);font-size:11.5px;letter-spacing:.08em;opacity:1}
 .tech--sealed .tech__req{color:var(--ink)}
 .tech--sealed .tech__name{color:var(--ink)}
+
+/* ── the fields ───────────────────────────────────────────────────
+   Underlined inputs inside a bordered card read as a stack of empty
+   boxes: the input's bottom rule and the card's side borders close
+   three sides of a rectangle that was never meant to be one. The
+   field gets its own quiet ground instead, so it reads as a slot to
+   type into, and the rule under it becomes the base of the slot
+   rather than a divider between two of them. */
+[data-screen="auth"] .authp__f{margin-bottom:0}
+[data-screen="auth"] .authp .input{
+  /* --v1 IS --paper: tinting with it changed nothing, which is why the
+     fields still read as gaps between rules. --v2 is the ramp's first
+     step that is actually a different colour from the page. */
+  background:var(--v2);
+  border-bottom-width:var(--edge-thin);
+  padding:clamp(11px,3vw,14px) clamp(10px,3vw,13px);
+  font-size:max(16px, 1rem)}          /* 16px floor stops iOS zooming on focus */
+[data-screen="auth"] .authp .input:focus-visible{
+  background:var(--paper);
+  box-shadow:inset 0 0 0 var(--edge-thin) var(--ink)}
+[data-screen="auth"] .authp__f .kicker{margin-bottom:7px}
+
+/* the action row: the commit takes the measure on a phone and sits
+   natural-width once there is room beside the secondary link */
+[data-screen="auth"] .authp__act{display:flex;flex-wrap:wrap;
+  align-items:center;gap:clamp(10px,3vw,18px);
+  margin-top:clamp(4px,1.5vw,10px)}
+[data-screen="auth"] .authp__act .btn--go{
+  flex:1 1 100%;min-height:50px;justify-content:center}
+@media(min-width:480px){
+  [data-screen="auth"] .authp__act .btn--go{flex:0 0 auto;min-width:min(52%,190px)}
+}
+
+/* ONE BRAND ON THE PAGE. Both the topbar and the desktop rail repeat
+   the wordmark beside the card that already states it — and signed
+   out, the rail has no chapters to list, so it was an empty column
+   carrying a duplicate logo. Authentication gets the whole canvas. */
+[data-screen="auth"] .topbar{display:none}
+@media(min-width:1024px){
+  [data-screen="auth"] .rail{display:none}
+  [data-screen="auth"] .shell{grid-template-columns:1fr}
+}
