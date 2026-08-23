@@ -34,16 +34,23 @@ const Motion = {
                    duration:130, ease:'inQuad' });
   },
 
-  ripple(btn, ev){
+  /* THE STRIKE. This was a Material ripple — a circle expanding from
+     the pointer over 560ms on an outQuad. That gesture belongs to a
+     different design language entirely: it is soft, it is round, and
+     it is the single most recognisable "generic app" motion there is.
+
+     A control in this system is struck, not rippled. The whole face
+     inverts for two frames and cuts back. No travel, no curve, no
+     radius, nothing to follow with the eye — you register that it
+     happened rather than watching it happen. */
+  ripple(btn){
     if (this.off) return;
-    const r = btn.getBoundingClientRect();
-    const d = Math.max(r.width, r.height) * 2.1;
     const s = document.createElement('span');
-    s.className = 'btn__ripple';
-    s.style.cssText = `width:${d}px;height:${d}px;left:${(ev.clientX ?? r.left + r.width/2) - r.left}px;top:${(ev.clientY ?? r.top + r.height/2) - r.top}px`;
+    s.className = 'btn__strike';
     btn.appendChild(s);
-    animate(s, { scale:[0,1], opacity:[.4,0], duration:560,
-            ease:'outQuad', onComplete:() => s.remove() });
+    animate(s, { opacity:[1, 1, 0], duration:110,
+            ease: (typeof steps === 'function' ? steps(2) : undefined),
+            onComplete:() => s.remove() });
   },
 
   /* energy accumulating: overshoots, then settles. scaleX not width —
