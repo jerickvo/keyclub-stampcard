@@ -464,7 +464,9 @@ const Views = {
         </div>
         <div class="log">${upcoming.map(m => C.entry(m)).join('')}</div>
       </section>` : ''}
-      ${C.close(`${held.filter(m => Store.attended(m.id)).length} OF ${held.length} HELD`)}
+      ${C.close(held.length
+        ? `${held.filter(m => Store.attended(m.id)).length} OF ${held.length} HELD`
+        : 'NOTHING PRESSED YET')}
     </div>`;
   },
 

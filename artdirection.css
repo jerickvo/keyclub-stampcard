@@ -274,8 +274,19 @@
 [data-screen="auth"] .view{max-width:640px}
 [data-screen="auth"] .authp{--ink-w:4.2;position:relative;isolation:isolate;
   padding:var(--s6) var(--s5) var(--s5)}
+/* the tone was 44% of the panel's height, which on a phone put a
+   screentone straight over the USERNAME and PASSWORD labels — the one
+   thing this system says never to do. It stays in the corner above
+   the first field. */
 [data-screen="auth"] .authp::after{content:"";position:absolute;
-  right:0;top:0;width:min(38%,190px);height:44%;z-index:0;
+  /* left MUST be cleared. `.panel::after` sets inset:0 for the panel's
+     own screentone and this rule reuses that pseudo-element, so left:0
+     survives — and with left, right AND width all set, the browser
+     drops `right`. The wedge was therefore pinned to the LEFT edge,
+     which is exactly where the first field label sits. The same trap
+     as the home hero's tone, in the same file, for the same reason. */
+  left:auto;bottom:auto;
+  right:0;top:0;width:min(30%,150px);height:22%;z-index:0;
   background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
   opacity:.26;clip-path:polygon(26% 0, 100% 0, 100% 100%, 0 100%);
   -webkit-mask-image:linear-gradient(to bottom left, #000 0%, transparent 76%);
