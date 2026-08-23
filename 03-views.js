@@ -179,7 +179,7 @@ const C = {
     return `<div class="rec rec--${state}">
       <span class="rec__node" aria-hidden="true"></span>
       <${el} class="entry entry--${state}"${attr}>
-      <span class="entry__ghost" aria-hidden="true">${pad(m.no)}</span>
+      <span class="entry__ghost" data-layer aria-hidden="true">${pad(m.no)}</span>
       <span class="entry__no">GM ${pad(m.no)}</span>
       <span class="entry__verdict">${verdict}</span>
       <span class="entry__meta">${meta}</span>

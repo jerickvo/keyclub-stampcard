@@ -1598,9 +1598,14 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
   [data-screen="record"] .rec{grid-column:span 3}
   [data-screen="record"] .rec--open,
   [data-screen="record"] .rec--miss{grid-column:1/-1}
-  [data-screen="record"] .rec--open{min-height:clamp(150px,19vw,250px);
-    align-items:flex-end}
-  [data-screen="record"] .rec--miss{min-height:120px;align-items:center;opacity:1}
+  /* The lead sizes to its content: it was reserving height and then
+     dropping its content to the bottom of it, which is what made the
+     one thing you can act on read as a mostly-empty textured box. */
+  [data-screen="record"] .rec--open{min-height:0;align-items:stretch}
+  /* A miss reserved 120px — the same room as an attended meeting — so
+     the gaps between the solid blocks were boxes too, and the pattern
+     of blocks down the column could not read as the record. */
+  [data-screen="record"] .rec--miss{min-height:0;align-items:center;opacity:1}
   [data-screen="record"] .rec--set:nth-of-type(4n+3){grid-column:span 2}
   [data-screen="record"] .rec--set:nth-of-type(4n){grid-column:span 4}
   [data-screen="record"] .rec--upcoming{grid-column:span 2}
@@ -2588,6 +2593,60 @@ main#view{padding-top:var(--space-tier);
   .bconfirm{flex:0 1 auto;margin-top:0}
   .bconfirm .btn{flex:0 0 auto}
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   RECORD — THE BLOCK IS THE ROW
+
+   Every row was a bordered box containing a second bordered box: the
+   .rec frame around the .entry block. The inner block already carries
+   all the meaning — spotted black for attended, screentone for
+   missed — so the outer frame was a container drawn around a thing
+   that was already a shape. It is gone; the block is the row.
+
+   And a meeting you missed took exactly as much of the page as one
+   you attended, so fourteen rows arrived at one weight and the page
+   read as a list. A miss is a thin ruled line now. Read down the
+   column and the pattern of solid blocks IS the attendance, which is
+   what this page was always trying to say.
+   ══════════════════════════════════════════════════════════════════ */
+[data-screen="record"] .rec{border:0!important;background:none!important;
+  padding:0!important;gap:clamp(8px,1.2vw,14px)}
+[data-screen="record"] .rec + .rec{border-top:0!important}
+[data-screen="record"] .entry{padding:clamp(13px,1.8vw,20px) clamp(14px,2vw,22px)}
+/* the gain was clipped by the block's own overflow:hidden */
+[data-screen="record"] .entry__gain{padding-right:2px}
+[data-screen="record"] .entry{overflow:clip;overflow-clip-margin:4px}
+
+/* a miss is a rule, not a box */
+[data-screen="record"] .entry--miss{border:0;border-top:var(--rule-hair) solid var(--v3);
+  background:none;padding:clamp(9px,1.2vw,13px) 0 clamp(9px,1.2vw,13px) 2px}
+[data-screen="record"] .entry--miss .entry__ghost{display:none}
+[data-screen="record"] .rec--miss{padding:0!important}
+
+/* THE LIVE MEETING is the lead — the one thing on this page you can
+   act on. It gets the page's only frame and a wedge of speed lines
+   running INTO it from the top-left corner.
+
+   It does not get to be enormous. It was reserving 250px and letting
+   its content fall to the bottom of that, which made the lead read as
+   a mostly-empty box with a texture in it — the same filler problem
+   the scan chamber had. It sizes to its content now; the frame and
+   the wedge are what make it lead, not the acreage. */
+[data-screen="record"] .rec--open{min-height:0!important;align-items:stretch}
+[data-screen="record"] .rec--open .entry{border:var(--edge-heavy) solid var(--ink);
+  position:relative;align-content:start;
+  padding:clamp(16px,2.2vw,26px) clamp(16px,2.2vw,26px)}
+[data-screen="record"] .rec--open .entry::after{content:"";position:absolute;
+  inset:0;z-index:0;pointer-events:none;
+  background-image:repeating-linear-gradient(64deg,
+    var(--ink) 0 1px, transparent 1px 10px);opacity:.12;
+  -webkit-mask-image:linear-gradient(118deg,#000 0 6%,transparent 46%);
+          mask-image:linear-gradient(118deg,#000 0 6%,transparent 46%)}
+/* :not([data-layer]) — without it this forces .entry__ghost, an
+   absolutely-positioned 190px display numeral, back into normal flow,
+   and the lead row inherits its height. That is the third time a
+   `> *` rule has done this; the marker exists precisely for it. */
+[data-screen="record"] .rec--open .entry > *:not([data-layer]){position:relative;z-index:1}
 
 /* ══════════════════════════════════════════════════════════════════
    CLUB TOOLS — THE SAME SHEET
@@ -3933,12 +3992,23 @@ none;
 [data-screen="record"] .entry--set .entry__meta{color:var(--tone-lt)}
 [data-screen="record"] .entry--set .entry__ghost{color:rgba(255,255,255,.10)}
 
-/* missed: screentone, present but not claimed */
+/* MISSED: a ruled line, not a box.
+
+   A meeting you did not attend took exactly as much of the page as
+   one you did — same box, same height, same dashed frame — so
+   fourteen rows arrived at one weight and the page read as a list
+   view. The pattern of solid blocks down the column is supposed to BE
+   the attendance record, and it cannot be while the gaps between the
+   blocks are boxes too.
+
+   A miss is now a hairline and a shorter row. Nothing is hidden and
+   nothing is dimmed past reading; it simply stops competing. */
 [data-screen="record"] .entry--miss{
-  background-image:radial-gradient(var(--tone-dot) .5px, transparent .6px);
-  background-size:var(--tone-40) var(--tone-40);
-  border-style:dashed;border-color:var(--tone);
+  background-image:none;
+  border:0;border-top:var(--rule-hair) solid var(--v3);
+  padding:clamp(9px,1.2vw,13px) 0 clamp(9px,1.2vw,13px) 2px;
 }
+[data-screen="record"] .entry--miss .entry__ghost{display:none}
 [data-screen="record"] .entry--miss .entry__no{color:var(--ink-2)}
 [data-screen="record"] .entry--miss .entry__verdict{color:var(--tone)}
 
@@ -18457,7 +18527,7 @@ const C = {
     return `<div class="rec rec--${state}">
       <span class="rec__node" aria-hidden="true"></span>
       <${el} class="entry entry--${state}"${attr}>
-      <span class="entry__ghost" aria-hidden="true">${pad(m.no)}</span>
+      <span class="entry__ghost" data-layer aria-hidden="true">${pad(m.no)}</span>
       <span class="entry__no">GM ${pad(m.no)}</span>
       <span class="entry__verdict">${verdict}</span>
       <span class="entry__meta">${meta}</span>

@@ -438,12 +438,23 @@ none;
 [data-screen="record"] .entry--set .entry__meta{color:var(--tone-lt)}
 [data-screen="record"] .entry--set .entry__ghost{color:rgba(255,255,255,.10)}
 
-/* missed: screentone, present but not claimed */
+/* MISSED: a ruled line, not a box.
+
+   A meeting you did not attend took exactly as much of the page as
+   one you did — same box, same height, same dashed frame — so
+   fourteen rows arrived at one weight and the page read as a list
+   view. The pattern of solid blocks down the column is supposed to BE
+   the attendance record, and it cannot be while the gaps between the
+   blocks are boxes too.
+
+   A miss is now a hairline and a shorter row. Nothing is hidden and
+   nothing is dimmed past reading; it simply stops competing. */
 [data-screen="record"] .entry--miss{
-  background-image:radial-gradient(var(--tone-dot) .5px, transparent .6px);
-  background-size:var(--tone-40) var(--tone-40);
-  border-style:dashed;border-color:var(--tone);
+  background-image:none;
+  border:0;border-top:var(--rule-hair) solid var(--v3);
+  padding:clamp(9px,1.2vw,13px) 0 clamp(9px,1.2vw,13px) 2px;
 }
+[data-screen="record"] .entry--miss .entry__ghost{display:none}
 [data-screen="record"] .entry--miss .entry__no{color:var(--ink-2)}
 [data-screen="record"] .entry--miss .entry__verdict{color:var(--tone)}
 

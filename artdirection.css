@@ -585,6 +585,60 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════
+   RECORD — THE BLOCK IS THE ROW
+
+   Every row was a bordered box containing a second bordered box: the
+   .rec frame around the .entry block. The inner block already carries
+   all the meaning — spotted black for attended, screentone for
+   missed — so the outer frame was a container drawn around a thing
+   that was already a shape. It is gone; the block is the row.
+
+   And a meeting you missed took exactly as much of the page as one
+   you attended, so fourteen rows arrived at one weight and the page
+   read as a list. A miss is a thin ruled line now. Read down the
+   column and the pattern of solid blocks IS the attendance, which is
+   what this page was always trying to say.
+   ══════════════════════════════════════════════════════════════════ */
+[data-screen="record"] .rec{border:0!important;background:none!important;
+  padding:0!important;gap:clamp(8px,1.2vw,14px)}
+[data-screen="record"] .rec + .rec{border-top:0!important}
+[data-screen="record"] .entry{padding:clamp(13px,1.8vw,20px) clamp(14px,2vw,22px)}
+/* the gain was clipped by the block's own overflow:hidden */
+[data-screen="record"] .entry__gain{padding-right:2px}
+[data-screen="record"] .entry{overflow:clip;overflow-clip-margin:4px}
+
+/* a miss is a rule, not a box */
+[data-screen="record"] .entry--miss{border:0;border-top:var(--rule-hair) solid var(--v3);
+  background:none;padding:clamp(9px,1.2vw,13px) 0 clamp(9px,1.2vw,13px) 2px}
+[data-screen="record"] .entry--miss .entry__ghost{display:none}
+[data-screen="record"] .rec--miss{padding:0!important}
+
+/* THE LIVE MEETING is the lead — the one thing on this page you can
+   act on. It gets the page's only frame and a wedge of speed lines
+   running INTO it from the top-left corner.
+
+   It does not get to be enormous. It was reserving 250px and letting
+   its content fall to the bottom of that, which made the lead read as
+   a mostly-empty box with a texture in it — the same filler problem
+   the scan chamber had. It sizes to its content now; the frame and
+   the wedge are what make it lead, not the acreage. */
+[data-screen="record"] .rec--open{min-height:0!important;align-items:stretch}
+[data-screen="record"] .rec--open .entry{border:var(--edge-heavy) solid var(--ink);
+  position:relative;align-content:start;
+  padding:clamp(16px,2.2vw,26px) clamp(16px,2.2vw,26px)}
+[data-screen="record"] .rec--open .entry::after{content:"";position:absolute;
+  inset:0;z-index:0;pointer-events:none;
+  background-image:repeating-linear-gradient(64deg,
+    var(--ink) 0 1px, transparent 1px 10px);opacity:.12;
+  -webkit-mask-image:linear-gradient(118deg,#000 0 6%,transparent 46%);
+          mask-image:linear-gradient(118deg,#000 0 6%,transparent 46%)}
+/* :not([data-layer]) — without it this forces .entry__ghost, an
+   absolutely-positioned 190px display numeral, back into normal flow,
+   and the lead row inherits its height. That is the third time a
+   `> *` rule has done this; the marker exists precisely for it. */
+[data-screen="record"] .rec--open .entry > *:not([data-layer]){position:relative;z-index:1}
+
+/* ══════════════════════════════════════════════════════════════════
    CLUB TOOLS — THE SAME SHEET
 
    The board account keeps its own chapters and its own routing; what
