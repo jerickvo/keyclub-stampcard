@@ -38,6 +38,25 @@ const C = {
     </header>`;
   },
 
+  /* THE CHAPTER CLOSE.
+
+     A short chapter used to simply stop two-thirds down the viewport
+     and leave the rest blank, which reads as a page that failed to
+     load rather than as a rest. Manga uses empty space constantly,
+     but it is always BOUNDED — a panel with nothing in it is a beat;
+     an unclosed page is a mistake. This is the bottom rule of the
+     spread: the chapter mark, the reading it closes on, and the
+     volume position. It also gives the empty area above it a job. */
+  close(reading){
+    const ch = (typeof chapterOf === 'function' && typeof current === 'string')
+      ? chapterOf(current) : null;
+    return `<footer class="close" data-enter aria-hidden="true">
+      <span class="close__rule" data-layer></span>
+      <span class="anno close__a">${esc(reading)}</span>
+      <span class="anno close__b">END OF CHAPTER${ch && ch.ch !== '—' ? ' ' + ch.ch : ''}</span>
+    </footer>`;
+  },
+
   /* ── the stat plate: a character status readout, not a summary card ── */
   hero(){
     const p = Rules.progress();
@@ -51,7 +70,6 @@ const C = {
     return `<section class="rig ${live ? '' : 'rig--br'}" data-enter aria-labelledby="heroLbl">
       <span class="rig__ghost" data-layer aria-hidden="true"></span>
       <div class="panel ${live ? 'panel--live' : ''} hero p-quiet ink-load">
-        <span class="sfx sfx--a" data-layer aria-hidden="true">${live ? 'OPEN' : 'HOLD'}</span>
         <span class="panel__rule" data-layer aria-hidden="true"></span>
         <span class="tick tick--tl" data-layer aria-hidden="true"></span>
         <span class="tick tick--br" data-layer aria-hidden="true"></span>
@@ -218,6 +236,15 @@ const C = {
     const total = Store.totalStamps();
     const open = total >= r.required;
     const ready = open && !r.claimed;
+    /* PANEL ROLE. Three sealed tiers rendered identically is three of
+       the same object again — the thing this dossier was built to
+       stop. The nearest one you have not reached is the hero of the
+       page whether or not it is claimable, because it is the only one
+       that is about to happen; the rest are micro. */
+    const near = Store.rewards.filter(x => total < x.required)
+                   .sort((a, b) => a.required - b.required)[0];
+    const rank = r.claimed ? 'past' : ready ? 'hero'
+               : (near && near.id === r.id) ? 'hero' : 'far';
     const state = r.claimed ? 'claimed' : open ? 'ready' : 'sealed';
     const done = Math.min(total, r.required);
 
@@ -229,7 +256,7 @@ const C = {
     const slots = Array.from({ length:cells }, (_, i) =>
       `<span class="dslot${i < litCells ? ' dslot--set' : ''}"></span>`).join('');
 
-    return `<section class="rig dossier dossier--${state}" data-enter data-reward="${r.id}">
+    return `<section class="rig dossier dossier--${state}" data-rank="${rank}" data-enter data-reward="${r.id}">
       <span class="rig__ghost" data-layer aria-hidden="true"></span>
       <div class="panel tech tech--${state}">
         <span class="dossier__idx idx${open ? ' idx--on' : ''}" aria-hidden="true">${pad(r.required)}</span>
@@ -439,6 +466,7 @@ const Views = {
       <div class="stack-panels">
         ${Store.rewards.map(C.tech).join('')}
       </div>
+      ${C.close(`${Store.totalStamps()} STAMPS ON RECORD`)}
     </div>`;
   },
 

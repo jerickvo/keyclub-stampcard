@@ -144,7 +144,6 @@
   --t-name:clamp(16px,1.4vw,21px);
   --t-body:clamp(14.5px,.32vw + 13.5px,17px);
   --t-caption:clamp(10px,.75vw,12px);
-  --t-sfx:clamp(64px,15vw,200px);
   --t-meta:clamp(12px,.85vw,14px);
   --tap:44px;            /* minimum touch target */
   --tabs-h:56px;         /* the bottom bar owns exactly this much */
@@ -1223,15 +1222,6 @@ html,body{overflow-x:clip;max-width:100%}
    SFX — lettering as artwork. Outlined, rotated, oversized, and always
    clipped by the panel that contains it. Never a floating decoration.
    ══════════════════════════════════════════════════════════════════ */
-.sfx{position:absolute;z-index:5;pointer-events:none;font-family:var(--f-display);
-  font-size:var(--t-sfx);line-height:.78;text-transform:uppercase;
-  letter-spacing:-.03em;white-space:nowrap;
-  color:transparent;-webkit-text-stroke:2.5px var(--v5);
-  paint-order:stroke fill}
-.sfx--solid{color:var(--v6);-webkit-text-stroke:0}
-.sfx--knock{color:var(--v0);-webkit-text-stroke:2.5px var(--v0)}
-.sfx--a{right:-4%;bottom:-9%;transform:rotate(-8deg);opacity:.13}
-.sfx--b{left:-3%;top:-7%;transform:rotate(6deg);opacity:.1}
 
 /* ══════════════════════════════════════════════════════════════════
    CHAPTER RAIL — a volume index, not a navbar.
@@ -1341,7 +1331,6 @@ html,body{overflow-x:clip;max-width:100%}
    mostly-empty rectangle on a phone. */
 [data-screen="home"] .view{grid-template-rows:none}
 .narr{max-width:min(70%,320px);font-size:clamp(10.5px,2.8vw,13px)}
-.sfx{font-size:clamp(56px,22vw,140px)}
 
 /* ── corrections after looking at the render ──
    Type cropped by a panel edge is a manga move, but only when the crop
@@ -1368,24 +1357,16 @@ html,body{overflow-x:clip;max-width:100%}
 .title--name{font-size:clamp(24px,7.2vw,92px);overflow-wrap:break-word}
 .narr--tl{max-width:min(38%,240px)}
 
-/* SFX belongs at a panel corner, cropped by it, behind the content —
-   not floating across the middle of the gauge */
-.sfx{z-index:0}
-/* `.sfx` is excluded so the decorative word stays absolutely
+/* [data-layer] is excluded so decorative children stay absolutely
    positioned behind the content instead of being pulled into flow by
    this rule's higher specificity — on the mobile hero that alone added
    56px of empty panel height. */
 .hero > *:not([data-layer]){position:relative;z-index:2}
-.sfx--a{right:auto;left:-2%;bottom:-14%;top:auto;transform:rotate(-7deg);
-  opacity:.22;-webkit-text-stroke-width:3px}
 [data-screen="home"] .hero{overflow:hidden}
 
 /* SFX still crossed the gauge and the caption at desktop width. Pushed
    fully into the corner and cropped hard, which is where lettering sits
    on a real page — anchored to the panel, not floating in it. */
-.sfx--a{left:auto;right:-3%;bottom:-18%;transform:rotate(-6deg);opacity:.16}
-.sfx--a{right:-8%;bottom:-12%;opacity:.2}
-@media(min-width:1024px){.sfx--a{right:-3%;bottom:-18%;opacity:.16}}
 
 /* ══════════════════════════════════════════════════════════════════
    THE EDGE — a ruled line, not a drawn one.
@@ -1580,11 +1561,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 /* ══════════════════════════════════════════════════════════════════
    SFX — opaque, large, cropped by the panel. Never a watermark.
    ══════════════════════════════════════════════════════════════════ */
-.sfx{color:var(--v6);-webkit-text-stroke:0;opacity:1;
-  font-size:clamp(72px,15vw,240px);letter-spacing:-.055em}
-.sfx--a{right:-5%;bottom:-16%;left:auto;top:auto;transform:rotate(-7deg);
-  opacity:.09}
-.sfx--out{color:transparent;-webkit-text-stroke:clamp(2px,.35vw,4px) var(--v6);opacity:.5}
 
 /* ══════════════════════════════════════════════════════════════════
    REWARDS — the glyph had escaped its box and was rendering ~1100px.
@@ -1741,8 +1717,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .seal--hero svg{width:74%;height:74%}
 [data-screen="home"] .seals{padding-top:var(--s7)}
 
-/* SFX was still reading as a watermark at 9% */
-.sfx--a{opacity:.16}
 
 /* Record rows need real interior space now that they are panels */
 [data-screen="record"] .rec{padding:var(--s4) var(--s4) var(--s5)}
@@ -2063,46 +2037,22 @@ main#view{padding-top:var(--space-tier);
    ───────────────────────────────────────────────────────────────── */
 [data-screen="home"] .hero{position:relative;isolation:isolate}
 
-/* The tone wedge the number stands on.
-   ::after, NOT ::before — the home hero's ::before is already spoken
-   for: the stylesheet paints the panel dark and lays a paper-coloured
-   ::before inside it, which is what produces the diagonal-cut corner.
-   Overriding it turned the whole panel black. */
-/* The wedge is scraped back on BOTH edges. It used to fade only toward
-   the top, so its right-hand edge stopped on a hard vertical line — a
-   tone sheet with a ruled edge reads as an unfinished rectangle sitting
-   behind the number rather than as tone laid into the panel. The
-   composite mask fades up and to the right, which is what a blade
-   actually leaves. */
-[data-screen="home"] .hero::after{content:"";position:absolute;
-  /* top/right MUST be reset. `.panel::after` sets `inset:0` for the
-     panel's own screentone, and this rule reuses that pseudo-element —
-     so without clearing them, `top:0` survives, and an absolutely
-     positioned box with top, bottom AND height set simply ignores
-     `bottom`. The wedge was therefore anchored to the TOP of the panel:
-     a dotted rectangle laid across the number and straight through
-     "STAMPS ACQUIRED", which is what made the caption read as struck
-     out. It belongs low and left, under the figure. */
-  top:auto;right:auto;
-  left:0;bottom:0;width:min(62%,340px);height:58%;
-  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
-  /* A short panel puts three lines of type inside the same 58% the tall
-     one gives to the figure alone, so the tone has to sit further back
-     where the column is narrow. It is material behind the number, not a
-     field the caption has to be read through. */
-  opacity:.3;z-index:0;
-  /* The tone is a band behind the FIGURE, not a field under the whole
-     lower half of the panel. Fading it out at the bottom as well as
-     the top clears the caption and the travel bar entirely — nothing
-     in this system is read through a texture — while leaving the
-     number standing on it, which is the only job it ever had. */
-  -webkit-mask-image:linear-gradient(to top, transparent 0%, #000 30%, #000 66%, transparent 100%),
-              linear-gradient(to right, #000 0%, #000 62%, transparent 100%);
-  mask-image:linear-gradient(to top, transparent 0%, #000 30%, #000 66%, transparent 100%),
-             linear-gradient(to right, #000 0%, #000 62%, transparent 100%);
-  -webkit-mask-composite:source-in;mask-composite:intersect;
-  clip-path:polygon(0 14%, 100% 0, 100% 100%, 0 100%)}
+/* THE TONE WEDGE HAD NOTHING TO BE CROPPED BY, SO IT GOES.
 
+   It started under the count, where a screentone behind 11px mono
+   made the label unreadable. I moved it beside the figure; that fixed
+   the legibility and created a worse problem. Once the hero lost its
+   panel border there was no edge anywhere near it, and masking it
+   into a soft corner just produced a rectangle of grey dots hanging
+   in open paper with two hard sides — a rendering fault, not
+   pressure.
+
+   Screentone in manga is always bounded: by a panel edge, by a
+   figure, by a field of speed lines. This one is bounded by nothing
+   and there is no honest edge to give it here. What the count needs
+   beside it is air. Tone is still used where it has a boundary — the
+   chamber's rake, the live record row's band.
+   ───────────────────────────────────────────────────────────────── */
 [data-screen="home"] .hero__core{position:relative;z-index:2;align-items:flex-end}
 [data-screen="home"] .hero__num{position:relative;z-index:2}
 
@@ -2175,14 +2125,10 @@ main#view{padding-top:var(--space-tier);
 .cut-br{clip-path:polygon(0 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%)}
 .cut-tl{clip-path:polygon(var(--chamfer) 0, 100% 0, 100% 100%, 0 100%, 0 var(--chamfer))}
 
-/* the tone wedge under the number follows the panel's aspect, so it
-   anchors the figure on a tall narrow panel and on a wide one alike */
-[data-screen="home"] .hero::after{width:min(78%,300px);height:64%}
 [data-rank="lead"]{--ink-w:3.6}
 .strike::after{opacity:.11}
 
 @media(min-width:1024px){
-  [data-screen="home"] .hero::after{width:min(62%,340px);height:58%;opacity:.45}
   [data-rank="lead"]{--ink-w:4.4}
   .strike::after{opacity:.14}
 }
@@ -2232,9 +2178,10 @@ main#view{padding-top:var(--space-tier);
   clip-path:polygon(22% 0, 100% 0, 100% 100%, 0 100%);
   -webkit-mask-image:linear-gradient(to bottom left, #000 0%, transparent 78%);
   mask-image:linear-gradient(to bottom left, #000 0%, transparent 78%)}
-/* `.sfx` must stay excluded from every `> *` rule in this file: it is
-   absolutely positioned by design, and a two-class descendant selector
-   outranks its own one-class rule and drags it into flow. */
+/* [data-layer] children must stay excluded from every `> *` rule in
+   this file: they are absolutely positioned by design, and a two-class
+   descendant selector outranks their own one-class rule and drags them
+   into flow. */
 .seals > *:not([data-layer]){position:relative;z-index:1}
 
 /* the record page's live row gets a tone band so the actionable entry
@@ -2947,6 +2894,44 @@ main#view{padding-top:var(--space-tier);
   box-shadow:inset 0 0 0 var(--rule-hair) var(--v3)}
 .dslot--set{background:var(--ink);box-shadow:none}
 
+/* ══════════════════════════════════════════════════════════════════
+   PANEL ROLE — HERO, SUPPORT, MICRO
+
+   Three sealed tiers were three of the same object drawn at the same
+   size: the one you are a single stamp away from and the one you are
+   twenty-one away from occupied identical space. State was doing the
+   work but SCALE was not, so the page read as a list.
+
+   The nearest tier is the hero of the spread — its numeral is set at
+   masthead scale, its slot array is tall enough to be a mass rather
+   than a legend, and it holds the measure alone. The rest are micro:
+   half the width, a third of the height, numerals in tone. That is
+   the difference between a manga page and a table of rows.
+   ══════════════════════════════════════════════════════════════════ */
+.dossier[data-rank="hero"] .dossier__idx{
+  --idx-size:clamp(58px,10vw,148px);
+  padding-right:clamp(16px,2.4vw,34px);
+  margin-right:clamp(16px,2.4vw,34px);
+  border-right-color:var(--ink)}
+.dossier[data-rank="hero"] .dslot{height:clamp(30px,4.4vw,64px)}
+.dossier[data-rank="hero"] .tech__name{font-size:clamp(20px,2.4vw,34px)}
+.dossier[data-rank="hero"] .panel{padding-block:clamp(24px,3.4vw,46px)}
+
+.dossier[data-rank="far"] .dossier__idx{--idx-size:clamp(24px,3vw,40px)}
+.dossier[data-rank="far"] .dslot{height:clamp(9px,1.1vw,14px)}
+.dossier[data-rank="far"] .tech__name{font-size:clamp(14px,1.3vw,17px)}
+.dossier[data-rank="far"] .panel{padding-block:clamp(12px,1.5vw,18px)}
+.dossier[data-rank="far"] .dossier__at{display:none}
+
+/* the hero takes the full measure; the micro tiers pair off beside it.
+   Placement is by RANK, not by source order — the tier that is next is
+   not always the first one in the list once earlier ones are claimed. */
+@media(min-width:768px){
+  [data-screen="rewards"] .stack-panels > .dossier[data-rank="hero"],
+  [data-screen="rewards"] .stack-panels > .dossier[data-rank="past"]{grid-column:1/-1}
+  [data-screen="rewards"] .stack-panels > .dossier[data-rank="far"]{grid-column:span 1}
+}
+
 /* ── SEALED: a division of the sheet, nothing more ── */
 .dossier--sealed{position:relative}
 .dossier--sealed::before{content:"";position:absolute;left:0;right:0;top:0;
@@ -3121,14 +3106,24 @@ main#view{padding-top:var(--space-tier);
   font-family:var(--f-display);text-transform:uppercase;
   font-size:clamp(150px,31vw,520px);line-height:.74;
   letter-spacing:-.055em;white-space:nowrap;
-  color:var(--ink);opacity:.075;
+  /* DRAWN, NOT TINTED. Filled at low value the word became a pale
+     grey wash the size of the page — a watermark, which is the exact
+     SaaS move this is supposed to replace. A manga sound effect is
+     INKED: hard outline, no tone. Knocking the fill out and drawing
+     the letterform in line gives it real presence at the size it
+     wants to be, and costs the composition no tonal mass, so the
+     masthead in front of it still wins. */
+  color:transparent;
+  -webkit-text-stroke:clamp(1.4px,.19vw,2.6px) var(--ink);
+  opacity:.22;
   top:calc(clamp(10px,2vw,30px) * -1)}
-.sfxw--r{right:-11vw;left:auto}
-.sfxw--l{left:-13vw;right:auto}
+/* and cropped hard — a third of the word is off the page */
+.sfxw--r{right:-19vw;left:auto}
+.sfxw--l{left:-21vw;right:auto}
 .sfxw--tilt{transform:rotate(calc(var(--run-a,60deg) - 90deg));
   transform-origin:left top;top:8vw}
 @media(min-width:1024px){
-  .sfxw{opacity:.065}
+  .sfxw{opacity:.17}
 }
 
 /* ── THE CREDENTIAL BAND ──────────────────────────────────────────
@@ -3294,22 +3289,12 @@ main#view{padding-top:var(--space-tier);
 [data-screen="home"] .view > section:nth-of-type(1){
   padding:clamp(20px,3vw,44px) 0 clamp(14px,2vw,26px)}
 
-/* the tone wedge sat UNDER the count and its label, and at these
-   sizes a screentone behind 11px mono makes the label unreadable —
-   texture has to have a job, and "sit behind the words" is not one.
-   It moves out to the right of the figure, where it reads as the
-   pressure the number is under rather than as noise on it. */
-[data-screen="home"] .hero::after{left:auto;right:0;width:min(30%,200px);
-  height:46%;top:auto;bottom:0;opacity:.42}
 /* the reading in the top-right corner is a fact, so it gets clear
    paper to sit on rather than sharing it with the screentone */
 [data-screen="home"] .hero__state{position:relative;z-index:3;
   background:var(--paper);padding-left:6px}
 [data-screen="home"] .hero__label{color:var(--ink-2);position:relative;z-index:3}
 [data-screen="home"] .hero__foot{margin-top:clamp(12px,1.8vw,20px)}
-/* the sound effect is a layer, not a collision: it sits behind the
-   figure and is cropped by the chamber's own bottom edge */
-[data-screen="home"] .sfx--a{bottom:-6%;opacity:.11}
 /* the ring, the dot wedge and the sound effect were all landing in
    the same square inch to the right of the figure. The ring is the
    one that says least — the stamp array below states the same thing
@@ -3853,6 +3838,124 @@ select.input:focus-visible{outline:none}
 .reticle__mark{opacity:.42;filter:drop-shadow(0 0 1.5px var(--paper))}
 .reticle--good .reticle__geo,
 .reticle--good .reticle__mark{opacity:.9}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   THE CHAPTER CLOSE
+
+   Rewards ended two-thirds down a tall viewport with a third of the
+   page left blank and nothing bounding it, which does not read as a
+   rest — it reads as a page that stopped. Manga leaves plenty of
+   space empty, but a beat is always enclosed by something.
+
+   This is the bottom rule of the spread. It is pushed to the foot of
+   the canvas, so the empty area above it becomes a panel with nothing
+   in it rather than an unfinished page, and it carries the two facts
+   a chapter ends on: where the reader stands, and which chapter this
+   was.
+   ══════════════════════════════════════════════════════════════════ */
+.close{position:relative;display:flex;align-items:baseline;
+  justify-content:space-between;gap:var(--s3);flex-wrap:wrap;
+  padding-top:clamp(12px,1.6vw,18px)}
+.close__rule{position:absolute;left:0;right:0;top:0;
+  height:var(--edge-heavy);background:var(--ink)}
+.close__b{color:var(--ink-2)}
+/* the chapter mark hangs off the rule at the leading corner, the same
+   registration tick the closers on Home use */
+.close::after{content:"";position:absolute;left:0;top:0;
+  width:var(--edge-heavy);height:clamp(12px,1.6vw,20px);background:var(--ink)}
+
+/* The rest before it is a FIXED beat, not whatever the viewport has
+   left over. Stretching the close to the foot of the canvas ties the
+   size of the pause to the height of the window, which means the same
+   page reads as a considered rest on one screen and as an abandoned
+   one on another. A bounded gap is the same beat everywhere. */
+.close{margin-top:clamp(44px,9vh,116px)}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   HOME — WHAT THE CLOSERS DO AND DO NOT SAY
+
+   The meeting numeral behind the closing entries rendered at 44px and
+   7% — too small to read as a layer and too faint to read as a fact,
+   which makes it the one thing on the page doing no job at all. On
+   Record it is a real device, set at display scale and cropped by the
+   row it belongs to. Here it just produced a grey smudge that looked
+   like a rendering fault. It goes.
+
+   The two closers also stop being the same object: what is happening
+   now is the support panel and keeps full type; what was last stamped
+   is the micro panel and is set down to a footnote.
+   ══════════════════════════════════════════════════════════════════ */
+[data-screen="home"] .entry__ghost{display:none}
+[data-screen="home"] .view > .duo > .rig:last-child .h2{
+  font-size:clamp(11px,.86vw,12.5px);letter-spacing:.2em}
+[data-screen="home"] .view > .duo > .rig:last-child .panel{
+  padding-top:clamp(11px,1.5vw,17px)}
+@media(min-width:1024px){
+  [data-screen="home"] .view > .duo > .rig:last-child{
+    font-size:.92em}
+}
+
+/* ── THE NAME MUST NOT BREAK MID-WORD ─────────────────────────────
+   At 390 a long username wrapped to "MEMBERUS / ER." — a hyphenless
+   break in the middle of a person's own name, which reads as a bug
+   and not as a bleed. The nameplate steps down a size on narrow
+   screens so ordinary names hold one line, and long ones break at a
+   size where the second line is not a two-letter orphan. */
+@media(max-width:479px){
+  :root{--t-name-hero:clamp(34px,10.4vw,58px)}
+  .nameplate .title--name{letter-spacing:-.03em}
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   MOBILE IS ITS OWN COMPOSITION, NOT THE DESKTOP ONE STACKED
+
+   On a phone the action chamber was 371px tall with a 34px crosshair
+   floating in the middle of it: three quarters of the tallest element
+   on the page was empty, which is not a rest — a rest has an edge.
+   The desktop chamber can afford that air because it sits BESIDE the
+   count and the two hold each other up. Stacked, it has nothing to
+   hold.
+
+   So the phone gets its own arrangement: the target reads across the
+   band instead of down it. The crosshair moves to the leading edge at
+   real size, the verb sets against it, and the commit takes the full
+   measure underneath. Same three layers, same vocabulary, a
+   proportion that belongs to the device.
+   ══════════════════════════════════════════════════════════════════ */
+@media(max-width:767px){
+  /* (0,1,1) to clear [data-screen="home"] .view > .strike, which
+     reserved 44dvh for the chamber back when it was a mostly-empty
+     box and needed the size to be unmissable. The band arrangement
+     below is unmissable at a third of that. */
+  [data-screen="home"] .view > .strike,
+  .strike{min-height:0;
+    grid-template-columns:auto minmax(0,1fr);
+    grid-template-rows:auto auto auto;
+    column-gap:clamp(14px,4vw,22px);row-gap:clamp(10px,2.4vw,16px)}
+  .strike__head{grid-column:1/-1;grid-row:1}
+  .strike__core{grid-column:1;grid-row:2;min-height:0;align-self:center}
+  .strike__core .xhair{--xh:clamp(46px,14vw,64px)}
+  .strike__body{grid-column:2;grid-row:2;align-self:center;justify-self:start}
+  .strike__go{grid-column:1/-1;grid-row:3}
+  /* the speed lines converge on the crosshair where it actually is now */
+  .strike::before{
+    -webkit-mask-image:radial-gradient(circle at 18% 52%, #000 0 10%, transparent 66%);
+            mask-image:radial-gradient(circle at 18% 52%, #000 0 10%, transparent 66%)}
+}
+
+/* ── the name gets the whole measure on a phone ───────────────────
+   The nameplate inherits the chapter masthead's reserved lane for the
+   vertical Japanese mark, which on a 390 screen took 70px off a 356px
+   measure and wrapped "MEMBERUSER." to a two-letter orphan. The
+   nameplate has no title in that lane to protect, so it takes the
+   measure back. */
+@media(max-width:479px){
+  [data-screen="home"] .view > .nameplate{padding-right:0}
+  :root{--t-name-hero:clamp(32px,9.4vw,58px)}
+}
 
 </style>
 <style>
@@ -18720,6 +18823,25 @@ const C = {
     </header>`;
   },
 
+  /* THE CHAPTER CLOSE.
+
+     A short chapter used to simply stop two-thirds down the viewport
+     and leave the rest blank, which reads as a page that failed to
+     load rather than as a rest. Manga uses empty space constantly,
+     but it is always BOUNDED — a panel with nothing in it is a beat;
+     an unclosed page is a mistake. This is the bottom rule of the
+     spread: the chapter mark, the reading it closes on, and the
+     volume position. It also gives the empty area above it a job. */
+  close(reading){
+    const ch = (typeof chapterOf === 'function' && typeof current === 'string')
+      ? chapterOf(current) : null;
+    return `<footer class="close" data-enter aria-hidden="true">
+      <span class="close__rule" data-layer></span>
+      <span class="anno close__a">${esc(reading)}</span>
+      <span class="anno close__b">END OF CHAPTER${ch && ch.ch !== '—' ? ' ' + ch.ch : ''}</span>
+    </footer>`;
+  },
+
   /* ── the stat plate: a character status readout, not a summary card ── */
   hero(){
     const p = Rules.progress();
@@ -18733,7 +18855,6 @@ const C = {
     return `<section class="rig ${live ? '' : 'rig--br'}" data-enter aria-labelledby="heroLbl">
       <span class="rig__ghost" data-layer aria-hidden="true"></span>
       <div class="panel ${live ? 'panel--live' : ''} hero p-quiet ink-load">
-        <span class="sfx sfx--a" data-layer aria-hidden="true">${live ? 'OPEN' : 'HOLD'}</span>
         <span class="panel__rule" data-layer aria-hidden="true"></span>
         <span class="tick tick--tl" data-layer aria-hidden="true"></span>
         <span class="tick tick--br" data-layer aria-hidden="true"></span>
@@ -18900,6 +19021,15 @@ const C = {
     const total = Store.totalStamps();
     const open = total >= r.required;
     const ready = open && !r.claimed;
+    /* PANEL ROLE. Three sealed tiers rendered identically is three of
+       the same object again — the thing this dossier was built to
+       stop. The nearest one you have not reached is the hero of the
+       page whether or not it is claimable, because it is the only one
+       that is about to happen; the rest are micro. */
+    const near = Store.rewards.filter(x => total < x.required)
+                   .sort((a, b) => a.required - b.required)[0];
+    const rank = r.claimed ? 'past' : ready ? 'hero'
+               : (near && near.id === r.id) ? 'hero' : 'far';
     const state = r.claimed ? 'claimed' : open ? 'ready' : 'sealed';
     const done = Math.min(total, r.required);
 
@@ -18911,7 +19041,7 @@ const C = {
     const slots = Array.from({ length:cells }, (_, i) =>
       `<span class="dslot${i < litCells ? ' dslot--set' : ''}"></span>`).join('');
 
-    return `<section class="rig dossier dossier--${state}" data-enter data-reward="${r.id}">
+    return `<section class="rig dossier dossier--${state}" data-rank="${rank}" data-enter data-reward="${r.id}">
       <span class="rig__ghost" data-layer aria-hidden="true"></span>
       <div class="panel tech tech--${state}">
         <span class="dossier__idx idx${open ? ' idx--on' : ''}" aria-hidden="true">${pad(r.required)}</span>
@@ -19121,6 +19251,7 @@ const Views = {
       <div class="stack-panels">
         ${Store.rewards.map(C.tech).join('')}
       </div>
+      ${C.close(`${Store.totalStamps()} STAMPS ON RECORD`)}
     </div>`;
   },
 

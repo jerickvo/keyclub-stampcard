@@ -101,7 +101,6 @@
   --t-name:clamp(16px,1.4vw,21px);
   --t-body:clamp(14.5px,.32vw + 13.5px,17px);
   --t-caption:clamp(10px,.75vw,12px);
-  --t-sfx:clamp(64px,15vw,200px);
   --t-meta:clamp(12px,.85vw,14px);
   --tap:44px;            /* minimum touch target */
   --tabs-h:56px;         /* the bottom bar owns exactly this much */
@@ -1180,15 +1179,6 @@ html,body{overflow-x:clip;max-width:100%}
    SFX — lettering as artwork. Outlined, rotated, oversized, and always
    clipped by the panel that contains it. Never a floating decoration.
    ══════════════════════════════════════════════════════════════════ */
-.sfx{position:absolute;z-index:5;pointer-events:none;font-family:var(--f-display);
-  font-size:var(--t-sfx);line-height:.78;text-transform:uppercase;
-  letter-spacing:-.03em;white-space:nowrap;
-  color:transparent;-webkit-text-stroke:2.5px var(--v5);
-  paint-order:stroke fill}
-.sfx--solid{color:var(--v6);-webkit-text-stroke:0}
-.sfx--knock{color:var(--v0);-webkit-text-stroke:2.5px var(--v0)}
-.sfx--a{right:-4%;bottom:-9%;transform:rotate(-8deg);opacity:.13}
-.sfx--b{left:-3%;top:-7%;transform:rotate(6deg);opacity:.1}
 
 /* ══════════════════════════════════════════════════════════════════
    CHAPTER RAIL — a volume index, not a navbar.
@@ -1298,7 +1288,6 @@ html,body{overflow-x:clip;max-width:100%}
    mostly-empty rectangle on a phone. */
 [data-screen="home"] .view{grid-template-rows:none}
 .narr{max-width:min(70%,320px);font-size:clamp(10.5px,2.8vw,13px)}
-.sfx{font-size:clamp(56px,22vw,140px)}
 
 /* ── corrections after looking at the render ──
    Type cropped by a panel edge is a manga move, but only when the crop
@@ -1325,24 +1314,16 @@ html,body{overflow-x:clip;max-width:100%}
 .title--name{font-size:clamp(24px,7.2vw,92px);overflow-wrap:break-word}
 .narr--tl{max-width:min(38%,240px)}
 
-/* SFX belongs at a panel corner, cropped by it, behind the content —
-   not floating across the middle of the gauge */
-.sfx{z-index:0}
-/* `.sfx` is excluded so the decorative word stays absolutely
+/* [data-layer] is excluded so decorative children stay absolutely
    positioned behind the content instead of being pulled into flow by
    this rule's higher specificity — on the mobile hero that alone added
    56px of empty panel height. */
 .hero > *:not([data-layer]){position:relative;z-index:2}
-.sfx--a{right:auto;left:-2%;bottom:-14%;top:auto;transform:rotate(-7deg);
-  opacity:.22;-webkit-text-stroke-width:3px}
 [data-screen="home"] .hero{overflow:hidden}
 
 /* SFX still crossed the gauge and the caption at desktop width. Pushed
    fully into the corner and cropped hard, which is where lettering sits
    on a real page — anchored to the panel, not floating in it. */
-.sfx--a{left:auto;right:-3%;bottom:-18%;transform:rotate(-6deg);opacity:.16}
-.sfx--a{right:-8%;bottom:-12%;opacity:.2}
-@media(min-width:1024px){.sfx--a{right:-3%;bottom:-18%;opacity:.16}}
 
 /* ══════════════════════════════════════════════════════════════════
    THE EDGE — a ruled line, not a drawn one.
@@ -1537,11 +1518,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 /* ══════════════════════════════════════════════════════════════════
    SFX — opaque, large, cropped by the panel. Never a watermark.
    ══════════════════════════════════════════════════════════════════ */
-.sfx{color:var(--v6);-webkit-text-stroke:0;opacity:1;
-  font-size:clamp(72px,15vw,240px);letter-spacing:-.055em}
-.sfx--a{right:-5%;bottom:-16%;left:auto;top:auto;transform:rotate(-7deg);
-  opacity:.09}
-.sfx--out{color:transparent;-webkit-text-stroke:clamp(2px,.35vw,4px) var(--v6);opacity:.5}
 
 /* ══════════════════════════════════════════════════════════════════
    REWARDS — the glyph had escaped its box and was rendering ~1100px.
@@ -1698,8 +1674,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .seal--hero svg{width:74%;height:74%}
 [data-screen="home"] .seals{padding-top:var(--s7)}
 
-/* SFX was still reading as a watermark at 9% */
-.sfx--a{opacity:.16}
 
 /* Record rows need real interior space now that they are panels */
 [data-screen="record"] .rec{padding:var(--s4) var(--s4) var(--s5)}
