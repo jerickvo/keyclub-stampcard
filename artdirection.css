@@ -584,6 +584,29 @@
   .bconfirm .btn{flex:0 0 auto}
 }
 
+/* the closers on Home wrapped their one entry in a frame inside an
+   already-registered section — a box in a division. The entry block
+   carries its own state; it does not need a container. */
+[data-screen="home"] .view > .duo .rec{border:0!important;padding:0!important}
+[data-screen="home"] .view > .duo .entry{padding:clamp(12px,1.6vw,18px) clamp(13px,1.8vw,20px)}
+[data-screen="home"] .view > .duo .entry--set{background:var(--ink);color:var(--paper)}
+[data-screen="home"] .view > .duo .entry--set .entry__no,
+[data-screen="home"] .view > .duo .entry--set .entry__verdict{color:var(--paper)}
+[data-screen="home"] .view > .duo .entry--set .entry__meta{color:var(--v3)}
+
+/* ── EDGE METADATA ON EVERY CHAPTER ────────────────────────────────
+   The rune existed on Home alone, so the one primitive that says
+   "this is an instrument reporting its own state" appeared on one
+   screen out of five. Every masthead carries its chapter mark now,
+   which is what makes the set read as one document. */
+.view > .head:not(.nameplate) .rune{display:none;position:absolute;
+  right:0;top:clamp(16px,2.6vw,36px);
+  writing-mode:vertical-rl;
+  font:500 clamp(8px,.62vw,10px)/1 var(--f-mono);letter-spacing:.24em;
+  text-transform:uppercase;color:var(--ink-2);white-space:nowrap;
+  pointer-events:none;user-select:none}
+@media(min-width:1024px){ .view > .head:not(.nameplate) .rune{display:block} }
+
 /* ══════════════════════════════════════════════════════════════════
    RECORD — THE BLOCK IS THE ROW
 

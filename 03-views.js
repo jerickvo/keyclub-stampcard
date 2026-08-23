@@ -18,14 +18,21 @@ const C = {
     return `<span class="bleed ${mod}" style="${style}" aria-hidden="true">${word}</span>`;
   },
 
+  /* Every chapter carries the same three marks: the kicker as an
+     annotation, the title as the masthead, and an edge rune stating
+     which chapter of the volume this is. The rune is what makes five
+     differently-composed screens read as one document. */
   head(kicker, title, jp, note){
+    const ch = (typeof chapterOf === 'function' && typeof current === 'string')
+      ? chapterOf(current) : null;
     return `<header class="head" data-enter>
-      <span class="head__rake" aria-hidden="true"></span>
+      <span class="head__rake" data-layer aria-hidden="true"></span>
       <div class="head__stack">
         <p class="kicker">${esc(kicker)}</p>
         <h1 class="title">${title}</h1>
         ${note ? `<p class="muted">${esc(note)}</p>` : ''}
       </div>
+      ${ch ? `<span class="rune" data-layer aria-hidden="true">VOL.01 // CH.${ch.ch}</span>` : ''}
       <span class="jp" aria-hidden="true">${jp}</span>
     </header>`;
   },
