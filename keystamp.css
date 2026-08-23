@@ -719,7 +719,15 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .reticle__c--bl{bottom:0;left:0;border-right:0;border-top:0}
 .reticle__c--br{bottom:0;right:0;border-left:0;border-top:0}
 .reticle__line{position:absolute;left:0;right:0;height:2px;background:var(--ink)}
-.reticle__geo,.reticle__mark{position:absolute;inset:-14%;opacity:.3;pointer-events:none}
+/* width/height MUST be auto so the insets size the box. These two are
+   absolutely positioned with inset:-14% to overflow the reticle on
+   every side; any explicit width here over-constrains left+right+width
+   and the browser resolves it by dropping `right`, which lays the SVG
+   out at the reticle's size shifted up-left by 14% of it. auto is also
+   what keeps the zero-specificity `:where(svg…){width:22px}` default
+   off them. */
+.reticle__geo,.reticle__mark{position:absolute;inset:-14%;
+  width:auto;height:auto;opacity:.3;pointer-events:none}
 .reticle__geo circle,.reticle__geo polygon,.reticle__geo path,.reticle__geo line,
 .reticle__mark circle,.reticle__mark polygon,.reticle__mark line{
   fill:none;stroke:var(--ink);stroke-width:1.3;vector-effect:non-scaling-stroke}
@@ -1405,8 +1413,12 @@ html,body{overflow-x:clip;max-width:100%}
    direction layer. A lead panel is 4px of absolute ink; a quiet one is
    a hairline.
    ══════════════════════════════════════════════════════════════════ */
+/* .authp is deliberately NOT in this list. It was, back when the
+   sign-in form was itself a panel; the card around it is the panel
+   now, so leaving the form here drew a second 2px box inside the
+   first one and made every field label look boxed in. */
 .panel,.head,.strike,.seal,.narr,.qrpanel,.manual,.viewer,.stat,.rec,
-.authp,.bpanel,.bnext,.tech{
+.bpanel,.bnext,.tech{
   border-width:calc(var(--ink-w, 2.8) * 1px);
   border-style:solid;
   border-radius:0;
@@ -1859,8 +1871,23 @@ main#view{padding-top:var(--space-tier);
    does what it says. */
 :where(svg:not(.fxdefs):not([width])){width:22px;height:22px;flex:none}
 
-.hero__ring,.who__seal,.verdict__seal,.boot__seal,.reticle__geo,.reticle__mark,
-.arena svg,.seal svg,.tech__glyph svg,.viewer svg,.slash,.lines,
+/* .reticle__geo and .reticle__mark are NOT in this list, and must not
+   be put back into it.
+
+   They are absolutely positioned with `inset:-14%`, which is how they
+   overflow the reticle box on every side. Giving them width:100% from
+   here over-constrained the box — left, right AND width all set — so
+   the browser dropped `right` and the SVG was laid out at the reticle's
+   size but offset up and left by 14% of it. That is 29.7px at 390x844,
+   and it is why the scan mark sat above and left of the target while
+   the .reticle wrapper measured perfectly centred: the wrapper was
+   centred, the artwork inside it was not.
+
+   `.viewer svg` is also gone: it matched those same two SVGs by
+   descent and reintroduced the identical conflict. The scanner's
+   fallback graphics are covered by `.viewer .stack svg` below. */
+.hero__ring,.who__seal,.verdict__seal,
+.arena svg,.seal svg,.tech__glyph svg,.viewer .stack svg,.slash,.lines,
 .verdict__field,.tech__crack svg,.qrpanel__code svg{width:100%;height:100%}
 .hero__ring{width:clamp(70px,8vw,120px);height:clamp(70px,8vw,120px)}
 .who__seal{width:clamp(52px,5vw,74px);height:clamp(52px,5vw,74px)}

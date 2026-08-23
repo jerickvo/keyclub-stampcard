@@ -35,6 +35,7 @@
 <link rel="icon" href="assets/brand/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="shortcut icon" href="assets/brand/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="Keystamp">
@@ -770,7 +771,15 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .reticle__c--bl{bottom:0;left:0;border-right:0;border-top:0}
 .reticle__c--br{bottom:0;right:0;border-left:0;border-top:0}
 .reticle__line{position:absolute;left:0;right:0;height:2px;background:var(--ink)}
-.reticle__geo,.reticle__mark{position:absolute;inset:-14%;opacity:.3;pointer-events:none}
+/* width/height MUST be auto so the insets size the box. These two are
+   absolutely positioned with inset:-14% to overflow the reticle on
+   every side; any explicit width here over-constrains left+right+width
+   and the browser resolves it by dropping `right`, which lays the SVG
+   out at the reticle's size shifted up-left by 14% of it. auto is also
+   what keeps the zero-specificity `:where(svg…){width:22px}` default
+   off them. */
+.reticle__geo,.reticle__mark{position:absolute;inset:-14%;
+  width:auto;height:auto;opacity:.3;pointer-events:none}
 .reticle__geo circle,.reticle__geo polygon,.reticle__geo path,.reticle__geo line,
 .reticle__mark circle,.reticle__mark polygon,.reticle__mark line{
   fill:none;stroke:var(--ink);stroke-width:1.3;vector-effect:non-scaling-stroke}
@@ -1456,8 +1465,12 @@ html,body{overflow-x:clip;max-width:100%}
    direction layer. A lead panel is 4px of absolute ink; a quiet one is
    a hairline.
    ══════════════════════════════════════════════════════════════════ */
+/* .authp is deliberately NOT in this list. It was, back when the
+   sign-in form was itself a panel; the card around it is the panel
+   now, so leaving the form here drew a second 2px box inside the
+   first one and made every field label look boxed in. */
 .panel,.head,.strike,.seal,.narr,.qrpanel,.manual,.viewer,.stat,.rec,
-.authp,.bpanel,.bnext,.tech{
+.bpanel,.bnext,.tech{
   border-width:calc(var(--ink-w, 2.8) * 1px);
   border-style:solid;
   border-radius:0;
@@ -1910,8 +1923,23 @@ main#view{padding-top:var(--space-tier);
    does what it says. */
 :where(svg:not(.fxdefs):not([width])){width:22px;height:22px;flex:none}
 
-.hero__ring,.who__seal,.verdict__seal,.boot__seal,.reticle__geo,.reticle__mark,
-.arena svg,.seal svg,.tech__glyph svg,.viewer svg,.slash,.lines,
+/* .reticle__geo and .reticle__mark are NOT in this list, and must not
+   be put back into it.
+
+   They are absolutely positioned with `inset:-14%`, which is how they
+   overflow the reticle box on every side. Giving them width:100% from
+   here over-constrained the box — left, right AND width all set — so
+   the browser dropped `right` and the SVG was laid out at the reticle's
+   size but offset up and left by 14% of it. That is 29.7px at 390x844,
+   and it is why the scan mark sat above and left of the target while
+   the .reticle wrapper measured perfectly centred: the wrapper was
+   centred, the artwork inside it was not.
+
+   `.viewer svg` is also gone: it matched those same two SVGs by
+   descent and reintroduced the identical conflict. The scanner's
+   fallback graphics are covered by `.viewer .stack svg` below. */
+.hero__ring,.who__seal,.verdict__seal,
+.arena svg,.seal svg,.tech__glyph svg,.viewer .stack svg,.slash,.lines,
 .verdict__field,.tech__crack svg,.qrpanel__code svg{width:100%;height:100%}
 .hero__ring{width:clamp(70px,8vw,120px);height:clamp(70px,8vw,120px)}
 .who__seal{width:clamp(52px,5vw,74px);height:clamp(52px,5vw,74px)}
@@ -3467,14 +3495,25 @@ main#view{padding-top:var(--space-tier);
    and silently takes the fallback for every name. The cqw units have
    the same requirement: they resolve against the nearest container
    ancestor, which is the nameplate, not the document. */
-.nameplate{container-type:inline-size;
-  --t-name-hero:min(clamp(30px, 12cqw, 132px),
-                    calc(100cqw / (var(--name-len, 12) * 0.75)))}
+/* The container is .head__stack, not .nameplate. The nameplate carries
+   the masthead's reserved lane for the vertical Japanese mark - 54px
+   at 600, 74px at 1280 - so its inline size is NOT the width the name
+   has to fit into, and sizing against it overflowed by exactly that
+   lane. The stack is the box the text actually lives in.
+
+   0.80 is measured, not chosen: this face runs 0.762em per glyph on
+   the widest name tested, and the remainder is headroom for letter
+   combinations wider than that. An element cannot be its own
+   container, so .title--name resolves cqw against .head__stack, which
+   is what we want. */
+.nameplate .head__stack{container-type:inline-size;
+  --t-name-hero:min(clamp(30px, 13cqw, 132px),
+                    calc(100cqw / (var(--name-len, 12) * 0.80)))}
 :root{--bleed-l:0px}
 @media(min-width:768px){ :root{--bleed-l:clamp(6px,1.2vw,18px)} }
 @media(min-width:1024px){
-  .nameplate{--t-name-hero:min(clamp(46px, 12cqw, 158px),
-                               calc(100cqw / (var(--name-len, 12) * 0.75)))}
+  .nameplate .head__stack{--t-name-hero:min(clamp(46px, 13cqw, 158px),
+                               calc(100cqw / (var(--name-len, 12) * 0.80)))}
   :root{--bleed-l:clamp(10px,1.6vw,26px)}
   .nameplate{padding-top:clamp(26px,3.4vw,54px)}
 }
@@ -4698,8 +4737,8 @@ none;
   flex:none;fill:var(--ink)}
 .authcard__logo *{fill:var(--ink);stroke:none}
 .authcard__wm{font-family:var(--f-display);
-  font-size:clamp(21px,5.6vw,30px);line-height:1;
-  letter-spacing:-.01em;color:var(--ink);min-width:0}
+  font-size:clamp(24px,6.4vw,34px);line-height:1;margin:0;
+  letter-spacing:-.01em;color:var(--ink);min-width:0;text-transform:none}
 .authcard__wm b{font-weight:400}
 .authcard__wm em{display:block;margin-top:7px;
   font:500 clamp(10px,2.6vw,11.5px)/1.3 var(--f-mono);
@@ -4716,10 +4755,14 @@ none;
 
 /* the atmosphere sits behind the card and is cropped by the viewport,
    not laid over the fields */
-[data-screen="auth"] .rake{opacity:.1;z-index:0}
-[data-screen="auth"] .sfxw{z-index:0;opacity:.13;
-  font-size:clamp(120px,30vw,300px);top:auto;bottom:2vh;right:-16vw}
-@media(min-width:1024px){ [data-screen="auth"] .sfxw{opacity:.1} }
+/* Atmosphere, not competition. The rake and the ghost word were both
+   at full strength around a form, which is the "too much going on"
+   the page was criticised for. Both drop back to a level that reads
+   as texture behind the card rather than as content beside it. */
+[data-screen="auth"] .rake{opacity:.055;z-index:0}
+[data-screen="auth"] .sfxw{z-index:0;opacity:.06;
+  font-size:clamp(96px,22vw,220px);top:auto;bottom:1vh;right:-14vw}
+@media(min-width:1024px){ [data-screen="auth"] .sfxw{opacity:.05} }
 
 /* ══ THE SEAL GRID ═════════════════════════════════════════════════
    An unearned seal was ink-on-ink and effectively invisible, so the
@@ -5219,19 +5262,24 @@ main#view:focus,main#view:focus-visible{outline:none}
    field gets its own quiet ground instead, so it reads as a slot to
    type into, and the rule under it becomes the base of the slot
    rather than a divider between two of them. */
-[data-screen="auth"] .authp__f{margin-bottom:0}
+/* THE FIELD IS ONE BOUNDED OBJECT.
+
+   An underline-only input inside a bordered card closes three sides of
+   a rectangle it was never meant to have: the card's two edges plus
+   the input's own bottom rule. The result read as a row of empty
+   boxes with the labels floating inside them. The input carries its
+   own full border now, so the label sits above a field with a visible
+   edge on all four sides, and the two align on the same measure. */
+[data-screen="auth"] .authp__f{margin-bottom:0;display:grid;gap:6px}
 [data-screen="auth"] .authp .input{
-  /* --v1 IS --paper: tinting with it changed nothing, which is why the
-     fields still read as gaps between rules. --v2 is the ramp's first
-     step that is actually a different colour from the page. */
-  background:var(--v2);
-  border-bottom-width:var(--edge-thin);
-  padding:clamp(11px,3vw,14px) clamp(10px,3vw,13px);
+  width:100%;box-sizing:border-box;
+  background:var(--v1);
+  border:var(--edge-thin) solid var(--ink);
+  padding:clamp(11px,3vw,14px) clamp(11px,3vw,14px);
   font-size:max(16px, 1rem)}          /* 16px floor stops iOS zooming on focus */
+[data-screen="auth"] .authp .input::placeholder{color:var(--ink-2);opacity:.75}
 [data-screen="auth"] .authp .input:focus-visible{
-  background:var(--paper);
-  box-shadow:inset 0 0 0 var(--edge-thin) var(--ink)}
-[data-screen="auth"] .authp__f .kicker{margin-bottom:7px}
+  outline:none;box-shadow:inset 0 0 0 var(--edge-heavy) var(--ink)}
 
 /* the action row: the commit takes the measure on a phone and sits
    natural-width once there is room beside the secondary link */
@@ -19960,16 +20008,11 @@ const Views = {
       <div class="authcard" data-enter>
         <header class="authcard__brand">
           ${logoMark('authcard__logo')}
-          <span class="authcard__wm">
+          <h1 class="authcard__wm">
             <b>Key</b>stamp
             <em>Key Club attendance</em>
-          </span>
+          </h1>
         </header>
-
-        <div class="authcard__lead">
-          <span class="anno">${up ? 'REG.NEW // ACCOUNT' : 'AUTH.REQ // ACCESS'}</span>
-          <h1 class="authcard__title">${up ? 'Join' : 'Sign in'}</h1>
-        </div>
 
         <form class="authp" id="authForm" novalidate>
 

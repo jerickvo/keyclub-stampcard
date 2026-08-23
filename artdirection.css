@@ -1456,14 +1456,25 @@
    and silently takes the fallback for every name. The cqw units have
    the same requirement: they resolve against the nearest container
    ancestor, which is the nameplate, not the document. */
-.nameplate{container-type:inline-size;
-  --t-name-hero:min(clamp(30px, 12cqw, 132px),
-                    calc(100cqw / (var(--name-len, 12) * 0.75)))}
+/* The container is .head__stack, not .nameplate. The nameplate carries
+   the masthead's reserved lane for the vertical Japanese mark - 54px
+   at 600, 74px at 1280 - so its inline size is NOT the width the name
+   has to fit into, and sizing against it overflowed by exactly that
+   lane. The stack is the box the text actually lives in.
+
+   0.80 is measured, not chosen: this face runs 0.762em per glyph on
+   the widest name tested, and the remainder is headroom for letter
+   combinations wider than that. An element cannot be its own
+   container, so .title--name resolves cqw against .head__stack, which
+   is what we want. */
+.nameplate .head__stack{container-type:inline-size;
+  --t-name-hero:min(clamp(30px, 13cqw, 132px),
+                    calc(100cqw / (var(--name-len, 12) * 0.80)))}
 :root{--bleed-l:0px}
 @media(min-width:768px){ :root{--bleed-l:clamp(6px,1.2vw,18px)} }
 @media(min-width:1024px){
-  .nameplate{--t-name-hero:min(clamp(46px, 12cqw, 158px),
-                               calc(100cqw / (var(--name-len, 12) * 0.75)))}
+  .nameplate .head__stack{--t-name-hero:min(clamp(46px, 13cqw, 158px),
+                               calc(100cqw / (var(--name-len, 12) * 0.80)))}
   :root{--bleed-l:clamp(10px,1.6vw,26px)}
   .nameplate{padding-top:clamp(26px,3.4vw,54px)}
 }

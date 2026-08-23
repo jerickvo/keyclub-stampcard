@@ -692,16 +692,11 @@ const Views = {
       <div class="authcard" data-enter>
         <header class="authcard__brand">
           ${logoMark('authcard__logo')}
-          <span class="authcard__wm">
+          <h1 class="authcard__wm">
             <b>Key</b>stamp
             <em>Key Club attendance</em>
-          </span>
+          </h1>
         </header>
-
-        <div class="authcard__lead">
-          <span class="anno">${up ? 'REG.NEW // ACCOUNT' : 'AUTH.REQ // ACCESS'}</span>
-          <h1 class="authcard__title">${up ? 'Join' : 'Sign in'}</h1>
-        </div>
 
         <form class="authp" id="authForm" novalidate>
 
