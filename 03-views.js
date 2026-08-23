@@ -446,6 +446,19 @@ const Views = {
       ${C.bleed('Seal', 'bottom:-4vw;left:-7vw')}
       ${C.head('Check in', 'Scan code', '読取')}
 
+      <!-- THE RIG. The viewfinder is not a component sitting on a
+           page; it is an instrument mounted in a frame, and the frame
+           states what it is doing. Technical readings run along the
+           top edge and a rune runs down the side — real state, not
+           decoration: the optics label, the code format the reader
+           accepts, and the live status. -->
+      <div class="rig-scan" data-enter>
+        <div class="rig-scan__bar" aria-hidden="true">
+          <span class="anno">OPT.CAM // 1280</span>
+          <span class="anno">FMT.M##/XXXXXX</span>
+          <span class="anno anno--seal" id="rigState">SYS.ARMED</span>
+        </div>
+        <span class="rig-scan__rune" aria-hidden="true">読取 // TARGETING</span>
       <div class="viewer" id="viewer" data-enter>
         <video id="cam" playsinline muted autoplay></video>
         <div class="viewer__scrim" aria-hidden="true"></div>
@@ -465,6 +478,7 @@ const Views = {
           <span class="reticle__line"></span>
         </div>
         <div class="viewer__status"><span class="viewer__msg" id="scanMsg">Starting camera</span></div>
+      </div>
       </div>
 
       <div class="manual" data-enter>

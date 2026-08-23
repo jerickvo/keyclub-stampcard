@@ -79,6 +79,12 @@ function paintAttendanceCount(meetingId){
 /* ══════════════════════════════════════════════════════════════════
    11. SCANNER — an explicit state machine, so every outcome has a look.
    ══════════════════════════════════════════════════════════════════ */
+/* what the rig reports, per scanner state */
+const RIG_STATE = {
+  boot:'SYS.ARMING', live:'SYS.TRACKING', hit:'SYS.LOCK',
+  busy:'SYS.VERIFY', good:'SYS.SEALED',  bad:'SYS.REFUSED',
+};
+
 const Scanner = {
   stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0,
 
@@ -99,6 +105,15 @@ const Scanner = {
          their default weight, and the frame read as a scanner that had
          given up rather than one that was working. It has a look now. */
       ret.classList.toggle('reticle--busy', state === 'busy');
+    }
+    /* The rig's own readout. It said SYS.ARMED in cinnabar whatever
+       had happened, so a frame showing a fault code showed two red
+       marks at once — and the second one was lying. */
+    const rs = $('#rigState');
+    if (rs){
+      rs.textContent = RIG_STATE[state] || 'SYS.ARMED';
+      rs.classList.toggle('anno--seal',
+        state === 'live' || state === 'hit' || state === 'busy');
     }
     viewer?.classList.toggle('viewer--hit', state === 'good' || state === 'hit');
     /* A refusal is not a small red sentence under the frame. The frame
@@ -202,6 +217,8 @@ const Scanner = {
     if (!viewer) return;
     this.hideLoader();
     viewer.classList.remove('viewer--feed');
+    const rs = $('#rigState');
+    if (rs){ rs.textContent = 'SYS.OFFLINE'; rs.classList.remove('anno--seal'); }
     /* A fault code, then the sentence. The three dead ends used to be
        told apart by a padlock, a camera and a keypad glyph — three
        pictures doing a job this page does with words in brackets
