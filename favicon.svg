@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Keystamp">
-  <title>Keystamp</title>
-  <rect width="32" height="32" fill="#fefdfb"/>
-  <path d="M16 2.2 28.4 9.3v14.4L16 30.8 3.6 23.7V9.3Z" fill="#080807"/>
-  <path d="M12.4 10.2v11.6M12.4 16.6 19.4 10.2M12.4 15.4 19.8 21.8"
-        fill="none" stroke="#fefdfb" stroke-width="2.6" stroke-linecap="round"/>
-</svg>

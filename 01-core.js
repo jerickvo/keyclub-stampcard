@@ -161,18 +161,59 @@ const ICON = {
    it in the page's own voice, which is words in brackets, not pictures. */
 const codeMark = (s) => `<span class="codemark" aria-hidden="true">${s}</span>`;
 
-/* If ASSETS.logo is set, your image is used; otherwise this vector mark
-   is drawn. Both render at the same size, so swapping is safe. */
+/* ══════════════════════════════════════════════════════════════════
+   THREE MARKS, THREE JOBS
+
+   The app had one mark doing every job — brand, stamp, progress,
+   empty state, scanner, reward — which is how a symbol stops meaning
+   anything. There are three now and they are not interchangeable:
+
+     LOGO   the keyway plate. Keystamp's brand mark, and only that:
+            rail, topbar, sign-in, favicon, installed-app icon. A
+            struck plate with a key's aperture cut out of it, its
+            leading corner taken off at the system's 60 degrees.
+            Solid mass, because a brand mark has to survive 16px in a
+            tab strip and a flat colour fill in an app grid.
+
+     TALLY  the struck tally. The stamp-card symbol: three counts and
+            the stroke that closes them. It is what a slot, an earned
+            stamp and reward progress are marked with. Attendance is
+            counting, and this is the mark counting has always used.
+
+     SEAL   the traced artwork (see below). Decoration and ceremony
+            only: the scanner's target, the impact frame, empty
+            states, the credential band. Never the brand, never a slot.
+
+   If ASSETS.logo is set, that image replaces the brand mark.
+   ══════════════════════════════════════════════════════════════════ */
 const logoMark = (cls = 'mark__seal') => ASSETS.logo
   ? `<img class="${cls}" src="${ASSETS.logo}" alt="" aria-hidden="true">`
   : LOGO.replace('class="mark__seal"', `class="${cls}"`);
 
+/* THE KEYWAY PLATE. One path, evenodd: the plate, then the bore, the
+   slot and the ward knocked out of it. Drawn as a filled silhouette
+   rather than strokes so it holds together at a favicon's size and
+   can be poured into a single flat colour for an app icon. */
 const LOGO = `
-<svg class="mark__seal" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-  <path d="M16 1.4 29.2 9v14L16 30.6 2.8 23V9Z" stroke="currentColor" stroke-width="1.2" opacity=".62"/>
-  <path d="M16 4.6 26.4 10.5v11.8L16 28.2 5.6 22.3V10.5Z" stroke="currentColor" stroke-width=".7" opacity=".3"/>
-  <path d="M12.2 10v12M12.2 16.4 19 10M12.2 15.6 19.4 22" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>
+<svg class="mark__seal" viewBox="0 0 32 32" aria-hidden="true">
+  <path fill="currentColor" fill-rule="evenodd" d="M9.8 2.2H29V30H3.8V12.6Z
+    M16.5 6.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 1 0 0-9Z
+    M14.2 13.8h4.6V25.8h-4.6Z
+    M9.9 18.3h4.3V22.1H9.9Z"/>
 </svg>`;
+
+/* THE STRUCK TALLY. Three counts and the stroke that closes them, the
+   stroke running at the system's angle. Two states: `struck` draws the
+   closing stroke, an unstruck slot draws only the counts. */
+/* Paths, not rects, deliberately: the stylesheets key colour off
+   `path` for artwork and off `circle`/`line` for registration
+   furniture, so a <rect> falls through every rule and paints default
+   black — invisible the moment a slot inverts to an ink field. */
+const TALLY = (struck = true) => `
+  <path d="M5.4 7h3.4v18H5.4Z"/>
+  <path d="M12.1 4.6h3.4v22.8h-3.4Z"/>
+  <path d="M18.8 7h3.4v18h-3.4Z"/>
+  ${struck ? '<path d="M2.6 24.4 27.4 6.9l2.3 3.2L4.9 27.6Z"/>' : ''}`;
 
 const wordmark = () => `<span class="mark">${logoMark()}<span class="mark__word">Key<b>stamp</b></span></span>`;
 

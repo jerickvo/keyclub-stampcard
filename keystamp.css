@@ -577,7 +577,23 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .tech__name{overflow-wrap:break-word}
 
 /* ══════════════════ SCAN ══════════════════ */
-.viewer{position:relative;display:grid;place-items:center;overflow:hidden;
+/* ONE CELL, NOT TWO ROWS.
+
+   The reticle and the status message were both in-flow grid items, so
+   `place-items:center` stacked them in two rows and centred the PAIR.
+   That put the target's centre half the message's height above the
+   chamber's centre — measured at -67px on a phone, -86px on a desktop,
+   growing with the chamber, which is why no fixed offset could ever
+   have fixed it.
+
+   Every child now shares one cell. The reticle centres in the whole
+   chamber and the status pins to the bottom edge, so the target is
+   mathematically centred whatever the message says or however the
+   chamber is sized. */
+.viewer{position:relative;display:grid;
+  grid-template:minmax(0,1fr)/minmax(0,1fr);
+  container-type:size;
+  overflow:hidden;
   border:var(--rule) solid var(--ink);aspect-ratio:3/4;
   /* Frame furniture, not a target. These brackets are fixed to the box
      and never change; the reticle inside is the mark that aims and
@@ -619,6 +635,12 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   max-height:none}
 /* a picture is playing: the housing goes paper so it holds against it */
 .viewer--feed{--bracket-c:var(--paper)}
+/* every in-flow child occupies the single cell; out-of-flow ones are
+   unaffected by grid placement and keep their own inset */
+.viewer > *{grid-area:1/1;min-width:0;min-height:0}
+.viewer > .reticle{place-self:center}
+.viewer > .viewer__status{place-self:end center;
+  padding-bottom:clamp(10px,4cqh,30px);max-width:92%}
 .viewer video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
   /* Monochrome stays: every accent token in this theme is remapped to
      ink, so a colour camera would be the one coloured thing in the whole
@@ -686,7 +708,11 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
                       to  {transform:translate(-50%,-50%) rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){ .loader{animation:none} }
 
-.reticle{position:relative;width:64%;aspect-ratio:1;max-width:250px}
+/* sized off the CHAMBER, not the viewport: cqmin is the smaller of the
+   chamber's own two axes, so the target can never outgrow the box it
+   is aiming inside — on a short landscape screen the chamber is wide
+   and shallow, and a width-only rule overflowed it vertically */
+.reticle{position:relative;width:min(64cqmin,250px);aspect-ratio:1}
 .reticle__c{position:absolute;width:26px;height:26px;border:var(--rule) solid var(--ink)}
 .reticle__c--tl{top:0;left:0;border-right:0;border-bottom:0}
 .reticle__c--tr{top:0;right:0;border-left:0;border-bottom:0}
@@ -897,7 +923,7 @@ select.input{padding-right:var(--s4)}
   fill:none;stroke:var(--ink);stroke-width:1;vector-effect:non-scaling-stroke}
 .boot__mark{position:relative;opacity:0}
 .boot__mark svg,.boot__mark img{width:94px;height:94px;object-fit:contain}
-.boot__mark path{fill:none;stroke:var(--ink);stroke-linecap:round}
+.boot__mark path{fill:var(--ink);stroke:none}
 .boot__title{position:absolute;inset:0;display:grid;place-items:center;
   opacity:0;pointer-events:none}
 .boot__half{grid-area:1/1;font-family:var(--f-display);
@@ -1100,12 +1126,20 @@ button.entry{cursor:pointer}
 
 /* ══════════════════ RAIL BRAND ══════════════════ */
 .rail__brand svg,.rail__brand img{width:44px;height:44px;display:block}
-.rail__brand svg *{stroke:var(--ink)!important;fill:none!important}
+/* THE BRAND MARK IS A MASS, NOT A LINE.
+
+   These forced fill:none + stroke because the old mark was a hairline
+   hexagon. The keyway plate is a filled silhouette — it has to survive
+   16px in a tab strip and a flat single-colour fill in an app-icon
+   grid, neither of which a 1px stroke does. Same correction on the
+   topbar, the boot card and the sign-in chop: one mark, one treatment,
+   everywhere it appears. */
+.rail__brand svg *{fill:var(--ink)!important;stroke:none!important}
 .rail__brand,.topbar #barBrand{font-family:var(--f-display);font-size:15px;
   text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
 #barBrand svg{width:26px;height:26px}
-#barBrand svg *{stroke:var(--ink)!important;fill:none!important}
-.boot__mark svg *{stroke:var(--ink)!important;fill:none!important}
+#barBrand svg *{fill:var(--ink)!important;stroke:none!important}
+.boot__mark svg *{fill:var(--ink)!important;stroke:none!important}
 
 /* ══════════════════ SPEED LINES ══════════════════
    The FX layer draws these; they only ever appear in ink. */
@@ -1196,8 +1230,19 @@ html,body{overflow-x:clip;max-width:100%}
 /* ══════════════════════════════════════════════════════════════════
    CHAPTER RAIL — a volume index, not a navbar.
    ══════════════════════════════════════════════════════════════════ */
-.rail__vol{font-family:var(--f-mono);font-size:9px;letter-spacing:.26em;
-  color:var(--v3);text-transform:uppercase}
+/* THE VOLUME LINE HAS TO FIT THE COLUMN IT IS IN.
+
+   At 1024 the rail is at its 208px floor, and "VOL. 01 · FIVE
+   CHAPTERS" at a fixed 11px with .26em tracking measures 222px — it
+   was clipped by the rail at every width from 1024 up to where 20vw
+   finally overtook it. The tracking and the size now scale with the
+   rail's own width, and the line is allowed to wrap rather than being
+   cut, so it fits the column instead of assuming one. */
+.rail__vol{font-family:var(--f-mono);
+  font-size:clamp(9px,1.05vw,11px);
+  letter-spacing:clamp(.1em,.9vw - .06em,.26em);
+  color:var(--v3);text-transform:uppercase;
+  overflow-wrap:anywhere;text-wrap:balance}
 .rail__link{position:relative}
 .rail__no{font-family:var(--f-mono);font-size:9px;letter-spacing:.14em;
   color:var(--v3);margin-right:9px;min-width:18px}

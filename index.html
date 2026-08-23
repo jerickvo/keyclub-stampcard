@@ -12,29 +12,37 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#080807">
-<title>Keystamp — Key Club attendance</title>
-<meta name="description" content="Keystamp — Key Club general meeting attendance and rewards.">
+<title>Keystamp</title>
+<meta name="description" content="Key Club attendance">
 
 <!-- ─────────────────────────────────────────────────────────────
-     ICONS
-     Every path here is project-relative, so they resolve served, from
-     a subfolder, or opened as a file. The previous tab icon was an
-     inline data URI still drawing the old crimson-on-black identity,
-     which the app has not used since v5 — that is why the tab logo did
-     not match the site. assets/logo/keystamp-logo.svg is deliberately
-     NOT used here: it paints with currentColor so it can take the ink
-     colour in-page, and a standalone favicon has nothing to inherit
-     from, so it would resolve to plain black and disappear against a
-     dark tab bar.
+     BRAND ASSETS — one mark, one place.
+
+     Every path here is a real file under assets/brand/. What was here
+     before was half broken and half wrong: the manifest pointed at
+     assets/icons/* which did not exist, favicon.ico / favicon-32.png /
+     apple-touch-icon.png at the repo root were referenced by nothing
+     at all, and the tab icon was an inline data URI still drawing the
+     retired hexagon mark — which is why the browser tab never matched
+     the app.
+
+     assets/brand/favicon.svg carries explicit colours rather than
+     currentColor: a standalone tab icon has nothing to inherit from.
+     assets/brand/app-logo.svg is the in-page mark and does use
+     currentColor, so it takes the ink colour wherever it is placed.
      ───────────────────────────────────────────────────────────── -->
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%20role%3D%22img%22%20aria-label%3D%22Keystamp%22%3E%20%3Ctitle%3EKeystamp%3C/title%3E%20%3Crect%20width%3D%2232%22%20height%3D%2232%22%20fill%3D%22%23fefdfb%22/%3E%20%3Cpath%20d%3D%22M16%202.2%2028.4%209.3v14.4L16%2030.8%203.6%2023.7V9.3Z%22%20fill%3D%22%23080807%22/%3E%20%3Cpath%20d%3D%22M12.4%2010.2v11.6M12.4%2016.6%2019.4%2010.2M12.4%2015.4%2019.8%2021.8%22%20%20%20%20fill%3D%22none%22%20stroke%3D%22%23fefdfb%22%20stroke-width%3D%222.6%22%20stroke-linecap%3D%22round%22/%3E%3C/svg%3E" type="image/svg+xml">
-<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<link rel="icon" href="assets/brand/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/brand/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="shortcut icon" href="assets/brand/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
 
 <meta property="og:type" content="website">
-<meta property="og:title" content="Keystamp — Key Club attendance">
-<meta property="og:description" content="Scan in at the MPR. Ten stamps, then the reward.">
-<meta property="og:image" content="assets/icons/og.png">
+<meta property="og:title" content="Keystamp">
+<meta property="og:description" content="Key Club attendance">
+<meta property="og:image" content="assets/brand/og.png">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Keystamp">
+<meta name="twitter:description" content="Key Club attendance">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -620,7 +628,23 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .tech__name{overflow-wrap:break-word}
 
 /* ══════════════════ SCAN ══════════════════ */
-.viewer{position:relative;display:grid;place-items:center;overflow:hidden;
+/* ONE CELL, NOT TWO ROWS.
+
+   The reticle and the status message were both in-flow grid items, so
+   `place-items:center` stacked them in two rows and centred the PAIR.
+   That put the target's centre half the message's height above the
+   chamber's centre — measured at -67px on a phone, -86px on a desktop,
+   growing with the chamber, which is why no fixed offset could ever
+   have fixed it.
+
+   Every child now shares one cell. The reticle centres in the whole
+   chamber and the status pins to the bottom edge, so the target is
+   mathematically centred whatever the message says or however the
+   chamber is sized. */
+.viewer{position:relative;display:grid;
+  grid-template:minmax(0,1fr)/minmax(0,1fr);
+  container-type:size;
+  overflow:hidden;
   border:var(--rule) solid var(--ink);aspect-ratio:3/4;
   /* Frame furniture, not a target. These brackets are fixed to the box
      and never change; the reticle inside is the mark that aims and
@@ -662,6 +686,12 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   max-height:none}
 /* a picture is playing: the housing goes paper so it holds against it */
 .viewer--feed{--bracket-c:var(--paper)}
+/* every in-flow child occupies the single cell; out-of-flow ones are
+   unaffected by grid placement and keep their own inset */
+.viewer > *{grid-area:1/1;min-width:0;min-height:0}
+.viewer > .reticle{place-self:center}
+.viewer > .viewer__status{place-self:end center;
+  padding-bottom:clamp(10px,4cqh,30px);max-width:92%}
 .viewer video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
   /* Monochrome stays: every accent token in this theme is remapped to
      ink, so a colour camera would be the one coloured thing in the whole
@@ -729,7 +759,11 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
                       to  {transform:translate(-50%,-50%) rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){ .loader{animation:none} }
 
-.reticle{position:relative;width:64%;aspect-ratio:1;max-width:250px}
+/* sized off the CHAMBER, not the viewport: cqmin is the smaller of the
+   chamber's own two axes, so the target can never outgrow the box it
+   is aiming inside — on a short landscape screen the chamber is wide
+   and shallow, and a width-only rule overflowed it vertically */
+.reticle{position:relative;width:min(64cqmin,250px);aspect-ratio:1}
 .reticle__c{position:absolute;width:26px;height:26px;border:var(--rule) solid var(--ink)}
 .reticle__c--tl{top:0;left:0;border-right:0;border-bottom:0}
 .reticle__c--tr{top:0;right:0;border-left:0;border-bottom:0}
@@ -940,7 +974,7 @@ select.input{padding-right:var(--s4)}
   fill:none;stroke:var(--ink);stroke-width:1;vector-effect:non-scaling-stroke}
 .boot__mark{position:relative;opacity:0}
 .boot__mark svg,.boot__mark img{width:94px;height:94px;object-fit:contain}
-.boot__mark path{fill:none;stroke:var(--ink);stroke-linecap:round}
+.boot__mark path{fill:var(--ink);stroke:none}
 .boot__title{position:absolute;inset:0;display:grid;place-items:center;
   opacity:0;pointer-events:none}
 .boot__half{grid-area:1/1;font-family:var(--f-display);
@@ -1143,12 +1177,20 @@ button.entry{cursor:pointer}
 
 /* ══════════════════ RAIL BRAND ══════════════════ */
 .rail__brand svg,.rail__brand img{width:44px;height:44px;display:block}
-.rail__brand svg *{stroke:var(--ink)!important;fill:none!important}
+/* THE BRAND MARK IS A MASS, NOT A LINE.
+
+   These forced fill:none + stroke because the old mark was a hairline
+   hexagon. The keyway plate is a filled silhouette — it has to survive
+   16px in a tab strip and a flat single-colour fill in an app-icon
+   grid, neither of which a 1px stroke does. Same correction on the
+   topbar, the boot card and the sign-in chop: one mark, one treatment,
+   everywhere it appears. */
+.rail__brand svg *{fill:var(--ink)!important;stroke:none!important}
 .rail__brand,.topbar #barBrand{font-family:var(--f-display);font-size:15px;
   text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
 #barBrand svg{width:26px;height:26px}
-#barBrand svg *{stroke:var(--ink)!important;fill:none!important}
-.boot__mark svg *{stroke:var(--ink)!important;fill:none!important}
+#barBrand svg *{fill:var(--ink)!important;stroke:none!important}
+.boot__mark svg *{fill:var(--ink)!important;stroke:none!important}
 
 /* ══════════════════ SPEED LINES ══════════════════
    The FX layer draws these; they only ever appear in ink. */
@@ -1239,8 +1281,19 @@ html,body{overflow-x:clip;max-width:100%}
 /* ══════════════════════════════════════════════════════════════════
    CHAPTER RAIL — a volume index, not a navbar.
    ══════════════════════════════════════════════════════════════════ */
-.rail__vol{font-family:var(--f-mono);font-size:9px;letter-spacing:.26em;
-  color:var(--v3);text-transform:uppercase}
+/* THE VOLUME LINE HAS TO FIT THE COLUMN IT IS IN.
+
+   At 1024 the rail is at its 208px floor, and "VOL. 01 · FIVE
+   CHAPTERS" at a fixed 11px with .26em tracking measures 222px — it
+   was clipped by the rail at every width from 1024 up to where 20vw
+   finally overtook it. The tracking and the size now scale with the
+   rail's own width, and the line is allowed to wrap rather than being
+   cut, so it fits the column instead of assuming one. */
+.rail__vol{font-family:var(--f-mono);
+  font-size:clamp(9px,1.05vw,11px);
+  letter-spacing:clamp(.1em,.9vw - .06em,.26em);
+  color:var(--v3);text-transform:uppercase;
+  overflow-wrap:anywhere;text-wrap:balance}
 .rail__link{position:relative}
 .rail__no{font-family:var(--f-mono);font-size:9px;letter-spacing:.14em;
   color:var(--v3);margin-right:9px;min-width:18px}
@@ -2230,25 +2283,11 @@ main#view{padding-top:var(--space-tier);
    here are ink, paper and the greys already in the scale.
    ───────────────────────────────────────────────────────────────── */
 [data-screen="auth"] .view{max-width:640px}
-[data-screen="auth"] .authp{--ink-w:4.2;position:relative;isolation:isolate;
-  padding:var(--s6) var(--s5) var(--s5)}
-/* the tone was 44% of the panel's height, which on a phone put a
-   screentone straight over the USERNAME and PASSWORD labels — the one
-   thing this system says never to do. It stays in the corner above
-   the first field. */
-[data-screen="auth"] .authp::after{content:"";position:absolute;
-  /* left MUST be cleared. `.panel::after` sets inset:0 for the panel's
-     own screentone and this rule reuses that pseudo-element, so left:0
-     survives — and with left, right AND width all set, the browser
-     drops `right`. The wedge was therefore pinned to the LEFT edge,
-     which is exactly where the first field label sits. The same trap
-     as the home hero's tone, in the same file, for the same reason. */
-  left:auto;bottom:auto;
-  right:0;top:0;width:min(30%,150px);height:22%;z-index:0;
-  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
-  opacity:.26;clip-path:polygon(26% 0, 100% 0, 100% 100%, 0 100%);
-  -webkit-mask-image:linear-gradient(to bottom left, #000 0%, transparent 76%);
-  mask-image:linear-gradient(to bottom left, #000 0%, transparent 76%)}
+/* the form is no longer its own panel — .authcard is the panel — so it
+   keeps no padding, no border and no screentone of its own; it is just
+   the field stack inside the card */
+[data-screen="auth"] .authp{position:relative;isolation:auto;padding:0;
+  display:grid;gap:clamp(13px,3vw,18px)}
 [data-screen="auth"] .authp > *:not([data-layer]){position:relative;z-index:1}
 
 .authp__f{display:block;margin-bottom:var(--s4)}
@@ -2267,11 +2306,11 @@ main#view{padding-top:var(--space-tier);
 /* The action row is full-width where a thumb reaches for it and
    natural-width where a cursor does — and it wraps rather than
    overflowing in between. */
-[data-screen="auth"] .authp{padding:var(--s5) var(--s4) var(--s4)}
+
 .authp__act{gap:var(--s3)}
 .authp__act .btn--go{flex:1 1 100%;justify-content:center}
 @media(min-width:768px){
-  [data-screen="auth"] .authp{padding:var(--s6) var(--s5) var(--s5)}
+
   .authp__act{gap:var(--s4)}
   .authp__act .btn--go{flex:0 0 auto;min-width:12ch}
 }
@@ -4213,6 +4252,41 @@ select.input:focus-visible{outline:none}
     grid-column:2;grid-row:1/-1;align-self:center;justify-self:end}
 }
 
+
+/* ══════════════════════════════════════════════════════════════════
+   THE ACCOUNT BLOCK — SIGN OUT BELOW THE RAIL
+
+   The only sign-out control lived in the desktop rail, which is
+   display:none under 1024. Every phone and every tablet therefore had
+   no way out of the session. This is the same control, on the account
+   chapter, reachable from the tab bar at any width. It stands down at
+   1024 where the rail returns and carries it again, so the app never
+   shows two.
+   ══════════════════════════════════════════════════════════════════ */
+.acct{position:relative;margin-top:clamp(26px,5vw,52px);
+  padding-top:clamp(14px,2vw,20px)}
+.acct__rule{position:absolute;left:0;right:0;top:0;
+  height:var(--edge-thin);background:var(--ink)}
+.acct__row{display:flex;flex-wrap:wrap;align-items:center;
+  justify-content:space-between;gap:clamp(12px,3vw,24px)}
+.acct__who{min-width:0}
+.acct__name{font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(17px,4.2vw,24px);line-height:1.05;margin-top:5px;
+  overflow-wrap:anywhere}
+/* a real target, not a token icon: full width where a thumb reaches
+   for it, natural width where a cursor does */
+.acct .btn--out{flex:1 1 min(100%,220px);min-height:48px;
+  display:grid;place-items:center;
+  font:700 clamp(12px,3vw,14px)/1 var(--f-mono);letter-spacing:.2em;
+  text-transform:uppercase;
+  background:var(--ink);color:var(--paper);border:0;cursor:pointer;
+  padding:0 clamp(16px,4vw,28px)}
+.acct .btn--out:hover,.acct .btn--out:focus-visible{
+  background:var(--paper);color:var(--ink);
+  box-shadow:inset 0 0 0 var(--edge-thin) var(--ink)}
+@media(min-width:520px){ .acct .btn--out{flex:0 0 auto} }
+@media(min-width:1024px){ .acct{display:none} }
+
 </style>
 <style>
 /* ══════════════════════════════════════════════════════════════════
@@ -4543,55 +4617,82 @@ none;
   *{animation-duration:.01ms!important;animation-iteration-count:1!important}
 }
 
-/* ══ SIGN-IN ═══════════════════════════════════════════════════════
-   The first screen has one job: say whose app this is before the form
-   is even read. The chop lands left, the wordmark sits against it,
-   and the speed-line rake sits behind both. */
-.authmark{display:flex;align-items:center;gap:var(--s4);
-  margin-bottom:var(--s5);position:relative;z-index:1}
-.authmark__wm{font-family:var(--f-display);font-size:clamp(19px,2.4vw,26px);
-  line-height:1;letter-spacing:-.01em;color:var(--ink)}
-.authmark__wm b{font-weight:400}
-/* 9.5px of --tone under the wordmark was the least readable text in the
-   application, and it is the line that says what the product is. It
-   joins the 11px floor and the ink-2 ramp like every other caption. */
-.authmark__wm em{display:block;margin-top:7px;
-  font:500 clamp(11px,2.8vw,12px)/1.3 var(--f-mono);
-  letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2);font-style:normal}
 
 [data-screen="auth"] .view{position:relative}
 [data-screen="auth"] .authp{position:relative;z-index:1}
 
 /* the mark inside the chop is the key device, not a glyph: the display
    face has no kanji coverage and fell back to a mismatched font */
-.chop__key{width:58%;height:58%;fill:none;stroke:currentColor;
-  stroke-width:5;stroke-linecap:square;stroke-linejoin:miter;
-  vector-effect:non-scaling-stroke}
-.chop--filled .chop__key{stroke:var(--paper)}
+.chop__key{width:62%;height:62%;fill:currentColor;stroke:none}
+.chop--filled .chop__key{fill:var(--paper)}
 
-/* ══ SIGN-IN COMPOSITION ═══════════════════════════════════════════
-   The form was floating in the top third of a flooded page with two
-   thirds of dead ink under it. Centring the stack and capping its
-   measure makes the page read as a deliberate title card. */
-/* svh, not vh: on iOS the address bar makes `100vh` taller than the
-   screen actually is, so a centred form is pushed under the fold on
-   first paint and jumps when the bar collapses. `min-height` (never
-   `height`) so a short landscape phone scrolls instead of cropping the
-   form, and the cap keeps the card from floating in the middle of a
-   1440px-tall monitor. */
+/* ══ SIGN-IN ═══════════════════════════════════════════════════════
+   ONE CARD, ONE VOICE.
+
+   The old page ran six competing things: a chapter masthead at display
+   size, a chop holding the mark, a wordmark beside it, a full-height
+   radiating rake, a screen-tall sound effect, and the form underneath
+   all of it. Nothing led, so it read as broken rather than composed.
+
+   The card is the page now. The brand states itself once at the top
+   and doubles as the title; the action is an annotation over the
+   fields, because on this screen the fields are the subject. The
+   atmosphere is still there — it just sits behind the card and gets
+   cropped by it.
+
+   svh, not vh: on iOS the address bar makes 100vh taller than the
+   screen actually is, so a centred card is pushed under the fold on
+   first paint and jumps when the bar collapses. min-height (never
+   height) so a short landscape phone scrolls instead of cropping the
+   form, and the cap stops the card floating in the middle of a tall
+   monitor.
+   ═════════════════════════════════════════════════════════════════ */
 [data-screen="auth"] .view{
-  min-height:min(100svh, 900px);
-  display:flex;flex-direction:column;justify-content:center;
-  max-width:min(640px, 100%);
+  position:relative;
+  min-height:min(100svh, 860px);
+  display:grid;place-content:center;justify-items:stretch;
+  width:min(100%, 30rem);
   margin-inline:auto;
-  padding-block:var(--s6);
+  padding-block:clamp(20px,5vh,56px);
 }
-/* The margin belongs to the section, not to the panel inside it. On
-   the panel it opened an 18px gap between the registration ghost
-   (which is `inset:0` on the section) and the panel the ghost is
-   supposed to sit behind — so the ghost painted as a solid ink bar
-   above and below the sign-in form at every viewport. */
-[data-screen="auth"] .view > .rig{margin-top:var(--s5)}
+.authcard{position:relative;z-index:1;
+  display:grid;gap:clamp(16px,3.4vw,26px);
+  background:var(--paper);
+  border:var(--edge-heavy) solid var(--ink);
+  padding:clamp(20px,5.5vw,38px);
+  /* the leading corner taken off at the system angle, same cut the
+     action chamber and the stamp sheet carry */
+  clip-path:polygon(var(--sheet-cut,26px) 0, 100% 0, 100% 100%,
+                    0 100%, 0 var(--sheet-cut,26px))}
+
+.authcard__brand{display:flex;align-items:center;
+  gap:clamp(10px,3vw,18px);min-width:0}
+.authcard__logo{width:clamp(38px,9vw,52px);height:clamp(38px,9vw,52px);
+  flex:none;fill:var(--ink)}
+.authcard__logo *{fill:var(--ink);stroke:none}
+.authcard__wm{font-family:var(--f-display);
+  font-size:clamp(21px,5.6vw,30px);line-height:1;
+  letter-spacing:-.01em;color:var(--ink);min-width:0}
+.authcard__wm b{font-weight:400}
+.authcard__wm em{display:block;margin-top:7px;
+  font:500 clamp(10px,2.6vw,11.5px)/1.3 var(--f-mono);
+  letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);
+  font-style:normal;overflow-wrap:anywhere}
+
+/* the action is a label on the fields, not a headline over them */
+.authcard__lead{display:grid;gap:6px;
+  padding-top:clamp(12px,2.6vw,18px);
+  border-top:var(--edge-thin) solid var(--ink)}
+.authcard__title{font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(26px,7.5vw,40px);line-height:.98;letter-spacing:-.02em;
+  margin:0;color:var(--ink)}
+
+/* the atmosphere sits behind the card and is cropped by the viewport,
+   not laid over the fields */
+[data-screen="auth"] .rake{opacity:.1;z-index:0}
+[data-screen="auth"] .sfxw{z-index:0;opacity:.13;
+  font-size:clamp(120px,30vw,300px);top:auto;bottom:2vh;right:-16vw}
+@media(min-width:1024px){ [data-screen="auth"] .sfxw{opacity:.1} }
 
 /* ══ THE SEAL GRID ═════════════════════════════════════════════════
    An unearned seal was ink-on-ink and effectively invisible, so the
@@ -4850,8 +4951,7 @@ none;
 .brow__del{min-height:38px;padding:8px 10px}
 
 .btn,.chip,.link{min-height:44px}
-.authmark{gap:var(--s3);flex-wrap:wrap}
-.authmark__wm{font-size:clamp(19px,5vw,26px)}
+
 
 .log{gap:var(--edge-thin)}
 
@@ -4921,7 +5021,10 @@ none;
 .kicker{font-size:clamp(11px,.55vw + 9.2px,13px)}
 /* the volume line is a sentence, so it takes the type floor and the
    ink ramp like every other sentence in the app */
-.rail__vol{font-size:11px;line-height:1.5;color:var(--ink-2)}
+.rail__vol{font-size:clamp(9.5px,1.05vw,11px);line-height:1.5;color:var(--ink-2)}
+/* the brand block must be able to shrink inside the rail track */
+.rail,.rail__brand,.rail__nav,.rail__foot{min-width:0}
+.rail__brand .mark,.rail__brand .mark__word{min-width:0;overflow-wrap:anywhere}
 /* an unearned seal's ordinal was tone-on-paper (1.98:1) — the cell is
    recessive through its dashed keyline and reduced opacity, which is
    the tier language; the number itself still has to be readable */
@@ -5081,6 +5184,49 @@ main#view:focus,main#view:focus-visible{outline:none}
 .tech__req{color:var(--ink);font-size:11.5px;letter-spacing:.08em;opacity:1}
 .tech--sealed .tech__req{color:var(--ink)}
 .tech--sealed .tech__name{color:var(--ink)}
+
+/* ── the fields ───────────────────────────────────────────────────
+   Underlined inputs inside a bordered card read as a stack of empty
+   boxes: the input's bottom rule and the card's side borders close
+   three sides of a rectangle that was never meant to be one. The
+   field gets its own quiet ground instead, so it reads as a slot to
+   type into, and the rule under it becomes the base of the slot
+   rather than a divider between two of them. */
+[data-screen="auth"] .authp__f{margin-bottom:0}
+[data-screen="auth"] .authp .input{
+  /* --v1 IS --paper: tinting with it changed nothing, which is why the
+     fields still read as gaps between rules. --v2 is the ramp's first
+     step that is actually a different colour from the page. */
+  background:var(--v2);
+  border-bottom-width:var(--edge-thin);
+  padding:clamp(11px,3vw,14px) clamp(10px,3vw,13px);
+  font-size:max(16px, 1rem)}          /* 16px floor stops iOS zooming on focus */
+[data-screen="auth"] .authp .input:focus-visible{
+  background:var(--paper);
+  box-shadow:inset 0 0 0 var(--edge-thin) var(--ink)}
+[data-screen="auth"] .authp__f .kicker{margin-bottom:7px}
+
+/* the action row: the commit takes the measure on a phone and sits
+   natural-width once there is room beside the secondary link */
+[data-screen="auth"] .authp__act{display:flex;flex-wrap:wrap;
+  align-items:center;gap:clamp(10px,3vw,18px);
+  margin-top:clamp(4px,1.5vw,10px)}
+[data-screen="auth"] .authp__act .btn--go{
+  flex:1 1 100%;min-height:50px;justify-content:center}
+@media(min-width:480px){
+  [data-screen="auth"] .authp__act .btn--go{flex:0 0 auto;min-width:min(52%,190px)}
+}
+
+/* ONE BRAND ON THE PAGE. Both the topbar and the desktop rail repeat
+   the wordmark beside the card that already states it — and signed
+   out, the rail has no chapters to list, so it was an empty column
+   carrying a duplicate logo. Authentication gets the whole canvas. */
+[data-screen="auth"] .topbar{display:none}
+@media(min-width:1024px){
+  [data-screen="auth"] .rail{display:none}
+  [data-screen="auth"] .shell{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
@@ -18507,18 +18653,59 @@ const ICON = {
    it in the page's own voice, which is words in brackets, not pictures. */
 const codeMark = (s) => `<span class="codemark" aria-hidden="true">${s}</span>`;
 
-/* If ASSETS.logo is set, your image is used; otherwise this vector mark
-   is drawn. Both render at the same size, so swapping is safe. */
+/* ══════════════════════════════════════════════════════════════════
+   THREE MARKS, THREE JOBS
+
+   The app had one mark doing every job — brand, stamp, progress,
+   empty state, scanner, reward — which is how a symbol stops meaning
+   anything. There are three now and they are not interchangeable:
+
+     LOGO   the keyway plate. Keystamp's brand mark, and only that:
+            rail, topbar, sign-in, favicon, installed-app icon. A
+            struck plate with a key's aperture cut out of it, its
+            leading corner taken off at the system's 60 degrees.
+            Solid mass, because a brand mark has to survive 16px in a
+            tab strip and a flat colour fill in an app grid.
+
+     TALLY  the struck tally. The stamp-card symbol: three counts and
+            the stroke that closes them. It is what a slot, an earned
+            stamp and reward progress are marked with. Attendance is
+            counting, and this is the mark counting has always used.
+
+     SEAL   the traced artwork (see below). Decoration and ceremony
+            only: the scanner's target, the impact frame, empty
+            states, the credential band. Never the brand, never a slot.
+
+   If ASSETS.logo is set, that image replaces the brand mark.
+   ══════════════════════════════════════════════════════════════════ */
 const logoMark = (cls = 'mark__seal') => ASSETS.logo
   ? `<img class="${cls}" src="${ASSETS.logo}" alt="" aria-hidden="true">`
   : LOGO.replace('class="mark__seal"', `class="${cls}"`);
 
+/* THE KEYWAY PLATE. One path, evenodd: the plate, then the bore, the
+   slot and the ward knocked out of it. Drawn as a filled silhouette
+   rather than strokes so it holds together at a favicon's size and
+   can be poured into a single flat colour for an app icon. */
 const LOGO = `
-<svg class="mark__seal" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-  <path d="M16 1.4 29.2 9v14L16 30.6 2.8 23V9Z" stroke="currentColor" stroke-width="1.2" opacity=".62"/>
-  <path d="M16 4.6 26.4 10.5v11.8L16 28.2 5.6 22.3V10.5Z" stroke="currentColor" stroke-width=".7" opacity=".3"/>
-  <path d="M12.2 10v12M12.2 16.4 19 10M12.2 15.6 19.4 22" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>
+<svg class="mark__seal" viewBox="0 0 32 32" aria-hidden="true">
+  <path fill="currentColor" fill-rule="evenodd" d="M9.8 2.2H29V30H3.8V12.6Z
+    M16.5 6.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 1 0 0-9Z
+    M14.2 13.8h4.6V25.8h-4.6Z
+    M9.9 18.3h4.3V22.1H9.9Z"/>
 </svg>`;
+
+/* THE STRUCK TALLY. Three counts and the stroke that closes them, the
+   stroke running at the system's angle. Two states: `struck` draws the
+   closing stroke, an unstruck slot draws only the counts. */
+/* Paths, not rects, deliberately: the stylesheets key colour off
+   `path` for artwork and off `circle`/`line` for registration
+   furniture, so a <rect> falls through every rule and paints default
+   black — invisible the moment a slot inverts to an ink field. */
+const TALLY = (struck = true) => `
+  <path d="M5.4 7h3.4v18H5.4Z"/>
+  <path d="M12.1 4.6h3.4v22.8h-3.4Z"/>
+  <path d="M18.8 7h3.4v18h-3.4Z"/>
+  ${struck ? '<path d="M2.6 24.4 27.4 6.9l2.3 3.2L4.9 27.6Z"/>' : ''}`;
 
 const wordmark = () => `<span class="mark">${logoMark()}<span class="mark__word">Key<b>stamp</b></span></span>`;
 
@@ -19192,7 +19379,7 @@ const C = {
       return `<li class="seal ${state ? 'seal--' + state : ''}${last}" data-seal="${state || 'empty'}" style="${tilt}"${
         dossier ? ` tabindex="0" aria-label="Stamp ${pad(p.floor + i + 1)}: general meeting ${
           mtg.no}, ${fmtDate(mtg.date)}, checked in at ${fmtTime(rec.at)}"` : ''}>
-        <svg viewBox="0 0 100 100" aria-hidden="true"><g class="seal__mark">${seal(state === 'set' ? 2 : 1)}</g></svg>
+        <svg viewBox="0 0 32 32" aria-hidden="true"><g class="seal__mark">${TALLY(state === 'set')}</g></svg>
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
         ${dossier}
       </li>`;
@@ -19693,6 +19880,25 @@ const Views = {
                      : 'Every milestone is unlocked.'}</p>
         </div>
       </section>
+      <!-- THE ACCOUNT BLOCK.
+
+           Sign out lived only in the desktop rail, and the rail is
+           gone below 1024 — so on every phone and every tablet there
+           was no way to sign out at all. Member is chapter 05, the
+           account chapter, and it is on the tab bar at every width, so
+           the control belongs here rather than behind a drawer or
+           hidden under an icon. It hides itself once the rail is back
+           and carrying the same control. -->
+      <section class="acct" data-enter>
+        <span class="acct__rule" data-layer aria-hidden="true"></span>
+        <div class="acct__row">
+          <div class="acct__who">
+            <p class="kicker">Signed in · ${Store.isBoard ? 'Board' : 'Member'}</p>
+            <p class="acct__name">${esc(memberName())}</p>
+          </div>
+          <button class="btn btn--out" data-signout type="button">Sign out</button>
+        </div>
+      </section>
       ${C.close(`${Store.attendanceRate()}% ATTENDANCE`)}
     </div>`;
   },
@@ -19705,28 +19911,39 @@ const Views = {
   auth(){
     const mode = AuthUI.mode;                 /* 'in' | 'up' */
     const up = mode === 'up';
+    /* THE AUTHENTICATION CARD.
+
+       This page used to run the dashboard's furniture: a chapter
+       masthead at display size, a chop with the mark in it, a wordmark
+       beside the chop, a full-height radiating rake and a sound effect
+       the height of the screen — six things all shouting, with the
+       form last in the reading order.
+
+       It is one card now. The brand is stated once, at the top, and
+       IS the page's title — there is no second masthead repeating it.
+       The action is an annotation, not a 96px headline, because on a
+       sign-in screen the fields are the subject and the word "Sign in"
+       is a label on them. The atmosphere stays, cropped hard and put
+       behind the card where it belongs. */
     return `<div class="view view--auth">
       <span class="rake" aria-hidden="true"></span>
       ${C.bleed(up ? 'JOIN' : 'ENTER', '', 'sfxw sfxw--r')}
 
-      <div class="authmark" data-enter>
-        <span class="chop chop--filled" aria-hidden="true">
-          <svg viewBox="0 0 100 100" class="chop__key">${KEY}</svg>
-        </span>
-        <span class="authmark__wm">
-          <b>KEY</b>STAMP
-          <em>Key Club attendance</em>
-        </span>
-      </div>
+      <div class="authcard" data-enter>
+        <header class="authcard__brand">
+          ${logoMark('authcard__logo')}
+          <span class="authcard__wm">
+            <b>Key</b>stamp
+            <em>Key Club attendance</em>
+          </span>
+        </header>
 
-      ${C.head(up ? 'New member' : 'Key Club',
-               up ? 'Join' : 'Sign in',
-               up ? '登録' : '入場')}
+        <div class="authcard__lead">
+          <span class="anno">${up ? 'REG.NEW // ACCOUNT' : 'AUTH.REQ // ACCESS'}</span>
+          <h1 class="authcard__title">${up ? 'Join' : 'Sign in'}</h1>
+        </div>
 
-      <section class="rig" data-enter>
-        <span class="rig__ghost" data-layer aria-hidden="true"></span>
-        <form class="panel authp" id="authForm" novalidate>
-          <span class="panel__rule" data-layer aria-hidden="true"></span>
+        <form class="authp" id="authForm" novalidate>
 
           <div class="field authp__f">
             <label class="kicker" for="authUser">Username</label>
@@ -19762,7 +19979,7 @@ const Views = {
 
           ${AuthUI.setupNotice()}
         </form>
-      </section>
+      </div>
     </div>`;
   },
 };
