@@ -783,6 +783,13 @@
 .empty__seal{position:relative;flex:none;
   width:clamp(74px,12vw,132px);aspect-ratio:1}
 .empty__seal svg{width:100%;height:100%;display:block;opacity:.5}
+/* THE ONE PLACE THE MARK IS DRAWN AS LINE, ON PURPOSE.
+
+   Everywhere else the seal is a filled silhouette, because that is
+   what the artwork is. Here the whole point is that nothing has been
+   pressed yet — so the mark is set as its own outline, the shape of an
+   impression with no ink in it. `path` therefore stays in the stroked
+   list rather than moving to the filled one. */
 .empty__seal svg circle,.empty__seal svg polygon,
 .empty__seal svg path,.empty__seal svg line{
   fill:none;stroke:var(--v3);stroke-width:2;vector-effect:non-scaling-stroke}
@@ -1330,8 +1337,8 @@
   background-image:none}
 [data-screen="home"] .seal[data-seal="empty"] .seal__mark circle,
 [data-screen="home"] .seal[data-seal="empty"] .seal__mark polygon,
-[data-screen="home"] .seal[data-seal="empty"] .seal__mark path,
 [data-screen="home"] .seal[data-seal="empty"] .seal__mark line{stroke:var(--v3)}
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark path{fill:var(--v3)}
 [data-screen="home"] .seal[data-seal="empty"] .seal__mark{opacity:.55}
 [data-screen="home"] .seal--next{
   box-shadow:inset 0 0 0 var(--edge-thin) var(--ink)}
@@ -2080,18 +2087,16 @@ select.input:focus-visible{outline:none}
 .verdict .verdict__title::before{content:"";position:absolute;left:0;top:0;
   width:min(52%,320px);height:var(--edge-heavy);background:var(--ink)}
 
-/* THE FIELD BEHIND THE IMPACT IS A FIGURE, NOT A BLOB.
+/* THE FIELD BEHIND THE IMPACT IS THE MARK.
 
-   It draws seal(4) at the full height of the screen, and the seal's
-   strokes are specified in a 100-unit viewBox — so at 844px the 5.5
-   unit arms scale to 46px each and the six of them fuse into a soft
-   grey disc covering half the frame. Behind a manga impact there is a
-   drawn figure or there is nothing; there is never a blur.
-
-   Non-scaling strokes keep it a LINE drawing at any size, so the mark
-   the whole product is built on reads as itself, enormous, behind the
-   word that just landed. */
-.verdict .verdict__field path,
+   When the seal was a line drawing this had to fight it: its strokes
+   were specified in a 100-unit viewBox, so at 844px the arms scaled to
+   46px each and fused into a soft grey disc across half the frame, and
+   the fix was to redraw it at hairline weight. The seal is traced
+   artwork now and scales the way a logo does, so the field is simply
+   the mark at full size behind the word that just landed. Only the
+   registration furniture still needs stroking. */
+.verdict .verdict__field path{fill:var(--ink);stroke:none}
 .verdict .verdict__field circle,
 .verdict .verdict__field line,
 .verdict .verdict__field polygon{
