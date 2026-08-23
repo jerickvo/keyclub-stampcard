@@ -385,7 +385,8 @@ const Views = {
            inside a box, so it interrupts the sheet instead of being
            placed on it. The state line and the two metadata marks are
            set in the margin the name leaves. -->
-      <header class="head head--bare nameplate" data-enter>
+      <header class="head head--bare nameplate" data-enter
+              style="--name-len:${Math.max(6, memberName().length + 1)}">
         <span class="nameplate__rule" data-layer aria-hidden="true"></span>
         <div class="head__stack">
           <h1 class="title title--name">${esc(memberName())}<em>.</em></h1>
