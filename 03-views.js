@@ -349,7 +349,7 @@ const Views = {
       action = C.strike({ verb:'Scan code', sub:'No general meeting is taking check-ins', go:'scan', calm:true });
 
     return `<div class="view">
-      ${C.bleed('Keystamp', 'top:-14px;right:-6vw', 'bleed--fill')}
+      ${C.bleed('STAMP', '', 'sfxw sfxw--r')}
       ${ASSETS.homeHeader ? `<div class="banner" data-enter>
         <img src="${ASSETS.homeHeader}" alt="">
       </div>` : ''}
@@ -414,7 +414,7 @@ const Views = {
     const upcoming = Store.meetings.filter(m => m.upcoming).reverse();
 
     return `<div class="view">
-      ${C.bleed('Record', 'top:-10px;left:-8vw')}
+      ${C.bleed('LOG', '', 'sfxw sfxw--l')}
       ${C.head('Attendance', 'Record', '記録')}
 
       ${held.length ? `<section data-enter class="stack-lg">
@@ -434,7 +434,7 @@ const Views = {
   rewards(){
     if (Store.failed) return this.loadFailure('Rewards', '解放');
     return `<div class="view">
-      ${C.bleed('Reward', 'top:-12px;right:-10vw', 'bleed--blood')}
+      ${C.bleed('UNSEAL', '', 'sfxw sfxw--r')}
       ${C.head('Milestones', 'Rewards', '解放')}
       <div class="stack-panels">
         ${Store.rewards.map(C.tech).join('')}
@@ -444,7 +444,7 @@ const Views = {
 
   scan(){
     return `<div class="view">
-      ${C.bleed('Seal', 'bottom:-4vw;left:-7vw')}
+      ${C.bleed('LOCK', '', 'sfxw sfxw--l sfxw--tilt')}
       ${C.head('Check in', 'Scan code', '読取')}
 
       <!-- THE RIG. The viewfinder is not a component sitting on a
@@ -460,6 +460,7 @@ const Views = {
           <span class="anno anno--seal" id="rigState">SYS.ARMED</span>
         </div>
         <span class="rig-scan__rune" aria-hidden="true">読取 // TARGETING</span>
+        <span class="rig-scan__cut" aria-hidden="true"></span>
       <div class="viewer" id="viewer" data-enter>
         <video id="cam" playsinline muted autoplay></video>
         <div class="viewer__scrim" aria-hidden="true"></div>
@@ -514,7 +515,7 @@ const Views = {
      of tabs for four screens was one level too many. */
   boardSpread(bleed, kicker, title, jp){
     return `<div class="view">
-      ${C.bleed(bleed, 'top:-10px;right:-9vw')}
+      ${C.bleed(bleed.toUpperCase(), '', 'sfxw sfxw--r')}
       ${C.head(kicker, title, jp)}
       <section class="rig" data-enter style="margin-top:var(--gut)">
         <span class="rig__ghost" data-layer aria-hidden="true"></span>
@@ -548,7 +549,7 @@ const Views = {
     const total = Store.totalStamps();
 
     return `<div class="view">
-      ${C.bleed('Member', 'top:-10px;right:-9vw', 'bleed--fill')}
+      ${C.bleed('IDENT', '', 'sfxw sfxw--r')}
       ${C.head(Store.isBoard ? 'Board' : 'Member', esc(memberName()), '会員')}
 
       <section class="rig stack-lg" data-enter>
@@ -611,7 +612,7 @@ const Views = {
     const up = mode === 'up';
     return `<div class="view view--auth">
       <span class="rake" aria-hidden="true"></span>
-      ${C.bleed(up ? 'Join' : 'Enter', 'top:-6px;right:-8vw', 'bleed--fill')}
+      ${C.bleed(up ? 'JOIN' : 'ENTER', '', 'sfxw sfxw--r')}
 
       <div class="authmark" data-enter>
         <span class="chop chop--filled" aria-hidden="true">

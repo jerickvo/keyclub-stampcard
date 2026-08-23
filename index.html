@@ -2822,6 +2822,63 @@ main#view{padding-top:var(--space-tier);
   pointer-events:none;user-select:none}
 
 /* ══════════════════════════════════════════════════════════════════
+   ACTIVATION AND INTERRUPTION
+
+   The rig looked the same whether the camera was tracking or dead.
+   Two states now change the COMPOSITION, not just a label.
+
+   TRACKING. Speed lines rake in from both sides of the frame at the
+   system's 60 degrees, and the reading bar's rule thickens. The
+   viewfinder stops being a picture in a box and becomes the thing
+   everything else is pointing at.
+
+   REFUSED. A hard diagonal cut is thrown across the rig and the
+   reading bar's rule breaks. This is the interruption the failure
+   state was missing — the frame flashing was an event inside the
+   viewfinder, but nothing around it registered that anything had
+   happened. Both are drawn, not animated, so reduced motion keeps
+   them.
+   ══════════════════════════════════════════════════════════════════ */
+.rig-scan{position:relative}
+.rig-scan::before,.rig-scan::after{content:"";position:absolute;
+  top:0;bottom:0;width:14vw;max-width:210px;z-index:0;
+  pointer-events:none;opacity:0;transition:opacity .18s steps(3,end);
+  background-image:repeating-linear-gradient(var(--run-a),
+    var(--ink) 0 1.5px, transparent 1.5px 7px,
+    var(--ink) 7px 8px, transparent 8px 19px)}
+.rig-scan::before{left:0;
+  -webkit-mask-image:linear-gradient(90deg,#000,transparent);
+          mask-image:linear-gradient(90deg,#000,transparent)}
+.rig-scan::after{right:0;
+  -webkit-mask-image:linear-gradient(270deg,#000,transparent);
+          mask-image:linear-gradient(270deg,#000,transparent)}
+.rig-scan:has(.viewer--feed)::before,
+.rig-scan:has(.viewer--feed)::after{opacity:.3}
+.rig-scan:has(.viewer--feed) .rig-scan__bar{border-bottom-width:var(--edge)}
+
+/* THE CUT. Refusal tears the rig open along the system diagonal: a
+   band of bare paper thrown across the frame with an ink edge on each
+   side, as if the panel itself had been slashed. It is drawn in paper
+   and ink, not cinnabar — the one red mark on a refused screen stays
+   the status reading, so the interruption reads as damage rather than
+   as another alarm. */
+.rig-scan:has(.viewer--bad)::before,
+.rig-scan:has(.viewer--bad)::after{opacity:0}
+.rig-scan__cut{position:absolute;inset:-2px;z-index:8;pointer-events:none;
+  display:none;--cw:clamp(11px,1.5vw,20px);--cy:44%;
+  --cmask:linear-gradient(180deg,#000 0 27%,transparent 27% 33%,
+    #000 33% 64%,transparent 64%);
+  -webkit-mask-image:var(--cmask);mask-image:var(--cmask);
+  background:linear-gradient(calc(var(--run-a) * -1),
+    transparent calc(var(--cy) - var(--cw) - 2px),
+    var(--ink)   calc(var(--cy) - var(--cw) - 2px), var(--ink)  calc(var(--cy) - var(--cw)),
+    var(--paper) calc(var(--cy) - var(--cw)),       var(--paper) calc(var(--cy) + var(--cw)),
+    var(--ink)   calc(var(--cy) + var(--cw)),       var(--ink)  calc(var(--cy) + var(--cw) + 2px),
+    transparent  calc(var(--cy) + var(--cw) + 2px))}
+.rig-scan:has(.viewer--bad) .rig-scan__cut{display:block}
+.rig-scan:has(.viewer--bad) .rig-scan__bar{border-bottom-color:var(--seal)}
+
+/* ══════════════════════════════════════════════════════════════════
    SCAN — THE VIEWFINDER AND THE TERMINAL
 
    The frame reads as an instrument now rather than as a panel with a
@@ -3043,8 +3100,36 @@ main#view{padding-top:var(--space-tier);
    .55 the ghost competed with the masthead in front of it and the
    chapter title stopped being the loudest thing on the page.
    Position is what makes it read as a layer; value keeps it behind. */
-[data-screen] .view > .bleed{right:-14vw;left:auto;
-  top:calc(clamp(16px,2.6vw,36px) * -1);opacity:.13}
+/* ══════════════════════════════════════════════════════════════════
+   SOUND EFFECTS — SCALE AND CROP, NOT OPACITY
+
+   Every chapter carries ONE impact word in the vocabulary of what
+   happens there: STAMP, LOG, LOCK, UNSEAL, IDENT, ENTER. It is not a
+   caption and not a watermark.
+
+   What makes it read as a manga sound effect is that it is far too
+   big for the space and the page cuts it off. Roughly a third of the
+   word is outside the viewport; the letters that remain are taller
+   than the chapter title. Value stays low, because I established the
+   hard way that brightening a ghost word makes it compete with the
+   masthead instead of sitting behind it — the loudness has to come
+   from size and from the crop, not from ink.
+
+   Scan's tilts to the system's 60 degrees, because that page is the
+   one about direction. */
+.sfxw{position:absolute;z-index:0;pointer-events:none;user-select:none;
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(150px,31vw,520px);line-height:.74;
+  letter-spacing:-.055em;white-space:nowrap;
+  color:var(--ink);opacity:.075;
+  top:calc(clamp(10px,2vw,30px) * -1)}
+.sfxw--r{right:-11vw;left:auto}
+.sfxw--l{left:-13vw;right:auto}
+.sfxw--tilt{transform:rotate(calc(var(--run-a,60deg) - 90deg));
+  transform-origin:left top;top:8vw}
+@media(min-width:1024px){
+  .sfxw{opacity:.065}
+}
 
 /* ── THE CREDENTIAL BAND ──────────────────────────────────────────
    A wide thin strip with a small seal marooned at one end — the
@@ -18946,7 +19031,7 @@ const Views = {
       action = C.strike({ verb:'Scan code', sub:'No general meeting is taking check-ins', go:'scan', calm:true });
 
     return `<div class="view">
-      ${C.bleed('Keystamp', 'top:-14px;right:-6vw', 'bleed--fill')}
+      ${C.bleed('STAMP', '', 'sfxw sfxw--r')}
       ${ASSETS.homeHeader ? `<div class="banner" data-enter>
         <img src="${ASSETS.homeHeader}" alt="">
       </div>` : ''}
@@ -19011,7 +19096,7 @@ const Views = {
     const upcoming = Store.meetings.filter(m => m.upcoming).reverse();
 
     return `<div class="view">
-      ${C.bleed('Record', 'top:-10px;left:-8vw')}
+      ${C.bleed('LOG', '', 'sfxw sfxw--l')}
       ${C.head('Attendance', 'Record', '記録')}
 
       ${held.length ? `<section data-enter class="stack-lg">
@@ -19031,7 +19116,7 @@ const Views = {
   rewards(){
     if (Store.failed) return this.loadFailure('Rewards', '解放');
     return `<div class="view">
-      ${C.bleed('Reward', 'top:-12px;right:-10vw', 'bleed--blood')}
+      ${C.bleed('UNSEAL', '', 'sfxw sfxw--r')}
       ${C.head('Milestones', 'Rewards', '解放')}
       <div class="stack-panels">
         ${Store.rewards.map(C.tech).join('')}
@@ -19041,7 +19126,7 @@ const Views = {
 
   scan(){
     return `<div class="view">
-      ${C.bleed('Seal', 'bottom:-4vw;left:-7vw')}
+      ${C.bleed('LOCK', '', 'sfxw sfxw--l sfxw--tilt')}
       ${C.head('Check in', 'Scan code', '読取')}
 
       <!-- THE RIG. The viewfinder is not a component sitting on a
@@ -19057,6 +19142,7 @@ const Views = {
           <span class="anno anno--seal" id="rigState">SYS.ARMED</span>
         </div>
         <span class="rig-scan__rune" aria-hidden="true">読取 // TARGETING</span>
+        <span class="rig-scan__cut" aria-hidden="true"></span>
       <div class="viewer" id="viewer" data-enter>
         <video id="cam" playsinline muted autoplay></video>
         <div class="viewer__scrim" aria-hidden="true"></div>
@@ -19111,7 +19197,7 @@ const Views = {
      of tabs for four screens was one level too many. */
   boardSpread(bleed, kicker, title, jp){
     return `<div class="view">
-      ${C.bleed(bleed, 'top:-10px;right:-9vw')}
+      ${C.bleed(bleed.toUpperCase(), '', 'sfxw sfxw--r')}
       ${C.head(kicker, title, jp)}
       <section class="rig" data-enter style="margin-top:var(--gut)">
         <span class="rig__ghost" data-layer aria-hidden="true"></span>
@@ -19145,7 +19231,7 @@ const Views = {
     const total = Store.totalStamps();
 
     return `<div class="view">
-      ${C.bleed('Member', 'top:-10px;right:-9vw', 'bleed--fill')}
+      ${C.bleed('IDENT', '', 'sfxw sfxw--r')}
       ${C.head(Store.isBoard ? 'Board' : 'Member', esc(memberName()), '会員')}
 
       <section class="rig stack-lg" data-enter>
@@ -19208,7 +19294,7 @@ const Views = {
     const up = mode === 'up';
     return `<div class="view view--auth">
       <span class="rake" aria-hidden="true"></span>
-      ${C.bleed(up ? 'Join' : 'Enter', 'top:-6px;right:-8vw', 'bleed--fill')}
+      ${C.bleed(up ? 'JOIN' : 'ENTER', '', 'sfxw sfxw--r')}
 
       <div class="authmark" data-enter>
         <span class="chop chop--filled" aria-hidden="true">
