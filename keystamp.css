@@ -256,16 +256,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
    panel inside the ghost. */
 .rig{position:relative;min-width:0}
 .rig > .panel{margin-block:0}
-/* THE GHOST IS GONE.
-
-   `.rig__ghost` was a solid ink rectangle offset 6px behind every
-   panel — a hard-edged print shadow. However it is drawn, a shape
-   sitting behind another shape to imply lift is a drop shadow, and a
-   drop shadow says "this card floats above the page". This system says
-   the opposite: there is one sheet of paper, and structure is ruled
-   onto it. The element stays in the markup (every view emits it) and
-   simply stops painting, so no view template has to change. */
-.rig__ghost{display:none}
 
 .panel{position:relative;z-index:1;background:var(--paper);
   border:var(--rule) solid var(--ink);border-radius:0;height:100%}
@@ -371,13 +361,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   fill:none;stroke:var(--ink);stroke-width:1.4;vector-effect:non-scaling-stroke}
 .hero__foot{margin-top:var(--s4);font-size:13px;color:var(--tone)}
 
-.gauge{position:relative;height:9px;margin-top:var(--s5);
-  border:var(--rule-hair) solid var(--ink);background:var(--paper);overflow:hidden}
-.gauge__fill{position:absolute;inset:0;transform:scaleX(0);
-  transform-origin:0 50%;background:var(--ink)}
-.gauge__tick{position:absolute;top:0;bottom:0;width:1.5px;background:var(--ink);
-  opacity:.45}
-
 /* ══════════════════ THE STAMP CARD ══════════════════ */
 .seals{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gut);
   list-style:none;padding:var(--s5)}
@@ -425,7 +408,9 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 /* the rake: 1px diagonal hatch, tone not ink, so it is texture and
    never competes with the words sitting on it */
 .strike::before{content:"";position:absolute;inset:0;pointer-events:none;
-  background-image:repeating-linear-gradient(74deg,var(--v3) 0 1px,transparent 1px 7px);
+  /* angle from --run-a (the mark's 60 degrees); artdirection.css
+     paints the real gradient, this is the fallback shape */
+  background-image:repeating-linear-gradient(var(--run-a,60deg),var(--v3) 0 1px,transparent 1px 7px);
   opacity:.38}
 
 /* ── the corner marks ─────────────────────────────────────────────
@@ -555,12 +540,8 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .tick{position:absolute;width:11px;height:11px;border:var(--rule-hair) solid var(--ink)}
 .tick--tl{top:-1px;left:-1px;border-right:0;border-bottom:0}
 .tick--br{right:-1px;bottom:-1px;border-left:0;border-top:0}
-
-/* ══════════════════ REWARDS ══════════════════ */
-.tech__top{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s3)}
 .tech__name{font-family:var(--f-display);font-size:clamp(16px,1.4vw,20px);text-transform:uppercase;line-height:1.05}
 .tech__at{font:500 10px/1 var(--f-mono);letter-spacing:.14em;color:var(--tone)}
-.tech__desc{font-size:13.5px;color:var(--tone);margin-top:var(--s2)}
 .tech__glyph svg{width:52px;height:52px}
 .tech__glyph circle,.tech__glyph polygon,.tech__glyph path,.tech__glyph line{
   fill:none;stroke:var(--ink);stroke-width:1.6;vector-effect:non-scaling-stroke}
@@ -572,31 +553,8 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
    and by its label, not by a texture: hairline keyline, muted type,
    and the word SEALED. Nothing is drawn across the content. */
 .tech__crack{position:absolute;inset:0;pointer-events:none;opacity:0}
-/* This was `height:6px` — a hard height on a wrapper that contains a
-   9px track, its 20px top margin, and a two-item legend. Everything
-   past 6px fell out of the card and was cut off by the panel's
-   `overflow:hidden`, so the "9 / 10 stamps · 90%" legend was invisible
-   on every reward card at every viewport. The wrapper is a stack; its
-   height is its content. */
-/* ── THE STAMP TRACK ──────────────────────────────────────────────
-   A reward's progress is a count of stamps, so it is drawn as stamp
-   cells: the meter is divided into exactly `--slots` compartments by
-   hairline rules laid over the fill. It reads as "9 of 10 pressed"
-   rather than as "90% of a bar", and it scales to any tier size
-   without the markup knowing the width. */
-.tech__gauge{margin-top:var(--s3)}
-.tech__gauge .gauge{margin-top:0;height:clamp(14px,1.5vw,20px);
-  border:var(--edge-hair) solid var(--ink);background:transparent;
-  position:relative;overflow:hidden}
-.tech__gauge .gauge::after{content:"";position:absolute;inset:0;
-  pointer-events:none;z-index:2;
-  background-image:repeating-linear-gradient(to right,
-    transparent 0 calc(100% / var(--slots, 10) - 1px),
-    var(--ink) calc(100% / var(--slots, 10) - 1px) calc(100% / var(--slots, 10)))}
-.tech__gauge .gauge__fill{background:var(--v6)}
 .tech__legend{display:flex;align-items:baseline;justify-content:space-between;
   gap:var(--s3);flex-wrap:wrap;margin-top:var(--s2)}
-.tech__top > div{min-width:0}
 .tech__name{overflow-wrap:break-word}
 
 /* ══════════════════ SCAN ══════════════════ */
@@ -1094,7 +1052,6 @@ button.entry{cursor:pointer}
 [data-screen="home"] .view > section:nth-of-type(1) .panel::before{
   content:"";position:absolute;inset:var(--rule);z-index:0;background:var(--paper);
   clip-path:polygon(0 0,100% 0,100% calc(100% - var(--cut-in)),calc(100% - var(--cut-in)) 100%,0 100%)}
-[data-screen="home"] .view > section:nth-of-type(1) .rig__ghost{display:none}
 
 /* The right-edge bleed only reads as a bleed when there is page gutter
    for it to run into. On a phone the gutter IS the safe margin, so the
@@ -1107,7 +1064,6 @@ button.entry{cursor:pointer}
   [data-screen="home"] .view > .duo > .rig:last-child .panel{
     margin-right:calc(var(--bleed) * -1);border-right:0}
 }
-[data-screen="home"] .view > .duo > .rig:last-child .rig__ghost{display:none}
 
 /* tiers are deliberately unequal heights — the establishing panel is
    short, the stamp card is the tall one, the closers are shallow */
@@ -1955,10 +1911,5 @@ main#view{padding-top:var(--space-tier);
   justify-content:flex-end;gap:var(--space-hair)}
 .view > .head .head__stack{width:100%}
 .view > .head .jp{position:absolute}
-
-/* the ink band and the panel background were drawn on different boxes,
-   so the offset ghost showed as a doubled edge on the right and bottom.
-   The ghost belongs behind the panel, not beside it. */
-.stack-panels > section .rig__ghost{display:none}
 [data-screen="rewards"] .rig .panel{background:var(--v1)}
 .kicker{display:inline-block}

@@ -153,13 +153,6 @@
 /* the target beside the count is one figure and never wraps */
 [data-screen="home"] .hero__of{white-space:nowrap}
 
-/* the travel bar: ruled, not rounded, with the remaining distance
-   drawn as tone rather than empty grey */
-[data-screen="home"] .gauge{height:12px;border:0;position:relative;z-index:2;
-  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
-  box-shadow:inset 0 0 0 1.5px var(--ink)}
-[data-screen="home"] .gauge__fill{background:var(--ink)}
-
 /* ─────────────────────────────────────────────────────────────────
    5. THE SCAN PANEL — the action panel
 
@@ -594,6 +587,30 @@
 [data-screen="home"] .view > .duo .entry--set .entry__verdict{color:var(--paper)}
 [data-screen="home"] .view > .duo .entry--set .entry__meta{color:var(--v3)}
 
+/* ── THE CLOSERS ARE NOT THE SAME OBJECT TWICE ────────────────────
+   Two registered blocks with identical rules and identical weight,
+   stacked. The live meeting is something you can act on; the last
+   stamp is a receipt. Ranked accordingly — the live one keeps the
+   heavy rule and a cinnabar tick, the receipt drops to a hairline. */
+[data-screen="home"] .view > .duo > .rig:first-child::before{height:var(--edge)}
+[data-screen="home"] .view > .duo > .rig:first-child::after{
+  background:var(--seal);width:var(--edge);height:clamp(14px,1.9vw,24px)}
+[data-screen="home"] .view > .duo > .rig:last-child::before{
+  height:var(--rule-hair);background:var(--v3)}
+[data-screen="home"] .view > .duo > .rig:last-child::after{
+  background:var(--v3);width:var(--rule-hair)}
+[data-screen="home"] .view > .duo > .rig:last-child .h2{color:var(--ink-2)}
+
+/* ── HIERARCHY INSIDE THE SMALL TYPE ──────────────────────────────
+   Every piece of 10-11px mono on the page sat at one weight, so the
+   reading in the corner, the label under the figure and the
+   annotations all competed. The label is the quiet one; the reading
+   is the loud one. */
+[data-screen="home"] .hero__label{font-size:clamp(9.5px,.9vw,11px);
+  letter-spacing:.26em;color:var(--v3)}
+[data-screen="home"] .hero__state{font-weight:700;color:var(--ink);
+  letter-spacing:.18em}
+
 /* ── EDGE METADATA ON EVERY CHAPTER ────────────────────────────────
    The rune existed on Home alone, so the one primitive that says
    "this is an instrument reporting its own state" appeared on one
@@ -653,8 +670,8 @@
   inset:0;z-index:0;pointer-events:none;
   background-image:repeating-linear-gradient(64deg,
     var(--ink) 0 1px, transparent 1px 10px);opacity:.12;
-  -webkit-mask-image:linear-gradient(118deg,#000 0 6%,transparent 46%);
-          mask-image:linear-gradient(118deg,#000 0 6%,transparent 46%)}
+  -webkit-mask-image:linear-gradient(calc(var(--run-a) + 60deg),#000 0 6%,transparent 46%);
+          mask-image:linear-gradient(calc(var(--run-a) + 60deg),#000 0 6%,transparent 46%)}
 /* :not([data-layer]) — without it this forces .entry__ghost, an
    absolutely-positioned 190px display numeral, back into normal flow,
    and the lead row inherits its height. That is the third time a
@@ -1023,6 +1040,90 @@
   box-shadow:inset 0 0 0 var(--edge-thin) var(--ink)}
 .strike--live .strike__head .anno{color:var(--seal-deep)}
 
+/* ── THE SEALED PAIR IS NOT A BALANCED SPREAD ─────────────────────
+   Two sealed tiers at exactly half the measure each is a symmetric
+   two-column grid — perfectly balanced and therefore perfectly inert.
+   The nearer tier is the one a member is walking toward, so it takes
+   more of the page: five parts to three. The asymmetry is the
+   tension. */
+@media(min-width:768px){ .stack-panels{grid-template-columns:5fr 3fr} }
+
+/* ── THE SCREEN VARIES IN DENSITY ─────────────────────────────────
+   One dot size at one spacing across every surface is a texture doing
+   no work. It tightens under the chapters that carry a lot of
+   structure and opens up where the page is meant to breathe, so the
+   paper itself has a grain that changes between chapters. */
+[data-screen="record"] body,[data-screen="board"] body{--tone-wide:16px}
+[data-screen="home"] body{--tone-wide:22px}
+[data-screen="scan"] body{--tone-wide:26px}
+
+/* ── THE GHOST WORD IS CROPPED, NOT PLACED ────────────────────────
+   The sound effect behind each masthead sat inside the measure with
+   air around it, which makes it an illustration rather than a layer.
+   It is cropped now — pushed off the right edge and up under the
+   rule, so the page interrupts the word.
+
+   Raising its opacity was the wrong lever and I tried it first: at
+   .55 the ghost competed with the masthead in front of it and the
+   chapter title stopped being the loudest thing on the page.
+   Position is what makes it read as a layer; value keeps it behind. */
+[data-screen] .view > .bleed{right:-14vw;left:auto;
+  top:calc(clamp(16px,2.6vw,36px) * -1);opacity:.13}
+
+/* ── THE CREDENTIAL BAND ──────────────────────────────────────────
+   A wide thin strip with a small seal marooned at one end — the
+   weakest composition left in the app. The seal is the subject: real
+   size, cropped by the top of its own division, identification set
+   against it. */
+[data-screen="profile"] .who{display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:center;gap:clamp(14px,2.4vw,32px);overflow:hidden}
+[data-screen="profile"] .who__seal{width:clamp(64px,9vw,124px);
+  height:clamp(64px,9vw,124px);
+  margin-top:calc(clamp(10px,1.6vw,22px) * -1);opacity:.9}
+[data-screen="profile"] .who .rune{position:static;writing-mode:horizontal-tb;
+  display:block;margin-top:6px;letter-spacing:.24em}
+
+/* ══════════════════════════════════════════════════════════════════
+   THE HEXAGON IS THE GEOMETRY
+
+   The mark is a hexagon. Until now that lived only inside the seal
+   glyph drawn in each stamp — a picture of the logo, not a system
+   built from it. A hexagon's edges meet at 60 degrees, so 60 is the
+   angle this product cuts and moves at, everywhere:
+
+     --cut-a   the diagonal that takes a panel's corner
+     --run-a   the angle every set of speed lines runs at
+
+   Both were arbitrary before — 64, 68 and 74 degrees in three
+   different places. One angle, taken from the mark, is what makes a
+   cut on Record and a wedge on Home look like the same hand.
+
+   And the CUT is a motif carried by every chapter's lead panel now,
+   not a thing that happens on Home: whatever leads a screen is the
+   thing with a corner taken out of it.
+   ══════════════════════════════════════════════════════════════════ */
+:root{--cut-a:60deg; --run-a:60deg}
+
+.strike::before,
+[data-screen="record"] .rec--open .entry::after{
+  background-image:repeating-linear-gradient(var(--run-a),
+    var(--ink) 0 1px, transparent 1px 9px)}
+
+[data-screen="record"] .rec--open .entry,
+[data-screen="rewards"] .dossier--ready .panel,
+[data-screen="profile"] .stat[data-rank="lead"],
+[data-screen="board"] .bnext{
+  clip-path:polygon(var(--sheet-cut) 0, 100% 0, 100% 100%,
+                    0 100%, 0 var(--sheet-cut))}
+/* a clipped panel cannot show a border on the cut corner, so the
+   weight moves inside where the clip cannot reach it */
+[data-screen="rewards"] .dossier--ready .panel,
+[data-screen="record"] .rec--open .entry{
+  border:0;box-shadow:inset 0 0 0 var(--edge-heavy) var(--ink)}
+[data-screen="profile"] .stat[data-rank="lead"]{
+  border-bottom:0;box-shadow:inset 0 calc(var(--edge-thin) * -1) 0 var(--ink)}
+
 /* ══════════════════════════════════════════════════════════════════
    PANEL RHYTHM — UNEQUAL TIERS, INTERLOCKING
 
@@ -1077,7 +1178,9 @@
      product is about, and it leaves paper beside it, which is what
      makes the tier read as a panel on a spread rather than a rule
      across it. */
-  width:min(100%, calc(var(--seal-cell) * 5 + var(--edge-heavy) * 2));
+  /* fills the measure below the laptop tier — a 272px block floating
+     in a 358px column reads as a bug, not a decision */
+  width:100%;
   --seal-cell:clamp(52px,8.4vw,124px);
   clip-path:polygon(0 0, 100% 0,
     100% calc(100% - var(--sheet-cut)), calc(100% - var(--sheet-cut)) 100%, 0 100%)}
@@ -1089,8 +1192,17 @@
 [data-screen="home"] .seal--set{background:var(--v6);
   box-shadow:inset -1px 0 0 rgba(247,247,245,.22),
              inset 0 -1px 0 rgba(247,247,245,.22)}
-[data-screen="home"] .seal[data-seal="empty"]{background:none;
+/* THE UNSTRUCK SLOT. It was a blank white square — the one element in
+   the sheet with nothing to say. It carries the seal outline at low
+   weight now, so an empty slot reads as an impression waiting to be
+   pressed rather than as a hole. */
+[data-screen="home"] .seal[data-seal="empty"]{background:var(--paper);
   background-image:none}
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark circle,
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark polygon,
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark path,
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark line{stroke:var(--v3)}
+[data-screen="home"] .seal[data-seal="empty"] .seal__mark{opacity:.55}
 [data-screen="home"] .seal--next{
   box-shadow:inset 0 0 0 var(--edge-thin) var(--ink)}
 [data-screen="home"] .seal__no{opacity:.5}

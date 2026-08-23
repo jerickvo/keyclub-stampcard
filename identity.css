@@ -577,12 +577,6 @@ none;
 .tech{min-height:0}
 .tech--sealed{padding-bottom:var(--s4)}
 .tech--sealed .tech__body{min-height:0}
-.tech__state{font-family:var(--f-mono);letter-spacing:.16em}
-.tech--open .tech__state{background:var(--ink);color:var(--paper);
-  border-color:var(--ink);padding:5px 9px}
-/* the sealed chip is a stamped label, not a status pill */
-.chip--sealed{border-style:solid;border-color:var(--v3);color:var(--ink-2);
-  letter-spacing:.22em}
 
 /* ── Record polish ────────────────────────────────────────────────
    +1 stamp is the payoff on an inked row, so it gets paper weight. */
@@ -864,5 +858,3 @@ main#view:focus,main#view:focus-visible{outline:none}
 .tech__req{color:var(--ink);font-size:11.5px;letter-spacing:.08em;opacity:1}
 .tech--sealed .tech__req{color:var(--ink)}
 .tech--sealed .tech__name{color:var(--ink)}
-/* the badge is the state, so it carries a keyline rather than floating */
-.tech__state{border:var(--edge-hair) solid var(--ink);padding:6px 10px}
