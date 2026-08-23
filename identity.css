@@ -236,7 +236,8 @@ none;
    word under it. That is the red. Everything below is the record of
    what the stamp did, and a record is written in ink. */
 .verdict__seal circle,.verdict__seal polygon,
-.verdict__seal path,.verdict__seal line{stroke:var(--seal)}
+.verdict__seal line{stroke:var(--seal)}
+.verdict__seal path{fill:var(--seal)}
 /* SEALED IS THE MARK.
 
    It was an 11px mono label above a 58px "Stamp acquired" — the

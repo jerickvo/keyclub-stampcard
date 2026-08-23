@@ -366,8 +366,9 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   text-transform:uppercase;margin-top:var(--s3)}
 .hero__ring{position:absolute;right:var(--s5);top:var(--s5);
   width:110px;height:110px;opacity:.16}
-.hero__ring circle,.hero__ring polygon,.hero__ring path,.hero__ring line{
+.hero__ring circle,.hero__ring polygon,.hero__ring line{
   fill:none;stroke:var(--ink);stroke-width:1.4;vector-effect:non-scaling-stroke}
+.hero__ring path{fill:var(--ink);stroke:none}
 .hero__foot{margin-top:var(--s4);font-size:13px;color:var(--tone)}
 
 /* ══════════════════ THE STAMP CARD ══════════════════ */
@@ -376,14 +377,23 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .seal{position:relative;aspect-ratio:1;display:grid;place-items:center;
   border:var(--rule) solid var(--ink);background:var(--paper)}
 .seal svg{width:62%;height:62%}
-.seal__mark circle,.seal__mark polygon,.seal__mark path,.seal__mark line{
+/* THE ARTWORK IS FILLED, THE FURNITURE IS STROKED.
+   The seal used to be a line drawing, so every one of these rules set
+   `stroke` on every element inside it. It is a traced silhouette now:
+   the mark is <path>, and the registration circles and ticks the outer
+   levels add around it are <circle> and <line>. Splitting the selector
+   on that boundary is the whole of the change — the colour each
+   container wants stays exactly where it was. */
+.seal__mark circle,.seal__mark polygon,.seal__mark line{
   fill:none;stroke:var(--ink);stroke-width:2;vector-effect:non-scaling-stroke}
+.seal__mark path{fill:var(--ink);stroke:none}
 .seal__no{position:absolute;right:5px;bottom:3px;font:500 9px/1 var(--f-mono);
   color:var(--tone)}
 /* a landed stamp is solid ink — the strongest thing on the page */
 .seal--set{background:var(--ink)}
 .seal--set .seal__mark circle,.seal--set .seal__mark polygon,
-.seal--set .seal__mark path,.seal--set .seal__mark line{stroke:var(--paper)}
+.seal--set .seal__mark line{stroke:var(--paper)}
+.seal--set .seal__mark path{fill:var(--paper)}
 .seal--set .seal__no{color:var(--paper);opacity:.65}
 .seal--next{border-style:dashed}
 .seal--next .seal__mark circle,.seal--next .seal__mark polygon,
@@ -685,8 +695,9 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .reticle__line{position:absolute;left:0;right:0;height:2px;background:var(--ink)}
 .reticle__geo,.reticle__mark{position:absolute;inset:-14%;opacity:.3;pointer-events:none}
 .reticle__geo circle,.reticle__geo polygon,.reticle__geo path,.reticle__geo line,
-.reticle__mark circle,.reticle__mark polygon,.reticle__mark path,.reticle__mark line{
+.reticle__mark circle,.reticle__mark polygon,.reticle__mark line{
   fill:none;stroke:var(--ink);stroke-width:1.3;vector-effect:non-scaling-stroke}
+.reticle__mark path{fill:var(--ink);stroke:none}
 /* `.manual` is a child of the view grid, so the tier gap already
    separates it from the frame above. The extra margin was a second
    gap stacked on the first — 92px of paper between the scanner and
@@ -767,8 +778,9 @@ select.input{padding-right:var(--s4)}
 .who__role{font:500 10px/1 var(--f-mono);letter-spacing:.16em;
   text-transform:uppercase;color:var(--tone);margin-top:6px}
 .who__seal{width:70px;height:70px;flex:none}
-.who__seal circle,.who__seal polygon,.who__seal path,.who__seal line{
+.who__seal circle,.who__seal polygon,.who__seal line{
   fill:none;stroke:var(--ink);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.who__seal path{fill:var(--ink);stroke:none}
 .who__seal--img{object-fit:contain}
 /* ══════════════════ EMPTY STATES ══════════════════
    Centred text in a dashed box is a placeholder, not a state. An empty
@@ -822,8 +834,9 @@ select.input{padding-right:var(--s4)}
           calc(var(--s6) + env(safe-area-inset-left, 0px));
   width:100%;max-width:min(46ch,100%);margin-inline:auto}
 .verdict__seal{width:min(34vmin,190px);height:min(34vmin,190px);margin:0 auto}
-.verdict__seal circle,.verdict__seal polygon,.verdict__seal path,.verdict__seal line{
+.verdict__seal circle,.verdict__seal polygon,.verdict__seal line{
   fill:none;stroke:var(--ink);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.verdict__seal path{fill:var(--ink);stroke:none}
 .verdict__state{font:500 11px/1 var(--f-mono);letter-spacing:.24em;
   text-transform:uppercase;margin-top:var(--s4)}
 .verdict__jp{font-family:var(--f-jp);font-size:12px;letter-spacing:.6em;color:var(--tone)}

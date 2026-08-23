@@ -297,21 +297,16 @@ const Lines = {
 /* ── the structure that forms behind the biggest moments ── */
 /* THE FIELD BEHIND THE IMPACT.
 
-   This drew seal(4) — the full-weight mark — at the height of the
-   screen. The seal's strokes are specified in a 100-unit viewBox, so
-   at 844px its 5.5-unit arms scaled to 46px each and the six of them
-   fused into a soft grey disc covering half the frame. Behind a manga
-   impact there is a drawn figure or there is nothing; there is never
-   a blur.
+   This drew seal(4) at the height of the screen, and back when the
+   seal was a line drawing its 5.5-unit arms scaled to 46px each and
+   the six of them fused into a soft grey disc covering half the
+   frame. I worked around that by redrawing it at hairline weight.
 
-   The width is passed in rather than inherited, because vortex()
-   writes stroke-width inline and no stylesheet can reach past that.
-   At 0.7 units it stays a fine line drawing at any size — the mark
-   the whole product is built on, enormous, behind the word. */
+   The seal is traced artwork now, so it scales the way a logo should:
+   the mark behind the impact is simply the mark, enormous, at low
+   value. The workaround is gone with the geometry that needed it. */
 const fieldSVG = () =>
-  `<svg class="verdict__field" id="verdictField" viewBox="0 0 100 100" aria-hidden="true">${
-    vortex(0.7, true)}<circle cx="50" cy="50" r="49"/><circle cx="50" cy="50" r="47"/>${
-    ticks(36, 46, 48.4, 9)}</svg>`;
+  `<svg class="verdict__field" id="verdictField" viewBox="0 0 100 100" aria-hidden="true">${seal(4)}</svg>`;
 
 const Ambient = {
   /* silence: pull the environment down so the impact lands in a quiet room */
