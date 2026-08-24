@@ -74,35 +74,61 @@
   --steel:var(--tint);  --steel-2:var(--tone);
   --line:var(--ink); --line-2:var(--ink-2); --line-3:var(--tone);
 
-  /* ══ EDGES ═════════════════════════════════════════════════════════
-     Two weights, not five. A hairline separates things that are in a
-     list together; a 2px edge encloses something that is a discrete
-     physical object — a stamp cell, the viewfinder, an input. Nothing
-     else gets a border. The heavier names survive so call sites keep
-     resolving, and they all print 2px. */
-  --edge-hair:1px;
-  --edge-thin:2px;
-  --edge:2px; --edge-heavy:2px; --edge-shout:2px;
-  --rule:2px; --rule-hair:1px;
+  /* ══ EDGES — THREE ROLES, AND ONLY THREE ═══════════════════════════
+     The old system had five weights and no rule about which meant
+     what, so every component invented its own edge. Three now, each
+     with a job:
 
-  /* ══ TYPE ══════════════════════════════════════════════════════════
-     One family. Archivo carries a width axis as well as a weight one,
-     so display type gets real presence without a second face, and the
-     app stops needing four. Mono survives for exactly one job: codes a
-     member might have to read out or type in. It is never a label and
-     never a mood. */
-  --f-display:'Archivo',ui-sans-serif,system-ui,sans-serif;
-  --f-body:var(--f-display);
-  --f-label:var(--f-display);
-  --f-accent:var(--f-display);
-  --f-jp:var(--f-display);
+       frame   3px — a physical object you could pick up. The stamp
+               card, the scanner's viewfinder. Nothing else.
+       panel   2px — major structure. A panel, a form field, the rule
+               under a section heading.
+       rule    1px — a minor divider between things already in a list.
+
+     The legacy names all resolve into those three, so no call site
+     downstream has to be rewritten to keep working. */
+  --edge-frame:3px;
+  --edge-panel:2px;
+  --edge-rule:1px;
+
+  --edge-hair:var(--edge-rule);
+  --edge-thin:var(--edge-panel);
+  --edge:var(--edge-panel); --edge-heavy:var(--edge-panel);
+  --edge-shout:var(--edge-frame);
+  --rule:var(--edge-panel); --rule-hair:var(--edge-rule);
+
+  /* ══ TYPE — THE ORIGINAL FAMILIES, BACK ═════════════════════════════
+     Collapsing everything onto one variable face during the first PRESS
+     pass took the character out along with the noise: Dela Gothic One's
+     blocky, single-weight impact is what makes "06" and a check-in verb
+     read as a stamp rather than a stat. The families are restored to
+     what they were; what changed for good is HOW MANY ROLES use each
+     one (kicker moved off mono onto body, for one) and that nothing is
+     forced into uppercase by default any more. */
+  --f-display:'Dela Gothic One',ui-sans-serif,system-ui,sans-serif;
+  --f-body:'Archivo Narrow',ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --f-label:'Oswald',var(--f-body);
+  --f-accent:'CC Wild Words Roman','CCWildWords','Comic Neue',cursive;
   --f-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --f-jp:'Noto Sans JP',var(--f-body);
 
-  /* ── screentone. one dot field, one density ───────────────── */
-  --tone-dot:  rgba(23,19,15,.16);
-  --tone-fine: 9px;
-  --tone-mid:  9px;
-  --tone-wide: 9px;
+  /* ══ SCREENTONE — ATMOSPHERE, AT TWO STRENGTHS ═════════════════════
+     Tone used to sit behind every screen at one density, which is how
+     a texture stops being a texture and becomes a grey wash. Two
+     strengths now, and the difference between them is the point:
+
+       page    the tooth of the paper. Barely there, everywhere.
+       field   a real tone block, laid deliberately behind one thing
+               per screen — never under a paragraph.  */
+  --tone-page: rgba(23,19,15,.085);
+  --tone-page-size: 10px;
+  --tone-field: rgba(23,19,15,.30);
+  --tone-field-size: 6px;
+
+  --tone-dot:  var(--tone-page);
+  --tone-fine: var(--tone-page-size);
+  --tone-mid:  var(--tone-page-size);
+  --tone-wide: var(--tone-page-size);
 
   /* ── motion ───────────────────────────────────────────────── */
   --press: cubic-bezier(.2,.9,.25,1);
@@ -951,72 +977,80 @@ main#view:focus,main#view:focus-visible{outline:none}
 /* ══════════════════════════════════════════════════════════════════
    PRESS — THE CARD, THE ACTION, THE BRIEF
 
-   One block, and it is the only place the stamp card is styled. The
-   card used to be described in three files at once: a base grid in
-   keystamp.css, a `[data-screen="home"]` override in artdirection.css
-   that turned the cell borders off again, a decorative `::after` on
-   the grid, and a state block here. Sixty selectors saying what one
-   object looks like, and any change to it had to be made in three
-   places in the right order. It is one object now, described once.
+   One block, and it is the only place these three objects are styled.
+   The card used to be described in three files at once — a base grid,
+   a `[data-screen="home"]` override that turned the cell borders off
+   again, a decorative ::after on the grid, and a state block. Sixty
+   selectors for one object, and any change to it meant three edits in
+   the right order.
+
+   Home is a composition, not a stack. Three panels of deliberately
+   unequal shape: a wide detailed card, a tall black one carrying the
+   mark, and a full-measure strip of reading underneath. That is where
+   the manga influence lives — in the panel rhythm and the ink mass,
+   not in graphics laid on top of them.
    ══════════════════════════════════════════════════════════════════ */
 
-.view--home{display:flex;flex-direction:column;gap:var(--s7)}
+.view--home{display:flex;flex-direction:column;gap:var(--s6)}
 
 /* ── THE CARD ──────────────────────────────────────────────────────
-   A printed stamp card: one ruled box carrying its own title row and
+   A printed stamp card: a framed box carrying its own title row and
    then the ten slots. The count is set ON it rather than beside it,
-   because the number and the card state the same fact, and two objects
-   competing to say one thing is what made Home unreadable.
+   because the number and the card state the same fact.
 
-   It is capped, and the cap is the composition: past about 720px the
-   card stops growing and the sheet around it becomes deliberate empty
-   paper rather than a card stretched to fill a monitor. */
-.card{border:var(--edge-thin) solid var(--ink);background:var(--paper);
-  max-width:720px;width:100%}
+   The offset tone block behind it is the one piece of screentone on
+   this screen. It is doing compositional work rather than decorating:
+   it gives the card a physical edge to sit on, and it breaks the
+   symmetry of a centred rectangle without adding a single graphic. */
+.card{position:relative;border:var(--edge-frame) solid var(--ink);
+  background:var(--paper);max-width:760px;width:100%}
+.card::after{content:"";position:absolute;inset:0;z-index:-1;
+  transform:translate(clamp(9px,2.2vw,18px),clamp(9px,2.2vw,18px));
+  background-image:radial-gradient(var(--tone-field) 1.15px,transparent 1.25px);
+  background-size:var(--tone-field-size) var(--tone-field-size)}
 
-.count{padding:var(--s5) var(--s5) var(--s4);
-  border-bottom:var(--edge-thin) solid var(--ink)}
-.count__num{display:flex;align-items:baseline;gap:.28em;
-  font-family:var(--f-display);font-variation-settings:'wdth' 112,'wght' 900;
-  line-height:.86;letter-spacing:-.045em}
-.count__num b{font-weight:inherit;font-size:clamp(64px,17vw,128px)}
-.count__num span{font-size:clamp(22px,5.2vw,40px);color:var(--ink-2);
+/* The title row of a printed card: the count at full display scale, a
+   rule under it, and the two readings sharing the line below. */
+.count{padding:var(--s5) var(--s5) var(--s4)}
+.count__num{display:flex;align-items:baseline;gap:.24em;
+  font-family:var(--f-display);line-height:.82;letter-spacing:-.01em}
+.count__num b{font-weight:inherit;font-size:clamp(72px,19vw,148px)}
+.count__num span{font-size:clamp(22px,5vw,40px);color:var(--ink-2);
   letter-spacing:-.02em}
-.count__label{margin-top:var(--s2);font-size:var(--t-body);color:var(--ink-2)}
-.count__line{margin-top:var(--s1);font-size:var(--t-body)}
+.count__foot{display:flex;flex-wrap:wrap;justify-content:space-between;
+  gap:2px var(--s4);margin-top:var(--s4);padding-top:var(--s2);
+  border-top:var(--edge-rule) solid var(--tone);
+  font-size:var(--t-body)}
+.count__label{color:var(--ink-2)}
 
 /* ── THE TEN SLOTS ─────────────────────────────────────────────────
    The grid IS the ruling: a tone field showing through 1px gaps draws
    every division at once, so ten cells cost one border instead of
-   forty. */
+   forty. The card's frame closes it at the bottom. */
 .seals{display:grid;grid-template-columns:repeat(5,1fr);
-  gap:var(--edge-hair);background:var(--tone);
+  gap:var(--edge-rule);background:var(--tone);container-type:inline-size;
+  border-top:var(--edge-panel) solid var(--ink);
   list-style:none;margin:0;padding:0}
 .seal{position:relative;aspect-ratio:1;display:grid;place-items:center;
   background:var(--paper);min-width:0}
-/* The mark and the slot number both scale with the cell rather than
-   sitting at a fixed size, so at 320px — where a cell is 56px — the
-   numeral stops touching the artwork. */
-.seals{container-type:inline-size}
 .seals .seal svg{width:74%;height:74%;display:block}
 .seal__mark path{fill:var(--tone);stroke:none}
 .seal__no{position:absolute;right:5%;bottom:3%;
   font:500 clamp(8px,2.1cqw,11px)/1 var(--f-mono);color:var(--tone)}
 
-/* EARNED — solid ink, the mark knocked out. The only cell that is a
-   filled surface, because it is the only one where something happened.
-   A stamp lands slightly off square; the rotation is on the mark, not
-   on the cell, so the card's ruling stays straight. */
+/* EARNED — solid ink, the mark knocked out. The only filled cell,
+   because it is the only one where something happened. A stamp lands
+   slightly off square; the rotation is on the mark, not the cell, so
+   the card's ruling stays straight. */
 .seal--set{background:var(--ink)}
 .seal--set .seal__mark path{fill:var(--paper)}
 .seal--set .seal__no{color:var(--paper);opacity:.55}
 .seal--set .seal__mark{transform:rotate(var(--press-tilt,0deg));
   transform-origin:50% 50%}
 
-/* CURRENT — the next one to earn. Ink on paper inside a keyline: the
-   strongest unearned thing on the card, which is what makes it the one
-   you are being asked to go and get. */
-.seal--next{box-shadow:inset 0 0 0 var(--edge-thin) var(--ink)}
+/* CURRENT — the next one to earn: ink on paper inside a keyline, the
+   strongest unearned thing on the card. */
+.seal--next{box-shadow:inset 0 0 0 var(--edge-panel) var(--ink)}
 .seal--next .seal__mark path{fill:var(--ink)}
 .seal--next .seal__no{color:var(--ink-2)}
 
@@ -1025,31 +1059,58 @@ main#view:focus,main#view:focus-visible{outline:none}
 .seal[data-seal="locked"] .seal__mark{opacity:.4}
 
 /* ── THE ACTION ────────────────────────────────────────────────────
-   One button and the meeting it acts on. Ink is the affordance. */
-.act{display:flex;flex-direction:column;gap:var(--s3);max-width:720px}
-.act__btn{display:block;width:100%;min-height:var(--tap);
-  padding:var(--s4) var(--s5);border:var(--edge-thin) solid var(--ink);
-  background:var(--paper);color:var(--ink);cursor:pointer;text-align:left;
-  font-family:var(--f-display);font-variation-settings:'wdth' 100,'wght' 700;
-  font-size:clamp(19px,4.4vw,26px);line-height:1.15;letter-spacing:-.015em}
-.act__btn--live{background:var(--ink);color:var(--paper)}
+   The black panel. This is the ink mass the page is composed around,
+   and the one place the swirl appears — cropped by the panel edge so
+   it reads as printed rather than placed, with the verb sitting in the
+   corner it leaves clear. */
+.act{display:flex;max-width:760px}
+.act__btn{position:relative;overflow:hidden;isolation:isolate;
+  display:grid;align-content:end;gap:4px;
+  width:100%;min-height:clamp(138px,32vw,190px);
+  padding:var(--s5);border:var(--edge-panel) solid var(--ink);
+  background:var(--paper);color:var(--ink);text-align:left;cursor:pointer}
+.act--live .act__btn{background:var(--ink);color:var(--paper)}
+.act__seal{position:absolute;right:-9%;top:-30%;
+  width:clamp(168px,50vw,280px);aspect-ratio:1;height:auto;
+  fill:currentColor;opacity:.15;pointer-events:none;z-index:-1}
+.act__verb{font-family:var(--f-display);
+  font-size:clamp(22px,5.8vw,36px);line-height:1.05;letter-spacing:-.01em}
+.act__sub{font-size:var(--t-body);opacity:.7}
 .act__btn:hover{background:var(--ink);color:var(--paper)}
-.act__sub{font-size:var(--t-body);color:var(--ink-2)}
+.act__btn:hover .act__seal{opacity:.22}
 
 /* ── THE BRIEF ─────────────────────────────────────────────────────
    Two bordered panels became one column of rules. */
-.brief{display:flex;flex-direction:column;gap:var(--s3);max-width:720px}
+.brief{display:flex;flex-direction:column;gap:var(--s3);max-width:760px}
 .brief__head{display:flex;align-items:baseline;justify-content:space-between;
   gap:var(--s3);padding-bottom:var(--s2);
-  border-bottom:var(--edge-thin) solid var(--ink)}
+  border-bottom:var(--edge-panel) solid var(--ink)}
 .brief .h2{margin:0}
 .brief__h2{margin-top:var(--s5);padding-bottom:var(--s2);
-  border-bottom:var(--edge-hair) solid var(--tone)}
+  border-bottom:var(--edge-rule) solid var(--tone)}
 
-/* The rail's account block leads with the person, not the record. The
-   name was set in display caps above a `SIGNED IN · MEMBER` label; the
-   label is the quiet half of that pair, so it sits under the name at
-   reading weight. */
-.rail__who{font-family:var(--f-display);font-variation-settings:'wght' 700;
-  font-size:clamp(15px,1.1vw,17px);line-height:1.25;overflow-wrap:anywhere}
+/* ── THE SPREAD ────────────────────────────────────────────────────
+   Once there is room, the three panels stop being a stack. The card
+   takes the wide measure, the ink panel goes tall beside it, and the
+   log runs the full width underneath — unequal shapes, which is the
+   whole of the manga-page influence on this screen. */
+@media(min-width:1024px){
+  .view--home{display:grid;
+    grid-template-columns:minmax(0,7fr) minmax(0,5fr);
+    gap:var(--s7) var(--s6);align-items:start}
+  .view--home > .card,
+  .view--home > .act,
+  .view--home > .brief{max-width:none}
+  .view--home > .card{grid-column:1}
+  .view--home > .act{grid-column:2;align-self:stretch}
+  .view--home > .act .act__btn{min-height:clamp(280px,30vw,420px)}
+  .view--home > .brief{grid-column:1/-1}
+}
+
+
+/* ══ THE RAIL'S ACCOUNT BLOCK ═══════════════════════════════════════
+   Leads with the person, not the record: the name at display weight,
+   the role underneath it at reading size, in that order. */
+.rail__who{font-family:var(--f-display);
+  font-size:clamp(15px,1.3vw,19px);line-height:1.15;overflow-wrap:anywhere}
 .rail__role{margin-top:2px;font-size:13px}

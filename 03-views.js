@@ -46,8 +46,10 @@ const C = {
       : `${p.remaining} more until ${next.name.toLowerCase()}`;
     return `<div class="count">
       <p class="count__num"><b>${pad(p.filled)}</b><span>/ ${p.span}</span></p>
-      <p class="count__label">stamps on this card</p>
-      <p class="count__line">${esc(line)}</p>
+      <div class="count__foot">
+        <span class="count__label">stamps on this card</span>
+        <span class="count__line">${esc(line)}</span>
+      </div>
     </div>`;
   },
 
@@ -108,9 +110,17 @@ const C = {
      readout wrapped around a verb — five graphics saying "press me"
      where ink on paper already says it. */
   strike({ verb, sub, go, live = false, calm = false }){
-    return `<div class="act" data-enter>
-      <button class="act__btn ${live ? 'act__btn--live' : ''}" data-go="${go}">${esc(verb)}</button>
-      <p class="act__sub">${esc(sub)}</p>
+    /* The one place the swirl appears on this screen, and it is the
+       right one: the mark you are pressing for, on the thing you press.
+       It is cropped by the panel rather than centred in it — a mark
+       that runs off the edge reads as printed on the page instead of
+       placed on it, and it keeps the verb's corner clear. */
+    return `<div class="act ${live ? 'act--live' : ''}" data-enter>
+      <button class="act__btn" data-go="${go}">
+        <svg class="act__seal" viewBox="0 0 100 100" aria-hidden="true">${sealArt()}</svg>
+        <span class="act__verb">${esc(verb)}</span>
+        <span class="act__sub">${esc(sub)}</span>
+      </button>
     </div>`;
   },
 
