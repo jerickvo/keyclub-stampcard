@@ -120,8 +120,12 @@ const C = {
     </section>`;
   },
 
-  /* THE ACTION. One button, ink, with the meeting it acts on set
-     underneath it in plain reading. The chamber it replaces was four
+  /* THE ACTION. One clean ink mass with the verb on it, beside a card
+     that already carries ten symbols. The swirl used to sit inside this
+     panel: at 15% it was an invisible texture, and at any strength that
+     would have made it visible it competed with both the verb and the
+     card's marks. The swirl belongs where it is the subject — the
+     opening spread, and the code on the projector. The chamber it replaces was four
      corner marks, a crosshair, a speed-line field and a TARGET LIVE
      readout wrapped around a verb — five graphics saying "press me"
      where ink on paper already says it. */
@@ -133,7 +137,6 @@ const C = {
        placed on it, and it keeps the verb's corner clear. */
     return `<div class="act ${live ? 'act--live' : ''}" data-enter>
       <button class="act__btn" data-go="${go}">
-        <svg class="act__seal" viewBox="0 0 100 100" aria-hidden="true">${sealArt()}</svg>
         <span class="act__verb">${esc(verb)}</span>
         <span class="act__sub">${esc(sub)}</span>
       </button>
@@ -311,6 +314,10 @@ const Views = {
           server accepts a scan, and the card carries the tier you are on.</p>
       </header>
 
+      <!-- The card leads and the ink panel runs off the right edge of
+           the sheet beside it. The two used to be equal-weight
+           rectangles side by side; a panel that bleeds is the thing
+           that stops a row of boxes reading as a row of boxes. -->
       <div class="deck" data-enter>
         ${C.sealGrid()}
         ${action}

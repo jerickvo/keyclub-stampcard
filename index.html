@@ -2328,6 +2328,8 @@ select.input:focus-visible{outline:none}
   --edge-frame:3px;
   --edge-panel:2px;
   --edge-rule:1px;
+  /* the card is the one object with an edge of its own */
+  --edge-card:5px;
 
   --edge-hair:var(--edge-rule);
   --edge-thin:var(--edge-panel);
@@ -2861,7 +2863,7 @@ main#view:focus,main#view:focus-visible{outline:none}
    not in graphics laid on top of them.
    ══════════════════════════════════════════════════════════════════ */
 
-.view--home{display:flex;flex-direction:column;gap:var(--s5)}
+.view--home{display:flex;flex-direction:column;gap:var(--s4)}
 
 /* ── THE CARD ──────────────────────────────────────────────────────
    A printed stamp card: a framed box carrying its own title row and
@@ -2872,12 +2874,17 @@ main#view:focus,main#view:focus-visible{outline:none}
    this screen. It is doing compositional work rather than decorating:
    it gives the card a physical edge to sit on, and it breaks the
    symmetry of a centred rectangle without adding a single graphic. */
-.card{position:relative;border:var(--edge-frame) solid var(--ink);
-  background:var(--paper);max-width:760px;width:100%}
+/* A PLATE, not a panel. Every framed thing in the app carried the same
+   edge, so the one object the product is about looked like a component.
+   This one has a heavier frame and a readable tone block offset behind
+   it — the screentone there used to be the same invisible 8.5% dot as
+   the page ground, so the card had no physical edge to sit on. */
+.card{position:relative;border:var(--edge-card) solid var(--ink);
+  background:var(--paper);width:100%}
 .card::after{content:"";position:absolute;inset:0;z-index:-1;
-  transform:translate(clamp(9px,2.2vw,18px),clamp(9px,2.2vw,18px));
-  background-image:radial-gradient(var(--tone-field) 1.15px,transparent 1.25px);
-  background-size:var(--tone-field-size) var(--tone-field-size)}
+  transform:translate(clamp(10px,2.4vw,20px),clamp(10px,2.4vw,20px));
+  background-image:radial-gradient(var(--ink) 1.25px,transparent 1.35px);
+  background-size:6px 6px}
 
 /* The title row of a printed card: the count at full display scale, a
    rule under it, and the two readings sharing the line below. */
@@ -2901,9 +2908,14 @@ main#view:focus,main#view:focus-visible{outline:none}
   gap:var(--edge-rule);background:var(--tone);container-type:inline-size;
   border-top:var(--edge-panel) solid var(--ink);
   list-style:none;margin:0;padding:0}
+/* An unearned slot carries tone. On paper the card read 60% blank —
+   six black cells and four near-white ones, which looks like a
+   half-drawn grid rather than a card with boxes still to fill. */
 .seal{position:relative;aspect-ratio:1;display:grid;place-items:center;
-  background:var(--paper);min-width:0}
-.seals .seal svg{width:74%;height:74%;display:block}
+  background:var(--paper);min-width:0;
+  background-image:radial-gradient(var(--ink) .9px,transparent 1px);
+  background-size:7px 7px}
+.seals .seal svg{width:84%;height:84%;display:block}
 .seal__mark path{fill:var(--tone);stroke:none}
 .seal__no{position:absolute;right:5%;bottom:3%;
   font:500 clamp(8px,2.1cqw,11px)/1 var(--f-mono);color:var(--tone)}
@@ -2912,7 +2924,7 @@ main#view:focus,main#view:focus-visible{outline:none}
    because it is the only one where something happened. A stamp lands
    slightly off square; the rotation is on the mark, not the cell, so
    the card's ruling stays straight. */
-.seal--set{background:var(--ink)}
+.seal--set{background:var(--ink);background-image:none}
 .seal--set .seal__mark path{fill:var(--paper)}
 .seal--set .seal__no{color:var(--paper);opacity:.55}
 .seal--set .seal__mark{transform:rotate(var(--press-tilt,0deg));
@@ -2920,7 +2932,10 @@ main#view:focus,main#view:focus-visible{outline:none}
 
 /* CURRENT — the next one to earn: ink on paper inside a keyline, the
    strongest unearned thing on the card. */
-.seal--next{box-shadow:inset 0 0 0 var(--edge-panel) var(--ink)}
+/* the next one to earn: paper cleared of tone inside a heavy keyline —
+   the one empty box on the card that is asking for something */
+.seal--next{background-image:none;
+  box-shadow:inset 0 0 0 var(--edge-frame) var(--ink)}
 .seal--next .seal__mark path{fill:var(--ink)}
 .seal--next .seal__no{color:var(--ink-2)}
 
@@ -2944,14 +2959,10 @@ main#view:focus,main#view:focus-visible{outline:none}
   background:var(--paper);color:var(--ink);text-align:left;cursor:pointer;
   font-family:var(--f-body)}
 .act--live .act__btn{background:var(--ink);color:var(--paper)}
-.act__seal{position:absolute;right:-9%;top:-30%;
-  width:clamp(168px,50vw,280px);aspect-ratio:1;height:auto;
-  fill:currentColor;opacity:.15;pointer-events:none;z-index:-1}
 .act__verb{font-family:var(--f-head);text-transform:uppercase;
   font-size:var(--t-verb);line-height:1;letter-spacing:.01em}
 .act__sub{font-size:var(--t-body);opacity:.7}
 .act__btn:hover{background:var(--ink);color:var(--paper)}
-.act__btn:hover .act__seal{opacity:.22}
 
 /* ── THE BRIEF ─────────────────────────────────────────────────────
    Two bordered panels became one column of rules. */
@@ -2963,12 +2974,17 @@ main#view:focus,main#view:focus-visible{outline:none}
    width — the wide printed card, the tall ink panel beside it. The
    ink panel takes the card's height exactly, so the pair reads as one
    spread rather than two components that happen to be adjacent. */
-.view--home{display:flex;flex-direction:column;gap:var(--s5)}
+.view--home{display:flex;flex-direction:column;gap:var(--s4)}
 .deck{display:grid;gap:var(--s4)}
 
+/* the ink panel runs off the sheet on both layouts; on a phone it does
+   it under the card, on a wide sheet beside it */
+.deck > .act{margin-right:calc(var(--gutter) * -1)}
+.deck > .act .act__btn{border-right:0}
+
 @media(min-width:1024px){
-  .deck{grid-template-columns:minmax(0,7fr) minmax(0,5fr);
-    gap:var(--s6);align-items:stretch}
+  .deck{grid-template-columns:minmax(0,62fr) minmax(0,38fr);
+    gap:clamp(20px,2.6vw,40px);align-items:stretch}
   .deck > .card,.deck > .act{max-width:none}
   .deck > .act .act__btn{min-height:0}
 }
@@ -18054,8 +18070,12 @@ const C = {
     </section>`;
   },
 
-  /* THE ACTION. One button, ink, with the meeting it acts on set
-     underneath it in plain reading. The chamber it replaces was four
+  /* THE ACTION. One clean ink mass with the verb on it, beside a card
+     that already carries ten symbols. The swirl used to sit inside this
+     panel: at 15% it was an invisible texture, and at any strength that
+     would have made it visible it competed with both the verb and the
+     card's marks. The swirl belongs where it is the subject — the
+     opening spread, and the code on the projector. The chamber it replaces was four
      corner marks, a crosshair, a speed-line field and a TARGET LIVE
      readout wrapped around a verb — five graphics saying "press me"
      where ink on paper already says it. */
@@ -18067,7 +18087,6 @@ const C = {
        placed on it, and it keeps the verb's corner clear. */
     return `<div class="act ${live ? 'act--live' : ''}" data-enter>
       <button class="act__btn" data-go="${go}">
-        <svg class="act__seal" viewBox="0 0 100 100" aria-hidden="true">${sealArt()}</svg>
         <span class="act__verb">${esc(verb)}</span>
         <span class="act__sub">${esc(sub)}</span>
       </button>
@@ -18245,6 +18264,10 @@ const Views = {
           server accepts a scan, and the card carries the tier you are on.</p>
       </header>
 
+      <!-- The card leads and the ink panel runs off the right edge of
+           the sheet beside it. The two used to be equal-weight
+           rectangles side by side; a panel that bleeds is the thing
+           that stops a row of boxes reading as a row of boxes. -->
       <div class="deck" data-enter>
         ${C.sealGrid()}
         ${action}
