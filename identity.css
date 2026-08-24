@@ -372,19 +372,6 @@ none;
 .bstat b{font-size:clamp(26px,3.4vw,40px);line-height:.9}
 .bstat span{color:var(--ink-2)}
 
-/* the next meeting is the subject of the page */
-.bnext{
-  border:var(--edge) solid var(--ink);
-  background-image:radial-gradient(var(--tone-dot) .5px, transparent .6px);
-  background-size:var(--tone-25) var(--tone-25);
-}
-.bnext--live{
-  background:var(--ink);color:var(--paper);border-width:var(--edge-heavy);
-  background-image:none;
-}
-.bnext--live .bactive__no,.bnext--live .muted{color:var(--paper)}
-.bnext--live .bstate--open{background:var(--paper);color:var(--ink);border-color:var(--paper)}
-
 /* milestone bars: fill is a spotted black on a line track */
 .bmile__bar{border:var(--edge-hair) solid var(--ink);background:var(--paper);height:10px}
 .bmile__fill{background:var(--ink)}
@@ -443,7 +430,6 @@ none;
 :where(.panel--seal){--ink-w:3}
 
 .bstat b{font-size:clamp(22px,6vw,30px)}
-.bnext{padding:var(--s4)}
 .bmile{grid-template-columns:auto 1fr;gap:var(--s3)}
 
 .brow{padding-block:var(--s3)}
@@ -457,7 +443,6 @@ none;
 @media (min-width:768px){
   :where(.panel){--ink-w:3}
   :where(.panel--seal){--ink-w:6}
-  .bnext{padding:var(--s5)}
 }
 
 
@@ -547,7 +532,7 @@ none;
 .muted,.chip--set,
 .qrpanel__when,.empty,
 .verdict__meet,.setupbox__hint,.bstat span,
-.brow__no,.brow__sub,.bactive__no--off,.bstate--ended,.bstate--past,.bmile__mid .muted,
+.brow__no,.brow__sub,.bstate--ended,.bstate--past,.bmile__mid .muted,
 .brow__mid .muted{color:var(--ink-2)}
 
 /* ── 3. Grid children that cannot shrink ──────────────────────────
@@ -1412,3 +1397,66 @@ button,input,select,textarea{font-family:inherit}
 .acct__out:focus-visible{outline:var(--edge-panel) solid var(--ink);
   outline-offset:3px}
 @media(min-width:1024px){ .acct{display:none} }
+
+
+/* ══════════════════════════════════════════════════════════════════
+   CLUB TOOLS — board overview
+
+   Same book, administrative chapter. The one thing a board member acts
+   on is the meeting taking check-ins, so that is the ink mass; the rest
+   is the year's standing, set in the same band the member pages use.
+
+   It used to be four figure plates of equal weight — one of them an
+   average derived from the other two — under a section heading reading
+   "The club, in numbers", inside a boxed title that no other screen
+   still uses.
+   ══════════════════════════════════════════════════════════════════ */
+.bover{display:flex;flex-direction:column;gap:var(--s5)}
+
+/* The panel is as tall as what it says. It used to stack the verb under
+   everything else and run four hundred pixels deep with its right two
+   thirds empty ink; the verb sits in that space now. */
+.bnow{display:grid;gap:2px var(--s5);
+  grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"lab" "no" "at" "state" "go";
+  align-items:start;justify-items:start;
+  padding:var(--s5);border:var(--edge-panel) solid var(--ink);
+  background:var(--paper);color:var(--ink)}
+.bnow__lab{grid-area:lab} .bnow__no{grid-area:no}
+.bnow__at{grid-area:at}   .bnow__state{grid-area:state}
+.bnow__go{grid-area:go}
+
+@media(min-width:720px){
+  .bnow{grid-template-columns:minmax(0,1fr) auto;
+    grid-template-areas:"lab go" "no go" "at go" "state go";
+    align-items:start}
+  .bnow__go{align-self:center;margin-top:0}
+}
+.bnow--live{background:var(--ink);color:var(--paper);border-color:var(--ink);
+  box-shadow:var(--s2) var(--s2) 0 var(--tone-field)}
+.bnow__lab{margin:0;font-size:var(--t-caption);color:var(--ink-2)}
+.bnow--live .bnow__lab{color:var(--tint)}
+.bnow__no{margin:0;padding-bottom:.08em;
+  font-family:var(--f-display);text-transform:uppercase;line-height:.9;
+  font-size:clamp(38px,9vw,76px)}
+.bnow__at{margin:0;font-size:var(--t-body);line-height:1.3}
+.bnow--live .bnow__at{color:var(--tint)}
+.bnow__state{margin:var(--s2) 0 0;font-size:var(--t-caption);
+  color:var(--ink-2)}
+.bnow--live .bnow__state{color:var(--paper)}
+.bnow__go{margin-top:var(--s4);padding:11px var(--s5);cursor:pointer;
+  border:var(--edge-panel) solid currentColor;
+  background:transparent;color:inherit;
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(15px,3vw,21px);line-height:1.2}
+.bnow--live .bnow__go{background:var(--paper);color:var(--ink);
+  border-color:var(--paper)}
+.bnow__go:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.bnow--live .bnow__go:hover{background:transparent;color:var(--paper);
+  border-color:var(--paper)}
+.bnow__go:focus-visible{outline:var(--edge-panel) solid currentColor;
+  outline-offset:3px}
+
+/* the board overview borrows Member's standing band, so it needs the
+   band's own top rule rather than a section heading above it */
+.bover .standing-band{border-top-width:var(--edge-panel)}

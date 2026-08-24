@@ -281,12 +281,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 
 .muted{color:var(--ink-2)}
 
-.head{display:flex;align-items:flex-start;justify-content:space-between;
-  gap:var(--s4);padding:var(--s4) var(--s5);border:var(--rule) solid var(--ink);
-  background:var(--paper);position:relative;overflow:hidden}
-.head--bare{align-items:center}
-.head__stack{position:relative}
-
 /* ══════════════════ HERO ══════════════════ */
 
 
@@ -777,7 +771,7 @@ html,body{overflow-x:clip;max-width:100%}
    being able to crop it. */
 
 
-.head{position:relative;overflow:visible}
+
 .rig{isolation:isolate}
 /* Home's title is a member's name — arbitrary user data, not a designed
    word, and it can be far longer than any chapter heading. At the
@@ -823,8 +817,7 @@ html,body{overflow-x:clip;max-width:100%}
    getting a 2.8px box of its own, so fifteen meetings meant fifteen
    boxes stacked inside the box around them. Rows are separated by a
    hairline and space now. */
-.panel,.head,
-.bpanel,.bnext{
+.panel{
   border-width:calc(var(--ink-w, 2.8) * 1px);
   border-style:solid;
   border-radius:0;
@@ -844,7 +837,7 @@ html,body{overflow-x:clip;max-width:100%}
    on the element that positions itself — so an out-of-flow child
    declares its own status at the point it is created and no stylesheet
    has to be told about it afterwards. */
-.panel > *:not([data-layer]),.head > *:not([data-layer]){
+.panel > *:not([data-layer]){
   position:relative;z-index:1}
 
 /* ══════════════════════════════════════════════════════════════════
@@ -951,7 +944,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
    every page at once; the mark itself is positioned against the padding
    box, so it does not move with it. */
 :root{--jp-lane:calc(var(--s4) + 22px)}
-.view > .head{padding-right:calc(var(--s4) + var(--jp-lane))}
 @media(min-width:1024px){
   /* the right lane now carries two vertical marks, so it is wider */
   :root{--jp-lane:calc(var(--s4) + 42px)}
@@ -986,7 +978,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 /* one padding value for every panel, plus a larger one where a panel is
    carrying the dominant moment */
 .panel{padding:var(--space-panel)}
-.head{padding:var(--space-panel) var(--space-panel-lg)}
 
 /* typographic rhythm */
 .h2 + *{margin-top:var(--space-stack-sm)}
@@ -1065,11 +1056,7 @@ main#view{padding-top:var(--space-tier);
    centred in a tall, almost empty panel. Same left anchor and same
    proportion as Home, so the pages read as one book.
    ══════════════════════════════════════════════════════════════════ */
-.view > .head{justify-content:flex-start;align-items:flex-end;
-  min-height:clamp(84px,9vw,132px);position:relative}
-.view > .head .head__stack{max-width:100%}
-.view > .head .kicker{position:absolute;left:var(--space-panel-lg);
-  top:var(--space-panel)}
+
 
 /* ══════════════════════════════════════════════════════════════════
    REWARDS — three full-width bars with content stranded in one corner.
@@ -1083,8 +1070,5 @@ main#view{padding-top:var(--space-tier);
 /* The kicker was absolutely positioned and landed on top of the title —
    text over text, which is what "text overlaps the borders" was. It
    stacks above the title in normal flow instead. */
-.view > .head .kicker{position:static}
-.view > .head{flex-direction:column;align-items:flex-start;
-  justify-content:flex-end;gap:var(--space-hair)}
-.view > .head .head__stack{width:100%}
+
 .kicker{display:inline-block}

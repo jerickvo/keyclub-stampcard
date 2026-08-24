@@ -157,9 +157,7 @@
    rule that the title sits on, which also frees the vertical space
    the old boxed header was spending on nothing.
    ───────────────────────────────────────────────────────────────── */
-.view > .head{border-bottom:0}
-.view > .head::after{content:"";position:absolute;left:0;right:0;bottom:0;
-  height:3px;background:var(--ink);z-index:1}
+
 
 .authp__f{display:block;margin-bottom:var(--s4)}
 .authp__f .kicker{display:block;margin-bottom:6px}
@@ -202,7 +200,11 @@
    and a rule — never by a coloured badge, because there is no colour
    in this system to spend on it.
    ───────────────────────────────────────────────────────────────── */
-.bpanel{--ink-w:3.2;position:relative;padding:var(--s5)}
+/* A division of the sheet, not a box on it. The pane used to carry a
+   3.2px border of its own, so every board screen drew a second frame
+   immediately under the page's title rule with an empty band between
+   the two. The section rules below are the only divisions it needs. */
+.bpanel{position:relative;padding:0}
 .bpanel--wait{opacity:.7}
 .bempty{margin:var(--s4) 0;font-size:13px}
 .bsec{margin:var(--s6) 0 var(--s3);padding-bottom:6px;
@@ -217,9 +219,6 @@
   font-size:clamp(22px,2.4vw,30px);line-height:1;letter-spacing:-.02em}
 .bstat span{display:block;margin-top:var(--s3);font:500 10px/1.3 var(--f-label);
   letter-spacing:.18em;color:var(--tone)}
-.bactive__no{font-family:var(--f-display);font-size:clamp(30px,4vw,52px);
-  line-height:1;margin:6px 0 4px}
-.bactive__no--off{color:var(--v3)}
 
 /* THE REGISTER.
 
@@ -343,13 +342,7 @@
    palette, no cards, no gradients. */
 
 
-.bnext{padding:var(--s5);border:var(--rule-hair) solid var(--ink)}
-/* live state is carried by the heavier rule and the filled tag, not by
-   colour alone — the tag still reads CHECK-IN OPEN in monochrome */
-.bnext--live{border-width:var(--edge-heavy)}
-.bnext__state{display:flex;align-items:center;gap:var(--s3);
-  flex-wrap:wrap;margin-top:var(--s4)}
-.bnext__state .muted{font-size:12px}
+
 
 .bmiles{margin-top:var(--s2)}
 .bmile{display:grid;grid-template-columns:auto 1fr;align-items:start;
@@ -434,6 +427,11 @@
 .bsec{position:relative;padding-top:clamp(14px,2vw,22px);margin-top:clamp(18px,2.6vw,30px)}
 .bsec::before{content:"";position:absolute;left:0;right:0;top:0;
   height:var(--edge-thin);background:var(--ink)}
+/* The pane's first section already sits under the page title's rule.
+   Drawing its own on top of that put two rules across the sheet with a
+   band of empty paper between them, on every board screen. */
+#boardPane > .bpanel > .bsec:first-child{padding-top:0;margin-top:0}
+#boardPane > .bpanel > .bsec:first-child::before{content:none}
 
 /* the figures: a ruled strip, one leading */
 .bstats{display:grid;gap:0;grid-template-columns:repeat(2,minmax(0,1fr));
@@ -688,13 +686,6 @@
    thing with a corner taken out of it.
    ══════════════════════════════════════════════════════════════════ */
 :root{--cut-a:60deg; --run-a:60deg}
-
-
-
-
-[data-screen="board"] .bnext{
-  clip-path:polygon(var(--sheet-cut) 0, 100% 0, 100% 100%,
-                    0 100%, 0 var(--sheet-cut))}
 
 /* ══════════════════════════════════════════════════════════════════
    THE STAMP SHEET — ONE INK MASS, NOT NINE SQUARES
@@ -1141,69 +1132,6 @@ select.input:focus-visible{outline:none}
 .ahead__head{display:flex;align-items:baseline;justify-content:space-between;
   gap:var(--s3);flex-wrap:wrap;margin-bottom:clamp(12px,1.8vw,20px)}
 .ahead .h2{color:var(--ink)}
-
-/* ── 3. THE SOUND EFFECT LANDED IN THE SAME PLACE FIVE TIMES ──────
-   Every chapter's impact word sat at the top edge, cropped by the
-   same corner. Five differently-composed spreads carrying one
-   identical layer is a template, and a template is the thing this
-   was supposed to stop being. Each chapter now places its word where
-   that page has room for it: Home behind the nameplate, Record low
-   and leading (the log runs down the page and the word runs with
-   it), Rewards high and trailing, Member across the middle, Scan on
-   the diagonal it already owns. */
-
-
-/* ── 4. THE MICRO TIER STILL SAID "UNLOCKS AT N" NOWHERE ──────────
-   Hiding the line was the lazy way to make the far tiers small: the
-   number of stamps a reward costs is the whole point of the row.
-   It comes back as an annotation on the same line as the name, which
-   is where a fact of that size belongs. */
-
-
-/* ── 5. THE UNSTRUCK SLOT WAS TOO PALE TO BE AN IMPRESSION ────────
-   It carries the mark at --v3 and .55, which on paper is a smudge —
-   the slot reads as blank, which is exactly what it was before the
-   outline was added. An impression waiting to be pressed has to be
-   visible as a shape. */
-/* `path` was in this list, and it is out of it now. The slot used to
-   hold a three-bar tally, which a stroke thickened harmlessly. It
-   holds a dense emblem now: a one-unit stroke on a 64-unit box closes
-   the counters — the studs, the notches, the pierced boss — and the
-   seal collapses into a blob. Artwork is filled and only filled; the
-   registration furniture is what gets stroked. */
-
-
-/* ── 6. THE CLOSING PAIR ON HOME WAS ONE OBJECT TWICE ─────────────
-   I set the trailing closer to .92em and called it a hierarchy. At
-   that difference the two panels are still the same object, and the
-   page ends on two equal-weight footnotes. What is happening NOW is
-   the support panel and keeps its rule and its full type; what was
-   last stamped is the micro panel — no rule, indented off the
-   register, set down to a marginal note. */
-
-
-/* ── 7. THE BOARD'S LIVE PANEL WAS INK WITH NOTHING IN IT ─────────
-   A full-measure black field with the meeting, the state and both
-   controls stacked in the left third and 60% of the ink empty. The
-   concentrated black on this page has to be carrying something. The
-   panel reads across now: the meeting numeral at figure scale on the
-   leading edge, the state and the control registered to the trailing
-   one, so the mass is spanned rather than filled at one end. */
-@media(min-width:768px){
-  [data-screen="board"] .bnext{display:grid;
-    grid-template-columns:minmax(0,1fr) auto;
-    align-items:start;column-gap:clamp(24px,5vw,80px)}
-  [data-screen="board"] .bnext > :not(.btn){grid-column:1}
-  /* the control carries an inline margin-top from the markup, which
-     is right in the stacked arrangement and wrong here — it is beside
-     the meeting now, not under it */
-  [data-screen="board"] .bnext > .btn{grid-column:2;grid-row:1/-1;
-    align-self:center;justify-self:end;margin-top:0!important;
-    min-width:clamp(150px,16vw,220px)}
-  /* the numeral is the figure this mass is carrying */
-  [data-screen="board"] .bnext .bactive__no{font-size:clamp(44px,6.4vw,96px);
-    line-height:.9}
-}
 
 
 /* ══════════════════════════════════════════════════════════════════

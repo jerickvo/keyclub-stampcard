@@ -23,15 +23,6 @@ const C = {
      title names one line lower, which is a label explaining a label.
      So are the diagonal rake, the volume rune and the edge kanji —
      three marks that reported nothing about the page they sat on. */
-  head(title, note){
-    return `<header class="head" data-enter>
-      <div class="head__stack">
-        <h1 class="title">${title}</h1>
-        ${note ? `<p class="muted">${esc(note)}</p>` : ''}
-      </div>
-    </header>`;
-  },
-
   /* ── the stat plate: a character status readout, not a summary card ── */
   /* THE COUNT. It is the card's masthead and it is set ON the card,
      not in a panel beside it: a printed stamp card carries its own
@@ -492,8 +483,10 @@ const Views = {
      row is gone: the nav rail already says where you are, and two levels
      of tabs for four screens was one level too many. */
   boardSpread(title){
-    return `<div class="view">
-      ${C.head(title)}
+    return `<div class="view view--board">
+      <header class="rechead" data-enter>
+        <h1 class="title rechead__title">${title}</h1>
+      </header>
       <section class="rig" data-enter style="margin-top:var(--gut)">
         <div id="boardPane">${BoardUI.pane()}</div>
       </section>

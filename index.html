@@ -358,12 +358,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 
 .muted{color:var(--ink-2)}
 
-.head{display:flex;align-items:flex-start;justify-content:space-between;
-  gap:var(--s4);padding:var(--s4) var(--s5);border:var(--rule) solid var(--ink);
-  background:var(--paper);position:relative;overflow:hidden}
-.head--bare{align-items:center}
-.head__stack{position:relative}
-
 /* ══════════════════ HERO ══════════════════ */
 
 
@@ -854,7 +848,7 @@ html,body{overflow-x:clip;max-width:100%}
    being able to crop it. */
 
 
-.head{position:relative;overflow:visible}
+
 .rig{isolation:isolate}
 /* Home's title is a member's name — arbitrary user data, not a designed
    word, and it can be far longer than any chapter heading. At the
@@ -900,8 +894,7 @@ html,body{overflow-x:clip;max-width:100%}
    getting a 2.8px box of its own, so fifteen meetings meant fifteen
    boxes stacked inside the box around them. Rows are separated by a
    hairline and space now. */
-.panel,.head,
-.bpanel,.bnext{
+.panel{
   border-width:calc(var(--ink-w, 2.8) * 1px);
   border-style:solid;
   border-radius:0;
@@ -921,7 +914,7 @@ html,body{overflow-x:clip;max-width:100%}
    on the element that positions itself — so an out-of-flow child
    declares its own status at the point it is created and no stylesheet
    has to be told about it afterwards. */
-.panel > *:not([data-layer]),.head > *:not([data-layer]){
+.panel > *:not([data-layer]){
   position:relative;z-index:1}
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1028,7 +1021,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
    every page at once; the mark itself is positioned against the padding
    box, so it does not move with it. */
 :root{--jp-lane:calc(var(--s4) + 22px)}
-.view > .head{padding-right:calc(var(--s4) + var(--jp-lane))}
 @media(min-width:1024px){
   /* the right lane now carries two vertical marks, so it is wider */
   :root{--jp-lane:calc(var(--s4) + 42px)}
@@ -1063,7 +1055,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 /* one padding value for every panel, plus a larger one where a panel is
    carrying the dominant moment */
 .panel{padding:var(--space-panel)}
-.head{padding:var(--space-panel) var(--space-panel-lg)}
 
 /* typographic rhythm */
 .h2 + *{margin-top:var(--space-stack-sm)}
@@ -1142,11 +1133,7 @@ main#view{padding-top:var(--space-tier);
    centred in a tall, almost empty panel. Same left anchor and same
    proportion as Home, so the pages read as one book.
    ══════════════════════════════════════════════════════════════════ */
-.view > .head{justify-content:flex-start;align-items:flex-end;
-  min-height:clamp(84px,9vw,132px);position:relative}
-.view > .head .head__stack{max-width:100%}
-.view > .head .kicker{position:absolute;left:var(--space-panel-lg);
-  top:var(--space-panel)}
+
 
 /* ══════════════════════════════════════════════════════════════════
    REWARDS — three full-width bars with content stranded in one corner.
@@ -1160,10 +1147,7 @@ main#view{padding-top:var(--space-tier);
 /* The kicker was absolutely positioned and landed on top of the title —
    text over text, which is what "text overlaps the borders" was. It
    stacks above the title in normal flow instead. */
-.view > .head .kicker{position:static}
-.view > .head{flex-direction:column;align-items:flex-start;
-  justify-content:flex-end;gap:var(--space-hair)}
-.view > .head .head__stack{width:100%}
+
 .kicker{display:inline-block}
 
 </style>
@@ -1327,9 +1311,7 @@ main#view{padding-top:var(--space-tier);
    rule that the title sits on, which also frees the vertical space
    the old boxed header was spending on nothing.
    ───────────────────────────────────────────────────────────────── */
-.view > .head{border-bottom:0}
-.view > .head::after{content:"";position:absolute;left:0;right:0;bottom:0;
-  height:3px;background:var(--ink);z-index:1}
+
 
 .authp__f{display:block;margin-bottom:var(--s4)}
 .authp__f .kicker{display:block;margin-bottom:6px}
@@ -1372,7 +1354,11 @@ main#view{padding-top:var(--space-tier);
    and a rule — never by a coloured badge, because there is no colour
    in this system to spend on it.
    ───────────────────────────────────────────────────────────────── */
-.bpanel{--ink-w:3.2;position:relative;padding:var(--s5)}
+/* A division of the sheet, not a box on it. The pane used to carry a
+   3.2px border of its own, so every board screen drew a second frame
+   immediately under the page's title rule with an empty band between
+   the two. The section rules below are the only divisions it needs. */
+.bpanel{position:relative;padding:0}
 .bpanel--wait{opacity:.7}
 .bempty{margin:var(--s4) 0;font-size:13px}
 .bsec{margin:var(--s6) 0 var(--s3);padding-bottom:6px;
@@ -1387,9 +1373,6 @@ main#view{padding-top:var(--space-tier);
   font-size:clamp(22px,2.4vw,30px);line-height:1;letter-spacing:-.02em}
 .bstat span{display:block;margin-top:var(--s3);font:500 10px/1.3 var(--f-label);
   letter-spacing:.18em;color:var(--tone)}
-.bactive__no{font-family:var(--f-display);font-size:clamp(30px,4vw,52px);
-  line-height:1;margin:6px 0 4px}
-.bactive__no--off{color:var(--v3)}
 
 /* THE REGISTER.
 
@@ -1513,13 +1496,7 @@ main#view{padding-top:var(--space-tier);
    palette, no cards, no gradients. */
 
 
-.bnext{padding:var(--s5);border:var(--rule-hair) solid var(--ink)}
-/* live state is carried by the heavier rule and the filled tag, not by
-   colour alone — the tag still reads CHECK-IN OPEN in monochrome */
-.bnext--live{border-width:var(--edge-heavy)}
-.bnext__state{display:flex;align-items:center;gap:var(--s3);
-  flex-wrap:wrap;margin-top:var(--s4)}
-.bnext__state .muted{font-size:12px}
+
 
 .bmiles{margin-top:var(--s2)}
 .bmile{display:grid;grid-template-columns:auto 1fr;align-items:start;
@@ -1604,6 +1581,11 @@ main#view{padding-top:var(--space-tier);
 .bsec{position:relative;padding-top:clamp(14px,2vw,22px);margin-top:clamp(18px,2.6vw,30px)}
 .bsec::before{content:"";position:absolute;left:0;right:0;top:0;
   height:var(--edge-thin);background:var(--ink)}
+/* The pane's first section already sits under the page title's rule.
+   Drawing its own on top of that put two rules across the sheet with a
+   band of empty paper between them, on every board screen. */
+#boardPane > .bpanel > .bsec:first-child{padding-top:0;margin-top:0}
+#boardPane > .bpanel > .bsec:first-child::before{content:none}
 
 /* the figures: a ruled strip, one leading */
 .bstats{display:grid;gap:0;grid-template-columns:repeat(2,minmax(0,1fr));
@@ -1858,13 +1840,6 @@ main#view{padding-top:var(--space-tier);
    thing with a corner taken out of it.
    ══════════════════════════════════════════════════════════════════ */
 :root{--cut-a:60deg; --run-a:60deg}
-
-
-
-
-[data-screen="board"] .bnext{
-  clip-path:polygon(var(--sheet-cut) 0, 100% 0, 100% 100%,
-                    0 100%, 0 var(--sheet-cut))}
 
 /* ══════════════════════════════════════════════════════════════════
    THE STAMP SHEET — ONE INK MASS, NOT NINE SQUARES
@@ -2312,69 +2287,6 @@ select.input:focus-visible{outline:none}
   gap:var(--s3);flex-wrap:wrap;margin-bottom:clamp(12px,1.8vw,20px)}
 .ahead .h2{color:var(--ink)}
 
-/* ── 3. THE SOUND EFFECT LANDED IN THE SAME PLACE FIVE TIMES ──────
-   Every chapter's impact word sat at the top edge, cropped by the
-   same corner. Five differently-composed spreads carrying one
-   identical layer is a template, and a template is the thing this
-   was supposed to stop being. Each chapter now places its word where
-   that page has room for it: Home behind the nameplate, Record low
-   and leading (the log runs down the page and the word runs with
-   it), Rewards high and trailing, Member across the middle, Scan on
-   the diagonal it already owns. */
-
-
-/* ── 4. THE MICRO TIER STILL SAID "UNLOCKS AT N" NOWHERE ──────────
-   Hiding the line was the lazy way to make the far tiers small: the
-   number of stamps a reward costs is the whole point of the row.
-   It comes back as an annotation on the same line as the name, which
-   is where a fact of that size belongs. */
-
-
-/* ── 5. THE UNSTRUCK SLOT WAS TOO PALE TO BE AN IMPRESSION ────────
-   It carries the mark at --v3 and .55, which on paper is a smudge —
-   the slot reads as blank, which is exactly what it was before the
-   outline was added. An impression waiting to be pressed has to be
-   visible as a shape. */
-/* `path` was in this list, and it is out of it now. The slot used to
-   hold a three-bar tally, which a stroke thickened harmlessly. It
-   holds a dense emblem now: a one-unit stroke on a 64-unit box closes
-   the counters — the studs, the notches, the pierced boss — and the
-   seal collapses into a blob. Artwork is filled and only filled; the
-   registration furniture is what gets stroked. */
-
-
-/* ── 6. THE CLOSING PAIR ON HOME WAS ONE OBJECT TWICE ─────────────
-   I set the trailing closer to .92em and called it a hierarchy. At
-   that difference the two panels are still the same object, and the
-   page ends on two equal-weight footnotes. What is happening NOW is
-   the support panel and keeps its rule and its full type; what was
-   last stamped is the micro panel — no rule, indented off the
-   register, set down to a marginal note. */
-
-
-/* ── 7. THE BOARD'S LIVE PANEL WAS INK WITH NOTHING IN IT ─────────
-   A full-measure black field with the meeting, the state and both
-   controls stacked in the left third and 60% of the ink empty. The
-   concentrated black on this page has to be carrying something. The
-   panel reads across now: the meeting numeral at figure scale on the
-   leading edge, the state and the control registered to the trailing
-   one, so the mass is spanned rather than filled at one end. */
-@media(min-width:768px){
-  [data-screen="board"] .bnext{display:grid;
-    grid-template-columns:minmax(0,1fr) auto;
-    align-items:start;column-gap:clamp(24px,5vw,80px)}
-  [data-screen="board"] .bnext > :not(.btn){grid-column:1}
-  /* the control carries an inline margin-top from the markup, which
-     is right in the stacked arrangement and wrong here — it is beside
-     the meeting now, not under it */
-  [data-screen="board"] .bnext > .btn{grid-column:2;grid-row:1/-1;
-    align-self:center;justify-self:end;margin-top:0!important;
-    min-width:clamp(150px,16vw,220px)}
-  /* the numeral is the figure this mass is carrying */
-  [data-screen="board"] .bnext .bactive__no{font-size:clamp(44px,6.4vw,96px);
-    line-height:.9}
-}
-
 
 /* ══════════════════════════════════════════════════════════════════
    THE ACCOUNT BLOCK — SIGN OUT BELOW THE RAIL
@@ -2764,19 +2676,6 @@ none;
 .bstat b{font-size:clamp(26px,3.4vw,40px);line-height:.9}
 .bstat span{color:var(--ink-2)}
 
-/* the next meeting is the subject of the page */
-.bnext{
-  border:var(--edge) solid var(--ink);
-  background-image:radial-gradient(var(--tone-dot) .5px, transparent .6px);
-  background-size:var(--tone-25) var(--tone-25);
-}
-.bnext--live{
-  background:var(--ink);color:var(--paper);border-width:var(--edge-heavy);
-  background-image:none;
-}
-.bnext--live .bactive__no,.bnext--live .muted{color:var(--paper)}
-.bnext--live .bstate--open{background:var(--paper);color:var(--ink);border-color:var(--paper)}
-
 /* milestone bars: fill is a spotted black on a line track */
 .bmile__bar{border:var(--edge-hair) solid var(--ink);background:var(--paper);height:10px}
 .bmile__fill{background:var(--ink)}
@@ -2835,7 +2734,6 @@ none;
 :where(.panel--seal){--ink-w:3}
 
 .bstat b{font-size:clamp(22px,6vw,30px)}
-.bnext{padding:var(--s4)}
 .bmile{grid-template-columns:auto 1fr;gap:var(--s3)}
 
 .brow{padding-block:var(--s3)}
@@ -2849,7 +2747,6 @@ none;
 @media (min-width:768px){
   :where(.panel){--ink-w:3}
   :where(.panel--seal){--ink-w:6}
-  .bnext{padding:var(--s5)}
 }
 
 
@@ -2939,7 +2836,7 @@ none;
 .muted,.chip--set,
 .qrpanel__when,.empty,
 .verdict__meet,.setupbox__hint,.bstat span,
-.brow__no,.brow__sub,.bactive__no--off,.bstate--ended,.bstate--past,.bmile__mid .muted,
+.brow__no,.brow__sub,.bstate--ended,.bstate--past,.bmile__mid .muted,
 .brow__mid .muted{color:var(--ink-2)}
 
 /* ── 3. Grid children that cannot shrink ──────────────────────────
@@ -3804,6 +3701,69 @@ button,input,select,textarea{font-family:inherit}
 .acct__out:focus-visible{outline:var(--edge-panel) solid var(--ink);
   outline-offset:3px}
 @media(min-width:1024px){ .acct{display:none} }
+
+
+/* ══════════════════════════════════════════════════════════════════
+   CLUB TOOLS — board overview
+
+   Same book, administrative chapter. The one thing a board member acts
+   on is the meeting taking check-ins, so that is the ink mass; the rest
+   is the year's standing, set in the same band the member pages use.
+
+   It used to be four figure plates of equal weight — one of them an
+   average derived from the other two — under a section heading reading
+   "The club, in numbers", inside a boxed title that no other screen
+   still uses.
+   ══════════════════════════════════════════════════════════════════ */
+.bover{display:flex;flex-direction:column;gap:var(--s5)}
+
+/* The panel is as tall as what it says. It used to stack the verb under
+   everything else and run four hundred pixels deep with its right two
+   thirds empty ink; the verb sits in that space now. */
+.bnow{display:grid;gap:2px var(--s5);
+  grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"lab" "no" "at" "state" "go";
+  align-items:start;justify-items:start;
+  padding:var(--s5);border:var(--edge-panel) solid var(--ink);
+  background:var(--paper);color:var(--ink)}
+.bnow__lab{grid-area:lab} .bnow__no{grid-area:no}
+.bnow__at{grid-area:at}   .bnow__state{grid-area:state}
+.bnow__go{grid-area:go}
+
+@media(min-width:720px){
+  .bnow{grid-template-columns:minmax(0,1fr) auto;
+    grid-template-areas:"lab go" "no go" "at go" "state go";
+    align-items:start}
+  .bnow__go{align-self:center;margin-top:0}
+}
+.bnow--live{background:var(--ink);color:var(--paper);border-color:var(--ink);
+  box-shadow:var(--s2) var(--s2) 0 var(--tone-field)}
+.bnow__lab{margin:0;font-size:var(--t-caption);color:var(--ink-2)}
+.bnow--live .bnow__lab{color:var(--tint)}
+.bnow__no{margin:0;padding-bottom:.08em;
+  font-family:var(--f-display);text-transform:uppercase;line-height:.9;
+  font-size:clamp(38px,9vw,76px)}
+.bnow__at{margin:0;font-size:var(--t-body);line-height:1.3}
+.bnow--live .bnow__at{color:var(--tint)}
+.bnow__state{margin:var(--s2) 0 0;font-size:var(--t-caption);
+  color:var(--ink-2)}
+.bnow--live .bnow__state{color:var(--paper)}
+.bnow__go{margin-top:var(--s4);padding:11px var(--s5);cursor:pointer;
+  border:var(--edge-panel) solid currentColor;
+  background:transparent;color:inherit;
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(15px,3vw,21px);line-height:1.2}
+.bnow--live .bnow__go{background:var(--paper);color:var(--ink);
+  border-color:var(--paper)}
+.bnow__go:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.bnow--live .bnow__go:hover{background:transparent;color:var(--paper);
+  border-color:var(--paper)}
+.bnow__go:focus-visible{outline:var(--edge-panel) solid currentColor;
+  outline-offset:3px}
+
+/* the board overview borrows Member's standing band, so it needs the
+   band's own top rule rather than a section heading above it */
+.bover .standing-band{border-top-width:var(--edge-panel)}
 
 </style>
 </head>
@@ -17908,15 +17868,6 @@ const C = {
      title names one line lower, which is a label explaining a label.
      So are the diagonal rake, the volume rune and the edge kanji —
      three marks that reported nothing about the page they sat on. */
-  head(title, note){
-    return `<header class="head" data-enter>
-      <div class="head__stack">
-        <h1 class="title">${title}</h1>
-        ${note ? `<p class="muted">${esc(note)}</p>` : ''}
-      </div>
-    </header>`;
-  },
-
   /* ── the stat plate: a character status readout, not a summary card ── */
   /* THE COUNT. It is the card's masthead and it is set ON the card,
      not in a panel beside it: a printed stamp card carries its own
@@ -18377,8 +18328,10 @@ const Views = {
      row is gone: the nav rail already says where you are, and two levels
      of tabs for four screens was one level too many. */
   boardSpread(title){
-    return `<div class="view">
-      ${C.head(title)}
+    return `<div class="view view--board">
+      <header class="rechead" data-enter>
+        <h1 class="title rechead__title">${title}</h1>
+      </header>
       <section class="rig" data-enter style="margin-top:var(--gut)">
         <div id="boardPane">${BoardUI.pane()}</div>
       </section>
@@ -18640,35 +18593,44 @@ const BoardUI = {
     const focus = active || next;
     const isLive = Boolean(active);
 
-    return `<div class="panel bpanel">
-      <h2 class="h2 bsec" style="margin-top:0">${isLive ? 'Happening now' : 'Next General Meeting'}</h2>
+    return `<div class="bover">
+      <!-- THE MEETING. One ink mass carrying the only thing on this
+           page a board member acts on, and the count of who has come
+           in so far. Everything under it is the year's standing. -->
       ${focus ? `
-        <div class="bnext ${isLive ? 'bnext--live' : ''}">
-          <p class="bactive__no">GM ${pad(focus.meeting_number)}</p>
-          <p class="muted">${esc(fmtDay(focus.meeting_date))} / ${esc(focus.start_time)}${
+        <div class="bnow ${isLive ? 'bnow--live' : ''}">
+          <p class="bnow__lab">${isLive ? 'Happening now' : 'Next general meeting'}</p>
+          <p class="bnow__no">GM ${pad(focus.meeting_number)}</p>
+          <p class="bnow__at">${esc(fmtDay(focus.meeting_date))} / ${esc(focus.start_time)}${
             focus.end_time ? '-' + esc(focus.end_time) : ''} / MPR</p>
-          <p class="bnext__state">
-            <span class="bstate bstate--${isLive ? 'open' : 'upcoming'}">${
-              isLive ? 'CHECK-IN OPEN' : 'CHECK-IN CLOSED'}</span>
-            ${isLive ? `<span class="muted">${o.today_attendance} checked in so far</span>` : ''}
-          </p>
-          <button class="btn ${isLive ? '' : 'btn--go'}" data-btab="session"
-            style="margin-top:var(--s4)">${isLive ? 'Show the code' : 'Open check-in'}</button>
+          <p class="bnow__state">${isLive
+            ? `Check-in open / ${o.today_attendance} checked in so far`
+            : 'Check-in closed'}</p>
+          <button class="bnow__go" type="button" data-btab="session">${
+            isLive ? 'Show the code' : 'Open check-in'}</button>
         </div>`
-        : `<div class="bnext">
-             <p class="bactive__no bactive__no--off">None</p>
-             <p class="muted">No General Meeting is on the calendar yet.</p>
-             <button class="btn" data-btab="meetings" style="margin-top:var(--s4)">Add one</button>
+        : `<div class="bnow bnow--none">
+             <p class="bnow__lab">Next general meeting</p>
+             <p class="bnow__no">None</p>
+             <p class="bnow__at">No general meeting is on the calendar yet.</p>
+             <button class="bnow__go" type="button" data-btab="meetings">Add one</button>
            </div>`}
 
-      <h2 class="h2 bsec">The club, in numbers</h2>
-      <div class="bstats">
-        ${this.stat(o.meetings_held, 'General Meetings held')}
-        ${this.stat(o.total_seals, 'Stamps earned')}
-        ${this.stat(o.participating_members, 'Members who have checked in')}
-        ${this.stat(o.average_attendance === null || o.average_attendance === undefined
-            ? '—' : o.average_attendance, 'Average per meeting')}
-      </div>
+      <!-- THE YEAR. Same band the member pages use for a standing: one
+           figure that leads, the rest supporting it. It used to be four
+           plates of equal weight, one of them an average-per-meeting
+           derived from the other two. -->
+      <section class="standing-band">
+        <p class="standing-band__fig">${pad(o.meetings_held ?? 0)}</p>
+        <p class="standing-band__of">general meetings held</p>
+        <dl class="standing-band__rest">
+          <div><dt>Stamps earned</dt><dd>${esc(String(o.total_seals ?? 0))}</dd></div>
+          <div><dt>Members checked in</dt><dd>${esc(String(o.participating_members ?? 0))}</dd></div>
+          <div><dt>Average per meeting</dt><dd>${
+            o.average_attendance === null || o.average_attendance === undefined
+              ? '—' : esc(String(o.average_attendance))}</dd></div>
+        </dl>
+      </section>
     </div>`;
   },
 

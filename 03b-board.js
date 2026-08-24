@@ -96,35 +96,44 @@ const BoardUI = {
     const focus = active || next;
     const isLive = Boolean(active);
 
-    return `<div class="panel bpanel">
-      <h2 class="h2 bsec" style="margin-top:0">${isLive ? 'Happening now' : 'Next General Meeting'}</h2>
+    return `<div class="bover">
+      <!-- THE MEETING. One ink mass carrying the only thing on this
+           page a board member acts on, and the count of who has come
+           in so far. Everything under it is the year's standing. -->
       ${focus ? `
-        <div class="bnext ${isLive ? 'bnext--live' : ''}">
-          <p class="bactive__no">GM ${pad(focus.meeting_number)}</p>
-          <p class="muted">${esc(fmtDay(focus.meeting_date))} / ${esc(focus.start_time)}${
+        <div class="bnow ${isLive ? 'bnow--live' : ''}">
+          <p class="bnow__lab">${isLive ? 'Happening now' : 'Next general meeting'}</p>
+          <p class="bnow__no">GM ${pad(focus.meeting_number)}</p>
+          <p class="bnow__at">${esc(fmtDay(focus.meeting_date))} / ${esc(focus.start_time)}${
             focus.end_time ? '-' + esc(focus.end_time) : ''} / MPR</p>
-          <p class="bnext__state">
-            <span class="bstate bstate--${isLive ? 'open' : 'upcoming'}">${
-              isLive ? 'CHECK-IN OPEN' : 'CHECK-IN CLOSED'}</span>
-            ${isLive ? `<span class="muted">${o.today_attendance} checked in so far</span>` : ''}
-          </p>
-          <button class="btn ${isLive ? '' : 'btn--go'}" data-btab="session"
-            style="margin-top:var(--s4)">${isLive ? 'Show the code' : 'Open check-in'}</button>
+          <p class="bnow__state">${isLive
+            ? `Check-in open / ${o.today_attendance} checked in so far`
+            : 'Check-in closed'}</p>
+          <button class="bnow__go" type="button" data-btab="session">${
+            isLive ? 'Show the code' : 'Open check-in'}</button>
         </div>`
-        : `<div class="bnext">
-             <p class="bactive__no bactive__no--off">None</p>
-             <p class="muted">No General Meeting is on the calendar yet.</p>
-             <button class="btn" data-btab="meetings" style="margin-top:var(--s4)">Add one</button>
+        : `<div class="bnow bnow--none">
+             <p class="bnow__lab">Next general meeting</p>
+             <p class="bnow__no">None</p>
+             <p class="bnow__at">No general meeting is on the calendar yet.</p>
+             <button class="bnow__go" type="button" data-btab="meetings">Add one</button>
            </div>`}
 
-      <h2 class="h2 bsec">The club, in numbers</h2>
-      <div class="bstats">
-        ${this.stat(o.meetings_held, 'General Meetings held')}
-        ${this.stat(o.total_seals, 'Stamps earned')}
-        ${this.stat(o.participating_members, 'Members who have checked in')}
-        ${this.stat(o.average_attendance === null || o.average_attendance === undefined
-            ? '—' : o.average_attendance, 'Average per meeting')}
-      </div>
+      <!-- THE YEAR. Same band the member pages use for a standing: one
+           figure that leads, the rest supporting it. It used to be four
+           plates of equal weight, one of them an average-per-meeting
+           derived from the other two. -->
+      <section class="standing-band">
+        <p class="standing-band__fig">${pad(o.meetings_held ?? 0)}</p>
+        <p class="standing-band__of">general meetings held</p>
+        <dl class="standing-band__rest">
+          <div><dt>Stamps earned</dt><dd>${esc(String(o.total_seals ?? 0))}</dd></div>
+          <div><dt>Members checked in</dt><dd>${esc(String(o.participating_members ?? 0))}</dd></div>
+          <div><dt>Average per meeting</dt><dd>${
+            o.average_attendance === null || o.average_attendance === undefined
+              ? '—' : esc(String(o.average_attendance))}</dd></div>
+        </dl>
+      </section>
     </div>`;
   },
 
