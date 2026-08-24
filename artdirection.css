@@ -2195,9 +2195,14 @@ select.input:focus-visible{outline:none}
    the slot reads as blank, which is exactly what it was before the
    outline was added. An impression waiting to be pressed has to be
    visible as a shape. */
+/* `path` was in this list, and it is out of it now. The slot used to
+   hold a three-bar tally, which a stroke thickened harmlessly. It
+   holds a dense emblem now: a one-unit stroke on a 64-unit box closes
+   the counters — the studs, the notches, the pierced boss — and the
+   seal collapses into a blob. Artwork is filled and only filled; the
+   registration furniture is what gets stroked. */
 [data-screen="home"] .seal[data-seal="empty"] .seal__mark circle,
 [data-screen="home"] .seal[data-seal="empty"] .seal__mark polygon,
-[data-screen="home"] .seal[data-seal="empty"] .seal__mark path,
 [data-screen="home"] .seal[data-seal="empty"] .seal__mark line{stroke:var(--v4)}
 [data-screen="home"] .seal[data-seal="empty"] .seal__mark{opacity:.8}
 

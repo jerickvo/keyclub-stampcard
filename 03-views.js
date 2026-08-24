@@ -138,7 +138,7 @@ const C = {
       return `<li class="seal ${state ? 'seal--' + state : ''}${last}" data-seal="${state || 'empty'}" style="${tilt}"${
         dossier ? ` tabindex="0" aria-label="Stamp ${pad(p.floor + i + 1)}: general meeting ${
           mtg.no}, ${fmtDate(mtg.date)}, checked in at ${fmtTime(rec.at)}"` : ''}>
-        <svg viewBox="0 0 32 32" aria-hidden="true"><g class="seal__mark">${TALLY(state === 'set')}</g></svg>
+        <svg viewBox="0 0 64 64" aria-hidden="true"><g class="seal__mark">${stampMark(p.floor + i)}</g></svg>
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
         ${dossier}
       </li>`;
