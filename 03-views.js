@@ -432,51 +432,60 @@ const Views = {
   },
 
   scan(){
-    return `<div class="view">
-      ${C.head('Scan code')}
+    /* WHAT THE CAMERA IS FOR. The rig used to state its own condition
+       in invented telemetry — OPT.CAM // 1280, FMT.M##/XXXXXX,
+       SYS.TRACKING, a rune reading TARGETING down the right edge —
+       none of which was ever a fact about anything. The one piece of
+       real state the page has is which meeting is taking check-ins,
+       and it was the one thing the page did not say. */
+    const open = Store.openMeeting();
+    const done = open && Store.attended(open.id);
+    const standing = !open
+      ? { lab:'Nothing open', at:'No check-in right now' }
+      : done
+        ? { lab:'Already stamped', at:`GM ${pad(open.no)}` }
+        : { lab:'Checking in to', at:`GM ${pad(open.no)} / ${fmtDay(open.date)} / ${esc(open.place)}` };
 
-      <!-- THE RIG. The viewfinder is not a component sitting on a
-           page; it is an instrument mounted in a frame, and the frame
-           states what it is doing. Technical readings run along the
-           top edge and a rune runs down the side — real state, not
-           decoration: the optics label, the code format the reader
-           accepts, and the live status. -->
-      <div class="rig-scan" data-enter>
-        <div class="rig-scan__bar" aria-hidden="true">
-          <span class="anno">OPT.CAM // 1280</span>
-          <span class="anno">FMT.M##/XXXXXX</span>
-          <span class="anno anno--seal" id="rigState">SYS.ARMED</span>
-        </div>
-        <span class="rig-scan__rune" aria-hidden="true">読取 // TARGETING</span>
-        <span class="rig-scan__cut" aria-hidden="true"></span>
+    return `<div class="view view--scan">
+      <header class="rechead" data-enter>
+        <h1 class="title rechead__title">Scan</h1>
+        <p class="rechead__note">Point the camera at the seal on the projector.
+          A stamp is written by the server, not by this screen — nothing is
+          recorded until it answers.</p>
+      </header>
+
+      <p class="standing" data-enter>
+        <span class="standing__lab">${standing.lab}</span>
+        <span class="standing__at">${standing.at}</span>
+      </p>
+
+      <!-- THE FRAME. Four corner marks and a status line. Everything
+           else that used to be mounted on it — a crosshair, a dashed
+           compass ring, twenty-four tick marks, a sweeping scan line,
+           a second set of inner brackets, and the club seal painted
+           over the middle of the camera image — was a graphic saying
+           "this is a camera" to someone already looking through one.
+           The seal was worse than redundant: it sat exactly where the
+           code you are trying to read has to go. -->
       <div class="viewer" id="viewer" data-enter>
         <video id="cam" playsinline muted autoplay></video>
         <div class="viewer__scrim" aria-hidden="true"></div>
         <div class="viewer__grain" aria-hidden="true"></div>
         <div class="reticle" id="reticle" aria-hidden="true">
-          <svg class="reticle__geo" viewBox="0 0 100 100">
-            <g class="sp"><circle cx="50" cy="50" r="48"/>
-              <circle cx="50" cy="50" r="43" stroke-dasharray="2 7"/>${ticks(24, 43, 47, 6)}</g>
-            <g class="sp-r"><circle cx="50" cy="50" r="34" stroke-dasharray="14 9"/>
-              <polygon points="50,20 80,50 50,80 20,50"/></g>
-          </svg>
-          <svg class="reticle__mark" viewBox="0 0 100 100">${seal(1)}</svg>
           <span class="reticle__c reticle__c--tl"></span>
           <span class="reticle__c reticle__c--tr"></span>
           <span class="reticle__c reticle__c--bl"></span>
           <span class="reticle__c reticle__c--br"></span>
-          <span class="reticle__line"></span>
         </div>
         <div class="viewer__status"><span class="viewer__msg" id="scanMsg">Starting camera</span></div>
       </div>
-      </div>
 
       <div class="manual" data-enter>
-        <p class="kicker">Camera not working? Type the code under the seal</p>
-        <div class="field">
-          <input class="input" id="manualInput" placeholder="m09/XXXXXX"
+        <label class="manual__lab" for="manualInput">Camera not working? Type the code under the seal</label>
+        <div class="manual__f">
+          <input class="manual__in" id="manualInput" placeholder="Seal code"
                  aria-label="Seal code" autocomplete="off" spellcheck="false" enterkeyhint="go">
-          <button class="btn btn--ghost" id="manualGo">Verify</button>
+          <button class="manual__go" id="manualGo" type="button">Verify</button>
         </div>
         <div class="bubble" id="demoHint"></div>
       </div>

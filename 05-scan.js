@@ -79,12 +79,6 @@ function paintAttendanceCount(meetingId){
 /* ══════════════════════════════════════════════════════════════════
    11. SCANNER — an explicit state machine, so every outcome has a look.
    ══════════════════════════════════════════════════════════════════ */
-/* what the rig reports, per scanner state */
-const RIG_STATE = {
-  boot:'SYS.ARMING', live:'SYS.TRACKING', hit:'SYS.LOCK',
-  busy:'SYS.VERIFY', good:'SYS.SEALED',  bad:'SYS.REFUSED',
-};
-
 const Scanner = {
   stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0,
 
@@ -106,15 +100,10 @@ const Scanner = {
          given up rather than one that was working. It has a look now. */
       ret.classList.toggle('reticle--busy', state === 'busy');
     }
-    /* The rig's own readout. It said SYS.ARMED in cinnabar whatever
-       had happened, so a frame showing a fault code showed two red
-       marks at once — and the second one was lying. */
-    const rs = $('#rigState');
-    if (rs){
-      rs.textContent = RIG_STATE[state] || 'SYS.ARMED';
-      rs.classList.toggle('anno--seal',
-        state === 'live' || state === 'hit' || state === 'busy');
-    }
+    /* The rig used to carry a second readout of its own — SYS.ARMING,
+       SYS.TRACKING, SYS.LOCK — restating this same state in invented
+       telemetry beside the sentence that already said it plainly. The
+       status line below the frame is the whole report now. */
     viewer?.classList.toggle('viewer--hit', state === 'good' || state === 'hit');
     /* A refusal is not a small red sentence under the frame. The frame
        itself answers — see .viewer--bad. The class is removed and
@@ -217,28 +206,26 @@ const Scanner = {
     if (!viewer) return;
     this.hideLoader();
     viewer.classList.remove('viewer--feed');
-    const rs = $('#rigState');
-    if (rs){ rs.textContent = 'SYS.OFFLINE'; rs.classList.remove('anno--seal'); }
     /* A fault code, then the sentence. The three dead ends used to be
        told apart by a padlock, a camera and a keypad glyph — three
        pictures doing a job this page does with words in brackets
        everywhere else. The code names the fault; the sentence says what
        to do about it. */
     const copy = {
-      denied:{ code:'ERR.PERM', title:'Camera permission is off',
+      denied:{ title:'Camera permission is off',
         body:'Allow camera access for this page in your browser settings, then reload. Or type the code below.' },
-      unavailable:{ code:'ERR.CAM', title:'No camera found',
+      unavailable:{ title:'No camera found',
         body:'Nothing on this device is reporting a camera. Type the code printed under the seal instead.' },
-      unsupported:{ code:'ERR.HTTPS', title:'Scanning needs a secure page',
+      unsupported:{ title:'Scanning needs a secure page',
         body:'Camera access only works over https. Type the code printed under the seal instead.' },
     }[kind];
 
-    /* The dead-end reads like the rest of the system now: a fault code
-       set as an annotation, the sentence at reading size, and the
-       whole thing anchored to the left of the frame instead of
-       floating in the middle of a grey box. */
+    /* The dead end says what broke and what to do about it. It used
+       to lead with a bracketed fault code — ERR.PERM, ERR.CAM,
+       ERR.HTTPS — invented for this screen, resolving to nothing, and
+       naming a system that does not exist. The sentence under it
+       already carried the whole message. */
     viewer.innerHTML = `<div class="stall">
-      ${codeMark(copy.code)}
       <h2 class="stall__title">${copy.title}</h2>
       <p class="stall__note">${copy.body}</p>
     </div>`;

@@ -449,128 +449,12 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .tech__crack{position:absolute;inset:0;pointer-events:none;opacity:0}
 .tech__name{overflow-wrap:break-word}
 
-/* ══════════════════ SCAN ══════════════════ */
-/* ONE CELL, NOT TWO ROWS.
-
-   The reticle and the status message were both in-flow grid items, so
-   `place-items:center` stacked them in two rows and centred the PAIR.
-   That put the target's centre half the message's height above the
-   chamber's centre — measured at -67px on a phone, -86px on a desktop,
-   growing with the chamber, which is why no fixed offset could ever
-   have fixed it.
-
-   Every child now shares one cell. The reticle centres in the whole
-   chamber and the status pins to the bottom edge, so the target is
-   mathematically centred whatever the message says or however the
-   chamber is sized. */
-.viewer{position:relative;display:grid;
-  grid-template:minmax(0,1fr)/minmax(0,1fr);
-  container-type:size;
-  overflow:hidden;
-  border:var(--rule) solid var(--ink);aspect-ratio:3/4;
-  /* Frame furniture, not a target. These brackets are fixed to the box
-     and never change; the reticle inside is the mark that aims and
-     reacts, and it is the one that carries cinnabar. Two red bracket
-     sets on one screen was the accent spent twice — paper on the dark
-     camera image reads as instrument housing and leaves the red to the
-     thing that earns it.
-
-     INK is the default, because the box's own ground is paper. Paper
-     brackets were keyed to the absence of .viewer--stalled, which is
-     only one of the states with no picture in it: while the browser is
-     asking for camera permission, and for as long as the feed takes to
-     start, the frame is paper and the brackets were painted paper on
-     top of it. .viewer--feed is set when a video is actually playing,
-     which is the real question being asked.
-
-     Declared HERE and not on ::after: a custom property re-declared on
-     the pseudo-element wins over whatever the element passes down, so
-     no state could override it from the outside. */
-  --bracket-c:var(--ink);
-  /* The camera frame is the one panel that has to answer to viewport
-     HEIGHT: it is the thing you hold up, and on a phone in landscape,
-     or a short laptop, a 3/4 box taller than the screen puts the
-     reticle out of reach. dvh (not vh) so the mobile address bar
-     collapsing does not resize it mid-scan, and the tab bar's own
-     height comes out of the budget. */
-  max-height:calc(72dvh - var(--tabs-h));
-  background:var(--paper-2)}
-/* Landscape is a different composition, not a shorter portrait: the
-   frame turns with the device. Keyed to orientation and aspect rather
-   than to a width, so a phone on its side and a laptop both get it. */
-@media(min-aspect-ratio:1/1){.viewer{aspect-ratio:4/3}}
-@media(min-width:768px){.viewer{aspect-ratio:4/3}}
-/* No camera, permission refused, or an insecure page: the frame stops
-   being a viewfinder and becomes a message panel. It is sized by the
-   message with a floor for presence, so it is a panel on a phone and a
-   panel on a monitor rather than a 230px letterbox on both. */
-.viewer--stalled{aspect-ratio:auto;min-height:clamp(200px,32dvh,320px);
-  max-height:none}
-/* a picture is playing: the housing goes paper so it holds against it */
-.viewer--feed{--bracket-c:var(--paper)}
-/* every in-flow child occupies the single cell; out-of-flow ones are
-   unaffected by grid placement and keep their own inset */
-.viewer > *{grid-area:1/1;min-width:0;min-height:0}
-.viewer > .reticle{place-self:center}
-.viewer > .viewer__status{place-self:end center;
-  padding-bottom:clamp(10px,4cqh,30px);max-width:92%}
-.viewer video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-  /* Monochrome stays: every accent token in this theme is remapped to
-     ink, so a colour camera would be the one coloured thing in the whole
-     app. But contrast(1.5) crushed the midtones of a live feed until you
-     could not see what you were pointing at -- the code is decoded from
-     the raw frame, not this filtered view, so the filter's only job is
-     legibility for the person aiming. Eased accordingly. */
-  filter:grayscale(1) contrast(1.12)}
-.viewer__scrim{position:absolute;inset:0;
-  background-image:radial-gradient(var(--ink) 1px,transparent 1px);
-  background-size:5px 5px;opacity:.09}     /* screentone, not a veil */
-/* ── THE VIEWFINDER FRAME ─────────────────────────────────────────
-   Four heavy right-angle brackets in cinnabar, pinned to the corners
-   of the camera frame. This is one of the four sanctioned uses of the
-   seal colour: the system is asking you to aim.
-
-   It has to be a PSEUDO-ELEMENT. The scanner rewrites `viewer.innerHTML`
-   wholesale on every state change (no camera, permission refused,
-   insecure page), so any child element carrying the frame is destroyed
-   the first time the state changes — which is exactly when a user most
-   needs the screen to still look like a viewfinder. A pseudo-element
-   belongs to the box, not to its contents, and survives every rewrite.
-
-   Eight gradients: a horizontal and a vertical arm per corner. They
-   sit at the corners and never across the middle, so they cannot
-   obscure what the camera is pointed at. */
-.viewer__grain{display:none}
-.viewer::after{content:"";position:absolute;inset:clamp(6px,1vw,12px);
-  pointer-events:none;z-index:6;
-  --bracket:clamp(20px,3.2vw,40px);
-  --bracket-w:var(--edge);
-  background-repeat:no-repeat;
-  background-image:
-    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
-    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
-    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
-    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0);
-  background-size:
-    var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket),
-    var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket),
-    var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket),
-    var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket);
-  background-position:
-    left top,left top, right top,right top,
-    left bottom,left bottom, right bottom,right bottom}
-/* a hit tightens the brackets inward — the frame closing on the code */
-.viewer--hit::after{inset:clamp(12px,2vw,22px)}
-
-.viewer--hit .viewer__grain{inset:6px}
-.viewer__status,.viewer__msg{position:relative;font-family:var(--f-accent);
-  text-align:center}
 /* THE WAITING MARK. `.loader` was applied in JS and styled in no
    stylesheet, so the only thing sizing it was an inline
    `inset:0;margin:auto` and the SVG's own default of filling its box.
-   It is a mark now: sized like the reticle's inner ring, centred in
-   it, and turning in twelve discrete steps because nothing in this
-   system eases. */
+   It is a mark now: sized against the target area, centred in it, and
+   turning in twelve discrete steps because nothing in this system
+   eases. */
 .loader{position:absolute;top:50%;left:50%;
   width:clamp(54px,42%,116px);aspect-ratio:1;
   transform:translate(-50%,-50%);
@@ -580,36 +464,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 @keyframes loaderTurn{from{transform:translate(-50%,-50%) rotate(0deg)}
                       to  {transform:translate(-50%,-50%) rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){ .loader{animation:none} }
-
-/* sized off the CHAMBER, not the viewport: cqmin is the smaller of the
-   chamber's own two axes, so the target can never outgrow the box it
-   is aiming inside — on a short landscape screen the chamber is wide
-   and shallow, and a width-only rule overflowed it vertically */
-.reticle{position:relative;width:min(64cqmin,250px);aspect-ratio:1}
-.reticle__c{position:absolute;width:26px;height:26px;border:var(--rule) solid var(--ink)}
-.reticle__c--tl{top:0;left:0;border-right:0;border-bottom:0}
-.reticle__c--tr{top:0;right:0;border-left:0;border-bottom:0}
-.reticle__c--bl{bottom:0;left:0;border-right:0;border-top:0}
-.reticle__c--br{bottom:0;right:0;border-left:0;border-top:0}
-.reticle__line{position:absolute;left:0;right:0;height:2px;background:var(--ink)}
-/* width/height MUST be auto so the insets size the box. These two are
-   absolutely positioned with inset:-14% to overflow the reticle on
-   every side; any explicit width here over-constrains left+right+width
-   and the browser resolves it by dropping `right`, which lays the SVG
-   out at the reticle's size shifted up-left by 14% of it. auto is also
-   what keeps the zero-specificity `:where(svg…){width:22px}` default
-   off them. */
-.reticle__geo,.reticle__mark{position:absolute;inset:-14%;
-  width:auto;height:auto;opacity:.3;pointer-events:none}
-.reticle__geo circle,.reticle__geo polygon,.reticle__geo path,.reticle__geo line,
-.reticle__mark circle,.reticle__mark polygon,.reticle__mark line{
-  fill:none;stroke:var(--ink);stroke-width:1.3;vector-effect:non-scaling-stroke}
-.reticle__mark path{fill:var(--ink);stroke:none}
-/* `.manual` is a child of the view grid, so the tier gap already
-   separates it from the frame above. The extra margin was a second
-   gap stacked on the first — 92px of paper between the scanner and
-   the fallback that belongs with it. */
-.manual{padding:var(--s5);border:var(--rule) solid var(--ink)}
 /* A text field and its button are a row until the row stops working.
    `flex-wrap` plus a real basis on the input is the whole rule: the
    pair sits side by side wherever there is room for both, and the
@@ -643,11 +497,8 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   font:500 clamp(13px,.4vw + 11.7px,14.5px)/1.2 var(--f-mono);
   letter-spacing:.08em;transition:none}
 .input::placeholder{color:var(--tone);letter-spacing:.06em}
-/* Focus thickens the rule; it does not colour it. Cinnabar belongs to
-   the TARGET, and on the scan screen a red underline meant the page
-   could show three red marks at once — the reticle, the rule and the
-   prompt — which is three more than this system allows. Weight is the
-   signal, and weight reads for someone who cannot see the hue. */
+/* Focus thickens the rule; it does not colour it. Weight is the
+   signal, and weight reads for someone who cannot see a hue. */
 .input:focus{outline:0;border-bottom-color:var(--ink);
   border-bottom-width:var(--edge-heavy)}
 /* The caret marker rides on the field wrapper, not on the input, so it
@@ -1069,7 +920,7 @@ html,body{overflow-x:clip;max-width:100%}
    getting a 2.8px box of its own, so fifteen meetings meant fifteen
    boxes stacked inside the box around them. Rows are separated by a
    hairline and space now. */
-.panel,.head,.manual,.viewer,.stat,
+.panel,.head,.stat,
 .bpanel,.bnext,.tech{
   border-width:calc(var(--ink-w, 2.8) * 1px);
   border-style:solid;
@@ -1237,7 +1088,7 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 
 /* one padding value for every panel, plus a larger one where a panel is
    carrying the dominant moment */
-.panel,.manual{padding:var(--space-panel)}
+.panel{padding:var(--space-panel)}
 .head{padding:var(--space-panel) var(--space-panel-lg)}
 .who{padding:var(--space-panel)}
 
@@ -1306,23 +1157,8 @@ main#view{padding-top:var(--space-tier);
    does what it says. */
 :where(svg:not(.fxdefs):not([width])){width:22px;height:22px;flex:none}
 
-/* .reticle__geo and .reticle__mark are NOT in this list, and must not
-   be put back into it.
-
-   They are absolutely positioned with `inset:-14%`, which is how they
-   overflow the reticle box on every side. Giving them width:100% from
-   here over-constrained the box — left, right AND width all set — so
-   the browser dropped `right` and the SVG was laid out at the reticle's
-   size but offset up and left by 14% of it. That is 29.7px at 390x844,
-   and it is why the scan mark sat above and left of the target while
-   the .reticle wrapper measured perfectly centred: the wrapper was
-   centred, the artwork inside it was not.
-
-   `.viewer svg` is also gone: it matched those same two SVGs by
-   descent and reintroduced the identical conflict. The scanner's
-   fallback graphics are covered by `.viewer .stack svg` below. */
 .who__seal,.verdict__seal,
-.arena svg,.tech__glyph svg,.viewer .stack svg,.slash,.lines,
+.arena svg,.tech__glyph svg,.slash,.lines,
 .verdict__field,.tech__crack svg,.qrpanel__code svg{width:100%;height:100%}
 .who__seal{width:clamp(52px,5vw,74px);height:clamp(52px,5vw,74px)}
 .tech__glyph svg{width:100%;height:100%}
@@ -1331,24 +1167,6 @@ main#view{padding-top:var(--space-tier);
 .boot__mark svg{width:88px;height:88px}
 .verdict__seal{width:min(30vmin,170px);height:min(30vmin,170px)}
 .boot__seal{width:min(40vmin,230px);height:min(40vmin,230px)}
-
-/* the "no camera" state was one enormous icon and two lines of text */
-/* `.viewer .stack` is here because the scanner's fallback states render
-   `<div class="stack">`, and nothing in the stylesheet ever matched that
-   class — so the padding and max-width below were written but never
-   applied. The copy ran the full width of the viewer and the drawn frame
-   cut through it ("NO CAMERA FOUND" lost its N; the body text ran off the
-   right edge). */
-.viewer__msg,.viewer .stack{display:flex;flex-direction:column;align-items:center;
-  gap:var(--space-stack-sm);text-align:center;padding:var(--space-panel-lg);
-  max-width:46ch;margin-inline:auto}
-.viewer__msg svg,.viewer .stack__icon svg{width:clamp(38px,4vw,56px)!important;
-  height:clamp(38px,4vw,56px)!important;opacity:.5}
-/* The camera frame is height-budgeted twice — once where it is defined
-   and once here. Both use dvh so a collapsing mobile address bar cannot
-   resize the viewfinder while someone is aiming it, and both leave the
-   fixed bar's height out of the budget. */
-.viewer{max-height:min(calc(72dvh - var(--tabs-h)),560px)}
 
 /* ══════════════════════════════════════════════════════════════════
    CHAPTER HEADS — every screen but Home was rendering its title

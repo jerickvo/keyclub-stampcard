@@ -318,30 +318,6 @@ none;
    enough to mean something. */
 .bstate--open{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
-/* ══ SCANNER ═══════════════════════════════════════════════════════
-   Verdict on the colour question: the camera image stays desaturated,
-   but the FRAME is vermilion. Keeping the feed monochrome is what
-   makes the overlay legible over an image nobody controls, and it
-   holds the manga register. Putting the accent in the reticle instead
-   gives the screen its colour where colour actually does work —
-   telling you where to aim and whether it worked. */
-/* The frame is ink; the TARGET is cinnabar. Aiming is the one moment
-   the app asks for the accent, and the sweep line that reads the code
-   carries it too — over an arbitrary camera image a red line is the
-   only mark guaranteed to be visible against both a bright wall and a
-   dark one. */
-.viewer{border-color:var(--ink)}
-.reticle__c{border-color:var(--seal)}
-.reticle--good .reticle__c{border-color:var(--seal);background:var(--seal)}
-/* Refused: the target fills solid. Ink-on-black was a state change you
-   could not see; the same element that aims in cinnabar refuses in it,
-   which spends no new colour. */
-.reticle--bad .reticle__c{background:var(--seal);border-color:var(--seal)}
-.reticle__line{background:var(--seal)}
-.viewer--hit{border-color:var(--seal)}
-.viewer__msg{border-color:var(--ink)}
-.viewer__msg--hot{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-
 /* ══ THE QR ════════════════════════════════════════════════════════
    The code stays pure black on pure white — that is a scanning
    requirement, not a style choice, and nothing is drawn over it. The
@@ -607,9 +583,6 @@ none;
 /* the brand block must be able to shrink inside the rail track */
 .rail,.rail__brand,.rail__nav,.rail__foot{min-width:0}
 .rail__brand .mark,.rail__brand .mark__word{min-width:0;overflow-wrap:anywhere}
-/* the scanner's fallback copy sits on the viewer's tone fill, not on
-   paper, which costs it the last of its contrast */
-.viewer .stack .muted,.viewer__msg{color:var(--ink)}
 .brow__mid .muted,.bstat span{font-size:clamp(12px,.45vw + 10.6px,13.5px)}
 /* Nothing in the application is allowed under 11px. The mono labels
    keep their wide tracking — that is what makes them read as manga
@@ -672,12 +645,6 @@ none;
 .brow__n{font-size:clamp(17px,4vw,19px)}
 .bstat{padding:var(--s4)}
 .bsec{margin-top:var(--s5)}
-/* The scanner frame keeps its weight — it is the one place a heavy
-   keyline does real work, telling you where to aim. Said through the
-   rank system now (scan's .viewer is --ink-w:4.2) rather than pinned
-   here, where a fixed width in the last stylesheet was quietly
-   capping it three steps lighter than the rank asked for. */
-:where(.viewer){border-width:var(--edge)}
 
 @media (min-width:768px){
   .tech{padding:var(--s5)}
@@ -712,7 +679,7 @@ main#view:focus,main#view:focus-visible{outline:none}
    against a log at 32). Both read as "slightly wrong" without being
    obviously broken, which is exactly the kind of thing that makes a
    layout feel unfinished. */
-.viewer{width:100%;margin-inline:0}
+
 
 /* ── 6. Reward requirement legibility ─────────────────────────────
    "Unlocks at 20 stamps" is the single most useful line on a locked
@@ -1180,4 +1147,153 @@ button,input,select,textarea{font-family:inherit}
   .ledger__mark,.lrow--open{grid-column:1 / -1}
   .lrow{column-gap:var(--s3)}
   .lrow--open{column-gap:var(--s4)}
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   THE SCANNER — scan
+
+   A hundred and thirty-two rules across three files used to dress this
+   page. What they drew, over and above a camera picture: a strip of
+   invented telemetry along the top (OPT.CAM // 1280, FMT.M##/XXXXXX,
+   SYS.TRACKING), a rune reading TARGETING down the right edge, a band
+   of diagonal hatching behind it, a crosshair, a dashed compass ring,
+   twenty-four tick marks, a sweeping scan line, a second set of inner
+   brackets, and the club seal painted across the middle of the frame.
+
+   None of it was a fact. The rune was decoration in a language the app
+   does not otherwise speak; the readouts named a system that does not
+   exist; and the seal sat exactly where the code you are trying to
+   read has to go.
+
+   What is left is what an instrument actually needs: a frame, four
+   marks showing where to aim, and one line saying what it is doing.
+   The one real piece of state — which meeting is taking check-ins —
+   is now printed above the frame, where the telemetry used to be.
+   ══════════════════════════════════════════════════════════════════ */
+.view--scan{display:flex;flex-direction:column;gap:var(--s4)}
+
+/* the meeting the camera is for. The only status this page can state
+   truthfully without asking the camera, and the thing the invented
+   telemetry was standing in front of. */
+.standing{display:flex;align-items:baseline;gap:var(--s3);
+  flex-wrap:wrap;margin:0}
+.standing__lab{font-size:var(--t-caption);color:var(--ink-2);
+  white-space:nowrap}
+.standing__at{font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(19px,3.8vw,28px);line-height:1;color:var(--ink)}
+
+/* ── THE FRAME ────────────────────────────────────────────────────
+   One heavy border, the feed inside it, the status pinned to the
+   bottom edge. Every child shares one grid cell so the target area is
+   centred in the frame whatever the status line happens to say. */
+.viewer{position:relative;display:grid;place-items:center;
+  isolation:isolate;overflow:hidden;
+  width:100%;aspect-ratio:1;max-height:62vh;
+  border:var(--edge-frame) solid var(--ink);background:var(--tint)}
+/* a code is square, so on a phone the frame is square: it fills the
+   sheet instead of leaving a letterbox with half a screen under it. */
+@media(min-width:600px){ .viewer{aspect-ratio:4/3} }
+.viewer > *{grid-area:1/1}
+.viewer video{width:100%;height:100%;object-fit:cover;display:block;
+  filter:grayscale(1) contrast(1.06)}
+
+/* screentone over the feed, not a veil: it holds the overlay legible
+   against a camera image nobody controls. */
+.viewer__scrim{width:100%;height:100%;pointer-events:none;
+  background-image:radial-gradient(rgba(10,10,10,.34) 1.1px,transparent 1.2px);
+  background-size:5px 5px}
+.viewer__grain{display:none}
+
+/* ── WHERE TO AIM ─────────────────────────────────────────────────
+   Four right-angle marks and nothing between them. They sit at the
+   corners and never across the middle, so they cannot cover the code. */
+/* lifted clear of the status band: the two used to share the bottom
+   of the frame, and the sentence printed straight over the lower
+   corner marks. */
+.reticle{position:relative;width:min(58%,290px);aspect-ratio:1;
+  margin-bottom:clamp(36px,8vw,58px);
+  pointer-events:none;z-index:2}
+.reticle__c{position:absolute;width:15%;height:15%;
+  border:var(--edge-frame) solid var(--paper);
+  filter:drop-shadow(0 0 1px rgba(10,10,10,.55))}
+.reticle__c--tl{top:0;left:0;border-right:0;border-bottom:0}
+.reticle__c--tr{top:0;right:0;border-left:0;border-bottom:0}
+.reticle__c--bl{bottom:0;left:0;border-right:0;border-top:0}
+.reticle__c--br{bottom:0;right:0;border-left:0;border-top:0}
+
+/* the marks close on a hit and open again on a refusal. Weight and
+   position carry the state; there is no colour in this system to spend. */
+.reticle--good .reticle__c{width:19%;height:19%}
+.reticle--busy .reticle__c{opacity:.55}
+.reticle--bad .reticle__c{width:12%;height:12%}
+
+/* ── THE STATUS ───────────────────────────────────────────────────
+   One sentence in plain words, on paper so it holds over any scene. */
+.viewer__status{align-self:end;justify-self:center;z-index:3;
+  padding:0 var(--s3) var(--s3);max-width:100%}
+.viewer__msg{display:inline-block;
+  padding:6px var(--s3);background:var(--paper);color:var(--ink);
+  font-size:var(--t-caption);line-height:1.25;text-align:center}
+.viewer__msg--hot{background:var(--ink);color:var(--paper)}
+.viewer__msg--soft{color:var(--ink-2)}
+
+/* a good read floods the frame for one beat */
+.viewer--hit{border-color:var(--ink)}
+.viewer--hit .viewer__scrim{opacity:.35}
+
+/* ── THE DEAD ENDS ────────────────────────────────────────────────
+   No camera, no permission, no https. The panel stops being a
+   viewfinder and becomes a note: title, sentence, and the field below
+   already focused. It used to lead with a bracketed fault code
+   invented for this screen. */
+.viewer--stalled{aspect-ratio:auto;min-height:clamp(160px,30vw,240px);
+  place-items:stretch;background:var(--paper)}
+.stall{display:flex;flex-direction:column;justify-content:center;
+  gap:var(--s2);padding:var(--s5);text-align:left}
+.stall__title{margin:0;font-family:var(--f-display);
+  text-transform:uppercase;line-height:1;
+  font-size:clamp(19px,3.6vw,28px)}
+.stall__note{margin:0;max-width:46ch;font-size:var(--t-caption);
+  line-height:1.45;color:var(--ink-2)}
+
+/* ── TYPING IT INSTEAD ────────────────────────────────────────────
+   The fallback is a real form block, not an afterthought squeezed
+   under the frame: a label, a ruled field, and the verb in ink. */
+.manual{display:flex;flex-direction:column;gap:var(--s2);
+  border-top:var(--edge-panel) solid var(--ink);padding-top:var(--s3)}
+.manual__lab{font-size:var(--t-caption);color:var(--ink-2);line-height:1.35}
+.manual__f{display:flex;gap:var(--s2);flex-wrap:wrap;align-items:stretch}
+.manual__in{flex:999 1 min(100%,14ch);min-width:0;
+  padding:11px 2px 9px;background:transparent;color:var(--ink);
+  border:0;border-bottom:var(--edge-panel) solid var(--ink);border-radius:0;
+  font-family:var(--f-mono);font-size:var(--t-caption);letter-spacing:.06em}
+.manual__in::placeholder{color:var(--tone)}
+.manual__in:focus{outline:0;border-bottom-width:var(--edge-frame)}
+.manual__go{flex:1 1 auto;min-width:max-content;
+  padding:11px var(--s4);border:var(--edge-panel) solid var(--ink);
+  background:var(--ink);color:var(--paper);cursor:pointer;
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(15px,3vw,20px);line-height:1.2}
+.manual__go:hover{background:var(--paper);color:var(--ink)}
+.manual__go:focus-visible{outline:var(--edge-panel) solid var(--ink);
+  outline-offset:3px}
+
+/* On a wide sheet the frame keeps a sane size instead of becoming a
+   letterbox two thirds of the screen across, and the fallback sits
+   beside it rather than a full page-width away from the thing it is a
+   fallback for. */
+@media(min-width:1024px){
+  .view--scan{display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(16rem,22rem);
+    grid-template-areas:"head head" "standing standing" "viewer manual";
+    gap:var(--s5) var(--s6);align-content:start}
+  .view--scan > .rechead{grid-area:head}
+  .view--scan > .standing{grid-area:standing}
+  .view--scan > .viewer{grid-area:viewer;max-height:none}
+  /* the fallback sits at the foot of the frame's row, so its ruled
+     field lines up with the status band instead of floating at the top
+     of eight hundred pixels of empty column. */
+  .view--scan > .manual{grid-area:manual;align-self:stretch;
+    justify-content:flex-end;border-top:0;padding-top:0}
 }

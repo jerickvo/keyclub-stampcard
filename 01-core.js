@@ -156,11 +156,6 @@ const ICON = {
   still:  SVG('<path d="M4 12h16"/><path d="M4 8v8M20 8v8"/>'),
 };
 
-/* A bracketed monospace token — the fault codes on the scanner's dead
-   ends. `[ERR.CAM]` says the same thing a padlock glyph says and says
-   it in the page's own voice, which is words in brackets, not pictures. */
-const codeMark = (s) => `<span class="codemark" aria-hidden="true">${s}</span>`;
-
 /* ══════════════════════════════════════════════════════════════════
    THREE MARKS, THREE JOBS
 

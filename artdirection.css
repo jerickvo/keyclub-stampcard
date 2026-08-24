@@ -149,9 +149,6 @@
    ───────────────────────────────────────────────────────────────── */
 :root{--ink-w:2.8}
 
-[data-screen="scan"] .viewer{--ink-w:4.2}
-[data-screen="scan"] .manual{--ink-w:2.4}
-
 [data-screen="profile"] .stat{--ink-w:1.6}
 
 /* ─────────────────────────────────────────────────────────────────
@@ -554,14 +551,6 @@
 .empty__note{margin-top:clamp(7px,1vw,11px);max-width:52ch;
   font-size:clamp(12.5px,1vw,14.5px);line-height:1.55;color:var(--ink-2)}
 
-/* the scanner's dead end, same language inside the frame */
-.viewer .stall{display:grid;justify-items:start;align-content:center;
-  gap:clamp(8px,1.2vw,13px);
-  padding:clamp(20px,4vw,44px);max-width:52ch;width:100%}
-.stall__title{font-family:var(--f-display);text-transform:uppercase;
-  font-size:clamp(16px,2.2vw,26px);line-height:1.04;color:var(--ink)}
-.stall__note{font-size:clamp(12.5px,1vw,14.5px);line-height:1.55;color:var(--ink-2)}
-
 /* ══════════════════════════════════════════════════════════════════
    THE RIG — the viewfinder is mounted, not placed
 
@@ -575,22 +564,7 @@
    format the reader accepts, and the live status, which is the one
    cinnabar mark on the screen while the target is armed.
    ══════════════════════════════════════════════════════════════════ */
-.rig-scan{position:relative;display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  grid-template-rows:auto auto;
-  column-gap:clamp(8px,1.2vw,16px)}
-.rig-scan__bar{grid-column:1/-1;display:flex;flex-wrap:wrap;
-  align-items:center;gap:clamp(10px,2vw,28px);
-  padding-bottom:clamp(8px,1.1vw,13px);margin-bottom:clamp(8px,1.1vw,13px);
-  border-bottom:var(--edge-thin) solid var(--ink)}
-.rig-scan__bar .anno:last-child{margin-left:auto}
-.rig-scan > .viewer{grid-column:1;grid-row:2}
-.rig-scan__rune{grid-column:2;grid-row:2;align-self:start;
-  writing-mode:vertical-rl;
-  font:500 clamp(8.5px,.66vw,10.5px)/1 var(--f-mono);letter-spacing:.26em;
-  color:var(--ink-2);
-  padding-top:clamp(4px,.8vw,10px);white-space:nowrap;
-  pointer-events:none;user-select:none}
+
 
 /* ══════════════════════════════════════════════════════════════════
    ACTIVATION AND INTERRUPTION
@@ -610,44 +584,7 @@
    happened. Both are drawn, not animated, so reduced motion keeps
    them.
    ══════════════════════════════════════════════════════════════════ */
-.rig-scan{position:relative}
-.rig-scan::before,.rig-scan::after{content:"";position:absolute;
-  top:0;bottom:0;width:14vw;max-width:210px;z-index:0;
-  pointer-events:none;opacity:0;transition:opacity .18s steps(3,end);
-  background-image:repeating-linear-gradient(var(--run-a),
-    var(--ink) 0 1.5px, transparent 1.5px 7px,
-    var(--ink) 7px 8px, transparent 8px 19px)}
-.rig-scan::before{left:0;
-  -webkit-mask-image:linear-gradient(90deg,#000,transparent);
-          mask-image:linear-gradient(90deg,#000,transparent)}
-.rig-scan::after{right:0;
-  -webkit-mask-image:linear-gradient(270deg,#000,transparent);
-          mask-image:linear-gradient(270deg,#000,transparent)}
-.rig-scan:has(.viewer--feed)::before,
-.rig-scan:has(.viewer--feed)::after{opacity:.3}
-.rig-scan:has(.viewer--feed) .rig-scan__bar{border-bottom-width:var(--edge)}
 
-/* THE CUT. Refusal tears the rig open along the system diagonal: a
-   band of bare paper thrown across the frame with an ink edge on each
-   side, as if the panel itself had been slashed. It is drawn in paper
-   and ink, not cinnabar — the one red mark on a refused screen stays
-   the status reading, so the interruption reads as damage rather than
-   as another alarm. */
-.rig-scan:has(.viewer--bad)::before,
-.rig-scan:has(.viewer--bad)::after{opacity:0}
-.rig-scan__cut{position:absolute;inset:-2px;z-index:8;pointer-events:none;
-  display:none;--cw:clamp(11px,1.5vw,20px);--cy:44%;
-  --cmask:linear-gradient(180deg,#000 0 27%,transparent 27% 33%,
-    #000 33% 64%,transparent 64%);
-  -webkit-mask-image:var(--cmask);mask-image:var(--cmask);
-  background:linear-gradient(calc(var(--run-a) * -1),
-    transparent calc(var(--cy) - var(--cw) - 2px),
-    var(--ink)   calc(var(--cy) - var(--cw) - 2px), var(--ink)  calc(var(--cy) - var(--cw)),
-    var(--paper) calc(var(--cy) - var(--cw)),       var(--paper) calc(var(--cy) + var(--cw)),
-    var(--ink)   calc(var(--cy) + var(--cw)),       var(--ink)  calc(var(--cy) + var(--cw) + 2px),
-    transparent  calc(var(--cy) + var(--cw) + 2px))}
-.rig-scan:has(.viewer--bad) .rig-scan__cut{display:block}
-.rig-scan:has(.viewer--bad) .rig-scan__bar{border-bottom-color:var(--seal)}
 
 /* ══════════════════════════════════════════════════════════════════
    SCAN — THE VIEWFINDER AND THE TERMINAL
@@ -664,23 +601,7 @@
    were both cinnabar too, so a screen with a fault code on it was
    showing three.
    ══════════════════════════════════════════════════════════════════ */
-.viewer::after{--bracket:clamp(26px,4.4vw,56px);--bracket-w:var(--edge-heavy)}
 
-.manual{border:0;background:none;padding:clamp(18px,2.4vw,30px) 0 0;
-  position:relative}
-.manual::before{content:"";position:absolute;left:0;right:0;top:0;
-  height:var(--edge-thin);background:var(--ink)}
-.manual .kicker{display:flex;align-items:flex-start;gap:9px}
-.manual .kicker::before{content:"";flex:none;margin-top:.45em;
-  width:clamp(10px,1.4vw,20px);height:var(--rule-hair);background:currentColor}
-/* the line: ink, not cinnabar — red is the target's, and only the
-   target's. It thickens on focus rather than changing colour. */
-.manual .input{border-bottom-color:var(--ink);border-bottom-width:var(--edge-thin)}
-.manual .field:focus-within .input{border-bottom-width:var(--edge)}
-/* the commit is struck, not dashed. A dashed border reads disabled. */
-.manual .btn{border-style:solid;border-width:var(--edge-thin);
-  background:var(--ink);color:var(--paper);min-height:48px}
-.manual .btn:hover,.manual .btn:focus-visible{background:var(--paper);color:var(--ink)}
 
 /* ══════════════════════════════════════════════════════════════════
    THE REWARD DOSSIER
@@ -836,7 +757,6 @@
    paper itself has a grain that changes between chapters. */
 [data-screen="board"] body{--tone-wide:16px}
 [data-screen="home"] body{--tone-wide:22px}
-[data-screen="scan"] body{--tone-wide:26px}
 
 /* ── THE GHOST WORD IS CROPPED, NOT PLACED ────────────────────────
    The sound effect behind each masthead sat inside the measure with
@@ -1193,14 +1113,7 @@ select.input:focus-visible{outline:none}
    system's targeting marks rather than characters that would set in
    whatever the mono face happens to have. Cinnabar, because a dead
    scanner is the one place on this screen the target never lights. */
-.codemark{display:inline-block;position:relative;
-  font:500 clamp(11px,1.4vw,13px)/1 var(--f-mono);letter-spacing:.22em;
-  color:var(--seal);
-  padding:8px 14px}
-.codemark::before,.codemark::after{content:"";position:absolute;
-  width:11px;height:11px;border:var(--rule-hair) solid var(--seal)}
-.codemark::before{left:0;top:0;border-right:0;border-bottom:0}
-.codemark::after{right:0;bottom:0;border-left:0;border-top:0}
+
 
 /* ── SCANNER STATES ───────────────────────────────────────────────
    These classes were toggled in JS and styled nowhere, so a successful
@@ -1209,25 +1122,12 @@ select.input:focus-visible{outline:none}
    weight, fill and inversion rather than by hue, because this theme has
    no hue to spend: every accent token resolves to ink. That also
    satisfies "not by colour alone" for free. */
-.reticle--live .reticle__c{border-width:var(--edge-thin)}
-/* The sweep line reads as "something is being scanned", so it is drawn
-   only while something is. It used to be visible in every state that
-   did not explicitly hide it — including `boot`, where a cinnabar line
-   sat across the frame while the browser was still asking for camera
-   permission and there was nothing behind it at all. */
-.reticle__line{top:50%;opacity:0}
-.reticle--live .reticle__line{opacity:.9}
-/* steps(), not ease-in-out. Everything else in this system cuts; a
-   sweep that accelerates and decelerates was the one soft gesture left
-   on the screen, and it read as an app animation rather than as a
-   mechanism ticking down the frame. */
-.reticle--live .reticle__line{animation:retSweep 2.4s steps(14,end) infinite}
+
 
 /* ── WAITING FOR THE CAMERA ───────────────────────────────────────
    The frame's own marks recede while the loader turns, so the moving
    mark is the one thing there is to look at. */
-.reticle--wait .reticle__geo,
-.reticle--wait .reticle__mark{opacity:.16}
+
 
 /* ── WORKING ──────────────────────────────────────────────────────
    The code is read and the server has not answered yet. The corners
@@ -1235,12 +1135,7 @@ select.input:focus-visible{outline:none}
    a two-step cycle, while the sweep line parks dead centre. Held plus
    blinking cannot be confused with the searching state (sweeping, thin)
    or with the refusal (filled, still). */
-.reticle--busy .reticle__c{border-width:var(--edge-heavy);
-  animation:busyHold 260ms steps(1,end) infinite alternate}
-.reticle--busy .reticle__line{top:50%;opacity:.9;
-  animation:busyBar 520ms steps(4,end) infinite}
-.reticle--busy .reticle__geo,
-.reticle--busy .reticle__mark{opacity:.5}
+
 @keyframes busyHold{
   from{border-color:var(--ink)}
   to  {border-color:var(--v3)}
@@ -1250,11 +1145,6 @@ select.input:focus-visible{outline:none}
   to  {transform:scaleX(1);transform-origin:left}
 }
 
-.reticle--good .reticle__c{border-width:var(--edge-heavy)}
-.reticle--good .reticle__geo,
-.reticle--good .reticle__mark{opacity:.85}
-.reticle--good .reticle__line{opacity:0}
-
 /* ── REFUSED ──────────────────────────────────────────────────────
    "The UI shouldn't just show a small red error text; the central
    frame should snap violently and flash starkly."
@@ -1263,7 +1153,7 @@ select.input:focus-visible{outline:none}
    kicks sideways — `steps()`, so every change is a cut with nothing
    in between. You cannot miss it and you cannot mistake it for the
    success state, which tightens quietly instead. */
-.viewer--bad{animation:refuse 90ms steps(1,end) 3,refuseKick 60ms steps(2,end) 2}
+
 /* Floods to PAPER, not ink. The viewfinder is already a black box, so
    an ink flash over it was a change nobody could see — the loud move
    on a dark field is inversion. Three white cuts over the camera feed
@@ -1277,40 +1167,10 @@ select.input:focus-visible{outline:none}
   50% {transform:translateX(-7px)}
   100%{transform:translateX(7px)}
 }
-/* refused: the corners close into a solid block and the sweep stops */
-.reticle--bad .reticle__c{border-width:var(--edge-thin);background:var(--ink)}
-.reticle--bad .reticle__geo,
-.reticle--bad .reticle__mark{opacity:.12}
-.reticle--bad .reticle__line{opacity:0}
-
-/* the frame itself answers: ink border thickens on a hit */
-.viewer--hit{border-width:var(--edge-shout)}
-
-.viewer__msg{padding:6px 12px;transition:background var(--snap) linear,color var(--snap) linear}
-.viewer__msg--hot{background:var(--ink);color:var(--paper)}
-.viewer__msg--soft{background:var(--paper);color:var(--ink);
-  border:var(--rule-hair) solid var(--ink)}
-/* the refusal states a fault code, and it states it in the one place
-   red is allowed on this screen — the target has just refused */
-.reticle--bad ~ .viewer__status .viewer__msg,
-.viewer--bad .viewer__msg{background:var(--paper);color:var(--seal);
-  border:var(--edge-thin) solid var(--seal);font-weight:700;letter-spacing:.2em}
 
 @keyframes retSweep{
   from{top:6%;opacity:.4}
   to  {top:94%;opacity:.9}
-}
-@media (prefers-reduced-motion:reduce){
-  .reticle--live .reticle__line{animation:none}
-  /* working still has to be distinguishable from stopped, so the
-     corners simply hold heavy and the bar holds half-drawn */
-  .reticle--busy .reticle__c{animation:none}
-  .reticle--busy .reticle__line{animation:none;
-    transform:scaleX(.55);transform-origin:left}
-  /* the refusal still has to be unmistakable without motion, so the
-     flash becomes a held state rather than being dropped */
-  .viewer--bad{animation:none;border-color:var(--seal);
-    border-width:var(--edge-shout)}
 }
 
 /* ── BUTTON HIERARCHY AND STATES ──────────────────────────────────
@@ -1338,34 +1198,8 @@ select.input:focus-visible{outline:none}
    this theme has no red to spend */
 .bconfirm .btn--go{background:var(--ink);border-width:var(--edge-thin)}
 
-/* ── SCANNER LEGIBILITY OVER AN ARBITRARY CAMERA IMAGE ────────────
-   Verdict on the black-and-white question: monochrome STAYS. Every
-   accent token in this theme resolves to ink, so a colour scanner would
-   be the single coloured element in the whole app -- colour for its own
-   sake, which is the thing to avoid.
 
-   What actually made it look unpolished is that the overlay was ink
-   drawn straight onto live video. That reads fine over a bright wall and
-   disappears over a dark one, and the camera image is the one thing here
-   nobody controls. So the overlay now carries its own contrast: the
-   status is a paper chip in every state, and the reticle gets a paper
-   halo so its edges hold against a dark scene. */
-.viewer__msg{background:var(--paper);color:var(--ink);
-  padding:7px 14px;border:var(--rule-hair) solid var(--ink)}
 
-/* drop-shadow follows the painted L of each corner; box-shadow would
-   ring the whole element box and turn the brackets into solid squares */
-/* Two paper passes over a 2.5px cinnabar stroke bleached the target
-   to white — the halo swallowed the mark it was meant to protect. One
-   tight paper ring, then a dark one outside it: the red core survives,
-   and the pair holds against a bright wall and a dark room alike. */
-.reticle__c,
-.reticle__line{filter:drop-shadow(0 0 1.1px var(--paper))
-                      drop-shadow(0 0 2px rgba(0,0,0,.65))}
-.reticle__geo,
-.reticle__mark{opacity:.42;filter:drop-shadow(0 0 1.5px var(--paper))}
-.reticle--good .reticle__geo,
-.reticle--good .reticle__mark{opacity:.9}
 
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1580,29 +1414,6 @@ select.input:focus-visible{outline:none}
   /* the numeral is the figure this mass is carrying */
   [data-screen="board"] .bnext .bactive__no{font-size:clamp(44px,6.4vw,96px);
     line-height:.9}
-}
-
-
-/* ── 8. THE CLOSING TIER ON HOME WAS ENTIRELY ORTHOGONAL ──────────
-   The spread carries two opposed diagonals — the chamber's leading
-   corner and the stamp sheet's trailing one — and then the whole
-   bottom third of the page is rules and rectangles. A motif that
-   appears twice at the top and never again is an accident, not a
-   system. The last stamped entry is the one ink mass down there, so
-   it takes the same cut the sheet takes, on the same corner. */
-
-
-/* ── 9. THE RIG HAD NO FLANKS FOR THE TRACKING LINES TO RUN IN ────
-   Activation rakes speed lines in from both sides of the frame, and
-   the viewfinder was 1015 of the rig's 1040 pixels — so the lines
-   were drawn into a 12px margin and read as nothing. The trailing
-   column opens up on a large screen: the rune gets a real margin to
-   sit in, the frame gains the asymmetry it was missing, and there is
-   somewhere for the rig to show that it is tracking. */
-@media(min-width:1024px){
-  .rig-scan{grid-template-columns:minmax(0,1fr) clamp(20px,7vw,120px)}
-  .rig-scan__rune{justify-self:center}
-  .rig-scan::after{width:clamp(20px,7vw,120px);max-width:none}
 }
 
 

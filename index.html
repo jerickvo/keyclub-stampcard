@@ -526,128 +526,12 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .tech__crack{position:absolute;inset:0;pointer-events:none;opacity:0}
 .tech__name{overflow-wrap:break-word}
 
-/* ══════════════════ SCAN ══════════════════ */
-/* ONE CELL, NOT TWO ROWS.
-
-   The reticle and the status message were both in-flow grid items, so
-   `place-items:center` stacked them in two rows and centred the PAIR.
-   That put the target's centre half the message's height above the
-   chamber's centre — measured at -67px on a phone, -86px on a desktop,
-   growing with the chamber, which is why no fixed offset could ever
-   have fixed it.
-
-   Every child now shares one cell. The reticle centres in the whole
-   chamber and the status pins to the bottom edge, so the target is
-   mathematically centred whatever the message says or however the
-   chamber is sized. */
-.viewer{position:relative;display:grid;
-  grid-template:minmax(0,1fr)/minmax(0,1fr);
-  container-type:size;
-  overflow:hidden;
-  border:var(--rule) solid var(--ink);aspect-ratio:3/4;
-  /* Frame furniture, not a target. These brackets are fixed to the box
-     and never change; the reticle inside is the mark that aims and
-     reacts, and it is the one that carries cinnabar. Two red bracket
-     sets on one screen was the accent spent twice — paper on the dark
-     camera image reads as instrument housing and leaves the red to the
-     thing that earns it.
-
-     INK is the default, because the box's own ground is paper. Paper
-     brackets were keyed to the absence of .viewer--stalled, which is
-     only one of the states with no picture in it: while the browser is
-     asking for camera permission, and for as long as the feed takes to
-     start, the frame is paper and the brackets were painted paper on
-     top of it. .viewer--feed is set when a video is actually playing,
-     which is the real question being asked.
-
-     Declared HERE and not on ::after: a custom property re-declared on
-     the pseudo-element wins over whatever the element passes down, so
-     no state could override it from the outside. */
-  --bracket-c:var(--ink);
-  /* The camera frame is the one panel that has to answer to viewport
-     HEIGHT: it is the thing you hold up, and on a phone in landscape,
-     or a short laptop, a 3/4 box taller than the screen puts the
-     reticle out of reach. dvh (not vh) so the mobile address bar
-     collapsing does not resize it mid-scan, and the tab bar's own
-     height comes out of the budget. */
-  max-height:calc(72dvh - var(--tabs-h));
-  background:var(--paper-2)}
-/* Landscape is a different composition, not a shorter portrait: the
-   frame turns with the device. Keyed to orientation and aspect rather
-   than to a width, so a phone on its side and a laptop both get it. */
-@media(min-aspect-ratio:1/1){.viewer{aspect-ratio:4/3}}
-@media(min-width:768px){.viewer{aspect-ratio:4/3}}
-/* No camera, permission refused, or an insecure page: the frame stops
-   being a viewfinder and becomes a message panel. It is sized by the
-   message with a floor for presence, so it is a panel on a phone and a
-   panel on a monitor rather than a 230px letterbox on both. */
-.viewer--stalled{aspect-ratio:auto;min-height:clamp(200px,32dvh,320px);
-  max-height:none}
-/* a picture is playing: the housing goes paper so it holds against it */
-.viewer--feed{--bracket-c:var(--paper)}
-/* every in-flow child occupies the single cell; out-of-flow ones are
-   unaffected by grid placement and keep their own inset */
-.viewer > *{grid-area:1/1;min-width:0;min-height:0}
-.viewer > .reticle{place-self:center}
-.viewer > .viewer__status{place-self:end center;
-  padding-bottom:clamp(10px,4cqh,30px);max-width:92%}
-.viewer video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-  /* Monochrome stays: every accent token in this theme is remapped to
-     ink, so a colour camera would be the one coloured thing in the whole
-     app. But contrast(1.5) crushed the midtones of a live feed until you
-     could not see what you were pointing at -- the code is decoded from
-     the raw frame, not this filtered view, so the filter's only job is
-     legibility for the person aiming. Eased accordingly. */
-  filter:grayscale(1) contrast(1.12)}
-.viewer__scrim{position:absolute;inset:0;
-  background-image:radial-gradient(var(--ink) 1px,transparent 1px);
-  background-size:5px 5px;opacity:.09}     /* screentone, not a veil */
-/* ── THE VIEWFINDER FRAME ─────────────────────────────────────────
-   Four heavy right-angle brackets in cinnabar, pinned to the corners
-   of the camera frame. This is one of the four sanctioned uses of the
-   seal colour: the system is asking you to aim.
-
-   It has to be a PSEUDO-ELEMENT. The scanner rewrites `viewer.innerHTML`
-   wholesale on every state change (no camera, permission refused,
-   insecure page), so any child element carrying the frame is destroyed
-   the first time the state changes — which is exactly when a user most
-   needs the screen to still look like a viewfinder. A pseudo-element
-   belongs to the box, not to its contents, and survives every rewrite.
-
-   Eight gradients: a horizontal and a vertical arm per corner. They
-   sit at the corners and never across the middle, so they cannot
-   obscure what the camera is pointed at. */
-.viewer__grain{display:none}
-.viewer::after{content:"";position:absolute;inset:clamp(6px,1vw,12px);
-  pointer-events:none;z-index:6;
-  --bracket:clamp(20px,3.2vw,40px);
-  --bracket-w:var(--edge);
-  background-repeat:no-repeat;
-  background-image:
-    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
-    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
-    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
-    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0);
-  background-size:
-    var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket),
-    var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket),
-    var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket),
-    var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket);
-  background-position:
-    left top,left top, right top,right top,
-    left bottom,left bottom, right bottom,right bottom}
-/* a hit tightens the brackets inward — the frame closing on the code */
-.viewer--hit::after{inset:clamp(12px,2vw,22px)}
-
-.viewer--hit .viewer__grain{inset:6px}
-.viewer__status,.viewer__msg{position:relative;font-family:var(--f-accent);
-  text-align:center}
 /* THE WAITING MARK. `.loader` was applied in JS and styled in no
    stylesheet, so the only thing sizing it was an inline
    `inset:0;margin:auto` and the SVG's own default of filling its box.
-   It is a mark now: sized like the reticle's inner ring, centred in
-   it, and turning in twelve discrete steps because nothing in this
-   system eases. */
+   It is a mark now: sized against the target area, centred in it, and
+   turning in twelve discrete steps because nothing in this system
+   eases. */
 .loader{position:absolute;top:50%;left:50%;
   width:clamp(54px,42%,116px);aspect-ratio:1;
   transform:translate(-50%,-50%);
@@ -657,36 +541,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 @keyframes loaderTurn{from{transform:translate(-50%,-50%) rotate(0deg)}
                       to  {transform:translate(-50%,-50%) rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){ .loader{animation:none} }
-
-/* sized off the CHAMBER, not the viewport: cqmin is the smaller of the
-   chamber's own two axes, so the target can never outgrow the box it
-   is aiming inside — on a short landscape screen the chamber is wide
-   and shallow, and a width-only rule overflowed it vertically */
-.reticle{position:relative;width:min(64cqmin,250px);aspect-ratio:1}
-.reticle__c{position:absolute;width:26px;height:26px;border:var(--rule) solid var(--ink)}
-.reticle__c--tl{top:0;left:0;border-right:0;border-bottom:0}
-.reticle__c--tr{top:0;right:0;border-left:0;border-bottom:0}
-.reticle__c--bl{bottom:0;left:0;border-right:0;border-top:0}
-.reticle__c--br{bottom:0;right:0;border-left:0;border-top:0}
-.reticle__line{position:absolute;left:0;right:0;height:2px;background:var(--ink)}
-/* width/height MUST be auto so the insets size the box. These two are
-   absolutely positioned with inset:-14% to overflow the reticle on
-   every side; any explicit width here over-constrains left+right+width
-   and the browser resolves it by dropping `right`, which lays the SVG
-   out at the reticle's size shifted up-left by 14% of it. auto is also
-   what keeps the zero-specificity `:where(svg…){width:22px}` default
-   off them. */
-.reticle__geo,.reticle__mark{position:absolute;inset:-14%;
-  width:auto;height:auto;opacity:.3;pointer-events:none}
-.reticle__geo circle,.reticle__geo polygon,.reticle__geo path,.reticle__geo line,
-.reticle__mark circle,.reticle__mark polygon,.reticle__mark line{
-  fill:none;stroke:var(--ink);stroke-width:1.3;vector-effect:non-scaling-stroke}
-.reticle__mark path{fill:var(--ink);stroke:none}
-/* `.manual` is a child of the view grid, so the tier gap already
-   separates it from the frame above. The extra margin was a second
-   gap stacked on the first — 92px of paper between the scanner and
-   the fallback that belongs with it. */
-.manual{padding:var(--s5);border:var(--rule) solid var(--ink)}
 /* A text field and its button are a row until the row stops working.
    `flex-wrap` plus a real basis on the input is the whole rule: the
    pair sits side by side wherever there is room for both, and the
@@ -720,11 +574,8 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   font:500 clamp(13px,.4vw + 11.7px,14.5px)/1.2 var(--f-mono);
   letter-spacing:.08em;transition:none}
 .input::placeholder{color:var(--tone);letter-spacing:.06em}
-/* Focus thickens the rule; it does not colour it. Cinnabar belongs to
-   the TARGET, and on the scan screen a red underline meant the page
-   could show three red marks at once — the reticle, the rule and the
-   prompt — which is three more than this system allows. Weight is the
-   signal, and weight reads for someone who cannot see the hue. */
+/* Focus thickens the rule; it does not colour it. Weight is the
+   signal, and weight reads for someone who cannot see a hue. */
 .input:focus{outline:0;border-bottom-color:var(--ink);
   border-bottom-width:var(--edge-heavy)}
 /* The caret marker rides on the field wrapper, not on the input, so it
@@ -1146,7 +997,7 @@ html,body{overflow-x:clip;max-width:100%}
    getting a 2.8px box of its own, so fifteen meetings meant fifteen
    boxes stacked inside the box around them. Rows are separated by a
    hairline and space now. */
-.panel,.head,.manual,.viewer,.stat,
+.panel,.head,.stat,
 .bpanel,.bnext,.tech{
   border-width:calc(var(--ink-w, 2.8) * 1px);
   border-style:solid;
@@ -1314,7 +1165,7 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 
 /* one padding value for every panel, plus a larger one where a panel is
    carrying the dominant moment */
-.panel,.manual{padding:var(--space-panel)}
+.panel{padding:var(--space-panel)}
 .head{padding:var(--space-panel) var(--space-panel-lg)}
 .who{padding:var(--space-panel)}
 
@@ -1383,23 +1234,8 @@ main#view{padding-top:var(--space-tier);
    does what it says. */
 :where(svg:not(.fxdefs):not([width])){width:22px;height:22px;flex:none}
 
-/* .reticle__geo and .reticle__mark are NOT in this list, and must not
-   be put back into it.
-
-   They are absolutely positioned with `inset:-14%`, which is how they
-   overflow the reticle box on every side. Giving them width:100% from
-   here over-constrained the box — left, right AND width all set — so
-   the browser dropped `right` and the SVG was laid out at the reticle's
-   size but offset up and left by 14% of it. That is 29.7px at 390x844,
-   and it is why the scan mark sat above and left of the target while
-   the .reticle wrapper measured perfectly centred: the wrapper was
-   centred, the artwork inside it was not.
-
-   `.viewer svg` is also gone: it matched those same two SVGs by
-   descent and reintroduced the identical conflict. The scanner's
-   fallback graphics are covered by `.viewer .stack svg` below. */
 .who__seal,.verdict__seal,
-.arena svg,.tech__glyph svg,.viewer .stack svg,.slash,.lines,
+.arena svg,.tech__glyph svg,.slash,.lines,
 .verdict__field,.tech__crack svg,.qrpanel__code svg{width:100%;height:100%}
 .who__seal{width:clamp(52px,5vw,74px);height:clamp(52px,5vw,74px)}
 .tech__glyph svg{width:100%;height:100%}
@@ -1408,24 +1244,6 @@ main#view{padding-top:var(--space-tier);
 .boot__mark svg{width:88px;height:88px}
 .verdict__seal{width:min(30vmin,170px);height:min(30vmin,170px)}
 .boot__seal{width:min(40vmin,230px);height:min(40vmin,230px)}
-
-/* the "no camera" state was one enormous icon and two lines of text */
-/* `.viewer .stack` is here because the scanner's fallback states render
-   `<div class="stack">`, and nothing in the stylesheet ever matched that
-   class — so the padding and max-width below were written but never
-   applied. The copy ran the full width of the viewer and the drawn frame
-   cut through it ("NO CAMERA FOUND" lost its N; the body text ran off the
-   right edge). */
-.viewer__msg,.viewer .stack{display:flex;flex-direction:column;align-items:center;
-  gap:var(--space-stack-sm);text-align:center;padding:var(--space-panel-lg);
-  max-width:46ch;margin-inline:auto}
-.viewer__msg svg,.viewer .stack__icon svg{width:clamp(38px,4vw,56px)!important;
-  height:clamp(38px,4vw,56px)!important;opacity:.5}
-/* The camera frame is height-budgeted twice — once where it is defined
-   and once here. Both use dvh so a collapsing mobile address bar cannot
-   resize the viewfinder while someone is aiming it, and both leave the
-   fixed bar's height out of the budget. */
-.viewer{max-height:min(calc(72dvh - var(--tabs-h)),560px)}
 
 /* ══════════════════════════════════════════════════════════════════
    CHAPTER HEADS — every screen but Home was rendering its title
@@ -1646,9 +1464,6 @@ main#view{padding-top:var(--space-tier);
    neither does.
    ───────────────────────────────────────────────────────────────── */
 :root{--ink-w:2.8}
-
-[data-screen="scan"] .viewer{--ink-w:4.2}
-[data-screen="scan"] .manual{--ink-w:2.4}
 
 [data-screen="profile"] .stat{--ink-w:1.6}
 
@@ -2052,14 +1867,6 @@ main#view{padding-top:var(--space-tier);
 .empty__note{margin-top:clamp(7px,1vw,11px);max-width:52ch;
   font-size:clamp(12.5px,1vw,14.5px);line-height:1.55;color:var(--ink-2)}
 
-/* the scanner's dead end, same language inside the frame */
-.viewer .stall{display:grid;justify-items:start;align-content:center;
-  gap:clamp(8px,1.2vw,13px);
-  padding:clamp(20px,4vw,44px);max-width:52ch;width:100%}
-.stall__title{font-family:var(--f-display);text-transform:uppercase;
-  font-size:clamp(16px,2.2vw,26px);line-height:1.04;color:var(--ink)}
-.stall__note{font-size:clamp(12.5px,1vw,14.5px);line-height:1.55;color:var(--ink-2)}
-
 /* ══════════════════════════════════════════════════════════════════
    THE RIG — the viewfinder is mounted, not placed
 
@@ -2073,22 +1880,7 @@ main#view{padding-top:var(--space-tier);
    format the reader accepts, and the live status, which is the one
    cinnabar mark on the screen while the target is armed.
    ══════════════════════════════════════════════════════════════════ */
-.rig-scan{position:relative;display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  grid-template-rows:auto auto;
-  column-gap:clamp(8px,1.2vw,16px)}
-.rig-scan__bar{grid-column:1/-1;display:flex;flex-wrap:wrap;
-  align-items:center;gap:clamp(10px,2vw,28px);
-  padding-bottom:clamp(8px,1.1vw,13px);margin-bottom:clamp(8px,1.1vw,13px);
-  border-bottom:var(--edge-thin) solid var(--ink)}
-.rig-scan__bar .anno:last-child{margin-left:auto}
-.rig-scan > .viewer{grid-column:1;grid-row:2}
-.rig-scan__rune{grid-column:2;grid-row:2;align-self:start;
-  writing-mode:vertical-rl;
-  font:500 clamp(8.5px,.66vw,10.5px)/1 var(--f-mono);letter-spacing:.26em;
-  color:var(--ink-2);
-  padding-top:clamp(4px,.8vw,10px);white-space:nowrap;
-  pointer-events:none;user-select:none}
+
 
 /* ══════════════════════════════════════════════════════════════════
    ACTIVATION AND INTERRUPTION
@@ -2108,44 +1900,7 @@ main#view{padding-top:var(--space-tier);
    happened. Both are drawn, not animated, so reduced motion keeps
    them.
    ══════════════════════════════════════════════════════════════════ */
-.rig-scan{position:relative}
-.rig-scan::before,.rig-scan::after{content:"";position:absolute;
-  top:0;bottom:0;width:14vw;max-width:210px;z-index:0;
-  pointer-events:none;opacity:0;transition:opacity .18s steps(3,end);
-  background-image:repeating-linear-gradient(var(--run-a),
-    var(--ink) 0 1.5px, transparent 1.5px 7px,
-    var(--ink) 7px 8px, transparent 8px 19px)}
-.rig-scan::before{left:0;
-  -webkit-mask-image:linear-gradient(90deg,#000,transparent);
-          mask-image:linear-gradient(90deg,#000,transparent)}
-.rig-scan::after{right:0;
-  -webkit-mask-image:linear-gradient(270deg,#000,transparent);
-          mask-image:linear-gradient(270deg,#000,transparent)}
-.rig-scan:has(.viewer--feed)::before,
-.rig-scan:has(.viewer--feed)::after{opacity:.3}
-.rig-scan:has(.viewer--feed) .rig-scan__bar{border-bottom-width:var(--edge)}
 
-/* THE CUT. Refusal tears the rig open along the system diagonal: a
-   band of bare paper thrown across the frame with an ink edge on each
-   side, as if the panel itself had been slashed. It is drawn in paper
-   and ink, not cinnabar — the one red mark on a refused screen stays
-   the status reading, so the interruption reads as damage rather than
-   as another alarm. */
-.rig-scan:has(.viewer--bad)::before,
-.rig-scan:has(.viewer--bad)::after{opacity:0}
-.rig-scan__cut{position:absolute;inset:-2px;z-index:8;pointer-events:none;
-  display:none;--cw:clamp(11px,1.5vw,20px);--cy:44%;
-  --cmask:linear-gradient(180deg,#000 0 27%,transparent 27% 33%,
-    #000 33% 64%,transparent 64%);
-  -webkit-mask-image:var(--cmask);mask-image:var(--cmask);
-  background:linear-gradient(calc(var(--run-a) * -1),
-    transparent calc(var(--cy) - var(--cw) - 2px),
-    var(--ink)   calc(var(--cy) - var(--cw) - 2px), var(--ink)  calc(var(--cy) - var(--cw)),
-    var(--paper) calc(var(--cy) - var(--cw)),       var(--paper) calc(var(--cy) + var(--cw)),
-    var(--ink)   calc(var(--cy) + var(--cw)),       var(--ink)  calc(var(--cy) + var(--cw) + 2px),
-    transparent  calc(var(--cy) + var(--cw) + 2px))}
-.rig-scan:has(.viewer--bad) .rig-scan__cut{display:block}
-.rig-scan:has(.viewer--bad) .rig-scan__bar{border-bottom-color:var(--seal)}
 
 /* ══════════════════════════════════════════════════════════════════
    SCAN — THE VIEWFINDER AND THE TERMINAL
@@ -2162,23 +1917,7 @@ main#view{padding-top:var(--space-tier);
    were both cinnabar too, so a screen with a fault code on it was
    showing three.
    ══════════════════════════════════════════════════════════════════ */
-.viewer::after{--bracket:clamp(26px,4.4vw,56px);--bracket-w:var(--edge-heavy)}
 
-.manual{border:0;background:none;padding:clamp(18px,2.4vw,30px) 0 0;
-  position:relative}
-.manual::before{content:"";position:absolute;left:0;right:0;top:0;
-  height:var(--edge-thin);background:var(--ink)}
-.manual .kicker{display:flex;align-items:flex-start;gap:9px}
-.manual .kicker::before{content:"";flex:none;margin-top:.45em;
-  width:clamp(10px,1.4vw,20px);height:var(--rule-hair);background:currentColor}
-/* the line: ink, not cinnabar — red is the target's, and only the
-   target's. It thickens on focus rather than changing colour. */
-.manual .input{border-bottom-color:var(--ink);border-bottom-width:var(--edge-thin)}
-.manual .field:focus-within .input{border-bottom-width:var(--edge)}
-/* the commit is struck, not dashed. A dashed border reads disabled. */
-.manual .btn{border-style:solid;border-width:var(--edge-thin);
-  background:var(--ink);color:var(--paper);min-height:48px}
-.manual .btn:hover,.manual .btn:focus-visible{background:var(--paper);color:var(--ink)}
 
 /* ══════════════════════════════════════════════════════════════════
    THE REWARD DOSSIER
@@ -2334,7 +2073,6 @@ main#view{padding-top:var(--space-tier);
    paper itself has a grain that changes between chapters. */
 [data-screen="board"] body{--tone-wide:16px}
 [data-screen="home"] body{--tone-wide:22px}
-[data-screen="scan"] body{--tone-wide:26px}
 
 /* ── THE GHOST WORD IS CROPPED, NOT PLACED ────────────────────────
    The sound effect behind each masthead sat inside the measure with
@@ -2691,14 +2429,7 @@ select.input:focus-visible{outline:none}
    system's targeting marks rather than characters that would set in
    whatever the mono face happens to have. Cinnabar, because a dead
    scanner is the one place on this screen the target never lights. */
-.codemark{display:inline-block;position:relative;
-  font:500 clamp(11px,1.4vw,13px)/1 var(--f-mono);letter-spacing:.22em;
-  color:var(--seal);
-  padding:8px 14px}
-.codemark::before,.codemark::after{content:"";position:absolute;
-  width:11px;height:11px;border:var(--rule-hair) solid var(--seal)}
-.codemark::before{left:0;top:0;border-right:0;border-bottom:0}
-.codemark::after{right:0;bottom:0;border-left:0;border-top:0}
+
 
 /* ── SCANNER STATES ───────────────────────────────────────────────
    These classes were toggled in JS and styled nowhere, so a successful
@@ -2707,25 +2438,12 @@ select.input:focus-visible{outline:none}
    weight, fill and inversion rather than by hue, because this theme has
    no hue to spend: every accent token resolves to ink. That also
    satisfies "not by colour alone" for free. */
-.reticle--live .reticle__c{border-width:var(--edge-thin)}
-/* The sweep line reads as "something is being scanned", so it is drawn
-   only while something is. It used to be visible in every state that
-   did not explicitly hide it — including `boot`, where a cinnabar line
-   sat across the frame while the browser was still asking for camera
-   permission and there was nothing behind it at all. */
-.reticle__line{top:50%;opacity:0}
-.reticle--live .reticle__line{opacity:.9}
-/* steps(), not ease-in-out. Everything else in this system cuts; a
-   sweep that accelerates and decelerates was the one soft gesture left
-   on the screen, and it read as an app animation rather than as a
-   mechanism ticking down the frame. */
-.reticle--live .reticle__line{animation:retSweep 2.4s steps(14,end) infinite}
+
 
 /* ── WAITING FOR THE CAMERA ───────────────────────────────────────
    The frame's own marks recede while the loader turns, so the moving
    mark is the one thing there is to look at. */
-.reticle--wait .reticle__geo,
-.reticle--wait .reticle__mark{opacity:.16}
+
 
 /* ── WORKING ──────────────────────────────────────────────────────
    The code is read and the server has not answered yet. The corners
@@ -2733,12 +2451,7 @@ select.input:focus-visible{outline:none}
    a two-step cycle, while the sweep line parks dead centre. Held plus
    blinking cannot be confused with the searching state (sweeping, thin)
    or with the refusal (filled, still). */
-.reticle--busy .reticle__c{border-width:var(--edge-heavy);
-  animation:busyHold 260ms steps(1,end) infinite alternate}
-.reticle--busy .reticle__line{top:50%;opacity:.9;
-  animation:busyBar 520ms steps(4,end) infinite}
-.reticle--busy .reticle__geo,
-.reticle--busy .reticle__mark{opacity:.5}
+
 @keyframes busyHold{
   from{border-color:var(--ink)}
   to  {border-color:var(--v3)}
@@ -2748,11 +2461,6 @@ select.input:focus-visible{outline:none}
   to  {transform:scaleX(1);transform-origin:left}
 }
 
-.reticle--good .reticle__c{border-width:var(--edge-heavy)}
-.reticle--good .reticle__geo,
-.reticle--good .reticle__mark{opacity:.85}
-.reticle--good .reticle__line{opacity:0}
-
 /* ── REFUSED ──────────────────────────────────────────────────────
    "The UI shouldn't just show a small red error text; the central
    frame should snap violently and flash starkly."
@@ -2761,7 +2469,7 @@ select.input:focus-visible{outline:none}
    kicks sideways — `steps()`, so every change is a cut with nothing
    in between. You cannot miss it and you cannot mistake it for the
    success state, which tightens quietly instead. */
-.viewer--bad{animation:refuse 90ms steps(1,end) 3,refuseKick 60ms steps(2,end) 2}
+
 /* Floods to PAPER, not ink. The viewfinder is already a black box, so
    an ink flash over it was a change nobody could see — the loud move
    on a dark field is inversion. Three white cuts over the camera feed
@@ -2775,40 +2483,10 @@ select.input:focus-visible{outline:none}
   50% {transform:translateX(-7px)}
   100%{transform:translateX(7px)}
 }
-/* refused: the corners close into a solid block and the sweep stops */
-.reticle--bad .reticle__c{border-width:var(--edge-thin);background:var(--ink)}
-.reticle--bad .reticle__geo,
-.reticle--bad .reticle__mark{opacity:.12}
-.reticle--bad .reticle__line{opacity:0}
-
-/* the frame itself answers: ink border thickens on a hit */
-.viewer--hit{border-width:var(--edge-shout)}
-
-.viewer__msg{padding:6px 12px;transition:background var(--snap) linear,color var(--snap) linear}
-.viewer__msg--hot{background:var(--ink);color:var(--paper)}
-.viewer__msg--soft{background:var(--paper);color:var(--ink);
-  border:var(--rule-hair) solid var(--ink)}
-/* the refusal states a fault code, and it states it in the one place
-   red is allowed on this screen — the target has just refused */
-.reticle--bad ~ .viewer__status .viewer__msg,
-.viewer--bad .viewer__msg{background:var(--paper);color:var(--seal);
-  border:var(--edge-thin) solid var(--seal);font-weight:700;letter-spacing:.2em}
 
 @keyframes retSweep{
   from{top:6%;opacity:.4}
   to  {top:94%;opacity:.9}
-}
-@media (prefers-reduced-motion:reduce){
-  .reticle--live .reticle__line{animation:none}
-  /* working still has to be distinguishable from stopped, so the
-     corners simply hold heavy and the bar holds half-drawn */
-  .reticle--busy .reticle__c{animation:none}
-  .reticle--busy .reticle__line{animation:none;
-    transform:scaleX(.55);transform-origin:left}
-  /* the refusal still has to be unmistakable without motion, so the
-     flash becomes a held state rather than being dropped */
-  .viewer--bad{animation:none;border-color:var(--seal);
-    border-width:var(--edge-shout)}
 }
 
 /* ── BUTTON HIERARCHY AND STATES ──────────────────────────────────
@@ -2836,34 +2514,8 @@ select.input:focus-visible{outline:none}
    this theme has no red to spend */
 .bconfirm .btn--go{background:var(--ink);border-width:var(--edge-thin)}
 
-/* ── SCANNER LEGIBILITY OVER AN ARBITRARY CAMERA IMAGE ────────────
-   Verdict on the black-and-white question: monochrome STAYS. Every
-   accent token in this theme resolves to ink, so a colour scanner would
-   be the single coloured element in the whole app -- colour for its own
-   sake, which is the thing to avoid.
 
-   What actually made it look unpolished is that the overlay was ink
-   drawn straight onto live video. That reads fine over a bright wall and
-   disappears over a dark one, and the camera image is the one thing here
-   nobody controls. So the overlay now carries its own contrast: the
-   status is a paper chip in every state, and the reticle gets a paper
-   halo so its edges hold against a dark scene. */
-.viewer__msg{background:var(--paper);color:var(--ink);
-  padding:7px 14px;border:var(--rule-hair) solid var(--ink)}
 
-/* drop-shadow follows the painted L of each corner; box-shadow would
-   ring the whole element box and turn the brackets into solid squares */
-/* Two paper passes over a 2.5px cinnabar stroke bleached the target
-   to white — the halo swallowed the mark it was meant to protect. One
-   tight paper ring, then a dark one outside it: the red core survives,
-   and the pair holds against a bright wall and a dark room alike. */
-.reticle__c,
-.reticle__line{filter:drop-shadow(0 0 1.1px var(--paper))
-                      drop-shadow(0 0 2px rgba(0,0,0,.65))}
-.reticle__geo,
-.reticle__mark{opacity:.42;filter:drop-shadow(0 0 1.5px var(--paper))}
-.reticle--good .reticle__geo,
-.reticle--good .reticle__mark{opacity:.9}
 
 
 /* ══════════════════════════════════════════════════════════════════
@@ -3078,29 +2730,6 @@ select.input:focus-visible{outline:none}
   /* the numeral is the figure this mass is carrying */
   [data-screen="board"] .bnext .bactive__no{font-size:clamp(44px,6.4vw,96px);
     line-height:.9}
-}
-
-
-/* ── 8. THE CLOSING TIER ON HOME WAS ENTIRELY ORTHOGONAL ──────────
-   The spread carries two opposed diagonals — the chamber's leading
-   corner and the stamp sheet's trailing one — and then the whole
-   bottom third of the page is rules and rectangles. A motif that
-   appears twice at the top and never again is an accident, not a
-   system. The last stamped entry is the one ink mass down there, so
-   it takes the same cut the sheet takes, on the same corner. */
-
-
-/* ── 9. THE RIG HAD NO FLANKS FOR THE TRACKING LINES TO RUN IN ────
-   Activation rakes speed lines in from both sides of the frame, and
-   the viewfinder was 1015 of the rig's 1040 pixels — so the lines
-   were drawn into a 12px margin and read as nothing. The trailing
-   column opens up on a large screen: the rune gets a real margin to
-   sit in, the frame gains the asymmetry it was missing, and there is
-   somewhere for the rig to show that it is tracking. */
-@media(min-width:1024px){
-  .rig-scan{grid-template-columns:minmax(0,1fr) clamp(20px,7vw,120px)}
-  .rig-scan__rune{justify-self:center}
-  .rig-scan::after{width:clamp(20px,7vw,120px);max-width:none}
 }
 
 
@@ -3460,30 +3089,6 @@ none;
    enough to mean something. */
 .bstate--open{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
-/* ══ SCANNER ═══════════════════════════════════════════════════════
-   Verdict on the colour question: the camera image stays desaturated,
-   but the FRAME is vermilion. Keeping the feed monochrome is what
-   makes the overlay legible over an image nobody controls, and it
-   holds the manga register. Putting the accent in the reticle instead
-   gives the screen its colour where colour actually does work —
-   telling you where to aim and whether it worked. */
-/* The frame is ink; the TARGET is cinnabar. Aiming is the one moment
-   the app asks for the accent, and the sweep line that reads the code
-   carries it too — over an arbitrary camera image a red line is the
-   only mark guaranteed to be visible against both a bright wall and a
-   dark one. */
-.viewer{border-color:var(--ink)}
-.reticle__c{border-color:var(--seal)}
-.reticle--good .reticle__c{border-color:var(--seal);background:var(--seal)}
-/* Refused: the target fills solid. Ink-on-black was a state change you
-   could not see; the same element that aims in cinnabar refuses in it,
-   which spends no new colour. */
-.reticle--bad .reticle__c{background:var(--seal);border-color:var(--seal)}
-.reticle__line{background:var(--seal)}
-.viewer--hit{border-color:var(--seal)}
-.viewer__msg{border-color:var(--ink)}
-.viewer__msg--hot{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-
 /* ══ THE QR ════════════════════════════════════════════════════════
    The code stays pure black on pure white — that is a scanning
    requirement, not a style choice, and nothing is drawn over it. The
@@ -3749,9 +3354,6 @@ none;
 /* the brand block must be able to shrink inside the rail track */
 .rail,.rail__brand,.rail__nav,.rail__foot{min-width:0}
 .rail__brand .mark,.rail__brand .mark__word{min-width:0;overflow-wrap:anywhere}
-/* the scanner's fallback copy sits on the viewer's tone fill, not on
-   paper, which costs it the last of its contrast */
-.viewer .stack .muted,.viewer__msg{color:var(--ink)}
 .brow__mid .muted,.bstat span{font-size:clamp(12px,.45vw + 10.6px,13.5px)}
 /* Nothing in the application is allowed under 11px. The mono labels
    keep their wide tracking — that is what makes them read as manga
@@ -3814,12 +3416,6 @@ none;
 .brow__n{font-size:clamp(17px,4vw,19px)}
 .bstat{padding:var(--s4)}
 .bsec{margin-top:var(--s5)}
-/* The scanner frame keeps its weight — it is the one place a heavy
-   keyline does real work, telling you where to aim. Said through the
-   rank system now (scan's .viewer is --ink-w:4.2) rather than pinned
-   here, where a fixed width in the last stylesheet was quietly
-   capping it three steps lighter than the rank asked for. */
-:where(.viewer){border-width:var(--edge)}
 
 @media (min-width:768px){
   .tech{padding:var(--s5)}
@@ -3854,7 +3450,7 @@ main#view:focus,main#view:focus-visible{outline:none}
    against a log at 32). Both read as "slightly wrong" without being
    obviously broken, which is exactly the kind of thing that makes a
    layout feel unfinished. */
-.viewer{width:100%;margin-inline:0}
+
 
 /* ── 6. Reward requirement legibility ─────────────────────────────
    "Unlocks at 20 stamps" is the single most useful line on a locked
@@ -4322,6 +3918,155 @@ button,input,select,textarea{font-family:inherit}
   .ledger__mark,.lrow--open{grid-column:1 / -1}
   .lrow{column-gap:var(--s3)}
   .lrow--open{column-gap:var(--s4)}
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   THE SCANNER — scan
+
+   A hundred and thirty-two rules across three files used to dress this
+   page. What they drew, over and above a camera picture: a strip of
+   invented telemetry along the top (OPT.CAM // 1280, FMT.M##/XXXXXX,
+   SYS.TRACKING), a rune reading TARGETING down the right edge, a band
+   of diagonal hatching behind it, a crosshair, a dashed compass ring,
+   twenty-four tick marks, a sweeping scan line, a second set of inner
+   brackets, and the club seal painted across the middle of the frame.
+
+   None of it was a fact. The rune was decoration in a language the app
+   does not otherwise speak; the readouts named a system that does not
+   exist; and the seal sat exactly where the code you are trying to
+   read has to go.
+
+   What is left is what an instrument actually needs: a frame, four
+   marks showing where to aim, and one line saying what it is doing.
+   The one real piece of state — which meeting is taking check-ins —
+   is now printed above the frame, where the telemetry used to be.
+   ══════════════════════════════════════════════════════════════════ */
+.view--scan{display:flex;flex-direction:column;gap:var(--s4)}
+
+/* the meeting the camera is for. The only status this page can state
+   truthfully without asking the camera, and the thing the invented
+   telemetry was standing in front of. */
+.standing{display:flex;align-items:baseline;gap:var(--s3);
+  flex-wrap:wrap;margin:0}
+.standing__lab{font-size:var(--t-caption);color:var(--ink-2);
+  white-space:nowrap}
+.standing__at{font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(19px,3.8vw,28px);line-height:1;color:var(--ink)}
+
+/* ── THE FRAME ────────────────────────────────────────────────────
+   One heavy border, the feed inside it, the status pinned to the
+   bottom edge. Every child shares one grid cell so the target area is
+   centred in the frame whatever the status line happens to say. */
+.viewer{position:relative;display:grid;place-items:center;
+  isolation:isolate;overflow:hidden;
+  width:100%;aspect-ratio:1;max-height:62vh;
+  border:var(--edge-frame) solid var(--ink);background:var(--tint)}
+/* a code is square, so on a phone the frame is square: it fills the
+   sheet instead of leaving a letterbox with half a screen under it. */
+@media(min-width:600px){ .viewer{aspect-ratio:4/3} }
+.viewer > *{grid-area:1/1}
+.viewer video{width:100%;height:100%;object-fit:cover;display:block;
+  filter:grayscale(1) contrast(1.06)}
+
+/* screentone over the feed, not a veil: it holds the overlay legible
+   against a camera image nobody controls. */
+.viewer__scrim{width:100%;height:100%;pointer-events:none;
+  background-image:radial-gradient(rgba(10,10,10,.34) 1.1px,transparent 1.2px);
+  background-size:5px 5px}
+.viewer__grain{display:none}
+
+/* ── WHERE TO AIM ─────────────────────────────────────────────────
+   Four right-angle marks and nothing between them. They sit at the
+   corners and never across the middle, so they cannot cover the code. */
+/* lifted clear of the status band: the two used to share the bottom
+   of the frame, and the sentence printed straight over the lower
+   corner marks. */
+.reticle{position:relative;width:min(58%,290px);aspect-ratio:1;
+  margin-bottom:clamp(36px,8vw,58px);
+  pointer-events:none;z-index:2}
+.reticle__c{position:absolute;width:15%;height:15%;
+  border:var(--edge-frame) solid var(--paper);
+  filter:drop-shadow(0 0 1px rgba(10,10,10,.55))}
+.reticle__c--tl{top:0;left:0;border-right:0;border-bottom:0}
+.reticle__c--tr{top:0;right:0;border-left:0;border-bottom:0}
+.reticle__c--bl{bottom:0;left:0;border-right:0;border-top:0}
+.reticle__c--br{bottom:0;right:0;border-left:0;border-top:0}
+
+/* the marks close on a hit and open again on a refusal. Weight and
+   position carry the state; there is no colour in this system to spend. */
+.reticle--good .reticle__c{width:19%;height:19%}
+.reticle--busy .reticle__c{opacity:.55}
+.reticle--bad .reticle__c{width:12%;height:12%}
+
+/* ── THE STATUS ───────────────────────────────────────────────────
+   One sentence in plain words, on paper so it holds over any scene. */
+.viewer__status{align-self:end;justify-self:center;z-index:3;
+  padding:0 var(--s3) var(--s3);max-width:100%}
+.viewer__msg{display:inline-block;
+  padding:6px var(--s3);background:var(--paper);color:var(--ink);
+  font-size:var(--t-caption);line-height:1.25;text-align:center}
+.viewer__msg--hot{background:var(--ink);color:var(--paper)}
+.viewer__msg--soft{color:var(--ink-2)}
+
+/* a good read floods the frame for one beat */
+.viewer--hit{border-color:var(--ink)}
+.viewer--hit .viewer__scrim{opacity:.35}
+
+/* ── THE DEAD ENDS ────────────────────────────────────────────────
+   No camera, no permission, no https. The panel stops being a
+   viewfinder and becomes a note: title, sentence, and the field below
+   already focused. It used to lead with a bracketed fault code
+   invented for this screen. */
+.viewer--stalled{aspect-ratio:auto;min-height:clamp(160px,30vw,240px);
+  place-items:stretch;background:var(--paper)}
+.stall{display:flex;flex-direction:column;justify-content:center;
+  gap:var(--s2);padding:var(--s5);text-align:left}
+.stall__title{margin:0;font-family:var(--f-display);
+  text-transform:uppercase;line-height:1;
+  font-size:clamp(19px,3.6vw,28px)}
+.stall__note{margin:0;max-width:46ch;font-size:var(--t-caption);
+  line-height:1.45;color:var(--ink-2)}
+
+/* ── TYPING IT INSTEAD ────────────────────────────────────────────
+   The fallback is a real form block, not an afterthought squeezed
+   under the frame: a label, a ruled field, and the verb in ink. */
+.manual{display:flex;flex-direction:column;gap:var(--s2);
+  border-top:var(--edge-panel) solid var(--ink);padding-top:var(--s3)}
+.manual__lab{font-size:var(--t-caption);color:var(--ink-2);line-height:1.35}
+.manual__f{display:flex;gap:var(--s2);flex-wrap:wrap;align-items:stretch}
+.manual__in{flex:999 1 min(100%,14ch);min-width:0;
+  padding:11px 2px 9px;background:transparent;color:var(--ink);
+  border:0;border-bottom:var(--edge-panel) solid var(--ink);border-radius:0;
+  font-family:var(--f-mono);font-size:var(--t-caption);letter-spacing:.06em}
+.manual__in::placeholder{color:var(--tone)}
+.manual__in:focus{outline:0;border-bottom-width:var(--edge-frame)}
+.manual__go{flex:1 1 auto;min-width:max-content;
+  padding:11px var(--s4);border:var(--edge-panel) solid var(--ink);
+  background:var(--ink);color:var(--paper);cursor:pointer;
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(15px,3vw,20px);line-height:1.2}
+.manual__go:hover{background:var(--paper);color:var(--ink)}
+.manual__go:focus-visible{outline:var(--edge-panel) solid var(--ink);
+  outline-offset:3px}
+
+/* On a wide sheet the frame keeps a sane size instead of becoming a
+   letterbox two thirds of the screen across, and the fallback sits
+   beside it rather than a full page-width away from the thing it is a
+   fallback for. */
+@media(min-width:1024px){
+  .view--scan{display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(16rem,22rem);
+    grid-template-areas:"head head" "standing standing" "viewer manual";
+    gap:var(--s5) var(--s6);align-content:start}
+  .view--scan > .rechead{grid-area:head}
+  .view--scan > .standing{grid-area:standing}
+  .view--scan > .viewer{grid-area:viewer;max-height:none}
+  /* the fallback sits at the foot of the frame's row, so its ruled
+     field lines up with the status band instead of floating at the top
+     of eight hundred pixels of empty column. */
+  .view--scan > .manual{grid-area:manual;align-self:stretch;
+    justify-content:flex-end;border-top:0;padding-top:0}
 }
 
 </style>
@@ -17745,11 +17490,6 @@ const ICON = {
   still:  SVG('<path d="M4 12h16"/><path d="M4 8v8M20 8v8"/>'),
 };
 
-/* A bracketed monospace token — the fault codes on the scanner's dead
-   ends. `[ERR.CAM]` says the same thing a padlock glyph says and says
-   it in the page's own voice, which is words in brackets, not pictures. */
-const codeMark = (s) => `<span class="codemark" aria-hidden="true">${s}</span>`;
-
 /* ══════════════════════════════════════════════════════════════════
    THREE MARKS, THREE JOBS
 
@@ -18843,51 +18583,60 @@ const Views = {
   },
 
   scan(){
-    return `<div class="view">
-      ${C.head('Scan code')}
+    /* WHAT THE CAMERA IS FOR. The rig used to state its own condition
+       in invented telemetry — OPT.CAM // 1280, FMT.M##/XXXXXX,
+       SYS.TRACKING, a rune reading TARGETING down the right edge —
+       none of which was ever a fact about anything. The one piece of
+       real state the page has is which meeting is taking check-ins,
+       and it was the one thing the page did not say. */
+    const open = Store.openMeeting();
+    const done = open && Store.attended(open.id);
+    const standing = !open
+      ? { lab:'Nothing open', at:'No check-in right now' }
+      : done
+        ? { lab:'Already stamped', at:`GM ${pad(open.no)}` }
+        : { lab:'Checking in to', at:`GM ${pad(open.no)} / ${fmtDay(open.date)} / ${esc(open.place)}` };
 
-      <!-- THE RIG. The viewfinder is not a component sitting on a
-           page; it is an instrument mounted in a frame, and the frame
-           states what it is doing. Technical readings run along the
-           top edge and a rune runs down the side — real state, not
-           decoration: the optics label, the code format the reader
-           accepts, and the live status. -->
-      <div class="rig-scan" data-enter>
-        <div class="rig-scan__bar" aria-hidden="true">
-          <span class="anno">OPT.CAM // 1280</span>
-          <span class="anno">FMT.M##/XXXXXX</span>
-          <span class="anno anno--seal" id="rigState">SYS.ARMED</span>
-        </div>
-        <span class="rig-scan__rune" aria-hidden="true">読取 // TARGETING</span>
-        <span class="rig-scan__cut" aria-hidden="true"></span>
+    return `<div class="view view--scan">
+      <header class="rechead" data-enter>
+        <h1 class="title rechead__title">Scan</h1>
+        <p class="rechead__note">Point the camera at the seal on the projector.
+          A stamp is written by the server, not by this screen — nothing is
+          recorded until it answers.</p>
+      </header>
+
+      <p class="standing" data-enter>
+        <span class="standing__lab">${standing.lab}</span>
+        <span class="standing__at">${standing.at}</span>
+      </p>
+
+      <!-- THE FRAME. Four corner marks and a status line. Everything
+           else that used to be mounted on it — a crosshair, a dashed
+           compass ring, twenty-four tick marks, a sweeping scan line,
+           a second set of inner brackets, and the club seal painted
+           over the middle of the camera image — was a graphic saying
+           "this is a camera" to someone already looking through one.
+           The seal was worse than redundant: it sat exactly where the
+           code you are trying to read has to go. -->
       <div class="viewer" id="viewer" data-enter>
         <video id="cam" playsinline muted autoplay></video>
         <div class="viewer__scrim" aria-hidden="true"></div>
         <div class="viewer__grain" aria-hidden="true"></div>
         <div class="reticle" id="reticle" aria-hidden="true">
-          <svg class="reticle__geo" viewBox="0 0 100 100">
-            <g class="sp"><circle cx="50" cy="50" r="48"/>
-              <circle cx="50" cy="50" r="43" stroke-dasharray="2 7"/>${ticks(24, 43, 47, 6)}</g>
-            <g class="sp-r"><circle cx="50" cy="50" r="34" stroke-dasharray="14 9"/>
-              <polygon points="50,20 80,50 50,80 20,50"/></g>
-          </svg>
-          <svg class="reticle__mark" viewBox="0 0 100 100">${seal(1)}</svg>
           <span class="reticle__c reticle__c--tl"></span>
           <span class="reticle__c reticle__c--tr"></span>
           <span class="reticle__c reticle__c--bl"></span>
           <span class="reticle__c reticle__c--br"></span>
-          <span class="reticle__line"></span>
         </div>
         <div class="viewer__status"><span class="viewer__msg" id="scanMsg">Starting camera</span></div>
       </div>
-      </div>
 
       <div class="manual" data-enter>
-        <p class="kicker">Camera not working? Type the code under the seal</p>
-        <div class="field">
-          <input class="input" id="manualInput" placeholder="m09/XXXXXX"
+        <label class="manual__lab" for="manualInput">Camera not working? Type the code under the seal</label>
+        <div class="manual__f">
+          <input class="manual__in" id="manualInput" placeholder="Seal code"
                  aria-label="Seal code" autocomplete="off" spellcheck="false" enterkeyhint="go">
-          <button class="btn btn--ghost" id="manualGo">Verify</button>
+          <button class="manual__go" id="manualGo" type="button">Verify</button>
         </div>
         <div class="bubble" id="demoHint"></div>
       </div>
@@ -20351,12 +20100,6 @@ function paintAttendanceCount(meetingId){
 /* ══════════════════════════════════════════════════════════════════
    11. SCANNER — an explicit state machine, so every outcome has a look.
    ══════════════════════════════════════════════════════════════════ */
-/* what the rig reports, per scanner state */
-const RIG_STATE = {
-  boot:'SYS.ARMING', live:'SYS.TRACKING', hit:'SYS.LOCK',
-  busy:'SYS.VERIFY', good:'SYS.SEALED',  bad:'SYS.REFUSED',
-};
-
 const Scanner = {
   stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0,
 
@@ -20378,15 +20121,10 @@ const Scanner = {
          given up rather than one that was working. It has a look now. */
       ret.classList.toggle('reticle--busy', state === 'busy');
     }
-    /* The rig's own readout. It said SYS.ARMED in cinnabar whatever
-       had happened, so a frame showing a fault code showed two red
-       marks at once — and the second one was lying. */
-    const rs = $('#rigState');
-    if (rs){
-      rs.textContent = RIG_STATE[state] || 'SYS.ARMED';
-      rs.classList.toggle('anno--seal',
-        state === 'live' || state === 'hit' || state === 'busy');
-    }
+    /* The rig used to carry a second readout of its own — SYS.ARMING,
+       SYS.TRACKING, SYS.LOCK — restating this same state in invented
+       telemetry beside the sentence that already said it plainly. The
+       status line below the frame is the whole report now. */
     viewer?.classList.toggle('viewer--hit', state === 'good' || state === 'hit');
     /* A refusal is not a small red sentence under the frame. The frame
        itself answers — see .viewer--bad. The class is removed and
@@ -20489,28 +20227,26 @@ const Scanner = {
     if (!viewer) return;
     this.hideLoader();
     viewer.classList.remove('viewer--feed');
-    const rs = $('#rigState');
-    if (rs){ rs.textContent = 'SYS.OFFLINE'; rs.classList.remove('anno--seal'); }
     /* A fault code, then the sentence. The three dead ends used to be
        told apart by a padlock, a camera and a keypad glyph — three
        pictures doing a job this page does with words in brackets
        everywhere else. The code names the fault; the sentence says what
        to do about it. */
     const copy = {
-      denied:{ code:'ERR.PERM', title:'Camera permission is off',
+      denied:{ title:'Camera permission is off',
         body:'Allow camera access for this page in your browser settings, then reload. Or type the code below.' },
-      unavailable:{ code:'ERR.CAM', title:'No camera found',
+      unavailable:{ title:'No camera found',
         body:'Nothing on this device is reporting a camera. Type the code printed under the seal instead.' },
-      unsupported:{ code:'ERR.HTTPS', title:'Scanning needs a secure page',
+      unsupported:{ title:'Scanning needs a secure page',
         body:'Camera access only works over https. Type the code printed under the seal instead.' },
     }[kind];
 
-    /* The dead-end reads like the rest of the system now: a fault code
-       set as an annotation, the sentence at reading size, and the
-       whole thing anchored to the left of the frame instead of
-       floating in the middle of a grey box. */
+    /* The dead end says what broke and what to do about it. It used
+       to lead with a bracketed fault code — ERR.PERM, ERR.CAM,
+       ERR.HTTPS — invented for this screen, resolving to nothing, and
+       naming a system that does not exist. The sentence under it
+       already carried the whole message. */
     viewer.innerHTML = `<div class="stall">
-      ${codeMark(copy.code)}
       <h2 class="stall__title">${copy.title}</h2>
       <p class="stall__note">${copy.body}</p>
     </div>`;
