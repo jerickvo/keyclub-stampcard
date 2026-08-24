@@ -125,7 +125,6 @@
 
   --f-label:var(--f-body);
   --f-accent:var(--f-body);
-  --f-jp:var(--f-body);
 
   /* ══ SCREENTONE — ATMOSPHERE, AT TWO STRENGTHS ═════════════════════
      Tone used to sit behind every screen at one density, which is how
@@ -242,10 +241,6 @@ none;
 }
 .kicker{color:var(--ink-2);letter-spacing:.26em}
 
-
-/* the vertical Japanese marker, now an accent rather than grey noise */
-.jp{color:var(--tone);opacity:.9}
-
 /* ══ ACTION ════════════════════════════════════════════════════════
    The primary action is the seal being pressed. Ink fill, and on
    press it deepens rather than lifting — a stamp goes down. */
@@ -357,47 +352,6 @@ none;
 .chop--filled .chop__key{fill:var(--paper)}
 
 /* ══════════════════════════════════════════════════════════════════
-   REWARDS — three panels, three states, no store front
-   ══════════════════════════════════════════════════════════════════
-   Locked is line only. Unlocked is screentone with a heavy keyline —
-   it has arrived but is not yet taken. Claimed is the spotted black,
-   the seal pressed. That escalation is the whole reward moment. */
-/* ══ REWARDS — THREE STATES, THREE WEIGHTS ═════════════════════════
-   A dossier that is sealed, one that is ready to be opened, and one
-   that has been claimed. The escalation is carried entirely by edge
-   weight and ink coverage — no textures, no fills laid across type. */
-.tech{
-  border:var(--edge-hair) solid var(--v3);
-  background:var(--paper);
-  position:relative;overflow:hidden;
-}
-/* SEALED: a hairline and muted type. Present, closed, quiet. */
-.tech--sealed{border-style:solid;border-color:var(--v3)}
-.tech--sealed .tech__name{color:var(--ink-2)}
-.tech--sealed .tech__glyph{opacity:.34}
-
-/* READY: the heaviest keyline in the list, and a solid ink bar down
-   the leading edge — the tab of a file that is ready to be pulled. */
-.tech--open{
-  border:var(--edge) solid var(--ink);
-  background:var(--paper);
-}
-.tech--open::before{
-  content:'';position:absolute;left:0;top:0;bottom:0;width:var(--edge-shout);
-  background:var(--seal);
-}
-.tech--open{padding-left:calc(var(--s5) + var(--edge-shout))}
-.tech--claimed{                      /* claimed: the seal is pressed */
-  background:var(--ink);color:var(--paper);border-color:var(--ink);
-  border-width:var(--edge);border-style:solid;
-}
-.tech--claimed .tech__name,
-.tech--claimed .tech__req,
-.tech--claimed .tech__state{color:var(--paper)}
-.tech--claimed .tech__glyph{color:var(--paper);opacity:.9}
-.tech--claimed .tech__req{color:var(--tone-lt)}
-
-/* ══════════════════════════════════════════════════════════════════
    BOARD — the same book, administrative chapters
    ══════════════════════════════════════════════════════════════════ */
 /* figures are the subject of Club Tools, so they get display scale and
@@ -453,23 +407,6 @@ none;
 /* the board form is a panel of the same book */
 .bform{border-bottom:var(--edge) solid var(--ink);padding-bottom:var(--s5)}
 .bsec{border-bottom:var(--edge-thin) solid var(--ink);color:var(--ink)}
-
-/* ── Rewards polish ───────────────────────────────────────────────
-   The "Unlocks at N stamps" line is real information, not a caption,
-   so it sits at ink-2 rather than tone. And removing the old blurb
-   left a hole in the locked cards — they collapse to their content
-   now instead of holding a paragraph's worth of empty. */
-/* The requirement line is rendered as `.tech__at`, not `.tech__req` —
-   the older class was left over from a previous markup pass, so every
-   rule written for it matched nothing and the line stayed at --tone
-   (#B0A99C) on a hatched ground: under 2:1 against the paper, on the
-   one sentence that answers "how far am I?". Both names are set, so
-   whichever the view renders is legible. */
-
-.tech--sealed .tech__req,.tech--sealed .tech__at{color:var(--ink-2)}
-.tech{min-height:0}
-.tech--sealed{padding-bottom:var(--s4)}
-.tech--sealed .tech__body{min-height:0}
 
 /* ══ NARROW — the base, not an exception ═════════════════════════════
    A phone page is a single column of stacked frames, which is how a
@@ -640,14 +577,12 @@ none;
    tight and the first thing to return when it does not. Expressed as
    the base with a lift at the tablet tier, so there is one direction
    of travel rather than a stack of exceptions. */
-.tech{padding:var(--s4)}
-.tech__name{font-size:clamp(17px,4vw,20px)}
+
 .brow__n{font-size:clamp(17px,4vw,19px)}
 .bstat{padding:var(--s4)}
 .bsec{margin-top:var(--s5)}
 
 @media (min-width:768px){
-  .tech{padding:var(--s5)}
   .bstat{padding:var(--s4) var(--s4) var(--s5)}
 }
 
@@ -687,8 +622,7 @@ main#view:focus,main#view:focus-visible{outline:none}
    secondary weight on top of screentone, which eats contrast. It gets
    full ink and mono tracking so it reads as a spec, not a whisper. */
 
-.tech--sealed .tech__req{color:var(--ink)}
-.tech--sealed .tech__name{color:var(--ink)}
+
 
 /* ONE BRAND ON THE PAGE. Both the topbar and the desktop rail repeat
    the wordmark beside the card that already states it — and signed
@@ -1296,4 +1230,98 @@ button,input,select,textarea{font-family:inherit}
      of eight hundred pixels of empty column. */
   .view--scan > .manual{grid-area:manual;align-self:stretch;
     justify-content:flex-end;border-top:0;padding-top:0}
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   THE LADDER — rewards
+
+   Every tier used to draw its own progress array starting from zero.
+   The same six stamps were therefore reported four times per row — a
+   ten-to-thirty cell array, "6 / 10 stamps", "4 to go", and "Unlocks
+   at 10 stamps" — and three times down the page, twelve statements of
+   one number. At phone width the thirty-cell array drew thirty
+   three-pixel slivers, which is a graphic that cannot be read.
+
+   There is one count. This is one scale showing where it stands
+   against all three rungs at once, and under it the rungs as ledger
+   lines in the register's own vocabulary.
+   ══════════════════════════════════════════════════════════════════ */
+.view--rewards{display:flex;flex-direction:column;gap:var(--s5)}
+
+/* ── THE SCALE ────────────────────────────────────────────────────
+   The impact beat: one figure, one track, the rungs marked on it at
+   their real positions so the distances between them are visible
+   rather than described. */
+.ladder{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+/* the display face draws well below its line box; without the pad the
+   figure's tail lands in the caption under it */
+.ladder__fig{margin:0;padding-bottom:.1em;font-family:var(--f-display);
+  line-height:.78;font-size:clamp(64px,15vw,120px);color:var(--ink)}
+.ladder__of{margin:0;font-size:var(--t-caption);color:var(--ink-2);
+  line-height:1.2}
+
+.ladder__track{position:relative;width:100%;
+  margin-top:clamp(28px,5vw,42px);
+  height:clamp(10px,1.4vw,15px);background:var(--tone-field)}
+.ladder__fill{position:absolute;inset:0 auto 0 0;width:var(--w,0%);
+  background:var(--ink)}
+
+/* a rung is a hard stop drawn through the track with its figure set
+   above it — the same numeral the tier rows use, so the scale and the
+   list are visibly the same instrument */
+.ladder__rung{position:absolute;top:-6px;bottom:-6px;left:var(--x,0%);
+  width:var(--edge-panel);background:var(--ink)}
+.ladder__rung b{position:absolute;left:50%;bottom:calc(100% + 5px);
+  transform:translateX(-50%);
+  font-family:var(--f-display);font-weight:inherit;line-height:1;
+  font-size:clamp(15px,3vw,21px);color:var(--ink-2)}
+/* a rung already behind you is drawn on the filled part of the track,
+   so it inverts to hold against the ink */
+.ladder__rung--past{background:var(--paper)}
+.ladder__rung--past b{color:var(--ink)}
+
+/* ── THE RUNGS ────────────────────────────────────────────────────
+   Ledger lines. Same grid, same rules, same numeral treatment as the
+   register on Record — one page vocabulary, two pages. */
+.tiers{display:flex;flex-direction:column;
+  border-top:var(--edge-panel) solid var(--ink)}
+.tier{display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;gap:var(--s3);
+  padding:clamp(11px,1.7vw,16px) 0;
+  border-bottom:var(--edge-rule) solid var(--tint)}
+.tier__at{font-family:var(--f-display);line-height:1;
+  font-size:clamp(24px,5vw,34px);color:var(--tone);
+  min-width:2.4ch;letter-spacing:-.02em}
+.tier__body{display:flex;flex-direction:column;gap:0;min-width:0}
+.tier__name{font-size:var(--t-body);line-height:1.15}
+.tier__desc{font-size:var(--t-caption);color:var(--ink-2);line-height:1.3}
+.tier__say{font-size:var(--t-caption);color:var(--ink-2);
+  white-space:nowrap;justify-self:end;text-align:right}
+
+/* SEALED — the distance is the only thing to say. */
+/* READY — the one rung you can act on, and the only ink on the list. */
+.tier--ready{background:var(--ink);color:var(--paper);
+  padding-left:var(--s4);padding-right:var(--s4);
+  margin:var(--s2) 0;border-bottom:0;
+  box-shadow:var(--s2) var(--s2) 0 var(--tone-field)}
+.tier--ready .tier__at{color:var(--paper)}
+.tier--ready .tier__desc{color:var(--tint)}
+.tier__claim{padding:9px var(--s4);cursor:pointer;
+  border:var(--edge-panel) solid var(--paper);
+  background:var(--paper);color:var(--ink);
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(15px,3vw,21px);line-height:1.2;white-space:nowrap}
+.tier__claim:hover{background:var(--ink);color:var(--paper)}
+.tier__claim:focus-visible{outline:var(--edge-panel) solid var(--paper);
+  outline-offset:3px}
+
+/* CLAIMED — taken. The numeral comes to full ink and the line recedes:
+   it is history, not an offer. */
+.tier--claimed .tier__at{color:var(--ink)}
+.tier--claimed .tier__name{color:var(--ink-2)}
+.tier--claimed .tier__desc{color:var(--tone)}
+
+@media(min-width:768px){
+  .tier{gap:var(--s4)}
 }

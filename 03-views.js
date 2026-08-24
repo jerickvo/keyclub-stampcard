@@ -53,6 +53,31 @@ const C = {
     </div>`;
   },
 
+  /* ONE RUNG. A ledger line, not a dossier: the tier number, the
+     name, what you can do about it, and the distance. The panel it
+     replaces carried a ten-to-thirty cell progress array of its own,
+     which at phone width drew thirty three-pixel slivers and said
+     nothing the number beside it did not already say. */
+  tier(r, total){
+    const open  = total >= r.required;
+    const ready = open && !r.claimed;
+    const state = r.claimed ? 'claimed' : ready ? 'ready' : 'sealed';
+    const say   = r.claimed ? 'Claimed'
+                : ready     ? 'Ready to claim'
+                : `${r.required - total} more ${r.required - total === 1 ? 'stamp' : 'stamps'}`;
+
+    return `<div class="tier tier--${state}" data-reward="${r.id}">
+      <span class="tier__at">${pad(r.required)}</span>
+      <span class="tier__body">
+        <span class="tier__name">${esc(r.name)}</span>
+        <span class="tier__desc">${esc(r.desc || '')}</span>
+      </span>
+      ${ready
+        ? `<button class="tier__claim" type="button" data-claim="${r.id}">Claim</button>`
+        : `<span class="tier__say">${say}</span>`}
+    </div>`;
+  },
+
   /* ── ten struck marks. Empty slots sit at slight angles; a landed
      stamp snaps flat, which is what makes the grid feel struck by hand ── */
   sealGrid(){
@@ -125,76 +150,6 @@ const C = {
   },
 
   /* ── a reward: sealed until the count reaches it ── */
-  /* ── THE DOSSIER ─────────────────────────────────────────────────
-     Three identical cards with three identical progress bars, which
-     is the single most generic arrangement an interface can arrive
-     at — and it said nothing about the difference between a reward
-     one stamp away and one twenty-one away.
-
-     A dossier now, and its STATE is its design:
-
-       sealed   quiet, unframed, the tier numeral in tone, the array
-                barely struck — a document you have not earned
-       ready    full ink frame, cinnabar mark, CLAIM across the
-                measure — the one thing on the page to act on
-       claimed  flooded ink — the concentrated black mass, and it
-                means something: this one is taken
-
-     The bar is gone. Progress is the same slot array the card on
-     Home uses, so the two screens are reading the same instrument. */
-  tech(r){
-    const total = Store.totalStamps();
-    const open = total >= r.required;
-    const ready = open && !r.claimed;
-    /* PANEL ROLE. Three sealed tiers rendered identically is three of
-       the same object again — the thing this dossier was built to
-       stop. The nearest one you have not reached is the hero of the
-       page whether or not it is claimable, because it is the only one
-       that is about to happen; the rest are micro. */
-    const near = Store.rewards.filter(x => total < x.required)
-                   .sort((a, b) => a.required - b.required)[0];
-    const rank = r.claimed ? 'past' : ready ? 'hero'
-               : (near && near.id === r.id) ? 'hero' : 'far';
-    const state = r.claimed ? 'claimed' : open ? 'ready' : 'sealed';
-    const done = Math.min(total, r.required);
-
-    /* the array is capped so a 30-stamp tier does not draw 30 cells on
-       a phone; past the cap it steps in fives and says so */
-    const step = r.required > 12 ? Math.ceil(r.required / 12) : 1;
-    const cells = Math.ceil(r.required / step);
-    const litCells = Math.floor(done / step);
-    const slots = Array.from({ length:cells }, (_, i) =>
-      `<span class="dslot${i < litCells ? ' dslot--set' : ''}"></span>`).join('');
-
-    return `<section class="rig dossier dossier--${state}" data-rank="${rank}" data-enter data-reward="${r.id}">
-      <div class="panel tech tech--${state}">
-        <span class="dossier__idx idx${open ? ' idx--on' : ''}" aria-hidden="true">${pad(r.required)}</span>
-        <div class="dossier__head">
-          <h3 class="tech__name">${esc(r.name)}</h3>
-          <span class="anno${ready ? ' anno--seal' : ''}">${
-            r.claimed ? 'CLAIMED' : open ? 'READY' : 'SEALED'}</span>
-        </div>
-        <p class="dossier__at">Unlocks at ${r.required} stamps</p>
-
-        <div class="dslots" style="--dcells:${cells}" role="img"
-             aria-label="${done} of ${r.required} stamps">${slots}</div>
-        <div class="dossier__legend">
-          <span class="kicker">${done} / ${r.required} stamps</span>
-          <span class="kicker">${open ? 'Unlocked' : (r.required - total) + ' to go'}</span>
-        </div>
-
-        ${ready
-          ? `<button class="btn btn--hot btn--wide dossier__claim" data-claim="${r.id}">Claim reward</button>`
-          : ''}
-
-        ${ready ? `<svg class="tech__crack" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M-2 44 22 40 38 52 61 43 79 55 102 47"/>
-            <path d="M30 -2 34 26 26 44 40 68 33 102"/>
-            <path d="M70 -2 64 30 76 52 62 74 71 102"/></svg>` : ''}
-      </div>
-    </section>`;
-  },
-
   /* Four figures at identical weight is four figures nobody reads
      first. A plate can now be ranked, and exactly one per page is. */
   stat(value, label, sub, rank){
@@ -423,11 +378,42 @@ const Views = {
 
   rewards(){
     if (Store.failed) return this.loadFailure('Rewards');
-    return `<div class="view">
-      ${C.head('Rewards')}
-      <div class="stack-panels">
-        ${Store.rewards.map(C.tech).join('')}
-      </div>
+    const total = Store.totalStamps();
+    const tiers = [...Store.rewards].sort((a, b) => a.required - b.required);
+    const top   = tiers[tiers.length - 1]?.required || 10;
+    /* the scale runs a little past the last rung so the mark for it is
+       not jammed against the right edge of the track */
+    const scale = Math.max(top * 1.06, total * 1.06, 1);
+    const next  = tiers.find(t => total < t.required) || null;
+
+    return `<div class="view view--rewards">
+      <header class="rechead" data-enter>
+        <h1 class="title rechead__title">Rewards</h1>
+        <p class="rechead__note">Stamps accumulate across the whole year — nothing
+          resets when a card fills. Every rung below is measured from the same count.</p>
+      </header>
+
+      <!-- ONE SCALE, NOT THREE BARS. Each tier used to draw its own
+           progress array starting from zero, so the same six stamps
+           were reported four times per row (an array, "6 / 10 stamps",
+           "4 to go", and "Unlocks at 10 stamps") and three times down
+           the page. There is one count; this is one line showing where
+           it stands against all three rungs at once. -->
+      <section class="ladder" data-enter>
+        <p class="ladder__fig">${pad(total)}</p>
+        <p class="ladder__of">${total === 1 ? 'stamp' : 'stamps'} so far${
+          next ? ` / ${next.required - total} to the next rung` : ' / every rung passed'}</p>
+        <div class="ladder__track" role="img"
+             aria-label="${total} stamps against rungs at ${tiers.map(t => t.required).join(', ')}">
+          <span class="ladder__fill" style="--w:${Math.min(total / scale * 100, 100).toFixed(1)}%"></span>
+          ${tiers.map(t => `<span class="ladder__rung${total >= t.required ? ' ladder__rung--past' : ''}"
+            style="--x:${(t.required / scale * 100).toFixed(1)}%"><b>${t.required}</b></span>`).join('')}
+        </div>
+      </section>
+
+      <section class="tiers" data-enter>
+        ${tiers.map(t => C.tier(t, total)).join('')}
+      </section>
     </div>`;
   },
 

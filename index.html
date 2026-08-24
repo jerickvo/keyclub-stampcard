@@ -190,7 +190,6 @@
   --f-label:'Oswald',var(--f-body);
   --f-accent:'CC Wild Words Roman','CCWildWords','Comic Neue',cursive;
   --f-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
-  --f-jp:'Noto Sans JP',var(--f-body);
 
   /* The step scale. s1-s4 are detail spacing and stay fixed — 4px is
      4px on every device. From s5 up the value is structural (panel
@@ -290,19 +289,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   gap:var(--gut-tier) var(--gut);align-content:start;position:relative}
 .view > *{grid-column:1/-1;min-width:0}
 
-/* every other screen alternates spans so tiers stay unequal without
-   knowing what is in them. Record only ever has two sections — the
-   held log and, sometimes, the scheduled log below it — and they are
-   wildly different heights (the held log can run many screens tall).
-   Placing them 4-cols/2-cols side by side (the old rule) put the
-   short "Scheduled" section into the grid's leftover top-row space
-   beside the tall log instead of a fresh row under it, squeezing its
-   cards down to ~80px wide and wrapping/overlapping their own text.
-   Record's sections now always take the full row; the alternating
-   split still applies to Rewards. */
-[data-screen="rewards"] .view > section:nth-of-type(3n+1){grid-column:1/5}
-[data-screen="rewards"] .view > section:nth-of-type(3n+2){grid-column:5/-1}
-
 /* ══════════════════ PANELS ══════════════════ */
 /* A `.rig` is a panel and the registration ghost printed behind it. The
    ghost is `inset:0` on the rig, so the rig's box and the panel's box
@@ -359,8 +345,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   overflow-wrap:break-word}
 .title--name em{font-style:normal}
 .h2{font:600 15px/1.25 var(--f-body);letter-spacing:0}
-.jp{font-family:var(--f-jp);font-size:12px;letter-spacing:.5em;color:var(--tone);
-  writing-mode:vertical-rl}
 
 /* ══════════════════ THE EDGE RUNE ══════════════════
    Microscopic vertical monospace running up the right edge of a
@@ -514,17 +498,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .tick{position:absolute;width:11px;height:11px;border:var(--rule-hair) solid var(--ink)}
 .tick--tl{top:-1px;left:-1px;border-right:0;border-bottom:0}
 .tick--br{right:-1px;bottom:-1px;border-left:0;border-top:0}
-.tech__name{font-family:var(--f-display);font-size:clamp(16px,1.4vw,20px);text-transform:uppercase;line-height:1.05}
-.tech__glyph svg{width:52px;height:52px}
-.tech__glyph circle,.tech__glyph polygon,.tech__glyph path,.tech__glyph line{
-  fill:none;stroke:var(--ink);stroke-width:1.6;vector-effect:non-scaling-stroke}
-/* The locked state was a diagonal CSS hatch laid over the whole card —
-   the single most generic treatment in the old build, and it fought
-   every word printed on it. A sealed reward is now stated by weight
-   and by its label, not by a texture: hairline keyline, muted type,
-   and the word SEALED. Nothing is drawn across the content. */
-.tech__crack{position:absolute;inset:0;pointer-events:none;opacity:0}
-.tech__name{overflow-wrap:break-word}
 
 /* THE WAITING MARK. `.loader` was applied in JS and styled in no
    stylesheet, so the only thing sizing it was an inline
@@ -670,7 +643,6 @@ select.input{padding-right:var(--s4)}
 .verdict__seal path{fill:var(--ink);stroke:none}
 .verdict__state{font:500 11px/1 var(--f-mono);letter-spacing:.24em;
   margin-top:var(--s4)}
-.verdict__jp{font-family:var(--f-jp);font-size:12px;letter-spacing:.6em;color:var(--tone)}
 .verdict__title{font-family:var(--f-display);font-size:clamp(30px,7vw,58px);
   text-transform:uppercase;line-height:1;margin-top:var(--s3)}
 .verdict__delta{font-family:var(--f-display);font-size:26px;margin-top:var(--s2)}
@@ -736,13 +708,6 @@ select.input{padding-right:var(--s4)}
   text-transform:uppercase;color:var(--ink);white-space:nowrap}
 .boot__half--a{clip-path:polygon(-20% -20%,120% -20%,120% 34%,-20% 66%)}
 .boot__half--b{clip-path:polygon(-20% 66%,120% 34%,120% 120%,-20% 120%)}
-/* dvh, and a safe-area floor: on a notched phone `12vh` measured
-   against the tall viewport put this line in the home-indicator strip
-   whenever the address bar was collapsed. */
-.boot__jp{position:absolute;
-  bottom:max(12dvh, calc(var(--s7) + env(safe-area-inset-bottom, 0px)));
-  font-family:var(--f-jp);font-size:13px;
-  letter-spacing:.66em;color:var(--tone);opacity:0}
 
 /* ══════════════════════════════════════════════════════════════════
    RESPONSIVE — THE SHELL
@@ -780,18 +745,10 @@ select.input{padding-right:var(--s4)}
 .topbar{display:flex}
 .tabs{display:flex}
 .view{grid-template-columns:repeat(2,minmax(0,1fr))}
-
-[data-screen="rewards"] .view > section{grid-column:1/-1}
 /* A bleed needs page margin to run into. On a phone the margin IS the
    safe edge, so the panel keeps its gutter rather than sitting on the
    glass with its border removed. */
 .panel--bleed{margin-right:0;border-right:var(--rule) solid var(--ink)}
-
-/* ── ≥768: tablets get a spread, not a wide phone ─────────────── */
-@media(min-width:768px){
-  
-  [data-screen="rewards"] .view > section{grid-column:1/-1}
-}
 
 /* ── ≥1024: the rail, and the six-column spread ─────────────────── */
 @media(min-width:1024px){
@@ -998,7 +955,7 @@ html,body{overflow-x:clip;max-width:100%}
    boxes stacked inside the box around them. Rows are separated by a
    hairline and space now. */
 .panel,.head,.stat,
-.bpanel,.bnext,.tech{
+.bpanel,.bnext{
   border-width:calc(var(--ink-w, 2.8) * 1px);
   border-style:solid;
   border-radius:0;
@@ -1077,12 +1034,7 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 /* ══════════════════════════════════════════════════════════════════
    REWARDS — the glyph had escaped its box and was rendering ~1100px.
    ══════════════════════════════════════════════════════════════════ */
-.tech__glyph{flex:none;width:clamp(44px,4.5vw,68px);height:clamp(44px,4.5vw,68px)}
-.tech__glyph svg{width:100%!important;height:100%!important;display:block}
-[data-screen="rewards"] .rig .panel{padding:var(--s5);overflow:hidden}
-[data-screen="rewards"] .view > section:nth-of-type(1){grid-column:1/-1}
-[data-screen="rewards"] .view > section:nth-of-type(2n){grid-column:span 4}
-[data-screen="rewards"] .view > section:nth-of-type(2n+3){grid-column:span 2}
+
 
 /* ══════════════════════════════════════════════════════════════════
    MOBILE — a vertical manga page, not a stacked desktop.
@@ -1121,7 +1073,7 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
    ignores `order` outright — the desktop spread is untouched. */
 
 
-[data-screen="rewards"] .view > section{grid-column:1/-1}
+
 /* The JP mark is position:absolute in the header's top-right, and nothing
    in the flow reserved room for it — so the chapter title's box (and, on
    Home, the narration balloon) ran underneath it. Titles are left-aligned
@@ -1235,10 +1187,9 @@ main#view{padding-top:var(--space-tier);
 :where(svg:not(.fxdefs):not([width])){width:22px;height:22px;flex:none}
 
 .who__seal,.verdict__seal,
-.arena svg,.tech__glyph svg,.slash,.lines,
-.verdict__field,.tech__crack svg,.qrpanel__code svg{width:100%;height:100%}
+.arena svg,.slash,.lines,
+.verdict__field,.qrpanel__code svg{width:100%;height:100%}
 .who__seal{width:clamp(52px,5vw,74px);height:clamp(52px,5vw,74px)}
-.tech__glyph svg{width:100%;height:100%}
 .btn svg,.motion-btn svg{width:16px;height:16px}
 .rail__nav button svg,.tabs button svg{width:18px;height:18px}
 .boot__mark svg{width:88px;height:88px}
@@ -1253,8 +1204,6 @@ main#view{padding-top:var(--space-tier);
 .view > .head{justify-content:flex-start;align-items:flex-end;
   min-height:clamp(84px,9vw,132px);position:relative}
 .view > .head .head__stack{max-width:100%}
-.view > .head .jp{position:absolute;right:var(--space-panel);
-  top:var(--space-panel);bottom:auto}
 .view > .head .kicker{position:absolute;left:var(--space-panel-lg);
   top:var(--space-panel)}
 
@@ -1262,44 +1211,10 @@ main#view{padding-top:var(--space-tier);
    REWARDS — three full-width bars with content stranded in one corner.
    They are panels now, proportioned and filled.
    ══════════════════════════════════════════════════════════════════ */
-[data-screen="rewards"] .view > section{grid-column:span 2!important}
-[data-screen="rewards"] .view > section:nth-of-type(1){grid-column:1/-1!important}
-/* A reward card holds a title, a requirement and a meter. It used to
-   also reserve `min-height:260px` for a description that the copy pass
-   removed, so from the tablet up every card carried ~100px of empty
-   paper between its title and its meter. Cards size to their content;
-   the grid row stretches them to match their neighbour, which is what
-   makes a row look level without any of them being padded out. */
-/* The dossier lays itself out — a numeral column beside a content
-   column — so this flex-column rule (0,3,0) was flattening it back to
-   a stack and collapsing the slot array to zero width. The dossier
-   owns its own layout now; what stays here is only the min-height
-   reset, which is still wanted. */
-[data-screen="rewards"] .rig .panel{min-height:0}
 
-/* ══════════════════════════════════════════════════════════════════
-   The reward panels are wrapped in .stack-panels, so every rule
-   written against `.view > section` matched nothing at all — which is
-   why they stayed full-width bars through three attempts. Targeting
-   the actual wrapper.
-   ══════════════════════════════════════════════════════════════════ */
-.stack-panels{display:grid;grid-template-columns:1fr;
-  gap:var(--space-tier);align-content:start}
-.stack-panels > section{grid-column:1/-1;min-width:0}
-.stack-panels > section > .panel{height:100%}
-/* From the tablet up the reward tiers become a spread: the nearest
-   reward leads across the full measure, the ones behind it sit beside
-   each other.
 
-   The spans were 4 / 3 / 2 against six columns. Nine units do not fit
-   into rows of six, so the lead left two columns of blank paper beside
-   it and the pair left one — three holes in a three-card page. Spans
-   have to add up to the row, and these do at any card count. */
-@media(min-width:768px){
-  .stack-panels{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .stack-panels > section{grid-column:span 1}
-  .stack-panels > section:first-child{grid-column:1/-1}
-}
+
+
 
 /* The kicker was absolutely positioned and landed on top of the title —
    text over text, which is what "text overlaps the borders" was. It
@@ -1308,8 +1223,6 @@ main#view{padding-top:var(--space-tier);
 .view > .head{flex-direction:column;align-items:flex-start;
   justify-content:flex-end;gap:var(--space-hair)}
 .view > .head .head__stack{width:100%}
-.view > .head .jp{position:absolute}
-[data-screen="rewards"] .rig .panel{background:var(--v1)}
 .kicker{display:inline-block}
 
 </style>
@@ -1928,32 +1841,7 @@ main#view{padding-top:var(--space-tier);
    only frame and its only red mark. Claimed floods to ink, which is
    where this screen spends its concentrated black.
    ══════════════════════════════════════════════════════════════════ */
-[data-screen="rewards"] .dossier .panel,
-.dossier .panel{border:0;background:none;height:auto;position:relative;overflow:visible;
-  display:grid;gap:clamp(9px,1.2vw,14px);
-  padding:clamp(18px,2.4vw,30px) 0 clamp(18px,2.4vw,28px);
-  grid-template-columns:auto 1fr;align-items:start}
-.dossier__idx{grid-row:1/span 4;align-self:start;
-  --idx-size:clamp(30px,4.4vw,64px);
-  padding-right:clamp(12px,1.8vw,24px);
-  border-right:var(--rule-hair) solid var(--v3);
-  margin-right:clamp(12px,1.8vw,24px)}
-.dossier__head{grid-column:2;display:flex;align-items:baseline;
-  justify-content:space-between;gap:var(--s3);flex-wrap:wrap}
-.dossier__at{grid-column:2;margin-top:-4px;
-  font:500 clamp(10.5px,1vw,12.5px)/1.3 var(--f-mono);
-  letter-spacing:.14em;color:var(--ink-2)}
-.dossier__legend{grid-column:2;display:flex;justify-content:space-between;
-  gap:var(--s3);flex-wrap:wrap}
-.dossier__claim{grid-column:2;margin-top:clamp(4px,.8vw,8px)}
 
-/* the slot array — the same instrument the card on Home uses */
-.dslots{grid-column:2;display:grid;
-  grid-template-columns:repeat(var(--dcells,10),minmax(0,1fr));
-  gap:clamp(3px,.5vw,6px)}
-.dslot{height:clamp(16px,2vw,26px);
-  box-shadow:inset 0 0 0 var(--rule-hair) var(--v3)}
-.dslot--set{background:var(--ink);box-shadow:none}
 
 /* ══════════════════════════════════════════════════════════════════
    PANEL ROLE — HERO, SUPPORT, MICRO
@@ -1969,59 +1857,7 @@ main#view{padding-top:var(--space-tier);
    half the width, a third of the height, numerals in tone. That is
    the difference between a manga page and a table of rows.
    ══════════════════════════════════════════════════════════════════ */
-.dossier[data-rank="hero"] .dossier__idx{
-  --idx-size:clamp(58px,10vw,148px);
-  padding-right:clamp(16px,2.4vw,34px);
-  margin-right:clamp(16px,2.4vw,34px);
-  border-right-color:var(--ink)}
-.dossier[data-rank="hero"] .dslot{height:clamp(30px,4.4vw,64px)}
-.dossier[data-rank="hero"] .tech__name{font-size:clamp(20px,2.4vw,34px)}
-.dossier[data-rank="hero"] .panel{padding-block:clamp(24px,3.4vw,46px)}
 
-.dossier[data-rank="far"] .dossier__idx{--idx-size:clamp(24px,3vw,40px)}
-.dossier[data-rank="far"] .dslot{height:clamp(9px,1.1vw,14px)}
-.dossier[data-rank="far"] .tech__name{font-size:clamp(14px,1.3vw,17px)}
-.dossier[data-rank="far"] .panel{padding-block:clamp(12px,1.5vw,18px)}
-.dossier[data-rank="far"] .dossier__at{display:none}
-
-/* the hero takes the full measure; the micro tiers pair off beside it.
-   Placement is by RANK, not by source order — the tier that is next is
-   not always the first one in the list once earlier ones are claimed. */
-@media(min-width:768px){
-  [data-screen="rewards"] .stack-panels > .dossier[data-rank="hero"],
-  [data-screen="rewards"] .stack-panels > .dossier[data-rank="past"]{grid-column:1/-1}
-  [data-screen="rewards"] .stack-panels > .dossier[data-rank="far"]{grid-column:span 1}
-}
-
-/* ── SEALED: a division of the sheet, nothing more ── */
-.dossier--sealed{position:relative}
-.dossier--sealed::before{content:"";position:absolute;left:0;right:0;top:0;
-  height:var(--edge-thin);background:var(--v3)}
-.dossier--sealed .tech__name{color:var(--ink-2)}
-
-/* ── READY: the one frame and the one red mark on the page ── */
-/* (0,3,0) to clear the [data-screen="rewards"] .dossier .panel reset
-   above — the ready tier is the one framed thing on the page and it
-   was losing its frame to my own border:0. */
-[data-screen="rewards"] .dossier--ready .panel,
-.dossier--ready .panel{border:var(--edge-heavy) solid var(--ink);
-  background:var(--paper);
-  padding:clamp(18px,2.4vw,30px) clamp(18px,2.4vw,30px) clamp(20px,2.6vw,32px)}
-.dossier--ready .dossier__idx{color:var(--ink)}
-.dossier--ready .dslot--set{background:var(--ink)}
-
-/* ── CLAIMED: flooded. this is where the screen spends its black ── */
-[data-screen="rewards"] .dossier--claimed .panel,
-.dossier--claimed .panel{background:var(--v6);color:var(--paper);
-  padding:clamp(18px,2.4vw,30px)}
-.dossier--claimed .tech__name,
-.dossier--claimed .dossier__idx{color:var(--paper)}
-.dossier--claimed .dossier__at,
-.dossier--claimed .kicker,
-.dossier--claimed .anno{color:var(--v3)}
-.dossier--claimed .dossier__idx{border-right-color:var(--v4)}
-.dossier--claimed .dslot{box-shadow:inset 0 0 0 var(--rule-hair) var(--v4)}
-.dossier--claimed .dslot--set{background:var(--paper)}
 
 /* ══════════════════════════════════════════════════════════════════
    THE CHAPTER MASTHEAD
@@ -2042,29 +1878,6 @@ main#view{padding-top:var(--space-tier);
    around the composition, not across its loudest word. */
 :root{--t-chapter:clamp(38px,10vw,84px)}
 @media(min-width:1024px){ :root{--t-chapter:clamp(56px,6.4vw,112px)} }
-
-/* ══════════════════════════════════════════════════════════════════
-   THE ACTION CHAMBER
-
-   A target, not a card. Three layers, in this order from the back:
-   speed lines running toward the centre, a crosshair on the point
-   itself, and the commit. The brackets sit outside all of it and
-   close inward when you reach for it — the chamber locking on.
-
-   The verb stays a real word ("Scan code") and the commit is [ SCAN ]
-   in the page's own bracket vocabulary; the small arrow glyph that
-   used to live in the corner is gone, because an arrow in a corner is
-   an affordance and this is supposed to be a target.
-   ══════════════════════════════════════════════════════════════════ */
-
-
-/* ── THE SEALED PAIR IS NOT A BALANCED SPREAD ─────────────────────
-   Two sealed tiers at exactly half the measure each is a symmetric
-   two-column grid — perfectly balanced and therefore perfectly inert.
-   The nearer tier is the one a member is walking toward, so it takes
-   more of the page: five parts to three. The asymmetry is the
-   tension. */
-@media(min-width:768px){ .stack-panels{grid-template-columns:5fr 3fr} }
 
 /* ── THE SCREEN VARIES IN DENSITY ─────────────────────────────────
    One dot size at one spacing across every surface is a texture doing
@@ -2139,15 +1952,11 @@ main#view{padding-top:var(--space-tier);
 :root{--cut-a:60deg; --run-a:60deg}
 
 
-[data-screen="rewards"] .dossier--ready .panel,
+
 [data-screen="profile"] .stat[data-rank="lead"],
 [data-screen="board"] .bnext{
   clip-path:polygon(var(--sheet-cut) 0, 100% 0, 100% 100%,
                     0 100%, 0 var(--sheet-cut))}
-/* a clipped panel cannot show a border on the cut corner, so the
-   weight moves inside where the clip cannot reach it */
-[data-screen="rewards"] .dossier--ready .panel{
-  border:0;box-shadow:inset 0 0 0 var(--edge-heavy) var(--ink)}
 [data-screen="profile"] .stat[data-rank="lead"]{
   border-bottom:0;box-shadow:inset 0 calc(var(--edge-thin) * -1) 0 var(--ink)}
 
@@ -2259,11 +2068,6 @@ main#view{padding-top:var(--space-tier);
    same seal — so small red type uses it and the big struck marks keep
    the bright one. */
 .anno--seal{color:var(--seal-deep)}
-
-/* ── INDEX. The numeral that says where a thing sits in a series. */
-.idx{font-family:var(--f-display);line-height:.8;letter-spacing:-.04em;
-  font-size:var(--idx-size,clamp(20px,2.6vw,38px));color:var(--v3)}
-.idx--on{color:var(--ink)}
 
 /* ── SPEED LINES. Direction, not texture: they always run TOWARD the
    thing that matters and they fade out behind it. */
@@ -2602,7 +2406,6 @@ select.input:focus-visible{outline:none}
   transform:rotate(-2.4deg);transform-origin:left center}
 .verdict .verdict__seal{margin:0 0 0 auto;margin-right:min(6vw,90px);
   width:min(26vmin,150px);height:min(26vmin,150px)}
-.verdict .verdict__jp{display:block;margin-top:clamp(6px,1vw,12px);letter-spacing:.5em}
 .verdict .verdict__title,
 .verdict .verdict__delta,
 .verdict .verdict__meet{text-align:left}
@@ -2683,9 +2486,7 @@ select.input:focus-visible{outline:none}
    number of stamps a reward costs is the whole point of the row.
    It comes back as an annotation on the same line as the name, which
    is where a fact of that size belongs. */
-.dossier[data-rank="far"] .dossier__at{display:block;
-  grid-column:2;margin-top:-2px;
-  font-size:clamp(9px,.85vw,10.5px);color:var(--v4)}
+
 
 /* ── 5. THE UNSTRUCK SLOT WAS TOO PALE TO BE AN IMPRESSION ────────
    It carries the mark at --v3 and .55, which on paper is a smudge —
@@ -2896,7 +2697,6 @@ select.input:focus-visible{outline:none}
 
   --f-label:var(--f-body);
   --f-accent:var(--f-body);
-  --f-jp:var(--f-body);
 
   /* ══ SCREENTONE — ATMOSPHERE, AT TWO STRENGTHS ═════════════════════
      Tone used to sit behind every screen at one density, which is how
@@ -3013,10 +2813,6 @@ none;
 }
 .kicker{color:var(--ink-2);letter-spacing:.26em}
 
-
-/* the vertical Japanese marker, now an accent rather than grey noise */
-.jp{color:var(--tone);opacity:.9}
-
 /* ══ ACTION ════════════════════════════════════════════════════════
    The primary action is the seal being pressed. Ink fill, and on
    press it deepens rather than lifting — a stamp goes down. */
@@ -3128,47 +2924,6 @@ none;
 .chop--filled .chop__key{fill:var(--paper)}
 
 /* ══════════════════════════════════════════════════════════════════
-   REWARDS — three panels, three states, no store front
-   ══════════════════════════════════════════════════════════════════
-   Locked is line only. Unlocked is screentone with a heavy keyline —
-   it has arrived but is not yet taken. Claimed is the spotted black,
-   the seal pressed. That escalation is the whole reward moment. */
-/* ══ REWARDS — THREE STATES, THREE WEIGHTS ═════════════════════════
-   A dossier that is sealed, one that is ready to be opened, and one
-   that has been claimed. The escalation is carried entirely by edge
-   weight and ink coverage — no textures, no fills laid across type. */
-.tech{
-  border:var(--edge-hair) solid var(--v3);
-  background:var(--paper);
-  position:relative;overflow:hidden;
-}
-/* SEALED: a hairline and muted type. Present, closed, quiet. */
-.tech--sealed{border-style:solid;border-color:var(--v3)}
-.tech--sealed .tech__name{color:var(--ink-2)}
-.tech--sealed .tech__glyph{opacity:.34}
-
-/* READY: the heaviest keyline in the list, and a solid ink bar down
-   the leading edge — the tab of a file that is ready to be pulled. */
-.tech--open{
-  border:var(--edge) solid var(--ink);
-  background:var(--paper);
-}
-.tech--open::before{
-  content:'';position:absolute;left:0;top:0;bottom:0;width:var(--edge-shout);
-  background:var(--seal);
-}
-.tech--open{padding-left:calc(var(--s5) + var(--edge-shout))}
-.tech--claimed{                      /* claimed: the seal is pressed */
-  background:var(--ink);color:var(--paper);border-color:var(--ink);
-  border-width:var(--edge);border-style:solid;
-}
-.tech--claimed .tech__name,
-.tech--claimed .tech__req,
-.tech--claimed .tech__state{color:var(--paper)}
-.tech--claimed .tech__glyph{color:var(--paper);opacity:.9}
-.tech--claimed .tech__req{color:var(--tone-lt)}
-
-/* ══════════════════════════════════════════════════════════════════
    BOARD — the same book, administrative chapters
    ══════════════════════════════════════════════════════════════════ */
 /* figures are the subject of Club Tools, so they get display scale and
@@ -3224,23 +2979,6 @@ none;
 /* the board form is a panel of the same book */
 .bform{border-bottom:var(--edge) solid var(--ink);padding-bottom:var(--s5)}
 .bsec{border-bottom:var(--edge-thin) solid var(--ink);color:var(--ink)}
-
-/* ── Rewards polish ───────────────────────────────────────────────
-   The "Unlocks at N stamps" line is real information, not a caption,
-   so it sits at ink-2 rather than tone. And removing the old blurb
-   left a hole in the locked cards — they collapse to their content
-   now instead of holding a paragraph's worth of empty. */
-/* The requirement line is rendered as `.tech__at`, not `.tech__req` —
-   the older class was left over from a previous markup pass, so every
-   rule written for it matched nothing and the line stayed at --tone
-   (#B0A99C) on a hatched ground: under 2:1 against the paper, on the
-   one sentence that answers "how far am I?". Both names are set, so
-   whichever the view renders is legible. */
-
-.tech--sealed .tech__req,.tech--sealed .tech__at{color:var(--ink-2)}
-.tech{min-height:0}
-.tech--sealed{padding-bottom:var(--s4)}
-.tech--sealed .tech__body{min-height:0}
 
 /* ══ NARROW — the base, not an exception ═════════════════════════════
    A phone page is a single column of stacked frames, which is how a
@@ -3411,14 +3149,12 @@ none;
    tight and the first thing to return when it does not. Expressed as
    the base with a lift at the tablet tier, so there is one direction
    of travel rather than a stack of exceptions. */
-.tech{padding:var(--s4)}
-.tech__name{font-size:clamp(17px,4vw,20px)}
+
 .brow__n{font-size:clamp(17px,4vw,19px)}
 .bstat{padding:var(--s4)}
 .bsec{margin-top:var(--s5)}
 
 @media (min-width:768px){
-  .tech{padding:var(--s5)}
   .bstat{padding:var(--s4) var(--s4) var(--s5)}
 }
 
@@ -3458,8 +3194,7 @@ main#view:focus,main#view:focus-visible{outline:none}
    secondary weight on top of screentone, which eats contrast. It gets
    full ink and mono tracking so it reads as a spec, not a whisper. */
 
-.tech--sealed .tech__req{color:var(--ink)}
-.tech--sealed .tech__name{color:var(--ink)}
+
 
 /* ONE BRAND ON THE PAGE. Both the topbar and the desktop rail repeat
    the wordmark beside the card that already states it — and signed
@@ -4069,6 +3804,100 @@ button,input,select,textarea{font-family:inherit}
     justify-content:flex-end;border-top:0;padding-top:0}
 }
 
+
+/* ══════════════════════════════════════════════════════════════════
+   THE LADDER — rewards
+
+   Every tier used to draw its own progress array starting from zero.
+   The same six stamps were therefore reported four times per row — a
+   ten-to-thirty cell array, "6 / 10 stamps", "4 to go", and "Unlocks
+   at 10 stamps" — and three times down the page, twelve statements of
+   one number. At phone width the thirty-cell array drew thirty
+   three-pixel slivers, which is a graphic that cannot be read.
+
+   There is one count. This is one scale showing where it stands
+   against all three rungs at once, and under it the rungs as ledger
+   lines in the register's own vocabulary.
+   ══════════════════════════════════════════════════════════════════ */
+.view--rewards{display:flex;flex-direction:column;gap:var(--s5)}
+
+/* ── THE SCALE ────────────────────────────────────────────────────
+   The impact beat: one figure, one track, the rungs marked on it at
+   their real positions so the distances between them are visible
+   rather than described. */
+.ladder{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+/* the display face draws well below its line box; without the pad the
+   figure's tail lands in the caption under it */
+.ladder__fig{margin:0;padding-bottom:.1em;font-family:var(--f-display);
+  line-height:.78;font-size:clamp(64px,15vw,120px);color:var(--ink)}
+.ladder__of{margin:0;font-size:var(--t-caption);color:var(--ink-2);
+  line-height:1.2}
+
+.ladder__track{position:relative;width:100%;
+  margin-top:clamp(28px,5vw,42px);
+  height:clamp(10px,1.4vw,15px);background:var(--tone-field)}
+.ladder__fill{position:absolute;inset:0 auto 0 0;width:var(--w,0%);
+  background:var(--ink)}
+
+/* a rung is a hard stop drawn through the track with its figure set
+   above it — the same numeral the tier rows use, so the scale and the
+   list are visibly the same instrument */
+.ladder__rung{position:absolute;top:-6px;bottom:-6px;left:var(--x,0%);
+  width:var(--edge-panel);background:var(--ink)}
+.ladder__rung b{position:absolute;left:50%;bottom:calc(100% + 5px);
+  transform:translateX(-50%);
+  font-family:var(--f-display);font-weight:inherit;line-height:1;
+  font-size:clamp(15px,3vw,21px);color:var(--ink-2)}
+/* a rung already behind you is drawn on the filled part of the track,
+   so it inverts to hold against the ink */
+.ladder__rung--past{background:var(--paper)}
+.ladder__rung--past b{color:var(--ink)}
+
+/* ── THE RUNGS ────────────────────────────────────────────────────
+   Ledger lines. Same grid, same rules, same numeral treatment as the
+   register on Record — one page vocabulary, two pages. */
+.tiers{display:flex;flex-direction:column;
+  border-top:var(--edge-panel) solid var(--ink)}
+.tier{display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;gap:var(--s3);
+  padding:clamp(11px,1.7vw,16px) 0;
+  border-bottom:var(--edge-rule) solid var(--tint)}
+.tier__at{font-family:var(--f-display);line-height:1;
+  font-size:clamp(24px,5vw,34px);color:var(--tone);
+  min-width:2.4ch;letter-spacing:-.02em}
+.tier__body{display:flex;flex-direction:column;gap:0;min-width:0}
+.tier__name{font-size:var(--t-body);line-height:1.15}
+.tier__desc{font-size:var(--t-caption);color:var(--ink-2);line-height:1.3}
+.tier__say{font-size:var(--t-caption);color:var(--ink-2);
+  white-space:nowrap;justify-self:end;text-align:right}
+
+/* SEALED — the distance is the only thing to say. */
+/* READY — the one rung you can act on, and the only ink on the list. */
+.tier--ready{background:var(--ink);color:var(--paper);
+  padding-left:var(--s4);padding-right:var(--s4);
+  margin:var(--s2) 0;border-bottom:0;
+  box-shadow:var(--s2) var(--s2) 0 var(--tone-field)}
+.tier--ready .tier__at{color:var(--paper)}
+.tier--ready .tier__desc{color:var(--tint)}
+.tier__claim{padding:9px var(--s4);cursor:pointer;
+  border:var(--edge-panel) solid var(--paper);
+  background:var(--paper);color:var(--ink);
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(15px,3vw,21px);line-height:1.2;white-space:nowrap}
+.tier__claim:hover{background:var(--ink);color:var(--paper)}
+.tier__claim:focus-visible{outline:var(--edge-panel) solid var(--paper);
+  outline-offset:3px}
+
+/* CLAIMED — taken. The numeral comes to full ink and the line recedes:
+   it is history, not an offer. */
+.tier--claimed .tier__at{color:var(--ink)}
+.tier--claimed .tier__name{color:var(--ink-2)}
+.tier--claimed .tier__desc{color:var(--tone)}
+
+@media(min-width:768px){
+  .tier{gap:var(--s4)}
+}
+
 </style>
 </head>
 <body>
@@ -4111,7 +3940,6 @@ button,input,select,textarea{font-family:inherit}
   <div class="verdict__inner">
     <svg class="verdict__seal" id="vSeal" viewBox="0 0 100 100" aria-hidden="true"></svg>
     <p class="verdict__state" id="vState">Sealed</p>
-    <p class="verdict__jp" id="vJp" aria-hidden="true">認証</p>
     <p class="verdict__title" id="vTitle">Stamp acquired</p>
     <p class="verdict__delta" id="vDelta">+1</p>
     <p class="verdict__meet" id="vMeet"></p>
@@ -4173,7 +4001,6 @@ button,input,select,textarea{font-family:inherit}
     <span class="boot__half boot__half--a">Keystamp</span>
     <span class="boot__half boot__half--b">Keystamp</span>
   </div>
-  <div class="boot__jp" id="bootJp">出席記録</div>
 </div>
 
 <!-- ─────────────────────────────────────────────────────────────
@@ -18204,6 +18031,31 @@ const C = {
     </div>`;
   },
 
+  /* ONE RUNG. A ledger line, not a dossier: the tier number, the
+     name, what you can do about it, and the distance. The panel it
+     replaces carried a ten-to-thirty cell progress array of its own,
+     which at phone width drew thirty three-pixel slivers and said
+     nothing the number beside it did not already say. */
+  tier(r, total){
+    const open  = total >= r.required;
+    const ready = open && !r.claimed;
+    const state = r.claimed ? 'claimed' : ready ? 'ready' : 'sealed';
+    const say   = r.claimed ? 'Claimed'
+                : ready     ? 'Ready to claim'
+                : `${r.required - total} more ${r.required - total === 1 ? 'stamp' : 'stamps'}`;
+
+    return `<div class="tier tier--${state}" data-reward="${r.id}">
+      <span class="tier__at">${pad(r.required)}</span>
+      <span class="tier__body">
+        <span class="tier__name">${esc(r.name)}</span>
+        <span class="tier__desc">${esc(r.desc || '')}</span>
+      </span>
+      ${ready
+        ? `<button class="tier__claim" type="button" data-claim="${r.id}">Claim</button>`
+        : `<span class="tier__say">${say}</span>`}
+    </div>`;
+  },
+
   /* ── ten struck marks. Empty slots sit at slight angles; a landed
      stamp snaps flat, which is what makes the grid feel struck by hand ── */
   sealGrid(){
@@ -18276,76 +18128,6 @@ const C = {
   },
 
   /* ── a reward: sealed until the count reaches it ── */
-  /* ── THE DOSSIER ─────────────────────────────────────────────────
-     Three identical cards with three identical progress bars, which
-     is the single most generic arrangement an interface can arrive
-     at — and it said nothing about the difference between a reward
-     one stamp away and one twenty-one away.
-
-     A dossier now, and its STATE is its design:
-
-       sealed   quiet, unframed, the tier numeral in tone, the array
-                barely struck — a document you have not earned
-       ready    full ink frame, cinnabar mark, CLAIM across the
-                measure — the one thing on the page to act on
-       claimed  flooded ink — the concentrated black mass, and it
-                means something: this one is taken
-
-     The bar is gone. Progress is the same slot array the card on
-     Home uses, so the two screens are reading the same instrument. */
-  tech(r){
-    const total = Store.totalStamps();
-    const open = total >= r.required;
-    const ready = open && !r.claimed;
-    /* PANEL ROLE. Three sealed tiers rendered identically is three of
-       the same object again — the thing this dossier was built to
-       stop. The nearest one you have not reached is the hero of the
-       page whether or not it is claimable, because it is the only one
-       that is about to happen; the rest are micro. */
-    const near = Store.rewards.filter(x => total < x.required)
-                   .sort((a, b) => a.required - b.required)[0];
-    const rank = r.claimed ? 'past' : ready ? 'hero'
-               : (near && near.id === r.id) ? 'hero' : 'far';
-    const state = r.claimed ? 'claimed' : open ? 'ready' : 'sealed';
-    const done = Math.min(total, r.required);
-
-    /* the array is capped so a 30-stamp tier does not draw 30 cells on
-       a phone; past the cap it steps in fives and says so */
-    const step = r.required > 12 ? Math.ceil(r.required / 12) : 1;
-    const cells = Math.ceil(r.required / step);
-    const litCells = Math.floor(done / step);
-    const slots = Array.from({ length:cells }, (_, i) =>
-      `<span class="dslot${i < litCells ? ' dslot--set' : ''}"></span>`).join('');
-
-    return `<section class="rig dossier dossier--${state}" data-rank="${rank}" data-enter data-reward="${r.id}">
-      <div class="panel tech tech--${state}">
-        <span class="dossier__idx idx${open ? ' idx--on' : ''}" aria-hidden="true">${pad(r.required)}</span>
-        <div class="dossier__head">
-          <h3 class="tech__name">${esc(r.name)}</h3>
-          <span class="anno${ready ? ' anno--seal' : ''}">${
-            r.claimed ? 'CLAIMED' : open ? 'READY' : 'SEALED'}</span>
-        </div>
-        <p class="dossier__at">Unlocks at ${r.required} stamps</p>
-
-        <div class="dslots" style="--dcells:${cells}" role="img"
-             aria-label="${done} of ${r.required} stamps">${slots}</div>
-        <div class="dossier__legend">
-          <span class="kicker">${done} / ${r.required} stamps</span>
-          <span class="kicker">${open ? 'Unlocked' : (r.required - total) + ' to go'}</span>
-        </div>
-
-        ${ready
-          ? `<button class="btn btn--hot btn--wide dossier__claim" data-claim="${r.id}">Claim reward</button>`
-          : ''}
-
-        ${ready ? `<svg class="tech__crack" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M-2 44 22 40 38 52 61 43 79 55 102 47"/>
-            <path d="M30 -2 34 26 26 44 40 68 33 102"/>
-            <path d="M70 -2 64 30 76 52 62 74 71 102"/></svg>` : ''}
-      </div>
-    </section>`;
-  },
-
   /* Four figures at identical weight is four figures nobody reads
      first. A plate can now be ranked, and exactly one per page is. */
   stat(value, label, sub, rank){
@@ -18574,11 +18356,42 @@ const Views = {
 
   rewards(){
     if (Store.failed) return this.loadFailure('Rewards');
-    return `<div class="view">
-      ${C.head('Rewards')}
-      <div class="stack-panels">
-        ${Store.rewards.map(C.tech).join('')}
-      </div>
+    const total = Store.totalStamps();
+    const tiers = [...Store.rewards].sort((a, b) => a.required - b.required);
+    const top   = tiers[tiers.length - 1]?.required || 10;
+    /* the scale runs a little past the last rung so the mark for it is
+       not jammed against the right edge of the track */
+    const scale = Math.max(top * 1.06, total * 1.06, 1);
+    const next  = tiers.find(t => total < t.required) || null;
+
+    return `<div class="view view--rewards">
+      <header class="rechead" data-enter>
+        <h1 class="title rechead__title">Rewards</h1>
+        <p class="rechead__note">Stamps accumulate across the whole year — nothing
+          resets when a card fills. Every rung below is measured from the same count.</p>
+      </header>
+
+      <!-- ONE SCALE, NOT THREE BARS. Each tier used to draw its own
+           progress array starting from zero, so the same six stamps
+           were reported four times per row (an array, "6 / 10 stamps",
+           "4 to go", and "Unlocks at 10 stamps") and three times down
+           the page. There is one count; this is one line showing where
+           it stands against all three rungs at once. -->
+      <section class="ladder" data-enter>
+        <p class="ladder__fig">${pad(total)}</p>
+        <p class="ladder__of">${total === 1 ? 'stamp' : 'stamps'} so far${
+          next ? ` / ${next.required - total} to the next rung` : ' / every rung passed'}</p>
+        <div class="ladder__track" role="img"
+             aria-label="${total} stamps against rungs at ${tiers.map(t => t.required).join(', ')}">
+          <span class="ladder__fill" style="--w:${Math.min(total / scale * 100, 100).toFixed(1)}%"></span>
+          ${tiers.map(t => `<span class="ladder__rung${total >= t.required ? ' ladder__rung--past' : ''}"
+            style="--x:${(t.required / scale * 100).toFixed(1)}%"><b>${t.required}</b></span>`).join('')}
+        </div>
+      </section>
+
+      <section class="tiers" data-enter>
+        ${tiers.map(t => C.tier(t, total)).join('')}
+      </section>
     </div>`;
   },
 
@@ -19599,7 +19412,13 @@ const FX = {
   speedLines(o){ Lines.burst(o); },
 
   /* one frame of violence: dark · blown contrast · a word · a cut · shake */
-  impactFrame({ word = '', jp = '', angle = -20, host = null, hot = true } = {}){
+  /* The impact frame used to flash a kanji behind the word — 記録 on
+     sign-in, 完了 on a claim, 認証 on a stamp, 出席記録 under the boot
+     title. None of the app's four typefaces contains a CJK glyph, so
+     every one of them was drawn by whatever face the operating system
+     happened to substitute: decoration in a language the interface does
+     not otherwise speak, set in a font the design does not own. */
+  impactFrame({ word = '', angle = -20, host = null, hot = true } = {}){
     if (Motion.off) return;
     const parent = host || $('#fx');
     if (!parent) return;
@@ -19617,14 +19436,6 @@ const FX = {
                duration:110, ease:EASE.CUT }, 44)
         .add(el, { scale:[1, 1.05], opacity:[1, 0], duration:80, ease:'inQuad' }, 210);
 
-      if (jp){
-        const g = document.createElement('div');
-        g.className = 'frameword frameword--jp';
-        g.textContent = jp;
-        parent.appendChild(g);
-        animate(g, { opacity:[0, .9, 0], duration:250, delay:60,
-                ease:'linear', onComplete:() => g.remove() });
-      }
     }
 
     Slash.create({ type:'B', angle, host, delay:52 });
@@ -19731,17 +19542,6 @@ const FX = {
             ease:spring({ mass:1, stiffness:94, damping:13, velocity:0 }) });
   },
 
-  /* The dossier's cells land one after another, each an instant cut —
-     a sheet being stamped, not a bar filling. */
-  slotStrike(list, at){
-    if (!list || Motion.off) return;
-    const lit = list.querySelectorAll('.dslot--set');
-    if (!lit.length) return;
-    aset(lit, { opacity:0 });
-    animate(lit, { opacity:[0, 1], duration:1,
-            delay:stagger(34, { start:at }), ease:STEP(1) });
-  },
-
   hoverCut(btn){
     if (Motion.off || btn.dataset.cutting) return;
     btn.dataset.cutting = '1';
@@ -19775,7 +19575,7 @@ const FX = {
      ────────────────────────────────────────────────────────────── */
   stampAcquire(meeting, done){
     const box = $('#verdict');
-    const P = { seal:$('#vSeal'), state:$('#vState'), jp:$('#vJp'), title:$('#vTitle'),
+    const P = { seal:$('#vSeal'), state:$('#vState'), title:$('#vTitle'),
                 delta:$('#vDelta'), meet:$('#vMeet'), flare:$('#vFlare'),
                 ring:$('#vRing'), ring2:$('#vRing2') };
 
@@ -19796,7 +19596,7 @@ const FX = {
     };
 
     if (Motion.off){
-      [P.state, P.jp, P.title, P.delta, P.meet].forEach(el => el.style.opacity = 1);
+      [P.state, P.title, P.delta, P.meet].forEach(el => el.style.opacity = 1);
       field?.remove();
       return void setTimeout(finish, 900);
     }
@@ -19806,7 +19606,7 @@ const FX = {
     const sealStrokes  = P.seal.querySelectorAll('path,circle,polygon,line');
     const fieldStrokes = field.querySelectorAll('path,circle,polygon,line');
     aset(sealStrokes, { opacity:1 });
-    aset([P.state, P.jp, P.title, P.delta, P.meet], { opacity:0 });
+    aset([P.state, P.title, P.delta, P.meet], { opacity:0 });
     aset(box, { opacity:0 });
 
     /* THE STAMP LANDS.
@@ -19846,7 +19646,6 @@ const FX = {
       .add(field, { scale:[1, 1.08], opacity:[.5, .16], duration:120, ease:STEP(2) }, 306)
 
       /* the register settling — each mark a cut, not a fade */
-      .add(P.jp,    { opacity:[0, .85], duration:1, ease:STEP(1) }, 380)
       .add(P.title, { opacity:[0, 1], duration:1, ease:STEP(1) }, 430)
       .add(P.delta, { opacity:[0, 1], duration:1, ease:STEP(1) }, 480)
       .add(P.meet,  { opacity:[0, 1], duration:1, ease:STEP(1) }, 530)
@@ -19885,33 +19684,22 @@ const FX = {
     setTimeout(() => Impact.shake($('#shell'), 4, 90), 300);
   },
 
-  /* ── the seal on a milestone breaks ── */
-  rewardUnlock(rig){
-    if (Motion.off || !rig) return;
-    const crack = rig.querySelector('.tech__crack');
-    const glyph = rig.querySelector('.tech__glyph');
-    const panel = rig.querySelector('.panel');
-    if (!crack) return;
-
-    const paths = crack.querySelectorAll('path');
-    aset(crack, { opacity:1 });
-
-    createTimeline()
-      /* the seal fractures */
-      .add(createDrawable(paths), { draw:['0 0', '0 1'],
-             duration:260, delay:stagger(50), ease:EASE.CUT }, 0)
-      /* then it gives way */
-      .add(crack, { opacity:[1, 0], scale:[1, 1.06], duration:200, ease:EASE.OUT }, 380);
-
-    setTimeout(() => {
-      Slash.cross({ angle:-16, host:panel });
-      Impact.shards(panel, 10, -16);
-      this.energyBurst(glyph || panel, { count:10, spread:56 });
-      animate(glyph, { scale:[.72, 1.12, 1], rotate:[-16, 0], duration:560, ease:EASE.IMPACT });
-      this.sealReveal(glyph, { dur:420 });
-      Impact.shake(panel, 5, 110);
-    }, 400);
-  },
+  /* ── a rung comes within reach ──
+     The row is cut once and the claim struck. This used to fracture a
+     drawn seal across a full-height dossier panel; the dossier is a
+     ledger line now, so the reaction is one cut at that scale rather
+     than a panel-sized set piece on a 60px row. */
+  rewardUnlock(row){
+    if (Motion.off || !row) return;
+    const claim = row.querySelector('.tier__claim');
+    Slash.create({ type:'A', angle:-9, host:row });
+    Impact.shake(row, 3, 90);
+    if (claim){
+      animate(claim, { scale:[.86, 1.06, 1], duration:420, delay:120,
+                       ease:EASE.IMPACT });
+      this.energyBurst(claim, { count:8, spread:44, delay:150 });
+    }
+  }
 };
 
 /* ── loading: the app is cut into existence ─────────────────────────
@@ -19933,7 +19721,7 @@ const FX = {
 Object.assign(FX, {
   loadingSequence(onReveal){
     const boot = $('#boot'), sealEl = $('#bootSeal'), mark = $('#bootMark');
-    const title = $('#bootTitle'), jp = $('#bootJp');
+    const title = $('#bootTitle');
     const halves = $$('.boot__half');
 
     /* both of these are idempotent on purpose. The curtain is a solid
@@ -19979,9 +19767,8 @@ Object.assign(FX, {
       .add(mark, { opacity:[1, 0], translateY:[0, -26], duration:200, ease:EASE.CUT }, 830)
       /* 7 · the title lands */
       .add(title, { opacity:[0, 1], scale:[1.14, 1], duration:170, ease:EASE.CUT }, 860)
-      .add(jp, { opacity:[0, .8], letterSpacing:['1.1em', '.66em'], duration:420, ease:EASE.CALM }, 900)
       /* 9 · collapse */
-      .add([jp, sealEl], { opacity:0, duration:180, ease:EASE.CALM }, 1250)
+      .add(sealEl, { opacity:0, duration:180, ease:EASE.CALM }, 1250)
       .add(boot, { opacity:[1, 0], duration:280, ease:EASE.CALM, onBegin:reveal }, 1420)
       /* 8 · the halves shear apart along the last cut */
       .add(halves[0], { translateX:-9, translateY:-27, rotate:-1.4,
@@ -20566,16 +20353,16 @@ function playViewIntro(id){
   }
 
   if (id === 'rewards'){
-    /* the meter is gone with the bar: a dossier's progress is its slot
-       array, and the cells strike in rather than filling */
-    $$('.dslots').forEach((el, i) => FX.slotStrike(el, 200 + i * 90));
-    /* the unlock plays once per reward per session, not on every visit */
-    $$('[data-reward]').forEach(rig => {
-      if (!rig.querySelector('.tech--ready')) return;
-      const rid = rig.dataset.reward;
+    /* the unlock plays once per reward per session, not on every visit.
+       The slot-array strike went with the arrays: each tier used to
+       redraw the whole card as its own progress bar, and the page shows
+       one scale for all three now. */
+    $$('[data-reward]').forEach(row => {
+      if (!row.classList.contains('tier--ready')) return;
+      const rid = row.dataset.reward;
       if (seenUnlocked.has(rid)) return;
       seenUnlocked.add(rid);
-      setTimeout(() => FX.rewardUnlock(rig), 420);
+      setTimeout(() => FX.rewardUnlock(row), 420);
     });
   }
 
@@ -20717,7 +20504,7 @@ document.addEventListener('submit', async e => {
   try {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
-    FX.impactFrame({ word:up ? 'Joined' : 'Welcome', jp:'記録', angle:-18 });
+    FX.impactFrame({ word:up ? 'Joined' : 'Welcome', angle:-18 });
     go('home');
   } catch (err){
     authErr(err && err.message ? err.message : 'Something went wrong. Try again.');
@@ -20842,7 +20629,7 @@ document.addEventListener('click', e => {
   const claim = e.target.closest('[data-claim]');
   if (claim){
     Store.claimReward(claim.dataset.claim).then(r => {
-      FX.impactFrame({ word:'Claimed', jp:'完了', angle:-24 });
+      FX.impactFrame({ word:'Claimed', angle:-24 });
       setTimeout(() => {
         toast({ key:'claim', title:`${r.name} claimed`,
                 detail:'Show this screen to a board member to pick it up.' });

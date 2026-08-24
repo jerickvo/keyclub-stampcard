@@ -339,7 +339,13 @@ const FX = {
   speedLines(o){ Lines.burst(o); },
 
   /* one frame of violence: dark · blown contrast · a word · a cut · shake */
-  impactFrame({ word = '', jp = '', angle = -20, host = null, hot = true } = {}){
+  /* The impact frame used to flash a kanji behind the word — 記録 on
+     sign-in, 完了 on a claim, 認証 on a stamp, 出席記録 under the boot
+     title. None of the app's four typefaces contains a CJK glyph, so
+     every one of them was drawn by whatever face the operating system
+     happened to substitute: decoration in a language the interface does
+     not otherwise speak, set in a font the design does not own. */
+  impactFrame({ word = '', angle = -20, host = null, hot = true } = {}){
     if (Motion.off) return;
     const parent = host || $('#fx');
     if (!parent) return;
@@ -357,14 +363,6 @@ const FX = {
                duration:110, ease:EASE.CUT }, 44)
         .add(el, { scale:[1, 1.05], opacity:[1, 0], duration:80, ease:'inQuad' }, 210);
 
-      if (jp){
-        const g = document.createElement('div');
-        g.className = 'frameword frameword--jp';
-        g.textContent = jp;
-        parent.appendChild(g);
-        animate(g, { opacity:[0, .9, 0], duration:250, delay:60,
-                ease:'linear', onComplete:() => g.remove() });
-      }
     }
 
     Slash.create({ type:'B', angle, host, delay:52 });
@@ -471,17 +469,6 @@ const FX = {
             ease:spring({ mass:1, stiffness:94, damping:13, velocity:0 }) });
   },
 
-  /* The dossier's cells land one after another, each an instant cut —
-     a sheet being stamped, not a bar filling. */
-  slotStrike(list, at){
-    if (!list || Motion.off) return;
-    const lit = list.querySelectorAll('.dslot--set');
-    if (!lit.length) return;
-    aset(lit, { opacity:0 });
-    animate(lit, { opacity:[0, 1], duration:1,
-            delay:stagger(34, { start:at }), ease:STEP(1) });
-  },
-
   hoverCut(btn){
     if (Motion.off || btn.dataset.cutting) return;
     btn.dataset.cutting = '1';
@@ -515,7 +502,7 @@ const FX = {
      ────────────────────────────────────────────────────────────── */
   stampAcquire(meeting, done){
     const box = $('#verdict');
-    const P = { seal:$('#vSeal'), state:$('#vState'), jp:$('#vJp'), title:$('#vTitle'),
+    const P = { seal:$('#vSeal'), state:$('#vState'), title:$('#vTitle'),
                 delta:$('#vDelta'), meet:$('#vMeet'), flare:$('#vFlare'),
                 ring:$('#vRing'), ring2:$('#vRing2') };
 
@@ -536,7 +523,7 @@ const FX = {
     };
 
     if (Motion.off){
-      [P.state, P.jp, P.title, P.delta, P.meet].forEach(el => el.style.opacity = 1);
+      [P.state, P.title, P.delta, P.meet].forEach(el => el.style.opacity = 1);
       field?.remove();
       return void setTimeout(finish, 900);
     }
@@ -546,7 +533,7 @@ const FX = {
     const sealStrokes  = P.seal.querySelectorAll('path,circle,polygon,line');
     const fieldStrokes = field.querySelectorAll('path,circle,polygon,line');
     aset(sealStrokes, { opacity:1 });
-    aset([P.state, P.jp, P.title, P.delta, P.meet], { opacity:0 });
+    aset([P.state, P.title, P.delta, P.meet], { opacity:0 });
     aset(box, { opacity:0 });
 
     /* THE STAMP LANDS.
@@ -586,7 +573,6 @@ const FX = {
       .add(field, { scale:[1, 1.08], opacity:[.5, .16], duration:120, ease:STEP(2) }, 306)
 
       /* the register settling — each mark a cut, not a fade */
-      .add(P.jp,    { opacity:[0, .85], duration:1, ease:STEP(1) }, 380)
       .add(P.title, { opacity:[0, 1], duration:1, ease:STEP(1) }, 430)
       .add(P.delta, { opacity:[0, 1], duration:1, ease:STEP(1) }, 480)
       .add(P.meet,  { opacity:[0, 1], duration:1, ease:STEP(1) }, 530)
@@ -625,33 +611,22 @@ const FX = {
     setTimeout(() => Impact.shake($('#shell'), 4, 90), 300);
   },
 
-  /* ── the seal on a milestone breaks ── */
-  rewardUnlock(rig){
-    if (Motion.off || !rig) return;
-    const crack = rig.querySelector('.tech__crack');
-    const glyph = rig.querySelector('.tech__glyph');
-    const panel = rig.querySelector('.panel');
-    if (!crack) return;
-
-    const paths = crack.querySelectorAll('path');
-    aset(crack, { opacity:1 });
-
-    createTimeline()
-      /* the seal fractures */
-      .add(createDrawable(paths), { draw:['0 0', '0 1'],
-             duration:260, delay:stagger(50), ease:EASE.CUT }, 0)
-      /* then it gives way */
-      .add(crack, { opacity:[1, 0], scale:[1, 1.06], duration:200, ease:EASE.OUT }, 380);
-
-    setTimeout(() => {
-      Slash.cross({ angle:-16, host:panel });
-      Impact.shards(panel, 10, -16);
-      this.energyBurst(glyph || panel, { count:10, spread:56 });
-      animate(glyph, { scale:[.72, 1.12, 1], rotate:[-16, 0], duration:560, ease:EASE.IMPACT });
-      this.sealReveal(glyph, { dur:420 });
-      Impact.shake(panel, 5, 110);
-    }, 400);
-  },
+  /* ── a rung comes within reach ──
+     The row is cut once and the claim struck. This used to fracture a
+     drawn seal across a full-height dossier panel; the dossier is a
+     ledger line now, so the reaction is one cut at that scale rather
+     than a panel-sized set piece on a 60px row. */
+  rewardUnlock(row){
+    if (Motion.off || !row) return;
+    const claim = row.querySelector('.tier__claim');
+    Slash.create({ type:'A', angle:-9, host:row });
+    Impact.shake(row, 3, 90);
+    if (claim){
+      animate(claim, { scale:[.86, 1.06, 1], duration:420, delay:120,
+                       ease:EASE.IMPACT });
+      this.energyBurst(claim, { count:8, spread:44, delay:150 });
+    }
+  }
 };
 
 /* ── loading: the app is cut into existence ─────────────────────────
@@ -673,7 +648,7 @@ const FX = {
 Object.assign(FX, {
   loadingSequence(onReveal){
     const boot = $('#boot'), sealEl = $('#bootSeal'), mark = $('#bootMark');
-    const title = $('#bootTitle'), jp = $('#bootJp');
+    const title = $('#bootTitle');
     const halves = $$('.boot__half');
 
     /* both of these are idempotent on purpose. The curtain is a solid
@@ -719,9 +694,8 @@ Object.assign(FX, {
       .add(mark, { opacity:[1, 0], translateY:[0, -26], duration:200, ease:EASE.CUT }, 830)
       /* 7 · the title lands */
       .add(title, { opacity:[0, 1], scale:[1.14, 1], duration:170, ease:EASE.CUT }, 860)
-      .add(jp, { opacity:[0, .8], letterSpacing:['1.1em', '.66em'], duration:420, ease:EASE.CALM }, 900)
       /* 9 · collapse */
-      .add([jp, sealEl], { opacity:0, duration:180, ease:EASE.CALM }, 1250)
+      .add(sealEl, { opacity:0, duration:180, ease:EASE.CALM }, 1250)
       .add(boot, { opacity:[1, 0], duration:280, ease:EASE.CALM, onBegin:reveal }, 1420)
       /* 8 · the halves shear apart along the last cut */
       .add(halves[0], { translateX:-9, translateY:-27, rotate:-1.4,
