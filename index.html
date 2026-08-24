@@ -115,20 +115,9 @@
      the contrast between them is the storytelling. Panels are assigned
      a value, and the page is composed so that some are nearly empty
      paper and some are almost solid ink. ── */
-  --v0:#fefdfb;   /* paper — the page itself           */
-  --v1:#f4f1ea;   /* off-white — a quiet panel          */
-  --v2:#ddd9d0;   /* light tone — recessive fill        */
-  --v3:#a8a49c;   /* mid tone — screentone body         */
-  --v4:#6d6a64;   /* dark tone — shadow                 */
-  --v5:#2a2825;   /* ink — borders, type                */
-  --v6:#080807;   /* deep black — the dominant panel    */
-
-  --paper:var(--v0);
-  --paper-2:var(--v1);
-  --ink:var(--v5);
-  --ink-2:var(--v4);
-  --tone:var(--v3);
-  --tone-lt:var(--v2);
+  /* The seven-value ramp that used to live here is gone. identity.css
+     declares the five paints the app actually uses and loads last, so
+     this block was overridden on every page it appeared on. */
 
   /* ── border hierarchy. A page where every panel has the same edge
      has no weight to it. Five, used to say how loud a panel is. ── */
@@ -141,8 +130,8 @@
   /* v4 names kept alive so the FX layer keeps working, remapped to
      ink and paper. Nothing in js/ has to change. */
   --void:var(--paper); --sumi:var(--paper); --ink-bg:var(--paper);
-  --lacquer:var(--paper); --lacquer-2:var(--paper-2); --well:var(--paper-2);
-  --steel:var(--tone-lt); --steel-2:var(--tone);
+  --lacquer:var(--paper); --lacquer-2:var(--tint); --well:var(--tint);
+  --steel:var(--tint); --steel-2:var(--tone);
   --burg:var(--ink); --oxblood:var(--ink); --crimson:var(--ink); --ember:var(--ink-2);
   --bone:var(--ink); --chalk:var(--ink-2); --ash:var(--tone); --faint:var(--tone);
   --beige:var(--tone);
@@ -284,7 +273,7 @@ body{
   color:var(--ink);border-radius:0}
 .rail__nav button svg{width:17px;height:17px;stroke-width:1.9}
 .rail__nav button[aria-current="page"]{background:var(--ink);color:var(--paper)}
-.rail__nav button:hover:not([aria-current="page"]){background:var(--paper-2)}
+.rail__nav button:hover:not([aria-current="page"]){background:var(--tint)}
 .rail__ind{display:none}
 .rail__foot{padding-top:var(--s4);border-top:var(--rule-hair) solid var(--ink)}
 
@@ -329,19 +318,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .panel::after{content:"";position:absolute;inset:0;pointer-events:none;
   z-index:0;background-image:radial-gradient(var(--ink) 1px,transparent 1px);
   background-size:5px 5px;opacity:.06}
-.panel--flat::after{opacity:0}
-
-/* a panel that is cut on the diagonal. The ink layer is the element,
-   the paper layer is the pseudo — that is the only way to keep a black
-   edge on a non-rectangular shape */
-.panel--cut{background:var(--ink);border:0;
-  clip-path:polygon(0 0,100% 0,100% calc(100% - 30px),calc(100% - 30px) 100%,0 100%)}
-.panel--cut::before{content:"";position:absolute;inset:var(--rule);z-index:0;
-  background:var(--paper);
-  clip-path:polygon(0 0,100% 0,100% calc(100% - 27px),calc(100% - 27px) 100%,0 100%)}
-
-/* a panel that runs off the edge of the page */
-.panel--bleed{margin-right:calc(var(--bleed) * -1);border-right:0}
 
 /* ══════════════════ LETTERING ══════════════════ */
 /* ── CASE, AND WHY THERE IS ALMOST NO text-transform HERE ──────────
@@ -358,7 +334,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
    uppercase is clean and is where all its drama lives, so display type
    is the one place uppercase is applied deliberately. */
 .kicker{font:400 13px/1 var(--f-body);letter-spacing:.1em;color:var(--ink-2)}
-.kicker--bone{color:var(--ink)}
 /* The display face, always uppercase — see the note above. */
 .title{font-family:var(--f-display);font-size:var(--t-title);
   text-transform:uppercase;
@@ -366,7 +341,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   /* last-resort guard: a single word longer than the panel breaks rather
      than escaping it. Normal titles never reach this. */
   overflow-wrap:break-word}
-.title--name em{font-style:normal}
 .h2{font:600 15px/1.25 var(--f-body);letter-spacing:0}
 
 /* ══════════════════ THE EDGE RUNE ══════════════════
@@ -418,25 +392,20 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   border:var(--rule-hair) solid var(--ink);background:var(--paper);color:var(--ink);
   cursor:pointer;border-radius:0;font:500 11px/1 var(--f-body);
   letter-spacing:.16em;position:relative;overflow:hidden}
-.btn--hot{background:var(--ink);color:var(--paper)}
 /* the strike: the control's whole face inverts for two frames */
 .btn__strike{position:absolute;inset:0;background:currentColor;
   mix-blend-mode:difference;pointer-events:none}
-.btn--ghost{border-style:dashed}
-.btn--wide{width:100%;justify-content:center}
 .btn:hover{transform:translate(-1px,-1px)}
 /* A link is a link. It was 11px uppercase tracked at .14em — a graphic
    treatment applied to the words "Full record", making the smallest
    text on the screen also the loudest. */
-.link,.section-link{background:none;border:0;cursor:pointer;
+.link{background:none;border:0;cursor:pointer;
   color:var(--ink);font:500 var(--t-body)/1.2 var(--f-body);letter-spacing:0;
   text-decoration:underline;text-underline-offset:3px}
 
 .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;
   border:var(--rule-hair) solid var(--ink);font:500 9.5px/1 var(--f-mono);
   letter-spacing:.16em;}
-.chip--hot{background:var(--ink);color:var(--paper)}
-.chip--set{border-style:dashed;color:var(--tone)}
 
 /* ══════════════════ BALLOONS ══════════════════
    Angular, not elliptical, with a tail. Manga balloons are polygons
@@ -479,8 +448,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 /* ══════════════════ RECORD / LOG ══════════════════ */
 .log{display:flex;flex-direction:column}
 .tick{position:absolute;width:11px;height:11px;border:var(--rule-hair) solid var(--ink)}
-.tick--tl{top:-1px;left:-1px;border-right:0;border-bottom:0}
-.tick--br{right:-1px;bottom:-1px;border-left:0;border-top:0}
 
 /* THE WAITING MARK. `.loader` was applied in JS and styled in no
    stylesheet, so the only thing sizing it was an inline
@@ -578,11 +545,11 @@ select.input{padding-right:var(--s4)}
 .panel.empty::before{content:"";position:absolute;z-index:0;pointer-events:none;
   right:calc(var(--s5) * -1);top:50%;transform:translateY(-50%);
   width:clamp(140px,22vw,240px);aspect-ratio:1;
-  border:var(--edge-thin) solid var(--v3);border-radius:50%;
+  border:var(--edge-thin) solid var(--tone);border-radius:50%;
   background:
-    radial-gradient(circle, transparent 0 38%, var(--v3) 38% 39%, transparent 39%),
+    radial-gradient(circle, transparent 0 38%, var(--tone) 38% 39%, transparent 39%),
     repeating-conic-gradient(from 0deg at 50% 50%,
-      var(--v3) 0deg 1deg, transparent 1deg 22.5deg);
+      var(--tone) 0deg 1deg, transparent 1deg 22.5deg);
   opacity:.5}
 .panel.empty > *{position:relative;z-index:1;max-width:46ch}
 .panel.empty .h2{color:var(--ink);font-size:clamp(13px,1.2vw,16px)}
@@ -720,10 +687,6 @@ select.input{padding-right:var(--s4)}
 .topbar{display:flex}
 .tabs{display:flex}
 .view{grid-template-columns:repeat(2,minmax(0,1fr))}
-/* A bleed needs page margin to run into. On a phone the margin IS the
-   safe edge, so the panel keeps its gutter rather than sitting on the
-   glass with its border removed. */
-.panel--bleed{margin-right:0;border-right:var(--rule) solid var(--ink)}
 
 /* ── ≥1024: the rail, and the six-column spread ─────────────────── */
 @media(min-width:1024px){
@@ -733,7 +696,6 @@ select.input{padding-right:var(--s4)}
   .topbar{display:none}
   .tabs{display:none}
   .view{grid-template-columns:repeat(6,minmax(0,1fr))}
-  .panel--bleed{margin-right:calc(var(--bleed) * -1);border-right:0}
 }
 
 /* ── ≥1600: a wider column, so the page is not an island ────────── */
@@ -815,8 +777,7 @@ html,body{overflow-x:clip;max-width:100%}
    ══════════════════════════════════════════════════════════════════ */
 
 
-.p-deep .kicker,.p-shout .kicker,.p-deep .muted,.p-shout .muted{color:var(--v3)}
-.p-deep .h2,.p-shout .h2{color:var(--v0)}
+
 
 /* ══════════════════════════════════════════════════════════════════
    CONTROLLED IMPERFECTION
@@ -853,7 +814,6 @@ html,body{overflow-x:clip;max-width:100%}
    cut, so it fits the column instead of assuming one. */
 
 .rail__link{position:relative}
-.rail__link[aria-current="page"] .rail__no{color:var(--v0)}
 
 /* ══════════════════════════════════════════════════════════════════
    PAGE RHYTHM — the tiers are deliberately unequal in height.
@@ -873,15 +833,6 @@ html,body{overflow-x:clip;max-width:100%}
 
 
 .rig{isolation:isolate}
-/* Home's title is a member's name — arbitrary user data, not a designed
-   word, and it can be far longer than any chapter heading. At the
-   chapter scale "MEMBERUSER." needed 250px of a 218px column on a
-   320px phone and `overflow-wrap:anywhere` duly split it mid-word into
-   "MEMBERUSE / R.". It gets its own floor, well under the chapter
-   scale, so ordinary names sit on one line at every width, and
-   `break-word` so a genuinely enormous name still wraps inside the
-   nameplate rather than escaping it. */
-.title--name{font-size:clamp(24px,7.2vw,92px);overflow-wrap:break-word}
 
 /* SFX still crossed the gauge and the caption at desktop width. Pushed
    fully into the corner and cropped hard, which is where lettering sits
@@ -952,7 +903,7 @@ html,body{overflow-x:clip;max-width:100%}
    label style, so a log row's verdict — a sentence about what happened
    — is set in the reading face like the rest of the row. */
 .qrpanel__when{font-family:var(--f-mono)}
-.h2,.rail__link span,.tabs button,.btn,.link,.section-link,.motion-btn{font-family:var(--f-body);font-weight:500}
+.h2,.rail__link span,.tabs button,.btn,.link,.motion-btn{font-family:var(--f-body);font-weight:500}
 body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .title{letter-spacing:-.035em}
 .h2{font-size:clamp(14px,1.05vw,16px);letter-spacing:0}
@@ -967,7 +918,7 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
    ══════════════════════════════════════════════════════════════════ */
 .rail{padding:var(--s5) 0 var(--s5) var(--s3);border-right:0;overflow:hidden}
 .rail::after{content:"";position:absolute;top:0;bottom:0;right:0;width:2px;
-  background:var(--v5)}
+  background:var(--ink)}
 .rail__brand{padding:0 var(--s3) var(--s5) 0;border-bottom:0}
 .rail__nav{gap:0;padding-top:var(--s5)}
 /* The rail carried a display-size chapter numeral beside each label,
@@ -982,11 +933,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
   letter-spacing:0;text-transform:none;color:var(--ink-2)}
 .rail__link[aria-current="page"] span{color:var(--ink);font-weight:600}
 .rail__link[aria-current="page"] svg{color:var(--ink)}
-/* Hover was --v4, which is exactly what --ink-2 resolves to — so once
-   the resting numeral moved off tone, hovering a rail item changed
-   nothing at all. It darkens to full ink now: resting quiet, hovered
-   ink, current ink plus the rule mark on the right. */
-.rail__link:hover .rail__no{color:var(--ink)!important}
 
 /* ══════════════════════════════════════════════════════════════════
    SFX — opaque, large, cropped by the panel. Never a watermark.
@@ -1006,9 +952,9 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
    establishing panel, a tall dominant one, a wide detail strip, then
    small closers. The icon tab bar is replaced by a page-turn strip.
    ══════════════════════════════════════════════════════════════════ */
-.tabs{border-top:0;background:var(--v0);padding-top:0}
+.tabs{border-top:0;background:var(--paper);padding-top:0}
 .tabs::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;
-  background:var(--v5)}
+  background:var(--ink)}
 .tabs button{gap:2px}
 /* The label, not the numeral, is what tells you where you are, so it
    keeps a real size — 9px at 320px, where five tabs share the bar —
@@ -1083,8 +1029,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .h2 + *{margin-top:var(--space-stack-sm)}
 .kicker + *{margin-top:var(--space-hair)}
 .log{gap:var(--space-tight)}
-.stack-lg{margin-top:var(--space-stack)}
-.stack-xl{margin-top:var(--space-chapter)}
 .picker{gap:var(--space-tight);margin-bottom:var(--space-tier)}
 .field{gap:var(--space-tight)}
 
@@ -1111,10 +1055,10 @@ main#view{padding-top:var(--space-tier);
 /* Text links were 11px tall — under any reasonable touch target. The
    hit area grows without the underline moving, so nothing shifts
    visually; only the tappable box changes. */
-.link,.section-link{display:inline-flex;align-items:center;
+.link{display:inline-flex;align-items:center;
   min-height:32px;padding-block:6px}
 @media(pointer:coarse){
-  .link,.section-link{min-height:44px;padding-block:11px}
+  .link{min-height:44px;padding-block:11px}
   .motion-btn{min-height:40px}
 }
 
@@ -1209,15 +1153,6 @@ main#view{padding-top:var(--space-tier);
 
 .tone{position:absolute;pointer-events:none;z-index:0;
   background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
-.tone--coarse{background-image:var(--tone-dot-b);background-size:var(--tone-cell-b)}
-.tone--line{background-image:var(--tone-line)}
-
-/* a tone that fades out, the way a sheet is scraped back with a blade
-   rather than stopping on a hard line */
-.tone--fade{-webkit-mask-image:linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%);
-  mask-image:linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%)}
-.tone--fade-r{-webkit-mask-image:linear-gradient(to left, #000 0%, #000 30%, transparent 92%);
-  mask-image:linear-gradient(to left, #000 0%, #000 30%, transparent 92%)}
 
 /* ─────────────────────────────────────────────────────────────────
    2. PANEL HIERARCHY
@@ -1341,7 +1276,7 @@ main#view{padding-top:var(--space-tier);
 .authp .input{width:100%;box-sizing:border-box;min-width:0}
 
 .authp__err{margin:0 0 var(--s4);padding:9px 12px;
-  border-left:4px solid var(--ink);background:var(--v1);
+  border-left:4px solid var(--ink);background:var(--paper);
   font:500 12.5px/1.45 var(--f-body);color:var(--ink)}
 
 .authp__act{display:flex;align-items:center;gap:var(--s4);flex-wrap:wrap}
@@ -1413,7 +1348,7 @@ main#view{padding-top:var(--space-tier);
    narrow. */
 .blist{list-style:none;margin:0;padding:0}
 .brow{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2) var(--s3);
-  padding:var(--s4) 0;border-bottom:var(--rule-hair) solid var(--v2);
+  padding:var(--s4) 0;border-bottom:var(--rule-hair) solid var(--tint);
   cursor:pointer;min-width:0}
 .brow > *{flex:none;min-width:0}
 .brow__no{flex:1 0 100%}
@@ -1434,7 +1369,7 @@ main#view{padding-top:var(--space-tier);
 }
 .brow--reward{cursor:default}
 .brow:last-child{border-bottom:0}
-.brow:hover,.brow:focus-visible{background:var(--v1);outline:0}
+.brow:hover,.brow:focus-visible{background:var(--paper);outline:0}
 .brow__no{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;
   color:var(--tone);white-space:nowrap}
 .brow__mid{min-width:0}
@@ -1448,7 +1383,7 @@ main#view{padding-top:var(--space-tier);
   padding:5px 8px;white-space:nowrap;border:1.5px solid var(--ink)}
 .bstate--open{background:var(--ink);color:var(--paper)}
 .bstate--upcoming{background:none;color:var(--ink)}
-.bstate--ended,.bstate--past{background:none;color:var(--v3);border-color:var(--v3)}
+.bstate--ended,.bstate--past{background:none;color:var(--tone);border-color:var(--tone)}
 
 .bdetail__name{font-family:var(--f-head);font-size:clamp(26px,3.4vw,42px);
   line-height:1;margin:4px 0 var(--s5);text-transform:uppercase;letter-spacing:-.03em}
@@ -1509,7 +1444,7 @@ main#view{padding-top:var(--space-tier);
 .setupbox p:last-child{margin-bottom:0}
 .setupbox__hint{color:var(--tone)}
 .setupbox code{font-family:var(--f-mono);font-size:11.5px;
-  border-bottom:1px solid var(--v3)}
+  border-bottom:1px solid var(--tone)}
 /* a failed connection is a heavier statement than a missing one */
 .setupbox--warn{border-width:var(--rule);background-image:none}
 
@@ -1574,7 +1509,7 @@ main#view{padding-top:var(--space-tier);
    control — a 1px stub left the counts stepping in and out. */
 .brow__del--off{visibility:hidden}
 .brow__del--off::before{content:"Delete"}
-.brow--confirm{background:var(--v1)}
+.brow--confirm{background:var(--paper)}
 .bconfirm{display:flex;gap:var(--s3);align-items:center;flex-wrap:wrap}
 .bconfirm .btn{padding:8px 14px;font-size:11px}
 /* The confirm pair wraps to its own line when the row cannot hold it,
@@ -1615,9 +1550,9 @@ main#view{padding-top:var(--space-tier);
   border-top:var(--edge) solid var(--ink)}
 .bstat{border:0!important;background:none!important;
   padding:clamp(13px,1.8vw,20px) clamp(12px,1.6vw,18px) clamp(13px,1.8vw,20px) 0;
-  border-bottom:var(--rule-hair) solid var(--v3)!important}
+  border-bottom:var(--rule-hair) solid var(--tone)!important}
 .bstat + .bstat{padding-left:clamp(12px,1.6vw,18px);
-  border-left:var(--rule-hair) solid var(--v3)!important}
+  border-left:var(--rule-hair) solid var(--tone)!important}
 .bstat:first-child b{font-size:clamp(38px,5.2vw,72px);line-height:.86}
 .bstat:first-child{grid-column:1/-1;padding-left:0;
   border-left:0!important;border-bottom-color:var(--ink)!important}
@@ -1673,7 +1608,7 @@ main#view{padding-top:var(--space-tier);
    ══════════════════════════════════════════════════════════════════ */
 .empty-reg{position:relative;padding:clamp(28px,5vw,64px) 0 clamp(24px,4vw,52px)}
 .empty-reg::before{content:"";position:absolute;left:0;right:0;top:0;
-  height:var(--edge-thin);background:var(--v3)}
+  height:var(--edge-thin);background:var(--tone)}
 .empty{display:grid;gap:clamp(16px,3vw,34px);align-items:center;
   grid-template-columns:auto minmax(0,1fr);
   border:0;background:none;padding:0;min-height:0}
@@ -1689,10 +1624,10 @@ main#view{padding-top:var(--space-tier);
    list rather than moving to the filled one. */
 .empty__seal svg circle,.empty__seal svg polygon,
 .empty__seal svg path,.empty__seal svg line{
-  fill:none;stroke:var(--v3);stroke-width:2;vector-effect:non-scaling-stroke}
+  fill:none;stroke:var(--tone);stroke-width:2;vector-effect:non-scaling-stroke}
 /* the void: the seal is present, the mark inside it is not */
 .empty__void{position:absolute;left:50%;top:50%;width:56%;height:var(--edge-thin);
-  background:var(--v3);transform:translate(-50%,-50%) rotate(-32deg)}
+  background:var(--tone);transform:translate(-50%,-50%) rotate(-32deg)}
 .empty__body{min-width:0}
 .empty__title{font-family:var(--f-head);text-transform:uppercase;
   font-size:clamp(17px,2.4vw,30px);line-height:1.02;letter-spacing:-.01em;
@@ -1964,12 +1899,6 @@ main#view{padding-top:var(--space-tier);
   letter-spacing:.2em;color:var(--ink-2)}
 .anno::before{content:"";width:clamp(10px,1.4vw,20px);height:var(--rule-hair);
   background:currentColor;flex:none}
-/* The bright cinnabar is a MARK colour, not a text colour: #E53935 on
-   this paper is 3.94:1, and an annotation is 9.5px, which needs 4.5.
-   The pressed-harder step of the same ink is 5.15:1 and reads as the
-   same seal — so small red type uses it and the big struck marks keep
-   the bright one. */
-.anno--seal{color:var(--seal-deep)}
 
 /* ── SPEED LINES. Direction, not texture: they always run TOWARD the
    thing that matters and they fade out behind it. */
@@ -2075,7 +2004,7 @@ select.input:focus-visible{outline:none}
 /* the one cinnabar mark the docket is allowed: the corner that says
    which slot it belongs to */
 .sealmeta::before{content:"";position:absolute;left:-1px;top:-1px;
-  width:10px;height:10px;border:var(--rule) solid var(--seal);
+  width:10px;height:10px;border:var(--rule) solid var(--ink);
   border-right:0;border-bottom:0}
 
 /* A pointer that cannot hover has nothing to reveal on the way past, so
@@ -2115,7 +2044,7 @@ select.input:focus-visible{outline:none}
 
 @keyframes busyHold{
   from{border-color:var(--ink)}
-  to  {border-color:var(--v3)}
+  to  {border-color:var(--tone)}
 }
 @keyframes busyBar{
   from{transform:scaleX(.12);transform-origin:left}
@@ -2154,7 +2083,7 @@ select.input:focus-visible{outline:none}
    .btn--go is the primary action everywhere in the app, but outside the
    auth screen it had no treatment at all -- "Open check-in" and "Delete"
    rendered identically to "Cancel". Filling it with ink is the same move
-   .btn--hot already makes, so this adds hierarchy without adding a new
+   the ink button already makes, so this adds hierarchy without a new
    visual language.
 
    :active and :focus-visible were missing entirely. The hover lift had
@@ -2304,10 +2233,6 @@ select.input:focus-visible{outline:none}
    weight, and a count. */
 .ahead{position:relative;padding-top:clamp(14px,2vw,22px);
   margin-top:clamp(26px,4vw,56px)}
-.ahead__rule{position:absolute;left:0;right:0;top:0;
-  height:var(--edge-thin);background:var(--ink)}
-.ahead__head{display:flex;align-items:baseline;justify-content:space-between;
-  gap:var(--s3);flex-wrap:wrap;margin-bottom:clamp(12px,1.8vw,20px)}
 .ahead .h2{color:var(--ink)}
 
 
@@ -2375,26 +2300,12 @@ select.input:focus-visible{outline:none}
   --ink-2:  #5E5D58;      /* ink, quiet — secondary reading           */
   --ink:    #0A0A0A;      /* ink — events, actions, primary reading   */
 
-  /* The seven-step ramp collapses onto those five. The names stay so
-     that nothing downstream has to be rewritten to keep working, but
-     there are only three paints behind them now — v6 and v5 are one
-     black, and v0 and v1 are one paper. */
-  --v0:var(--paper); --v1:var(--paper); --v2:var(--tint);
-  --v3:var(--tone);  --v4:var(--ink-2); --v5:var(--ink); --v6:var(--ink);
-
-  --paper-2:var(--tint);
-  --tone-lt:var(--tint);
-  --kozo:var(--paper); --kozo-2:var(--tint);
-  --sumi:var(--ink);   --kage:var(--ink);
-
-  /* The seal accent resolves to ink, so every hand-written `--seal`
-     call site downstream keeps working and now prints black. */
-  --shu:var(--ink); --shu-deep:var(--ink);
-  --seal:var(--ink); --seal-deep:var(--ink);
-
-  --crimson:var(--ink); --burg:var(--ink); --oxblood:var(--ink);
-  --ember:var(--ink-2); --line-hot:var(--ink);
-  --void:var(--ink);  --ink-bg:var(--ink);
+  /* Three design generations left a second naming layer over these
+     five paints — v0..v6, sumi, kozo, shu, seal, crimson, burg, ember,
+     oxblood, void, lacquer, beige, bone, ash, steel — every one of them
+     aliased onto paper / tint / tone / ink-2 / ink. Forty-three call
+     sites were rewritten to name the paint they actually wanted, and
+     the layer is gone. */
   --lacquer:var(--ink); --lacquer-2:var(--ink); --well:var(--tint);
   --bone:var(--paper);  --chalk:var(--tint);
   --ash:var(--tone);    --faint:var(--ink-2);  --beige:var(--tint);
@@ -2511,7 +2422,7 @@ body{
      is the one gradient this system has no use for. */
   background-color:var(--paper);
   background-image:radial-gradient(var(--tone-dot) .5px, transparent .6px);
-  background-size:var(--tone-wide) var(--tone-wide);
+  background-size:var(--tone-page-size) var(--tone-page-size);
   color:var(--ink);
 }
 
@@ -2530,28 +2441,7 @@ body{
 
    The wobble on the border and the slight rotation matter: a real
    chop is pressed by hand and never lands square. */
-.chop{
-  --chop-size:clamp(38px,5vw,54px);
-  position:relative;display:inline-grid;place-items:center;
-  width:var(--chop-size);height:var(--chop-size);
-  border:2.5px solid var(--ink);
-  border-radius:0;
-  color:var(--ink);
-  font-family:var(--f-head);
-  font-size:calc(var(--chop-size) * .34);
-  line-height:1;letter-spacing:.02em;
-  transform:rotate(-4deg);
-  background:
-none;
-}
-.chop::after{                     /* the ink that squeezed out */
-  content:'';position:absolute;inset:-3px;border-radius:0;
-  border:1px solid var(--ink);opacity:.30;
-  transform:rotate(2.5deg);pointer-events:none;
-}
-.chop--filled{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.chop--ghost{border-color:var(--tone);color:var(--tone);opacity:.55;transform:rotate(-1deg)}
-.chop--ghost::after{border-color:transparent}
+
 
 /* ══ PANELS ════════════════════════════════════════════════════════
    Manga panels are defined by the gutter, not the border. The white
@@ -2570,13 +2460,6 @@ none;
 }
 
 /* a panel that carries the accent: one per screen, maximum */
-:where(.panel--seal){
-  --ink-w:6;
-}
-.panel--seal::before{
-  content:'';position:absolute;left:0;right:0;top:0;height:var(--edge-thin);
-  background:var(--ink);
-}
 
 /* ══ TYPE ══════════════════════════════════════════════════════════
    Dela Gothic is already the right display face — heavy, Japanese,
@@ -2596,7 +2479,7 @@ none;
   background:var(--ink);border-color:var(--ink);color:var(--paper);
   font-weight:600;
 }
-.btn--go:hover{background:var(--v6);border-color:var(--v6)}
+.btn--go:hover{background:var(--ink);border-color:var(--ink)}
 .btn--go:active{transform:translate(1px,1px)}
 
 /* ══ NAVIGATION ════════════════════════════════════════════════════
@@ -2612,8 +2495,6 @@ none;
 
 .rail__link[aria-current],
 .tab[aria-current]{color:var(--ink)}
-.rail__link[aria-current] .rail__no,
-.tab[aria-current] .tab__no{color:var(--ink)}
 .rail__ind,.tabs__ind{background:var(--ink)}
 
 /* ══ THE SEAL, APPLIED ══════════════════════════════════════════════
@@ -2634,8 +2515,8 @@ none;
    word under it. That is the red. Everything below is the record of
    what the stamp did, and a record is written in ink. */
 .verdict__seal circle,.verdict__seal polygon,
-.verdict__seal line{stroke:var(--seal)}
-.verdict__seal path{fill:var(--seal)}
+.verdict__seal line{stroke:var(--ink)}
+.verdict__seal path{fill:var(--ink)}
 /* SEALED IS THE MARK.
 
    It was an 11px mono label above a 58px "Stamp acquired" — the
@@ -2644,7 +2525,7 @@ none;
    cinnabar, struck a few degrees off square because a stamp pressed
    by hand never lands true. The sentence becomes the caption it
    always was. */
-.verdict__state{color:var(--seal);font-family:var(--f-head);font-weight:400;
+.verdict__state{color:var(--ink);font-family:var(--f-head);font-weight:400;
   font-size:clamp(46px,13vw,132px);line-height:.82;letter-spacing:-.03em;
   text-transform:uppercase;transform:rotate(-3.2deg);margin-top:clamp(6px,1.4vw,14px)}
 .verdict__title{font-family:var(--f-body);font-weight:500;
@@ -2670,7 +2551,7 @@ none;
    shadow: nothing in this system floats. */
 .qrpanel__code--big{
   background:#FFFFFF;
-  border:var(--edge-heavy) solid var(--sumi);
+  border:var(--edge-heavy) solid var(--ink);
 }
 
 /* ══ SPEED LINES ═══════════════════════════════════════════════════
@@ -2697,7 +2578,6 @@ none;
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;animation-iteration-count:1!important}
 }
-.chop--filled .chop__key{fill:var(--paper)}
 
 /* ══════════════════════════════════════════════════════════════════
    BOARD — the same book, administrative chapters
@@ -2727,7 +2607,7 @@ none;
 
 /* rows read as a register: hairline rules, no boxes */
 .brow{border-bottom:var(--edge-hair) solid var(--tone)}
-.brow:hover,.brow:focus-visible{background:var(--paper-2)}
+.brow:hover,.brow:focus-visible{background:var(--tint)}
 .brow__no{color:var(--ink-2)}
 .brow__n{font-family:var(--f-head)}
 
@@ -2775,7 +2655,6 @@ none;
    zero specificity anything that has an opinion wins, which is what a
    default is for. */
 :where(.panel){--ink-w:2}
-:where(.panel--seal){--ink-w:3}
 
 .bstat b{font-size:clamp(22px,6vw,30px)}
 .bmile{grid-template-columns:auto 1fr;gap:var(--s3)}
@@ -2790,8 +2669,7 @@ none;
 
 @media (min-width:768px){
   :where(.panel){--ink-w:3}
-  :where(.panel--seal){--ink-w:6}
-}
+  }
 
 
 /* ══════════════════════════════════════════════════════════════════
@@ -2838,11 +2716,10 @@ none;
    Buttons, chips, links and inputs were landing anywhere between 32px
    and 40px tall. One floor, one rhythm, and 44px on touch so nothing
    in the app needs a careful finger. */
-.btn,.chip,.motion-btn,.input,.brow__del,.section-link{
+.btn,.chip,.motion-btn,.input,.brow__del{
   min-height:38px;
 }
 .motion-btn{padding:0 var(--s4)}
-.section-link{padding:0 var(--s3)}
 
 /* ── 2. A type floor ──────────────────────────────────────────────
    Secondary information was sitting at 9–10px, which is legible on a
@@ -2877,7 +2754,7 @@ none;
    not a palette change. Panels that are printed in ink keep their own
    lighter overrides, which are more specific and still win.
    ══════════════════════════════════════════════════════════════════ */
-.muted,.chip--set,
+.muted,
 .qrpanel__when,.empty,
 .verdict__meet,.setupbox__hint,.bstat span,
 .brow__no,.brow__sub,.bstate--ended,.bstate--past,.bmile__mid .muted,
@@ -2896,7 +2773,7 @@ none;
    finger; a 380px browser window on a desktop is not. Width was
    standing in for this and got both cases wrong. */
 @media (pointer:coarse){
-  .btn,.chip,.motion-btn,.input,.link,.section-link,.brow__del,
+  .btn,.chip,.motion-btn,.input,.link,.brow__del,
   .tab,select{min-height:44px}
   .input{padding-inline:var(--s4)}
   .btn{padding-inline:var(--s5)}

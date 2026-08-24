@@ -25,20 +25,9 @@
      the contrast between them is the storytelling. Panels are assigned
      a value, and the page is composed so that some are nearly empty
      paper and some are almost solid ink. ── */
-  --v0:#fefdfb;   /* paper — the page itself           */
-  --v1:#f4f1ea;   /* off-white — a quiet panel          */
-  --v2:#ddd9d0;   /* light tone — recessive fill        */
-  --v3:#a8a49c;   /* mid tone — screentone body         */
-  --v4:#6d6a64;   /* dark tone — shadow                 */
-  --v5:#2a2825;   /* ink — borders, type                */
-  --v6:#080807;   /* deep black — the dominant panel    */
-
-  --paper:var(--v0);
-  --paper-2:var(--v1);
-  --ink:var(--v5);
-  --ink-2:var(--v4);
-  --tone:var(--v3);
-  --tone-lt:var(--v2);
+  /* The seven-value ramp that used to live here is gone. identity.css
+     declares the five paints the app actually uses and loads last, so
+     this block was overridden on every page it appeared on. */
 
   /* ── border hierarchy. A page where every panel has the same edge
      has no weight to it. Five, used to say how loud a panel is. ── */
@@ -51,8 +40,8 @@
   /* v4 names kept alive so the FX layer keeps working, remapped to
      ink and paper. Nothing in js/ has to change. */
   --void:var(--paper); --sumi:var(--paper); --ink-bg:var(--paper);
-  --lacquer:var(--paper); --lacquer-2:var(--paper-2); --well:var(--paper-2);
-  --steel:var(--tone-lt); --steel-2:var(--tone);
+  --lacquer:var(--paper); --lacquer-2:var(--tint); --well:var(--tint);
+  --steel:var(--tint); --steel-2:var(--tone);
   --burg:var(--ink); --oxblood:var(--ink); --crimson:var(--ink); --ember:var(--ink-2);
   --bone:var(--ink); --chalk:var(--ink-2); --ash:var(--tone); --faint:var(--tone);
   --beige:var(--tone);
@@ -194,7 +183,7 @@ body{
   color:var(--ink);border-radius:0}
 .rail__nav button svg{width:17px;height:17px;stroke-width:1.9}
 .rail__nav button[aria-current="page"]{background:var(--ink);color:var(--paper)}
-.rail__nav button:hover:not([aria-current="page"]){background:var(--paper-2)}
+.rail__nav button:hover:not([aria-current="page"]){background:var(--tint)}
 .rail__ind{display:none}
 .rail__foot{padding-top:var(--s4);border-top:var(--rule-hair) solid var(--ink)}
 
@@ -239,19 +228,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .panel::after{content:"";position:absolute;inset:0;pointer-events:none;
   z-index:0;background-image:radial-gradient(var(--ink) 1px,transparent 1px);
   background-size:5px 5px;opacity:.06}
-.panel--flat::after{opacity:0}
-
-/* a panel that is cut on the diagonal. The ink layer is the element,
-   the paper layer is the pseudo — that is the only way to keep a black
-   edge on a non-rectangular shape */
-.panel--cut{background:var(--ink);border:0;
-  clip-path:polygon(0 0,100% 0,100% calc(100% - 30px),calc(100% - 30px) 100%,0 100%)}
-.panel--cut::before{content:"";position:absolute;inset:var(--rule);z-index:0;
-  background:var(--paper);
-  clip-path:polygon(0 0,100% 0,100% calc(100% - 27px),calc(100% - 27px) 100%,0 100%)}
-
-/* a panel that runs off the edge of the page */
-.panel--bleed{margin-right:calc(var(--bleed) * -1);border-right:0}
 
 /* ══════════════════ LETTERING ══════════════════ */
 /* ── CASE, AND WHY THERE IS ALMOST NO text-transform HERE ──────────
@@ -268,7 +244,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
    uppercase is clean and is where all its drama lives, so display type
    is the one place uppercase is applied deliberately. */
 .kicker{font:400 13px/1 var(--f-body);letter-spacing:.1em;color:var(--ink-2)}
-.kicker--bone{color:var(--ink)}
 /* The display face, always uppercase — see the note above. */
 .title{font-family:var(--f-display);font-size:var(--t-title);
   text-transform:uppercase;
@@ -276,7 +251,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   /* last-resort guard: a single word longer than the panel breaks rather
      than escaping it. Normal titles never reach this. */
   overflow-wrap:break-word}
-.title--name em{font-style:normal}
 .h2{font:600 15px/1.25 var(--f-body);letter-spacing:0}
 
 /* ══════════════════ THE EDGE RUNE ══════════════════
@@ -328,25 +302,20 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   border:var(--rule-hair) solid var(--ink);background:var(--paper);color:var(--ink);
   cursor:pointer;border-radius:0;font:500 11px/1 var(--f-body);
   letter-spacing:.16em;position:relative;overflow:hidden}
-.btn--hot{background:var(--ink);color:var(--paper)}
 /* the strike: the control's whole face inverts for two frames */
 .btn__strike{position:absolute;inset:0;background:currentColor;
   mix-blend-mode:difference;pointer-events:none}
-.btn--ghost{border-style:dashed}
-.btn--wide{width:100%;justify-content:center}
 .btn:hover{transform:translate(-1px,-1px)}
 /* A link is a link. It was 11px uppercase tracked at .14em — a graphic
    treatment applied to the words "Full record", making the smallest
    text on the screen also the loudest. */
-.link,.section-link{background:none;border:0;cursor:pointer;
+.link{background:none;border:0;cursor:pointer;
   color:var(--ink);font:500 var(--t-body)/1.2 var(--f-body);letter-spacing:0;
   text-decoration:underline;text-underline-offset:3px}
 
 .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;
   border:var(--rule-hair) solid var(--ink);font:500 9.5px/1 var(--f-mono);
   letter-spacing:.16em;}
-.chip--hot{background:var(--ink);color:var(--paper)}
-.chip--set{border-style:dashed;color:var(--tone)}
 
 /* ══════════════════ BALLOONS ══════════════════
    Angular, not elliptical, with a tail. Manga balloons are polygons
@@ -389,8 +358,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 /* ══════════════════ RECORD / LOG ══════════════════ */
 .log{display:flex;flex-direction:column}
 .tick{position:absolute;width:11px;height:11px;border:var(--rule-hair) solid var(--ink)}
-.tick--tl{top:-1px;left:-1px;border-right:0;border-bottom:0}
-.tick--br{right:-1px;bottom:-1px;border-left:0;border-top:0}
 
 /* THE WAITING MARK. `.loader` was applied in JS and styled in no
    stylesheet, so the only thing sizing it was an inline
@@ -488,11 +455,11 @@ select.input{padding-right:var(--s4)}
 .panel.empty::before{content:"";position:absolute;z-index:0;pointer-events:none;
   right:calc(var(--s5) * -1);top:50%;transform:translateY(-50%);
   width:clamp(140px,22vw,240px);aspect-ratio:1;
-  border:var(--edge-thin) solid var(--v3);border-radius:50%;
+  border:var(--edge-thin) solid var(--tone);border-radius:50%;
   background:
-    radial-gradient(circle, transparent 0 38%, var(--v3) 38% 39%, transparent 39%),
+    radial-gradient(circle, transparent 0 38%, var(--tone) 38% 39%, transparent 39%),
     repeating-conic-gradient(from 0deg at 50% 50%,
-      var(--v3) 0deg 1deg, transparent 1deg 22.5deg);
+      var(--tone) 0deg 1deg, transparent 1deg 22.5deg);
   opacity:.5}
 .panel.empty > *{position:relative;z-index:1;max-width:46ch}
 .panel.empty .h2{color:var(--ink);font-size:clamp(13px,1.2vw,16px)}
@@ -630,10 +597,6 @@ select.input{padding-right:var(--s4)}
 .topbar{display:flex}
 .tabs{display:flex}
 .view{grid-template-columns:repeat(2,minmax(0,1fr))}
-/* A bleed needs page margin to run into. On a phone the margin IS the
-   safe edge, so the panel keeps its gutter rather than sitting on the
-   glass with its border removed. */
-.panel--bleed{margin-right:0;border-right:var(--rule) solid var(--ink)}
 
 /* ── ≥1024: the rail, and the six-column spread ─────────────────── */
 @media(min-width:1024px){
@@ -643,7 +606,6 @@ select.input{padding-right:var(--s4)}
   .topbar{display:none}
   .tabs{display:none}
   .view{grid-template-columns:repeat(6,minmax(0,1fr))}
-  .panel--bleed{margin-right:calc(var(--bleed) * -1);border-right:0}
 }
 
 /* ── ≥1600: a wider column, so the page is not an island ────────── */
@@ -725,8 +687,7 @@ html,body{overflow-x:clip;max-width:100%}
    ══════════════════════════════════════════════════════════════════ */
 
 
-.p-deep .kicker,.p-shout .kicker,.p-deep .muted,.p-shout .muted{color:var(--v3)}
-.p-deep .h2,.p-shout .h2{color:var(--v0)}
+
 
 /* ══════════════════════════════════════════════════════════════════
    CONTROLLED IMPERFECTION
@@ -763,7 +724,6 @@ html,body{overflow-x:clip;max-width:100%}
    cut, so it fits the column instead of assuming one. */
 
 .rail__link{position:relative}
-.rail__link[aria-current="page"] .rail__no{color:var(--v0)}
 
 /* ══════════════════════════════════════════════════════════════════
    PAGE RHYTHM — the tiers are deliberately unequal in height.
@@ -783,15 +743,6 @@ html,body{overflow-x:clip;max-width:100%}
 
 
 .rig{isolation:isolate}
-/* Home's title is a member's name — arbitrary user data, not a designed
-   word, and it can be far longer than any chapter heading. At the
-   chapter scale "MEMBERUSER." needed 250px of a 218px column on a
-   320px phone and `overflow-wrap:anywhere` duly split it mid-word into
-   "MEMBERUSE / R.". It gets its own floor, well under the chapter
-   scale, so ordinary names sit on one line at every width, and
-   `break-word` so a genuinely enormous name still wraps inside the
-   nameplate rather than escaping it. */
-.title--name{font-size:clamp(24px,7.2vw,92px);overflow-wrap:break-word}
 
 /* SFX still crossed the gauge and the caption at desktop width. Pushed
    fully into the corner and cropped hard, which is where lettering sits
@@ -862,7 +813,7 @@ html,body{overflow-x:clip;max-width:100%}
    label style, so a log row's verdict — a sentence about what happened
    — is set in the reading face like the rest of the row. */
 .qrpanel__when{font-family:var(--f-mono)}
-.h2,.rail__link span,.tabs button,.btn,.link,.section-link,.motion-btn{font-family:var(--f-body);font-weight:500}
+.h2,.rail__link span,.tabs button,.btn,.link,.motion-btn{font-family:var(--f-body);font-weight:500}
 body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .title{letter-spacing:-.035em}
 .h2{font-size:clamp(14px,1.05vw,16px);letter-spacing:0}
@@ -877,7 +828,7 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
    ══════════════════════════════════════════════════════════════════ */
 .rail{padding:var(--s5) 0 var(--s5) var(--s3);border-right:0;overflow:hidden}
 .rail::after{content:"";position:absolute;top:0;bottom:0;right:0;width:2px;
-  background:var(--v5)}
+  background:var(--ink)}
 .rail__brand{padding:0 var(--s3) var(--s5) 0;border-bottom:0}
 .rail__nav{gap:0;padding-top:var(--s5)}
 /* The rail carried a display-size chapter numeral beside each label,
@@ -892,11 +843,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
   letter-spacing:0;text-transform:none;color:var(--ink-2)}
 .rail__link[aria-current="page"] span{color:var(--ink);font-weight:600}
 .rail__link[aria-current="page"] svg{color:var(--ink)}
-/* Hover was --v4, which is exactly what --ink-2 resolves to — so once
-   the resting numeral moved off tone, hovering a rail item changed
-   nothing at all. It darkens to full ink now: resting quiet, hovered
-   ink, current ink plus the rule mark on the right. */
-.rail__link:hover .rail__no{color:var(--ink)!important}
 
 /* ══════════════════════════════════════════════════════════════════
    SFX — opaque, large, cropped by the panel. Never a watermark.
@@ -916,9 +862,9 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
    establishing panel, a tall dominant one, a wide detail strip, then
    small closers. The icon tab bar is replaced by a page-turn strip.
    ══════════════════════════════════════════════════════════════════ */
-.tabs{border-top:0;background:var(--v0);padding-top:0}
+.tabs{border-top:0;background:var(--paper);padding-top:0}
 .tabs::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;
-  background:var(--v5)}
+  background:var(--ink)}
 .tabs button{gap:2px}
 /* The label, not the numeral, is what tells you where you are, so it
    keeps a real size — 9px at 320px, where five tabs share the bar —
@@ -993,8 +939,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .h2 + *{margin-top:var(--space-stack-sm)}
 .kicker + *{margin-top:var(--space-hair)}
 .log{gap:var(--space-tight)}
-.stack-lg{margin-top:var(--space-stack)}
-.stack-xl{margin-top:var(--space-chapter)}
 .picker{gap:var(--space-tight);margin-bottom:var(--space-tier)}
 .field{gap:var(--space-tight)}
 
@@ -1021,10 +965,10 @@ main#view{padding-top:var(--space-tier);
 /* Text links were 11px tall — under any reasonable touch target. The
    hit area grows without the underline moving, so nothing shifts
    visually; only the tappable box changes. */
-.link,.section-link{display:inline-flex;align-items:center;
+.link{display:inline-flex;align-items:center;
   min-height:32px;padding-block:6px}
 @media(pointer:coarse){
-  .link,.section-link{min-height:44px;padding-block:11px}
+  .link{min-height:44px;padding-block:11px}
   .motion-btn{min-height:40px}
 }
 
