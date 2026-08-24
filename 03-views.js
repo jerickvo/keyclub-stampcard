@@ -14,94 +14,41 @@ const memberName = () => (Store.user && Store.user.name) || 'Member';
    ══════════════════════════════════════════════════════════════════ */
 const C = {
   /* the giant cropped word behind a view */
-  bleed(word, style, mod = ''){
-    return `<span class="bleed ${mod}" style="${style}" aria-hidden="true">${word}</span>`;
-  },
-
   /* Every chapter carries the same three marks: the kicker as an
      annotation, the title as the masthead, and an edge rune stating
      which chapter of the volume this is. The rune is what makes five
      differently-composed screens read as one document. */
-  head(kicker, title, jp, note){
-    const ch = (typeof chapterOf === 'function' && typeof current === 'string')
-      ? chapterOf(current) : null;
+  /* THE MASTHEAD. A title and, when there is one, a line of plain
+     reading under it. The kicker is gone: it named the same thing the
+     title names one line lower, which is a label explaining a label.
+     So are the diagonal rake, the volume rune and the edge kanji —
+     three marks that reported nothing about the page they sat on. */
+  head(title, note){
     return `<header class="head" data-enter>
-      <span class="head__rake" data-layer aria-hidden="true"></span>
       <div class="head__stack">
-        <p class="kicker">${esc(kicker)}</p>
         <h1 class="title">${title}</h1>
         ${note ? `<p class="muted">${esc(note)}</p>` : ''}
       </div>
-      ${ch && ch.ch !== '—'
-        ? `<span class="rune" data-layer aria-hidden="true">VOL.01 // CH.${ch.ch}</span>` : ''}
-      <span class="jp" aria-hidden="true">${jp}</span>
     </header>`;
   },
 
-  /* THE CHAPTER CLOSE.
-
-     A short chapter used to simply stop two-thirds down the viewport
-     and leave the rest blank, which reads as a page that failed to
-     load rather than as a rest. Manga uses empty space constantly,
-     but it is always BOUNDED — a panel with nothing in it is a beat;
-     an unclosed page is a mistake. This is the bottom rule of the
-     spread: the chapter mark, the reading it closes on, and the
-     volume position. It also gives the empty area above it a job. */
-  close(reading){
-    const ch = (typeof chapterOf === 'function' && typeof current === 'string')
-      ? chapterOf(current) : null;
-    return `<footer class="close" data-enter aria-hidden="true">
-      <span class="close__rule" data-layer></span>
-      <span class="anno close__a">${esc(reading)}</span>
-      <span class="anno close__b">END OF CHAPTER${ch && ch.ch !== '—' ? ' ' + ch.ch : ''}</span>
-    </footer>`;
-  },
-
   /* ── the stat plate: a character status readout, not a summary card ── */
-  hero(){
+  /* THE COUNT. It is the card's masthead and it is set ON the card,
+     not in a panel beside it: a printed stamp card carries its own
+     title row, and putting the number anywhere else made two objects
+     compete to say one thing. No ring, no ticks, no frame — the
+     numeral at display size against paper is the whole device. */
+  count(){
     const p = Rules.progress();
-    const open = Store.openMeeting();
-    const live = open && !Store.attended(open.id);
     const next = Store.rewards.find(r => r.required === p.next);
     const line = !p.next ? 'Every reward unlocked'
       : p.remaining === 0 ? `${next.name} is ready to claim`
       : `${p.remaining} more until ${next.name.toLowerCase()}`;
-
-    return `<section class="rig ${live ? '' : 'rig--br'}" data-enter aria-labelledby="heroLbl">
-      <span class="rig__ghost" data-layer aria-hidden="true"></span>
-      <div class="panel ${live ? 'panel--live' : ''} hero p-quiet ink-load">
-        <span class="panel__rule" data-layer aria-hidden="true"></span>
-        <span class="tick tick--tl" data-layer aria-hidden="true"></span>
-        <span class="tick tick--br" data-layer aria-hidden="true"></span>
-
-        <div class="hero__top">
-          ${live
-            ? `<span class="emph emph--hot" id="heroLbl"><b>Check-in open</b></span>`
-            : `<p class="kicker" id="heroLbl">Current record</p>`}
-          <span class="hero__state ${p.remaining === 0 ? 'hero__state--ready' : ''}">${
-            !p.next ? 'Complete' : p.remaining === 0 ? 'Reward ready' : 'Reward at ' + p.next}</span>
-        </div>
-
-        <div class="hero__core">
-          <svg class="hero__ring" viewBox="0 0 100 100" aria-hidden="true">
-            <g class="sp">${seal(3)}</g>
-            <g class="sp-r"><polygon points="50,26 74,50 50,74 26,50"/></g>
-          </svg>
-          <span class="hero__num" id="heroNum">${pad(p.total)}</span>
-          <span class="hero__of">/ ${p.next || 30}</span>
-        </div>
-        <p class="hero__label">Stamps acquired</p>
-
-        <!-- The bar is gone. The stamp array immediately below IS the
-             progress — ten slots, filling — so a horizontal fill bar
-             restated it in the one visual form this system has no use
-             for. What remains is the reading: how far to the next
-             seal, set as an annotation rather than a caption. -->
-        <div class="hero__foot">
-          <span class="anno">${esc(line)}</span>
-        </div>
-      </div>
-    </section>`;
+    return `<div class="count">
+      <p class="count__num"><b>${pad(p.filled)}</b><span>/ ${p.span}</span></p>
+      <p class="count__label">stamps on this card</p>
+      <p class="count__line">${esc(line)}</p>
+    </div>`;
   },
 
   /* ── ten struck marks. Empty slots sit at slight angles; a landed
@@ -124,8 +71,13 @@ const C = {
     const cells = Array.from({ length:p.span }, (_, i) => {
       const state = i < p.filled ? 'set' : i === p.filled ? 'next' : '';
       const last = state === 'set' && i === p.filled - 1 ? ' seal--last seal--hero' : '';
-      const tilt = state === 'set' ? '' :
-        `transform:rotate(${[-1.7, 1.2, .6, -1.1, 1.6][i % 5]}deg)`;
+      /* The stamped tilt moved onto the EARNED slots. A slot you have
+         not filled is a blank space on a printed card and sits square;
+         a stamp is pressed by hand and lands a degree or two off. The
+         rotation is carried on the mark rather than on the cell so the
+         card's ruling stays straight. */
+      const tilt = state === 'set'
+        ? `--press-tilt:${[-2.1, 1.4, -1.2, 2.3, -1.7][i % 5]}deg` : '';
 
       const rec = state === 'set' ? chrono[p.floor + i] : null;
       const mtg = rec ? Store.meetings.find(m => m.id === rec.meetingId) : null;
@@ -144,46 +96,22 @@ const C = {
       </li>`;
     }).join('');
 
-    return `<section class="rig rig--bl ink-a" data-enter>
-      <span class="rig__ghost rig__ghost--l" data-layer aria-hidden="true"></span>
-      <div class="panel panel--flat">
-        <ul class="seals" id="seals" aria-label="${p.filled} of ${p.span} stamps in this tier">${cells}</ul>
-      </div>
+    return `<section class="card" data-enter>
+      ${C.count()}
+      <ul class="seals" id="seals" aria-label="${p.filled} of ${p.span} stamps in this tier">${cells}</ul>
     </section>`;
   },
 
-  /* THE ACTION CHAMBER.
-
-     The primary action is not a card — it is a marked-off area of the
-     page with the target inside it. The four corner marks are the
-     signature device of this system (a barrier, a viewfinder, a seal's
-     registration marks) and they are what makes this read as somewhere
-     to aim rather than as another panel. They are decorative spans,
-     not borders, so they can move independently on hover: the chamber
-     locks onto the target when you reach for it. */
+  /* THE ACTION. One button, ink, with the meeting it acts on set
+     underneath it in plain reading. The chamber it replaces was four
+     corner marks, a crosshair, a speed-line field and a TARGET LIVE
+     readout wrapped around a verb — five graphics saying "press me"
+     where ink on paper already says it. */
   strike({ verb, sub, go, live = false, calm = false }){
-    const corners = ['tl','tr','bl','br']
-      .map(c => `<span class="chamber__c chamber__c--${c}" data-layer aria-hidden="true"></span>`).join('');
-    /* The chamber was a hatched rectangle with a title in one corner
-       and a small arrow in the other — 370px of texture with nothing
-       in the middle of it, which is the emptiest element in the app on
-       the screen where the user is standing in a room trying to check
-       in. It is a target now: speed lines running toward a crosshair
-       at the centre, the verb underneath, and the commit set as
-       [ SCAN ] because that is the vocabulary the rest of the page
-       already speaks. */
-    return `<button class="strike ${live ? 'strike--live' : ''} ${calm ? 'strike--calm' : ''}"
-      data-enter data-go="${go}">
-      ${corners}
-      <span class="strike__head" data-layer aria-hidden="true">
-        <span class="anno">${live ? 'TARGET LIVE' : 'TARGET IDLE'}</span></span>
-      <span class="strike__core" aria-hidden="true">
-        <span class="xhair"></span>
-      </span>
-      <span class="strike__body"><span class="strike__verb">${esc(verb)}</span>
-        <span class="strike__sub">${esc(sub)}</span></span>
-      <span class="strike__go" aria-hidden="true">[ SCAN ]</span>
-    </button>`;
+    return `<div class="act" data-enter>
+      <button class="act__btn ${live ? 'act__btn--live' : ''}" data-go="${go}">${esc(verb)}</button>
+      <p class="act__sub">${esc(sub)}</p>
+    </div>`;
   },
 
   /* ── one entry in the meeting log ── */
@@ -192,7 +120,7 @@ const C = {
     const scan = Store.scanFor(m.id);
     const verdict = {
       set:      'Attendance confirmed',
-      open:     '<span class="pip"></span>Check in now',
+      open:     'Check in now',
       miss:     'No record',
       upcoming: 'Scheduled',
     }[state];
@@ -203,9 +131,7 @@ const C = {
     const attr = el === 'button' ? ' data-go="scan"' : '';
 
     return `<div class="rec rec--${state}">
-      <span class="rec__node" aria-hidden="true"></span>
       <${el} class="entry entry--${state}"${attr}>
-      <span class="entry__ghost" data-layer aria-hidden="true">${pad(m.no)}</span>
       <span class="entry__no">GM ${pad(m.no)}</span>
       <span class="entry__verdict">${verdict}</span>
       <span class="entry__meta">${meta}</span>
@@ -257,7 +183,6 @@ const C = {
       `<span class="dslot${i < litCells ? ' dslot--set' : ''}"></span>`).join('');
 
     return `<section class="rig dossier dossier--${state}" data-rank="${rank}" data-enter data-reward="${r.id}">
-      <span class="rig__ghost" data-layer aria-hidden="true"></span>
       <div class="panel tech tech--${state}">
         <span class="dossier__idx idx${open ? ' idx--on' : ''}" aria-hidden="true">${pad(r.required)}</span>
         <div class="dossier__head">
@@ -340,11 +265,10 @@ const Views = {
      member their record is empty when the truth is that we do not
      know — the one failure mode most likely to make someone think
      their attendance was lost. */
-  loadFailure(title, jp){
+  loadFailure(title){
     return `<div class="view">
-      ${C.head('Keystamp', title, jp)}
+      ${C.head(title)}
       <section class="rig" data-enter>
-        <span class="rig__ghost" data-layer aria-hidden="true"></span>
         <div class="panel bpanel">
           <p class="kicker">Could not load</p>
           <p style="margin-top:8px">Keystamp could not reach the club records, so your
@@ -358,92 +282,62 @@ const Views = {
   },
 
   home(){
-    if (Store.failed) return this.loadFailure('Home', '記録');
+    if (Store.failed) return this.loadFailure('Home');
     const open = Store.openMeeting();
     const next = Store.nextMeeting();
     const done = open && Store.attended(open.id);
     const recent = Store.scans.length ? Store.meeting(Store.scans[0].meetingId) : null;
 
+    /* ONE ACTION. The wording says which meeting it acts on rather
+       than describing the mechanism, so the button and the line under
+       it are not two statements of the same fact. */
     let action;
     if (open && !done)
-      action = C.strike({ verb:'Scan code', sub:`GM ${pad(open.no)} · Wed ${fmtDay(open.date)} · MPR`, go:'scan', live:true });
+      action = C.strike({ verb:`Check in to GM ${pad(open.no)}`,
+                          sub:`Wed ${fmtDay(open.date)} · ${esc(open.time)} · ${esc(open.place)}`,
+                          go:'scan', live:true });
     else if (open && done)
-      action = C.strike({ verb:'Stamped', sub:`GM ${pad(open.no)} confirmed`, go:'record', calm:true });
+      action = C.strike({ verb:'View your record',
+                          sub:`GM ${pad(open.no)} stamped`, go:'record' });
     else if (next)
-      action = C.strike({ verb:'Scan code', sub:`Opens at GM ${pad(next.no)} · ${fmtDate(next.date)}`,
-                          go:'scan', calm:true });
+      action = C.strike({ verb:'Scan a code',
+                          sub:`Check-in opens at GM ${pad(next.no)} · ${fmtDate(next.date)}`,
+                          go:'scan' });
     else
-      action = C.strike({ verb:'Scan code', sub:'No general meeting is taking check-ins', go:'scan', calm:true });
+      action = C.strike({ verb:'Scan a code',
+                          sub:'No meeting is taking check-ins right now', go:'scan' });
 
-    return `<div class="view">
-      ${C.bleed('STAMP', '', 'sfxw sfxw--r')}
-      ${ASSETS.homeHeader ? `<div class="banner" data-enter>
-        <img src="${ASSETS.homeHeader}" alt="">
-      </div>` : ''}
-      <!-- THE NAMEPLATE. No frame. The name is bled off the left edge
-           of the canvas and sits ON the register rule rather than
-           inside a box, so it interrupts the sheet instead of being
-           placed on it. The state line and the two metadata marks are
-           set in the margin the name leaves. -->
-      <header class="head head--bare nameplate" data-enter
-              style="--name-len:${Math.max(6, memberName().length + 1)}">
-        <span class="nameplate__rule" data-layer aria-hidden="true"></span>
-        <div class="head__stack">
-          <h1 class="title title--name">${esc(memberName())}<em>.</em></h1>
-        </div>
-        <div class="nameplate__meta">
-          <span class="anno${open && !done ? ' anno--seal' : ''}">SYS.${
-            open && !done ? 'ACTIVE' : 'STANDBY'}</span>
-          ${(() => { const p = Rules.progress(); const o = Store.openMeeting();
-       const line = o && !Store.attended(o.id) ? 'The room is already filling up.'
-         : p.remaining === 0 ? 'That was the last one.'
-         : p.remaining === 1 ? 'One more. Just one.'
-         : `${p.remaining} more before it means anything.`;
-       return `<p class="nameplate__line">${line}</p>`; })()}
-        </div>
-        <span class="rune" data-layer aria-hidden="true">VOL.01 // CH.01</span>
-        <span class="jp" aria-hidden="true">出席</span>
-      </header>
-
-      ${C.hero()}
+    /* THE CARD IS THE PAGE. Home is one object — the count set on the
+       card that carries it — one action, and a short reading of what
+       just happened. The nameplate that used to open the screen was a
+       display-size account ID, a fabricated SYS status and a line of
+       flavour copy; a member's name belongs on their own page, and the
+       other two were never information. */
+    return `<div class="view view--home">
       ${C.sealGrid()}
       ${action}
 
-      <div class="duo">
-      <section class="rig rig--tr" data-enter>
-        <span class="rig__ghost" data-layer aria-hidden="true"></span>
-        <div class="panel">
-          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:var(--s3)">
-            <h2 class="h2">${open ? 'Happening now' : 'Next meeting'}</h2>
-            <button class="section-link" data-go="record">Full record</button>
-          </div>
-          <div class="log" style="margin-top:var(--s4)">
-            ${open ? C.entry(open) : next ? C.entry(next)
-              : `<p class="muted" style="font-size:13.5px">Nothing scheduled yet.</p>`}
-          </div>
+      <section class="brief" data-enter>
+        <div class="brief__head">
+          <h2 class="h2">${open ? 'Happening now' : 'Next meeting'}</h2>
+          <button class="section-link" data-go="record">Full record</button>
         </div>
+        ${open ? C.entry(open) : next ? C.entry(next)
+          : `<p class="muted">Nothing scheduled yet.</p>`}
+        ${recent ? `<h2 class="h2 brief__h2">Last stamped</h2>
+          ${C.entry(recent, { link:false })}` : ''}
       </section>
-
-      ${recent ? `<section class="rig rig--bl" data-enter>
-        <span class="rig__ghost rig__ghost--l" data-layer aria-hidden="true"></span>
-        <div class="panel panel--flat">
-          <h2 class="h2">Last stamped</h2>
-          <div class="log" style="margin-top:var(--s4)">${C.entry(recent, { link:false })}</div>
-        </div>
-      </section>` : ''}
-      </div>
     </div>`;
   },
 
   /* the attendance record: every general meeting, in order, with what happened */
   record(){
-    if (Store.failed) return this.loadFailure('Record', '記録');
+    if (Store.failed) return this.loadFailure('Record');
     const held = Store.heldMeetings();
     const upcoming = Store.meetings.filter(m => m.upcoming).reverse();
 
     return `<div class="view">
-      ${C.bleed('LOG', '', 'sfxw sfxw--l')}
-      ${C.head('Attendance', 'Record', '記録')}
+      ${C.head('Record')}
 
       ${held.length ? `<section data-enter class="stack-lg">
         <div class="log">${held.map(m => C.entry(m)).join('')}</div>
@@ -465,28 +359,22 @@ const Views = {
         </div>
         <div class="log">${upcoming.map(m => C.entry(m)).join('')}</div>
       </section>` : ''}
-      ${C.close(held.length
-        ? `${held.filter(m => Store.attended(m.id)).length} OF ${held.length} HELD`
-        : 'NOTHING PRESSED YET')}
     </div>`;
   },
 
   rewards(){
-    if (Store.failed) return this.loadFailure('Rewards', '解放');
+    if (Store.failed) return this.loadFailure('Rewards');
     return `<div class="view">
-      ${C.bleed('UNSEAL', '', 'sfxw sfxw--r')}
-      ${C.head('Milestones', 'Rewards', '解放')}
+      ${C.head('Rewards')}
       <div class="stack-panels">
         ${Store.rewards.map(C.tech).join('')}
       </div>
-      ${C.close(`${Store.totalStamps()} STAMPS ON RECORD`)}
     </div>`;
   },
 
   scan(){
     return `<div class="view">
-      ${C.bleed('LOCK', '', 'sfxw sfxw--l sfxw--tilt')}
-      ${C.head('Check in', 'Scan code', '読取')}
+      ${C.head('Scan code')}
 
       <!-- THE RIG. The viewfinder is not a component sitting on a
            page; it is an instrument mounted in a frame, and the frame
@@ -554,21 +442,19 @@ const Views = {
   /* Each board route is a chapter of the same spread. The internal chip
      row is gone: the nav rail already says where you are, and two levels
      of tabs for four screens was one level too many. */
-  boardSpread(bleed, kicker, title, jp){
+  boardSpread(title){
     return `<div class="view">
-      ${C.bleed(bleed.toUpperCase(), '', 'sfxw sfxw--r')}
-      ${C.head(kicker, title, jp)}
+      ${C.head(title)}
       <section class="rig" data-enter style="margin-top:var(--gut)">
-        <span class="rig__ghost" data-layer aria-hidden="true"></span>
         <div id="boardPane">${BoardUI.pane()}</div>
       </section>
     </div>`;
   },
 
-  board(){     BoardUI.tab = 'club';     return this.boardSpread('Tools',  'Key Club', 'Club Tools', '部活'); },
-  bmeet(){     BoardUI.tab = 'meetings'; return this.boardSpread('Meets',  'Key Club', 'Meetings',   '例会'); },
-  bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Code',   'Key Club', 'Check-In',   '受付'); },
-  bmembers(){  BoardUI.tab = 'progress'; return this.boardSpread('Roster', 'Key Club', 'Members',    '会員'); },
+  board(){     BoardUI.tab = 'club';     return this.boardSpread('Club Tools'); },
+  bmeet(){     BoardUI.tab = 'meetings'; return this.boardSpread('Meetings'); },
+  bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Check-In'); },
+  bmembers(){  BoardUI.tab = 'progress'; return this.boardSpread('Members'); },
 
   /* ── MEMBER — the credential page (§38) ───────────────────────────
      This was the one spread that did not belong to the system. It
@@ -583,20 +469,17 @@ const Views = {
      the milestones reduced to a register — the Rewards chapter holds
      the full treatment, this one holds the ledger of it. */
   profile(){
-    if (Store.failed) return this.loadFailure('Member', '会員');
+    if (Store.failed) return this.loadFailure('Member');
     const held = Store.heldMeetings();
     const attended = held.filter(m => Store.attended(m.id)).length;
     const p = Rules.progress();
     const total = Store.totalStamps();
 
     return `<div class="view">
-      ${C.bleed('IDENT', '', 'sfxw sfxw--r')}
-      ${C.head(Store.isBoard ? 'Board' : 'Member', esc(memberName()), '会員')}
+      ${C.head(esc(memberName()))}
 
       <section class="rig stack-lg" data-enter>
-        <span class="rig__ghost" data-layer aria-hidden="true"></span>
         <div class="panel who" data-rank="quiet">
-          <span class="panel__rule" data-layer aria-hidden="true"></span>
           ${ASSETS.schoolSeal
             ? `<img class="who__seal who__seal--img" src="${ASSETS.schoolSeal}" alt="" aria-hidden="true">`
             : `<svg class="who__seal" viewBox="0 0 100 100" aria-hidden="true">${seal(4)}</svg>`}
@@ -620,7 +503,6 @@ const Views = {
       </div>
 
       <section class="rig rig--bl stack-xl" data-enter>
-        <span class="rig__ghost rig__ghost--l" data-layer aria-hidden="true"></span>
         <div class="panel panel--flat" data-rank="quiet">
           <h2 class="h2">Milestones</h2>
           <ol class="ledger">
@@ -659,7 +541,6 @@ const Views = {
           <button class="btn btn--out" data-signout type="button">Sign out</button>
         </div>
       </section>
-      ${C.close(`${Store.attendanceRate()}% ATTENDANCE`)}
     </div>`;
   },
 
@@ -687,7 +568,6 @@ const Views = {
        behind the card where it belongs. */
     return `<div class="view view--auth">
       <span class="rake" aria-hidden="true"></span>
-      ${C.bleed(up ? 'JOIN' : 'ENTER', '', 'sfxw sfxw--r')}
 
       <div class="authcard" data-enter>
         <header class="authcard__brand">

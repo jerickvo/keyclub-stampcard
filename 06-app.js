@@ -117,10 +117,9 @@ function hashRoute(){
 function paintBrand(){
   const el = $('#railBrand');
   if (!el) return;
-  const n = navFor().length;
-  el.innerHTML = wordmark() +
-    `<p class="rail__vol" style="margin-top:9px">Vol. 01 · ${
-      n === 4 ? 'Four' : 'Five'} chapters</p>`;
+  /* "Vol. 01 · five chapters" is gone. It was magazine costume on a
+     navigation rail, and it counted the tabs sitting directly under it. */
+  el.innerHTML = wordmark();
 }
 
 function paintNav(){
@@ -130,14 +129,14 @@ function paintNav(){
 
   navFor().forEach(n => {
     const cur = current === n.id ? ' aria-current="page"' : '';
-    /* no icons: an icon tab bar is an OS convention and reads as an app
-       no matter how it is styled. Chapter numerals instead. */
+    /* The chapter numeral above each label is gone. It numbered five
+       words that already read fine, and numbering navigation is a
+       graphic treatment standing in for a hierarchy the labels do not
+       need. The desktop rail keeps its icon; the tab bar stays text. */
     tabs.insertAdjacentHTML('beforeend',
-      `<button class="tab" data-go="${n.id}"${cur}>
-         <span class="tab__no">${n.ch}</span><span>${n.label}</span></button>`);
+      `<button class="tab" data-go="${n.id}"${cur}><span>${n.label}</span></button>`);
     rail.insertAdjacentHTML('beforeend',
-      `<button class="rail__link" data-go="${n.id}"${cur}>
-         <span class="rail__no">${n.ch}</span>${ICON[n.icon]}<span>${n.label}</span></button>`);
+      `<button class="rail__link" data-go="${n.id}"${cur}>${ICON[n.icon]}<span>${n.label}</span></button>`);
   });
 
   requestAnimationFrame(placeIndicators);
@@ -171,14 +170,9 @@ async function go(id){
   /* One surface for the whole app: warm paper. Black is manga ink --
      spotted blacks, panel frames, active states, the scanner border --
      and is never used as a page-level theme. */
-  const ch = chapterOf(id);
-  let pn = $('#pageno');
-  if (!pn){
-    pn = document.createElement('div');
-    pn.id = 'pageno'; pn.className = 'pageno'; pn.setAttribute('aria-hidden','true');
-    document.body.appendChild(pn);
-  }
-  pn.textContent = `CH. ${ch.ch} / ${pad(navFor().length)}`;
+  /* The `CH. 01 / 05` rune that used to run up the right edge is gone
+     with the rest of the volume-and-chapter costume. It numbered the
+     five tabs sitting in the rail beside it. */
   view.innerHTML = Views[id]();
   paintNav();
   try { scrollTo({ top:0, behavior:Motion.off ? 'auto' : 'smooth' }); } catch (_) { scrollTo(0, 0); }
@@ -623,8 +617,8 @@ function paintIdentity(){
      in go() and the role check inside board-data are the enforcement. */
   const boardBtn = '';
   foot.innerHTML = Store.signedIn
-    ? `<p class="kicker">Signed in · ${Store.isBoard ? 'Board' : 'Member'}</p>
-       <p style="font-family:var(--f-display);font-size:15px;margin-top:6px;text-transform:uppercase">${esc(Store.user.name)}</p>
+    ? `<p class="rail__who">${esc(Store.user.name)}</p>
+       <p class="muted rail__role">${Store.isBoard ? 'Board' : 'Member'}</p>
        ${boardBtn}
        <button class="link" data-signout style="margin-top:10px">Sign out</button>`
     : `<p class="kicker">Not signed in</p>
