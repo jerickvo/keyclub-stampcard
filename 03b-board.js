@@ -131,7 +131,7 @@ const BoardUI = {
           <div><dt>Members checked in</dt><dd>${esc(String(o.participating_members ?? 0))}</dd></div>
           <div><dt>Average per meeting</dt><dd>${
             o.average_attendance === null || o.average_attendance === undefined
-              ? '—' : esc(String(o.average_attendance))}</dd></div>
+              ? '-' : esc(String(o.average_attendance))}</dd></div>
         </dl>
       </section>
     </div>`;
@@ -139,7 +139,7 @@ const BoardUI = {
 
   stat(value, label){
     return `<div class="bstat">
-      <b>${value === null || value === undefined ? '—' : esc(String(value))}</b>
+      <b>${value === null || value === undefined ? '-' : esc(String(value))}</b>
       <span>${esc(label)}</span>
     </div>`;
   },
@@ -330,7 +330,7 @@ const BoardUI = {
       ${d.attendance.length
         ? `<ul class="blist">${d.attendance.map(a => `
             <li class="brow" ${a.meeting_id ? `data-bmeeting="${esc(a.meeting_id)}" tabindex="0" role="button"` : ''}>
-              <span class="brow__no">GM ${a.meeting_number ? pad(a.meeting_number) : '—'}</span>
+              <span class="brow__no">GM ${a.meeting_number ? pad(a.meeting_number) : '-'}</span>
               <span class="brow__mid"><b>${esc(fmtDay(a.meeting_date))}</b>
                 <span class="muted">${esc(a.location || 'MPR')} / checked in ${esc(fmtTime(a.checked_in_at))}</span></span>
             </li>`).join('')}</ul>`
@@ -408,7 +408,7 @@ const BoardUI = {
              ink border across a QR is a scan failure, not a flourish -->
         <div class="qrpanel__code qrpanel__code--big" id="qrBox"></div>
         <div class="bcount"><span class="kicker">Checked in</span>
-          <b id="attCount">—</b></div>
+          <b id="attCount">-</b></div>
         <button class="btn" data-bend="${esc(sel.id)}" style="margin-top:var(--s4)">Close check-in</button>
       ` : `
         <p class="muted" style="margin-top:var(--s4)">Check-in is closed for this meeting.</p>

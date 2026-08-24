@@ -335,7 +335,7 @@ const Views = {
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">Record</h1>
         <p class="rechead__note">Every general meeting, in order. A line is written
-          the moment the server accepts a scan — nothing here is entered by hand.</p>
+          the moment the server accepts a scan; nothing here is entered by hand.</p>
       </header>
 
       ${held.length ? `<div class="recbody">
@@ -375,7 +375,7 @@ const Views = {
     return `<div class="view view--rewards">
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">Rewards</h1>
-        <p class="rechead__note">Stamps accumulate across the whole year — nothing
+        <p class="rechead__note">Stamps accumulate across the whole year; nothing
           resets when a card fills. Every rung below is measured from the same count.</p>
       </header>
 
@@ -422,7 +422,7 @@ const Views = {
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">Scan</h1>
         <p class="rechead__note">Point the camera at the seal on the projector.
-          A stamp is written by the server, not by this screen — nothing is
+          A stamp is written by the server, not by this screen; nothing is
           recorded until it answers.</p>
       </header>
 

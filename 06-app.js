@@ -35,7 +35,7 @@ const BOARD_NAV = [
 const NAV = MEMBER_NAV;                       /* kept: existing callers */
 const navFor = () => (Store.isBoard ? BOARD_NAV : MEMBER_NAV);
 const chapterOf = id =>
-  BOARD_NAV.find(n => n.id === id) || MEMBER_NAV.find(n => n.id === id) || { ch:'—', title:'' };
+  BOARD_NAV.find(n => n.id === id) || MEMBER_NAV.find(n => n.id === id) || { ch:'-', title:'' };
 
 const ROUTES = MEMBER_NAV.map(n => n.id)
   .concat(BOARD_NAV.map(n => n.id), 'auth');

@@ -320,18 +320,14 @@ async function submitSeal(raw, fromCamera){
    the code, and the retry is explicit — the frame says it is looking
    again rather than leaving the member to guess whether it is still
    on. The human sentence is not lost; it is in the toast beside it. */
-const REJECT_CODE = {
-  INVALID_TOKEN:'REJ.FORMAT',      EXPIRED_TOKEN:'REJ.EXPIRED',
-  MEETING_NOT_FOUND:'REJ.NOMEET',  MEETING_NOT_ACTIVE:'REJ.CLOSED',
-  ATTENDANCE_CLOSED:'REJ.CLOSED',  WRONG_DAY:'REJ.DATE',
-  ALREADY_CHECKED_IN:'REJ.DUP',    PROFILE_NOT_READY:'REJ.ACCT',
-  NOT_AUTHENTICATED:'REJ.AUTH',    NOT_AUTHORIZED:'REJ.AUTH',
-  NETWORK_ERROR:'ERR.NET',         VERIFIER_UNAVAILABLE:'ERR.SVC',
-  SERVER_ERROR:'ERR.SRV',          NO_BACKEND:'ERR.CFG',
-};
-
 function rejectVisual(code){
-  Scanner.setState('bad', REJECT_CODE[code] || 'REJ.CODE');
+  /* The frame used to report a refusal as an invented fault code —
+     REJ.FORMAT, REJ.EXPIRED, ERR.SVC — a thirteen-entry table naming a
+     system that does not exist. The reason for the refusal is already
+     written in plain words in the toast beside the frame, so the frame
+     says the short version of the same thing rather than a second,
+     made-up one. */
+  Scanner.setState('bad', scanMessage(code)[0]);
   FX.scanReject();
   setTimeout(() => {
     if (!$('#reticle')) return;
