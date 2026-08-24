@@ -3707,6 +3707,99 @@ button,input,select,textarea{font-family:inherit}
    band's own top rule rather than a section heading above it */
 .bover .standing-band{border-top-width:var(--edge-panel)}
 
+
+/* ══════════════════════════════════════════════════════════════════
+   MANGA PRIMITIVES
+
+   Building blocks, not a template. No page uses all of them, and a page
+   that reads better with one panel than two gets one.
+
+   The set that used to live here — .panel--bleed, .panel--cut,
+   .tone--coarse, .tick--tl — was styled and never emitted by anything.
+   These are written from what the pages actually need.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── TONE ─────────────────────────────────────────────────────────
+   The page tone was a .5px dot at 8.5% opacity on a 10px grid, which
+   at arm's length is a flat grey wash and at any distance is nothing
+   at all. Screentone in print is a visible dot: you can see the
+   halftone. Three densities, all readable, used as a GROUND behind a
+   panel rather than as wallpaper behind everything. */
+.tone-30,.tone-50,.tone-70{position:relative;isolation:isolate}
+.tone-30{background-image:radial-gradient(var(--ink) .9px,transparent 1px);
+  background-size:7px 7px}
+.tone-50{background-image:radial-gradient(var(--ink) 1.25px,transparent 1.35px);
+  background-size:6px 6px}
+.tone-70{background-image:radial-gradient(var(--ink) 1.7px,transparent 1.8px);
+  background-size:5px 5px}
+/* tone laid at 45° reads as a different material from tone laid square,
+   which is how a printed page distinguishes two grounds without a rule */
+.tone-diag{background-image:repeating-linear-gradient(45deg,
+  var(--ink) 0 1.5px,transparent 1.5px 6px)}
+
+/* ── BLEED ────────────────────────────────────────────────────────
+   A panel that runs off the sheet. main#view carries the page gutter as
+   padding, so a bleed is that padding cancelled on one side — the
+   element reaches the true viewport edge and stops. html/body already
+   carry overflow-x:clip, so this can never widen the document; the
+   17-viewport audit stays honest. */
+.bleed-r{margin-right:calc(var(--gutter) * -1);border-right:0}
+.bleed-l{margin-left:calc(var(--gutter) * -1);border-left:0}
+@media(min-width:1024px){
+  /* past the rail the page is centred inside --page-max, so the gutter
+     is no longer what stands between a panel and the edge. Bleeding to
+     the true edge there would tear the composition off the measure. */
+  .bleed-r,.bleed-l{margin-right:0;margin-left:0;
+    border-right:var(--edge-panel) solid var(--ink);
+    border-left:var(--edge-panel) solid var(--ink)}
+  .bleed-r{border-right:0;margin-right:calc(var(--gutter) * -1)}
+  .bleed-l{border-left:0;margin-left:calc(var(--gutter) * -1)}
+}
+
+/* ── INK ──────────────────────────────────────────────────────────
+   The black mass. Everything inside knocks out to paper. */
+.ink{background:var(--ink);color:var(--paper);
+  border:var(--edge-panel) solid var(--ink)}
+.ink .muted,.ink .tier__desc,.ink .lrow__when{color:var(--tint)}
+/* the offset behind a mass reads as a second printed pass, and it is
+   what makes an ink panel sit ON the sheet rather than in it */
+.ink-cast{box-shadow:var(--s2) var(--s2) 0 var(--tone)}
+
+/* ── CROP ─────────────────────────────────────────────────────────
+   A frame that clips whatever is inside it. Artwork is placed larger
+   than the frame and deliberately cut by its edge; this is the single
+   technique that separates a manga panel from a picture in a box. */
+.crop{position:relative;overflow:hidden;isolation:isolate}
+.crop > .crop__art{position:absolute;pointer-events:none;
+  fill:var(--ink);z-index:0}
+.crop > :not(.crop__art){position:relative;z-index:1}
+
+/* ── GUTTER ───────────────────────────────────────────────────────
+   The white channel between two framed panels. Manga reads through the
+   gutter, so it has to be wide enough to be a channel and not a hairline
+   gap. This is a grid gap by another name, but naming it keeps panel
+   spacing from drifting into general margin. */
+.gutter-row{display:grid;gap:var(--s4)}
+@media(min-width:900px){
+  .gutter-row{gap:clamp(20px,2.6vw,40px)}
+}
+
+/* ── GRAPHIC LABEL ────────────────────────────────────────────────
+   A heading that is a graphic object, not a line of text: the header
+   voice knocked out of an ink strip. Used where a section has to
+   announce itself rather than merely be titled. */
+.glabel{display:inline-block;
+  padding:.14em var(--s3) .2em;
+  background:var(--ink);color:var(--paper);
+  font-family:var(--f-head);font-size:var(--t-sub);
+  line-height:1.05;white-space:nowrap}
+
+/* ── SECTION MARKER ───────────────────────────────────────────────
+   The quieter division: rule, then the label sitting on it. */
+.smark{margin:0 0 var(--s2);padding-bottom:var(--s2);
+  border-bottom:var(--edge-panel) solid var(--ink);
+  font-family:var(--f-head);font-size:var(--t-head);line-height:1.02}
+
 </style>
 </head>
 <body>
