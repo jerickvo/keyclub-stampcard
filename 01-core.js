@@ -156,11 +156,6 @@ const ICON = {
   still:  SVG('<path d="M4 12h16"/><path d="M4 8v8M20 8v8"/>'),
 };
 
-/* A bracketed monospace token — the fault codes on the scanner's dead
-   ends. `[ERR.CAM]` says the same thing a padlock glyph says and says
-   it in the page's own voice, which is words in brackets, not pictures. */
-const codeMark = (s) => `<span class="codemark" aria-hidden="true">${s}</span>`;
-
 /* ══════════════════════════════════════════════════════════════════
    THREE MARKS, THREE JOBS
 
@@ -461,7 +456,15 @@ const Store = {
   attended(id){ return this.scans.some(s => s.meetingId === id); },
   scanFor(id){ return this.scans.find(s => s.meetingId === id) || null; },
   openMeeting(){ return this.meetings.find(m => m.open) || null; },
-  nextMeeting(){ return [...this.meetings].reverse().find(m => m.upcoming) || null; },
+  /* The soonest meeting still ahead. This used to reverse the array and
+     take the first upcoming one, which is only "next" if the source
+     happens to return meetings newest-first; against an ascending list
+     it returned the furthest meeting on the calendar. Sorted by date,
+     it is right whatever order the rows arrive in. */
+  nextMeeting(){
+    return [...this.meetings].filter(m => m.upcoming)
+      .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)[0] || null;
+  },
   pastMeetings(){ return this.meetings.filter(m => !m.upcoming && !m.open); },
   heldMeetings(){ return this.meetings.filter(m => !m.upcoming); },
   rewardsUnlocked(){ const t = this.totalStamps(); return this.rewards.filter(r => t >= r.required).length; },

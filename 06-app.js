@@ -35,7 +35,7 @@ const BOARD_NAV = [
 const NAV = MEMBER_NAV;                       /* kept: existing callers */
 const navFor = () => (Store.isBoard ? BOARD_NAV : MEMBER_NAV);
 const chapterOf = id =>
-  BOARD_NAV.find(n => n.id === id) || MEMBER_NAV.find(n => n.id === id) || { ch:'—', title:'' };
+  BOARD_NAV.find(n => n.id === id) || MEMBER_NAV.find(n => n.id === id) || { ch:'-', title:'' };
 
 const ROUTES = MEMBER_NAV.map(n => n.id)
   .concat(BOARD_NAV.map(n => n.id), 'auth');
@@ -200,16 +200,16 @@ function playViewIntro(id){
   }
 
   if (id === 'rewards'){
-    /* the meter is gone with the bar: a dossier's progress is its slot
-       array, and the cells strike in rather than filling */
-    $$('.dslots').forEach((el, i) => FX.slotStrike(el, 200 + i * 90));
-    /* the unlock plays once per reward per session, not on every visit */
-    $$('[data-reward]').forEach(rig => {
-      if (!rig.querySelector('.tech--ready')) return;
-      const rid = rig.dataset.reward;
+    /* the unlock plays once per reward per session, not on every visit.
+       The slot-array strike went with the arrays: each tier used to
+       redraw the whole card as its own progress bar, and the page shows
+       one scale for all three now. */
+    $$('[data-reward]').forEach(row => {
+      if (!row.classList.contains('tier--ready')) return;
+      const rid = row.dataset.reward;
       if (seenUnlocked.has(rid)) return;
       seenUnlocked.add(rid);
-      setTimeout(() => FX.rewardUnlock(rig), 420);
+      setTimeout(() => FX.rewardUnlock(row), 420);
     });
   }
 
@@ -351,7 +351,7 @@ document.addEventListener('submit', async e => {
   try {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
-    FX.impactFrame({ word:up ? 'Joined' : 'Welcome', jp:'記録', angle:-18 });
+    FX.impactFrame({ word:up ? 'Joined' : 'Welcome', angle:-18 });
     go('home');
   } catch (err){
     authErr(err && err.message ? err.message : 'Something went wrong. Try again.');
@@ -476,7 +476,7 @@ document.addEventListener('click', e => {
   const claim = e.target.closest('[data-claim]');
   if (claim){
     Store.claimReward(claim.dataset.claim).then(r => {
-      FX.impactFrame({ word:'Claimed', jp:'完了', angle:-24 });
+      FX.impactFrame({ word:'Claimed', angle:-24 });
       setTimeout(() => {
         toast({ key:'claim', title:`${r.name} claimed`,
                 detail:'Show this screen to a board member to pick it up.' });

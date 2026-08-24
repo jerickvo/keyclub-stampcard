@@ -95,13 +95,16 @@
      34px floor on titles applied below 400px — sizes chosen for a
      phone-sized *panel* rather than a phone-sized *column*, which is
      what made the narrow layouts read as an oversized mobile page. */
-  --t-title:clamp(30px,7.2vw,92px);
-  --t-hero:clamp(72px,20vw,204px);
-  --t-verb:clamp(21px,3.2vw,38px);
-  --t-name:clamp(16px,1.4vw,21px);
-  --t-body:clamp(14.5px,.32vw + 13.5px,17px);
-  --t-caption:clamp(10px,.75vw,12px);
-  --t-meta:clamp(12px,.85vw,14px);
+  /* Sized for comic lettering, which needs more room than a grotesque:
+     CC Wild Words at 13px is cramped and hard to read, 16px is the
+     floor for comfort. The whole reading scale moved up accordingly. */
+  --t-title:clamp(38px,9vw,104px);      /* JJK display, page titles     */
+  --t-hero:clamp(84px,22vw,232px);      /* JJK display, the count       */
+  --t-verb:clamp(24px,4.2vw,46px);      /* JJK display, action words    */
+  --t-name:clamp(17px,1.5vw,23px);
+  --t-body:clamp(16px,.3vw + 15.2px,18px);
+  --t-caption:clamp(12px,.8vw,14px);
+  --t-meta:clamp(13px,.9vw,15px);
   --tap:44px;            /* minimum touch target */
   --tabs-h:56px;         /* the bottom bar owns exactly this much */
 
@@ -110,7 +113,6 @@
   --f-label:'Oswald',var(--f-body);
   --f-accent:'CC Wild Words Roman','CCWildWords','Comic Neue',cursive;
   --f-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
-  --f-jp:'Noto Sans JP',var(--f-body);
 
   /* The step scale. s1-s4 are detail spacing and stay fixed — 4px is
      4px on every device. From s5 up the value is structural (panel
@@ -210,19 +212,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   gap:var(--gut-tier) var(--gut);align-content:start;position:relative}
 .view > *{grid-column:1/-1;min-width:0}
 
-/* every other screen alternates spans so tiers stay unequal without
-   knowing what is in them. Record only ever has two sections — the
-   held log and, sometimes, the scheduled log below it — and they are
-   wildly different heights (the held log can run many screens tall).
-   Placing them 4-cols/2-cols side by side (the old rule) put the
-   short "Scheduled" section into the grid's leftover top-row space
-   beside the tall log instead of a fresh row under it, squeezing its
-   cards down to ~80px wide and wrapping/overlapping their own text.
-   Record's sections now always take the full row; the alternating
-   split still applies to Rewards. */
-[data-screen="rewards"] .view > section:nth-of-type(3n+1){grid-column:1/5}
-[data-screen="rewards"] .view > section:nth-of-type(3n+2){grid-column:5/-1}
-
 /* ══════════════════ PANELS ══════════════════ */
 /* A `.rig` is a panel and the registration ghost printed behind it. The
    ghost is `inset:0` on the rig, so the rig's box and the panel's box
@@ -255,24 +244,30 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .panel--bleed{margin-right:calc(var(--bleed) * -1);border-right:0}
 
 /* ══════════════════ LETTERING ══════════════════ */
-/* Sentence case is the voice. Two thirds of every screen used to be
-   uppercase and letterspaced, which is volume standing in for order:
-   when everything shouts, the eye has nothing to rank. Caps survive in
-   exactly one role — .kicker, a small section label. */
-.kicker{font:600 11px/1 var(--f-body);letter-spacing:.14em;
-  text-transform:uppercase;color:var(--ink-2)}
+/* ── CASE, AND WHY THERE IS ALMOST NO text-transform HERE ──────────
+   CC Wild Words is a unicase comic-lettering face: its lowercase and
+   uppercase are both drawn as capitals, at slightly different widths.
+   Body copy therefore ALREADY reads as caps without being transformed,
+   and adding text-transform on top only throws away the narrower
+   lowercase forms. So markup stays sentence case — correct for screen
+   readers, and correct if the face ever fails to load — and the font
+   does the rest.
+
+   The display face is the opposite case: Jujutsu Kaisen draws a
+   diaeresis on lowercase e/o/u, so "Record" renders as "Rëcörd". Its
+   uppercase is clean and is where all its drama lives, so display type
+   is the one place uppercase is applied deliberately. */
+.kicker{font:400 13px/1 var(--f-body);letter-spacing:.1em;color:var(--ink-2)}
 .kicker--bone{color:var(--ink)}
-/* Dela Gothic One ships one weight — it is already blocky and bold by
-   design, so it needs no weight or width axis pushed onto it. */
+/* The display face, always uppercase — see the note above. */
 .title{font-family:var(--f-display);font-size:var(--t-title);
-  line-height:.94;letter-spacing:-.01em;
+  text-transform:uppercase;
+  line-height:.9;letter-spacing:.005em;
   /* last-resort guard: a single word longer than the panel breaks rather
      than escaping it. Normal titles never reach this. */
   overflow-wrap:break-word}
 .title--name em{font-style:normal}
 .h2{font:600 15px/1.25 var(--f-body);letter-spacing:0}
-.jp{font-family:var(--f-jp);font-size:12px;letter-spacing:.5em;color:var(--tone);
-  writing-mode:vertical-rl}
 
 /* ══════════════════ THE EDGE RUNE ══════════════════
    Microscopic vertical monospace running up the right edge of a
@@ -283,33 +278,8 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
    Hidden below the laptop tier — a phone has no spare edge to spend,
    and a rune squeezed against a 320px viewport is decoration rather
    than framing. */
-.rune{display:none;position:absolute;
-  /* Its own column in the right lane, INSIDE the one already reserved
-     for the Japanese mark — two parallel vertical rules, not one mark
-     fighting another. `.jp` is anchored to the top of that lane, the
-     rune is centred in it, so the two can never meet however tall the
-     container grows. */
-  right:calc(var(--space-panel) + 17px);
-  top:50%;transform:translateY(-50%);
-  writing-mode:vertical-rl;
-  /* Sized from the viewport, not fixed: at 1024 the nameplate is only
-     about 130px tall and a 9.5px rune with this tracking overran it. */
-  font:500 clamp(8px,.62vw,10px)/1 var(--f-mono);letter-spacing:.24em;
-  /* Muted ink, not screentone. At 8-10px a --v3 rune is a smudge you
-     have to hunt for; --ink-2 is quiet without being illegible, which
-     is the whole point of a mark you are meant to lean in and read. */
-  text-transform:uppercase;color:var(--ink-2);
-  white-space:nowrap;pointer-events:none;user-select:none}
-@media(min-width:1024px){
-  .rune{display:block}
-}
-.muted{color:var(--ink-2)}
 
-.head{display:flex;align-items:flex-start;justify-content:space-between;
-  gap:var(--s4);padding:var(--s4) var(--s5);border:var(--rule) solid var(--ink);
-  background:var(--paper);position:relative;overflow:hidden}
-.head--bare{align-items:center}
-.head__stack{position:relative}
+.muted{color:var(--ink-2)}
 
 /* ══════════════════ HERO ══════════════════ */
 
@@ -347,7 +317,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   min-height:var(--tap);padding:10px var(--s4);
   border:var(--rule-hair) solid var(--ink);background:var(--paper);color:var(--ink);
   cursor:pointer;border-radius:0;font:500 11px/1 var(--f-body);
-  letter-spacing:.16em;text-transform:uppercase;position:relative;overflow:hidden}
+  letter-spacing:.16em;position:relative;overflow:hidden}
 .btn--hot{background:var(--ink);color:var(--paper)}
 /* the strike: the control's whole face inverts for two frames */
 .btn__strike{position:absolute;inset:0;background:currentColor;
@@ -364,7 +334,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 
 .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;
   border:var(--rule-hair) solid var(--ink);font:500 9.5px/1 var(--f-mono);
-  letter-spacing:.16em;text-transform:uppercase}
+  letter-spacing:.16em;}
 .chip--hot{background:var(--ink);color:var(--paper)}
 .chip--set{border-style:dashed;color:var(--tone)}
 
@@ -404,166 +374,20 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .bubble p,.toast p{font-family:var(--f-mono);font-size:12.5px;line-height:1.45;
   letter-spacing:.02em;text-align:left;color:var(--ink-2)}
 .toast strong{display:block;font-family:var(--f-label);font-size:13px;
-  letter-spacing:.14em;text-transform:uppercase;margin-bottom:5px;color:var(--ink)}
+  letter-spacing:.14em;margin-bottom:5px;color:var(--ink)}
 
 /* ══════════════════ RECORD / LOG ══════════════════ */
 .log{display:flex;flex-direction:column}
-.entry__no{font:500 11px/1 var(--f-mono);color:var(--ink-2)}
-.entry__meta{font-size:13px;color:var(--ink-2)}
-.entry__verdict{font:600 var(--t-body)/1.3 var(--f-body);letter-spacing:0}
-.entry__gain{font-family:var(--f-display);font-size:15px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
-  gap:var(--gut)}
-.stat{padding:var(--s4);border:var(--rule-hair) solid var(--ink)}
-/* The stat plate shipped with markup (`<b>07<i>/09</i></b><span>label</span>`)
-   but no rules for its children, so all three stayed inline and ran
-   together — the profile read "07 / 09Meetings attended" with the label
-   welded to the figure. Value and label are separate lines, matching how
-   the hero states its number above its caption. */
-.stat b{display:block;font-family:var(--f-display);font-weight:400;
-  font-size:clamp(24px,2.6vw,32px);line-height:1;letter-spacing:-.02em}
-.stat b i{font-family:var(--f-mono);font-style:normal;font-size:.5em;
-  letter-spacing:0;color:var(--tone);margin-left:.24em}
-.stat span{display:block;font:500 10.5px/1.3 var(--f-label);
-  letter-spacing:.18em;text-transform:uppercase;color:var(--tone);
-  margin-top:var(--s3)}
 .tick{position:absolute;width:11px;height:11px;border:var(--rule-hair) solid var(--ink)}
 .tick--tl{top:-1px;left:-1px;border-right:0;border-bottom:0}
 .tick--br{right:-1px;bottom:-1px;border-left:0;border-top:0}
-.tech__name{font-family:var(--f-display);font-size:clamp(16px,1.4vw,20px);text-transform:uppercase;line-height:1.05}
-.tech__glyph svg{width:52px;height:52px}
-.tech__glyph circle,.tech__glyph polygon,.tech__glyph path,.tech__glyph line{
-  fill:none;stroke:var(--ink);stroke-width:1.6;vector-effect:non-scaling-stroke}
-/* The locked state was a diagonal CSS hatch laid over the whole card —
-   the single most generic treatment in the old build, and it fought
-   every word printed on it. A sealed reward is now stated by weight
-   and by its label, not by a texture: hairline keyline, muted type,
-   and the word SEALED. Nothing is drawn across the content. */
-.tech__crack{position:absolute;inset:0;pointer-events:none;opacity:0}
-.tech__name{overflow-wrap:break-word}
 
-/* ══════════════════ SCAN ══════════════════ */
-/* ONE CELL, NOT TWO ROWS.
-
-   The reticle and the status message were both in-flow grid items, so
-   `place-items:center` stacked them in two rows and centred the PAIR.
-   That put the target's centre half the message's height above the
-   chamber's centre — measured at -67px on a phone, -86px on a desktop,
-   growing with the chamber, which is why no fixed offset could ever
-   have fixed it.
-
-   Every child now shares one cell. The reticle centres in the whole
-   chamber and the status pins to the bottom edge, so the target is
-   mathematically centred whatever the message says or however the
-   chamber is sized. */
-.viewer{position:relative;display:grid;
-  grid-template:minmax(0,1fr)/minmax(0,1fr);
-  container-type:size;
-  overflow:hidden;
-  border:var(--rule) solid var(--ink);aspect-ratio:3/4;
-  /* Frame furniture, not a target. These brackets are fixed to the box
-     and never change; the reticle inside is the mark that aims and
-     reacts, and it is the one that carries cinnabar. Two red bracket
-     sets on one screen was the accent spent twice — paper on the dark
-     camera image reads as instrument housing and leaves the red to the
-     thing that earns it.
-
-     INK is the default, because the box's own ground is paper. Paper
-     brackets were keyed to the absence of .viewer--stalled, which is
-     only one of the states with no picture in it: while the browser is
-     asking for camera permission, and for as long as the feed takes to
-     start, the frame is paper and the brackets were painted paper on
-     top of it. .viewer--feed is set when a video is actually playing,
-     which is the real question being asked.
-
-     Declared HERE and not on ::after: a custom property re-declared on
-     the pseudo-element wins over whatever the element passes down, so
-     no state could override it from the outside. */
-  --bracket-c:var(--ink);
-  /* The camera frame is the one panel that has to answer to viewport
-     HEIGHT: it is the thing you hold up, and on a phone in landscape,
-     or a short laptop, a 3/4 box taller than the screen puts the
-     reticle out of reach. dvh (not vh) so the mobile address bar
-     collapsing does not resize it mid-scan, and the tab bar's own
-     height comes out of the budget. */
-  max-height:calc(72dvh - var(--tabs-h));
-  background:var(--paper-2)}
-/* Landscape is a different composition, not a shorter portrait: the
-   frame turns with the device. Keyed to orientation and aspect rather
-   than to a width, so a phone on its side and a laptop both get it. */
-@media(min-aspect-ratio:1/1){.viewer{aspect-ratio:4/3}}
-@media(min-width:768px){.viewer{aspect-ratio:4/3}}
-/* No camera, permission refused, or an insecure page: the frame stops
-   being a viewfinder and becomes a message panel. It is sized by the
-   message with a floor for presence, so it is a panel on a phone and a
-   panel on a monitor rather than a 230px letterbox on both. */
-.viewer--stalled{aspect-ratio:auto;min-height:clamp(200px,32dvh,320px);
-  max-height:none}
-/* a picture is playing: the housing goes paper so it holds against it */
-.viewer--feed{--bracket-c:var(--paper)}
-/* every in-flow child occupies the single cell; out-of-flow ones are
-   unaffected by grid placement and keep their own inset */
-.viewer > *{grid-area:1/1;min-width:0;min-height:0}
-.viewer > .reticle{place-self:center}
-.viewer > .viewer__status{place-self:end center;
-  padding-bottom:clamp(10px,4cqh,30px);max-width:92%}
-.viewer video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-  /* Monochrome stays: every accent token in this theme is remapped to
-     ink, so a colour camera would be the one coloured thing in the whole
-     app. But contrast(1.5) crushed the midtones of a live feed until you
-     could not see what you were pointing at -- the code is decoded from
-     the raw frame, not this filtered view, so the filter's only job is
-     legibility for the person aiming. Eased accordingly. */
-  filter:grayscale(1) contrast(1.12)}
-.viewer__scrim{position:absolute;inset:0;
-  background-image:radial-gradient(var(--ink) 1px,transparent 1px);
-  background-size:5px 5px;opacity:.09}     /* screentone, not a veil */
-/* ── THE VIEWFINDER FRAME ─────────────────────────────────────────
-   Four heavy right-angle brackets in cinnabar, pinned to the corners
-   of the camera frame. This is one of the four sanctioned uses of the
-   seal colour: the system is asking you to aim.
-
-   It has to be a PSEUDO-ELEMENT. The scanner rewrites `viewer.innerHTML`
-   wholesale on every state change (no camera, permission refused,
-   insecure page), so any child element carrying the frame is destroyed
-   the first time the state changes — which is exactly when a user most
-   needs the screen to still look like a viewfinder. A pseudo-element
-   belongs to the box, not to its contents, and survives every rewrite.
-
-   Eight gradients: a horizontal and a vertical arm per corner. They
-   sit at the corners and never across the middle, so they cannot
-   obscure what the camera is pointed at. */
-.viewer__grain{display:none}
-.viewer::after{content:"";position:absolute;inset:clamp(6px,1vw,12px);
-  pointer-events:none;z-index:6;
-  --bracket:clamp(20px,3.2vw,40px);
-  --bracket-w:var(--edge);
-  background-repeat:no-repeat;
-  background-image:
-    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
-    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
-    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0),
-    linear-gradient(var(--bracket-c) 0 0),linear-gradient(var(--bracket-c) 0 0);
-  background-size:
-    var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket),
-    var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket),
-    var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket),
-    var(--bracket) var(--bracket-w),var(--bracket-w) var(--bracket);
-  background-position:
-    left top,left top, right top,right top,
-    left bottom,left bottom, right bottom,right bottom}
-/* a hit tightens the brackets inward — the frame closing on the code */
-.viewer--hit::after{inset:clamp(12px,2vw,22px)}
-
-.viewer--hit .viewer__grain{inset:6px}
-.viewer__status,.viewer__msg{position:relative;font-family:var(--f-accent);
-  text-transform:uppercase;text-align:center}
 /* THE WAITING MARK. `.loader` was applied in JS and styled in no
    stylesheet, so the only thing sizing it was an inline
    `inset:0;margin:auto` and the SVG's own default of filling its box.
-   It is a mark now: sized like the reticle's inner ring, centred in
-   it, and turning in twelve discrete steps because nothing in this
-   system eases. */
+   It is a mark now: sized against the target area, centred in it, and
+   turning in twelve discrete steps because nothing in this system
+   eases. */
 .loader{position:absolute;top:50%;left:50%;
   width:clamp(54px,42%,116px);aspect-ratio:1;
   transform:translate(-50%,-50%);
@@ -573,36 +397,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 @keyframes loaderTurn{from{transform:translate(-50%,-50%) rotate(0deg)}
                       to  {transform:translate(-50%,-50%) rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){ .loader{animation:none} }
-
-/* sized off the CHAMBER, not the viewport: cqmin is the smaller of the
-   chamber's own two axes, so the target can never outgrow the box it
-   is aiming inside — on a short landscape screen the chamber is wide
-   and shallow, and a width-only rule overflowed it vertically */
-.reticle{position:relative;width:min(64cqmin,250px);aspect-ratio:1}
-.reticle__c{position:absolute;width:26px;height:26px;border:var(--rule) solid var(--ink)}
-.reticle__c--tl{top:0;left:0;border-right:0;border-bottom:0}
-.reticle__c--tr{top:0;right:0;border-left:0;border-bottom:0}
-.reticle__c--bl{bottom:0;left:0;border-right:0;border-top:0}
-.reticle__c--br{bottom:0;right:0;border-left:0;border-top:0}
-.reticle__line{position:absolute;left:0;right:0;height:2px;background:var(--ink)}
-/* width/height MUST be auto so the insets size the box. These two are
-   absolutely positioned with inset:-14% to overflow the reticle on
-   every side; any explicit width here over-constrains left+right+width
-   and the browser resolves it by dropping `right`, which lays the SVG
-   out at the reticle's size shifted up-left by 14% of it. auto is also
-   what keeps the zero-specificity `:where(svg…){width:22px}` default
-   off them. */
-.reticle__geo,.reticle__mark{position:absolute;inset:-14%;
-  width:auto;height:auto;opacity:.3;pointer-events:none}
-.reticle__geo circle,.reticle__geo polygon,.reticle__geo path,.reticle__geo line,
-.reticle__mark circle,.reticle__mark polygon,.reticle__mark line{
-  fill:none;stroke:var(--ink);stroke-width:1.3;vector-effect:non-scaling-stroke}
-.reticle__mark path{fill:var(--ink);stroke:none}
-/* `.manual` is a child of the view grid, so the tier gap already
-   separates it from the frame above. The extra margin was a second
-   gap stacked on the first — 92px of paper between the scanner and
-   the fallback that belongs with it. */
-.manual{padding:var(--s5);border:var(--rule) solid var(--ink)}
 /* A text field and its button are a row until the row stops working.
    `flex-wrap` plus a real basis on the input is the whole rule: the
    pair sits side by side wherever there is room for both, and the
@@ -636,11 +430,8 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   font:500 clamp(13px,.4vw + 11.7px,14.5px)/1.2 var(--f-mono);
   letter-spacing:.08em;transition:none}
 .input::placeholder{color:var(--tone);letter-spacing:.06em}
-/* Focus thickens the rule; it does not colour it. Cinnabar belongs to
-   the TARGET, and on the scan screen a red underline meant the page
-   could show three red marks at once — the reticle, the rule and the
-   prompt — which is three more than this system allows. Weight is the
-   signal, and weight reads for someone who cannot see the hue. */
+/* Focus thickens the rule; it does not colour it. Weight is the
+   signal, and weight reads for someone who cannot see a hue. */
 .input:focus{outline:0;border-bottom-color:var(--ink);
   border-bottom-width:var(--edge-heavy)}
 /* The caret marker rides on the field wrapper, not on the input, so it
@@ -669,15 +460,7 @@ select.input{padding-right:var(--s4)}
 .picker{display:flex;flex-wrap:wrap;gap:var(--s2)}
 
 /* ══════════════════ MEMBER ══════════════════ */
-.who{display:flex;align-items:center;gap:var(--s4);padding:var(--s5)}
-.who__name{font-family:var(--f-display);font-size:var(--t-name);text-transform:uppercase}
-.who__role{font:500 10px/1 var(--f-mono);letter-spacing:.16em;
-  text-transform:uppercase;color:var(--tone);margin-top:6px}
-.who__seal{width:70px;height:70px;flex:none}
-.who__seal circle,.who__seal polygon,.who__seal line{
-  fill:none;stroke:var(--ink);stroke-width:1.5;vector-effect:non-scaling-stroke}
-.who__seal path{fill:var(--ink);stroke:none}
-.who__seal--img{object-fit:contain}
+
 /* ══════════════════ EMPTY STATES ══════════════════
    Centred text in a dashed box is a placeholder, not a state. An empty
    state here is a blank seal: the mark that would have been pressed,
@@ -734,13 +517,12 @@ select.input{padding-right:var(--s4)}
   fill:none;stroke:var(--ink);stroke-width:1.5;vector-effect:non-scaling-stroke}
 .verdict__seal path{fill:var(--ink);stroke:none}
 .verdict__state{font:500 11px/1 var(--f-mono);letter-spacing:.24em;
-  text-transform:uppercase;margin-top:var(--s4)}
-.verdict__jp{font-family:var(--f-jp);font-size:12px;letter-spacing:.6em;color:var(--tone)}
+  margin-top:var(--s4)}
 .verdict__title{font-family:var(--f-display);font-size:clamp(30px,7vw,58px);
   text-transform:uppercase;line-height:1;margin-top:var(--s3)}
 .verdict__delta{font-family:var(--f-display);font-size:26px;margin-top:var(--s2)}
 .verdict__meet{font:500 10px/1 var(--f-mono);letter-spacing:.16em;
-  text-transform:uppercase;color:var(--tone);margin-top:var(--s3)}
+  color:var(--tone);margin-top:var(--s3)}
 
 /* ══════════════════ FX LAYER ══════════════════ */
 .fx{position:fixed;inset:0;z-index:125;pointer-events:none;overflow:hidden;
@@ -801,13 +583,6 @@ select.input{padding-right:var(--s4)}
   text-transform:uppercase;color:var(--ink);white-space:nowrap}
 .boot__half--a{clip-path:polygon(-20% -20%,120% -20%,120% 34%,-20% 66%)}
 .boot__half--b{clip-path:polygon(-20% 66%,120% 34%,120% 120%,-20% 120%)}
-/* dvh, and a safe-area floor: on a notched phone `12vh` measured
-   against the tall viewport put this line in the home-indicator strip
-   whenever the address bar was collapsed. */
-.boot__jp{position:absolute;
-  bottom:max(12dvh, calc(var(--s7) + env(safe-area-inset-bottom, 0px)));
-  font-family:var(--f-jp);font-size:13px;
-  letter-spacing:.66em;color:var(--tone);opacity:0}
 
 /* ══════════════════════════════════════════════════════════════════
    RESPONSIVE — THE SHELL
@@ -845,18 +620,10 @@ select.input{padding-right:var(--s4)}
 .topbar{display:flex}
 .tabs{display:flex}
 .view{grid-template-columns:repeat(2,minmax(0,1fr))}
-[data-screen="record"] .view > section,
-[data-screen="rewards"] .view > section{grid-column:1/-1}
 /* A bleed needs page margin to run into. On a phone the margin IS the
    safe edge, so the panel keeps its gutter rather than sitting on the
    glass with its border removed. */
 .panel--bleed{margin-right:0;border-right:var(--rule) solid var(--ink)}
-
-/* ── ≥768: tablets get a spread, not a wide phone ─────────────── */
-@media(min-width:768px){
-  [data-screen="record"] .view > section,
-  [data-screen="rewards"] .view > section{grid-column:1/-1}
-}
 
 /* ── ≥1024: the rail, and the six-column spread ─────────────────── */
 @media(min-width:1024px){
@@ -897,37 +664,7 @@ select.input{padding-right:var(--s4)}
    straight through the first line of text — "Club Merch" was cut in
    half by its own card border. The record screen's own padding rule is
    more specific and still wins. */
-.rec{display:flex;align-items:stretch;gap:var(--s3);position:relative;
-  padding:var(--s3) 0;min-width:0}
-.rec + .rec{border-top:var(--edge-hair) solid var(--tone)}
-/* `1fr` carries an automatic minimum of min-content, so the text column
-   could not shrink below its longest word — "ATTENDANCE" plus "+1
-   stamp" needed 162px inside a 151px card and the whole grid simply
-   grew past the card, where `overflow:hidden` cut the gain in half
-   ("+1 stan"). `minmax(0,1fr)` lets the column give, so the text wraps
-   instead of the box overflowing. This is the single most common cause
-   of a grid child that will not fit, and it belongs here rather than
-   at each call site. */
-.entry{flex:1;display:grid;grid-template-columns:minmax(0,1fr) auto;
-  grid-template-areas:"no gain" "verdict gain" "meta meta";
-  gap:2px var(--s3);align-items:baseline;text-align:left;background:none;
-  border:0;padding:0;cursor:inherit;color:var(--ink);position:relative;
-  overflow:hidden;font-family:var(--f-body)}
-/* The clip stays — it is what crops the decorative page numeral to the
-   row's frame — but with a track that can shrink there is no longer any
-   content for it to cut. */
-.entry__verdict{line-height:1.25}
-.entry__gain{white-space:nowrap}
-button.entry{cursor:pointer}
-.entry__no{grid-area:no}
-.entry__verdict{grid-area:verdict;display:flex;align-items:center;gap:6px}
-.entry__meta{grid-area:meta;margin-top:3px}
-.entry__gain{grid-area:gain;align-self:center}
-/* An open meeting is the one you can act on, so it is set in full ink.
-   It used to be a black pill with a square bullet inside it — a button
-   that is not a button, next to the button that is. */
-.entry--open .entry__verdict{color:var(--ink);font-weight:700}
-.entry--miss{opacity:.55}
+
 
 /* ══════════════════════════════════════════════════════════════════
    THE TWO PANELS THAT BREAK THEIR BOX
@@ -958,19 +695,7 @@ button.entry{cursor:pointer}
 
 /* ══════════════════ SPEED LINES ══════════════════
    The FX layer draws these; they only ever appear in ink. */
-.lines line,.lines path,.slash path,.slash rect{stroke:var(--ink);fill:var(--ink)}
-
-/* The per-tier home composition now lives in one place — the ladder
-   above — rather than in three overlapping ranges here. What remains is
-   the small-screen behaviour of individual components, expressed as the
-   base state and lifted at ≥768 rather than as a `max-width` exception.
-
-   The stat plate is a good example of why: it was `repeat(auto-fit,
-   minmax(96px,1fr))` with a hard two-column override under 560px, so
-   the number of columns depended on which of the two rules won rather
-   than on how much room there actually was. auto-fit with a floor is
-   the whole answer, at every width. */
-.stats{grid-template-columns:repeat(auto-fit,minmax(clamp(120px,40%,168px),1fr))}          /* it sits under the number at this width */
+.lines line,.lines path,.slash path,.slash rect{stroke:var(--ink);fill:var(--ink)}          /* it sits under the number at this width */
 /* Callouts clear the tab bar AND the home indicator, so a message never
    lands on the navigation or in the gesture strip. */
 .toasts{left:var(--gutter);right:var(--gutter);max-width:none;
@@ -1046,7 +771,7 @@ html,body{overflow-x:clip;max-width:100%}
    being able to crop it. */
 
 
-.head{position:relative;overflow:visible}
+
 .rig{isolation:isolate}
 /* Home's title is a member's name — arbitrary user data, not a designed
    word, and it can be far longer than any chapter heading. At the
@@ -1092,8 +817,7 @@ html,body{overflow-x:clip;max-width:100%}
    getting a 2.8px box of its own, so fifteen meetings meant fifteen
    boxes stacked inside the box around them. Rows are separated by a
    hairline and space now. */
-.panel,.head,.manual,.viewer,.stat,
-.bpanel,.bnext,.tech{
+.panel{
   border-width:calc(var(--ink-w, 2.8) * 1px);
   border-style:solid;
   border-radius:0;
@@ -1104,9 +828,8 @@ html,body{overflow-x:clip;max-width:100%}
    background art. The trouble is that `.panel > *` outranks the single
    class an absolutely-positioned child declares itself with, so every
    new out-of-flow element was silently dragged back into the layout —
-   .chamber__c bunched into a corner, .rune doubled the nameplate's
-   height, .sealmeta stretched its slot to twice its size, and the
-   hero's .tick corner marks have been in flow this whole time.
+   .sealmeta stretched its slot to twice its size, and the hero's .tick
+   corner marks were in flow this whole time.
 
    Chasing that with a growing list of :not() class names was the
    defect: it only ever excluded the ones somebody had already been
@@ -1114,7 +837,7 @@ html,body{overflow-x:clip;max-width:100%}
    on the element that positions itself — so an out-of-flow child
    declares its own status at the point it is created and no stylesheet
    has to be told about it afterwards. */
-.panel > *:not([data-layer]),.head > *:not([data-layer]){
+.panel > *:not([data-layer]){
   position:relative;z-index:1}
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1128,7 +851,7 @@ html,body{overflow-x:clip;max-width:100%}
 /* Mono is for codes a member might read out or type in. It is not a
    label style, so a log row's verdict — a sentence about what happened
    — is set in the reading face like the rest of the row. */
-.entry__no,.qrpanel__when{font-family:var(--f-mono)}
+.qrpanel__when{font-family:var(--f-mono)}
 .h2,.rail__link span,.tabs button,.btn,.link,.section-link,.motion-btn{font-family:var(--f-label);font-weight:500}
 body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .title{letter-spacing:-.035em}
@@ -1166,97 +889,13 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .rail__link:hover .rail__no{color:var(--ink)!important}
 
 /* ══════════════════════════════════════════════════════════════════
-   THE STAMP CARD — a composition, not a contact sheet.
-
-   Ten identical cells at identical spacing was the most generic thing
-   on the page and also the largest. The most recent stamp now dominates
-   at roughly three times the area and breaks the top edge of its panel;
-   the rest fall in behind it at reduced weight, and the empty ones
-   recede to tone instead of announcing themselves with dashed boxes.
-   ══════════════════════════════════════════════════════════════════ */
-
-
-/* the panel has to let the hero stamp break its edge */
-
-
-/* ══════════════════════════════════════════════════════════════════
-   RECORD — a sequence, not a table.
-
-   Nine rows of equal weight with hairline dividers had no second or
-   third thing to look at; the hierarchy died after the title. The rows
-   are now panels of unequal size: the live meeting takes a full tier,
-   confirmed ones sit small and quiet, and a missed meeting is given
-   deliberate empty space rather than being compressed like the rest.
-   ══════════════════════════════════════════════════════════════════ */
-/* THE RECORD SPREAD.
-
-   Narrow: one card per row of a column-count the log works out for
-   itself from how much room it has. Wide: the composed spread, where
-   rows are deliberately unequal — the live meeting takes a full tier,
-   confirmed ones sit small and quiet, a missed one is given space
-   rather than being compressed like the rest.
-
-   These are two different compositions, not one composition at two
-   sizes, which is why the wide one is stated inside its own tier
-   instead of being approximated by shrinking. */
-[data-screen="record"] .log{display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));
-  gap:var(--gut) var(--gut)}
-[data-screen="record"] .rec{grid-column:span 1;padding:var(--s4);
-  border-top:0!important;align-items:flex-start}
-[data-screen="record"] .rec + .rec{padding-top:var(--s4)}
-[data-screen="record"] .rec--open,
-[data-screen="record"] .rec--miss{grid-column:1/-1}
-[data-screen="record"] .rec--open .entry__verdict{font-size:13px;padding:5px 11px}
-[data-screen="record"] .rec--open .entry__ghost{font-size:clamp(90px,13vw,190px);
-  opacity:.1;top:-8px;right:8px}
-[data-screen="record"] .rec--miss .entry{opacity:.42}
-
-@media(min-width:768px){
-  [data-screen="record"] .log{grid-template-columns:repeat(4,minmax(0,1fr));
-    grid-auto-flow:row dense}
-  [data-screen="record"] .rec{grid-column:span 2}
-  [data-screen="record"] .rec--open,
-  [data-screen="record"] .rec--miss{grid-column:1/-1}
-  [data-screen="record"] .rec--upcoming{grid-column:span 2}
-}
-@media(min-width:1024px){
-  /* `dense` is what turns unequal spans into a composition instead of a
-     row of gaps: a narrow card backfills the space a wide one left, so
-     the tiers stay irregular AND the page stays packed. Without it the
-     span-2 rows left a third of every other row as blank paper, which
-     reads as a layout fault rather than as rhythm. */
-  [data-screen="record"] .log{grid-template-columns:repeat(6,minmax(0,1fr));
-    grid-auto-flow:row dense}
-  [data-screen="record"] .rec{grid-column:span 3}
-  [data-screen="record"] .rec--open,
-  [data-screen="record"] .rec--miss{grid-column:1/-1}
-  /* The lead sizes to its content: it was reserving height and then
-     dropping its content to the bottom of it, which is what made the
-     one thing you can act on read as a mostly-empty textured box. */
-  [data-screen="record"] .rec--open{min-height:0;align-items:stretch}
-  /* A miss reserved 120px — the same room as an attended meeting — so
-     the gaps between the solid blocks were boxes too, and the pattern
-     of blocks down the column could not read as the record. */
-  [data-screen="record"] .rec--miss{min-height:0;align-items:center;opacity:1}
-  [data-screen="record"] .rec--set:nth-of-type(4n+3){grid-column:span 2}
-  [data-screen="record"] .rec--set:nth-of-type(4n){grid-column:span 4}
-  [data-screen="record"] .rec--upcoming{grid-column:span 2}
-}
-
-/* ══════════════════════════════════════════════════════════════════
    SFX — opaque, large, cropped by the panel. Never a watermark.
    ══════════════════════════════════════════════════════════════════ */
 
 /* ══════════════════════════════════════════════════════════════════
    REWARDS — the glyph had escaped its box and was rendering ~1100px.
    ══════════════════════════════════════════════════════════════════ */
-.tech__glyph{flex:none;width:clamp(44px,4.5vw,68px);height:clamp(44px,4.5vw,68px)}
-.tech__glyph svg{width:100%!important;height:100%!important;display:block}
-[data-screen="rewards"] .rig .panel{padding:var(--s5);overflow:hidden}
-[data-screen="rewards"] .view > section:nth-of-type(1){grid-column:1/-1}
-[data-screen="rewards"] .view > section:nth-of-type(2n){grid-column:span 4}
-[data-screen="rewards"] .view > section:nth-of-type(2n+3){grid-column:span 2}
+
 
 /* ══════════════════════════════════════════════════════════════════
    MOBILE — a vertical manga page, not a stacked desktop.
@@ -1295,7 +934,7 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
    ignores `order` outright — the desktop spread is untouched. */
 
 
-[data-screen="rewards"] .view > section{grid-column:1/-1}
+
 /* The JP mark is position:absolute in the header's top-right, and nothing
    in the flow reserved room for it — so the chapter title's box (and, on
    Home, the narration balloon) ran underneath it. Titles are left-aligned
@@ -1305,12 +944,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
    every page at once; the mark itself is positioned against the padding
    box, so it does not move with it. */
 :root{--jp-lane:calc(var(--s4) + 22px)}
-.view > .head{padding-right:calc(var(--s4) + var(--jp-lane))}
-
-
-/* Record rows need real interior space now that they are panels */
-[data-screen="record"] .rec{padding:var(--s4) var(--s4) var(--s5)}
-[data-screen="record"] .rec--open{padding:var(--s5)}
 @media(min-width:1024px){
   /* the right lane now carries two vertical marks, so it is wider */
   :root{--jp-lane:calc(var(--s4) + 42px)}
@@ -1344,11 +977,7 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 
 /* one padding value for every panel, plus a larger one where a panel is
    carrying the dominant moment */
-.panel,.manual{padding:var(--space-panel)}
-
-[data-screen="record"] .rec--open{padding:var(--space-panel-lg)}
-.head{padding:var(--space-panel) var(--space-panel-lg)}
-.who{padding:var(--space-panel)}
+.panel{padding:var(--space-panel)}
 
 /* typographic rhythm */
 .h2 + *{margin-top:var(--space-stack-sm)}
@@ -1358,8 +987,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .stack-xl{margin-top:var(--space-chapter)}
 .picker{gap:var(--space-tight);margin-bottom:var(--space-tier)}
 .field{gap:var(--space-tight)}
-.stats{gap:var(--space-tier)}
-.stat{padding:var(--space-panel)}
 
 /* the board QR was rendering at the full panel width (~870px), which is
    far larger than any camera needs and pushed everything below the fold */
@@ -1415,113 +1042,33 @@ main#view{padding-top:var(--space-tier);
    does what it says. */
 :where(svg:not(.fxdefs):not([width])){width:22px;height:22px;flex:none}
 
-/* .reticle__geo and .reticle__mark are NOT in this list, and must not
-   be put back into it.
-
-   They are absolutely positioned with `inset:-14%`, which is how they
-   overflow the reticle box on every side. Giving them width:100% from
-   here over-constrained the box — left, right AND width all set — so
-   the browser dropped `right` and the SVG was laid out at the reticle's
-   size but offset up and left by 14% of it. That is 29.7px at 390x844,
-   and it is why the scan mark sat above and left of the target while
-   the .reticle wrapper measured perfectly centred: the wrapper was
-   centred, the artwork inside it was not.
-
-   `.viewer svg` is also gone: it matched those same two SVGs by
-   descent and reintroduced the identical conflict. The scanner's
-   fallback graphics are covered by `.viewer .stack svg` below. */
-.who__seal,.verdict__seal,
-.arena svg,.tech__glyph svg,.viewer .stack svg,.slash,.lines,
-.verdict__field,.tech__crack svg,.qrpanel__code svg{width:100%;height:100%}
-.who__seal{width:clamp(52px,5vw,74px);height:clamp(52px,5vw,74px)}
-.tech__glyph svg{width:100%;height:100%}
+.verdict__seal,
+.arena svg,.slash,.lines,
+.verdict__field,.qrpanel__code svg{width:100%;height:100%}
 .btn svg,.motion-btn svg{width:16px;height:16px}
 .rail__nav button svg,.tabs button svg{width:18px;height:18px}
 .boot__mark svg{width:88px;height:88px}
 .verdict__seal{width:min(30vmin,170px);height:min(30vmin,170px)}
 .boot__seal{width:min(40vmin,230px);height:min(40vmin,230px)}
 
-/* the "no camera" state was one enormous icon and two lines of text */
-/* `.viewer .stack` is here because the scanner's fallback states render
-   `<div class="stack">`, and nothing in the stylesheet ever matched that
-   class — so the padding and max-width below were written but never
-   applied. The copy ran the full width of the viewer and the drawn frame
-   cut through it ("NO CAMERA FOUND" lost its N; the body text ran off the
-   right edge). */
-.viewer__msg,.viewer .stack{display:flex;flex-direction:column;align-items:center;
-  gap:var(--space-stack-sm);text-align:center;padding:var(--space-panel-lg);
-  max-width:46ch;margin-inline:auto}
-.viewer__msg svg,.viewer .stack__icon svg{width:clamp(38px,4vw,56px)!important;
-  height:clamp(38px,4vw,56px)!important;opacity:.5}
-/* The camera frame is height-budgeted twice — once where it is defined
-   and once here. Both use dvh so a collapsing mobile address bar cannot
-   resize the viewfinder while someone is aiming it, and both leave the
-   fixed bar's height out of the budget. */
-.viewer{max-height:min(calc(72dvh - var(--tabs-h)),560px)}
-
 /* ══════════════════════════════════════════════════════════════════
    CHAPTER HEADS — every screen but Home was rendering its title
    centred in a tall, almost empty panel. Same left anchor and same
    proportion as Home, so the pages read as one book.
    ══════════════════════════════════════════════════════════════════ */
-.view > .head{justify-content:flex-start;align-items:flex-end;
-  min-height:clamp(84px,9vw,132px);position:relative}
-.view > .head .head__stack{max-width:100%}
-.view > .head .jp{position:absolute;right:var(--space-panel);
-  top:var(--space-panel);bottom:auto}
-.view > .head .kicker{position:absolute;left:var(--space-panel-lg);
-  top:var(--space-panel)}
+
 
 /* ══════════════════════════════════════════════════════════════════
    REWARDS — three full-width bars with content stranded in one corner.
    They are panels now, proportioned and filled.
    ══════════════════════════════════════════════════════════════════ */
-[data-screen="rewards"] .view > section{grid-column:span 2!important}
-[data-screen="rewards"] .view > section:nth-of-type(1){grid-column:1/-1!important}
-/* A reward card holds a title, a requirement and a meter. It used to
-   also reserve `min-height:260px` for a description that the copy pass
-   removed, so from the tablet up every card carried ~100px of empty
-   paper between its title and its meter. Cards size to their content;
-   the grid row stretches them to match their neighbour, which is what
-   makes a row look level without any of them being padded out. */
-/* The dossier lays itself out — a numeral column beside a content
-   column — so this flex-column rule (0,3,0) was flattening it back to
-   a stack and collapsing the slot array to zero width. The dossier
-   owns its own layout now; what stays here is only the min-height
-   reset, which is still wanted. */
-[data-screen="rewards"] .rig .panel{min-height:0}
 
-/* ══════════════════════════════════════════════════════════════════
-   The reward panels are wrapped in .stack-panels, so every rule
-   written against `.view > section` matched nothing at all — which is
-   why they stayed full-width bars through three attempts. Targeting
-   the actual wrapper.
-   ══════════════════════════════════════════════════════════════════ */
-.stack-panels{display:grid;grid-template-columns:1fr;
-  gap:var(--space-tier);align-content:start}
-.stack-panels > section{grid-column:1/-1;min-width:0}
-.stack-panels > section > .panel{height:100%}
-/* From the tablet up the reward tiers become a spread: the nearest
-   reward leads across the full measure, the ones behind it sit beside
-   each other.
 
-   The spans were 4 / 3 / 2 against six columns. Nine units do not fit
-   into rows of six, so the lead left two columns of blank paper beside
-   it and the pair left one — three holes in a three-card page. Spans
-   have to add up to the row, and these do at any card count. */
-@media(min-width:768px){
-  .stack-panels{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .stack-panels > section{grid-column:span 1}
-  .stack-panels > section:first-child{grid-column:1/-1}
-}
+
+
 
 /* The kicker was absolutely positioned and landed on top of the title —
    text over text, which is what "text overlaps the borders" was. It
    stacks above the title in normal flow instead. */
-.view > .head .kicker{position:static}
-.view > .head{flex-direction:column;align-items:flex-start;
-  justify-content:flex-end;gap:var(--space-hair)}
-.view > .head .head__stack{width:100%}
-.view > .head .jp{position:absolute}
-[data-screen="rewards"] .rig .panel{background:var(--v1)}
+
 .kicker{display:inline-block}

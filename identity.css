@@ -97,20 +97,34 @@
   --edge-shout:var(--edge-frame);
   --rule:var(--edge-panel); --rule-hair:var(--edge-rule);
 
-  /* ══ TYPE — THE ORIGINAL FAMILIES, BACK ═════════════════════════════
-     Collapsing everything onto one variable face during the first PRESS
-     pass took the character out along with the noise: Dela Gothic One's
-     blocky, single-weight impact is what makes "06" and a check-in verb
-     read as a stamp rather than a stat. The families are restored to
-     what they were; what changed for good is HOW MANY ROLES use each
-     one (kicker moved off mono onto body, for one) and that nothing is
-     forced into uppercase by default any more. */
-  --f-display:'Dela Gothic One',ui-sans-serif,system-ui,sans-serif;
-  --f-body:'Archivo Narrow',ui-sans-serif,system-ui,-apple-system,sans-serif;
-  --f-label:'Oswald',var(--f-body);
-  --f-accent:'CC Wild Words Roman','CCWildWords','Comic Neue',cursive;
+  /* ══ TYPE — TWO VOICES ═════════════════════════════════════════════
+     Down from six families to two, plus mono for real technical data.
+
+       display  Jujutsu Kaisen. Titles, hero numbers, impact words. It
+                is a display face with 101 glyphs and no lowercase
+                subtleties to speak of — it is for the two or three
+                largest things on a screen and nothing else.
+       body     CC Wild Words. Everything a member actually reads, in
+                three genuine cut faces: Roman, Italic, Bold Italic.
+                This is the product's voice.
+       mono     JetBrains Mono, and only where the content is a code or
+                an identifier a person might read aloud or type in.
+
+     Oswald, Dela Gothic One, Archivo Narrow, Comic Neue and Noto Sans
+     JP are gone. The legacy role names below still resolve so that no
+     call site had to be rewritten to keep working — but there are two
+     faces behind them now, not six.
+
+     CC Wild Words has no bold upright cut, only Bold Italic. Anywhere
+     the design wants strong emphasis it therefore gets Bold Italic,
+     which is the family's own answer and reads as a shout in comics
+     lettering — never a synthesised faux-bold. */
+  --f-display:'Jujutsu Kaisen',ui-sans-serif,system-ui,sans-serif;
+  --f-body:'CC Wild Words',ui-rounded,'Comic Sans MS',ui-sans-serif,sans-serif;
   --f-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
-  --f-jp:'Noto Sans JP',var(--f-body);
+
+  --f-label:var(--f-body);
+  --f-accent:var(--f-body);
 
   /* ══ SCREENTONE — ATMOSPHERE, AT TWO STRENGTHS ═════════════════════
      Tone used to sit behind every screen at one density, which is how
@@ -227,10 +241,6 @@ none;
 }
 .kicker{color:var(--ink-2);letter-spacing:.26em}
 
-
-/* the vertical Japanese marker, now an accent rather than grey noise */
-.jp{color:var(--tone);opacity:.9}
-
 /* ══ ACTION ════════════════════════════════════════════════════════
    The primary action is the seal being pressed. Ink fill, and on
    press it deepens rather than lifting — a stamp goes down. */
@@ -302,31 +312,6 @@ none;
    live one. Past and upcoming stay in ink, which keeps the red rare
    enough to mean something. */
 .bstate--open{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.entry--set .entry__verdict{color:var(--ink)}
-
-/* ══ SCANNER ═══════════════════════════════════════════════════════
-   Verdict on the colour question: the camera image stays desaturated,
-   but the FRAME is vermilion. Keeping the feed monochrome is what
-   makes the overlay legible over an image nobody controls, and it
-   holds the manga register. Putting the accent in the reticle instead
-   gives the screen its colour where colour actually does work —
-   telling you where to aim and whether it worked. */
-/* The frame is ink; the TARGET is cinnabar. Aiming is the one moment
-   the app asks for the accent, and the sweep line that reads the code
-   carries it too — over an arbitrary camera image a red line is the
-   only mark guaranteed to be visible against both a bright wall and a
-   dark one. */
-.viewer{border-color:var(--ink)}
-.reticle__c{border-color:var(--seal)}
-.reticle--good .reticle__c{border-color:var(--seal);background:var(--seal)}
-/* Refused: the target fills solid. Ink-on-black was a state change you
-   could not see; the same element that aims in cinnabar refuses in it,
-   which spends no new colour. */
-.reticle--bad .reticle__c{background:var(--seal);border-color:var(--seal)}
-.reticle__line{background:var(--seal)}
-.viewer--hit{border-color:var(--seal)}
-.viewer__msg{border-color:var(--ink)}
-.viewer__msg--hot{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
 /* ══ THE QR ════════════════════════════════════════════════════════
    The code stays pure black on pure white — that is a scanning
@@ -364,221 +349,7 @@ none;
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;animation-iteration-count:1!important}
 }
-
-
-[data-screen="auth"] .view{position:relative}
-[data-screen="auth"] .authp{position:relative;z-index:1}
 .chop--filled .chop__key{fill:var(--paper)}
-
-/* ══ SIGN-IN ═══════════════════════════════════════════════════════
-   ONE CARD, ONE VOICE.
-
-   The old page ran six competing things: a chapter masthead at display
-   size, a chop holding the mark, a wordmark beside it, a full-height
-   radiating rake, a screen-tall sound effect, and the form underneath
-   all of it. Nothing led, so it read as broken rather than composed.
-
-   The card is the page now. The brand states itself once at the top
-   and doubles as the title; the action is an annotation over the
-   fields, because on this screen the fields are the subject. The
-   atmosphere is still there — it just sits behind the card and gets
-   cropped by it.
-
-   svh, not vh: on iOS the address bar makes 100vh taller than the
-   screen actually is, so a centred card is pushed under the fold on
-   first paint and jumps when the bar collapses. min-height (never
-   height) so a short landscape phone scrolls instead of cropping the
-   form, and the cap stops the card floating in the middle of a tall
-   monitor.
-   ═════════════════════════════════════════════════════════════════ */
-[data-screen="auth"] .view{
-  position:relative;
-  min-height:min(100svh, 860px);
-  display:grid;place-content:center;justify-items:stretch;
-  width:min(100%, 30rem);
-  margin-inline:auto;
-  padding-block:clamp(20px,5vh,56px);
-}
-.authcard{position:relative;z-index:1;
-  display:grid;gap:clamp(16px,3.4vw,26px);
-  background:var(--paper);
-  border:var(--edge-heavy) solid var(--ink);
-  padding:clamp(20px,5.5vw,38px);
-  /* the leading corner taken off at the system angle, same cut the
-     action chamber and the stamp sheet carry */
-  clip-path:polygon(var(--sheet-cut,26px) 0, 100% 0, 100% 100%,
-                    0 100%, 0 var(--sheet-cut,26px))}
-
-.authcard__brand{display:flex;align-items:center;
-  gap:clamp(10px,3vw,18px);min-width:0}
-.authcard__logo{width:clamp(38px,9vw,52px);height:clamp(38px,9vw,52px);
-  flex:none;fill:var(--ink)}
-.authcard__logo *{fill:var(--ink);stroke:none}
-.authcard__wm{font-family:var(--f-display);
-  font-size:clamp(24px,6.4vw,34px);line-height:1;margin:0;
-  letter-spacing:-.01em;color:var(--ink);min-width:0;text-transform:none}
-.authcard__wm b{font-weight:400}
-.authcard__wm em{display:block;margin-top:7px;
-  font:500 clamp(10px,2.6vw,11.5px)/1.3 var(--f-mono);
-  letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);
-  font-style:normal;overflow-wrap:anywhere}
-
-/* the atmosphere sits behind the card and is cropped by the viewport,
-   not laid over the fields */
-/* Atmosphere, not competition. The rake and the ghost word were both
-   at full strength around a form, which is the "too much going on"
-   the page was criticised for. Both drop back to a level that reads
-   as texture behind the card rather than as content beside it. */
-[data-screen="auth"] .rake{opacity:.055;z-index:0}
-
-/* ══ THE SEAL GRID ═════════════════════════════════════════════════
-   An unearned seal was ink-on-ink and effectively invisible, so the
-   record read as an empty black field. A blank seal is now a ghost
-   chop: the outline of the mark waiting to be pressed, which also
-   makes the earned ones land harder by contrast. */
-/* An unearned slot is an empty box waiting to be pressed: a hairline
-   of muted ink, solid (never dashed — dashed reads as "disabled form
-   field", and these are not controls). An earned one is the stamp
-   itself: absolute ink, edge to edge. The difference between the two
-   is the whole mechanic of the product, so it is the largest contrast
-   on the page. */
-
-
-/* ══ THE TEN STAMPS — SLOT STATES ON ONE PIECE OF ARTWORK ══════════
-   The card carries ten different emblems, so state cannot be carried
-   by the drawing: every slot already looks unlike its neighbours, and
-   a member reading "different shape" as "different status" would have
-   the card backwards. State is carried by what happens *to* whichever
-   emblem a slot holds — ink or paper, weight, and what the cell does
-   around it — so the same four changes apply to all ten.
-
-     EMPTY    an ordinal not yet reached. The emblem in muted ink on
-              paper: legible as a shape, so the slot reads as an
-              impression waiting to be pressed rather than as a hole,
-              and never as earned.
-     CURRENT  the next stamp to be earned. The emblem at full ink
-              inside a closed keyline — the only unearned slot on the
-              card at full weight, which is what makes it the thing
-              you are being asked to go and get. It used to be the
-              faintest cell on the card, below even the empty ones.
-     EARNED   the emblem knocked out of a solid ink cell. The largest
-              contrast on the page, because the difference between
-              earned and unearned is the whole mechanic.
-     CLAIMED  the stamp just landed: EARNED, plus the surrounding
-              treatment `.seal--last`/`.seal--hero` already carries.
-   and, for completeness of the contract rather than because the
-   current attendance model emits it:
-     LOCKED   `data-seal="locked"` — a slot the member cannot reach.
-              Struck through, at the weight of a cancelled thing.
-
-   Everything below is opacity and fill on the same paths. No emblem
-   is swapped, redrawn or transformed between states. */
-/* The opacity is set on the path, not only on the group. An earlier
-   rule fades `.seal--next .seal__mark path` to .35, which is a fade
-   the group's opacity cannot undo: ink at .35 on paper resolves to
-   164, and the muted grey an empty slot is drawn in is 169. The
-   current slot and the empty slots were rendering as the same value —
-   the one distinction the card most needs to make. */
-
-
-
-
-/* ══ THE CALM STRIKE ═══════════════════════════════════════════════
-   .strike is a dark card with light type. .strike--calm flips the
-   surface to paper but its children kept the colours written for the
-   dark base, so the Scan card on Home rendered light-on-light and was
-   effectively invisible.
-
-   In the three tiers, "no meeting is open" is the SCREENTONE state:
-   present, but not the thing being pointed at. So it gets a tone
-   ground and ink type — recessive, not absent. */
-
-
-/* ══════════════════════════════════════════════════════════════════
-   RECORD — the page that is literally a record being built
-   ══════════════════════════════════════════════════════════════════
-   The three tiers do the whole job here. A meeting you attended is a
-   spotted black; a meeting you missed is a tone ghost; the structure
-   between them is line. Read down the page and the pattern of solid
-   blocks IS your attendance, before a single number is parsed. */
-[data-screen="record"] .log{gap:var(--edge-thin)}
-
-[data-screen="record"] .entry{
-  border:var(--edge-hair) solid var(--ink);
-  background:var(--paper);
-  padding:var(--s4);
-  position:relative;
-  transition:transform var(--snap) linear;
-}
-/* attended: inked in */
-[data-screen="record"] .entry--set{
-  background:var(--ink);color:var(--paper);border-color:var(--ink);
-}
-[data-screen="record"] .entry--set .entry__no,
-[data-screen="record"] .entry--set .entry__verdict{color:var(--paper)}
-[data-screen="record"] .entry--set .entry__meta{color:var(--tone-lt)}
-[data-screen="record"] .entry--set .entry__ghost{color:rgba(255,255,255,.10)}
-
-/* MISSED: a ruled line, not a box.
-
-   A meeting you did not attend took exactly as much of the page as
-   one you did — same box, same height, same dashed frame — so
-   fourteen rows arrived at one weight and the page read as a list
-   view. The pattern of solid blocks down the column is supposed to BE
-   the attendance record, and it cannot be while the gaps between the
-   blocks are boxes too.
-
-   A miss is now a hairline and a shorter row. Nothing is hidden and
-   nothing is dimmed past reading; it simply stops competing. */
-[data-screen="record"] .entry--miss{
-  background-image:none;
-  border:0;border-top:var(--rule-hair) solid var(--v3);
-  padding:clamp(9px,1.2vw,13px) 0 clamp(9px,1.2vw,13px) 2px;
-}
-[data-screen="record"] .entry--miss .entry__ghost{display:none}
-[data-screen="record"] .entry--miss .entry__no{color:var(--ink-2)}
-[data-screen="record"] .entry--miss .entry__verdict{color:var(--tone)}
-
-/* ══════════════════════════════════════════════════════════════════
-   REWARDS — three panels, three states, no store front
-   ══════════════════════════════════════════════════════════════════
-   Locked is line only. Unlocked is screentone with a heavy keyline —
-   it has arrived but is not yet taken. Claimed is the spotted black,
-   the seal pressed. That escalation is the whole reward moment. */
-/* ══ REWARDS — THREE STATES, THREE WEIGHTS ═════════════════════════
-   A dossier that is sealed, one that is ready to be opened, and one
-   that has been claimed. The escalation is carried entirely by edge
-   weight and ink coverage — no textures, no fills laid across type. */
-.tech{
-  border:var(--edge-hair) solid var(--v3);
-  background:var(--paper);
-  position:relative;overflow:hidden;
-}
-/* SEALED: a hairline and muted type. Present, closed, quiet. */
-.tech--sealed{border-style:solid;border-color:var(--v3)}
-.tech--sealed .tech__name{color:var(--ink-2)}
-.tech--sealed .tech__glyph{opacity:.34}
-
-/* READY: the heaviest keyline in the list, and a solid ink bar down
-   the leading edge — the tab of a file that is ready to be pulled. */
-.tech--open{
-  border:var(--edge) solid var(--ink);
-  background:var(--paper);
-}
-.tech--open::before{
-  content:'';position:absolute;left:0;top:0;bottom:0;width:var(--edge-shout);
-  background:var(--seal);
-}
-.tech--open{padding-left:calc(var(--s5) + var(--edge-shout))}
-.tech--claimed{                      /* claimed: the seal is pressed */
-  background:var(--ink);color:var(--paper);border-color:var(--ink);
-  border-width:var(--edge);border-style:solid;
-}
-.tech--claimed .tech__name,
-.tech--claimed .tech__req,
-.tech--claimed .tech__state{color:var(--paper)}
-.tech--claimed .tech__glyph{color:var(--paper);opacity:.9}
-.tech--claimed .tech__req{color:var(--tone-lt)}
 
 /* ══════════════════════════════════════════════════════════════════
    BOARD — the same book, administrative chapters
@@ -600,19 +371,6 @@ none;
 .bstat:first-child span{color:var(--ink-2)}
 .bstat b{font-size:clamp(26px,3.4vw,40px);line-height:.9}
 .bstat span{color:var(--ink-2)}
-
-/* the next meeting is the subject of the page */
-.bnext{
-  border:var(--edge) solid var(--ink);
-  background-image:radial-gradient(var(--tone-dot) .5px, transparent .6px);
-  background-size:var(--tone-25) var(--tone-25);
-}
-.bnext--live{
-  background:var(--ink);color:var(--paper);border-width:var(--edge-heavy);
-  background-image:none;
-}
-.bnext--live .bactive__no,.bnext--live .muted{color:var(--paper)}
-.bnext--live .bstate--open{background:var(--paper);color:var(--ink);border-color:var(--paper)}
 
 /* milestone bars: fill is a spotted black on a line track */
 .bmile__bar{border:var(--edge-hair) solid var(--ink);background:var(--paper);height:10px}
@@ -636,27 +394,6 @@ none;
 /* the board form is a panel of the same book */
 .bform{border-bottom:var(--edge) solid var(--ink);padding-bottom:var(--s5)}
 .bsec{border-bottom:var(--edge-thin) solid var(--ink);color:var(--ink)}
-
-/* ── Rewards polish ───────────────────────────────────────────────
-   The "Unlocks at N stamps" line is real information, not a caption,
-   so it sits at ink-2 rather than tone. And removing the old blurb
-   left a hole in the locked cards — they collapse to their content
-   now instead of holding a paragraph's worth of empty. */
-/* The requirement line is rendered as `.tech__at`, not `.tech__req` —
-   the older class was left over from a previous markup pass, so every
-   rule written for it matched nothing and the line stayed at --tone
-   (#B0A99C) on a hatched ground: under 2:1 against the paper, on the
-   one sentence that answers "how far am I?". Both names are set, so
-   whichever the view renders is legible. */
-
-.tech--sealed .tech__req,.tech--sealed .tech__at{color:var(--ink-2)}
-.tech{min-height:0}
-.tech--sealed{padding-bottom:var(--s4)}
-.tech--sealed .tech__body{min-height:0}
-
-/* ── Record polish ────────────────────────────────────────────────
-   +1 stamp is the payoff on an inked row, so it gets paper weight. */
-[data-screen="record"] .entry--set .entry__verdict{color:var(--paper);font-weight:600}
 
 /* ══ NARROW — the base, not an exception ═════════════════════════════
    A phone page is a single column of stacked frames, which is how a
@@ -692,11 +429,7 @@ none;
 :where(.panel){--ink-w:2}
 :where(.panel--seal){--ink-w:3}
 
-[data-screen="record"] .entry{padding:var(--s3)}
-[data-screen="record"] .entry__meta{font-size:clamp(11.5px,3vw,13px)}
-
 .bstat b{font-size:clamp(22px,6vw,30px)}
-.bnext{padding:var(--s4)}
 .bmile{grid-template-columns:auto 1fr;gap:var(--s3)}
 
 .brow{padding-block:var(--s3)}
@@ -710,8 +443,6 @@ none;
 @media (min-width:768px){
   :where(.panel){--ink-w:3}
   :where(.panel--seal){--ink-w:6}
-  [data-screen="record"] .entry{padding:var(--s4)}
-  .bnext{padding:var(--s5)}
 }
 
 
@@ -774,15 +505,11 @@ none;
 /* the brand block must be able to shrink inside the rail track */
 .rail,.rail__brand,.rail__nav,.rail__foot{min-width:0}
 .rail__brand .mark,.rail__brand .mark__word{min-width:0;overflow-wrap:anywhere}
-/* the scanner's fallback copy sits on the viewer's tone fill, not on
-   paper, which costs it the last of its contrast */
-.viewer .stack .muted,.viewer__msg{color:var(--ink)}
-.entry__meta,.brow__mid .muted,.bstat span{font-size:clamp(12px,.45vw + 10.6px,13.5px)}
+.brow__mid .muted,.bstat span{font-size:clamp(12px,.45vw + 10.6px,13.5px)}
 /* Nothing in the application is allowed under 11px. The mono labels
    keep their wide tracking — that is what makes them read as manga
    captions — they simply stop shrinking. */
-.chip,.bstate,.brow__del,.entry__verdict,
-.entry__no,.who__role,.brow__no,.brow__sub{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
+.chip,.bstate,.brow__del,.brow__no,.brow__sub{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
 
 /* ══════════════════════════════════════════════════════════════════
    MUTED TEXT IS INK, NOT TONE
@@ -802,22 +529,18 @@ none;
    not a palette change. Panels that are printed in ink keep their own
    lighter overrides, which are more specific and still win.
    ══════════════════════════════════════════════════════════════════ */
-.muted,.entry__no,.entry__meta,.entry__verdict,
-.stat span,.stat b i,.chip--set,
-.qrpanel__when,.who__role,.empty,
+.muted,.chip--set,
+.qrpanel__when,.empty,
 .verdict__meet,.setupbox__hint,.bstat span,
-.brow__no,.brow__sub,.bactive__no--off,.bstate--ended,.bstate--past,.bmile__mid .muted,
+.brow__no,.brow__sub,.bstate--ended,.bstate--past,.bmile__mid .muted,
 .brow__mid .muted{color:var(--ink-2)}
-/* the record's missed rows are recessive by opacity and a dashed
-   keyline, which is the tier language — not by unreadable type */
-[data-screen="record"] .entry--miss .entry__verdict{color:var(--ink-2)}
 
 /* ── 3. Grid children that cannot shrink ──────────────────────────
    `.duo` and `.rig` reported horizontal clipping: a grid child's
    default min-width is auto, so a long unbreakable string pushes the
    track wider than its column instead of wrapping. */
-.rig > *,.entry,.brow__mid,.bmile__mid{min-width:0}
-.entry__meta,.brow__mid b{overflow-wrap:anywhere}
+.rig > *,.brow__mid,.bmile__mid{min-width:0}
+.brow__mid b{overflow-wrap:anywhere}
 
 /* ══ TOUCH ═════════════════════════════════════════════════════════
    Keyed to the input device, not to the screen width. A 1024px
@@ -830,37 +553,6 @@ none;
   .input{padding-inline:var(--s4)}
   .btn{padding-inline:var(--s5)}
 }
-
-/* ══ THE SINGLE-COLUMN RECORD ══════════════════════════════════════
-   Each row was an outer light panel wrapping an inner ink block — two
-   borders and two paddings for one piece of information, which in a
-   narrow column is most of the horizontal budget. The inked entry
-   becomes the frame itself, and the gain moves under the verdict
-   rather than fighting it for the same baseline.
-
-   This is a property of the COLUMN, not of the device: it applies
-   wherever the log is running one card per row, which the log's own
-   auto-fill rule decides. Container queries let the card ask that
-   question directly instead of guessing from the viewport. */
-[data-screen="record"] .log{container-type:inline-size;container-name:log}
-
-@container log (max-width: 380px){
-  [data-screen="record"] .rec{
-    border:0;padding:0;background:none;box-shadow:none;
-  }
-  [data-screen="record"] .entry{
-    padding:var(--s4);
-    border:var(--edge-thin) solid var(--ink);
-    grid-template-columns:1fr;
-    grid-template-areas:"no" "verdict" "meta" "gain";
-    gap:3px;
-  }
-  [data-screen="record"] .entry--set{border-color:var(--ink)}
-  [data-screen="record"] .entry__gain{
-    grid-area:gain;margin-top:var(--s3);
-    font-family:var(--f-display);font-size:15px;
-  }
-}
 /* Browsers without container query support keep the two-frame row,
    which is legible everywhere — it is denser, not broken. */
 
@@ -869,20 +561,12 @@ none;
    tight and the first thing to return when it does not. Expressed as
    the base with a lift at the tablet tier, so there is one direction
    of travel rather than a stack of exceptions. */
-.tech{padding:var(--s4)}
-.tech__name{font-size:clamp(17px,4vw,20px)}
+
 .brow__n{font-size:clamp(17px,4vw,19px)}
 .bstat{padding:var(--s4)}
 .bsec{margin-top:var(--s5)}
-/* The scanner frame keeps its weight — it is the one place a heavy
-   keyline does real work, telling you where to aim. Said through the
-   rank system now (scan's .viewer is --ink-w:4.2) rather than pinned
-   here, where a fixed width in the last stylesheet was quietly
-   capping it three steps lighter than the rank asked for. */
-:where(.viewer){border-width:var(--edge)}
 
 @media (min-width:768px){
-  .tech{padding:var(--s5)}
   .bstat{padding:var(--s4) var(--s4) var(--s5)}
 }
 
@@ -914,8 +598,7 @@ main#view:focus,main#view:focus-visible{outline:none}
    against a log at 32). Both read as "slightly wrong" without being
    obviously broken, which is exactly the kind of thing that makes a
    layout feel unfinished. */
-.viewer{width:100%;margin-inline:0}
-.rec .entry{padding-right:0}
+
 
 /* ── 6. Reward requirement legibility ─────────────────────────────
    "Unlocks at 20 stamps" is the single most useful line on a locked
@@ -923,45 +606,7 @@ main#view:focus,main#view:focus-visible{outline:none}
    secondary weight on top of screentone, which eats contrast. It gets
    full ink and mono tracking so it reads as a spec, not a whisper. */
 
-.tech--sealed .tech__req{color:var(--ink)}
-.tech--sealed .tech__name{color:var(--ink)}
 
-/* ── the fields ───────────────────────────────────────────────────
-   Underlined inputs inside a bordered card read as a stack of empty
-   boxes: the input's bottom rule and the card's side borders close
-   three sides of a rectangle that was never meant to be one. The
-   field gets its own quiet ground instead, so it reads as a slot to
-   type into, and the rule under it becomes the base of the slot
-   rather than a divider between two of them. */
-/* THE FIELD IS ONE BOUNDED OBJECT.
-
-   An underline-only input inside a bordered card closes three sides of
-   a rectangle it was never meant to have: the card's two edges plus
-   the input's own bottom rule. The result read as a row of empty
-   boxes with the labels floating inside them. The input carries its
-   own full border now, so the label sits above a field with a visible
-   edge on all four sides, and the two align on the same measure. */
-[data-screen="auth"] .authp__f{margin-bottom:0;display:grid;gap:6px}
-[data-screen="auth"] .authp .input{
-  width:100%;box-sizing:border-box;
-  background:var(--v1);
-  border:var(--edge-thin) solid var(--ink);
-  padding:clamp(11px,3vw,14px) clamp(11px,3vw,14px);
-  font-size:max(16px, 1rem)}          /* 16px floor stops iOS zooming on focus */
-[data-screen="auth"] .authp .input::placeholder{color:var(--ink-2);opacity:.75}
-[data-screen="auth"] .authp .input:focus-visible{
-  outline:none;box-shadow:inset 0 0 0 var(--edge-heavy) var(--ink)}
-
-/* the action row: the commit takes the measure on a phone and sits
-   natural-width once there is room beside the secondary link */
-[data-screen="auth"] .authp__act{display:flex;flex-wrap:wrap;
-  align-items:center;gap:clamp(10px,3vw,18px);
-  margin-top:clamp(4px,1.5vw,10px)}
-[data-screen="auth"] .authp__act .btn--go{
-  flex:1 1 100%;min-height:50px;justify-content:center}
-@media(min-width:480px){
-  [data-screen="auth"] .authp__act .btn--go{flex:0 0 auto;min-width:min(52%,190px)}
-}
 
 /* ONE BRAND ON THE PAGE. Both the topbar and the desktop rail repeat
    the wordmark beside the card that already states it — and signed
@@ -991,7 +636,7 @@ main#view:focus,main#view:focus-visible{outline:none}
    not in graphics laid on top of them.
    ══════════════════════════════════════════════════════════════════ */
 
-.view--home{display:flex;flex-direction:column;gap:var(--s6)}
+.view--home{display:flex;flex-direction:column;gap:var(--s5)}
 
 /* ── THE CARD ──────────────────────────────────────────────────────
    A printed stamp card: a framed box carrying its own title row and
@@ -1064,48 +709,69 @@ main#view:focus,main#view:focus-visible{outline:none}
    it reads as printed rather than placed, with the verb sitting in the
    corner it leaves clear. */
 .act{display:flex;max-width:760px}
+/* font-family is not optional here. A <button> does not inherit it, so
+   without this line the button and everything inside it renders in the
+   browser's default Arial — which is exactly what was happening. */
 .act__btn{position:relative;overflow:hidden;isolation:isolate;
   display:grid;align-content:end;gap:4px;
   width:100%;min-height:clamp(138px,32vw,190px);
   padding:var(--s5);border:var(--edge-panel) solid var(--ink);
-  background:var(--paper);color:var(--ink);text-align:left;cursor:pointer}
+  background:var(--paper);color:var(--ink);text-align:left;cursor:pointer;
+  font-family:var(--f-body)}
 .act--live .act__btn{background:var(--ink);color:var(--paper)}
 .act__seal{position:absolute;right:-9%;top:-30%;
   width:clamp(168px,50vw,280px);aspect-ratio:1;height:auto;
   fill:currentColor;opacity:.15;pointer-events:none;z-index:-1}
-.act__verb{font-family:var(--f-display);
-  font-size:clamp(22px,5.8vw,36px);line-height:1.05;letter-spacing:-.01em}
+.act__verb{font-family:var(--f-display);text-transform:uppercase;
+  font-size:var(--t-verb);line-height:1;letter-spacing:.01em}
 .act__sub{font-size:var(--t-body);opacity:.7}
 .act__btn:hover{background:var(--ink);color:var(--paper)}
 .act__btn:hover .act__seal{opacity:.22}
 
 /* ── THE BRIEF ─────────────────────────────────────────────────────
    Two bordered panels became one column of rules. */
-.brief{display:flex;flex-direction:column;gap:var(--s3);max-width:760px}
-.brief__head{display:flex;align-items:baseline;justify-content:space-between;
-  gap:var(--s3);padding-bottom:var(--s2);
-  border-bottom:var(--edge-panel) solid var(--ink)}
-.brief .h2{margin:0}
-.brief__h2{margin-top:var(--s5);padding-bottom:var(--s2);
-  border-bottom:var(--edge-rule) solid var(--tone)}
 
-/* ── THE SPREAD ────────────────────────────────────────────────────
-   Once there is room, the three panels stop being a stack. The card
-   takes the wide measure, the ink panel goes tall beside it, and the
-   log runs the full width underneath — unequal shapes, which is the
-   whole of the manga-page influence on this screen. */
+
+/* ── THE DECK ─────────────────────────────────────────────────────
+   Home is two objects: the card, and the one thing you can do about
+   it. They stack on a phone and sit as unequal panels once there is
+   width — the wide printed card, the tall ink panel beside it. The
+   ink panel takes the card's height exactly, so the pair reads as one
+   spread rather than two components that happen to be adjacent. */
+.view--home{display:flex;flex-direction:column;gap:var(--s5)}
+.deck{display:grid;gap:var(--s4)}
+
 @media(min-width:1024px){
-  .view--home{display:grid;
-    grid-template-columns:minmax(0,7fr) minmax(0,5fr);
-    gap:var(--s7) var(--s6);align-items:start}
-  .view--home > .card,
-  .view--home > .act,
-  .view--home > .brief{max-width:none}
-  .view--home > .card{grid-column:1}
-  .view--home > .act{grid-column:2;align-self:stretch}
-  .view--home > .act .act__btn{min-height:clamp(280px,30vw,420px)}
-  .view--home > .brief{grid-column:1/-1}
+  .deck{grid-template-columns:minmax(0,7fr) minmax(0,5fr);
+    gap:var(--s6);align-items:stretch}
+  .deck > .card,.deck > .act{max-width:none}
+  .deck > .act .act__btn{min-height:0}
 }
+
+/* ── AHEAD ────────────────────────────────────────────────────────
+   The meetings still to come, and nothing else. What used to sit here
+   was two log entries, the first of which restated the meeting the
+   ink panel was already showing — same number, same date, same room,
+   two hundred pixels lower. This is the part Home did not already
+   say, set small and tight so the card keeps the page. */
+.ahead{display:flex;flex-direction:column}
+.ahead__mark{margin:0 0 var(--s2);padding-bottom:var(--s2);
+  border-bottom:var(--edge-panel) solid var(--ink);
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(19px,3.6vw,26px);line-height:1}
+.ahead__list{list-style:none;margin:0;padding:0;
+  display:flex;flex-direction:column}
+.ahead__row{display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:baseline;gap:var(--s3);
+  padding:clamp(9px,1.4vw,13px) 0;
+  border-bottom:var(--edge-rule) solid var(--tint)}
+.ahead__no{font-family:var(--f-display);line-height:1;
+  font-size:clamp(21px,4.4vw,30px);color:var(--ink-2);
+  min-width:2.4ch;letter-spacing:-.02em}
+.ahead__day{font-size:var(--t-body);color:var(--ink-2)}
+.ahead__at{font-size:var(--t-caption);color:var(--tone);
+  justify-self:end;text-align:right}
 
 
 /* ══ THE RAIL'S ACCOUNT BLOCK ═══════════════════════════════════════
@@ -1114,3 +780,687 @@ main#view:focus,main#view:focus-visible{outline:none}
 .rail__who{font-family:var(--f-display);
   font-size:clamp(15px,1.3vw,19px);line-height:1.15;overflow-wrap:anywhere}
 .rail__role{margin-top:2px;font-size:13px}
+
+
+/* ══ FORM CONTROLS INHERIT THE VOICE ════════════════════════════════
+   Buttons, inputs and selects do not inherit font-family from their
+   parent — the UA stylesheet gives them Arial 13.33px. Every control in
+   the app that forgot to set one was silently outside the type system.
+   One rule, at the root of the cascade, instead of remembering it on
+   every component forever. */
+button,input,select,textarea{font-family:inherit}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   THE OPENING SPREAD — sign in
+
+   One panel, composed on a diagonal. The seal is enormous and cropped
+   by the left edge; the wordmark sits across its upper field in the
+   display face; the form is a small dense block low and right. The
+   imbalance is the design — a centred card is what made this page
+   anonymous.
+
+   The seal is the ONE graphic on the page and it is doing structural
+   work: it establishes scale, it fills the quiet half of the
+   composition, and it is the only thing here a member will remember.
+   ══════════════════════════════════════════════════════════════════ */
+/* The generic .view is a six-column grid; auth is not on that grid, so
+   it opts out entirely rather than fighting it. Width and centring live
+   on .spread, which is the only layout box this page has. */
+.view--auth{display:block;width:100%;max-width:none;padding:0;margin:0}
+
+.spread{position:relative;width:100%;max-width:1040px;margin-inline:auto;
+  box-sizing:border-box;
+  display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s6);
+  padding:clamp(24px,7vw,64px) var(--gutter);
+  isolation:isolate}
+
+/* the cropped mark. Half of it is off the sheet on purpose. */
+.spread__art{position:absolute;inset:0;overflow:hidden;z-index:-1;
+  pointer-events:none}
+.spread__seal{position:absolute;
+  left:-40%;top:50%;transform:translateY(-54%);
+  width:min(132vw,900px);aspect-ratio:1;height:auto;
+  fill:var(--ink);opacity:.13}
+
+/* The kicker sits ABOVE the wordmark. Underneath it, the display face's
+   long descenders ran straight through it. */
+.spread__head{max-width:none}
+.spread__sub{margin:0 0 var(--s3);font-size:var(--t-caption);
+  letter-spacing:.16em;color:var(--ink-2)}
+.spread__wm{font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(54px,16vw,132px);line-height:.9;letter-spacing:.01em;
+  margin:0}
+
+/* THE FORM. Its own class namespace on purpose: it used to share
+   .field / .input / .btn with the rest of the app, and three sets of
+   rules from three files fought over it — one laying the label beside
+   the input, one giving the button a flex-basis of 100% so the swap
+   link wrapped off the sheet. Nothing here is shared, so nothing here
+   can be overridden from a distance. */
+.authp{position:relative;background:var(--paper);
+  border:var(--edge-frame) solid var(--ink);
+  padding:clamp(20px,5vw,34px);
+  display:flex;flex-direction:column;gap:var(--s4);
+  max-width:440px;width:100%;box-sizing:border-box}
+.authp__title{font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(26px,6vw,38px);line-height:1;margin:0}
+.authp__f{display:flex;flex-direction:column;gap:5px;min-width:0}
+.authp__lab{font-size:var(--t-caption);color:var(--ink-2);letter-spacing:.08em}
+.authp__in{display:block;width:100%;box-sizing:border-box;min-width:0;
+  min-height:var(--tap);padding:10px 12px;
+  border:var(--edge-panel) solid var(--ink);border-radius:0;
+  background:var(--paper);color:var(--ink);
+  font-family:var(--f-body);font-size:max(16px,var(--t-body))}
+.authp__in::placeholder{color:var(--tone)}
+.authp__in:focus-visible{outline:var(--edge-panel) solid var(--ink);
+  outline-offset:2px}
+.authp__err{margin:0;color:var(--ink);font-style:italic;font-weight:700;
+  border-left:var(--edge-frame) solid var(--ink);padding-left:10px}
+.authp__act{display:flex;flex-direction:column;gap:var(--s3);margin-top:var(--s2)}
+.authp__go{display:block;width:100%;min-height:54px;box-sizing:border-box;
+  padding:12px 16px;border:0;border-radius:0;cursor:pointer;
+  background:var(--ink);color:var(--paper);
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(20px,4.6vw,26px);line-height:1;letter-spacing:.02em}
+.authp__go:hover{background:var(--ink-2)}
+.authp__go[disabled]{opacity:.55;cursor:progress}
+.authp__swap{display:block;width:100%;min-height:var(--tap);
+  background:none;border:0;cursor:pointer;padding:0;
+  color:var(--ink);font-family:var(--f-body);font-size:var(--t-body);
+  text-decoration:underline;text-underline-offset:3px;text-align:left}
+
+/* Once there is room the spread goes diagonal: mark and wordmark upper
+   left, form lower right, with the empty quarters carrying the tension. */
+@media(min-width:820px){
+  .spread{grid-template-columns:minmax(0,1fr) minmax(0,clamp(340px,34%,430px));
+    align-items:center;gap:clamp(28px,5vw,72px);
+    min-height:min(760px,86vh)}
+  .spread__head{align-self:center}
+  .spread__seal{left:-30%;width:min(86vw,780px)}
+  .authp{align-self:start;margin-top:clamp(20px,6vh,72px)}
+}
+
+/* The single-weight display face cannot carry a bold span, and the
+   browser synthesising one looks like a rendering fault. */
+.mark__word b{font-weight:inherit}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   THE REGISTER — record
+
+   Seventy-four rules across three files used to describe this page,
+   fighting each other with !important, a --ink-w variable, clip-paths,
+   nth-of-type column spans and a container query. The result was a
+   stack of full-bleed black slabs, one per screen-height. All of it is
+   gone; this is the whole page.
+
+   The page reads quiet → impact → dense → quiet: a heading with room
+   around it, one large figure standing in the margin, then the register
+   itself set tight, and the meetings still ahead trailing off at the
+   bottom. The one thing that breaks the rhythm is the meeting you can
+   walk into right now.
+   ══════════════════════════════════════════════════════════════════ */
+.view--record{display:flex;flex-direction:column;gap:var(--s5)}
+
+/* text only a screen reader needs. The verdict word is not printed on
+   every line — the mark carries it — so the word is said here instead. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+
+/* ── the heading ──────────────────────────────────────────────────
+   Quiet. The title runs at display size and the note sits under it in
+   a short measure, so the eye drops straight past into the register
+   instead of tracking across a full-width paragraph. */
+.rechead{border-bottom:var(--edge-frame) solid var(--ink);
+  padding-bottom:var(--s3)}
+/* The display face draws from +.94em to -.36em — 1.30em of ink inside a
+   .9em line box. Without this the R and the C of RECORD hang into the
+   paragraph below. .2em is the measured overshoot, in the title's own
+   em so it scales with the clamp. */
+.rechead__title{margin:0;padding-bottom:.2em}
+/* Home's heading sits above the card rather than above a page of text,
+   so it runs one step tighter. */
+.rechead--tight{padding-bottom:var(--s2)}
+.rechead--tight .rechead__title{font-size:clamp(30px,6.5vw,64px)}
+.rechead__note{margin:0;max-width:44ch;
+  font-size:var(--t-caption);line-height:1.45;color:var(--ink-2)}
+
+/* ── the body ─────────────────────────────────────────────────────
+   One column at every width. The tally was a sticky left margin for a
+   while; on a tall sheet that left thirteen hundred pixels of blank
+   paper beside the register, which is exactly the emptiness this
+   redesign is meant to remove. It is a band now: full width, read left
+   to right, and the register starts under it. */
+.recbody{display:grid;gap:var(--s4)}
+
+/* ── the tally ────────────────────────────────────────────────────
+   The impact beat. One figure at display size, a solid block showing
+   the same number as a proportion, and the count of what is missing.
+   Three facts, no chrome. */
+.tally{display:grid;gap:2px;
+  grid-template-columns:auto minmax(0,1fr);
+  grid-template-areas:"fig of" "bar bar" "gone gone";
+  align-items:end}
+.tally__fig{grid-area:fig;margin:0;font-family:var(--f-display);
+  line-height:.78;font-size:clamp(64px,15vw,120px);color:var(--ink)}
+.tally__of{grid-area:of;margin:0 0 .55em var(--s3);
+  font-size:var(--t-caption);color:var(--ink-2);line-height:1.2}
+.tally__bar{grid-area:bar;position:relative;margin:var(--s3) 0 0;
+  width:100%;height:clamp(9px,1.3vw,14px);
+  background:var(--tone-field);overflow:hidden}
+.tally__bar::before{content:"";position:absolute;inset:0 auto 0 0;
+  width:var(--fill,0%);background:var(--ink)}
+.tally__gone{grid-area:gone;margin:var(--s2) 0 0;
+  font-size:var(--t-caption);color:var(--ink-2);line-height:1.2}
+
+/* On a wide sheet the three facts sit on one line and the block runs
+   the measure — the band is the widest ink on the page after the
+   heading rule, which is what makes it the beat it is. */
+@media(min-width:760px){
+  .tally{grid-template-columns:auto auto minmax(0,1fr) auto;
+    grid-template-areas:"fig of bar gone";
+    align-items:center;column-gap:var(--s4)}
+  .tally__of{margin:0;align-self:end;padding-bottom:.5em}
+  .tally__bar{margin:0}
+  .tally__gone{margin:0;align-self:end;padding-bottom:.5em;
+    white-space:nowrap}
+}
+
+/* ── the register ─────────────────────────────────────────────────── */
+.ledger{display:flex;flex-direction:column;
+  border-top:var(--edge-panel) solid var(--ink)}
+.ledger--ahead{margin-top:var(--s4);border-top:0}
+
+/* the section mark: a label sitting on its own rule, the way a printed
+   ledger divides a page */
+.ledger__mark{margin:0 0 var(--s2);padding-bottom:var(--s2);
+  border-bottom:var(--edge-panel) solid var(--ink);
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(19px,3.6vw,26px);line-height:1}
+.ledger--ahead .ledger__mark{margin-top:0}
+
+/* ── one line ─────────────────────────────────────────────────────
+   Dense on purpose: hairline rules, tight leading, and no state word
+   repeated down the column. The number is what gives the page its
+   vertical beat, so it is set at display size, not caption size. */
+.lrow{display:grid;
+  grid-template-columns:auto clamp(30px,7vw,42px) minmax(0,1fr) auto;
+  align-items:center;gap:var(--s3);
+  width:100%;text-align:left;background:none;border:0;border-radius:0;
+  color:inherit;font:inherit;
+  padding:clamp(9px,1.4vw,13px) 0;
+  border-bottom:var(--edge-rule) solid var(--tint)}
+
+.lrow__no{font-family:var(--f-display);line-height:1;
+  font-size:clamp(21px,4.4vw,30px);color:var(--tone);
+  min-width:2.4ch;letter-spacing:-.02em}
+.lrow__stamp{display:grid;place-items:center;aspect-ratio:1}
+.lrow__mark{width:100%;height:100%;display:block}
+.lrow__mark path{fill:var(--ink)}
+
+/* an unstamped meeting is an empty box on a stamp card, so that is what
+   it looks like — the outline the mark would have filled. */
+.lrow__slot{width:58%;aspect-ratio:1;border-radius:50%;
+  border:var(--edge-panel) solid var(--tint)}
+
+.lrow__body{display:flex;flex-direction:column;gap:0;min-width:0}
+.lrow__date{font-size:var(--t-body);line-height:1.15}
+.lrow__when{font-size:var(--t-caption);color:var(--ink-2);line-height:1.3}
+
+/* ATTENDED — the number goes to full ink and the stamp prints. No word:
+   the mark is the record. */
+.lrow--set .lrow__no{color:var(--ink)}
+
+/* MISSED — the whole line recedes. Nothing is struck through: an
+   absence is quiet, not cancelled. */
+.lrow--miss .lrow__no{color:var(--ink-2)}
+.lrow--miss .lrow__date{color:var(--ink-2)}
+.lrow--miss .lrow__when{color:var(--tone)}
+
+/* SCHEDULED — not yet anything. */
+.lrow--upcoming .lrow__no{color:var(--ink-2)}
+.lrow--upcoming .lrow__date{color:var(--ink-2)}
+.lrow--upcoming .lrow__when{color:var(--tone)}
+
+/* OPEN — the one line you can act on, and the only ink mass on the
+   page. It breaks the register's rhythm on purpose: it bleeds past the
+   column rules, it inverts, and it is the only line that ends in a verb. */
+.lrow--open{background:var(--ink);color:var(--paper);cursor:pointer;
+  padding:var(--s4);margin:var(--s3) 0;border-bottom:0;
+  box-shadow:var(--s2) var(--s2) 0 var(--tone-field)}
+.lrow--open .lrow__no{color:var(--paper)}
+.lrow--open .lrow__slot{border-color:var(--paper)}
+.lrow--open .lrow__date{font-family:var(--f-display);
+  text-transform:uppercase;font-size:clamp(21px,4.6vw,30px);line-height:1}
+.lrow--open .lrow__when{color:var(--tint)}
+.lrow__go{font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(15px,3vw,20px);line-height:1;color:var(--paper);
+  white-space:nowrap}
+.lrow--open:hover{background:var(--ink-2)}
+.lrow--open:focus-visible{outline:var(--edge-panel) solid var(--ink);
+  outline-offset:3px}
+
+@media(min-width:768px){
+  .lrow{gap:var(--s4)}
+}
+
+/* Once there is width to spend, the line stops stacking and runs across
+   it: number, mark, date, then the reading set flush right. */
+@media(min-width:900px){
+  .lrow{grid-template-columns:auto clamp(34px,3vw,44px) minmax(7rem,auto)
+      minmax(0,1fr) auto;
+    align-items:baseline;column-gap:var(--s4)}
+  .lrow__body{display:contents}
+  .lrow__stamp{align-self:center}
+  .lrow__date{grid-column:3}
+  .lrow__when{grid-column:4;justify-self:end;text-align:right}
+  .lrow__go{grid-column:5}
+}
+
+/* Past a certain width one line per row leaves six hundred pixels of
+   nothing between the date and the reading. A printed register solves
+   that by setting in two columns, so this does: the sheet fills, the
+   page halves in height, and the meeting that is open still takes the
+   full measure across the top. */
+@media(min-width:1180px){
+  .ledger{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    column-gap:clamp(32px,4vw,72px)}
+  .ledger__mark,.lrow--open{grid-column:1 / -1}
+  .lrow{column-gap:var(--s3)}
+  .lrow--open{column-gap:var(--s4)}
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   THE SCANNER — scan
+
+   A hundred and thirty-two rules across three files used to dress this
+   page. What they drew, over and above a camera picture: a strip of
+   invented telemetry along the top (OPT.CAM // 1280, FMT.M##/XXXXXX,
+   SYS.TRACKING), a rune reading TARGETING down the right edge, a band
+   of diagonal hatching behind it, a crosshair, a dashed compass ring,
+   twenty-four tick marks, a sweeping scan line, a second set of inner
+   brackets, and the club seal painted across the middle of the frame.
+
+   None of it was a fact. The rune was decoration in a language the app
+   does not otherwise speak; the readouts named a system that does not
+   exist; and the seal sat exactly where the code you are trying to
+   read has to go.
+
+   What is left is what an instrument actually needs: a frame, four
+   marks showing where to aim, and one line saying what it is doing.
+   The one real piece of state — which meeting is taking check-ins —
+   is now printed above the frame, where the telemetry used to be.
+   ══════════════════════════════════════════════════════════════════ */
+.view--scan{display:flex;flex-direction:column;gap:var(--s4)}
+
+/* the meeting the camera is for. The only status this page can state
+   truthfully without asking the camera, and the thing the invented
+   telemetry was standing in front of. */
+.standing{display:flex;align-items:baseline;gap:var(--s3);
+  flex-wrap:wrap;margin:0}
+.standing__lab{font-size:var(--t-caption);color:var(--ink-2);
+  white-space:nowrap}
+.standing__at{font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(19px,3.8vw,28px);line-height:1;color:var(--ink)}
+
+/* ── THE FRAME ────────────────────────────────────────────────────
+   One heavy border, the feed inside it, the status pinned to the
+   bottom edge. Every child shares one grid cell so the target area is
+   centred in the frame whatever the status line happens to say. */
+.viewer{position:relative;display:grid;place-items:center;
+  isolation:isolate;overflow:hidden;
+  width:100%;aspect-ratio:1;max-height:62vh;
+  border:var(--edge-frame) solid var(--ink);background:var(--tint)}
+/* a code is square, so on a phone the frame is square: it fills the
+   sheet instead of leaving a letterbox with half a screen under it. */
+@media(min-width:600px){ .viewer{aspect-ratio:4/3} }
+.viewer > *{grid-area:1/1}
+.viewer video{width:100%;height:100%;object-fit:cover;display:block;
+  filter:grayscale(1) contrast(1.06)}
+
+/* screentone over the feed, not a veil: it holds the overlay legible
+   against a camera image nobody controls. */
+.viewer__scrim{width:100%;height:100%;pointer-events:none;
+  background-image:radial-gradient(rgba(10,10,10,.34) 1.1px,transparent 1.2px);
+  background-size:5px 5px}
+.viewer__grain{display:none}
+
+/* ── WHERE TO AIM ─────────────────────────────────────────────────
+   Four right-angle marks and nothing between them. They sit at the
+   corners and never across the middle, so they cannot cover the code. */
+/* lifted clear of the status band: the two used to share the bottom
+   of the frame, and the sentence printed straight over the lower
+   corner marks. */
+.reticle{position:relative;width:min(58%,290px);aspect-ratio:1;
+  margin-bottom:clamp(36px,8vw,58px);
+  pointer-events:none;z-index:2}
+.reticle__c{position:absolute;width:15%;height:15%;
+  border:var(--edge-frame) solid var(--paper);
+  filter:drop-shadow(0 0 1px rgba(10,10,10,.55))}
+.reticle__c--tl{top:0;left:0;border-right:0;border-bottom:0}
+.reticle__c--tr{top:0;right:0;border-left:0;border-bottom:0}
+.reticle__c--bl{bottom:0;left:0;border-right:0;border-top:0}
+.reticle__c--br{bottom:0;right:0;border-left:0;border-top:0}
+
+/* the marks close on a hit and open again on a refusal. Weight and
+   position carry the state; there is no colour in this system to spend. */
+.reticle--good .reticle__c{width:19%;height:19%}
+.reticle--busy .reticle__c{opacity:.55}
+.reticle--bad .reticle__c{width:12%;height:12%}
+
+/* ── THE STATUS ───────────────────────────────────────────────────
+   One sentence in plain words, on paper so it holds over any scene. */
+.viewer__status{align-self:end;justify-self:center;z-index:3;
+  padding:0 var(--s3) var(--s3);max-width:100%}
+.viewer__msg{display:inline-block;
+  padding:6px var(--s3);background:var(--paper);color:var(--ink);
+  font-size:var(--t-caption);line-height:1.25;text-align:center}
+.viewer__msg--hot{background:var(--ink);color:var(--paper)}
+.viewer__msg--soft{color:var(--ink-2)}
+
+/* a good read floods the frame for one beat */
+.viewer--hit{border-color:var(--ink)}
+.viewer--hit .viewer__scrim{opacity:.35}
+
+/* ── THE DEAD ENDS ────────────────────────────────────────────────
+   No camera, no permission, no https. The panel stops being a
+   viewfinder and becomes a note: title, sentence, and the field below
+   already focused. It used to lead with a bracketed fault code
+   invented for this screen. */
+.viewer--stalled{aspect-ratio:auto;min-height:clamp(160px,30vw,240px);
+  place-items:stretch;background:var(--paper)}
+.stall{display:flex;flex-direction:column;justify-content:center;
+  gap:var(--s2);padding:var(--s5);text-align:left}
+.stall__title{margin:0;font-family:var(--f-display);
+  text-transform:uppercase;line-height:1;
+  font-size:clamp(19px,3.6vw,28px)}
+.stall__note{margin:0;max-width:46ch;font-size:var(--t-caption);
+  line-height:1.45;color:var(--ink-2)}
+
+/* ── TYPING IT INSTEAD ────────────────────────────────────────────
+   The fallback is a real form block, not an afterthought squeezed
+   under the frame: a label, a ruled field, and the verb in ink. */
+.manual{display:flex;flex-direction:column;gap:var(--s2);
+  border-top:var(--edge-panel) solid var(--ink);padding-top:var(--s3)}
+.manual__lab{font-size:var(--t-caption);color:var(--ink-2);line-height:1.35}
+.manual__f{display:flex;gap:var(--s2);flex-wrap:wrap;align-items:stretch}
+.manual__in{flex:999 1 min(100%,14ch);min-width:0;
+  padding:11px 2px 9px;background:transparent;color:var(--ink);
+  border:0;border-bottom:var(--edge-panel) solid var(--ink);border-radius:0;
+  font-family:var(--f-mono);font-size:var(--t-caption);letter-spacing:.06em}
+.manual__in::placeholder{color:var(--tone)}
+.manual__in:focus{outline:0;border-bottom-width:var(--edge-frame)}
+.manual__go{flex:1 1 auto;min-width:max-content;
+  padding:11px var(--s4);border:var(--edge-panel) solid var(--ink);
+  background:var(--ink);color:var(--paper);cursor:pointer;
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(15px,3vw,20px);line-height:1.2}
+.manual__go:hover{background:var(--paper);color:var(--ink)}
+.manual__go:focus-visible{outline:var(--edge-panel) solid var(--ink);
+  outline-offset:3px}
+
+/* On a wide sheet the frame keeps a sane size instead of becoming a
+   letterbox two thirds of the screen across, and the fallback sits
+   beside it rather than a full page-width away from the thing it is a
+   fallback for. */
+@media(min-width:1024px){
+  .view--scan{display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(16rem,22rem);
+    grid-template-areas:"head head" "standing standing" "viewer manual";
+    gap:var(--s5) var(--s6);align-content:start}
+  .view--scan > .rechead{grid-area:head}
+  .view--scan > .standing{grid-area:standing}
+  .view--scan > .viewer{grid-area:viewer;max-height:none}
+  /* the fallback sits at the foot of the frame's row, so its ruled
+     field lines up with the status band instead of floating at the top
+     of eight hundred pixels of empty column. */
+  .view--scan > .manual{grid-area:manual;align-self:stretch;
+    justify-content:flex-end;border-top:0;padding-top:0}
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   THE LADDER — rewards
+
+   Every tier used to draw its own progress array starting from zero.
+   The same six stamps were therefore reported four times per row — a
+   ten-to-thirty cell array, "6 / 10 stamps", "4 to go", and "Unlocks
+   at 10 stamps" — and three times down the page, twelve statements of
+   one number. At phone width the thirty-cell array drew thirty
+   three-pixel slivers, which is a graphic that cannot be read.
+
+   There is one count. This is one scale showing where it stands
+   against all three rungs at once, and under it the rungs as ledger
+   lines in the register's own vocabulary.
+   ══════════════════════════════════════════════════════════════════ */
+.view--rewards{display:flex;flex-direction:column;gap:var(--s5)}
+
+/* ── THE SCALE ────────────────────────────────────────────────────
+   The impact beat: one figure, one track, the rungs marked on it at
+   their real positions so the distances between them are visible
+   rather than described. */
+.ladder{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+/* the display face draws well below its line box; without the pad the
+   figure's tail lands in the caption under it */
+.ladder__fig{margin:0;padding-bottom:.1em;font-family:var(--f-display);
+  line-height:.78;font-size:clamp(64px,15vw,120px);color:var(--ink)}
+.ladder__of{margin:0;font-size:var(--t-caption);color:var(--ink-2);
+  line-height:1.2}
+
+.ladder__track{position:relative;width:100%;
+  margin-top:clamp(28px,5vw,42px);
+  height:clamp(10px,1.4vw,15px);background:var(--tone-field)}
+.ladder__fill{position:absolute;inset:0 auto 0 0;width:var(--w,0%);
+  background:var(--ink)}
+
+/* a rung is a hard stop drawn through the track with its figure set
+   above it — the same numeral the tier rows use, so the scale and the
+   list are visibly the same instrument */
+.ladder__rung{position:absolute;top:-6px;bottom:-6px;left:var(--x,0%);
+  width:var(--edge-panel);background:var(--ink)}
+.ladder__rung b{position:absolute;left:50%;bottom:calc(100% + 5px);
+  transform:translateX(-50%);
+  font-family:var(--f-display);font-weight:inherit;line-height:1;
+  font-size:clamp(15px,3vw,21px);color:var(--ink-2)}
+/* a rung already behind you is drawn on the filled part of the track,
+   so it inverts to hold against the ink */
+.ladder__rung--past{background:var(--paper)}
+.ladder__rung--past b{color:var(--ink)}
+
+/* ── THE RUNGS ────────────────────────────────────────────────────
+   Ledger lines. Same grid, same rules, same numeral treatment as the
+   register on Record — one page vocabulary, two pages. */
+.tiers{display:flex;flex-direction:column;
+  border-top:var(--edge-panel) solid var(--ink)}
+.tier{display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;gap:var(--s3);
+  padding:clamp(11px,1.7vw,16px) 0;
+  border-bottom:var(--edge-rule) solid var(--tint)}
+.tier__at{font-family:var(--f-display);line-height:1;
+  font-size:clamp(24px,5vw,34px);color:var(--tone);
+  min-width:2.4ch;letter-spacing:-.02em}
+.tier__body{display:flex;flex-direction:column;gap:0;min-width:0}
+.tier__name{font-size:var(--t-body);line-height:1.15}
+.tier__desc{font-size:var(--t-caption);color:var(--ink-2);line-height:1.3}
+.tier__say{font-size:var(--t-caption);color:var(--ink-2);
+  white-space:nowrap;justify-self:end;text-align:right}
+
+/* SEALED — the distance is the only thing to say. */
+/* READY — the one rung you can act on, and the only ink on the list. */
+.tier--ready{background:var(--ink);color:var(--paper);
+  padding-left:var(--s4);padding-right:var(--s4);
+  margin:var(--s2) 0;border-bottom:0;
+  box-shadow:var(--s2) var(--s2) 0 var(--tone-field)}
+.tier--ready .tier__at{color:var(--paper)}
+.tier--ready .tier__desc{color:var(--tint)}
+.tier__claim{padding:9px var(--s4);cursor:pointer;
+  border:var(--edge-panel) solid var(--paper);
+  background:var(--paper);color:var(--ink);
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(15px,3vw,21px);line-height:1.2;white-space:nowrap}
+.tier__claim:hover{background:var(--ink);color:var(--paper)}
+.tier__claim:focus-visible{outline:var(--edge-panel) solid var(--paper);
+  outline-offset:3px}
+
+/* CLAIMED — taken. The numeral comes to full ink and the line recedes:
+   it is history, not an offer. */
+.tier--claimed .tier__at{color:var(--ink)}
+.tier--claimed .tier__name{color:var(--ink-2)}
+.tier--claimed .tier__desc{color:var(--tone)}
+
+@media(min-width:768px){
+  .tier{gap:var(--s4)}
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   THE ACCOUNT — member
+
+   This page used to open with the username set as a display headline —
+   twenty digits of it at 110px inside a box — then print the same
+   string again in the identity band below, and again in the desktop
+   rail. Beside it sat CARD TIER 10, a label naming nothing the product
+   has, and a sentence reading "06 stamps struck across 6 of 14
+   meetings held" directly above a figure grid stating the same two
+   numbers. Under all of it the three reward milestones were listed in
+   full: the entire Rewards page, restated.
+
+   What is left is what only this page can answer — who is signed in,
+   what their standing is, and how to sign out.
+   ══════════════════════════════════════════════════════════════════ */
+.view--member{display:flex;flex-direction:column;gap:var(--s5)}
+
+/* ── WHO ──────────────────────────────────────────────────────────
+   The name at display scale and the role under it. Once. */
+.who{display:flex;flex-direction:column;gap:2px}
+.who__name{margin:0;font-family:var(--f-display);text-transform:uppercase;
+  line-height:.92;font-size:clamp(30px,7vw,64px);color:var(--ink);
+  overflow-wrap:anywhere}
+.who__hand{margin:0;font-size:var(--t-caption);color:var(--ink-2);
+  line-height:1.3;overflow-wrap:anywhere}
+
+/* ── STANDING ─────────────────────────────────────────────────────
+   The same band Record uses for its tally, carrying the three figures
+   that belong to the account rather than to any one meeting. */
+.standing-band{display:grid;gap:2px;
+  grid-template-columns:auto minmax(0,1fr);
+  grid-template-areas:"fig of" "rest rest";
+  align-items:end;
+  border-top:var(--edge-frame) solid var(--ink);padding-top:var(--s4)}
+.standing-band__fig{grid-area:fig;margin:0;padding-bottom:.1em;
+  font-family:var(--f-display);line-height:.78;
+  font-size:clamp(64px,15vw,120px);color:var(--ink)}
+.standing-band__of{grid-area:of;margin:0 0 .55em var(--s2);
+  font-size:var(--t-caption);color:var(--ink-2);line-height:1.2}
+
+.standing-band__rest{grid-area:rest;display:grid;gap:0;margin:var(--s4) 0 0;
+  grid-template-columns:minmax(0,1fr)}
+.standing-band__rest > div{display:grid;
+  grid-template-columns:minmax(0,1fr) auto;align-items:baseline;
+  gap:var(--s3);padding:clamp(9px,1.4vw,13px) 0;
+  border-bottom:var(--edge-rule) solid var(--tint)}
+.standing-band__rest dt{font-size:var(--t-caption);color:var(--ink-2)}
+/* uppercase is not a style choice here. The display face draws a
+   diaeresis on lowercase o, so "06 of 14" set in it renders "06 öf 14";
+   every other use of the face in the app is uppercase for the same
+   reason. */
+.standing-band__rest dd{margin:0;justify-self:end;
+  font-family:var(--f-display);text-transform:uppercase;line-height:1;
+  font-size:clamp(19px,3.6vw,26px);color:var(--ink)}
+
+@media(min-width:760px){
+  .standing-band{grid-template-columns:auto auto minmax(0,1fr);
+    grid-template-areas:"fig of rest";align-items:center;
+    column-gap:var(--s3)}
+  .standing-band__of{margin:0 clamp(24px,4vw,56px) 0 0;
+    align-self:end;padding-bottom:.62em}
+  .standing-band__rest{margin:0;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    column-gap:clamp(16px,2.4vw,36px)}
+  .standing-band__rest > div{grid-template-columns:minmax(0,1fr);
+    align-content:end;gap:2px;
+    border-bottom:0;border-top:var(--edge-rule) solid var(--tint);
+    padding:var(--s2) 0 0}
+  .standing-band__rest dd{justify-self:start}
+}
+
+/* ── SIGN OUT ─────────────────────────────────────────────────────
+   The rail carries this control once there is a rail; below 1024 there
+   is none, and this is the only screen on the tab bar that can hold
+   it, so it lives here at every width the rail does not cover. */
+.acct{display:flex;border-top:var(--edge-panel) solid var(--ink);
+  padding-top:var(--s4)}
+.acct__out{padding:11px var(--s5);cursor:pointer;
+  border:var(--edge-panel) solid var(--ink);
+  background:var(--paper);color:var(--ink);
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(15px,3vw,21px);line-height:1.2}
+.acct__out:hover{background:var(--ink);color:var(--paper)}
+.acct__out:focus-visible{outline:var(--edge-panel) solid var(--ink);
+  outline-offset:3px}
+@media(min-width:1024px){ .acct{display:none} }
+
+
+/* ══════════════════════════════════════════════════════════════════
+   CLUB TOOLS — board overview
+
+   Same book, administrative chapter. The one thing a board member acts
+   on is the meeting taking check-ins, so that is the ink mass; the rest
+   is the year's standing, set in the same band the member pages use.
+
+   It used to be four figure plates of equal weight — one of them an
+   average derived from the other two — under a section heading reading
+   "The club, in numbers", inside a boxed title that no other screen
+   still uses.
+   ══════════════════════════════════════════════════════════════════ */
+.bover{display:flex;flex-direction:column;gap:var(--s5)}
+
+/* The panel is as tall as what it says. It used to stack the verb under
+   everything else and run four hundred pixels deep with its right two
+   thirds empty ink; the verb sits in that space now. */
+.bnow{display:grid;gap:2px var(--s5);
+  grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"lab" "no" "at" "state" "go";
+  align-items:start;justify-items:start;
+  padding:var(--s5);border:var(--edge-panel) solid var(--ink);
+  background:var(--paper);color:var(--ink)}
+.bnow__lab{grid-area:lab} .bnow__no{grid-area:no}
+.bnow__at{grid-area:at}   .bnow__state{grid-area:state}
+.bnow__go{grid-area:go}
+
+@media(min-width:720px){
+  .bnow{grid-template-columns:minmax(0,1fr) auto;
+    grid-template-areas:"lab go" "no go" "at go" "state go";
+    align-items:start}
+  .bnow__go{align-self:center;margin-top:0}
+}
+.bnow--live{background:var(--ink);color:var(--paper);border-color:var(--ink);
+  box-shadow:var(--s2) var(--s2) 0 var(--tone-field)}
+.bnow__lab{margin:0;font-size:var(--t-caption);color:var(--ink-2)}
+.bnow--live .bnow__lab{color:var(--tint)}
+.bnow__no{margin:0;padding-bottom:.08em;
+  font-family:var(--f-display);text-transform:uppercase;line-height:.9;
+  font-size:clamp(38px,9vw,76px)}
+.bnow__at{margin:0;font-size:var(--t-body);line-height:1.3}
+.bnow--live .bnow__at{color:var(--tint)}
+.bnow__state{margin:var(--s2) 0 0;font-size:var(--t-caption);
+  color:var(--ink-2)}
+.bnow--live .bnow__state{color:var(--paper)}
+.bnow__go{margin-top:var(--s4);padding:11px var(--s5);cursor:pointer;
+  border:var(--edge-panel) solid currentColor;
+  background:transparent;color:inherit;
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(15px,3vw,21px);line-height:1.2}
+.bnow--live .bnow__go{background:var(--paper);color:var(--ink);
+  border-color:var(--paper)}
+.bnow__go:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.bnow--live .bnow__go:hover{background:transparent;color:var(--paper);
+  border-color:var(--paper)}
+.bnow__go:focus-visible{outline:var(--edge-panel) solid currentColor;
+  outline-offset:3px}
+
+/* the board overview borrows Member's standing band, so it needs the
+   band's own top rule rather than a section heading above it */
+.bover .standing-band{border-top-width:var(--edge-panel)}

@@ -149,37 +149,6 @@
    ───────────────────────────────────────────────────────────────── */
 :root{--ink-w:2.8}
 
-[data-screen="record"] .rec--open{--ink-w:4.2}   /* the one you can act on */
-[data-screen="record"] .rec--set{--ink-w:2}
-[data-screen="record"] .rec--miss,
-[data-screen="record"] .rec--upcoming{--ink-w:1.4}
-
-[data-screen="scan"] .viewer{--ink-w:4.2}
-[data-screen="scan"] .manual{--ink-w:2.4}
-
-[data-screen="profile"] .stat{--ink-w:1.6}
-
-/* ─────────────────────────────────────────────────────────────────
-   9. CROPPED TONE IN THE SUPPORTING PANELS
-
-   Tone laid into a corner and cut on the diagonal, so the supporting
-   panels have material in them without competing with the lead. The
-   wedge is absolutely positioned and masked, so it adds no height and
-   cannot push anything out of the viewport.
-   ───────────────────────────────────────────────────────────────── */
-
-
-/* the record page's live row gets a tone band so the actionable entry
-   reads as figure against the confirmed rows' ground */
-[data-screen="record"] .rec--open{position:relative;isolation:isolate}
-[data-screen="record"] .rec--open::after{content:"";position:absolute;
-  inset:0 0 0 auto;width:min(52%,420px);
-  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
-  opacity:.4;z-index:0;
-  -webkit-mask-image:linear-gradient(to left, #000 0%, transparent 88%);
-  mask-image:linear-gradient(to left, #000 0%, transparent 88%)}
-[data-screen="record"] .rec--open > *:not([data-layer]){position:relative;z-index:1}
-
 /* ─────────────────────────────────────────────────────────────────
    10. THE CHAPTER NAMEPLATE
 
@@ -188,25 +157,7 @@
    rule that the title sits on, which also frees the vertical space
    the old boxed header was spending on nothing.
    ───────────────────────────────────────────────────────────────── */
-.view > .head{border-bottom:0}
-.view > .head::after{content:"";position:absolute;left:0;right:0;bottom:0;
-  height:3px;background:var(--ink);z-index:1}
 
-/* ─────────────────────────────────────────────────────────────────
-   11. AUTH PANEL
-
-   Built from the page's own parts — panel, rule, screentone, ink —
-   so signing in reads as the first page of the book rather than a
-   form bolted onto the front of it. No new colour: the only values
-   here are ink, paper and the greys already in the scale.
-   ───────────────────────────────────────────────────────────────── */
-[data-screen="auth"] .view{max-width:640px}
-/* the form is no longer its own panel — .authcard is the panel — so it
-   keeps no padding, no border and no screentone of its own; it is just
-   the field stack inside the card */
-[data-screen="auth"] .authp{position:relative;isolation:auto;padding:0;
-  display:grid;gap:clamp(13px,3vw,18px)}
-[data-screen="auth"] .authp > *:not([data-layer]){position:relative;z-index:1}
 
 .authp__f{display:block;margin-bottom:var(--s4)}
 .authp__f .kicker{display:block;margin-bottom:6px}
@@ -249,7 +200,11 @@
    and a rule — never by a coloured badge, because there is no colour
    in this system to spend on it.
    ───────────────────────────────────────────────────────────────── */
-.bpanel{--ink-w:3.2;position:relative;padding:var(--s5)}
+/* A division of the sheet, not a box on it. The pane used to carry a
+   3.2px border of its own, so every board screen drew a second frame
+   immediately under the page's title rule with an empty band between
+   the two. The section rules below are the only divisions it needs. */
+.bpanel{position:relative;padding:0}
 .bpanel--wait{opacity:.7}
 .bempty{margin:var(--s4) 0;font-size:13px}
 .bsec{margin:var(--s6) 0 var(--s3);padding-bottom:6px;
@@ -263,10 +218,7 @@
 .bstat b{display:block;font-family:var(--f-display);font-weight:400;
   font-size:clamp(22px,2.4vw,30px);line-height:1;letter-spacing:-.02em}
 .bstat span{display:block;margin-top:var(--s3);font:500 10px/1.3 var(--f-label);
-  letter-spacing:.18em;text-transform:uppercase;color:var(--tone)}
-.bactive__no{font-family:var(--f-display);font-size:clamp(30px,4vw,52px);
-  line-height:1;margin:6px 0 4px}
-.bactive__no--off{color:var(--v3)}
+  letter-spacing:.18em;color:var(--tone)}
 
 /* THE REGISTER.
 
@@ -390,13 +342,7 @@
    palette, no cards, no gradients. */
 
 
-.bnext{padding:var(--s5);border:var(--rule-hair) solid var(--ink)}
-/* live state is carried by the heavier rule and the filled tag, not by
-   colour alone — the tag still reads CHECK-IN OPEN in monochrome */
-.bnext--live{border-width:var(--edge-heavy)}
-.bnext__state{display:flex;align-items:center;gap:var(--s3);
-  flex-wrap:wrap;margin-top:var(--s4)}
-.bnext__state .muted{font-size:12px}
+
 
 .bmiles{margin-top:var(--s2)}
 .bmile{display:grid;grid-template-columns:auto 1fr;align-items:start;
@@ -442,7 +388,7 @@
    outside it. Only rows with zero attendance render the control. */
 .brow__del{border:var(--rule-hair) solid var(--ink);background:none;
   color:var(--ink);font:500 9.5px/1 var(--f-mono);letter-spacing:.14em;
-  text-transform:uppercase;padding:6px 9px;cursor:pointer}
+  padding:6px 9px;cursor:pointer}
 .brow__del:hover,.brow__del:focus-visible{background:var(--ink);color:var(--paper)}
 /* Rows without a delete control still reserve its width, so the count
    column stays true down the register. `visibility:hidden` keeps the
@@ -463,81 +409,6 @@
   .bconfirm .btn{flex:0 0 auto}
 }
 
-/* ── THE CLOSERS ARE NOT THE SAME OBJECT TWICE ────────────────────
-   Two registered blocks with identical rules and identical weight,
-   stacked. The live meeting is something you can act on; the last
-   stamp is a receipt. Ranked accordingly — the live one keeps the
-   heavy rule and a cinnabar tick, the receipt drops to a hairline. */
-
-
-/* ── HIERARCHY INSIDE THE SMALL TYPE ──────────────────────────────
-   Every piece of 10-11px mono on the page sat at one weight, so the
-   reading in the corner, the label under the figure and the
-   annotations all competed. The label is the quiet one; the reading
-   is the loud one. */
-
-
-/* ── EDGE METADATA ON EVERY CHAPTER ────────────────────────────────
-   The rune existed on Home alone, so the one primitive that says
-   "this is an instrument reporting its own state" appeared on one
-   screen out of five. Every masthead carries its chapter mark now,
-   which is what makes the set read as one document. */
-
-
-/* ══════════════════════════════════════════════════════════════════
-   RECORD — THE BLOCK IS THE ROW
-
-   Every row was a bordered box containing a second bordered box: the
-   .rec frame around the .entry block. The inner block already carries
-   all the meaning — spotted black for attended, screentone for
-   missed — so the outer frame was a container drawn around a thing
-   that was already a shape. It is gone; the block is the row.
-
-   And a meeting you missed took exactly as much of the page as one
-   you attended, so fourteen rows arrived at one weight and the page
-   read as a list. A miss is a thin ruled line now. Read down the
-   column and the pattern of solid blocks IS the attendance, which is
-   what this page was always trying to say.
-   ══════════════════════════════════════════════════════════════════ */
-[data-screen="record"] .rec{border:0!important;background:none!important;
-  padding:0!important;gap:clamp(8px,1.2vw,14px)}
-[data-screen="record"] .rec + .rec{border-top:0!important}
-[data-screen="record"] .entry{padding:clamp(13px,1.8vw,20px) clamp(14px,2vw,22px)}
-/* the gain was clipped by the block's own overflow:hidden */
-[data-screen="record"] .entry__gain{padding-right:2px}
-[data-screen="record"] .entry{overflow:clip;overflow-clip-margin:4px}
-
-/* a miss is a rule, not a box */
-[data-screen="record"] .entry--miss{border:0;border-top:var(--rule-hair) solid var(--v3);
-  background:none;padding:clamp(9px,1.2vw,13px) 0 clamp(9px,1.2vw,13px) 2px}
-[data-screen="record"] .entry--miss .entry__ghost{display:none}
-[data-screen="record"] .rec--miss{padding:0!important}
-
-/* THE LIVE MEETING is the lead — the one thing on this page you can
-   act on. It gets the page's only frame and a wedge of speed lines
-   running INTO it from the top-left corner.
-
-   It does not get to be enormous. It was reserving 250px and letting
-   its content fall to the bottom of that, which made the lead read as
-   a mostly-empty box with a texture in it — the same filler problem
-   the scan chamber had. It sizes to its content now; the frame and
-   the wedge are what make it lead, not the acreage. */
-[data-screen="record"] .rec--open{min-height:0!important;align-items:stretch}
-[data-screen="record"] .rec--open .entry{border:var(--edge-heavy) solid var(--ink);
-  position:relative;align-content:start;
-  padding:clamp(16px,2.2vw,26px) clamp(16px,2.2vw,26px)}
-[data-screen="record"] .rec--open .entry::after{content:"";position:absolute;
-  inset:0;z-index:0;pointer-events:none;
-  background-image:repeating-linear-gradient(64deg,
-    var(--ink) 0 1px, transparent 1px 10px);opacity:.12;
-  -webkit-mask-image:linear-gradient(calc(var(--run-a) + 60deg),#000 0 6%,transparent 46%);
-          mask-image:linear-gradient(calc(var(--run-a) + 60deg),#000 0 6%,transparent 46%)}
-/* :not([data-layer]) — without it this forces .entry__ghost, an
-   absolutely-positioned 190px display numeral, back into normal flow,
-   and the lead row inherits its height. That is the third time a
-   `> *` rule has done this; the marker exists precisely for it. */
-[data-screen="record"] .rec--open .entry > *:not([data-layer]){position:relative;z-index:1}
-
 /* ══════════════════════════════════════════════════════════════════
    CLUB TOOLS — THE SAME SHEET
 
@@ -556,6 +427,11 @@
 .bsec{position:relative;padding-top:clamp(14px,2vw,22px);margin-top:clamp(18px,2.6vw,30px)}
 .bsec::before{content:"";position:absolute;left:0;right:0;top:0;
   height:var(--edge-thin);background:var(--ink)}
+/* The pane's first section already sits under the page title's rule.
+   Drawing its own on top of that put two rules across the sheet with a
+   band of empty paper between them, on every board screen. */
+#boardPane > .bpanel > .bsec:first-child{padding-top:0;margin-top:0}
+#boardPane > .bpanel > .bsec:first-child::before{content:none}
 
 /* the figures: a ruled strip, one leading */
 .bstats{display:grid;gap:0;grid-template-columns:repeat(2,minmax(0,1fr));
@@ -607,31 +483,7 @@
 /* the credential band and the milestone ledger were the last two
    boxes on the page; they are divisions of the sheet like everything
    else now */
-[data-screen="profile"] .who,
-[data-screen="profile"] .panel--flat{border:0;background:none;height:auto;
-  position:relative;padding:clamp(16px,2.2vw,26px) 0 clamp(16px,2.2vw,26px)}
-[data-screen="profile"] .who::before,
-[data-screen="profile"] .panel--flat::before{content:"";position:absolute;
-  left:0;right:0;top:0;height:var(--edge-thin);background:var(--ink)}
-[data-screen="profile"] .ledger{border-top:0;margin-top:clamp(10px,1.4vw,16px)}
 
-[data-screen="profile"] .stats{display:grid;gap:0;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  border-top:var(--edge) solid var(--ink)}
-[data-screen="profile"] .stat{border:0;background:none;
-  padding:clamp(14px,2vw,22px) clamp(12px,1.6vw,20px) clamp(14px,2vw,22px) 0;
-  border-bottom:var(--rule-hair) solid var(--v3)}
-[data-screen="profile"] .stat + .stat{padding-left:clamp(12px,1.6vw,20px);
-  border-left:var(--rule-hair) solid var(--v3)}
-[data-screen="profile"] .stat[data-rank="lead"]{grid-column:1/-1;
-  border-left:0;padding-left:0;border-bottom-color:var(--ink);
-  border-bottom-width:var(--edge-thin)}
-[data-screen="profile"] .stat[data-rank="lead"] b{
-  font-size:clamp(54px,9vw,116px);line-height:.82}
-@media(min-width:768px){
-  [data-screen="profile"] .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
-  [data-screen="profile"] .stat:nth-child(2){padding-left:0;border-left:0}
-}
 
 /* ══════════════════════════════════════════════════════════════════
    EMPTY STATES — THE UNSTRUCK SEAL
@@ -671,14 +523,6 @@
 .empty__note{margin-top:clamp(7px,1vw,11px);max-width:52ch;
   font-size:clamp(12.5px,1vw,14.5px);line-height:1.55;color:var(--ink-2)}
 
-/* the scanner's dead end, same language inside the frame */
-.viewer .stall{display:grid;justify-items:start;align-content:center;
-  gap:clamp(8px,1.2vw,13px);
-  padding:clamp(20px,4vw,44px);max-width:52ch;width:100%}
-.stall__title{font-family:var(--f-display);text-transform:uppercase;
-  font-size:clamp(16px,2.2vw,26px);line-height:1.04;color:var(--ink)}
-.stall__note{font-size:clamp(12.5px,1vw,14.5px);line-height:1.55;color:var(--ink-2)}
-
 /* ══════════════════════════════════════════════════════════════════
    THE RIG — the viewfinder is mounted, not placed
 
@@ -692,22 +536,7 @@
    format the reader accepts, and the live status, which is the one
    cinnabar mark on the screen while the target is armed.
    ══════════════════════════════════════════════════════════════════ */
-.rig-scan{position:relative;display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  grid-template-rows:auto auto;
-  column-gap:clamp(8px,1.2vw,16px)}
-.rig-scan__bar{grid-column:1/-1;display:flex;flex-wrap:wrap;
-  align-items:center;gap:clamp(10px,2vw,28px);
-  padding-bottom:clamp(8px,1.1vw,13px);margin-bottom:clamp(8px,1.1vw,13px);
-  border-bottom:var(--edge-thin) solid var(--ink)}
-.rig-scan__bar .anno:last-child{margin-left:auto}
-.rig-scan > .viewer{grid-column:1;grid-row:2}
-.rig-scan__rune{grid-column:2;grid-row:2;align-self:start;
-  writing-mode:vertical-rl;
-  font:500 clamp(8.5px,.66vw,10.5px)/1 var(--f-mono);letter-spacing:.26em;
-  text-transform:uppercase;color:var(--ink-2);
-  padding-top:clamp(4px,.8vw,10px);white-space:nowrap;
-  pointer-events:none;user-select:none}
+
 
 /* ══════════════════════════════════════════════════════════════════
    ACTIVATION AND INTERRUPTION
@@ -727,44 +556,7 @@
    happened. Both are drawn, not animated, so reduced motion keeps
    them.
    ══════════════════════════════════════════════════════════════════ */
-.rig-scan{position:relative}
-.rig-scan::before,.rig-scan::after{content:"";position:absolute;
-  top:0;bottom:0;width:14vw;max-width:210px;z-index:0;
-  pointer-events:none;opacity:0;transition:opacity .18s steps(3,end);
-  background-image:repeating-linear-gradient(var(--run-a),
-    var(--ink) 0 1.5px, transparent 1.5px 7px,
-    var(--ink) 7px 8px, transparent 8px 19px)}
-.rig-scan::before{left:0;
-  -webkit-mask-image:linear-gradient(90deg,#000,transparent);
-          mask-image:linear-gradient(90deg,#000,transparent)}
-.rig-scan::after{right:0;
-  -webkit-mask-image:linear-gradient(270deg,#000,transparent);
-          mask-image:linear-gradient(270deg,#000,transparent)}
-.rig-scan:has(.viewer--feed)::before,
-.rig-scan:has(.viewer--feed)::after{opacity:.3}
-.rig-scan:has(.viewer--feed) .rig-scan__bar{border-bottom-width:var(--edge)}
 
-/* THE CUT. Refusal tears the rig open along the system diagonal: a
-   band of bare paper thrown across the frame with an ink edge on each
-   side, as if the panel itself had been slashed. It is drawn in paper
-   and ink, not cinnabar — the one red mark on a refused screen stays
-   the status reading, so the interruption reads as damage rather than
-   as another alarm. */
-.rig-scan:has(.viewer--bad)::before,
-.rig-scan:has(.viewer--bad)::after{opacity:0}
-.rig-scan__cut{position:absolute;inset:-2px;z-index:8;pointer-events:none;
-  display:none;--cw:clamp(11px,1.5vw,20px);--cy:44%;
-  --cmask:linear-gradient(180deg,#000 0 27%,transparent 27% 33%,
-    #000 33% 64%,transparent 64%);
-  -webkit-mask-image:var(--cmask);mask-image:var(--cmask);
-  background:linear-gradient(calc(var(--run-a) * -1),
-    transparent calc(var(--cy) - var(--cw) - 2px),
-    var(--ink)   calc(var(--cy) - var(--cw) - 2px), var(--ink)  calc(var(--cy) - var(--cw)),
-    var(--paper) calc(var(--cy) - var(--cw)),       var(--paper) calc(var(--cy) + var(--cw)),
-    var(--ink)   calc(var(--cy) + var(--cw)),       var(--ink)  calc(var(--cy) + var(--cw) + 2px),
-    transparent  calc(var(--cy) + var(--cw) + 2px))}
-.rig-scan:has(.viewer--bad) .rig-scan__cut{display:block}
-.rig-scan:has(.viewer--bad) .rig-scan__bar{border-bottom-color:var(--seal)}
 
 /* ══════════════════════════════════════════════════════════════════
    SCAN — THE VIEWFINDER AND THE TERMINAL
@@ -781,23 +573,7 @@
    were both cinnabar too, so a screen with a fault code on it was
    showing three.
    ══════════════════════════════════════════════════════════════════ */
-.viewer::after{--bracket:clamp(26px,4.4vw,56px);--bracket-w:var(--edge-heavy)}
 
-.manual{border:0;background:none;padding:clamp(18px,2.4vw,30px) 0 0;
-  position:relative}
-.manual::before{content:"";position:absolute;left:0;right:0;top:0;
-  height:var(--edge-thin);background:var(--ink)}
-.manual .kicker{display:flex;align-items:flex-start;gap:9px}
-.manual .kicker::before{content:"";flex:none;margin-top:.45em;
-  width:clamp(10px,1.4vw,20px);height:var(--rule-hair);background:currentColor}
-/* the line: ink, not cinnabar — red is the target's, and only the
-   target's. It thickens on focus rather than changing colour. */
-.manual .input{border-bottom-color:var(--ink);border-bottom-width:var(--edge-thin)}
-.manual .field:focus-within .input{border-bottom-width:var(--edge)}
-/* the commit is struck, not dashed. A dashed border reads disabled. */
-.manual .btn{border-style:solid;border-width:var(--edge-thin);
-  background:var(--ink);color:var(--paper);min-height:48px}
-.manual .btn:hover,.manual .btn:focus-visible{background:var(--paper);color:var(--ink)}
 
 /* ══════════════════════════════════════════════════════════════════
    THE REWARD DOSSIER
@@ -808,32 +584,7 @@
    only frame and its only red mark. Claimed floods to ink, which is
    where this screen spends its concentrated black.
    ══════════════════════════════════════════════════════════════════ */
-[data-screen="rewards"] .dossier .panel,
-.dossier .panel{border:0;background:none;height:auto;position:relative;overflow:visible;
-  display:grid;gap:clamp(9px,1.2vw,14px);
-  padding:clamp(18px,2.4vw,30px) 0 clamp(18px,2.4vw,28px);
-  grid-template-columns:auto 1fr;align-items:start}
-.dossier__idx{grid-row:1/span 4;align-self:start;
-  --idx-size:clamp(30px,4.4vw,64px);
-  padding-right:clamp(12px,1.8vw,24px);
-  border-right:var(--rule-hair) solid var(--v3);
-  margin-right:clamp(12px,1.8vw,24px)}
-.dossier__head{grid-column:2;display:flex;align-items:baseline;
-  justify-content:space-between;gap:var(--s3);flex-wrap:wrap}
-.dossier__at{grid-column:2;margin-top:-4px;
-  font:500 clamp(10.5px,1vw,12.5px)/1.3 var(--f-mono);
-  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
-.dossier__legend{grid-column:2;display:flex;justify-content:space-between;
-  gap:var(--s3);flex-wrap:wrap}
-.dossier__claim{grid-column:2;margin-top:clamp(4px,.8vw,8px)}
 
-/* the slot array — the same instrument the card on Home uses */
-.dslots{grid-column:2;display:grid;
-  grid-template-columns:repeat(var(--dcells,10),minmax(0,1fr));
-  gap:clamp(3px,.5vw,6px)}
-.dslot{height:clamp(16px,2vw,26px);
-  box-shadow:inset 0 0 0 var(--rule-hair) var(--v3)}
-.dslot--set{background:var(--ink);box-shadow:none}
 
 /* ══════════════════════════════════════════════════════════════════
    PANEL ROLE — HERO, SUPPORT, MICRO
@@ -849,59 +600,7 @@
    half the width, a third of the height, numerals in tone. That is
    the difference between a manga page and a table of rows.
    ══════════════════════════════════════════════════════════════════ */
-.dossier[data-rank="hero"] .dossier__idx{
-  --idx-size:clamp(58px,10vw,148px);
-  padding-right:clamp(16px,2.4vw,34px);
-  margin-right:clamp(16px,2.4vw,34px);
-  border-right-color:var(--ink)}
-.dossier[data-rank="hero"] .dslot{height:clamp(30px,4.4vw,64px)}
-.dossier[data-rank="hero"] .tech__name{font-size:clamp(20px,2.4vw,34px)}
-.dossier[data-rank="hero"] .panel{padding-block:clamp(24px,3.4vw,46px)}
 
-.dossier[data-rank="far"] .dossier__idx{--idx-size:clamp(24px,3vw,40px)}
-.dossier[data-rank="far"] .dslot{height:clamp(9px,1.1vw,14px)}
-.dossier[data-rank="far"] .tech__name{font-size:clamp(14px,1.3vw,17px)}
-.dossier[data-rank="far"] .panel{padding-block:clamp(12px,1.5vw,18px)}
-.dossier[data-rank="far"] .dossier__at{display:none}
-
-/* the hero takes the full measure; the micro tiers pair off beside it.
-   Placement is by RANK, not by source order — the tier that is next is
-   not always the first one in the list once earlier ones are claimed. */
-@media(min-width:768px){
-  [data-screen="rewards"] .stack-panels > .dossier[data-rank="hero"],
-  [data-screen="rewards"] .stack-panels > .dossier[data-rank="past"]{grid-column:1/-1}
-  [data-screen="rewards"] .stack-panels > .dossier[data-rank="far"]{grid-column:span 1}
-}
-
-/* ── SEALED: a division of the sheet, nothing more ── */
-.dossier--sealed{position:relative}
-.dossier--sealed::before{content:"";position:absolute;left:0;right:0;top:0;
-  height:var(--edge-thin);background:var(--v3)}
-.dossier--sealed .tech__name{color:var(--ink-2)}
-
-/* ── READY: the one frame and the one red mark on the page ── */
-/* (0,3,0) to clear the [data-screen="rewards"] .dossier .panel reset
-   above — the ready tier is the one framed thing on the page and it
-   was losing its frame to my own border:0. */
-[data-screen="rewards"] .dossier--ready .panel,
-.dossier--ready .panel{border:var(--edge-heavy) solid var(--ink);
-  background:var(--paper);
-  padding:clamp(18px,2.4vw,30px) clamp(18px,2.4vw,30px) clamp(20px,2.6vw,32px)}
-.dossier--ready .dossier__idx{color:var(--ink)}
-.dossier--ready .dslot--set{background:var(--ink)}
-
-/* ── CLAIMED: flooded. this is where the screen spends its black ── */
-[data-screen="rewards"] .dossier--claimed .panel,
-.dossier--claimed .panel{background:var(--v6);color:var(--paper);
-  padding:clamp(18px,2.4vw,30px)}
-.dossier--claimed .tech__name,
-.dossier--claimed .dossier__idx{color:var(--paper)}
-.dossier--claimed .dossier__at,
-.dossier--claimed .kicker,
-.dossier--claimed .anno{color:var(--v3)}
-.dossier--claimed .dossier__idx{border-right-color:var(--v4)}
-.dossier--claimed .dslot{box-shadow:inset 0 0 0 var(--rule-hair) var(--v4)}
-.dossier--claimed .dslot--set{background:var(--paper)}
 
 /* ══════════════════════════════════════════════════════════════════
    THE CHAPTER MASTHEAD
@@ -923,37 +622,13 @@
 :root{--t-chapter:clamp(38px,10vw,84px)}
 @media(min-width:1024px){ :root{--t-chapter:clamp(56px,6.4vw,112px)} }
 
-/* ══════════════════════════════════════════════════════════════════
-   THE ACTION CHAMBER
-
-   A target, not a card. Three layers, in this order from the back:
-   speed lines running toward the centre, a crosshair on the point
-   itself, and the commit. The brackets sit outside all of it and
-   close inward when you reach for it — the chamber locking on.
-
-   The verb stays a real word ("Scan code") and the commit is [ SCAN ]
-   in the page's own bracket vocabulary; the small arrow glyph that
-   used to live in the corner is gone, because an arrow in a corner is
-   an affordance and this is supposed to be a target.
-   ══════════════════════════════════════════════════════════════════ */
-
-
-/* ── THE SEALED PAIR IS NOT A BALANCED SPREAD ─────────────────────
-   Two sealed tiers at exactly half the measure each is a symmetric
-   two-column grid — perfectly balanced and therefore perfectly inert.
-   The nearer tier is the one a member is walking toward, so it takes
-   more of the page: five parts to three. The asymmetry is the
-   tension. */
-@media(min-width:768px){ .stack-panels{grid-template-columns:5fr 3fr} }
-
 /* ── THE SCREEN VARIES IN DENSITY ─────────────────────────────────
    One dot size at one spacing across every surface is a texture doing
    no work. It tightens under the chapters that carry a lot of
    structure and opens up where the page is meant to breathe, so the
    paper itself has a grain that changes between chapters. */
-[data-screen="record"] body,[data-screen="board"] body{--tone-wide:16px}
+[data-screen="board"] body{--tone-wide:16px}
 [data-screen="home"] body{--tone-wide:22px}
-[data-screen="scan"] body{--tone-wide:26px}
 
 /* ── THE GHOST WORD IS CROPPED, NOT PLACED ────────────────────────
    The sound effect behind each masthead sat inside the measure with
@@ -989,14 +664,7 @@
    weakest composition left in the app. The seal is the subject: real
    size, cropped by the top of its own division, identification set
    against it. */
-[data-screen="profile"] .who{display:grid;
-  grid-template-columns:auto minmax(0,1fr);
-  align-items:center;gap:clamp(14px,2.4vw,32px);overflow:hidden}
-[data-screen="profile"] .who__seal{width:clamp(64px,9vw,124px);
-  height:clamp(64px,9vw,124px);
-  margin-top:calc(clamp(10px,1.6vw,22px) * -1);opacity:.9}
-[data-screen="profile"] .who .rune{position:static;writing-mode:horizontal-tb;
-  display:block;margin-top:6px;letter-spacing:.24em}
+
 
 /* ══════════════════════════════════════════════════════════════════
    THE HEXAGON IS THE GEOMETRY
@@ -1018,25 +686,6 @@
    thing with a corner taken out of it.
    ══════════════════════════════════════════════════════════════════ */
 :root{--cut-a:60deg; --run-a:60deg}
-
-
-[data-screen="record"] .rec--open .entry::after{
-  background-image:repeating-linear-gradient(var(--run-a),
-    var(--ink) 0 1px, transparent 1px 9px)}
-
-[data-screen="record"] .rec--open .entry,
-[data-screen="rewards"] .dossier--ready .panel,
-[data-screen="profile"] .stat[data-rank="lead"],
-[data-screen="board"] .bnext{
-  clip-path:polygon(var(--sheet-cut) 0, 100% 0, 100% 100%,
-                    0 100%, 0 var(--sheet-cut))}
-/* a clipped panel cannot show a border on the cut corner, so the
-   weight moves inside where the clip cannot reach it */
-[data-screen="rewards"] .dossier--ready .panel,
-[data-screen="record"] .rec--open .entry{
-  border:0;box-shadow:inset 0 0 0 var(--edge-heavy) var(--ink)}
-[data-screen="profile"] .stat[data-rank="lead"]{
-  border-bottom:0;box-shadow:inset 0 calc(var(--edge-thin) * -1) 0 var(--ink)}
 
 /* ══════════════════════════════════════════════════════════════════
    THE STAMP SHEET — ONE INK MASS, NOT NINE SQUARES
@@ -1119,8 +768,6 @@
      .brk      targeting brackets — this area is a target
      .xhair    crosshair — the exact point of action
      .anno     technical annotation — a fact the system knows
-     .idx      numeric index — this is item N of a series
-     .rune     vertical edge metadata — live system state
      .speed    directional lines — force applied in a direction
      .reg      the register rule — a division of the sheet
 
@@ -1137,7 +784,7 @@
    short leader rule. Never a caption; always a reading. */
 .anno{display:inline-flex;align-items:center;gap:7px;
   font:500 clamp(9.5px,.95vw,11px)/1 var(--f-mono);
-  letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
+  letter-spacing:.2em;color:var(--ink-2)}
 .anno::before{content:"";width:clamp(10px,1.4vw,20px);height:var(--rule-hair);
   background:currentColor;flex:none}
 /* The bright cinnabar is a MARK colour, not a text colour: #E53935 on
@@ -1146,11 +793,6 @@
    same seal — so small red type uses it and the big struck marks keep
    the bright one. */
 .anno--seal{color:var(--seal-deep)}
-
-/* ── INDEX. The numeral that says where a thing sits in a series. */
-.idx{font-family:var(--f-display);line-height:.8;letter-spacing:-.04em;
-  font-size:var(--idx-size,clamp(20px,2.6vw,38px));color:var(--v3)}
-.idx--on{color:var(--ink)}
 
 /* ── SPEED LINES. Direction, not texture: they always run TOWARD the
    thing that matters and they fade out behind it. */
@@ -1222,59 +864,14 @@ select.input:focus-visible{outline:none}
    tall enough for a headline, which is why the page opened on nothing.
    The nameplate above it now carries the name, so this panel can be
    what it always should have been — a quiet identification band. */
-.who{align-items:center}
-.who__id{min-width:0}
-.who__line{font-size:clamp(12.5px,.95vw,14.5px);color:var(--ink-2);
-  margin-top:4px}
-.who .rune{color:var(--ink-2)}
-@media(min-width:1024px){ .who .rune{display:block} }
+
 
 /* ── THE MILESTONE LEDGER ──────────────────────────────────────────
    The same three milestones the Rewards chapter renders in full. This
    is the ledger of them, not a second card design: a ruled monospace
    register, one line each, reading tier / name / state / distance.
    One design system, two levels of detail. */
-.ledger{list-style:none;margin-top:var(--space-stack);
-  border-top:var(--edge-thin) solid var(--ink)}
-.ledger__row{display:grid;align-items:baseline;
-  grid-template-columns:auto 1fr auto;
-  grid-template-areas:"at name state" ". gap gap";
-  gap:2px var(--s3);padding:var(--s3) 0;
-  border-bottom:var(--rule-hair) solid var(--v3);
-  font-family:var(--f-mono);font-size:clamp(11px,1vw,12.5px);
-  letter-spacing:.1em;text-transform:uppercase}
-.ledger__at{grid-area:at;font-family:var(--f-display);
-  font-size:clamp(17px,1.9vw,26px);line-height:.9;color:var(--ink-2);
-  letter-spacing:-.03em}
-.ledger__name{grid-area:name;color:var(--ink);letter-spacing:.14em}
-.ledger__state{grid-area:state;color:var(--ink-2);justify-self:end}
-/* Muted text is INK at a lower weight, not tone — this file's own
-   rule, and the tier numeral and the distance both broke it at 1.98:1.
-   --ink-2 on paper is 5.3:1 and still recedes. */
-.ledger__gap{grid-area:gap;color:var(--ink-2)}
-/* the tier that is actually reachable is the one carrying weight */
-.ledger__row--ready .ledger__at{color:var(--ink)}
-.ledger__row--ready .ledger__state{color:var(--seal)}
-.ledger__row--claimed .ledger__at{color:var(--ink)}
-.ledger__row--claimed .ledger__name{text-decoration:line-through;
-  text-decoration-thickness:1.5px;color:var(--ink-2)}
-.ledger__foot{margin-top:var(--space-stack);font-size:13px}
-@media(min-width:768px){
-  .ledger__row{grid-template-columns:auto 1fr auto auto;
-    grid-template-areas:"at name gap state";gap:var(--s4)}
-  .ledger__gap{justify-self:end;min-width:7ch;text-align:right}
-}
 
-/* ── ONE FIGURE LEADS ──────────────────────────────────────────────
-   Four plates at identical weight is four figures nobody reads first.
-   The ranked one takes the ink weight and the display size; the other
-   three stay quiet and support it. */
-/* [data-screen="profile"] .stat sets --ink-w at (0,2,0), so a bare
-   [data-rank] could never outrank it. Matched here at the same weight
-   and later in the file. */
-.stat[data-rank="lead"]{--ink-w:3.2;background:var(--v1)}
-.stat[data-rank="lead"] b{font-size:clamp(38px,4.6vw,64px);line-height:.86}
-.stat[data-rank="lead"] span{color:var(--ink)}
 
 /* ── THE SLOT DOSSIER (§26) ────────────────────────────────────────
    Hover or focus a landed stamp and the check-in behind it is stated:
@@ -1292,7 +889,7 @@ select.input:focus-visible{outline:none}
   padding:9px 11px;background:var(--paper);
   border:var(--edge-thin) solid var(--ink);
   font:400 10.5px/1.55 var(--f-mono);letter-spacing:.06em;
-  color:var(--ink-2);text-align:left;text-transform:uppercase;
+  color:var(--ink-2);text-align:left;
   pointer-events:none}
 .sealmeta > *{display:block}
 .sealmeta__no{font-weight:700;color:var(--ink);letter-spacing:.14em;
@@ -1316,14 +913,7 @@ select.input:focus-visible{outline:none}
    system's targeting marks rather than characters that would set in
    whatever the mono face happens to have. Cinnabar, because a dead
    scanner is the one place on this screen the target never lights. */
-.codemark{display:inline-block;position:relative;
-  font:500 clamp(11px,1.4vw,13px)/1 var(--f-mono);letter-spacing:.22em;
-  text-transform:uppercase;color:var(--seal);
-  padding:8px 14px}
-.codemark::before,.codemark::after{content:"";position:absolute;
-  width:11px;height:11px;border:var(--rule-hair) solid var(--seal)}
-.codemark::before{left:0;top:0;border-right:0;border-bottom:0}
-.codemark::after{right:0;bottom:0;border-left:0;border-top:0}
+
 
 /* ── SCANNER STATES ───────────────────────────────────────────────
    These classes were toggled in JS and styled nowhere, so a successful
@@ -1332,25 +922,12 @@ select.input:focus-visible{outline:none}
    weight, fill and inversion rather than by hue, because this theme has
    no hue to spend: every accent token resolves to ink. That also
    satisfies "not by colour alone" for free. */
-.reticle--live .reticle__c{border-width:var(--edge-thin)}
-/* The sweep line reads as "something is being scanned", so it is drawn
-   only while something is. It used to be visible in every state that
-   did not explicitly hide it — including `boot`, where a cinnabar line
-   sat across the frame while the browser was still asking for camera
-   permission and there was nothing behind it at all. */
-.reticle__line{top:50%;opacity:0}
-.reticle--live .reticle__line{opacity:.9}
-/* steps(), not ease-in-out. Everything else in this system cuts; a
-   sweep that accelerates and decelerates was the one soft gesture left
-   on the screen, and it read as an app animation rather than as a
-   mechanism ticking down the frame. */
-.reticle--live .reticle__line{animation:retSweep 2.4s steps(14,end) infinite}
+
 
 /* ── WAITING FOR THE CAMERA ───────────────────────────────────────
    The frame's own marks recede while the loader turns, so the moving
    mark is the one thing there is to look at. */
-.reticle--wait .reticle__geo,
-.reticle--wait .reticle__mark{opacity:.16}
+
 
 /* ── WORKING ──────────────────────────────────────────────────────
    The code is read and the server has not answered yet. The corners
@@ -1358,12 +935,7 @@ select.input:focus-visible{outline:none}
    a two-step cycle, while the sweep line parks dead centre. Held plus
    blinking cannot be confused with the searching state (sweeping, thin)
    or with the refusal (filled, still). */
-.reticle--busy .reticle__c{border-width:var(--edge-heavy);
-  animation:busyHold 260ms steps(1,end) infinite alternate}
-.reticle--busy .reticle__line{top:50%;opacity:.9;
-  animation:busyBar 520ms steps(4,end) infinite}
-.reticle--busy .reticle__geo,
-.reticle--busy .reticle__mark{opacity:.5}
+
 @keyframes busyHold{
   from{border-color:var(--ink)}
   to  {border-color:var(--v3)}
@@ -1373,11 +945,6 @@ select.input:focus-visible{outline:none}
   to  {transform:scaleX(1);transform-origin:left}
 }
 
-.reticle--good .reticle__c{border-width:var(--edge-heavy)}
-.reticle--good .reticle__geo,
-.reticle--good .reticle__mark{opacity:.85}
-.reticle--good .reticle__line{opacity:0}
-
 /* ── REFUSED ──────────────────────────────────────────────────────
    "The UI shouldn't just show a small red error text; the central
    frame should snap violently and flash starkly."
@@ -1386,7 +953,7 @@ select.input:focus-visible{outline:none}
    kicks sideways — `steps()`, so every change is a cut with nothing
    in between. You cannot miss it and you cannot mistake it for the
    success state, which tightens quietly instead. */
-.viewer--bad{animation:refuse 90ms steps(1,end) 3,refuseKick 60ms steps(2,end) 2}
+
 /* Floods to PAPER, not ink. The viewfinder is already a black box, so
    an ink flash over it was a change nobody could see — the loud move
    on a dark field is inversion. Three white cuts over the camera feed
@@ -1400,40 +967,10 @@ select.input:focus-visible{outline:none}
   50% {transform:translateX(-7px)}
   100%{transform:translateX(7px)}
 }
-/* refused: the corners close into a solid block and the sweep stops */
-.reticle--bad .reticle__c{border-width:var(--edge-thin);background:var(--ink)}
-.reticle--bad .reticle__geo,
-.reticle--bad .reticle__mark{opacity:.12}
-.reticle--bad .reticle__line{opacity:0}
-
-/* the frame itself answers: ink border thickens on a hit */
-.viewer--hit{border-width:var(--edge-shout)}
-
-.viewer__msg{padding:6px 12px;transition:background var(--snap) linear,color var(--snap) linear}
-.viewer__msg--hot{background:var(--ink);color:var(--paper)}
-.viewer__msg--soft{background:var(--paper);color:var(--ink);
-  border:var(--rule-hair) solid var(--ink)}
-/* the refusal states a fault code, and it states it in the one place
-   red is allowed on this screen — the target has just refused */
-.reticle--bad ~ .viewer__status .viewer__msg,
-.viewer--bad .viewer__msg{background:var(--paper);color:var(--seal);
-  border:var(--edge-thin) solid var(--seal);font-weight:700;letter-spacing:.2em}
 
 @keyframes retSweep{
   from{top:6%;opacity:.4}
   to  {top:94%;opacity:.9}
-}
-@media (prefers-reduced-motion:reduce){
-  .reticle--live .reticle__line{animation:none}
-  /* working still has to be distinguishable from stopped, so the
-     corners simply hold heavy and the bar holds half-drawn */
-  .reticle--busy .reticle__c{animation:none}
-  .reticle--busy .reticle__line{animation:none;
-    transform:scaleX(.55);transform-origin:left}
-  /* the refusal still has to be unmistakable without motion, so the
-     flash becomes a held state rather than being dropped */
-  .viewer--bad{animation:none;border-color:var(--seal);
-    border-width:var(--edge-shout)}
 }
 
 /* ── BUTTON HIERARCHY AND STATES ──────────────────────────────────
@@ -1461,34 +998,8 @@ select.input:focus-visible{outline:none}
    this theme has no red to spend */
 .bconfirm .btn--go{background:var(--ink);border-width:var(--edge-thin)}
 
-/* ── SCANNER LEGIBILITY OVER AN ARBITRARY CAMERA IMAGE ────────────
-   Verdict on the black-and-white question: monochrome STAYS. Every
-   accent token in this theme resolves to ink, so a colour scanner would
-   be the single coloured element in the whole app -- colour for its own
-   sake, which is the thing to avoid.
 
-   What actually made it look unpolished is that the overlay was ink
-   drawn straight onto live video. That reads fine over a bright wall and
-   disappears over a dark one, and the camera image is the one thing here
-   nobody controls. So the overlay now carries its own contrast: the
-   status is a paper chip in every state, and the reticle gets a paper
-   halo so its edges hold against a dark scene. */
-.viewer__msg{background:var(--paper);color:var(--ink);
-  padding:7px 14px;border:var(--rule-hair) solid var(--ink)}
 
-/* drop-shadow follows the painted L of each corner; box-shadow would
-   ring the whole element box and turn the brackets into solid squares */
-/* Two paper passes over a 2.5px cinnabar stroke bleached the target
-   to white — the halo swallowed the mark it was meant to protect. One
-   tight paper ring, then a dark one outside it: the red core survives,
-   and the pair holds against a bright wall and a dark room alike. */
-.reticle__c,
-.reticle__line{filter:drop-shadow(0 0 1.1px var(--paper))
-                      drop-shadow(0 0 2px rgba(0,0,0,.65))}
-.reticle__geo,
-.reticle__mark{opacity:.42;filter:drop-shadow(0 0 1.5px var(--paper))}
-.reticle--good .reticle__geo,
-.reticle--good .reticle__mark{opacity:.9}
 
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1575,7 +1086,6 @@ select.input:focus-visible{outline:none}
   transform:rotate(-2.4deg);transform-origin:left center}
 .verdict .verdict__seal{margin:0 0 0 auto;margin-right:min(6vw,90px);
   width:min(26vmin,150px);height:min(26vmin,150px)}
-.verdict .verdict__jp{display:block;margin-top:clamp(6px,1vw,12px);letter-spacing:.5em}
 .verdict .verdict__title,
 .verdict .verdict__delta,
 .verdict .verdict__meet{text-align:left}
@@ -1609,23 +1119,6 @@ select.input:focus-visible{outline:none}
   .verdict .verdict__seal{margin-right:min(4vw,40px)}
 }
 
-
-/* ══════════════════════════════════════════════════════════════════
-   PHASE 30 SELF-CRITIQUE — WHAT THE RENDERS SHOWED
-
-   Seven things the composition passes above did not reach.
-   ══════════════════════════════════════════════════════════════════ */
-
-/* ── 1. THE THIRD STAT ORPHANED ───────────────────────────────────
-   Four readings in a two-column grid on a phone: the lead takes the
-   full measure, two pair off, and the fourth sits alone in the left
-   half with the right half empty — an orphan, and it reads as a cell
-   that failed to load. It takes the measure instead, so the tier goes
-   wide / narrow-narrow / wide. Irregular on purpose. */
-@media(max-width:479px){
-  [data-screen="profile"] .stats > .stat:last-child{grid-column:1/-1}
-}
-
 /* ── 2. WHAT HAS NOT HAPPENED YET ─────────────────────────────────
    Record's scheduled meetings had a heading in --faint set with an
    inline style, no rule, and a full chapter gap above it. It read as
@@ -1639,114 +1132,6 @@ select.input:focus-visible{outline:none}
 .ahead__head{display:flex;align-items:baseline;justify-content:space-between;
   gap:var(--s3);flex-wrap:wrap;margin-bottom:clamp(12px,1.8vw,20px)}
 .ahead .h2{color:var(--ink)}
-/* the entries ahead are the quiet half of the page: they are records
-   of nothing yet, so they hold the smaller weight */
-.ahead .entry{font-size:.94em}
-
-/* ── 3. THE SOUND EFFECT LANDED IN THE SAME PLACE FIVE TIMES ──────
-   Every chapter's impact word sat at the top edge, cropped by the
-   same corner. Five differently-composed spreads carrying one
-   identical layer is a template, and a template is the thing this
-   was supposed to stop being. Each chapter now places its word where
-   that page has room for it: Home behind the nameplate, Record low
-   and leading (the log runs down the page and the word runs with
-   it), Rewards high and trailing, Member across the middle, Scan on
-   the diagonal it already owns. */
-
-
-/* ── 4. THE MICRO TIER STILL SAID "UNLOCKS AT N" NOWHERE ──────────
-   Hiding the line was the lazy way to make the far tiers small: the
-   number of stamps a reward costs is the whole point of the row.
-   It comes back as an annotation on the same line as the name, which
-   is where a fact of that size belongs. */
-.dossier[data-rank="far"] .dossier__at{display:block;
-  grid-column:2;margin-top:-2px;
-  font-size:clamp(9px,.85vw,10.5px);color:var(--v4)}
-
-/* ── 5. THE UNSTRUCK SLOT WAS TOO PALE TO BE AN IMPRESSION ────────
-   It carries the mark at --v3 and .55, which on paper is a smudge —
-   the slot reads as blank, which is exactly what it was before the
-   outline was added. An impression waiting to be pressed has to be
-   visible as a shape. */
-/* `path` was in this list, and it is out of it now. The slot used to
-   hold a three-bar tally, which a stroke thickened harmlessly. It
-   holds a dense emblem now: a one-unit stroke on a 64-unit box closes
-   the counters — the studs, the notches, the pierced boss — and the
-   seal collapses into a blob. Artwork is filled and only filled; the
-   registration furniture is what gets stroked. */
-
-
-/* ── 6. THE CLOSING PAIR ON HOME WAS ONE OBJECT TWICE ─────────────
-   I set the trailing closer to .92em and called it a hierarchy. At
-   that difference the two panels are still the same object, and the
-   page ends on two equal-weight footnotes. What is happening NOW is
-   the support panel and keeps its rule and its full type; what was
-   last stamped is the micro panel — no rule, indented off the
-   register, set down to a marginal note. */
-
-
-/* ── 7. THE BOARD'S LIVE PANEL WAS INK WITH NOTHING IN IT ─────────
-   A full-measure black field with the meeting, the state and both
-   controls stacked in the left third and 60% of the ink empty. The
-   concentrated black on this page has to be carrying something. The
-   panel reads across now: the meeting numeral at figure scale on the
-   leading edge, the state and the control registered to the trailing
-   one, so the mass is spanned rather than filled at one end. */
-@media(min-width:768px){
-  [data-screen="board"] .bnext{display:grid;
-    grid-template-columns:minmax(0,1fr) auto;
-    align-items:start;column-gap:clamp(24px,5vw,80px)}
-  [data-screen="board"] .bnext > :not(.btn){grid-column:1}
-  /* the control carries an inline margin-top from the markup, which
-     is right in the stacked arrangement and wrong here — it is beside
-     the meeting now, not under it */
-  [data-screen="board"] .bnext > .btn{grid-column:2;grid-row:1/-1;
-    align-self:center;justify-self:end;margin-top:0!important;
-    min-width:clamp(150px,16vw,220px)}
-  /* the numeral is the figure this mass is carrying */
-  [data-screen="board"] .bnext .bactive__no{font-size:clamp(44px,6.4vw,96px);
-    line-height:.9}
-}
-
-
-/* ── 8. THE CLOSING TIER ON HOME WAS ENTIRELY ORTHOGONAL ──────────
-   The spread carries two opposed diagonals — the chamber's leading
-   corner and the stamp sheet's trailing one — and then the whole
-   bottom third of the page is rules and rectangles. A motif that
-   appears twice at the top and never again is an accident, not a
-   system. The last stamped entry is the one ink mass down there, so
-   it takes the same cut the sheet takes, on the same corner. */
-
-
-/* ── 9. THE RIG HAD NO FLANKS FOR THE TRACKING LINES TO RUN IN ────
-   Activation rakes speed lines in from both sides of the frame, and
-   the viewfinder was 1015 of the rig's 1040 pixels — so the lines
-   were drawn into a 12px margin and read as nothing. The trailing
-   column opens up on a large screen: the rune gets a real margin to
-   sit in, the frame gains the asymmetry it was missing, and there is
-   somewhere for the rig to show that it is tracking. */
-@media(min-width:1024px){
-  .rig-scan{grid-template-columns:minmax(0,1fr) clamp(20px,7vw,120px)}
-  .rig-scan__rune{justify-self:center}
-  .rig-scan::after{width:clamp(20px,7vw,120px);max-width:none}
-}
-
-/* ── 10. THE LIVE ROW ON RECORD WAS A FRAME AROUND NOTHING ────────
-   The meeting taking check-ins is the one framed panel on the page
-   and two thirds of it was empty paper to the right of three short
-   lines. The row reads across now: what it is on the leading edge,
-   the control registered to the trailing one. Same correction the
-   board's live panel needed, and for the same reason — a heavy frame
-   has to be carrying something across its whole width or it is just
-   a big box. */
-@media(min-width:768px){
-  [data-screen="record"] .rec--open .entry{display:grid;
-    grid-template-columns:minmax(0,1fr) auto;
-    align-items:center;column-gap:clamp(20px,4vw,64px)}
-  [data-screen="record"] .rec--open .entry > .entry__verdict,
-  [data-screen="record"] .rec--open .entry .entry__go{
-    grid-column:2;grid-row:1/-1;align-self:center;justify-self:end}
-}
 
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1759,26 +1144,4 @@ select.input:focus-visible{outline:none}
    1024 where the rail returns and carries it again, so the app never
    shows two.
    ══════════════════════════════════════════════════════════════════ */
-.acct{position:relative;margin-top:clamp(26px,5vw,52px);
-  padding-top:clamp(14px,2vw,20px)}
-.acct__rule{position:absolute;left:0;right:0;top:0;
-  height:var(--edge-thin);background:var(--ink)}
-.acct__row{display:flex;flex-wrap:wrap;align-items:center;
-  justify-content:space-between;gap:clamp(12px,3vw,24px)}
-.acct__who{min-width:0}
-.acct__name{font-family:var(--f-display);text-transform:uppercase;
-  font-size:clamp(17px,4.2vw,24px);line-height:1.05;margin-top:5px;
-  overflow-wrap:anywhere}
-/* a real target, not a token icon: full width where a thumb reaches
-   for it, natural width where a cursor does */
-.acct .btn--out{flex:1 1 min(100%,220px);min-height:48px;
-  display:grid;place-items:center;
-  font:700 clamp(12px,3vw,14px)/1 var(--f-mono);letter-spacing:.2em;
-  text-transform:uppercase;
-  background:var(--ink);color:var(--paper);border:0;cursor:pointer;
-  padding:0 clamp(16px,4vw,28px)}
-.acct .btn--out:hover,.acct .btn--out:focus-visible{
-  background:var(--paper);color:var(--ink);
-  box-shadow:inset 0 0 0 var(--edge-thin) var(--ink)}
-@media(min-width:520px){ .acct .btn--out{flex:0 0 auto} }
-@media(min-width:1024px){ .acct{display:none} }
+

@@ -102,6 +102,13 @@ function mkClient(){
         };
       };
 
+      const writeClaim = (payload) => {
+        db.reward_claims = db.reward_claims || [];
+        const row = Object.assign({ id:'rc_'+Math.random().toString(36).slice(2,8),
+                                    claimed_at:new Date().toISOString() }, payload);
+        db.reward_claims.push(row); saveDB();
+        return row;
+      };
       q.insert = function(payload){
         const self = this;
         return {
@@ -122,9 +129,25 @@ function mkClient(){
               db.meetings.push(row); saveDB();
               return { data:row, error:null };
             }
+            if (self._table === 'reward_claims') return { data:writeClaim(payload), error:null };
             return { data:payload, error:null };
           },
-          then(res){ return Promise.resolve({ data:payload, error:null }).then(res); },
+          then(res){
+            /* Claims used to be accepted and dropped on the floor: the
+               insert resolved ok and nothing was written, so a member
+               could claim a reward, see the confirmation, and find it
+               still unclaimed on the next read. The real table has a
+               unique key on (user_id, reward_id), which is why the
+               client tolerates 23505 — so the mock enforces it too. */
+            if (self._table === 'reward_claims'){
+              const dup = (db.reward_claims || []).some(c =>
+                c.user_id === payload.user_id && c.reward_id === payload.reward_id);
+              if (dup) return Promise.resolve({ data:null,
+                error:{ message:'duplicate key value', code:'23505' } }).then(res);
+              return Promise.resolve({ data:writeClaim(payload), error:null }).then(res);
+            }
+            return Promise.resolve({ data:payload, error:null }).then(res);
+          },
         };
       };
       return q;
