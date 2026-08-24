@@ -23,74 +23,88 @@
    ══════════════════════════════════════════════════════════════════ */
 
 :root{
-  /* ── LIGHT: ink on warm pulp ──────────────────────────────────── */
-  --kozo:      #F1ECE2;   /* warm pulp. the page                     */
-  --sumi:      #12100D;   /* warm black. never blue-black            */
-  --shu:       #E53935;   /* CINNABAR. the seal paste                */
-  --shu-deep:  #C62828;   /* the same mark, pressed harder           */
+  /* ══ PRESS — PAPER, TONE, INK ══════════════════════════════════════
+     Three paints. Not seven values, not an accent system, not a theme.
 
-  /* ── the ramp between them ──────────────────────────────────────
-     The ink end of the ramp was #211E1A — a warm black, but a soft
-     one. "Absolute contrast" is the first principle of this system,
-     and a 12.9:1 ink was doing the work of a 16.8:1 one. The two ink
-     steps are deepened toward absolute while keeping their warmth
-     (they are still red-shifted, never blue-black), which is what
-     makes the paper read as paper rather than as grey. Everything
-     between them is unchanged: the tonal structure of the page and
-     the whole responsive pass that depends on it still hold. */
-  --v0:#FDFDFC;           /* page highlight, the raised edge of pulp */
-  --v1:#F7F7F5;           /* paper                                    */
-  --v2:#E6E5E1;           /* recessive fill                           */
-  --v3:#A9A8A2;           /* screentone body                          */
-  --v4:#5E5D58;           /* muted ink                                */
-  --v5:#0A0A0A;           /* ink — structural                         */
-  --v6:#000000;           /* flooded ink — absolute                   */
+       paper   the sheet. Everything sits on it.
+       tone    the unearned and the inactive: rules, empty slots,
+               anything the member has not done yet.
+       ink     an event. A stamp that was earned, a meeting open now,
+               the one action on the screen. If a surface is solid and
+               nothing happened there, it should not be solid.
 
-  --kozo-2:    #E6E5E1;
-  --kage:      #111111;   /* ink panel, one step off pure             */
+     Tone appears at two strengths and ink at two, which is legibility
+     rather than palette: a hairline that shouts is a border by another
+     name, and secondary text at full tone is 1.7:1 and unreadable. The
+     tints are the same two paints, quieter — there is no fifth colour.
 
-  --paper:var(--v1);
-  --paper-2:var(--v2);
-  --ink:var(--v5);
-  --ink-2:var(--v4);
-  --tone:var(--v3);
-  --tone-lt:var(--v2);
+     The vermilion seal accent is gone. It was spent six ways on labels
+     that reported nothing, and a spot colour that appears on every
+     screen is not a spot colour. Emphasis is carried by ink mass now.
+     ══════════════════════════════════════════════════════════════════ */
+  --paper:  #F7F7F5;      /* the sheet                                */
+  --tint:   #E2DFD8;      /* tone, light — hairlines and rules        */
+  --tone:   #A9A8A2;      /* tone, full — unearned, inactive          */
+  --ink-2:  #5E5D58;      /* ink, quiet — secondary reading           */
+  --ink:    #0A0A0A;      /* ink — events, actions, primary reading   */
 
-  /* ══ THE SEAL ═══════════════════════════════════════════════════
-     One colour, and it is not a theme — it is shuniku, the vermilion
-     paste a hanko is pressed in. It appears where something has been
-     VERIFIED or where the system is asking you to aim, and nowhere
-     else. If you can see two red things on a screen at once, one of
-     them is wrong.
+  /* The seven-step ramp collapses onto those five. The names stay so
+     that nothing downstream has to be rewritten to keep working, but
+     there are only three paints behind them now — v6 and v5 are one
+     black, and v0 and v1 are one paper. */
+  --v0:var(--paper); --v1:var(--paper); --v2:var(--tint);
+  --v3:var(--tone);  --v4:var(--ink-2); --v5:var(--ink); --v6:var(--ink);
 
-     Deliberately NOT wired into --crimson / --burg / --oxblood /
-     --line-hot. Those aliases exist for the FX layer and currently
-     resolve to ink; giving them red would put the accent in a dozen
-     places at once, which is exactly how an accent stops meaning
-     anything. Every use of --seal below is written out by hand. */
-  --seal:var(--shu);
-  --seal-deep:var(--shu-deep);
+  --paper-2:var(--tint);
+  --tone-lt:var(--tint);
+  --kozo:var(--paper); --kozo-2:var(--tint);
+  --sumi:var(--ink);   --kage:var(--ink);
 
-  --crimson:var(--v6);
-  --burg:var(--v6);
-  --oxblood:var(--v6);
-  --ember:var(--v4);
-  --line-hot:var(--v6);
+  /* The seal accent resolves to ink, so every hand-written `--seal`
+     call site downstream keeps working and now prints black. */
+  --shu:var(--ink); --shu-deep:var(--ink);
+  --seal:var(--ink); --seal-deep:var(--ink);
 
-  --void:var(--v6);  --ink-bg:var(--kage);
-  --lacquer:var(--kage); --lacquer-2:#251E19; --well:var(--v2);
-  --bone:var(--v0);  --chalk:var(--v2);
-  --ash:var(--v3);   --faint:var(--v4);  --beige:var(--v2);
-  --steel:var(--v2); --steel-2:var(--v3);
-  --line:var(--ink); --line-2:var(--v4); --line-3:var(--v3);
+  --crimson:var(--ink); --burg:var(--ink); --oxblood:var(--ink);
+  --ember:var(--ink-2); --line-hot:var(--ink);
+  --void:var(--ink);  --ink-bg:var(--ink);
+  --lacquer:var(--ink); --lacquer-2:var(--ink); --well:var(--tint);
+  --bone:var(--paper);  --chalk:var(--tint);
+  --ash:var(--tone);    --faint:var(--ink-2);  --beige:var(--tint);
+  --steel:var(--tint);  --steel-2:var(--tone);
+  --line:var(--ink); --line-2:var(--ink-2); --line-3:var(--tone);
 
-  /* ── screentone. one dot field, three densities ───────────────── */
-  --tone-dot:  rgba(23,19,15,.20);
-  --tone-fine: 4px;
-  --tone-mid:  6px;
+  /* ══ EDGES ═════════════════════════════════════════════════════════
+     Two weights, not five. A hairline separates things that are in a
+     list together; a 2px edge encloses something that is a discrete
+     physical object — a stamp cell, the viewfinder, an input. Nothing
+     else gets a border. The heavier names survive so call sites keep
+     resolving, and they all print 2px. */
+  --edge-hair:1px;
+  --edge-thin:2px;
+  --edge:2px; --edge-heavy:2px; --edge-shout:2px;
+  --rule:2px; --rule-hair:1px;
+
+  /* ══ TYPE ══════════════════════════════════════════════════════════
+     One family. Archivo carries a width axis as well as a weight one,
+     so display type gets real presence without a second face, and the
+     app stops needing four. Mono survives for exactly one job: codes a
+     member might have to read out or type in. It is never a label and
+     never a mood. */
+  --f-display:'Archivo',ui-sans-serif,system-ui,sans-serif;
+  --f-body:var(--f-display);
+  --f-label:var(--f-display);
+  --f-accent:var(--f-display);
+  --f-jp:var(--f-display);
+  --f-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+
+  /* ── screentone. one dot field, one density ───────────────── */
+  --tone-dot:  rgba(23,19,15,.16);
+  --tone-fine: 9px;
+  --tone-mid:  9px;
   --tone-wide: 9px;
 
-  /* ── motion ───────────────────────────────────────────────────── */
+  /* ── motion ───────────────────────────────────────────────── */
   --press: cubic-bezier(.2,.9,.25,1);
 }
 
@@ -211,7 +225,7 @@ none;
    readable, on the one control every screen depends on. --ink-2 is
    4.97:1 and still plainly the quiet state beside the active
    numeral's full ink. Muted text is ink at a lower value, not tone. */
-.rail__no,.tab__no{color:var(--ink-2)}
+
 .rail__link[aria-current],
 .tab[aria-current]{color:var(--ink)}
 .rail__link[aria-current] .rail__no,
@@ -262,7 +276,6 @@ none;
    live one. Past and upcoming stay in ink, which keeps the red rare
    enough to mean something. */
 .bstate--open{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.seal--set,.rec--set .rec__node{color:var(--ink)}
 .entry--set .entry__verdict{color:var(--ink)}
 
 /* ══ SCANNER ═══════════════════════════════════════════════════════
@@ -329,10 +342,6 @@ none;
 
 [data-screen="auth"] .view{position:relative}
 [data-screen="auth"] .authp{position:relative;z-index:1}
-
-/* the mark inside the chop is the key device, not a glyph: the display
-   face has no kanji coverage and fell back to a mismatched font */
-.chop__key{width:62%;height:62%;fill:currentColor;stroke:none}
 .chop--filled .chop__key{fill:var(--paper)}
 
 /* ══ SIGN-IN ═══════════════════════════════════════════════════════
@@ -388,14 +397,6 @@ none;
   letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);
   font-style:normal;overflow-wrap:anywhere}
 
-/* the action is a label on the fields, not a headline over them */
-.authcard__lead{display:grid;gap:6px;
-  padding-top:clamp(12px,2.6vw,18px);
-  border-top:var(--edge-thin) solid var(--ink)}
-.authcard__title{font-family:var(--f-display);text-transform:uppercase;
-  font-size:clamp(26px,7.5vw,40px);line-height:.98;letter-spacing:-.02em;
-  margin:0;color:var(--ink)}
-
 /* the atmosphere sits behind the card and is cropped by the viewport,
    not laid over the fields */
 /* Atmosphere, not competition. The rake and the ghost word were both
@@ -403,9 +404,6 @@ none;
    the page was criticised for. Both drop back to a level that reads
    as texture behind the card rather than as content beside it. */
 [data-screen="auth"] .rake{opacity:.055;z-index:0}
-[data-screen="auth"] .sfxw{z-index:0;opacity:.06;
-  font-size:clamp(96px,22vw,220px);top:auto;bottom:1vh;right:-14vw}
-@media(min-width:1024px){ [data-screen="auth"] .sfxw{opacity:.05} }
 
 /* ══ THE SEAL GRID ═════════════════════════════════════════════════
    An unearned seal was ink-on-ink and effectively invisible, so the
@@ -418,15 +416,7 @@ none;
    itself: absolute ink, edge to edge. The difference between the two
    is the whole mechanic of the product, so it is the largest contrast
    on the page. */
-.seal{border-color:var(--v3);border-style:solid;background:transparent}
-.seal:not(.seal--set){opacity:1;border-width:var(--edge-hair)}
-.seal:not(.seal--set) .seal__mark{opacity:.3}
-.seal--set{border-color:var(--v6);background:var(--v6);opacity:1;
-  border-style:solid;border-width:var(--edge-hair)}
-/* A landed stamp is solid ink, so its ordinal has to be paper. This
-   said `--ink`, which put an ink numeral on an ink cell — 1.18:1, i.e.
-   the count was invisible on exactly the stamps that had been earned. */
-.seal--set .seal__no{color:var(--paper)}
+
 
 /* ══ THE TEN STAMPS — SLOT STATES ON ONE PIECE OF ARTWORK ══════════
    The card carries ten different emblems, so state cannot be carried
@@ -463,28 +453,7 @@ none;
    164, and the muted grey an empty slot is drawn in is 169. The
    current slot and the empty slots were rendering as the same value —
    the one distinction the card most needs to make. */
-.seals .seal[data-seal="empty"] .seal__mark,
-.seals .seal[data-seal="empty"] .seal__mark path{opacity:1}
-.seals .seal[data-seal="empty"] .seal__mark path{fill:var(--v3);stroke:none}
 
-.seals .seal--next .seal__mark,
-.seals .seal--next .seal__mark path{opacity:1}
-.seals .seal--next .seal__mark path{fill:var(--ink);stroke:none}
-
-.seals .seal--set .seal__mark,
-.seals .seal--set .seal__mark path{opacity:1}
-.seals .seal--set .seal__mark path{fill:var(--paper);stroke:none}
-
-.seals .seal[data-seal="locked"] .seal__mark,
-.seals .seal[data-seal="locked"] .seal__mark path{opacity:.38}
-.seals .seal[data-seal="locked"] .seal__mark path{fill:var(--v4);stroke:none}
-/* the strike is the cell's, not the artwork's — the emblem stays
-   whole underneath it, which is the difference between "you cannot
-   have this one" and "this one is damaged" */
-.seals .seal[data-seal="locked"]{position:relative}
-.seals .seal[data-seal="locked"]::after{content:"";position:absolute;
-  inset:18% 8%;border-top:var(--edge-thin) solid var(--v4);
-  transform:rotate(-60deg);transform-origin:50% 50%}
 
 
 
@@ -497,16 +466,7 @@ none;
    In the three tiers, "no meeting is open" is the SCREENTONE state:
    present, but not the thing being pointed at. So it gets a tone
    ground and ink type — recessive, not absent. */
-.strike--calm{border-color:var(--ink-2)}
-.strike--calm .strike__arrow{background:var(--ink-2);border-color:var(--ink-2)}
 
-/* The chamber is paper, so its type is ink. The only inverted surface
-   is the target block inside it, which carries its own colours. */
-.strike,.strike .strike__verb{color:var(--ink)}
-.strike .strike__sub{color:var(--ink-2)}
-.strike .strike__arrow svg{stroke:var(--paper)}
-.strike:hover .strike__arrow svg,
-.strike:focus-visible .strike__arrow svg{stroke:var(--ink)}
 
 /* ══════════════════════════════════════════════════════════════════
    RECORD — the page that is literally a record being built
@@ -552,11 +512,6 @@ none;
 [data-screen="record"] .entry--miss .entry__ghost{display:none}
 [data-screen="record"] .entry--miss .entry__no{color:var(--ink-2)}
 [data-screen="record"] .entry--miss .entry__verdict{color:var(--tone)}
-
-/* the big ghost numeral behind each cell is the panel's page number */
-[data-screen="record"] .entry__ghost{
-  font-family:var(--f-display);opacity:1;color:rgba(33,30,26,.07);
-}
 
 /* ══════════════════════════════════════════════════════════════════
    REWARDS — three panels, three states, no store front
@@ -667,7 +622,7 @@ none;
    (#B0A99C) on a hatched ground: under 2:1 against the paper, on the
    one sentence that answers "how far am I?". Both names are set, so
    whichever the view renders is legible. */
-.tech__req,.tech__at{color:var(--ink-2);letter-spacing:.08em}
+
 .tech--sealed .tech__req,.tech--sealed .tech__at{color:var(--ink-2)}
 .tech{min-height:0}
 .tech--sealed{padding-bottom:var(--s4)}
@@ -790,16 +745,9 @@ none;
    labels keep their wide tracking — that is what makes them read as
    manga captions — but they stop shrinking below 11px. */
 .kicker{font-size:clamp(11px,.55vw + 9.2px,13px)}
-/* the volume line is a sentence, so it takes the type floor and the
-   ink ramp like every other sentence in the app */
-.rail__vol{font-size:clamp(9.5px,1.05vw,11px);line-height:1.5;color:var(--ink-2)}
 /* the brand block must be able to shrink inside the rail track */
 .rail,.rail__brand,.rail__nav,.rail__foot{min-width:0}
 .rail__brand .mark,.rail__brand .mark__word{min-width:0;overflow-wrap:anywhere}
-/* an unearned seal's ordinal was tone-on-paper (1.98:1) — the cell is
-   recessive through its dashed keyline and reduced opacity, which is
-   the tier language; the number itself still has to be readable */
-.seal:not(.seal--set) .seal__no{color:var(--ink-2)}
 /* the scanner's fallback copy sits on the viewer's tone fill, not on
    paper, which costs it the last of its contrast */
 .viewer .stack .muted,.viewer__msg{color:var(--ink)}
@@ -807,9 +755,8 @@ none;
 /* Nothing in the application is allowed under 11px. The mono labels
    keep their wide tracking — that is what makes them read as manga
    captions — they simply stop shrinking. */
-.chip,.bstate,.brow__del,.tech__legend,.tech__at,.entry__verdict,
-.entry__no,.qrpanel__roll,.strike__sub,.who__role,.narr__ch,
-.t-utility,.brow__no,.brow__sub{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
+.chip,.bstate,.brow__del,.entry__verdict,
+.entry__no,.who__role,.brow__no,.brow__sub{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
 
 /* ══════════════════════════════════════════════════════════════════
    MUTED TEXT IS INK, NOT TONE
@@ -829,12 +776,11 @@ none;
    not a palette change. Panels that are printed in ink keep their own
    lighter overrides, which are more specific and still win.
    ══════════════════════════════════════════════════════════════════ */
-.muted,.hero__of,.hero__foot,.entry__no,.entry__meta,.entry__verdict,
-.stat span,.stat b i,.tech__at,.tech__desc,.tech__legend,.chip--set,
-.qrpanel__when,.qrpanel__uri,.qrpanel__roll,.who__role,.empty,
-.verdict__meet,.narr__ch,.t-utility,.setupbox__hint,.bstat span,
-.brow__no,.brow__sub,.bactive__no--off,.bstate--ended,.bstate--past,
-.hero__state,.tech__state,.bnote,.bident__when,.bmile__mid .muted,
+.muted,.entry__no,.entry__meta,.entry__verdict,
+.stat span,.stat b i,.chip--set,
+.qrpanel__when,.who__role,.empty,
+.verdict__meet,.setupbox__hint,.bstat span,
+.brow__no,.brow__sub,.bactive__no--off,.bstate--ended,.bstate--past,.bmile__mid .muted,
 .brow__mid .muted{color:var(--ink-2)}
 /* the record's missed rows are recessive by opacity and a dashed
    keyline, which is the tier language — not by unreadable type */
@@ -844,8 +790,8 @@ none;
    `.duo` and `.rig` reported horizontal clipping: a grid child's
    default min-width is auto, so a long unbreakable string pushes the
    track wider than its column instead of wrapping. */
-.duo > *,.rig > *,.entry,.brow__mid,.bmile__mid{min-width:0}
-.entry__meta,.brow__mid b,.bident__say{overflow-wrap:anywhere}
+.rig > *,.entry,.brow__mid,.bmile__mid{min-width:0}
+.entry__meta,.brow__mid b{overflow-wrap:anywhere}
 
 /* ══ TOUCH ═════════════════════════════════════════════════════════
    Keyed to the input device, not to the screen width. A 1024px
@@ -854,7 +800,7 @@ none;
    standing in for this and got both cases wrong. */
 @media (pointer:coarse){
   .btn,.chip,.motion-btn,.input,.link,.section-link,.brow__del,
-  .tab,select,.theme-btn{min-height:44px}
+  .tab,select{min-height:44px}
   .input{padding-inline:var(--s4)}
   .btn{padding-inline:var(--s5)}
 }
@@ -876,7 +822,6 @@ none;
   [data-screen="record"] .rec{
     border:0;padding:0;background:none;box-shadow:none;
   }
-  [data-screen="record"] .rec__node{display:none}
   [data-screen="record"] .entry{
     padding:var(--s4);
     border:var(--edge-thin) solid var(--ink);
@@ -889,7 +834,6 @@ none;
     grid-area:gain;margin-top:var(--s3);
     font-family:var(--f-display);font-size:15px;
   }
-  [data-screen="record"] .entry__ghost{font-size:44px;top:var(--s3);right:var(--s3)}
 }
 /* Browsers without container query support keep the two-frame row,
    which is legible everywhere — it is denser, not broken. */
@@ -952,7 +896,7 @@ main#view:focus,main#view:focus-visible{outline:none}
    card — it is the answer to "how far am I?" — and it was sitting at
    secondary weight on top of screentone, which eats contrast. It gets
    full ink and mono tracking so it reads as a spec, not a whisper. */
-.tech__req{color:var(--ink);font-size:11.5px;letter-spacing:.08em;opacity:1}
+
 .tech--sealed .tech__req{color:var(--ink)}
 .tech--sealed .tech__name{color:var(--ink)}
 
@@ -1002,3 +946,110 @@ main#view:focus,main#view:focus-visible{outline:none}
   [data-screen="auth"] .rail{display:none}
   [data-screen="auth"] .shell{grid-template-columns:1fr}
 }
+
+
+/* ══════════════════════════════════════════════════════════════════
+   PRESS — THE CARD, THE ACTION, THE BRIEF
+
+   One block, and it is the only place the stamp card is styled. The
+   card used to be described in three files at once: a base grid in
+   keystamp.css, a `[data-screen="home"]` override in artdirection.css
+   that turned the cell borders off again, a decorative `::after` on
+   the grid, and a state block here. Sixty selectors saying what one
+   object looks like, and any change to it had to be made in three
+   places in the right order. It is one object now, described once.
+   ══════════════════════════════════════════════════════════════════ */
+
+.view--home{display:flex;flex-direction:column;gap:var(--s7)}
+
+/* ── THE CARD ──────────────────────────────────────────────────────
+   A printed stamp card: one ruled box carrying its own title row and
+   then the ten slots. The count is set ON it rather than beside it,
+   because the number and the card state the same fact, and two objects
+   competing to say one thing is what made Home unreadable.
+
+   It is capped, and the cap is the composition: past about 720px the
+   card stops growing and the sheet around it becomes deliberate empty
+   paper rather than a card stretched to fill a monitor. */
+.card{border:var(--edge-thin) solid var(--ink);background:var(--paper);
+  max-width:720px;width:100%}
+
+.count{padding:var(--s5) var(--s5) var(--s4);
+  border-bottom:var(--edge-thin) solid var(--ink)}
+.count__num{display:flex;align-items:baseline;gap:.28em;
+  font-family:var(--f-display);font-variation-settings:'wdth' 112,'wght' 900;
+  line-height:.86;letter-spacing:-.045em}
+.count__num b{font-weight:inherit;font-size:clamp(64px,17vw,128px)}
+.count__num span{font-size:clamp(22px,5.2vw,40px);color:var(--ink-2);
+  letter-spacing:-.02em}
+.count__label{margin-top:var(--s2);font-size:var(--t-body);color:var(--ink-2)}
+.count__line{margin-top:var(--s1);font-size:var(--t-body)}
+
+/* ── THE TEN SLOTS ─────────────────────────────────────────────────
+   The grid IS the ruling: a tone field showing through 1px gaps draws
+   every division at once, so ten cells cost one border instead of
+   forty. */
+.seals{display:grid;grid-template-columns:repeat(5,1fr);
+  gap:var(--edge-hair);background:var(--tone);
+  list-style:none;margin:0;padding:0}
+.seal{position:relative;aspect-ratio:1;display:grid;place-items:center;
+  background:var(--paper);min-width:0}
+/* The mark and the slot number both scale with the cell rather than
+   sitting at a fixed size, so at 320px — where a cell is 56px — the
+   numeral stops touching the artwork. */
+.seals{container-type:inline-size}
+.seals .seal svg{width:74%;height:74%;display:block}
+.seal__mark path{fill:var(--tone);stroke:none}
+.seal__no{position:absolute;right:5%;bottom:3%;
+  font:500 clamp(8px,2.1cqw,11px)/1 var(--f-mono);color:var(--tone)}
+
+/* EARNED — solid ink, the mark knocked out. The only cell that is a
+   filled surface, because it is the only one where something happened.
+   A stamp lands slightly off square; the rotation is on the mark, not
+   on the cell, so the card's ruling stays straight. */
+.seal--set{background:var(--ink)}
+.seal--set .seal__mark path{fill:var(--paper)}
+.seal--set .seal__no{color:var(--paper);opacity:.55}
+.seal--set .seal__mark{transform:rotate(var(--press-tilt,0deg));
+  transform-origin:50% 50%}
+
+/* CURRENT — the next one to earn. Ink on paper inside a keyline: the
+   strongest unearned thing on the card, which is what makes it the one
+   you are being asked to go and get. */
+.seal--next{box-shadow:inset 0 0 0 var(--edge-thin) var(--ink)}
+.seal--next .seal__mark path{fill:var(--ink)}
+.seal--next .seal__no{color:var(--ink-2)}
+
+/* LOCKED — defined for the contract; the attendance model does not
+   emit it today. */
+.seal[data-seal="locked"] .seal__mark{opacity:.4}
+
+/* ── THE ACTION ────────────────────────────────────────────────────
+   One button and the meeting it acts on. Ink is the affordance. */
+.act{display:flex;flex-direction:column;gap:var(--s3);max-width:720px}
+.act__btn{display:block;width:100%;min-height:var(--tap);
+  padding:var(--s4) var(--s5);border:var(--edge-thin) solid var(--ink);
+  background:var(--paper);color:var(--ink);cursor:pointer;text-align:left;
+  font-family:var(--f-display);font-variation-settings:'wdth' 100,'wght' 700;
+  font-size:clamp(19px,4.4vw,26px);line-height:1.15;letter-spacing:-.015em}
+.act__btn--live{background:var(--ink);color:var(--paper)}
+.act__btn:hover{background:var(--ink);color:var(--paper)}
+.act__sub{font-size:var(--t-body);color:var(--ink-2)}
+
+/* ── THE BRIEF ─────────────────────────────────────────────────────
+   Two bordered panels became one column of rules. */
+.brief{display:flex;flex-direction:column;gap:var(--s3);max-width:720px}
+.brief__head{display:flex;align-items:baseline;justify-content:space-between;
+  gap:var(--s3);padding-bottom:var(--s2);
+  border-bottom:var(--edge-thin) solid var(--ink)}
+.brief .h2{margin:0}
+.brief__h2{margin-top:var(--s5);padding-bottom:var(--s2);
+  border-bottom:var(--edge-hair) solid var(--tone)}
+
+/* The rail's account block leads with the person, not the record. The
+   name was set in display caps above a `SIGNED IN · MEMBER` label; the
+   label is the quiet half of that pair, so it sits under the name at
+   reading weight. */
+.rail__who{font-family:var(--f-display);font-variation-settings:'wght' 700;
+  font-size:clamp(15px,1.1vw,17px);line-height:1.25;overflow-wrap:anywhere}
+.rail__role{margin-top:2px;font-size:13px}
