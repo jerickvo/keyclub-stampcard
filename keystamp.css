@@ -376,7 +376,16 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   list-style:none;padding:var(--s5)}
 .seal{position:relative;aspect-ratio:1;display:grid;place-items:center;
   border:var(--rule) solid var(--ink);background:var(--paper)}
-.seal svg{width:62%;height:62%}
+/* The mark sits at 86% of the slot, not edge to edge. Each treasure is
+   scaled so its longest side is 58 of its 64-unit box, so 86% puts it at
+   ~78% of the cell — enough paper around it that two earned slots
+   abutting across a hairline read as two stamps rather than one field.
+   A symbol that is wide rather than tall keeps its own aspect inside
+   that box and simply occupies less of the slot, which is the reference
+   drawing's proportion and not something to correct. The specificity is
+   deliberate: a later blanket rule sizes every artwork SVG in the
+   application at 100%, and this has to outrank it. */
+.seals .seal svg{width:86%;height:86%}
 /* THE ARTWORK IS FILLED, THE FURNITURE IS STROKED.
    The seal used to be a line drawing, so every one of these rules set
    `stroke` on every element inside it. It is a traced silhouette now:

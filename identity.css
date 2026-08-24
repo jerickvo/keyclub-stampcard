@@ -428,6 +428,64 @@ none;
    the count was invisible on exactly the stamps that had been earned. */
 .seal--set .seal__no{color:var(--paper)}
 
+/* ══ THE TEN STAMPS — SLOT STATES ON ONE PIECE OF ARTWORK ══════════
+   The card carries ten different emblems, so state cannot be carried
+   by the drawing: every slot already looks unlike its neighbours, and
+   a member reading "different shape" as "different status" would have
+   the card backwards. State is carried by what happens *to* whichever
+   emblem a slot holds — ink or paper, weight, and what the cell does
+   around it — so the same four changes apply to all ten.
+
+     EMPTY    an ordinal not yet reached. The emblem in muted ink on
+              paper: legible as a shape, so the slot reads as an
+              impression waiting to be pressed rather than as a hole,
+              and never as earned.
+     CURRENT  the next stamp to be earned. The emblem at full ink
+              inside a closed keyline — the only unearned slot on the
+              card at full weight, which is what makes it the thing
+              you are being asked to go and get. It used to be the
+              faintest cell on the card, below even the empty ones.
+     EARNED   the emblem knocked out of a solid ink cell. The largest
+              contrast on the page, because the difference between
+              earned and unearned is the whole mechanic.
+     CLAIMED  the stamp just landed: EARNED, plus the surrounding
+              treatment `.seal--last`/`.seal--hero` already carries.
+   and, for completeness of the contract rather than because the
+   current attendance model emits it:
+     LOCKED   `data-seal="locked"` — a slot the member cannot reach.
+              Struck through, at the weight of a cancelled thing.
+
+   Everything below is opacity and fill on the same paths. No emblem
+   is swapped, redrawn or transformed between states. */
+/* The opacity is set on the path, not only on the group. An earlier
+   rule fades `.seal--next .seal__mark path` to .35, which is a fade
+   the group's opacity cannot undo: ink at .35 on paper resolves to
+   164, and the muted grey an empty slot is drawn in is 169. The
+   current slot and the empty slots were rendering as the same value —
+   the one distinction the card most needs to make. */
+.seals .seal[data-seal="empty"] .seal__mark,
+.seals .seal[data-seal="empty"] .seal__mark path{opacity:1}
+.seals .seal[data-seal="empty"] .seal__mark path{fill:var(--v3);stroke:none}
+
+.seals .seal--next .seal__mark,
+.seals .seal--next .seal__mark path{opacity:1}
+.seals .seal--next .seal__mark path{fill:var(--ink);stroke:none}
+
+.seals .seal--set .seal__mark,
+.seals .seal--set .seal__mark path{opacity:1}
+.seals .seal--set .seal__mark path{fill:var(--paper);stroke:none}
+
+.seals .seal[data-seal="locked"] .seal__mark,
+.seals .seal[data-seal="locked"] .seal__mark path{opacity:.38}
+.seals .seal[data-seal="locked"] .seal__mark path{fill:var(--v4);stroke:none}
+/* the strike is the cell's, not the artwork's — the emblem stays
+   whole underneath it, which is the difference between "you cannot
+   have this one" and "this one is damaged" */
+.seals .seal[data-seal="locked"]{position:relative}
+.seals .seal[data-seal="locked"]::after{content:"";position:absolute;
+  inset:18% 8%;border-top:var(--edge-thin) solid var(--v4);
+  transform:rotate(-60deg);transform-origin:50% 50%}
+
 
 
 /* ══ THE CALM STRIKE ═══════════════════════════════════════════════
