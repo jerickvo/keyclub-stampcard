@@ -135,8 +135,8 @@ const C = {
       upcoming: 'Scheduled',
     }[state];
     const meta = scan
-      ? `Wed ${fmtDay(m.date)} · stamped ${fmtTime(scan.at)} · ${esc(m.place)}`
-      : `Wed ${fmtDay(m.date)} · ${esc(m.time)} · ${esc(m.place)}`;
+      ? `Wed ${fmtDay(m.date)} / stamped ${fmtTime(scan.at)} / ${esc(m.place)}`
+      : `Wed ${fmtDay(m.date)} / ${esc(m.time)} / ${esc(m.place)}`;
     const el = (state === 'open' && link) ? 'button' : 'div';
     const attr = el === 'button' ? ' data-go="scan"' : '';
 
@@ -304,14 +304,14 @@ const Views = {
     let action;
     if (open && !done)
       action = C.strike({ verb:`Check in to GM ${pad(open.no)}`,
-                          sub:`Wed ${fmtDay(open.date)} · ${esc(open.time)} · ${esc(open.place)}`,
+                          sub:`Wed ${fmtDay(open.date)} / ${esc(open.time)} / ${esc(open.place)}`,
                           go:'scan', live:true });
     else if (open && done)
       action = C.strike({ verb:'View your record',
                           sub:`GM ${pad(open.no)} stamped`, go:'record' });
     else if (next)
       action = C.strike({ verb:'Scan a code',
-                          sub:`Check-in opens at GM ${pad(next.no)} · ${fmtDate(next.date)}`,
+                          sub:`Check-in opens at GM ${pad(next.no)} / ${fmtDate(next.date)}`,
                           go:'scan' });
     else
       action = C.strike({ verb:'Scan a code',
@@ -545,7 +545,7 @@ const Views = {
         <span class="acct__rule" data-layer aria-hidden="true"></span>
         <div class="acct__row">
           <div class="acct__who">
-            <p class="kicker">Signed in · ${Store.isBoard ? 'Board' : 'Member'}</p>
+            <p class="kicker">Signed in / ${Store.isBoard ? 'Board' : 'Member'}</p>
             <p class="acct__name">${esc(memberName())}</p>
           </div>
           <button class="btn btn--out" data-signout type="button">Sign out</button>
@@ -562,62 +562,66 @@ const Views = {
   auth(){
     const mode = AuthUI.mode;                 /* 'in' | 'up' */
     const up = mode === 'up';
-    /* THE AUTHENTICATION CARD.
+    /* THE OPENING SPREAD.
 
-       This page used to run the dashboard's furniture: a chapter
-       masthead at display size, a chop with the mark in it, a wordmark
-       beside the chop, a full-height radiating rake and a sound effect
-       the height of the screen — six things all shouting, with the
-       form last in the reading order.
+       A sign-in screen is the one page every member sees before they
+       have anything to look at, so it is the page that has to say what
+       this product is. It was a grey card floating in the middle of a
+       blank sheet — competent and completely anonymous.
 
-       It is one card now. The brand is stated once, at the top, and
-       IS the page's title — there is no second masthead repeating it.
-       The action is an annotation, not a 96px headline, because on a
-       sign-in screen the fields are the subject and the word "Sign in"
-       is a label on them. The atmosphere stays, cropped hard and put
-       behind the card where it belongs. */
+       It is a manga opening panel now: the seal at enormous size,
+       cropped hard by the left edge of the sheet so it reads as printed
+       rather than placed; the wordmark set in the display face across
+       it; and the form dropped into the lower-right quarter as a small
+       dense block of ink. The composition is deliberately unbalanced —
+       the weight sits low and right, the mark sits high and left — and
+       that diagonal is the whole of the drama. No frame around it, no
+       decoration in it, and nothing between the member and the two
+       fields they came here to fill in. */
     return `<div class="view view--auth">
-      <span class="rake" aria-hidden="true"></span>
 
-      <div class="authcard" data-enter>
-        <header class="authcard__brand">
-          ${logoMark('authcard__logo')}
-          <h1 class="authcard__wm">
-            <b>Key</b>stamp
-            <em>Key Club attendance</em>
-          </h1>
+      <div class="spread" data-enter>
+
+        <div class="spread__art" aria-hidden="true">
+          <svg class="spread__seal" viewBox="0 0 100 100">${sealArt()}</svg>
+        </div>
+
+        <header class="spread__head">
+          <p class="spread__sub">Key Club attendance</p>
+          <h1 class="spread__wm">Keystamp</h1>
         </header>
 
         <form class="authp" id="authForm" novalidate>
+          <p class="authp__title">${up ? 'Create account' : 'Sign in'}</p>
 
-          <div class="field authp__f">
-            <label class="kicker" for="authUser">Username</label>
-            <input class="input" id="authUser" name="username" type="text"
+          <div class="authp__f">
+            <label class="authp__lab" for="authUser">Username</label>
+            <input class="authp__in" id="authUser" name="username" type="text"
                    autocomplete="username" autocapitalize="none" spellcheck="false"
                    inputmode="latin" maxlength="${Config.USERNAME_MAX}"
                    placeholder="${up ? 'letters, numbers, _ and .' : 'your username'}">
           </div>
 
-          <div class="field authp__f">
-            <label class="kicker" for="authPass">Password</label>
-            <input class="input" id="authPass" name="password" type="password"
+          <div class="authp__f">
+            <label class="authp__lab" for="authPass">Password</label>
+            <input class="authp__in" id="authPass" name="password" type="password"
                    autocomplete="${up ? 'new-password' : 'current-password'}"
                    placeholder="${up ? 'at least 8 characters' : ''}">
           </div>
 
-          ${up ? `<div class="field authp__f">
-            <label class="kicker" for="authPass2">Confirm password</label>
-            <input class="input" id="authPass2" name="confirm" type="password"
+          ${up ? `<div class="authp__f">
+            <label class="authp__lab" for="authPass2">Confirm password</label>
+            <input class="authp__in" id="authPass2" name="confirm" type="password"
                    autocomplete="new-password">
           </div>` : ''}
 
           <p class="authp__err" id="authErr" role="alert" aria-live="assertive" hidden></p>
 
           <div class="authp__act">
-            <button class="btn btn--go" type="submit" id="authGo">
+            <button class="authp__go" type="submit" id="authGo">
               ${up ? 'Create account' : 'Sign in'}
             </button>
-            <button class="link" type="button" id="authSwap">
+            <button class="authp__swap" type="button" id="authSwap">
               ${up ? 'I already have an account' : 'Create an account'}
             </button>
           </div>

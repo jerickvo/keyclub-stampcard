@@ -101,8 +101,8 @@ const BoardUI = {
       ${focus ? `
         <div class="bnext ${isLive ? 'bnext--live' : ''}">
           <p class="bactive__no">GM ${pad(focus.meeting_number)}</p>
-          <p class="muted">${esc(fmtDay(focus.meeting_date))} · ${esc(focus.start_time)}${
-            focus.end_time ? '–' + esc(focus.end_time) : ''} · MPR</p>
+          <p class="muted">${esc(fmtDay(focus.meeting_date))} / ${esc(focus.start_time)}${
+            focus.end_time ? '-' + esc(focus.end_time) : ''} / MPR</p>
           <p class="bnext__state">
             <span class="bstate bstate--${isLive ? 'open' : 'upcoming'}">${
               isLive ? 'CHECK-IN OPEN' : 'CHECK-IN CLOSED'}</span>
@@ -218,7 +218,7 @@ const BoardUI = {
       <span class="brow__no" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">GM ${pad(m.meeting_number)}</span>
       <span class="brow__mid" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">
         <b>${esc(fmtDay(m.meeting_date))}</b>
-        <span class="muted">${esc(m.start_time)}${m.end_time ? '–' + esc(m.end_time) : ''} · ${esc(m.location || 'MPR')}</span>
+        <span class="muted">${esc(m.start_time)}${m.end_time ? '-' + esc(m.end_time) : ''} / ${esc(m.location || 'MPR')}</span>
       </span>
       <span class="bstate bstate--${m.state.toLowerCase()}">${m.state}</span>
       <span class="brow__n">${m.attendance_count}</span>
@@ -238,7 +238,7 @@ const BoardUI = {
         <label class="field"><span class="kicker">Meeting number</span>
           <input class="input" id="mNo" type="number" min="1" inputmode="numeric"
                  value="${esc(f.no || '')}" placeholder="12"></label>
-        <label class="field"><span class="kicker">Date · Wednesday</span>
+        <label class="field"><span class="kicker">Date / Wednesday</span>
           <input class="input" id="mDate" type="date" value="${esc(f.date || Schedule.nextWednesday())}"></label>
         <label class="field"><span class="kicker">Start</span>
           <input class="input" id="mStart" type="time" value="${esc(f.start || '15:15')}"></label>
@@ -276,7 +276,7 @@ const BoardUI = {
             <span class="brow__mid">
               <b>${esc(m.username)}</b>
               <span class="muted">joined ${esc(fmtDay(m.created_at))}${
-                m.last_attendance ? ' · last seen ' + esc(fmtDay(m.last_attendance)) : ' · never checked in'}</span>
+                m.last_attendance ? ' / last seen ' + esc(fmtDay(m.last_attendance)) : ' / never checked in'}</span>
             </span>
             <span class="brow__n">${m.stamps}</span>
             <span class="brow__sub muted">${m.rewards_unlocked}/3</span>
@@ -284,7 +284,7 @@ const BoardUI = {
         </ul>
         <div class="bpage">
           <button class="btn" data-bpage="${Math.max(1, d.page - 1)}" ${d.page <= 1 ? 'disabled' : ''}>Back</button>
-          <span class="muted">Page ${d.page} of ${d.pages} · ${d.total} member${d.total === 1 ? '' : 's'}</span>
+          <span class="muted">Page ${d.page} of ${d.pages} / ${d.total} member${d.total === 1 ? '' : 's'}</span>
           <button class="btn" data-bpage="${Math.min(d.pages, d.page + 1)}" ${d.page >= d.pages ? 'disabled' : ''}>Next</button>
         </div>`
         : this.empty(this.q ? 'No member matches that username.' : 'No member accounts yet.')}
@@ -323,7 +323,7 @@ const BoardUI = {
             <li class="brow" ${a.meeting_id ? `data-bmeeting="${esc(a.meeting_id)}" tabindex="0" role="button"` : ''}>
               <span class="brow__no">GM ${a.meeting_number ? pad(a.meeting_number) : '—'}</span>
               <span class="brow__mid"><b>${esc(fmtDay(a.meeting_date))}</b>
-                <span class="muted">${esc(a.location || 'MPR')} · checked in ${esc(fmtTime(a.checked_in_at))}</span></span>
+                <span class="muted">${esc(a.location || 'MPR')} / checked in ${esc(fmtTime(a.checked_in_at))}</span></span>
             </li>`).join('')}</ul>`
         : this.empty('No attendance yet.')}
     </div>`;
@@ -338,8 +338,8 @@ const BoardUI = {
 
       <p class="kicker">Meeting</p>
       <h2 class="bdetail__name">GM ${pad(m.meeting_number)}</h2>
-      <p class="muted">${esc(fmtDay(m.meeting_date))} · ${esc(m.start_time)}${
-        m.end_time ? '–' + esc(m.end_time) : ''} · ${esc(m.location || 'MPR')}</p>
+      <p class="muted">${esc(fmtDay(m.meeting_date))} / ${esc(m.start_time)}${
+        m.end_time ? '-' + esc(m.end_time) : ''} / ${esc(m.location || 'MPR')}</p>
 
       <div class="bstats bstats--tight" style="margin-top:var(--s5)">
         ${this.stat(d.attendees.length, 'Checked in')}
@@ -391,7 +391,7 @@ const BoardUI = {
 
       <div class="qrpanel__head" style="margin-top:var(--s4)">
         <span class="qrpanel__no">GM ${pad(sel.meeting_number)}</span>
-        <span class="qrpanel__when">${esc(fmtDay(sel.meeting_date))} · ${esc(sel.start_time)} · MPR</span>
+        <span class="qrpanel__when">${esc(fmtDay(sel.meeting_date))} / ${esc(sel.start_time)} / MPR</span>
       </div>
 
       ${isOpen ? `

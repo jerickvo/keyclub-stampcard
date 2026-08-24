@@ -95,13 +95,16 @@
      34px floor on titles applied below 400px — sizes chosen for a
      phone-sized *panel* rather than a phone-sized *column*, which is
      what made the narrow layouts read as an oversized mobile page. */
-  --t-title:clamp(30px,7.2vw,92px);
-  --t-hero:clamp(72px,20vw,204px);
-  --t-verb:clamp(21px,3.2vw,38px);
-  --t-name:clamp(16px,1.4vw,21px);
-  --t-body:clamp(14.5px,.32vw + 13.5px,17px);
-  --t-caption:clamp(10px,.75vw,12px);
-  --t-meta:clamp(12px,.85vw,14px);
+  /* Sized for comic lettering, which needs more room than a grotesque:
+     CC Wild Words at 13px is cramped and hard to read, 16px is the
+     floor for comfort. The whole reading scale moved up accordingly. */
+  --t-title:clamp(38px,9vw,104px);      /* JJK display, page titles     */
+  --t-hero:clamp(84px,22vw,232px);      /* JJK display, the count       */
+  --t-verb:clamp(24px,4.2vw,46px);      /* JJK display, action words    */
+  --t-name:clamp(17px,1.5vw,23px);
+  --t-body:clamp(16px,.3vw + 15.2px,18px);
+  --t-caption:clamp(12px,.8vw,14px);
+  --t-meta:clamp(13px,.9vw,15px);
   --tap:44px;            /* minimum touch target */
   --tabs-h:56px;         /* the bottom bar owns exactly this much */
 
@@ -255,17 +258,25 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .panel--bleed{margin-right:calc(var(--bleed) * -1);border-right:0}
 
 /* ══════════════════ LETTERING ══════════════════ */
-/* Sentence case is the voice. Two thirds of every screen used to be
-   uppercase and letterspaced, which is volume standing in for order:
-   when everything shouts, the eye has nothing to rank. Caps survive in
-   exactly one role — .kicker, a small section label. */
-.kicker{font:600 11px/1 var(--f-body);letter-spacing:.14em;
-  text-transform:uppercase;color:var(--ink-2)}
+/* ── CASE, AND WHY THERE IS ALMOST NO text-transform HERE ──────────
+   CC Wild Words is a unicase comic-lettering face: its lowercase and
+   uppercase are both drawn as capitals, at slightly different widths.
+   Body copy therefore ALREADY reads as caps without being transformed,
+   and adding text-transform on top only throws away the narrower
+   lowercase forms. So markup stays sentence case — correct for screen
+   readers, and correct if the face ever fails to load — and the font
+   does the rest.
+
+   The display face is the opposite case: Jujutsu Kaisen draws a
+   diaeresis on lowercase e/o/u, so "Record" renders as "Rëcörd". Its
+   uppercase is clean and is where all its drama lives, so display type
+   is the one place uppercase is applied deliberately. */
+.kicker{font:400 13px/1 var(--f-body);letter-spacing:.1em;color:var(--ink-2)}
 .kicker--bone{color:var(--ink)}
-/* Dela Gothic One ships one weight — it is already blocky and bold by
-   design, so it needs no weight or width axis pushed onto it. */
+/* The display face, always uppercase — see the note above. */
 .title{font-family:var(--f-display);font-size:var(--t-title);
-  line-height:.94;letter-spacing:-.01em;
+  text-transform:uppercase;
+  line-height:.9;letter-spacing:.005em;
   /* last-resort guard: a single word longer than the panel breaks rather
      than escaping it. Normal titles never reach this. */
   overflow-wrap:break-word}
@@ -298,7 +309,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   /* Muted ink, not screentone. At 8-10px a --v3 rune is a smudge you
      have to hunt for; --ink-2 is quiet without being illegible, which
      is the whole point of a mark you are meant to lean in and read. */
-  text-transform:uppercase;color:var(--ink-2);
+  color:var(--ink-2);
   white-space:nowrap;pointer-events:none;user-select:none}
 @media(min-width:1024px){
   .rune{display:block}
@@ -347,7 +358,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   min-height:var(--tap);padding:10px var(--s4);
   border:var(--rule-hair) solid var(--ink);background:var(--paper);color:var(--ink);
   cursor:pointer;border-radius:0;font:500 11px/1 var(--f-body);
-  letter-spacing:.16em;text-transform:uppercase;position:relative;overflow:hidden}
+  letter-spacing:.16em;position:relative;overflow:hidden}
 .btn--hot{background:var(--ink);color:var(--paper)}
 /* the strike: the control's whole face inverts for two frames */
 .btn__strike{position:absolute;inset:0;background:currentColor;
@@ -364,7 +375,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 
 .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;
   border:var(--rule-hair) solid var(--ink);font:500 9.5px/1 var(--f-mono);
-  letter-spacing:.16em;text-transform:uppercase}
+  letter-spacing:.16em;}
 .chip--hot{background:var(--ink);color:var(--paper)}
 .chip--set{border-style:dashed;color:var(--tone)}
 
@@ -404,7 +415,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .bubble p,.toast p{font-family:var(--f-mono);font-size:12.5px;line-height:1.45;
   letter-spacing:.02em;text-align:left;color:var(--ink-2)}
 .toast strong{display:block;font-family:var(--f-label);font-size:13px;
-  letter-spacing:.14em;text-transform:uppercase;margin-bottom:5px;color:var(--ink)}
+  letter-spacing:.14em;margin-bottom:5px;color:var(--ink)}
 
 /* ══════════════════ RECORD / LOG ══════════════════ */
 .log{display:flex;flex-direction:column}
@@ -425,7 +436,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .stat b i{font-family:var(--f-mono);font-style:normal;font-size:.5em;
   letter-spacing:0;color:var(--tone);margin-left:.24em}
 .stat span{display:block;font:500 10.5px/1.3 var(--f-label);
-  letter-spacing:.18em;text-transform:uppercase;color:var(--tone);
+  letter-spacing:.18em;color:var(--tone);
   margin-top:var(--s3)}
 .tick{position:absolute;width:11px;height:11px;border:var(--rule-hair) solid var(--ink)}
 .tick--tl{top:-1px;left:-1px;border-right:0;border-bottom:0}
@@ -557,7 +568,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 
 .viewer--hit .viewer__grain{inset:6px}
 .viewer__status,.viewer__msg{position:relative;font-family:var(--f-accent);
-  text-transform:uppercase;text-align:center}
+  text-align:center}
 /* THE WAITING MARK. `.loader` was applied in JS and styled in no
    stylesheet, so the only thing sizing it was an inline
    `inset:0;margin:auto` and the SVG's own default of filling its box.
@@ -672,7 +683,7 @@ select.input{padding-right:var(--s4)}
 .who{display:flex;align-items:center;gap:var(--s4);padding:var(--s5)}
 .who__name{font-family:var(--f-display);font-size:var(--t-name);text-transform:uppercase}
 .who__role{font:500 10px/1 var(--f-mono);letter-spacing:.16em;
-  text-transform:uppercase;color:var(--tone);margin-top:6px}
+  color:var(--tone);margin-top:6px}
 .who__seal{width:70px;height:70px;flex:none}
 .who__seal circle,.who__seal polygon,.who__seal line{
   fill:none;stroke:var(--ink);stroke-width:1.5;vector-effect:non-scaling-stroke}
@@ -734,13 +745,13 @@ select.input{padding-right:var(--s4)}
   fill:none;stroke:var(--ink);stroke-width:1.5;vector-effect:non-scaling-stroke}
 .verdict__seal path{fill:var(--ink);stroke:none}
 .verdict__state{font:500 11px/1 var(--f-mono);letter-spacing:.24em;
-  text-transform:uppercase;margin-top:var(--s4)}
+  margin-top:var(--s4)}
 .verdict__jp{font-family:var(--f-jp);font-size:12px;letter-spacing:.6em;color:var(--tone)}
 .verdict__title{font-family:var(--f-display);font-size:clamp(30px,7vw,58px);
   text-transform:uppercase;line-height:1;margin-top:var(--s3)}
 .verdict__delta{font-family:var(--f-display);font-size:26px;margin-top:var(--s2)}
 .verdict__meet{font:500 10px/1 var(--f-mono);letter-spacing:.16em;
-  text-transform:uppercase;color:var(--tone);margin-top:var(--s3)}
+  color:var(--tone);margin-top:var(--s3)}
 
 /* ══════════════════ FX LAYER ══════════════════ */
 .fx{position:fixed;inset:0;z-index:125;pointer-events:none;overflow:hidden;

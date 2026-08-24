@@ -97,20 +97,35 @@
   --edge-shout:var(--edge-frame);
   --rule:var(--edge-panel); --rule-hair:var(--edge-rule);
 
-  /* ══ TYPE — THE ORIGINAL FAMILIES, BACK ═════════════════════════════
-     Collapsing everything onto one variable face during the first PRESS
-     pass took the character out along with the noise: Dela Gothic One's
-     blocky, single-weight impact is what makes "06" and a check-in verb
-     read as a stamp rather than a stat. The families are restored to
-     what they were; what changed for good is HOW MANY ROLES use each
-     one (kicker moved off mono onto body, for one) and that nothing is
-     forced into uppercase by default any more. */
-  --f-display:'Dela Gothic One',ui-sans-serif,system-ui,sans-serif;
-  --f-body:'Archivo Narrow',ui-sans-serif,system-ui,-apple-system,sans-serif;
-  --f-label:'Oswald',var(--f-body);
-  --f-accent:'CC Wild Words Roman','CCWildWords','Comic Neue',cursive;
+  /* ══ TYPE — TWO VOICES ═════════════════════════════════════════════
+     Down from six families to two, plus mono for real technical data.
+
+       display  Jujutsu Kaisen. Titles, hero numbers, impact words. It
+                is a display face with 101 glyphs and no lowercase
+                subtleties to speak of — it is for the two or three
+                largest things on a screen and nothing else.
+       body     CC Wild Words. Everything a member actually reads, in
+                three genuine cut faces: Roman, Italic, Bold Italic.
+                This is the product's voice.
+       mono     JetBrains Mono, and only where the content is a code or
+                an identifier a person might read aloud or type in.
+
+     Oswald, Dela Gothic One, Archivo Narrow, Comic Neue and Noto Sans
+     JP are gone. The legacy role names below still resolve so that no
+     call site had to be rewritten to keep working — but there are two
+     faces behind them now, not six.
+
+     CC Wild Words has no bold upright cut, only Bold Italic. Anywhere
+     the design wants strong emphasis it therefore gets Bold Italic,
+     which is the family's own answer and reads as a shout in comics
+     lettering — never a synthesised faux-bold. */
+  --f-display:'Jujutsu Kaisen',ui-sans-serif,system-ui,sans-serif;
+  --f-body:'CC Wild Words',ui-rounded,'Comic Sans MS',ui-sans-serif,sans-serif;
   --f-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
-  --f-jp:'Noto Sans JP',var(--f-body);
+
+  --f-label:var(--f-body);
+  --f-accent:var(--f-body);
+  --f-jp:var(--f-body);
 
   /* ══ SCREENTONE — ATMOSPHERE, AT TWO STRENGTHS ═════════════════════
      Tone used to sit behind every screen at one density, which is how
@@ -364,72 +379,7 @@ none;
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;animation-iteration-count:1!important}
 }
-
-
-[data-screen="auth"] .view{position:relative}
-[data-screen="auth"] .authp{position:relative;z-index:1}
 .chop--filled .chop__key{fill:var(--paper)}
-
-/* ══ SIGN-IN ═══════════════════════════════════════════════════════
-   ONE CARD, ONE VOICE.
-
-   The old page ran six competing things: a chapter masthead at display
-   size, a chop holding the mark, a wordmark beside it, a full-height
-   radiating rake, a screen-tall sound effect, and the form underneath
-   all of it. Nothing led, so it read as broken rather than composed.
-
-   The card is the page now. The brand states itself once at the top
-   and doubles as the title; the action is an annotation over the
-   fields, because on this screen the fields are the subject. The
-   atmosphere is still there — it just sits behind the card and gets
-   cropped by it.
-
-   svh, not vh: on iOS the address bar makes 100vh taller than the
-   screen actually is, so a centred card is pushed under the fold on
-   first paint and jumps when the bar collapses. min-height (never
-   height) so a short landscape phone scrolls instead of cropping the
-   form, and the cap stops the card floating in the middle of a tall
-   monitor.
-   ═════════════════════════════════════════════════════════════════ */
-[data-screen="auth"] .view{
-  position:relative;
-  min-height:min(100svh, 860px);
-  display:grid;place-content:center;justify-items:stretch;
-  width:min(100%, 30rem);
-  margin-inline:auto;
-  padding-block:clamp(20px,5vh,56px);
-}
-.authcard{position:relative;z-index:1;
-  display:grid;gap:clamp(16px,3.4vw,26px);
-  background:var(--paper);
-  border:var(--edge-heavy) solid var(--ink);
-  padding:clamp(20px,5.5vw,38px);
-  /* the leading corner taken off at the system angle, same cut the
-     action chamber and the stamp sheet carry */
-  clip-path:polygon(var(--sheet-cut,26px) 0, 100% 0, 100% 100%,
-                    0 100%, 0 var(--sheet-cut,26px))}
-
-.authcard__brand{display:flex;align-items:center;
-  gap:clamp(10px,3vw,18px);min-width:0}
-.authcard__logo{width:clamp(38px,9vw,52px);height:clamp(38px,9vw,52px);
-  flex:none;fill:var(--ink)}
-.authcard__logo *{fill:var(--ink);stroke:none}
-.authcard__wm{font-family:var(--f-display);
-  font-size:clamp(24px,6.4vw,34px);line-height:1;margin:0;
-  letter-spacing:-.01em;color:var(--ink);min-width:0;text-transform:none}
-.authcard__wm b{font-weight:400}
-.authcard__wm em{display:block;margin-top:7px;
-  font:500 clamp(10px,2.6vw,11.5px)/1.3 var(--f-mono);
-  letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);
-  font-style:normal;overflow-wrap:anywhere}
-
-/* the atmosphere sits behind the card and is cropped by the viewport,
-   not laid over the fields */
-/* Atmosphere, not competition. The rake and the ghost word were both
-   at full strength around a form, which is the "too much going on"
-   the page was criticised for. Both drop back to a level that reads
-   as texture behind the card rather than as content beside it. */
-[data-screen="auth"] .rake{opacity:.055;z-index:0}
 
 /* ══ THE SEAL GRID ═════════════════════════════════════════════════
    An unearned seal was ink-on-ink and effectively invisible, so the
@@ -926,43 +876,6 @@ main#view:focus,main#view:focus-visible{outline:none}
 .tech--sealed .tech__req{color:var(--ink)}
 .tech--sealed .tech__name{color:var(--ink)}
 
-/* ── the fields ───────────────────────────────────────────────────
-   Underlined inputs inside a bordered card read as a stack of empty
-   boxes: the input's bottom rule and the card's side borders close
-   three sides of a rectangle that was never meant to be one. The
-   field gets its own quiet ground instead, so it reads as a slot to
-   type into, and the rule under it becomes the base of the slot
-   rather than a divider between two of them. */
-/* THE FIELD IS ONE BOUNDED OBJECT.
-
-   An underline-only input inside a bordered card closes three sides of
-   a rectangle it was never meant to have: the card's two edges plus
-   the input's own bottom rule. The result read as a row of empty
-   boxes with the labels floating inside them. The input carries its
-   own full border now, so the label sits above a field with a visible
-   edge on all four sides, and the two align on the same measure. */
-[data-screen="auth"] .authp__f{margin-bottom:0;display:grid;gap:6px}
-[data-screen="auth"] .authp .input{
-  width:100%;box-sizing:border-box;
-  background:var(--v1);
-  border:var(--edge-thin) solid var(--ink);
-  padding:clamp(11px,3vw,14px) clamp(11px,3vw,14px);
-  font-size:max(16px, 1rem)}          /* 16px floor stops iOS zooming on focus */
-[data-screen="auth"] .authp .input::placeholder{color:var(--ink-2);opacity:.75}
-[data-screen="auth"] .authp .input:focus-visible{
-  outline:none;box-shadow:inset 0 0 0 var(--edge-heavy) var(--ink)}
-
-/* the action row: the commit takes the measure on a phone and sits
-   natural-width once there is room beside the secondary link */
-[data-screen="auth"] .authp__act{display:flex;flex-wrap:wrap;
-  align-items:center;gap:clamp(10px,3vw,18px);
-  margin-top:clamp(4px,1.5vw,10px)}
-[data-screen="auth"] .authp__act .btn--go{
-  flex:1 1 100%;min-height:50px;justify-content:center}
-@media(min-width:480px){
-  [data-screen="auth"] .authp__act .btn--go{flex:0 0 auto;min-width:min(52%,190px)}
-}
-
 /* ONE BRAND ON THE PAGE. Both the topbar and the desktop rail repeat
    the wordmark beside the card that already states it — and signed
    out, the rail has no chapters to list, so it was an empty column
@@ -1064,17 +977,21 @@ main#view:focus,main#view:focus-visible{outline:none}
    it reads as printed rather than placed, with the verb sitting in the
    corner it leaves clear. */
 .act{display:flex;max-width:760px}
+/* font-family is not optional here. A <button> does not inherit it, so
+   without this line the button and everything inside it renders in the
+   browser's default Arial — which is exactly what was happening. */
 .act__btn{position:relative;overflow:hidden;isolation:isolate;
   display:grid;align-content:end;gap:4px;
   width:100%;min-height:clamp(138px,32vw,190px);
   padding:var(--s5);border:var(--edge-panel) solid var(--ink);
-  background:var(--paper);color:var(--ink);text-align:left;cursor:pointer}
+  background:var(--paper);color:var(--ink);text-align:left;cursor:pointer;
+  font-family:var(--f-body)}
 .act--live .act__btn{background:var(--ink);color:var(--paper)}
 .act__seal{position:absolute;right:-9%;top:-30%;
   width:clamp(168px,50vw,280px);aspect-ratio:1;height:auto;
   fill:currentColor;opacity:.15;pointer-events:none;z-index:-1}
-.act__verb{font-family:var(--f-display);
-  font-size:clamp(22px,5.8vw,36px);line-height:1.05;letter-spacing:-.01em}
+.act__verb{font-family:var(--f-display);text-transform:uppercase;
+  font-size:var(--t-verb);line-height:1;letter-spacing:.01em}
 .act__sub{font-size:var(--t-body);opacity:.7}
 .act__btn:hover{background:var(--ink);color:var(--paper)}
 .act__btn:hover .act__seal{opacity:.22}
@@ -1114,3 +1031,107 @@ main#view:focus,main#view:focus-visible{outline:none}
 .rail__who{font-family:var(--f-display);
   font-size:clamp(15px,1.3vw,19px);line-height:1.15;overflow-wrap:anywhere}
 .rail__role{margin-top:2px;font-size:13px}
+
+
+/* ══ FORM CONTROLS INHERIT THE VOICE ════════════════════════════════
+   Buttons, inputs and selects do not inherit font-family from their
+   parent — the UA stylesheet gives them Arial 13.33px. Every control in
+   the app that forgot to set one was silently outside the type system.
+   One rule, at the root of the cascade, instead of remembering it on
+   every component forever. */
+button,input,select,textarea{font-family:inherit}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   THE OPENING SPREAD — sign in
+
+   One panel, composed on a diagonal. The seal is enormous and cropped
+   by the left edge; the wordmark sits across its upper field in the
+   display face; the form is a small dense block low and right. The
+   imbalance is the design — a centred card is what made this page
+   anonymous.
+
+   The seal is the ONE graphic on the page and it is doing structural
+   work: it establishes scale, it fills the quiet half of the
+   composition, and it is the only thing here a member will remember.
+   ══════════════════════════════════════════════════════════════════ */
+/* The generic .view is a six-column grid; auth is not on that grid, so
+   it opts out entirely rather than fighting it. Width and centring live
+   on .spread, which is the only layout box this page has. */
+.view--auth{display:block;width:100%;max-width:none;padding:0;margin:0}
+
+.spread{position:relative;width:100%;max-width:1040px;margin-inline:auto;
+  box-sizing:border-box;
+  display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s6);
+  padding:clamp(24px,7vw,64px) var(--gutter);
+  isolation:isolate}
+
+/* the cropped mark. Half of it is off the sheet on purpose. */
+.spread__art{position:absolute;inset:0;overflow:hidden;z-index:-1;
+  pointer-events:none}
+.spread__seal{position:absolute;
+  left:-40%;top:50%;transform:translateY(-54%);
+  width:min(132vw,900px);aspect-ratio:1;height:auto;
+  fill:var(--ink);opacity:.13}
+
+/* The kicker sits ABOVE the wordmark. Underneath it, the display face's
+   long descenders ran straight through it. */
+.spread__head{max-width:none}
+.spread__sub{margin:0 0 var(--s3);font-size:var(--t-caption);
+  letter-spacing:.16em;color:var(--ink-2)}
+.spread__wm{font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(54px,16vw,132px);line-height:.9;letter-spacing:.01em;
+  margin:0}
+
+/* THE FORM. Its own class namespace on purpose: it used to share
+   .field / .input / .btn with the rest of the app, and three sets of
+   rules from three files fought over it — one laying the label beside
+   the input, one giving the button a flex-basis of 100% so the swap
+   link wrapped off the sheet. Nothing here is shared, so nothing here
+   can be overridden from a distance. */
+.authp{position:relative;background:var(--paper);
+  border:var(--edge-frame) solid var(--ink);
+  padding:clamp(20px,5vw,34px);
+  display:flex;flex-direction:column;gap:var(--s4);
+  max-width:440px;width:100%;box-sizing:border-box}
+.authp__title{font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(26px,6vw,38px);line-height:1;margin:0}
+.authp__f{display:flex;flex-direction:column;gap:5px;min-width:0}
+.authp__lab{font-size:var(--t-caption);color:var(--ink-2);letter-spacing:.08em}
+.authp__in{display:block;width:100%;box-sizing:border-box;min-width:0;
+  min-height:var(--tap);padding:10px 12px;
+  border:var(--edge-panel) solid var(--ink);border-radius:0;
+  background:var(--paper);color:var(--ink);
+  font-family:var(--f-body);font-size:max(16px,var(--t-body))}
+.authp__in::placeholder{color:var(--tone)}
+.authp__in:focus-visible{outline:var(--edge-panel) solid var(--ink);
+  outline-offset:2px}
+.authp__err{margin:0;color:var(--ink);font-style:italic;font-weight:700;
+  border-left:var(--edge-frame) solid var(--ink);padding-left:10px}
+.authp__act{display:flex;flex-direction:column;gap:var(--s3);margin-top:var(--s2)}
+.authp__go{display:block;width:100%;min-height:54px;box-sizing:border-box;
+  padding:12px 16px;border:0;border-radius:0;cursor:pointer;
+  background:var(--ink);color:var(--paper);
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(20px,4.6vw,26px);line-height:1;letter-spacing:.02em}
+.authp__go:hover{background:var(--ink-2)}
+.authp__go[disabled]{opacity:.55;cursor:progress}
+.authp__swap{display:block;width:100%;min-height:var(--tap);
+  background:none;border:0;cursor:pointer;padding:0;
+  color:var(--ink);font-family:var(--f-body);font-size:var(--t-body);
+  text-decoration:underline;text-underline-offset:3px;text-align:left}
+
+/* Once there is room the spread goes diagonal: mark and wordmark upper
+   left, form lower right, with the empty quarters carrying the tension. */
+@media(min-width:820px){
+  .spread{grid-template-columns:minmax(0,1fr) minmax(0,clamp(340px,34%,430px));
+    align-items:center;gap:clamp(28px,5vw,72px);
+    min-height:min(760px,86vh)}
+  .spread__head{align-self:center}
+  .spread__seal{left:-30%;width:min(86vw,780px)}
+  .authp{align-self:start;margin-top:clamp(20px,6vh,72px)}
+}
+
+/* The single-weight display face cannot carry a bold span, and the
+   browser synthesising one looks like a rendering fault. */
+.mark__word b{font-weight:inherit}
