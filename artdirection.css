@@ -149,36 +149,10 @@
    ───────────────────────────────────────────────────────────────── */
 :root{--ink-w:2.8}
 
-[data-screen="record"] .rec--open{--ink-w:4.2}   /* the one you can act on */
-[data-screen="record"] .rec--set{--ink-w:2}
-[data-screen="record"] .rec--miss,
-[data-screen="record"] .rec--upcoming{--ink-w:1.4}
-
 [data-screen="scan"] .viewer{--ink-w:4.2}
 [data-screen="scan"] .manual{--ink-w:2.4}
 
 [data-screen="profile"] .stat{--ink-w:1.6}
-
-/* ─────────────────────────────────────────────────────────────────
-   9. CROPPED TONE IN THE SUPPORTING PANELS
-
-   Tone laid into a corner and cut on the diagonal, so the supporting
-   panels have material in them without competing with the lead. The
-   wedge is absolutely positioned and masked, so it adds no height and
-   cannot push anything out of the viewport.
-   ───────────────────────────────────────────────────────────────── */
-
-
-/* the record page's live row gets a tone band so the actionable entry
-   reads as figure against the confirmed rows' ground */
-[data-screen="record"] .rec--open{position:relative;isolation:isolate}
-[data-screen="record"] .rec--open::after{content:"";position:absolute;
-  inset:0 0 0 auto;width:min(52%,420px);
-  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
-  opacity:.4;z-index:0;
-  -webkit-mask-image:linear-gradient(to left, #000 0%, transparent 88%);
-  mask-image:linear-gradient(to left, #000 0%, transparent 88%)}
-[data-screen="record"] .rec--open > *:not([data-layer]){position:relative;z-index:1}
 
 /* ─────────────────────────────────────────────────────────────────
    10. THE CHAPTER NAMEPLATE
@@ -447,81 +421,6 @@
   .bconfirm .btn{flex:0 0 auto}
 }
 
-/* ── THE CLOSERS ARE NOT THE SAME OBJECT TWICE ────────────────────
-   Two registered blocks with identical rules and identical weight,
-   stacked. The live meeting is something you can act on; the last
-   stamp is a receipt. Ranked accordingly — the live one keeps the
-   heavy rule and a cinnabar tick, the receipt drops to a hairline. */
-
-
-/* ── HIERARCHY INSIDE THE SMALL TYPE ──────────────────────────────
-   Every piece of 10-11px mono on the page sat at one weight, so the
-   reading in the corner, the label under the figure and the
-   annotations all competed. The label is the quiet one; the reading
-   is the loud one. */
-
-
-/* ── EDGE METADATA ON EVERY CHAPTER ────────────────────────────────
-   The rune existed on Home alone, so the one primitive that says
-   "this is an instrument reporting its own state" appeared on one
-   screen out of five. Every masthead carries its chapter mark now,
-   which is what makes the set read as one document. */
-
-
-/* ══════════════════════════════════════════════════════════════════
-   RECORD — THE BLOCK IS THE ROW
-
-   Every row was a bordered box containing a second bordered box: the
-   .rec frame around the .entry block. The inner block already carries
-   all the meaning — spotted black for attended, screentone for
-   missed — so the outer frame was a container drawn around a thing
-   that was already a shape. It is gone; the block is the row.
-
-   And a meeting you missed took exactly as much of the page as one
-   you attended, so fourteen rows arrived at one weight and the page
-   read as a list. A miss is a thin ruled line now. Read down the
-   column and the pattern of solid blocks IS the attendance, which is
-   what this page was always trying to say.
-   ══════════════════════════════════════════════════════════════════ */
-[data-screen="record"] .rec{border:0!important;background:none!important;
-  padding:0!important;gap:clamp(8px,1.2vw,14px)}
-[data-screen="record"] .rec + .rec{border-top:0!important}
-[data-screen="record"] .entry{padding:clamp(13px,1.8vw,20px) clamp(14px,2vw,22px)}
-/* the gain was clipped by the block's own overflow:hidden */
-[data-screen="record"] .entry__gain{padding-right:2px}
-[data-screen="record"] .entry{overflow:clip;overflow-clip-margin:4px}
-
-/* a miss is a rule, not a box */
-[data-screen="record"] .entry--miss{border:0;border-top:var(--rule-hair) solid var(--v3);
-  background:none;padding:clamp(9px,1.2vw,13px) 0 clamp(9px,1.2vw,13px) 2px}
-[data-screen="record"] .entry--miss .entry__ghost{display:none}
-[data-screen="record"] .rec--miss{padding:0!important}
-
-/* THE LIVE MEETING is the lead — the one thing on this page you can
-   act on. It gets the page's only frame and a wedge of speed lines
-   running INTO it from the top-left corner.
-
-   It does not get to be enormous. It was reserving 250px and letting
-   its content fall to the bottom of that, which made the lead read as
-   a mostly-empty box with a texture in it — the same filler problem
-   the scan chamber had. It sizes to its content now; the frame and
-   the wedge are what make it lead, not the acreage. */
-[data-screen="record"] .rec--open{min-height:0!important;align-items:stretch}
-[data-screen="record"] .rec--open .entry{border:var(--edge-heavy) solid var(--ink);
-  position:relative;align-content:start;
-  padding:clamp(16px,2.2vw,26px) clamp(16px,2.2vw,26px)}
-[data-screen="record"] .rec--open .entry::after{content:"";position:absolute;
-  inset:0;z-index:0;pointer-events:none;
-  background-image:repeating-linear-gradient(64deg,
-    var(--ink) 0 1px, transparent 1px 10px);opacity:.12;
-  -webkit-mask-image:linear-gradient(calc(var(--run-a) + 60deg),#000 0 6%,transparent 46%);
-          mask-image:linear-gradient(calc(var(--run-a) + 60deg),#000 0 6%,transparent 46%)}
-/* :not([data-layer]) — without it this forces .entry__ghost, an
-   absolutely-positioned 190px display numeral, back into normal flow,
-   and the lead row inherits its height. That is the third time a
-   `> *` rule has done this; the marker exists precisely for it. */
-[data-screen="record"] .rec--open .entry > *:not([data-layer]){position:relative;z-index:1}
-
 /* ══════════════════════════════════════════════════════════════════
    CLUB TOOLS — THE SAME SHEET
 
@@ -597,7 +496,7 @@
 [data-screen="profile"] .who::before,
 [data-screen="profile"] .panel--flat::before{content:"";position:absolute;
   left:0;right:0;top:0;height:var(--edge-thin);background:var(--ink)}
-[data-screen="profile"] .ledger{border-top:0;margin-top:clamp(10px,1.4vw,16px)}
+[data-screen="profile"] .mstone{border-top:0;margin-top:clamp(10px,1.4vw,16px)}
 
 [data-screen="profile"] .stats{display:grid;gap:0;
   grid-template-columns:repeat(2,minmax(0,1fr));
@@ -935,7 +834,7 @@
    no work. It tightens under the chapters that carry a lot of
    structure and opens up where the page is meant to breathe, so the
    paper itself has a grain that changes between chapters. */
-[data-screen="record"] body,[data-screen="board"] body{--tone-wide:16px}
+[data-screen="board"] body{--tone-wide:16px}
 [data-screen="home"] body{--tone-wide:22px}
 [data-screen="scan"] body{--tone-wide:26px}
 
@@ -1004,11 +903,6 @@
 :root{--cut-a:60deg; --run-a:60deg}
 
 
-[data-screen="record"] .rec--open .entry::after{
-  background-image:repeating-linear-gradient(var(--run-a),
-    var(--ink) 0 1px, transparent 1px 9px)}
-
-[data-screen="record"] .rec--open .entry,
 [data-screen="rewards"] .dossier--ready .panel,
 [data-screen="profile"] .stat[data-rank="lead"],
 [data-screen="board"] .bnext{
@@ -1016,8 +910,7 @@
                     0 100%, 0 var(--sheet-cut))}
 /* a clipped panel cannot show a border on the cut corner, so the
    weight moves inside where the clip cannot reach it */
-[data-screen="rewards"] .dossier--ready .panel,
-[data-screen="record"] .rec--open .entry{
+[data-screen="rewards"] .dossier--ready .panel{
   border:0;box-shadow:inset 0 0 0 var(--edge-heavy) var(--ink)}
 [data-screen="profile"] .stat[data-rank="lead"]{
   border-bottom:0;box-shadow:inset 0 calc(var(--edge-thin) * -1) 0 var(--ink)}
@@ -1218,35 +1111,35 @@ select.input:focus-visible{outline:none}
    is the ledger of them, not a second card design: a ruled monospace
    register, one line each, reading tier / name / state / distance.
    One design system, two levels of detail. */
-.ledger{list-style:none;margin-top:var(--space-stack);
+.mstone{list-style:none;margin-top:var(--space-stack);
   border-top:var(--edge-thin) solid var(--ink)}
-.ledger__row{display:grid;align-items:baseline;
+.mstone__row{display:grid;align-items:baseline;
   grid-template-columns:auto 1fr auto;
   grid-template-areas:"at name state" ". gap gap";
   gap:2px var(--s3);padding:var(--s3) 0;
   border-bottom:var(--rule-hair) solid var(--v3);
   font-family:var(--f-mono);font-size:clamp(11px,1vw,12.5px);
   letter-spacing:.1em;}
-.ledger__at{grid-area:at;font-family:var(--f-display);
+.mstone__at{grid-area:at;font-family:var(--f-display);
   font-size:clamp(17px,1.9vw,26px);line-height:.9;color:var(--ink-2);
   letter-spacing:-.03em}
-.ledger__name{grid-area:name;color:var(--ink);letter-spacing:.14em}
-.ledger__state{grid-area:state;color:var(--ink-2);justify-self:end}
+.mstone__name{grid-area:name;color:var(--ink);letter-spacing:.14em}
+.mstone__state{grid-area:state;color:var(--ink-2);justify-self:end}
 /* Muted text is INK at a lower weight, not tone — this file's own
    rule, and the tier numeral and the distance both broke it at 1.98:1.
    --ink-2 on paper is 5.3:1 and still recedes. */
-.ledger__gap{grid-area:gap;color:var(--ink-2)}
+.mstone__gap{grid-area:gap;color:var(--ink-2)}
 /* the tier that is actually reachable is the one carrying weight */
-.ledger__row--ready .ledger__at{color:var(--ink)}
-.ledger__row--ready .ledger__state{color:var(--seal)}
-.ledger__row--claimed .ledger__at{color:var(--ink)}
-.ledger__row--claimed .ledger__name{text-decoration:line-through;
+.mstone__row--ready .mstone__at{color:var(--ink)}
+.mstone__row--ready .mstone__state{color:var(--seal)}
+.mstone__row--claimed .mstone__at{color:var(--ink)}
+.mstone__row--claimed .mstone__name{text-decoration:line-through;
   text-decoration-thickness:1.5px;color:var(--ink-2)}
-.ledger__foot{margin-top:var(--space-stack);font-size:13px}
+.mstone__foot{margin-top:var(--space-stack);font-size:13px}
 @media(min-width:768px){
-  .ledger__row{grid-template-columns:auto 1fr auto auto;
+  .mstone__row{grid-template-columns:auto 1fr auto auto;
     grid-template-areas:"at name gap state";gap:var(--s4)}
-  .ledger__gap{justify-self:end;min-width:7ch;text-align:right}
+  .mstone__gap{justify-self:end;min-width:7ch;text-align:right}
 }
 
 /* ── ONE FIGURE LEADS ──────────────────────────────────────────────
@@ -1713,23 +1606,6 @@ select.input:focus-visible{outline:none}
   .rig-scan{grid-template-columns:minmax(0,1fr) clamp(20px,7vw,120px)}
   .rig-scan__rune{justify-self:center}
   .rig-scan::after{width:clamp(20px,7vw,120px);max-width:none}
-}
-
-/* ── 10. THE LIVE ROW ON RECORD WAS A FRAME AROUND NOTHING ────────
-   The meeting taking check-ins is the one framed panel on the page
-   and two thirds of it was empty paper to the right of three short
-   lines. The row reads across now: what it is on the leading edge,
-   the control registered to the trailing one. Same correction the
-   board's live panel needed, and for the same reason — a heavy frame
-   has to be carrying something across its whole width or it is just
-   a big box. */
-@media(min-width:768px){
-  [data-screen="record"] .rec--open .entry{display:grid;
-    grid-template-columns:minmax(0,1fr) auto;
-    align-items:center;column-gap:clamp(20px,4vw,64px)}
-  [data-screen="record"] .rec--open .entry > .entry__verdict,
-  [data-screen="record"] .rec--open .entry .entry__go{
-    grid-column:2;grid-row:1/-1;align-self:center;justify-self:end}
 }
 
 

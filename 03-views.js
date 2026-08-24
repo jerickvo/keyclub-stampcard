@@ -261,6 +261,60 @@ const C = {
       </div>
     </section>`;
   },
+  /* ── ONE ROW OF THE LEDGER ────────────────────────────────────────
+     A printed attendance record: the meeting number in the margin, the
+     stamp it earned struck beside it, the reading, and the date. The
+     row IS the rule — a hairline under each one and nothing else. No
+     card, no box, no fill.
+
+     An attended row carries its actual stamp symbol, which is the one
+     place outside the card where the ten marks appear. That is what
+     makes this a record of stamps rather than a list of dates. */
+  /* ONE LINE OF THE REGISTER.
+
+     The mark carries the verdict, so the verdict is not also spelled out
+     six times down the page: a stamped line shows its stamp, a missed
+     line shows the empty slot the stamp would have filled. The only rows
+     that say anything in words are the ones where a word is news — the
+     open meeting, and a miss. */
+  ledgerRow(m){
+    const state = Store.state(m);
+    const scan  = Store.scanFor(m.id);
+
+    /* the mark is the stamp this meeting earned, by its ordinal in the
+       member's history — the same artwork the card shows. */
+    const idx = state === 'set'
+      ? [...Store.scans].sort((a,b)=>String(a.at)<String(b.at)?-1:1)
+          .findIndex(x => x.meetingId === m.id)
+      : -1;
+    const mark = idx >= 0
+      ? `<svg class="lrow__mark" viewBox="0 0 64 64" aria-hidden="true">${stampMark(idx)}</svg>`
+      : `<span class="lrow__slot" aria-hidden="true"></span>`;
+
+    const detail = {
+      set:  scan ? `Stamped ${fmtTime(scan.at)} / ${esc(m.place)}`
+                 : `Stamped / ${esc(m.place)}`,
+      open: `Open now / ${esc(m.place)}`,
+      miss: `Not stamped / ${esc(m.place)}`,
+      upcoming: `${esc(m.time)} / ${esc(m.place)}`,
+    }[state];
+
+    const el   = state === 'open' ? 'button' : 'div';
+    const attr = state === 'open' ? ' type="button" data-go="scan"' : '';
+    const sr   = { set:'Attended', open:'Check in open', miss:'Missed',
+                   upcoming:'Scheduled' }[state];
+
+    return `<${el} class="lrow lrow--${state}"${attr}>
+      <span class="lrow__no">${pad(m.no)}</span>
+      <span class="lrow__stamp">${mark}</span>
+      <span class="lrow__body">
+        <span class="lrow__date">${state === 'open' ? 'Today' : fmtDay(m.date)}</span>
+        <span class="lrow__when">${detail}</span>
+      </span>
+      ${state === 'open' ? '<span class="lrow__go">Scan</span>' : ''}
+      <span class="sr-only">${sr}</span>
+    </${el}>`;
+  },
 };
 
 /* ══════════════════════════════════════════════════════════════════
@@ -343,31 +397,42 @@ const Views = {
   /* the attendance record: every general meeting, in order, with what happened */
   record(){
     if (Store.failed) return this.loadFailure('Record');
-    const held = Store.heldMeetings();
-    const upcoming = Store.meetings.filter(m => m.upcoming).reverse();
+    /* newest first, so the meeting you can still walk into leads the
+       page instead of sitting fourteen rows down. */
+    const byNo = (a,b) => b.no - a.no;
+    const held = [...Store.heldMeetings()].sort(byNo);
+    const upcoming = Store.meetings.filter(m => m.upcoming).sort(byNo);
+    const kept = held.filter(m => Store.attended(m.id)).length;
+    const gone = held.length - kept;
+    const frac = held.length ? kept / held.length : 0;
 
-    return `<div class="view">
-      ${C.head('Record')}
+    return `<div class="view view--record">
+      <header class="rechead" data-enter>
+        <h1 class="title rechead__title">Record</h1>
+        <p class="rechead__note">Every general meeting, in order. A line is written
+          the moment the server accepts a scan — nothing here is entered by hand.</p>
+      </header>
 
-      ${held.length ? `<section data-enter class="stack-lg">
-        <div class="log">${held.map(m => C.entry(m)).join('')}</div>
-      </section>`
+      ${held.length ? `<div class="recbody">
+        <aside class="tally" data-enter>
+          <p class="tally__fig">${pad(kept)}</p>
+          <p class="tally__of">stamped of ${pad(held.length)} held</p>
+          <p class="tally__bar" style="--fill:${(frac*100).toFixed(1)}%" aria-hidden="true"></p>
+          <p class="tally__gone">${gone
+            ? `${gone} missed` : 'None missed'}</p>
+        </aside>
+
+        <section class="ledger" data-enter>
+          ${held.map(m => C.ledgerRow(m)).join('')}
+        </section>
+      </div>`
       : C.empty(ICON.blank, 'No general meetings yet',
                 'Your record fills itself: every meeting you scan into is '
                 + 'written here automatically. Nothing to do until the first one.')}
 
-      <!-- WHAT HAS NOT HAPPENED YET is a division of the same sheet,
-           not a leftover at the bottom of it. It was set in --faint
-           with an inline style and no rule of its own, which read as
-           a section someone forgot to finish. It gets the register
-           rule the rest of the document uses and states what it is. -->
-      ${upcoming.length ? `<section data-enter class="ahead">
-        <span class="ahead__rule" data-layer aria-hidden="true"></span>
-        <div class="ahead__head">
-          <h2 class="h2">Scheduled</h2>
-          <span class="anno">${upcoming.length} AHEAD</span>
-        </div>
-        <div class="log">${upcoming.map(m => C.entry(m)).join('')}</div>
+      ${upcoming.length ? `<section class="ledger ledger--ahead" data-enter>
+        <h2 class="ledger__mark">Scheduled</h2>
+        ${upcoming.map(m => C.ledgerRow(m)).join('')}
       </section>` : ''}
     </div>`;
   },
@@ -515,19 +580,19 @@ const Views = {
       <section class="rig rig--bl stack-xl" data-enter>
         <div class="panel panel--flat" data-rank="quiet">
           <h2 class="h2">Milestones</h2>
-          <ol class="ledger">
+          <ol class="mstone">
             ${Store.rewards.map(r => {
               const open = total >= r.required;
               const state = r.claimed ? 'Claimed' : open ? 'Ready' : 'Sealed';
-              return `<li class="ledger__row ledger__row--${state.toLowerCase()}">
-                <span class="ledger__at">${pad(r.required)}</span>
-                <span class="ledger__name">${esc(r.name)}</span>
-                <span class="ledger__state">${state}</span>
-                <span class="ledger__gap">${open ? '—' : (r.required - total) + ' to go'}</span>
+              return `<li class="mstone__row mstone__row--${state.toLowerCase()}">
+                <span class="mstone__at">${pad(r.required)}</span>
+                <span class="mstone__name">${esc(r.name)}</span>
+                <span class="mstone__state">${state}</span>
+                <span class="mstone__gap">${open ? '—' : (r.required - total) + ' to go'}</span>
               </li>`;
             }).join('')}
           </ol>
-          <p class="muted ledger__foot">
+          <p class="muted mstone__foot">
             ${p.next ? `${p.remaining} more ${p.remaining === 1 ? 'stamp' : 'stamps'} until the next one unlocks.`
                      : 'Every milestone is unlocked.'}</p>
         </div>

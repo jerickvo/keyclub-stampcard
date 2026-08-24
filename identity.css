@@ -381,114 +381,6 @@ none;
 }
 .chop--filled .chop__key{fill:var(--paper)}
 
-/* ══ THE SEAL GRID ═════════════════════════════════════════════════
-   An unearned seal was ink-on-ink and effectively invisible, so the
-   record read as an empty black field. A blank seal is now a ghost
-   chop: the outline of the mark waiting to be pressed, which also
-   makes the earned ones land harder by contrast. */
-/* An unearned slot is an empty box waiting to be pressed: a hairline
-   of muted ink, solid (never dashed — dashed reads as "disabled form
-   field", and these are not controls). An earned one is the stamp
-   itself: absolute ink, edge to edge. The difference between the two
-   is the whole mechanic of the product, so it is the largest contrast
-   on the page. */
-
-
-/* ══ THE TEN STAMPS — SLOT STATES ON ONE PIECE OF ARTWORK ══════════
-   The card carries ten different emblems, so state cannot be carried
-   by the drawing: every slot already looks unlike its neighbours, and
-   a member reading "different shape" as "different status" would have
-   the card backwards. State is carried by what happens *to* whichever
-   emblem a slot holds — ink or paper, weight, and what the cell does
-   around it — so the same four changes apply to all ten.
-
-     EMPTY    an ordinal not yet reached. The emblem in muted ink on
-              paper: legible as a shape, so the slot reads as an
-              impression waiting to be pressed rather than as a hole,
-              and never as earned.
-     CURRENT  the next stamp to be earned. The emblem at full ink
-              inside a closed keyline — the only unearned slot on the
-              card at full weight, which is what makes it the thing
-              you are being asked to go and get. It used to be the
-              faintest cell on the card, below even the empty ones.
-     EARNED   the emblem knocked out of a solid ink cell. The largest
-              contrast on the page, because the difference between
-              earned and unearned is the whole mechanic.
-     CLAIMED  the stamp just landed: EARNED, plus the surrounding
-              treatment `.seal--last`/`.seal--hero` already carries.
-   and, for completeness of the contract rather than because the
-   current attendance model emits it:
-     LOCKED   `data-seal="locked"` — a slot the member cannot reach.
-              Struck through, at the weight of a cancelled thing.
-
-   Everything below is opacity and fill on the same paths. No emblem
-   is swapped, redrawn or transformed between states. */
-/* The opacity is set on the path, not only on the group. An earlier
-   rule fades `.seal--next .seal__mark path` to .35, which is a fade
-   the group's opacity cannot undo: ink at .35 on paper resolves to
-   164, and the muted grey an empty slot is drawn in is 169. The
-   current slot and the empty slots were rendering as the same value —
-   the one distinction the card most needs to make. */
-
-
-
-
-/* ══ THE CALM STRIKE ═══════════════════════════════════════════════
-   .strike is a dark card with light type. .strike--calm flips the
-   surface to paper but its children kept the colours written for the
-   dark base, so the Scan card on Home rendered light-on-light and was
-   effectively invisible.
-
-   In the three tiers, "no meeting is open" is the SCREENTONE state:
-   present, but not the thing being pointed at. So it gets a tone
-   ground and ink type — recessive, not absent. */
-
-
-/* ══════════════════════════════════════════════════════════════════
-   RECORD — the page that is literally a record being built
-   ══════════════════════════════════════════════════════════════════
-   The three tiers do the whole job here. A meeting you attended is a
-   spotted black; a meeting you missed is a tone ghost; the structure
-   between them is line. Read down the page and the pattern of solid
-   blocks IS your attendance, before a single number is parsed. */
-[data-screen="record"] .log{gap:var(--edge-thin)}
-
-[data-screen="record"] .entry{
-  border:var(--edge-hair) solid var(--ink);
-  background:var(--paper);
-  padding:var(--s4);
-  position:relative;
-  transition:transform var(--snap) linear;
-}
-/* attended: inked in */
-[data-screen="record"] .entry--set{
-  background:var(--ink);color:var(--paper);border-color:var(--ink);
-}
-[data-screen="record"] .entry--set .entry__no,
-[data-screen="record"] .entry--set .entry__verdict{color:var(--paper)}
-[data-screen="record"] .entry--set .entry__meta{color:var(--tone-lt)}
-[data-screen="record"] .entry--set .entry__ghost{color:rgba(255,255,255,.10)}
-
-/* MISSED: a ruled line, not a box.
-
-   A meeting you did not attend took exactly as much of the page as
-   one you did — same box, same height, same dashed frame — so
-   fourteen rows arrived at one weight and the page read as a list
-   view. The pattern of solid blocks down the column is supposed to BE
-   the attendance record, and it cannot be while the gaps between the
-   blocks are boxes too.
-
-   A miss is now a hairline and a shorter row. Nothing is hidden and
-   nothing is dimmed past reading; it simply stops competing. */
-[data-screen="record"] .entry--miss{
-  background-image:none;
-  border:0;border-top:var(--rule-hair) solid var(--v3);
-  padding:clamp(9px,1.2vw,13px) 0 clamp(9px,1.2vw,13px) 2px;
-}
-[data-screen="record"] .entry--miss .entry__ghost{display:none}
-[data-screen="record"] .entry--miss .entry__no{color:var(--ink-2)}
-[data-screen="record"] .entry--miss .entry__verdict{color:var(--tone)}
-
 /* ══════════════════════════════════════════════════════════════════
    REWARDS — three panels, three states, no store front
    ══════════════════════════════════════════════════════════════════
@@ -604,10 +496,6 @@ none;
 .tech--sealed{padding-bottom:var(--s4)}
 .tech--sealed .tech__body{min-height:0}
 
-/* ── Record polish ────────────────────────────────────────────────
-   +1 stamp is the payoff on an inked row, so it gets paper weight. */
-[data-screen="record"] .entry--set .entry__verdict{color:var(--paper);font-weight:600}
-
 /* ══ NARROW — the base, not an exception ═════════════════════════════
    A phone page is a single column of stacked frames, which is how a
    tankōbon is read anyway. Panels lose their offset shadow (it costs
@@ -642,9 +530,6 @@ none;
 :where(.panel){--ink-w:2}
 :where(.panel--seal){--ink-w:3}
 
-[data-screen="record"] .entry{padding:var(--s3)}
-[data-screen="record"] .entry__meta{font-size:clamp(11.5px,3vw,13px)}
-
 .bstat b{font-size:clamp(22px,6vw,30px)}
 .bnext{padding:var(--s4)}
 .bmile{grid-template-columns:auto 1fr;gap:var(--s3)}
@@ -660,7 +545,6 @@ none;
 @media (min-width:768px){
   :where(.panel){--ink-w:3}
   :where(.panel--seal){--ink-w:6}
-  [data-screen="record"] .entry{padding:var(--s4)}
   .bnext{padding:var(--s5)}
 }
 
@@ -758,9 +642,6 @@ none;
 .verdict__meet,.setupbox__hint,.bstat span,
 .brow__no,.brow__sub,.bactive__no--off,.bstate--ended,.bstate--past,.bmile__mid .muted,
 .brow__mid .muted{color:var(--ink-2)}
-/* the record's missed rows are recessive by opacity and a dashed
-   keyline, which is the tier language — not by unreadable type */
-[data-screen="record"] .entry--miss .entry__verdict{color:var(--ink-2)}
 
 /* ── 3. Grid children that cannot shrink ──────────────────────────
    `.duo` and `.rig` reported horizontal clipping: a grid child's
@@ -779,37 +660,6 @@ none;
   .tab,select{min-height:44px}
   .input{padding-inline:var(--s4)}
   .btn{padding-inline:var(--s5)}
-}
-
-/* ══ THE SINGLE-COLUMN RECORD ══════════════════════════════════════
-   Each row was an outer light panel wrapping an inner ink block — two
-   borders and two paddings for one piece of information, which in a
-   narrow column is most of the horizontal budget. The inked entry
-   becomes the frame itself, and the gain moves under the verdict
-   rather than fighting it for the same baseline.
-
-   This is a property of the COLUMN, not of the device: it applies
-   wherever the log is running one card per row, which the log's own
-   auto-fill rule decides. Container queries let the card ask that
-   question directly instead of guessing from the viewport. */
-[data-screen="record"] .log{container-type:inline-size;container-name:log}
-
-@container log (max-width: 380px){
-  [data-screen="record"] .rec{
-    border:0;padding:0;background:none;box-shadow:none;
-  }
-  [data-screen="record"] .entry{
-    padding:var(--s4);
-    border:var(--edge-thin) solid var(--ink);
-    grid-template-columns:1fr;
-    grid-template-areas:"no" "verdict" "meta" "gain";
-    gap:3px;
-  }
-  [data-screen="record"] .entry--set{border-color:var(--ink)}
-  [data-screen="record"] .entry__gain{
-    grid-area:gain;margin-top:var(--s3);
-    font-family:var(--f-display);font-size:15px;
-  }
 }
 /* Browsers without container query support keep the two-frame row,
    which is legible everywhere — it is denser, not broken. */
@@ -1135,3 +985,185 @@ button,input,select,textarea{font-family:inherit}
 /* The single-weight display face cannot carry a bold span, and the
    browser synthesising one looks like a rendering fault. */
 .mark__word b{font-weight:inherit}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   THE REGISTER — record
+
+   Seventy-four rules across three files used to describe this page,
+   fighting each other with !important, a --ink-w variable, clip-paths,
+   nth-of-type column spans and a container query. The result was a
+   stack of full-bleed black slabs, one per screen-height. All of it is
+   gone; this is the whole page.
+
+   The page reads quiet → impact → dense → quiet: a heading with room
+   around it, one large figure standing in the margin, then the register
+   itself set tight, and the meetings still ahead trailing off at the
+   bottom. The one thing that breaks the rhythm is the meeting you can
+   walk into right now.
+   ══════════════════════════════════════════════════════════════════ */
+.view--record{display:flex;flex-direction:column;gap:var(--s5)}
+
+/* text only a screen reader needs. The verdict word is not printed on
+   every line — the mark carries it — so the word is said here instead. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+
+/* ── the heading ──────────────────────────────────────────────────
+   Quiet. The title runs at display size and the note sits under it in
+   a short measure, so the eye drops straight past into the register
+   instead of tracking across a full-width paragraph. */
+.rechead{border-bottom:var(--edge-frame) solid var(--ink);
+  padding-bottom:var(--s3)}
+/* The display face draws from +.94em to -.36em — 1.30em of ink inside a
+   .9em line box. Without this the R and the C of RECORD hang into the
+   paragraph below. .2em is the measured overshoot, in the title's own
+   em so it scales with the clamp. */
+.rechead__title{margin:0;padding-bottom:.2em}
+.rechead__note{margin:0;max-width:44ch;
+  font-size:var(--t-caption);line-height:1.45;color:var(--ink-2)}
+
+/* ── the body ─────────────────────────────────────────────────────
+   One column at every width. The tally was a sticky left margin for a
+   while; on a tall sheet that left thirteen hundred pixels of blank
+   paper beside the register, which is exactly the emptiness this
+   redesign is meant to remove. It is a band now: full width, read left
+   to right, and the register starts under it. */
+.recbody{display:grid;gap:var(--s4)}
+
+/* ── the tally ────────────────────────────────────────────────────
+   The impact beat. One figure at display size, a solid block showing
+   the same number as a proportion, and the count of what is missing.
+   Three facts, no chrome. */
+.tally{display:grid;gap:2px;
+  grid-template-columns:auto minmax(0,1fr);
+  grid-template-areas:"fig of" "bar bar" "gone gone";
+  align-items:end}
+.tally__fig{grid-area:fig;margin:0;font-family:var(--f-display);
+  line-height:.78;font-size:clamp(64px,15vw,120px);color:var(--ink)}
+.tally__of{grid-area:of;margin:0 0 .55em var(--s3);
+  font-size:var(--t-caption);color:var(--ink-2);line-height:1.2}
+.tally__bar{grid-area:bar;position:relative;margin:var(--s3) 0 0;
+  width:100%;height:clamp(9px,1.3vw,14px);
+  background:var(--tone-field);overflow:hidden}
+.tally__bar::before{content:"";position:absolute;inset:0 auto 0 0;
+  width:var(--fill,0%);background:var(--ink)}
+.tally__gone{grid-area:gone;margin:var(--s2) 0 0;
+  font-size:var(--t-caption);color:var(--ink-2);line-height:1.2}
+
+/* On a wide sheet the three facts sit on one line and the block runs
+   the measure — the band is the widest ink on the page after the
+   heading rule, which is what makes it the beat it is. */
+@media(min-width:760px){
+  .tally{grid-template-columns:auto auto minmax(0,1fr) auto;
+    grid-template-areas:"fig of bar gone";
+    align-items:center;column-gap:var(--s4)}
+  .tally__of{margin:0;align-self:end;padding-bottom:.5em}
+  .tally__bar{margin:0}
+  .tally__gone{margin:0;align-self:end;padding-bottom:.5em;
+    white-space:nowrap}
+}
+
+/* ── the register ─────────────────────────────────────────────────── */
+.ledger{display:flex;flex-direction:column;
+  border-top:var(--edge-panel) solid var(--ink)}
+.ledger--ahead{margin-top:var(--s4);border-top:0}
+
+/* the section mark: a label sitting on its own rule, the way a printed
+   ledger divides a page */
+.ledger__mark{margin:0 0 var(--s2);padding-bottom:var(--s2);
+  border-bottom:var(--edge-panel) solid var(--ink);
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(19px,3.6vw,26px);line-height:1}
+.ledger--ahead .ledger__mark{margin-top:0}
+
+/* ── one line ─────────────────────────────────────────────────────
+   Dense on purpose: hairline rules, tight leading, and no state word
+   repeated down the column. The number is what gives the page its
+   vertical beat, so it is set at display size, not caption size. */
+.lrow{display:grid;
+  grid-template-columns:auto clamp(30px,7vw,42px) minmax(0,1fr) auto;
+  align-items:center;gap:var(--s3);
+  width:100%;text-align:left;background:none;border:0;border-radius:0;
+  color:inherit;font:inherit;
+  padding:clamp(9px,1.4vw,13px) 0;
+  border-bottom:var(--edge-rule) solid var(--tint)}
+
+.lrow__no{font-family:var(--f-display);line-height:1;
+  font-size:clamp(21px,4.4vw,30px);color:var(--tone);
+  min-width:2.4ch;letter-spacing:-.02em}
+.lrow__stamp{display:grid;place-items:center;aspect-ratio:1}
+.lrow__mark{width:100%;height:100%;display:block}
+.lrow__mark path{fill:var(--ink)}
+
+/* an unstamped meeting is an empty box on a stamp card, so that is what
+   it looks like — the outline the mark would have filled. */
+.lrow__slot{width:58%;aspect-ratio:1;border-radius:50%;
+  border:var(--edge-panel) solid var(--tint)}
+
+.lrow__body{display:flex;flex-direction:column;gap:0;min-width:0}
+.lrow__date{font-size:var(--t-body);line-height:1.15}
+.lrow__when{font-size:var(--t-caption);color:var(--ink-2);line-height:1.3}
+
+/* ATTENDED — the number goes to full ink and the stamp prints. No word:
+   the mark is the record. */
+.lrow--set .lrow__no{color:var(--ink)}
+
+/* MISSED — the whole line recedes. Nothing is struck through: an
+   absence is quiet, not cancelled. */
+.lrow--miss .lrow__no{color:var(--ink-2)}
+.lrow--miss .lrow__date{color:var(--ink-2)}
+.lrow--miss .lrow__when{color:var(--tone)}
+
+/* SCHEDULED — not yet anything. */
+.lrow--upcoming .lrow__no{color:var(--ink-2)}
+.lrow--upcoming .lrow__date{color:var(--ink-2)}
+.lrow--upcoming .lrow__when{color:var(--tone)}
+
+/* OPEN — the one line you can act on, and the only ink mass on the
+   page. It breaks the register's rhythm on purpose: it bleeds past the
+   column rules, it inverts, and it is the only line that ends in a verb. */
+.lrow--open{background:var(--ink);color:var(--paper);cursor:pointer;
+  padding:var(--s4);margin:var(--s3) 0;border-bottom:0;
+  box-shadow:var(--s2) var(--s2) 0 var(--tone-field)}
+.lrow--open .lrow__no{color:var(--paper)}
+.lrow--open .lrow__slot{border-color:var(--paper)}
+.lrow--open .lrow__date{font-family:var(--f-display);
+  text-transform:uppercase;font-size:clamp(21px,4.6vw,30px);line-height:1}
+.lrow--open .lrow__when{color:var(--tint)}
+.lrow__go{font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(15px,3vw,20px);line-height:1;color:var(--paper);
+  white-space:nowrap}
+.lrow--open:hover{background:var(--ink-2)}
+.lrow--open:focus-visible{outline:var(--edge-panel) solid var(--ink);
+  outline-offset:3px}
+
+@media(min-width:768px){
+  .lrow{gap:var(--s4)}
+}
+
+/* Once there is width to spend, the line stops stacking and runs across
+   it: number, mark, date, then the reading set flush right. */
+@media(min-width:900px){
+  .lrow{grid-template-columns:auto clamp(34px,3vw,44px) minmax(7rem,auto)
+      minmax(0,1fr) auto;
+    align-items:baseline;column-gap:var(--s4)}
+  .lrow__body{display:contents}
+  .lrow__stamp{align-self:center}
+  .lrow__date{grid-column:3}
+  .lrow__when{grid-column:4;justify-self:end;text-align:right}
+  .lrow__go{grid-column:5}
+}
+
+/* Past a certain width one line per row leaves six hundred pixels of
+   nothing between the date and the reading. A printed register solves
+   that by setting in two columns, so this does: the sheet fills, the
+   page halves in height, and the meeting that is open still takes the
+   full measure across the top. */
+@media(min-width:1180px){
+  .ledger{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    column-gap:clamp(32px,4vw,72px)}
+  .ledger__mark,.lrow--open{grid-column:1 / -1}
+  .lrow{column-gap:var(--s3)}
+  .lrow--open{column-gap:var(--s4)}
+}

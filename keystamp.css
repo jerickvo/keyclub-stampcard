@@ -856,7 +856,7 @@ select.input{padding-right:var(--s4)}
 .topbar{display:flex}
 .tabs{display:flex}
 .view{grid-template-columns:repeat(2,minmax(0,1fr))}
-[data-screen="record"] .view > section,
+
 [data-screen="rewards"] .view > section{grid-column:1/-1}
 /* A bleed needs page margin to run into. On a phone the margin IS the
    safe edge, so the panel keeps its gutter rather than sitting on the
@@ -865,7 +865,7 @@ select.input{padding-right:var(--s4)}
 
 /* ── ≥768: tablets get a spread, not a wide phone ─────────────── */
 @media(min-width:768px){
-  [data-screen="record"] .view > section,
+  
   [data-screen="rewards"] .view > section{grid-column:1/-1}
 }
 
@@ -1177,85 +1177,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .rail__link:hover .rail__no{color:var(--ink)!important}
 
 /* ══════════════════════════════════════════════════════════════════
-   THE STAMP CARD — a composition, not a contact sheet.
-
-   Ten identical cells at identical spacing was the most generic thing
-   on the page and also the largest. The most recent stamp now dominates
-   at roughly three times the area and breaks the top edge of its panel;
-   the rest fall in behind it at reduced weight, and the empty ones
-   recede to tone instead of announcing themselves with dashed boxes.
-   ══════════════════════════════════════════════════════════════════ */
-
-
-/* the panel has to let the hero stamp break its edge */
-
-
-/* ══════════════════════════════════════════════════════════════════
-   RECORD — a sequence, not a table.
-
-   Nine rows of equal weight with hairline dividers had no second or
-   third thing to look at; the hierarchy died after the title. The rows
-   are now panels of unequal size: the live meeting takes a full tier,
-   confirmed ones sit small and quiet, and a missed meeting is given
-   deliberate empty space rather than being compressed like the rest.
-   ══════════════════════════════════════════════════════════════════ */
-/* THE RECORD SPREAD.
-
-   Narrow: one card per row of a column-count the log works out for
-   itself from how much room it has. Wide: the composed spread, where
-   rows are deliberately unequal — the live meeting takes a full tier,
-   confirmed ones sit small and quiet, a missed one is given space
-   rather than being compressed like the rest.
-
-   These are two different compositions, not one composition at two
-   sizes, which is why the wide one is stated inside its own tier
-   instead of being approximated by shrinking. */
-[data-screen="record"] .log{display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));
-  gap:var(--gut) var(--gut)}
-[data-screen="record"] .rec{grid-column:span 1;padding:var(--s4);
-  border-top:0!important;align-items:flex-start}
-[data-screen="record"] .rec + .rec{padding-top:var(--s4)}
-[data-screen="record"] .rec--open,
-[data-screen="record"] .rec--miss{grid-column:1/-1}
-[data-screen="record"] .rec--open .entry__verdict{font-size:13px;padding:5px 11px}
-[data-screen="record"] .rec--open .entry__ghost{font-size:clamp(90px,13vw,190px);
-  opacity:.1;top:-8px;right:8px}
-[data-screen="record"] .rec--miss .entry{opacity:.42}
-
-@media(min-width:768px){
-  [data-screen="record"] .log{grid-template-columns:repeat(4,minmax(0,1fr));
-    grid-auto-flow:row dense}
-  [data-screen="record"] .rec{grid-column:span 2}
-  [data-screen="record"] .rec--open,
-  [data-screen="record"] .rec--miss{grid-column:1/-1}
-  [data-screen="record"] .rec--upcoming{grid-column:span 2}
-}
-@media(min-width:1024px){
-  /* `dense` is what turns unequal spans into a composition instead of a
-     row of gaps: a narrow card backfills the space a wide one left, so
-     the tiers stay irregular AND the page stays packed. Without it the
-     span-2 rows left a third of every other row as blank paper, which
-     reads as a layout fault rather than as rhythm. */
-  [data-screen="record"] .log{grid-template-columns:repeat(6,minmax(0,1fr));
-    grid-auto-flow:row dense}
-  [data-screen="record"] .rec{grid-column:span 3}
-  [data-screen="record"] .rec--open,
-  [data-screen="record"] .rec--miss{grid-column:1/-1}
-  /* The lead sizes to its content: it was reserving height and then
-     dropping its content to the bottom of it, which is what made the
-     one thing you can act on read as a mostly-empty textured box. */
-  [data-screen="record"] .rec--open{min-height:0;align-items:stretch}
-  /* A miss reserved 120px — the same room as an attended meeting — so
-     the gaps between the solid blocks were boxes too, and the pattern
-     of blocks down the column could not read as the record. */
-  [data-screen="record"] .rec--miss{min-height:0;align-items:center;opacity:1}
-  [data-screen="record"] .rec--set:nth-of-type(4n+3){grid-column:span 2}
-  [data-screen="record"] .rec--set:nth-of-type(4n){grid-column:span 4}
-  [data-screen="record"] .rec--upcoming{grid-column:span 2}
-}
-
-/* ══════════════════════════════════════════════════════════════════
    SFX — opaque, large, cropped by the panel. Never a watermark.
    ══════════════════════════════════════════════════════════════════ */
 
@@ -1317,11 +1238,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
    box, so it does not move with it. */
 :root{--jp-lane:calc(var(--s4) + 22px)}
 .view > .head{padding-right:calc(var(--s4) + var(--jp-lane))}
-
-
-/* Record rows need real interior space now that they are panels */
-[data-screen="record"] .rec{padding:var(--s4) var(--s4) var(--s5)}
-[data-screen="record"] .rec--open{padding:var(--s5)}
 @media(min-width:1024px){
   /* the right lane now carries two vertical marks, so it is wider */
   :root{--jp-lane:calc(var(--s4) + 42px)}
@@ -1356,8 +1272,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 /* one padding value for every panel, plus a larger one where a panel is
    carrying the dominant moment */
 .panel,.manual{padding:var(--space-panel)}
-
-[data-screen="record"] .rec--open{padding:var(--space-panel-lg)}
 .head{padding:var(--space-panel) var(--space-panel-lg)}
 .who{padding:var(--space-panel)}
 
