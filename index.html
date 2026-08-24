@@ -3223,6 +3223,10 @@ button,input,select,textarea{font-family:inherit}
    paragraph below. .2em is the measured overshoot, in the title's own
    em so it scales with the clamp. */
 .rechead__title{margin:0;padding-bottom:.2em}
+/* Home's heading sits above the card rather than above a page of text,
+   so it runs one step tighter. */
+.rechead--tight{padding-bottom:var(--s2)}
+.rechead--tight .rechead__title{font-size:clamp(30px,6.5vw,64px)}
 .rechead__note{margin:0;max-width:44ch;
   font-size:var(--t-caption);line-height:1.45;color:var(--ink-2)}
 
@@ -18146,6 +18150,16 @@ const Views = {
       .slice(0, 3);
 
     return `<div class="view view--home">
+      <!-- Home was the one screen that opened straight into a panel.
+           Every other page leads with its name in the display face over
+           a rule, and without one here the app's first screen had no
+           quiet beat before the card. -->
+      <header class="rechead rechead--tight" data-enter>
+        <h1 class="title rechead__title">Your card</h1>
+        <p class="rechead__note">Ten stamps to a card. A stamp lands when the
+          server accepts a scan, and the card carries the tier you are on.</p>
+      </header>
+
       <div class="deck" data-enter>
         ${C.sealGrid()}
         ${action}

@@ -301,6 +301,16 @@ const Views = {
       .slice(0, 3);
 
     return `<div class="view view--home">
+      <!-- Home was the one screen that opened straight into a panel.
+           Every other page leads with its name in the display face over
+           a rule, and without one here the app's first screen had no
+           quiet beat before the card. -->
+      <header class="rechead rechead--tight" data-enter>
+        <h1 class="title rechead__title">Your card</h1>
+        <p class="rechead__note">Ten stamps to a card. A stamp lands when the
+          server accepts a scan, and the card carries the tier you are on.</p>
+      </header>
+
       <div class="deck" data-enter>
         ${C.sealGrid()}
         ${action}
