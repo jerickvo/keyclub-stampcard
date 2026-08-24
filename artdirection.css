@@ -149,8 +149,6 @@
    ───────────────────────────────────────────────────────────────── */
 :root{--ink-w:2.8}
 
-[data-screen="profile"] .stat{--ink-w:1.6}
-
 /* ─────────────────────────────────────────────────────────────────
    10. THE CHAPTER NAMEPLATE
 
@@ -487,31 +485,7 @@
 /* the credential band and the milestone ledger were the last two
    boxes on the page; they are divisions of the sheet like everything
    else now */
-[data-screen="profile"] .who,
-[data-screen="profile"] .panel--flat{border:0;background:none;height:auto;
-  position:relative;padding:clamp(16px,2.2vw,26px) 0 clamp(16px,2.2vw,26px)}
-[data-screen="profile"] .who::before,
-[data-screen="profile"] .panel--flat::before{content:"";position:absolute;
-  left:0;right:0;top:0;height:var(--edge-thin);background:var(--ink)}
-[data-screen="profile"] .mstone{border-top:0;margin-top:clamp(10px,1.4vw,16px)}
 
-[data-screen="profile"] .stats{display:grid;gap:0;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  border-top:var(--edge) solid var(--ink)}
-[data-screen="profile"] .stat{border:0;background:none;
-  padding:clamp(14px,2vw,22px) clamp(12px,1.6vw,20px) clamp(14px,2vw,22px) 0;
-  border-bottom:var(--rule-hair) solid var(--v3)}
-[data-screen="profile"] .stat + .stat{padding-left:clamp(12px,1.6vw,20px);
-  border-left:var(--rule-hair) solid var(--v3)}
-[data-screen="profile"] .stat[data-rank="lead"]{grid-column:1/-1;
-  border-left:0;padding-left:0;border-bottom-color:var(--ink);
-  border-bottom-width:var(--edge-thin)}
-[data-screen="profile"] .stat[data-rank="lead"] b{
-  font-size:clamp(54px,9vw,116px);line-height:.82}
-@media(min-width:768px){
-  [data-screen="profile"] .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
-  [data-screen="profile"] .stat:nth-child(2){padding-left:0;border-left:0}
-}
 
 /* ══════════════════════════════════════════════════════════════════
    EMPTY STATES — THE UNSTRUCK SEAL
@@ -692,14 +666,7 @@
    weakest composition left in the app. The seal is the subject: real
    size, cropped by the top of its own division, identification set
    against it. */
-[data-screen="profile"] .who{display:grid;
-  grid-template-columns:auto minmax(0,1fr);
-  align-items:center;gap:clamp(14px,2.4vw,32px);overflow:hidden}
-[data-screen="profile"] .who__seal{width:clamp(64px,9vw,124px);
-  height:clamp(64px,9vw,124px);
-  margin-top:calc(clamp(10px,1.6vw,22px) * -1);opacity:.9}
-[data-screen="profile"] .who .rune{position:static;writing-mode:horizontal-tb;
-  display:block;margin-top:6px;letter-spacing:.24em}
+
 
 /* ══════════════════════════════════════════════════════════════════
    THE HEXAGON IS THE GEOMETRY
@@ -724,12 +691,10 @@
 
 
 
-[data-screen="profile"] .stat[data-rank="lead"],
+
 [data-screen="board"] .bnext{
   clip-path:polygon(var(--sheet-cut) 0, 100% 0, 100% 100%,
                     0 100%, 0 var(--sheet-cut))}
-[data-screen="profile"] .stat[data-rank="lead"]{
-  border-bottom:0;box-shadow:inset 0 calc(var(--edge-thin) * -1) 0 var(--ink)}
 
 /* ══════════════════════════════════════════════════════════════════
    THE STAMP SHEET — ONE INK MASS, NOT NINE SQUARES
@@ -812,8 +777,6 @@
      .brk      targeting brackets — this area is a target
      .xhair    crosshair — the exact point of action
      .anno     technical annotation — a fact the system knows
-     .idx      numeric index — this is item N of a series
-     .rune     vertical edge metadata — live system state
      .speed    directional lines — force applied in a direction
      .reg      the register rule — a division of the sheet
 
@@ -910,59 +873,14 @@ select.input:focus-visible{outline:none}
    tall enough for a headline, which is why the page opened on nothing.
    The nameplate above it now carries the name, so this panel can be
    what it always should have been — a quiet identification band. */
-.who{align-items:center}
-.who__id{min-width:0}
-.who__line{font-size:clamp(12.5px,.95vw,14.5px);color:var(--ink-2);
-  margin-top:4px}
-.who .rune{color:var(--ink-2)}
-@media(min-width:1024px){ .who .rune{display:block} }
+
 
 /* ── THE MILESTONE LEDGER ──────────────────────────────────────────
    The same three milestones the Rewards chapter renders in full. This
    is the ledger of them, not a second card design: a ruled monospace
    register, one line each, reading tier / name / state / distance.
    One design system, two levels of detail. */
-.mstone{list-style:none;margin-top:var(--space-stack);
-  border-top:var(--edge-thin) solid var(--ink)}
-.mstone__row{display:grid;align-items:baseline;
-  grid-template-columns:auto 1fr auto;
-  grid-template-areas:"at name state" ". gap gap";
-  gap:2px var(--s3);padding:var(--s3) 0;
-  border-bottom:var(--rule-hair) solid var(--v3);
-  font-family:var(--f-mono);font-size:clamp(11px,1vw,12.5px);
-  letter-spacing:.1em;}
-.mstone__at{grid-area:at;font-family:var(--f-display);
-  font-size:clamp(17px,1.9vw,26px);line-height:.9;color:var(--ink-2);
-  letter-spacing:-.03em}
-.mstone__name{grid-area:name;color:var(--ink);letter-spacing:.14em}
-.mstone__state{grid-area:state;color:var(--ink-2);justify-self:end}
-/* Muted text is INK at a lower weight, not tone — this file's own
-   rule, and the tier numeral and the distance both broke it at 1.98:1.
-   --ink-2 on paper is 5.3:1 and still recedes. */
-.mstone__gap{grid-area:gap;color:var(--ink-2)}
-/* the tier that is actually reachable is the one carrying weight */
-.mstone__row--ready .mstone__at{color:var(--ink)}
-.mstone__row--ready .mstone__state{color:var(--seal)}
-.mstone__row--claimed .mstone__at{color:var(--ink)}
-.mstone__row--claimed .mstone__name{text-decoration:line-through;
-  text-decoration-thickness:1.5px;color:var(--ink-2)}
-.mstone__foot{margin-top:var(--space-stack);font-size:13px}
-@media(min-width:768px){
-  .mstone__row{grid-template-columns:auto 1fr auto auto;
-    grid-template-areas:"at name gap state";gap:var(--s4)}
-  .mstone__gap{justify-self:end;min-width:7ch;text-align:right}
-}
 
-/* ── ONE FIGURE LEADS ──────────────────────────────────────────────
-   Four plates at identical weight is four figures nobody reads first.
-   The ranked one takes the ink weight and the display size; the other
-   three stay quiet and support it. */
-/* [data-screen="profile"] .stat sets --ink-w at (0,2,0), so a bare
-   [data-rank] could never outrank it. Matched here at the same weight
-   and later in the file. */
-.stat[data-rank="lead"]{--ink-w:3.2;background:var(--v1)}
-.stat[data-rank="lead"] b{font-size:clamp(38px,4.6vw,64px);line-height:.86}
-.stat[data-rank="lead"] span{color:var(--ink)}
 
 /* ── THE SLOT DOSSIER (§26) ────────────────────────────────────────
    Hover or focus a landed stamp and the check-in behind it is stated:
@@ -1210,23 +1128,6 @@ select.input:focus-visible{outline:none}
   .verdict .verdict__seal{margin-right:min(4vw,40px)}
 }
 
-
-/* ══════════════════════════════════════════════════════════════════
-   PHASE 30 SELF-CRITIQUE — WHAT THE RENDERS SHOWED
-
-   Seven things the composition passes above did not reach.
-   ══════════════════════════════════════════════════════════════════ */
-
-/* ── 1. THE THIRD STAT ORPHANED ───────────────────────────────────
-   Four readings in a two-column grid on a phone: the lead takes the
-   full measure, two pair off, and the fourth sits alone in the left
-   half with the right half empty — an orphan, and it reads as a cell
-   that failed to load. It takes the measure instead, so the tier goes
-   wide / narrow-narrow / wide. Irregular on purpose. */
-@media(max-width:479px){
-  [data-screen="profile"] .stats > .stat:last-child{grid-column:1/-1}
-}
-
 /* ── 2. WHAT HAS NOT HAPPENED YET ─────────────────────────────────
    Record's scheduled meetings had a heading in --faint set with an
    inline style, no rule, and a full chapter gap above it. It read as
@@ -1315,26 +1216,4 @@ select.input:focus-visible{outline:none}
    1024 where the rail returns and carries it again, so the app never
    shows two.
    ══════════════════════════════════════════════════════════════════ */
-.acct{position:relative;margin-top:clamp(26px,5vw,52px);
-  padding-top:clamp(14px,2vw,20px)}
-.acct__rule{position:absolute;left:0;right:0;top:0;
-  height:var(--edge-thin);background:var(--ink)}
-.acct__row{display:flex;flex-wrap:wrap;align-items:center;
-  justify-content:space-between;gap:clamp(12px,3vw,24px)}
-.acct__who{min-width:0}
-.acct__name{font-family:var(--f-display);text-transform:uppercase;
-  font-size:clamp(17px,4.2vw,24px);line-height:1.05;margin-top:5px;
-  overflow-wrap:anywhere}
-/* a real target, not a token icon: full width where a thumb reaches
-   for it, natural width where a cursor does */
-.acct .btn--out{flex:1 1 min(100%,220px);min-height:48px;
-  display:grid;place-items:center;
-  font:700 clamp(12px,3vw,14px)/1 var(--f-mono);letter-spacing:.2em;
-  
-  background:var(--ink);color:var(--paper);border:0;cursor:pointer;
-  padding:0 clamp(16px,4vw,28px)}
-.acct .btn--out:hover,.acct .btn--out:focus-visible{
-  background:var(--paper);color:var(--ink);
-  box-shadow:inset 0 0 0 var(--edge-thin) var(--ink)}
-@media(min-width:520px){ .acct .btn--out{flex:0 0 auto} }
-@media(min-width:1024px){ .acct{display:none} }
+

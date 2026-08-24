@@ -150,13 +150,6 @@ const C = {
   },
 
   /* ── a reward: sealed until the count reaches it ── */
-  /* Four figures at identical weight is four figures nobody reads
-     first. A plate can now be ranked, and exactly one per page is. */
-  stat(value, label, sub, rank){
-    return `<div class="stat"${rank ? ` data-rank="${rank}"` : ''}>
-      <b>${esc(value)}${sub ? `<i> / ${esc(sub)}</i>` : ''}</b><span>${esc(label)}</span></div>`;
-  },
-
   /* Structured, monospaced, in the page's own technical voice: a
      docket, not a tooltip. aria-hidden because the slot already carries
      the same facts as a label — this is the sighted view of them. */
@@ -260,7 +253,9 @@ const Views = {
      their attendance was lost. */
   loadFailure(title){
     return `<div class="view">
-      ${C.head(title)}
+      <header class="rechead" data-enter>
+        <h1 class="title rechead__title">${title}</h1>
+      </header>
       <section class="rig" data-enter>
         <div class="panel bpanel">
           <p class="kicker">Could not load</p>
@@ -524,76 +519,59 @@ const Views = {
      the full treatment, this one holds the ledger of it. */
   profile(){
     if (Store.failed) return this.loadFailure('Member');
-    const held = Store.heldMeetings();
+    const held     = Store.heldMeetings();
     const attended = held.filter(m => Store.attended(m.id)).length;
-    const p = Rules.progress();
-    const total = Store.totalStamps();
+    const total    = Store.totalStamps();
+    const name     = memberName();
+    const handle   = (Store.user && Store.user.username) || name;
+    const role     = Store.isBoard ? 'Board' : 'Member';
 
-    return `<div class="view">
-      ${C.head(esc(memberName()))}
+    /* THE ACCOUNT PAGE SAYS EACH THING ONCE.
 
-      <section class="rig stack-lg" data-enter>
-        <div class="panel who" data-rank="quiet">
-          ${ASSETS.schoolSeal
-            ? `<img class="who__seal who__seal--img" src="${ASSETS.schoolSeal}" alt="" aria-hidden="true">`
-            : `<svg class="who__seal" viewBox="0 0 100 100" aria-hidden="true">${seal(4)}</svg>`}
-          <div class="who__id">
-            <p class="who__role">${Store.isBoard ? 'Board' : 'Member'} / ${
-              esc(Store.user && Store.user.username ? Store.user.username : memberName())}</p>
-            <p class="who__line">${
-              total === 0 ? 'No stamps on this card yet.'
-              : `${pad(total)} stamps struck across ${attended} of ${held.length} meetings held.`}</p>
-          </div>
-          <span class="rune" data-layer aria-hidden="true">CARD ${
-            p.next ? 'TIER ' + p.next : 'COMPLETE'}</span>
-        </div>
+       It used to open with the username set as a display headline —
+       twenty digits of it at 110px inside a box — then print the same
+       string again in the identity band underneath, and again in the
+       desktop rail. Beside it sat CARD TIER 10, a label naming nothing
+       the product has, and a sentence reading "06 stamps struck across
+       6 of 14 meetings held" directly above a figure grid stating the
+       same two numbers. Below all of it, the three reward milestones
+       were listed in full — the entire Rewards page, restated.
+
+       What is left is what only this page can answer: who is signed
+       in, what their standing is, and how to sign out. */
+    return `<div class="view view--member">
+      <header class="rechead" data-enter>
+        <h1 class="title rechead__title">Member</h1>
+        <p class="rechead__note">Your account and your standing for the year.
+          The meeting-by-meeting record is under Record; the rungs are under Rewards.</p>
+      </header>
+
+      <section class="who" data-enter>
+        <p class="who__name">${esc(name)}</p>
+        <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
+          handle !== name ? ` / ${esc(handle)}` : ''}</p>
       </section>
 
-      <div class="stats stack-lg">
-        ${C.stat(pad(total), 'Total stamps', null, 'lead')}
-        ${C.stat(pad(attended), 'Meetings attended', pad(held.length))}
-        ${C.stat(pad(Store.rewardsUnlocked()), 'Rewards unlocked', pad(Store.rewards.length))}
-        ${C.stat(Store.attendanceRate() + '%', 'Attendance rate')}
-      </div>
-
-      <section class="rig rig--bl stack-xl" data-enter>
-        <div class="panel panel--flat" data-rank="quiet">
-          <h2 class="h2">Milestones</h2>
-          <ol class="mstone">
-            ${Store.rewards.map(r => {
-              const open = total >= r.required;
-              const state = r.claimed ? 'Claimed' : open ? 'Ready' : 'Sealed';
-              return `<li class="mstone__row mstone__row--${state.toLowerCase()}">
-                <span class="mstone__at">${pad(r.required)}</span>
-                <span class="mstone__name">${esc(r.name)}</span>
-                <span class="mstone__state">${state}</span>
-                <span class="mstone__gap">${open ? '—' : (r.required - total) + ' to go'}</span>
-              </li>`;
-            }).join('')}
-          </ol>
-          <p class="muted mstone__foot">
-            ${p.next ? `${p.remaining} more ${p.remaining === 1 ? 'stamp' : 'stamps'} until the next one unlocks.`
-                     : 'Every milestone is unlocked.'}</p>
-        </div>
+      <section class="standing-band" data-enter>
+        <p class="standing-band__fig">${pad(total)}</p>
+        <p class="standing-band__of">${total === 1 ? 'stamp' : 'stamps'} this year</p>
+        <dl class="standing-band__rest">
+          <div><dt>Meetings attended</dt><dd>${pad(attended)} of ${pad(held.length)}</dd></div>
+          <div><dt>Attendance rate</dt><dd>${Store.attendanceRate()}%</dd></div>
+          <div><dt>Rewards unlocked</dt><dd>${pad(Store.rewardsUnlocked())} of ${pad(Store.rewards.length)}</dd></div>
+        </dl>
       </section>
+
       <!-- THE ACCOUNT BLOCK.
 
            Sign out lived only in the desktop rail, and the rail is
            gone below 1024 — so on every phone and every tablet there
-           was no way to sign out at all. Member is chapter 05, the
-           account chapter, and it is on the tab bar at every width, so
-           the control belongs here rather than behind a drawer or
-           hidden under an icon. It hides itself once the rail is back
-           and carrying the same control. -->
+           was no way to sign out at all. Member is the account screen
+           and it is on the tab bar at every width, so the control
+           belongs here rather than behind a drawer or under an icon.
+           It hides itself once the rail is back and carrying it. -->
       <section class="acct" data-enter>
-        <span class="acct__rule" data-layer aria-hidden="true"></span>
-        <div class="acct__row">
-          <div class="acct__who">
-            <p class="kicker">Signed in / ${Store.isBoard ? 'Board' : 'Member'}</p>
-            <p class="acct__name">${esc(memberName())}</p>
-          </div>
-          <button class="btn btn--out" data-signout type="button">Sign out</button>
-        </div>
+        <button class="acct__out" data-signout type="button">Sign out</button>
       </section>
     </div>`;
   },

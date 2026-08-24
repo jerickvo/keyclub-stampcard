@@ -278,26 +278,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
    Hidden below the laptop tier — a phone has no spare edge to spend,
    and a rune squeezed against a 320px viewport is decoration rather
    than framing. */
-.rune{display:none;position:absolute;
-  /* Its own column in the right lane, INSIDE the one already reserved
-     for the Japanese mark — two parallel vertical rules, not one mark
-     fighting another. `.jp` is anchored to the top of that lane, the
-     rune is centred in it, so the two can never meet however tall the
-     container grows. */
-  right:calc(var(--space-panel) + 17px);
-  top:50%;transform:translateY(-50%);
-  writing-mode:vertical-rl;
-  /* Sized from the viewport, not fixed: at 1024 the nameplate is only
-     about 130px tall and a 9.5px rune with this tracking overran it. */
-  font:500 clamp(8px,.62vw,10px)/1 var(--f-mono);letter-spacing:.24em;
-  /* Muted ink, not screentone. At 8-10px a --v3 rune is a smudge you
-     have to hunt for; --ink-2 is quiet without being illegible, which
-     is the whole point of a mark you are meant to lean in and read. */
-  color:var(--ink-2);
-  white-space:nowrap;pointer-events:none;user-select:none}
-@media(min-width:1024px){
-  .rune{display:block}
-}
+
 .muted{color:var(--ink-2)}
 
 .head{display:flex;align-items:flex-start;justify-content:space-between;
@@ -403,21 +384,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 
 /* ══════════════════ RECORD / LOG ══════════════════ */
 .log{display:flex;flex-direction:column}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
-  gap:var(--gut)}
-.stat{padding:var(--s4);border:var(--rule-hair) solid var(--ink)}
-/* The stat plate shipped with markup (`<b>07<i>/09</i></b><span>label</span>`)
-   but no rules for its children, so all three stayed inline and ran
-   together — the profile read "07 / 09Meetings attended" with the label
-   welded to the figure. Value and label are separate lines, matching how
-   the hero states its number above its caption. */
-.stat b{display:block;font-family:var(--f-display);font-weight:400;
-  font-size:clamp(24px,2.6vw,32px);line-height:1;letter-spacing:-.02em}
-.stat b i{font-family:var(--f-mono);font-style:normal;font-size:.5em;
-  letter-spacing:0;color:var(--tone);margin-left:.24em}
-.stat span{display:block;font:500 10.5px/1.3 var(--f-label);
-  letter-spacing:.18em;color:var(--tone);
-  margin-top:var(--s3)}
 .tick{position:absolute;width:11px;height:11px;border:var(--rule-hair) solid var(--ink)}
 .tick--tl{top:-1px;left:-1px;border-right:0;border-bottom:0}
 .tick--br{right:-1px;bottom:-1px;border-left:0;border-top:0}
@@ -500,15 +466,7 @@ select.input{padding-right:var(--s4)}
 .picker{display:flex;flex-wrap:wrap;gap:var(--s2)}
 
 /* ══════════════════ MEMBER ══════════════════ */
-.who{display:flex;align-items:center;gap:var(--s4);padding:var(--s5)}
-.who__name{font-family:var(--f-display);font-size:var(--t-name);text-transform:uppercase}
-.who__role{font:500 10px/1 var(--f-mono);letter-spacing:.16em;
-  color:var(--tone);margin-top:6px}
-.who__seal{width:70px;height:70px;flex:none}
-.who__seal circle,.who__seal polygon,.who__seal line{
-  fill:none;stroke:var(--ink);stroke-width:1.5;vector-effect:non-scaling-stroke}
-.who__seal path{fill:var(--ink);stroke:none}
-.who__seal--img{object-fit:contain}
+
 /* ══════════════════ EMPTY STATES ══════════════════
    Centred text in a dashed box is a placeholder, not a state. An empty
    state here is a blank seal: the mark that would have been pressed,
@@ -743,19 +701,7 @@ select.input{padding-right:var(--s4)}
 
 /* ══════════════════ SPEED LINES ══════════════════
    The FX layer draws these; they only ever appear in ink. */
-.lines line,.lines path,.slash path,.slash rect{stroke:var(--ink);fill:var(--ink)}
-
-/* The per-tier home composition now lives in one place — the ladder
-   above — rather than in three overlapping ranges here. What remains is
-   the small-screen behaviour of individual components, expressed as the
-   base state and lifted at ≥768 rather than as a `max-width` exception.
-
-   The stat plate is a good example of why: it was `repeat(auto-fit,
-   minmax(96px,1fr))` with a hard two-column override under 560px, so
-   the number of columns depended on which of the two rules won rather
-   than on how much room there actually was. auto-fit with a floor is
-   the whole answer, at every width. */
-.stats{grid-template-columns:repeat(auto-fit,minmax(clamp(120px,40%,168px),1fr))}          /* it sits under the number at this width */
+.lines line,.lines path,.slash path,.slash rect{stroke:var(--ink);fill:var(--ink)}          /* it sits under the number at this width */
 /* Callouts clear the tab bar AND the home indicator, so a message never
    lands on the navigation or in the gesture strip. */
 .toasts{left:var(--gutter);right:var(--gutter);max-width:none;
@@ -877,7 +823,7 @@ html,body{overflow-x:clip;max-width:100%}
    getting a 2.8px box of its own, so fifteen meetings meant fifteen
    boxes stacked inside the box around them. Rows are separated by a
    hairline and space now. */
-.panel,.head,.stat,
+.panel,.head,
 .bpanel,.bnext{
   border-width:calc(var(--ink-w, 2.8) * 1px);
   border-style:solid;
@@ -889,9 +835,8 @@ html,body{overflow-x:clip;max-width:100%}
    background art. The trouble is that `.panel > *` outranks the single
    class an absolutely-positioned child declares itself with, so every
    new out-of-flow element was silently dragged back into the layout —
-   .chamber__c bunched into a corner, .rune doubled the nameplate's
-   height, .sealmeta stretched its slot to twice its size, and the
-   hero's .tick corner marks have been in flow this whole time.
+   .sealmeta stretched its slot to twice its size, and the hero's .tick
+   corner marks were in flow this whole time.
 
    Chasing that with a growing list of :not() class names was the
    defect: it only ever excluded the ones somebody had already been
@@ -1042,7 +987,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
    carrying the dominant moment */
 .panel{padding:var(--space-panel)}
 .head{padding:var(--space-panel) var(--space-panel-lg)}
-.who{padding:var(--space-panel)}
 
 /* typographic rhythm */
 .h2 + *{margin-top:var(--space-stack-sm)}
@@ -1052,8 +996,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .stack-xl{margin-top:var(--space-chapter)}
 .picker{gap:var(--space-tight);margin-bottom:var(--space-tier)}
 .field{gap:var(--space-tight)}
-.stats{gap:var(--space-tier)}
-.stat{padding:var(--space-panel)}
 
 /* the board QR was rendering at the full panel width (~870px), which is
    far larger than any camera needs and pushed everything below the fold */
@@ -1109,10 +1051,9 @@ main#view{padding-top:var(--space-tier);
    does what it says. */
 :where(svg:not(.fxdefs):not([width])){width:22px;height:22px;flex:none}
 
-.who__seal,.verdict__seal,
+.verdict__seal,
 .arena svg,.slash,.lines,
 .verdict__field,.qrpanel__code svg{width:100%;height:100%}
-.who__seal{width:clamp(52px,5vw,74px);height:clamp(52px,5vw,74px)}
 .btn svg,.motion-btn svg{width:16px;height:16px}
 .rail__nav button svg,.tabs button svg{width:18px;height:18px}
 .boot__mark svg{width:88px;height:88px}

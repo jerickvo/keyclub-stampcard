@@ -524,7 +524,7 @@ none;
 /* Nothing in the application is allowed under 11px. The mono labels
    keep their wide tracking — that is what makes them read as manga
    captions — they simply stop shrinking. */
-.chip,.bstate,.brow__del,.who__role,.brow__no,.brow__sub{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
+.chip,.bstate,.brow__del,.brow__no,.brow__sub{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
 
 /* ══════════════════════════════════════════════════════════════════
    MUTED TEXT IS INK, NOT TONE
@@ -544,9 +544,8 @@ none;
    not a palette change. Panels that are printed in ink keep their own
    lighter overrides, which are more specific and still win.
    ══════════════════════════════════════════════════════════════════ */
-.muted,
-.stat span,.stat b i,.chip--set,
-.qrpanel__when,.who__role,.empty,
+.muted,.chip--set,
+.qrpanel__when,.empty,
 .verdict__meet,.setupbox__hint,.bstat span,
 .brow__no,.brow__sub,.bactive__no--off,.bstate--ended,.bstate--past,.bmile__mid .muted,
 .brow__mid .muted{color:var(--ink-2)}
@@ -1325,3 +1324,91 @@ button,input,select,textarea{font-family:inherit}
 @media(min-width:768px){
   .tier{gap:var(--s4)}
 }
+
+
+/* ══════════════════════════════════════════════════════════════════
+   THE ACCOUNT — member
+
+   This page used to open with the username set as a display headline —
+   twenty digits of it at 110px inside a box — then print the same
+   string again in the identity band below, and again in the desktop
+   rail. Beside it sat CARD TIER 10, a label naming nothing the product
+   has, and a sentence reading "06 stamps struck across 6 of 14
+   meetings held" directly above a figure grid stating the same two
+   numbers. Under all of it the three reward milestones were listed in
+   full: the entire Rewards page, restated.
+
+   What is left is what only this page can answer — who is signed in,
+   what their standing is, and how to sign out.
+   ══════════════════════════════════════════════════════════════════ */
+.view--member{display:flex;flex-direction:column;gap:var(--s5)}
+
+/* ── WHO ──────────────────────────────────────────────────────────
+   The name at display scale and the role under it. Once. */
+.who{display:flex;flex-direction:column;gap:2px}
+.who__name{margin:0;font-family:var(--f-display);text-transform:uppercase;
+  line-height:.92;font-size:clamp(30px,7vw,64px);color:var(--ink);
+  overflow-wrap:anywhere}
+.who__hand{margin:0;font-size:var(--t-caption);color:var(--ink-2);
+  line-height:1.3;overflow-wrap:anywhere}
+
+/* ── STANDING ─────────────────────────────────────────────────────
+   The same band Record uses for its tally, carrying the three figures
+   that belong to the account rather than to any one meeting. */
+.standing-band{display:grid;gap:2px;
+  grid-template-columns:auto minmax(0,1fr);
+  grid-template-areas:"fig of" "rest rest";
+  align-items:end;
+  border-top:var(--edge-frame) solid var(--ink);padding-top:var(--s4)}
+.standing-band__fig{grid-area:fig;margin:0;padding-bottom:.1em;
+  font-family:var(--f-display);line-height:.78;
+  font-size:clamp(64px,15vw,120px);color:var(--ink)}
+.standing-band__of{grid-area:of;margin:0 0 .55em var(--s2);
+  font-size:var(--t-caption);color:var(--ink-2);line-height:1.2}
+
+.standing-band__rest{grid-area:rest;display:grid;gap:0;margin:var(--s4) 0 0;
+  grid-template-columns:minmax(0,1fr)}
+.standing-band__rest > div{display:grid;
+  grid-template-columns:minmax(0,1fr) auto;align-items:baseline;
+  gap:var(--s3);padding:clamp(9px,1.4vw,13px) 0;
+  border-bottom:var(--edge-rule) solid var(--tint)}
+.standing-band__rest dt{font-size:var(--t-caption);color:var(--ink-2)}
+/* uppercase is not a style choice here. The display face draws a
+   diaeresis on lowercase o, so "06 of 14" set in it renders "06 öf 14";
+   every other use of the face in the app is uppercase for the same
+   reason. */
+.standing-band__rest dd{margin:0;justify-self:end;
+  font-family:var(--f-display);text-transform:uppercase;line-height:1;
+  font-size:clamp(19px,3.6vw,26px);color:var(--ink)}
+
+@media(min-width:760px){
+  .standing-band{grid-template-columns:auto auto minmax(0,1fr);
+    grid-template-areas:"fig of rest";align-items:center;
+    column-gap:var(--s3)}
+  .standing-band__of{margin:0 clamp(24px,4vw,56px) 0 0;
+    align-self:end;padding-bottom:.62em}
+  .standing-band__rest{margin:0;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    column-gap:clamp(16px,2.4vw,36px)}
+  .standing-band__rest > div{grid-template-columns:minmax(0,1fr);
+    align-content:end;gap:2px;
+    border-bottom:0;border-top:var(--edge-rule) solid var(--tint);
+    padding:var(--s2) 0 0}
+  .standing-band__rest dd{justify-self:start}
+}
+
+/* ── SIGN OUT ─────────────────────────────────────────────────────
+   The rail carries this control once there is a rail; below 1024 there
+   is none, and this is the only screen on the tab bar that can hold
+   it, so it lives here at every width the rail does not cover. */
+.acct{display:flex;border-top:var(--edge-panel) solid var(--ink);
+  padding-top:var(--s4)}
+.acct__out{padding:11px var(--s5);cursor:pointer;
+  border:var(--edge-panel) solid var(--ink);
+  background:var(--paper);color:var(--ink);
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(15px,3vw,21px);line-height:1.2}
+.acct__out:hover{background:var(--ink);color:var(--paper)}
+.acct__out:focus-visible{outline:var(--edge-panel) solid var(--ink);
+  outline-offset:3px}
+@media(min-width:1024px){ .acct{display:none} }
