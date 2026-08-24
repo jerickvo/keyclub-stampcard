@@ -317,7 +317,6 @@ none;
    live one. Past and upcoming stay in ink, which keeps the red rare
    enough to mean something. */
 .bstate--open{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.entry--set .entry__verdict{color:var(--ink)}
 
 /* ══ SCANNER ═══════════════════════════════════════════════════════
    Verdict on the colour question: the camera image stays desaturated,
@@ -611,12 +610,11 @@ none;
 /* the scanner's fallback copy sits on the viewer's tone fill, not on
    paper, which costs it the last of its contrast */
 .viewer .stack .muted,.viewer__msg{color:var(--ink)}
-.entry__meta,.brow__mid .muted,.bstat span{font-size:clamp(12px,.45vw + 10.6px,13.5px)}
+.brow__mid .muted,.bstat span{font-size:clamp(12px,.45vw + 10.6px,13.5px)}
 /* Nothing in the application is allowed under 11px. The mono labels
    keep their wide tracking — that is what makes them read as manga
    captions — they simply stop shrinking. */
-.chip,.bstate,.brow__del,.entry__verdict,
-.entry__no,.who__role,.brow__no,.brow__sub{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
+.chip,.bstate,.brow__del,.who__role,.brow__no,.brow__sub{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
 
 /* ══════════════════════════════════════════════════════════════════
    MUTED TEXT IS INK, NOT TONE
@@ -636,7 +634,7 @@ none;
    not a palette change. Panels that are printed in ink keep their own
    lighter overrides, which are more specific and still win.
    ══════════════════════════════════════════════════════════════════ */
-.muted,.entry__no,.entry__meta,.entry__verdict,
+.muted,
 .stat span,.stat b i,.chip--set,
 .qrpanel__when,.who__role,.empty,
 .verdict__meet,.setupbox__hint,.bstat span,
@@ -647,8 +645,8 @@ none;
    `.duo` and `.rig` reported horizontal clipping: a grid child's
    default min-width is auto, so a long unbreakable string pushes the
    track wider than its column instead of wrapping. */
-.rig > *,.entry,.brow__mid,.bmile__mid{min-width:0}
-.entry__meta,.brow__mid b{overflow-wrap:anywhere}
+.rig > *,.brow__mid,.bmile__mid{min-width:0}
+.brow__mid b{overflow-wrap:anywhere}
 
 /* ══ TOUCH ═════════════════════════════════════════════════════════
    Keyed to the input device, not to the screen width. A 1024px
@@ -715,7 +713,6 @@ main#view:focus,main#view:focus-visible{outline:none}
    obviously broken, which is exactly the kind of thing that makes a
    layout feel unfinished. */
 .viewer{width:100%;margin-inline:0}
-.rec .entry{padding-right:0}
 
 /* ── 6. Reward requirement legibility ─────────────────────────────
    "Unlocks at 20 stamps" is the single most useful line on a locked
@@ -754,7 +751,7 @@ main#view:focus,main#view:focus-visible{outline:none}
    not in graphics laid on top of them.
    ══════════════════════════════════════════════════════════════════ */
 
-.view--home{display:flex;flex-direction:column;gap:var(--s6)}
+.view--home{display:flex;flex-direction:column;gap:var(--s5)}
 
 /* ── THE CARD ──────────────────────────────────────────────────────
    A printed stamp card: a framed box carrying its own title row and
@@ -848,31 +845,48 @@ main#view:focus,main#view:focus-visible{outline:none}
 
 /* ── THE BRIEF ─────────────────────────────────────────────────────
    Two bordered panels became one column of rules. */
-.brief{display:flex;flex-direction:column;gap:var(--s3);max-width:760px}
-.brief__head{display:flex;align-items:baseline;justify-content:space-between;
-  gap:var(--s3);padding-bottom:var(--s2);
-  border-bottom:var(--edge-panel) solid var(--ink)}
-.brief .h2{margin:0}
-.brief__h2{margin-top:var(--s5);padding-bottom:var(--s2);
-  border-bottom:var(--edge-rule) solid var(--tone)}
 
-/* ── THE SPREAD ────────────────────────────────────────────────────
-   Once there is room, the three panels stop being a stack. The card
-   takes the wide measure, the ink panel goes tall beside it, and the
-   log runs the full width underneath — unequal shapes, which is the
-   whole of the manga-page influence on this screen. */
+
+/* ── THE DECK ─────────────────────────────────────────────────────
+   Home is two objects: the card, and the one thing you can do about
+   it. They stack on a phone and sit as unequal panels once there is
+   width — the wide printed card, the tall ink panel beside it. The
+   ink panel takes the card's height exactly, so the pair reads as one
+   spread rather than two components that happen to be adjacent. */
+.view--home{display:flex;flex-direction:column;gap:var(--s5)}
+.deck{display:grid;gap:var(--s4)}
+
 @media(min-width:1024px){
-  .view--home{display:grid;
-    grid-template-columns:minmax(0,7fr) minmax(0,5fr);
-    gap:var(--s7) var(--s6);align-items:start}
-  .view--home > .card,
-  .view--home > .act,
-  .view--home > .brief{max-width:none}
-  .view--home > .card{grid-column:1}
-  .view--home > .act{grid-column:2;align-self:stretch}
-  .view--home > .act .act__btn{min-height:clamp(280px,30vw,420px)}
-  .view--home > .brief{grid-column:1/-1}
+  .deck{grid-template-columns:minmax(0,7fr) minmax(0,5fr);
+    gap:var(--s6);align-items:stretch}
+  .deck > .card,.deck > .act{max-width:none}
+  .deck > .act .act__btn{min-height:0}
 }
+
+/* ── AHEAD ────────────────────────────────────────────────────────
+   The meetings still to come, and nothing else. What used to sit here
+   was two log entries, the first of which restated the meeting the
+   ink panel was already showing — same number, same date, same room,
+   two hundred pixels lower. This is the part Home did not already
+   say, set small and tight so the card keeps the page. */
+.ahead{display:flex;flex-direction:column}
+.ahead__mark{margin:0 0 var(--s2);padding-bottom:var(--s2);
+  border-bottom:var(--edge-panel) solid var(--ink);
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(19px,3.6vw,26px);line-height:1}
+.ahead__list{list-style:none;margin:0;padding:0;
+  display:flex;flex-direction:column}
+.ahead__row{display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:baseline;gap:var(--s3);
+  padding:clamp(9px,1.4vw,13px) 0;
+  border-bottom:var(--edge-rule) solid var(--tint)}
+.ahead__no{font-family:var(--f-display);line-height:1;
+  font-size:clamp(21px,4.4vw,30px);color:var(--ink-2);
+  min-width:2.4ch;letter-spacing:-.02em}
+.ahead__day{font-size:var(--t-body);color:var(--ink-2)}
+.ahead__at{font-size:var(--t-caption);color:var(--tone);
+  justify-self:end;text-align:right}
 
 
 /* ══ THE RAIL'S ACCOUNT BLOCK ═══════════════════════════════════════

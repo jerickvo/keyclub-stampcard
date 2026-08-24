@@ -419,10 +419,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 
 /* ══════════════════ RECORD / LOG ══════════════════ */
 .log{display:flex;flex-direction:column}
-.entry__no{font:500 11px/1 var(--f-mono);color:var(--ink-2)}
-.entry__meta{font-size:13px;color:var(--ink-2)}
-.entry__verdict{font:600 var(--t-body)/1.3 var(--f-body);letter-spacing:0}
-.entry__gain{font-family:var(--f-display);font-size:15px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
   gap:var(--gut)}
 .stat{padding:var(--s4);border:var(--rule-hair) solid var(--ink)}
@@ -908,37 +904,7 @@ select.input{padding-right:var(--s4)}
    straight through the first line of text — "Club Merch" was cut in
    half by its own card border. The record screen's own padding rule is
    more specific and still wins. */
-.rec{display:flex;align-items:stretch;gap:var(--s3);position:relative;
-  padding:var(--s3) 0;min-width:0}
-.rec + .rec{border-top:var(--edge-hair) solid var(--tone)}
-/* `1fr` carries an automatic minimum of min-content, so the text column
-   could not shrink below its longest word — "ATTENDANCE" plus "+1
-   stamp" needed 162px inside a 151px card and the whole grid simply
-   grew past the card, where `overflow:hidden` cut the gain in half
-   ("+1 stan"). `minmax(0,1fr)` lets the column give, so the text wraps
-   instead of the box overflowing. This is the single most common cause
-   of a grid child that will not fit, and it belongs here rather than
-   at each call site. */
-.entry{flex:1;display:grid;grid-template-columns:minmax(0,1fr) auto;
-  grid-template-areas:"no gain" "verdict gain" "meta meta";
-  gap:2px var(--s3);align-items:baseline;text-align:left;background:none;
-  border:0;padding:0;cursor:inherit;color:var(--ink);position:relative;
-  overflow:hidden;font-family:var(--f-body)}
-/* The clip stays — it is what crops the decorative page numeral to the
-   row's frame — but with a track that can shrink there is no longer any
-   content for it to cut. */
-.entry__verdict{line-height:1.25}
-.entry__gain{white-space:nowrap}
-button.entry{cursor:pointer}
-.entry__no{grid-area:no}
-.entry__verdict{grid-area:verdict;display:flex;align-items:center;gap:6px}
-.entry__meta{grid-area:meta;margin-top:3px}
-.entry__gain{grid-area:gain;align-self:center}
-/* An open meeting is the one you can act on, so it is set in full ink.
-   It used to be a black pill with a square bullet inside it — a button
-   that is not a button, next to the button that is. */
-.entry--open .entry__verdict{color:var(--ink);font-weight:700}
-.entry--miss{opacity:.55}
+
 
 /* ══════════════════════════════════════════════════════════════════
    THE TWO PANELS THAT BREAK THEIR BOX
@@ -1139,7 +1105,7 @@ html,body{overflow-x:clip;max-width:100%}
 /* Mono is for codes a member might read out or type in. It is not a
    label style, so a log row's verdict — a sentence about what happened
    — is set in the reading face like the rest of the row. */
-.entry__no,.qrpanel__when{font-family:var(--f-mono)}
+.qrpanel__when{font-family:var(--f-mono)}
 .h2,.rail__link span,.tabs button,.btn,.link,.section-link,.motion-btn{font-family:var(--f-label);font-weight:500}
 body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .title{letter-spacing:-.035em}

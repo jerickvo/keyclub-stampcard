@@ -124,32 +124,6 @@ const C = {
     </div>`;
   },
 
-  /* ── one entry in the meeting log ── */
-  entry(m, { link = true } = {}){
-    const state = Store.state(m);
-    const scan = Store.scanFor(m.id);
-    const verdict = {
-      set:      'Attendance confirmed',
-      open:     'Check in now',
-      miss:     'No record',
-      upcoming: 'Scheduled',
-    }[state];
-    const meta = scan
-      ? `Wed ${fmtDay(m.date)} / stamped ${fmtTime(scan.at)} / ${esc(m.place)}`
-      : `Wed ${fmtDay(m.date)} / ${esc(m.time)} / ${esc(m.place)}`;
-    const el = (state === 'open' && link) ? 'button' : 'div';
-    const attr = el === 'button' ? ' data-go="scan"' : '';
-
-    return `<div class="rec rec--${state}">
-      <${el} class="entry entry--${state}"${attr}>
-      <span class="entry__no">GM ${pad(m.no)}</span>
-      <span class="entry__verdict">${verdict}</span>
-      <span class="entry__meta">${meta}</span>
-      ${state === 'set' ? '<span class="entry__gain">+1 stamp</span>' : ''}
-      </${el}>
-    </div>`;
-  },
-
   /* ── a reward: sealed until the count reaches it ── */
   /* ── THE DOSSIER ─────────────────────────────────────────────────
      Three identical cards with three identical progress bars, which
@@ -350,47 +324,57 @@ const Views = {
     const open = Store.openMeeting();
     const next = Store.nextMeeting();
     const done = open && Store.attended(open.id);
-    const recent = Store.scans.length ? Store.meeting(Store.scans[0].meetingId) : null;
 
-    /* ONE ACTION. The wording says which meeting it acts on rather
-       than describing the mechanism, so the button and the line under
-       it are not two statements of the same fact. */
+    /* ONE ACTION. The verb is a verb and nothing else; which meeting it
+       acts on, and when, is the reading under it. The two used to be
+       welded into one long display line that broke after "GM" and left
+       the number orphaned on the next row. */
     let action;
     if (open && !done)
-      action = C.strike({ verb:`Check in to GM ${pad(open.no)}`,
-                          sub:`Wed ${fmtDay(open.date)} / ${esc(open.time)} / ${esc(open.place)}`,
+      action = C.strike({ verb:'Check in',
+                          sub:`GM ${pad(open.no)} / ${fmtDay(open.date)} / ${esc(open.time)} / ${esc(open.place)}`,
                           go:'scan', live:true });
     else if (open && done)
-      action = C.strike({ verb:'View your record',
-                          sub:`GM ${pad(open.no)} stamped`, go:'record' });
+      action = C.strike({ verb:'Your record',
+                          sub:`GM ${pad(open.no)} is stamped`, go:'record' });
     else if (next)
       action = C.strike({ verb:'Scan a code',
-                          sub:`Check-in opens at GM ${pad(next.no)} / ${fmtDate(next.date)}`,
+                          sub:`Check-in opens at GM ${pad(next.no)} / ${fmtDay(next.date)}`,
                           go:'scan' });
     else
       action = C.strike({ verb:'Scan a code',
                           sub:'No meeting is taking check-ins right now', go:'scan' });
 
     /* THE CARD IS THE PAGE. Home is one object — the count set on the
-       card that carries it — one action, and a short reading of what
-       just happened. The nameplate that used to open the screen was a
-       display-size account ID, a fabricated SYS status and a line of
-       flavour copy; a member's name belongs on their own page, and the
-       other two were never information. */
-    return `<div class="view view--home">
-      ${C.sealGrid()}
-      ${action}
+       card that carries it — one action, and the meetings still ahead.
 
-      <section class="brief" data-enter>
-        <div class="brief__head">
-          <h2 class="h2">${open ? 'Happening now' : 'Next meeting'}</h2>
-          <button class="section-link" data-go="record">Full record</button>
-        </div>
-        ${open ? C.entry(open) : next ? C.entry(next)
-          : `<p class="muted">Nothing scheduled yet.</p>`}
-        ${recent ? `<h2 class="h2 brief__h2">Last stamped</h2>
-          ${C.entry(recent, { link:false })}` : ''}
-      </section>
+       It used to also carry two meeting entries under the action, and
+       the first of them was the same meeting the action panel was
+       already showing: the same number, the same date, the same room,
+       restated two hundred pixels lower. Both are gone. What is left
+       below the deck is the only thing Home did not already say. */
+    const showing = open ? open.id : next ? next.id : null;
+    const ahead = Store.meetings
+      .filter(m => m.upcoming && m.id !== showing)
+      .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)
+      .slice(0, 3);
+
+    return `<div class="view view--home">
+      <div class="deck" data-enter>
+        ${C.sealGrid()}
+        ${action}
+      </div>
+
+      ${ahead.length ? `<section class="ahead" data-enter>
+        <h2 class="ahead__mark">Ahead</h2>
+        <ul class="ahead__list">
+          ${ahead.map(m => `<li class="ahead__row">
+            <span class="ahead__no">${pad(m.no)}</span>
+            <span class="ahead__day">${fmtDate(m.date)}</span>
+            <span class="ahead__at">${esc(m.time)} / ${esc(m.place)}</span>
+          </li>`).join('')}
+        </ul>
+      </section>` : ''}
     </div>`;
   },
 

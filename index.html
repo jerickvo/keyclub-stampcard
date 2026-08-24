@@ -496,10 +496,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 
 /* ══════════════════ RECORD / LOG ══════════════════ */
 .log{display:flex;flex-direction:column}
-.entry__no{font:500 11px/1 var(--f-mono);color:var(--ink-2)}
-.entry__meta{font-size:13px;color:var(--ink-2)}
-.entry__verdict{font:600 var(--t-body)/1.3 var(--f-body);letter-spacing:0}
-.entry__gain{font-family:var(--f-display);font-size:15px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
   gap:var(--gut)}
 .stat{padding:var(--s4);border:var(--rule-hair) solid var(--ink)}
@@ -985,37 +981,7 @@ select.input{padding-right:var(--s4)}
    straight through the first line of text — "Club Merch" was cut in
    half by its own card border. The record screen's own padding rule is
    more specific and still wins. */
-.rec{display:flex;align-items:stretch;gap:var(--s3);position:relative;
-  padding:var(--s3) 0;min-width:0}
-.rec + .rec{border-top:var(--edge-hair) solid var(--tone)}
-/* `1fr` carries an automatic minimum of min-content, so the text column
-   could not shrink below its longest word — "ATTENDANCE" plus "+1
-   stamp" needed 162px inside a 151px card and the whole grid simply
-   grew past the card, where `overflow:hidden` cut the gain in half
-   ("+1 stan"). `minmax(0,1fr)` lets the column give, so the text wraps
-   instead of the box overflowing. This is the single most common cause
-   of a grid child that will not fit, and it belongs here rather than
-   at each call site. */
-.entry{flex:1;display:grid;grid-template-columns:minmax(0,1fr) auto;
-  grid-template-areas:"no gain" "verdict gain" "meta meta";
-  gap:2px var(--s3);align-items:baseline;text-align:left;background:none;
-  border:0;padding:0;cursor:inherit;color:var(--ink);position:relative;
-  overflow:hidden;font-family:var(--f-body)}
-/* The clip stays — it is what crops the decorative page numeral to the
-   row's frame — but with a track that can shrink there is no longer any
-   content for it to cut. */
-.entry__verdict{line-height:1.25}
-.entry__gain{white-space:nowrap}
-button.entry{cursor:pointer}
-.entry__no{grid-area:no}
-.entry__verdict{grid-area:verdict;display:flex;align-items:center;gap:6px}
-.entry__meta{grid-area:meta;margin-top:3px}
-.entry__gain{grid-area:gain;align-self:center}
-/* An open meeting is the one you can act on, so it is set in full ink.
-   It used to be a black pill with a square bullet inside it — a button
-   that is not a button, next to the button that is. */
-.entry--open .entry__verdict{color:var(--ink);font-weight:700}
-.entry--miss{opacity:.55}
+
 
 /* ══════════════════════════════════════════════════════════════════
    THE TWO PANELS THAT BREAK THEIR BOX
@@ -1216,7 +1182,7 @@ html,body{overflow-x:clip;max-width:100%}
 /* Mono is for codes a member might read out or type in. It is not a
    label style, so a log row's verdict — a sentence about what happened
    — is set in the reading face like the rest of the row. */
-.entry__no,.qrpanel__when{font-family:var(--f-mono)}
+.qrpanel__when{font-family:var(--f-mono)}
 .h2,.rail__link span,.tabs button,.btn,.link,.section-link,.motion-btn{font-family:var(--f-label);font-weight:500}
 body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .title{letter-spacing:-.035em}
@@ -3048,9 +3014,6 @@ select.input:focus-visible{outline:none}
 .ahead__head{display:flex;align-items:baseline;justify-content:space-between;
   gap:var(--s3);flex-wrap:wrap;margin-bottom:clamp(12px,1.8vw,20px)}
 .ahead .h2{color:var(--ink)}
-/* the entries ahead are the quiet half of the page: they are records
-   of nothing yet, so they hold the smaller weight */
-.ahead .entry{font-size:.94em}
 
 /* ── 3. THE SOUND EFFECT LANDED IN THE SAME PLACE FIVE TIMES ──────
    Every chapter's impact word sat at the top edge, cropped by the
@@ -3496,7 +3459,6 @@ none;
    live one. Past and upcoming stay in ink, which keeps the red rare
    enough to mean something. */
 .bstate--open{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.entry--set .entry__verdict{color:var(--ink)}
 
 /* ══ SCANNER ═══════════════════════════════════════════════════════
    Verdict on the colour question: the camera image stays desaturated,
@@ -3790,12 +3752,11 @@ none;
 /* the scanner's fallback copy sits on the viewer's tone fill, not on
    paper, which costs it the last of its contrast */
 .viewer .stack .muted,.viewer__msg{color:var(--ink)}
-.entry__meta,.brow__mid .muted,.bstat span{font-size:clamp(12px,.45vw + 10.6px,13.5px)}
+.brow__mid .muted,.bstat span{font-size:clamp(12px,.45vw + 10.6px,13.5px)}
 /* Nothing in the application is allowed under 11px. The mono labels
    keep their wide tracking — that is what makes them read as manga
    captions — they simply stop shrinking. */
-.chip,.bstate,.brow__del,.entry__verdict,
-.entry__no,.who__role,.brow__no,.brow__sub{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
+.chip,.bstate,.brow__del,.who__role,.brow__no,.brow__sub{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
 
 /* ══════════════════════════════════════════════════════════════════
    MUTED TEXT IS INK, NOT TONE
@@ -3815,7 +3776,7 @@ none;
    not a palette change. Panels that are printed in ink keep their own
    lighter overrides, which are more specific and still win.
    ══════════════════════════════════════════════════════════════════ */
-.muted,.entry__no,.entry__meta,.entry__verdict,
+.muted,
 .stat span,.stat b i,.chip--set,
 .qrpanel__when,.who__role,.empty,
 .verdict__meet,.setupbox__hint,.bstat span,
@@ -3826,8 +3787,8 @@ none;
    `.duo` and `.rig` reported horizontal clipping: a grid child's
    default min-width is auto, so a long unbreakable string pushes the
    track wider than its column instead of wrapping. */
-.rig > *,.entry,.brow__mid,.bmile__mid{min-width:0}
-.entry__meta,.brow__mid b{overflow-wrap:anywhere}
+.rig > *,.brow__mid,.bmile__mid{min-width:0}
+.brow__mid b{overflow-wrap:anywhere}
 
 /* ══ TOUCH ═════════════════════════════════════════════════════════
    Keyed to the input device, not to the screen width. A 1024px
@@ -3894,7 +3855,6 @@ main#view:focus,main#view:focus-visible{outline:none}
    obviously broken, which is exactly the kind of thing that makes a
    layout feel unfinished. */
 .viewer{width:100%;margin-inline:0}
-.rec .entry{padding-right:0}
 
 /* ── 6. Reward requirement legibility ─────────────────────────────
    "Unlocks at 20 stamps" is the single most useful line on a locked
@@ -3933,7 +3893,7 @@ main#view:focus,main#view:focus-visible{outline:none}
    not in graphics laid on top of them.
    ══════════════════════════════════════════════════════════════════ */
 
-.view--home{display:flex;flex-direction:column;gap:var(--s6)}
+.view--home{display:flex;flex-direction:column;gap:var(--s5)}
 
 /* ── THE CARD ──────────────────────────────────────────────────────
    A printed stamp card: a framed box carrying its own title row and
@@ -4027,31 +3987,48 @@ main#view:focus,main#view:focus-visible{outline:none}
 
 /* ── THE BRIEF ─────────────────────────────────────────────────────
    Two bordered panels became one column of rules. */
-.brief{display:flex;flex-direction:column;gap:var(--s3);max-width:760px}
-.brief__head{display:flex;align-items:baseline;justify-content:space-between;
-  gap:var(--s3);padding-bottom:var(--s2);
-  border-bottom:var(--edge-panel) solid var(--ink)}
-.brief .h2{margin:0}
-.brief__h2{margin-top:var(--s5);padding-bottom:var(--s2);
-  border-bottom:var(--edge-rule) solid var(--tone)}
 
-/* ── THE SPREAD ────────────────────────────────────────────────────
-   Once there is room, the three panels stop being a stack. The card
-   takes the wide measure, the ink panel goes tall beside it, and the
-   log runs the full width underneath — unequal shapes, which is the
-   whole of the manga-page influence on this screen. */
+
+/* ── THE DECK ─────────────────────────────────────────────────────
+   Home is two objects: the card, and the one thing you can do about
+   it. They stack on a phone and sit as unequal panels once there is
+   width — the wide printed card, the tall ink panel beside it. The
+   ink panel takes the card's height exactly, so the pair reads as one
+   spread rather than two components that happen to be adjacent. */
+.view--home{display:flex;flex-direction:column;gap:var(--s5)}
+.deck{display:grid;gap:var(--s4)}
+
 @media(min-width:1024px){
-  .view--home{display:grid;
-    grid-template-columns:minmax(0,7fr) minmax(0,5fr);
-    gap:var(--s7) var(--s6);align-items:start}
-  .view--home > .card,
-  .view--home > .act,
-  .view--home > .brief{max-width:none}
-  .view--home > .card{grid-column:1}
-  .view--home > .act{grid-column:2;align-self:stretch}
-  .view--home > .act .act__btn{min-height:clamp(280px,30vw,420px)}
-  .view--home > .brief{grid-column:1/-1}
+  .deck{grid-template-columns:minmax(0,7fr) minmax(0,5fr);
+    gap:var(--s6);align-items:stretch}
+  .deck > .card,.deck > .act{max-width:none}
+  .deck > .act .act__btn{min-height:0}
 }
+
+/* ── AHEAD ────────────────────────────────────────────────────────
+   The meetings still to come, and nothing else. What used to sit here
+   was two log entries, the first of which restated the meeting the
+   ink panel was already showing — same number, same date, same room,
+   two hundred pixels lower. This is the part Home did not already
+   say, set small and tight so the card keeps the page. */
+.ahead{display:flex;flex-direction:column}
+.ahead__mark{margin:0 0 var(--s2);padding-bottom:var(--s2);
+  border-bottom:var(--edge-panel) solid var(--ink);
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(19px,3.6vw,26px);line-height:1}
+.ahead__list{list-style:none;margin:0;padding:0;
+  display:flex;flex-direction:column}
+.ahead__row{display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:baseline;gap:var(--s3);
+  padding:clamp(9px,1.4vw,13px) 0;
+  border-bottom:var(--edge-rule) solid var(--tint)}
+.ahead__no{font-family:var(--f-display);line-height:1;
+  font-size:clamp(21px,4.4vw,30px);color:var(--ink-2);
+  min-width:2.4ch;letter-spacing:-.02em}
+.ahead__day{font-size:var(--t-body);color:var(--ink-2)}
+.ahead__at{font-size:var(--t-caption);color:var(--tone);
+  justify-self:end;text-align:right}
 
 
 /* ══ THE RAIL'S ACCOUNT BLOCK ═══════════════════════════════════════
@@ -18073,7 +18050,15 @@ const Store = {
   attended(id){ return this.scans.some(s => s.meetingId === id); },
   scanFor(id){ return this.scans.find(s => s.meetingId === id) || null; },
   openMeeting(){ return this.meetings.find(m => m.open) || null; },
-  nextMeeting(){ return [...this.meetings].reverse().find(m => m.upcoming) || null; },
+  /* The soonest meeting still ahead. This used to reverse the array and
+     take the first upcoming one, which is only "next" if the source
+     happens to return meetings newest-first; against an ascending list
+     it returned the furthest meeting on the calendar. Sorted by date,
+     it is right whatever order the rows arrive in. */
+  nextMeeting(){
+    return [...this.meetings].filter(m => m.upcoming)
+      .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)[0] || null;
+  },
   pastMeetings(){ return this.meetings.filter(m => !m.upcoming && !m.open); },
   heldMeetings(){ return this.meetings.filter(m => !m.upcoming); },
   rewardsUnlocked(){ const t = this.totalStamps(); return this.rewards.filter(r => t >= r.required).length; },
@@ -18550,32 +18535,6 @@ const C = {
     </div>`;
   },
 
-  /* ── one entry in the meeting log ── */
-  entry(m, { link = true } = {}){
-    const state = Store.state(m);
-    const scan = Store.scanFor(m.id);
-    const verdict = {
-      set:      'Attendance confirmed',
-      open:     'Check in now',
-      miss:     'No record',
-      upcoming: 'Scheduled',
-    }[state];
-    const meta = scan
-      ? `Wed ${fmtDay(m.date)} / stamped ${fmtTime(scan.at)} / ${esc(m.place)}`
-      : `Wed ${fmtDay(m.date)} / ${esc(m.time)} / ${esc(m.place)}`;
-    const el = (state === 'open' && link) ? 'button' : 'div';
-    const attr = el === 'button' ? ' data-go="scan"' : '';
-
-    return `<div class="rec rec--${state}">
-      <${el} class="entry entry--${state}"${attr}>
-      <span class="entry__no">GM ${pad(m.no)}</span>
-      <span class="entry__verdict">${verdict}</span>
-      <span class="entry__meta">${meta}</span>
-      ${state === 'set' ? '<span class="entry__gain">+1 stamp</span>' : ''}
-      </${el}>
-    </div>`;
-  },
-
   /* ── a reward: sealed until the count reaches it ── */
   /* ── THE DOSSIER ─────────────────────────────────────────────────
      Three identical cards with three identical progress bars, which
@@ -18776,47 +18735,57 @@ const Views = {
     const open = Store.openMeeting();
     const next = Store.nextMeeting();
     const done = open && Store.attended(open.id);
-    const recent = Store.scans.length ? Store.meeting(Store.scans[0].meetingId) : null;
 
-    /* ONE ACTION. The wording says which meeting it acts on rather
-       than describing the mechanism, so the button and the line under
-       it are not two statements of the same fact. */
+    /* ONE ACTION. The verb is a verb and nothing else; which meeting it
+       acts on, and when, is the reading under it. The two used to be
+       welded into one long display line that broke after "GM" and left
+       the number orphaned on the next row. */
     let action;
     if (open && !done)
-      action = C.strike({ verb:`Check in to GM ${pad(open.no)}`,
-                          sub:`Wed ${fmtDay(open.date)} / ${esc(open.time)} / ${esc(open.place)}`,
+      action = C.strike({ verb:'Check in',
+                          sub:`GM ${pad(open.no)} / ${fmtDay(open.date)} / ${esc(open.time)} / ${esc(open.place)}`,
                           go:'scan', live:true });
     else if (open && done)
-      action = C.strike({ verb:'View your record',
-                          sub:`GM ${pad(open.no)} stamped`, go:'record' });
+      action = C.strike({ verb:'Your record',
+                          sub:`GM ${pad(open.no)} is stamped`, go:'record' });
     else if (next)
       action = C.strike({ verb:'Scan a code',
-                          sub:`Check-in opens at GM ${pad(next.no)} / ${fmtDate(next.date)}`,
+                          sub:`Check-in opens at GM ${pad(next.no)} / ${fmtDay(next.date)}`,
                           go:'scan' });
     else
       action = C.strike({ verb:'Scan a code',
                           sub:'No meeting is taking check-ins right now', go:'scan' });
 
     /* THE CARD IS THE PAGE. Home is one object — the count set on the
-       card that carries it — one action, and a short reading of what
-       just happened. The nameplate that used to open the screen was a
-       display-size account ID, a fabricated SYS status and a line of
-       flavour copy; a member's name belongs on their own page, and the
-       other two were never information. */
-    return `<div class="view view--home">
-      ${C.sealGrid()}
-      ${action}
+       card that carries it — one action, and the meetings still ahead.
 
-      <section class="brief" data-enter>
-        <div class="brief__head">
-          <h2 class="h2">${open ? 'Happening now' : 'Next meeting'}</h2>
-          <button class="section-link" data-go="record">Full record</button>
-        </div>
-        ${open ? C.entry(open) : next ? C.entry(next)
-          : `<p class="muted">Nothing scheduled yet.</p>`}
-        ${recent ? `<h2 class="h2 brief__h2">Last stamped</h2>
-          ${C.entry(recent, { link:false })}` : ''}
-      </section>
+       It used to also carry two meeting entries under the action, and
+       the first of them was the same meeting the action panel was
+       already showing: the same number, the same date, the same room,
+       restated two hundred pixels lower. Both are gone. What is left
+       below the deck is the only thing Home did not already say. */
+    const showing = open ? open.id : next ? next.id : null;
+    const ahead = Store.meetings
+      .filter(m => m.upcoming && m.id !== showing)
+      .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)
+      .slice(0, 3);
+
+    return `<div class="view view--home">
+      <div class="deck" data-enter>
+        ${C.sealGrid()}
+        ${action}
+      </div>
+
+      ${ahead.length ? `<section class="ahead" data-enter>
+        <h2 class="ahead__mark">Ahead</h2>
+        <ul class="ahead__list">
+          ${ahead.map(m => `<li class="ahead__row">
+            <span class="ahead__no">${pad(m.no)}</span>
+            <span class="ahead__day">${fmtDate(m.date)}</span>
+            <span class="ahead__at">${esc(m.time)} / ${esc(m.place)}</span>
+          </li>`).join('')}
+        </ul>
+      </section>` : ''}
     </div>`;
   },
 

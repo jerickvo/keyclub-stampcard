@@ -1516,9 +1516,6 @@ select.input:focus-visible{outline:none}
 .ahead__head{display:flex;align-items:baseline;justify-content:space-between;
   gap:var(--s3);flex-wrap:wrap;margin-bottom:clamp(12px,1.8vw,20px)}
 .ahead .h2{color:var(--ink)}
-/* the entries ahead are the quiet half of the page: they are records
-   of nothing yet, so they hold the smaller weight */
-.ahead .entry{font-size:.94em}
 
 /* ── 3. THE SOUND EFFECT LANDED IN THE SAME PLACE FIVE TIMES ──────
    Every chapter's impact word sat at the top edge, cropped by the
