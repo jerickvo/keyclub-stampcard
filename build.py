@@ -151,8 +151,17 @@ def main():
 
     html = re.sub(r'<script src="([^"]+)"></script>', js_sub, html)
 
-    # ── manifest: a link to a file we no longer want to depend on ───
-    html = re.sub(r'<link rel="manifest"[^>]*>\n?', "", html)
+    # ── manifest: KEPT ──────────────────────────────────────────────
+    # This used to be stripped to protect the "zero same-origin
+    # requests" invariant. That reasoning does not survive contact with
+    # the rest of the head: the favicon, the 32px PNG, the .ico and the
+    # apple-touch icon are all same-origin requests already, and the
+    # invariant that actually matters is "nothing whose absence breaks
+    # the app". A manifest is progressive enhancement — it 404s
+    # harmlessly from a zip mount and it is what gives the installed
+    # app its name, description and icons on a real server, which is
+    # where this is deployed. Stripping it meant the PWA identity was
+    # simply absent from the file everyone actually loads.
 
     banner = (
         "<!-- ══════════════════════════════════════════════════════════\n"
