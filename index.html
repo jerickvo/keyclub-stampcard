@@ -47,7 +47,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Archivo+Narrow:wght@400;500;600;700&family=Oswald:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Comic+Neue:wght@700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 
 <style>
 /* ══════════════════════════════════════════════════════════════════
@@ -314,9 +314,10 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .kicker{font:600 11px/1 var(--f-body);letter-spacing:.14em;
   text-transform:uppercase;color:var(--ink-2)}
 .kicker--bone{color:var(--ink)}
+/* Dela Gothic One ships one weight — it is already blocky and bold by
+   design, so it needs no weight or width axis pushed onto it. */
 .title{font-family:var(--f-display);font-size:var(--t-title);
-  font-variation-settings:'wdth' 112,'wght' 800;
-  line-height:.94;letter-spacing:-.025em;
+  line-height:.94;letter-spacing:-.01em;
   /* last-resort guard: a single word longer than the panel breaks rather
      than escaping it. Normal titles never reach this. */
   overflow-wrap:break-word}
@@ -3465,18 +3466,20 @@ select.input:focus-visible{outline:none}
   --edge-shout:var(--edge-frame);
   --rule:var(--edge-panel); --rule-hair:var(--edge-rule);
 
-  /* ══ TYPE ══════════════════════════════════════════════════════════
-     One family. Archivo carries a width axis as well as a weight one,
-     so display type gets real presence without a second face, and the
-     app stops needing four. Mono survives for exactly one job: codes a
-     member might have to read out or type in. It is never a label and
-     never a mood. */
-  --f-display:'Archivo',ui-sans-serif,system-ui,sans-serif;
-  --f-body:var(--f-display);
-  --f-label:var(--f-display);
-  --f-accent:var(--f-display);
-  --f-jp:var(--f-display);
+  /* ══ TYPE — THE ORIGINAL FAMILIES, BACK ═════════════════════════════
+     Collapsing everything onto one variable face during the first PRESS
+     pass took the character out along with the noise: Dela Gothic One's
+     blocky, single-weight impact is what makes "06" and a check-in verb
+     read as a stamp rather than a stat. The families are restored to
+     what they were; what changed for good is HOW MANY ROLES use each
+     one (kicker moved off mono onto body, for one) and that nothing is
+     forced into uppercase by default any more. */
+  --f-display:'Dela Gothic One',ui-sans-serif,system-ui,sans-serif;
+  --f-body:'Archivo Narrow',ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --f-label:'Oswald',var(--f-body);
+  --f-accent:'CC Wild Words Roman','CCWildWords','Comic Neue',cursive;
   --f-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --f-jp:'Noto Sans JP',var(--f-body);
 
   /* ══ SCREENTONE — ATMOSPHERE, AT TWO STRENGTHS ═════════════════════
      Tone used to sit behind every screen at one density, which is how
@@ -4379,8 +4382,7 @@ main#view:focus,main#view:focus-visible{outline:none}
    rule under it, and the two readings sharing the line below. */
 .count{padding:var(--s5) var(--s5) var(--s4)}
 .count__num{display:flex;align-items:baseline;gap:.24em;
-  font-family:var(--f-display);font-variation-settings:'wdth' 112,'wght' 900;
-  line-height:.82;letter-spacing:-.05em}
+  font-family:var(--f-display);line-height:.82;letter-spacing:-.01em}
 .count__num b{font-weight:inherit;font-size:clamp(72px,19vw,148px)}
 .count__num span{font-size:clamp(22px,5vw,40px);color:var(--ink-2);
   letter-spacing:-.02em}
@@ -4441,8 +4443,7 @@ main#view:focus,main#view:focus-visible{outline:none}
   width:clamp(168px,50vw,280px);aspect-ratio:1;height:auto;
   fill:currentColor;opacity:.15;pointer-events:none;z-index:-1}
 .act__verb{font-family:var(--f-display);
-  font-variation-settings:'wdth' 100,'wght' 800;
-  font-size:clamp(25px,6.6vw,40px);line-height:1.02;letter-spacing:-.025em}
+  font-size:clamp(22px,5.8vw,36px);line-height:1.05;letter-spacing:-.01em}
 .act__sub{font-size:var(--t-body);opacity:.7}
 .act__btn:hover{background:var(--ink);color:var(--paper)}
 .act__btn:hover .act__seal{opacity:.22}
@@ -4474,6 +4475,14 @@ main#view:focus,main#view:focus-visible{outline:none}
   .view--home > .act .act__btn{min-height:clamp(280px,30vw,420px)}
   .view--home > .brief{grid-column:1/-1}
 }
+
+
+/* ══ THE RAIL'S ACCOUNT BLOCK ═══════════════════════════════════════
+   Leads with the person, not the record: the name at display weight,
+   the role underneath it at reading size, in that order. */
+.rail__who{font-family:var(--f-display);
+  font-size:clamp(15px,1.3vw,19px);line-height:1.15;overflow-wrap:anywhere}
+.rail__role{margin-top:2px;font-size:13px}
 
 </style>
 </head>

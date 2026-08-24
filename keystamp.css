@@ -262,9 +262,10 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .kicker{font:600 11px/1 var(--f-body);letter-spacing:.14em;
   text-transform:uppercase;color:var(--ink-2)}
 .kicker--bone{color:var(--ink)}
+/* Dela Gothic One ships one weight — it is already blocky and bold by
+   design, so it needs no weight or width axis pushed onto it. */
 .title{font-family:var(--f-display);font-size:var(--t-title);
-  font-variation-settings:'wdth' 112,'wght' 800;
-  line-height:.94;letter-spacing:-.025em;
+  line-height:.94;letter-spacing:-.01em;
   /* last-resort guard: a single word longer than the panel breaks rather
      than escaping it. Normal titles never reach this. */
   overflow-wrap:break-word}
