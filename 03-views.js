@@ -607,8 +607,12 @@ const Views = {
 
       <div class="spread" data-enter>
 
-        <div class="spread__art" aria-hidden="true">
-          <svg class="spread__seal" viewBox="0 0 100 100">${sealArt()}</svg>
+        <!-- THE INK FIELD. The swirl is knocked out of it at full
+             strength and cropped by two edges. It used to sit behind the
+             whole page at 13% opacity, which is a watermark: enormous,
+             correctly cropped, and contributing nothing. -->
+        <div class="spread__field crop" aria-hidden="true">
+          <svg class="spread__seal crop__art" viewBox="0 0 100 100">${sealArt()}</svg>
         </div>
 
         <header class="spread__head">
