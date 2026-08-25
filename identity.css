@@ -1323,21 +1323,29 @@ button,input,select,textarea{font-family:inherit}
 .ladder__of{margin:0;font-size:var(--t-caption);color:var(--ink-2);
   line-height:1.2}
 
+/* The track is the page's ink. It was an 11px rule, which is the right
+   information at a size nobody reads: in its ordinary state — no tier
+   yet claimable — this page had no black on it at all, and the count
+   it carries is the whole subject. Same data, at a size that reads. */
 .ladder__track{position:relative;width:100%;
-  margin-top:clamp(28px,5vw,42px);
-  height:clamp(10px,1.4vw,15px);background:var(--tone-field)}
+  margin-top:clamp(30px,5vw,46px);
+  height:clamp(38px,6vw,76px);
+  background:var(--tint);
+  background-image:radial-gradient(var(--ink) 1.25px,transparent 1.35px);
+  background-size:6px 6px;
+  border:var(--edge-panel) solid var(--ink)}
 .ladder__fill{position:absolute;inset:0 auto 0 0;width:var(--w,0%);
   background:var(--ink)}
 
 /* a rung is a hard stop drawn through the track with its figure set
    above it — the same numeral the tier rows use, so the scale and the
    list are visibly the same instrument */
-.ladder__rung{position:absolute;top:-6px;bottom:-6px;left:var(--x,0%);
+.ladder__rung{position:absolute;top:0;bottom:0;left:var(--x,0%);
   width:var(--edge-panel);background:var(--ink)}
-.ladder__rung b{position:absolute;left:50%;bottom:calc(100% + 5px);
+.ladder__rung b{position:absolute;left:50%;bottom:calc(100% + 6px);
   transform:translateX(-50%);
   font-family:var(--f-head);font-weight:inherit;line-height:1;
-  font-size:clamp(15px,3vw,21px);color:var(--ink-2)}
+  font-size:var(--t-sub);color:var(--ink-2)}
 /* a rung already behind you is drawn on the filled part of the track,
    so it inverts to hold against the ink */
 .ladder__rung--past{background:var(--paper)}
