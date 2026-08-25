@@ -550,17 +550,24 @@ const Views = {
        What is left is what only this page can answer: who is signed
        in, what their standing is, and how to sign out. */
     return `<div class="view view--member">
-      <header class="rechead" data-enter>
+      <header class="rechead rechead--tight" data-enter>
         <h1 class="title rechead__title">Member</h1>
-        <p class="rechead__note">Your account and your standing for the year.
-          The meeting-by-meeting record is under Record; the rungs are under Rewards.</p>
       </header>
 
-      <section class="who" data-enter>
-        <p class="who__name">${esc(name)}</p>
-        <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
-          handle !== name ? ` / ${esc(handle)}` : ''}</p>
-      </section>
+      <!-- A CHARACTER SHEET. The identity is an ink plate carrying the
+           name, and the member's own card sits beside it — the object
+           the whole product is about, on the page that is about them.
+           The prose note that used to sit here was a nav map: it told
+           you the record was under Record and the rungs under Rewards,
+           which the nav already does. -->
+      <div class="sheet" data-enter>
+        <section class="who">
+          <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
+            handle !== name ? ` / ${esc(handle)}` : ''}</p>
+          <p class="who__name">${esc(name)}</p>
+        </section>
+        ${C.sealGrid()}
+      </div>
 
       <section class="standing-band" data-enter>
         <p class="standing-band__fig">${pad(total)}</p>

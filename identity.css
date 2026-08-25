@@ -1426,14 +1426,33 @@ button,input,select,textarea{font-family:inherit}
    ══════════════════════════════════════════════════════════════════ */
 .view--member{display:flex;flex-direction:column;gap:var(--s5)}
 
+/* ── THE SHEET ────────────────────────────────────────────────────
+   Identity plate and card. On a phone they stack; on a wide sheet the
+   plate takes the left third and the card the rest, so the object the
+   product is about is the largest thing on the page that is about the
+   person who owns it. */
+.sheet{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr);
+  align-items:start}
+@media(min-width:900px){
+  .sheet{grid-template-columns:minmax(0,34fr) minmax(0,66fr);
+    gap:clamp(20px,2.8vw,44px);align-items:stretch}
+  /* the name sits at the foot of the plate. Centred in seven hundred
+     pixels of ink it read as a block that had not been composed. */
+  .sheet > .who{align-content:end}
+}
+
 /* ── WHO ──────────────────────────────────────────────────────────
-   The name at display scale and the role under it. Once. */
-.who{display:flex;flex-direction:column;gap:2px}
+   An ink plate. The name at display scale, the handle above it, once. */
+.who{display:grid;align-content:start;gap:3px;
+  background:var(--ink);color:var(--paper);
+  padding:clamp(18px,3vw,32px);
+  margin-left:calc(var(--gutter) * -1);
+  padding-left:max(var(--gutter),clamp(18px,3vw,32px))}
 .who__name{margin:0;font-family:var(--f-display);text-transform:uppercase;
-  line-height:.92;font-size:clamp(30px,7vw,64px);color:var(--ink);
-  overflow-wrap:anywhere}
-.who__hand{margin:0;font-size:var(--t-caption);color:var(--ink-2);
-  line-height:1.3;overflow-wrap:anywhere}
+  line-height:.92;font-size:clamp(28px,5.4vw,56px);color:var(--paper);
+  overflow-wrap:anywhere;padding-bottom:.06em}
+.who__hand{margin:0;font-size:var(--t-caption);color:var(--tint);
+  line-height:1.3;overflow-wrap:anywhere;letter-spacing:.1em}
 
 /* ── STANDING ─────────────────────────────────────────────────────
    The same band Record uses for its tally, carrying the three figures
