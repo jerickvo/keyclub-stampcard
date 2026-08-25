@@ -1149,24 +1149,33 @@ button,input,select,textarea{font-family:inherit}
    ══════════════════════════════════════════════════════════════════ */
 .view--scan{display:flex;flex-direction:column;gap:var(--s4)}
 
-/* the meeting the camera is for. The only status this page can state
+/* The meeting the camera is for — the only status this page can state
    truthfully without asking the camera, and the thing the invented
-   telemetry was standing in front of. */
+   telemetry was standing in front of. It is an ink strip rather than
+   two grey lines: this is the page's answer to "what am I pointing at",
+   and it was set quieter than the caption under the title. */
 .standing{display:flex;align-items:baseline;gap:var(--s3);
-  flex-wrap:wrap;margin:0}
-.standing__lab{font-size:var(--t-caption);color:var(--ink-2);
-  white-space:nowrap}
-.standing__at{font-family:var(--f-head);text-transform:uppercase;
-  font-size:clamp(19px,3.8vw,28px);line-height:1;color:var(--ink)}
+  flex-wrap:wrap;margin:0;
+  background:var(--ink);color:var(--paper);
+  padding:clamp(9px,1.4vw,14px) clamp(12px,2vw,20px);
+  margin-right:calc(var(--gutter) * -1)}
+.standing__lab{font-size:var(--t-caption);color:var(--tint);
+  white-space:nowrap;letter-spacing:.12em}
+.standing__at{font-family:var(--f-head);
+  font-size:var(--t-sub);line-height:1.05;color:var(--paper)}
 
 /* ── THE FRAME ────────────────────────────────────────────────────
    One heavy border, the feed inside it, the status pinned to the
    bottom edge. Every child shares one grid cell so the target area is
    centred in the frame whatever the status line happens to say. */
+/* The frame sits ON the sheet: a tone block offset behind it, the same
+   device the stamp card uses. Without it the instrument floated in
+   white and the page was the lightest in the app after Sign In. */
 .viewer{position:relative;display:grid;place-items:center;
   isolation:isolate;overflow:hidden;
   width:100%;aspect-ratio:1;max-height:62vh;
-  border:var(--edge-frame) solid var(--ink);background:var(--tint)}
+  border:var(--edge-frame) solid var(--ink);background:var(--tint);
+  box-shadow:clamp(8px,1.6vw,14px) clamp(8px,1.6vw,14px) 0 var(--tone)}
 /* a code is square, so on a phone the frame is square: it fills the
    sheet instead of leaving a letterbox with half a screen under it. */
 @media(min-width:600px){ .viewer{aspect-ratio:4/3} }
@@ -1261,9 +1270,9 @@ button,input,select,textarea{font-family:inherit}
    fallback for. */
 @media(min-width:1024px){
   .view--scan{display:grid;
-    grid-template-columns:minmax(0,1fr) minmax(16rem,22rem);
+    grid-template-columns:minmax(0,1fr) minmax(13rem,17rem);
     grid-template-areas:"head head" "standing standing" "viewer manual";
-    gap:var(--s5) var(--s6);align-content:start}
+    gap:var(--s5) var(--s5);align-content:start}
   .view--scan > .rechead{grid-area:head}
   .view--scan > .standing{grid-area:standing}
   .view--scan > .viewer{grid-area:viewer;max-height:none}
