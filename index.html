@@ -3780,12 +3780,16 @@ button,input,select,textarea{font-family:inherit}
    "The club, in numbers", inside a boxed title that no other screen
    still uses.
    ══════════════════════════════════════════════════════════════════ */
-.bover{display:flex;flex-direction:column;gap:var(--s5)}
+.bover{display:flex;flex-direction:column;gap:var(--s4)}
 
 /* The panel is as tall as what it says. It used to stack the verb under
    everything else and run four hundred pixels deep with its right two
    thirds empty ink; the verb sits in that space now. */
-.bnow{display:grid;gap:2px var(--s5);
+/* the live meeting runs off the right edge of the sheet: it is the one
+   thing on this page a board member acts on, and a panel that bleeds is
+   what stops a column of blocks reading as a column of blocks */
+.bnow{margin-right:calc(var(--gutter) * -1);border-right:0;
+  display:grid;gap:2px var(--s5);
   grid-template-columns:minmax(0,1fr);
   grid-template-areas:"lab" "no" "at" "state" "go";
   align-items:start;justify-items:start;
@@ -3796,9 +3800,15 @@ button,input,select,textarea{font-family:inherit}
 .bnow__go{grid-area:go}
 
 @media(min-width:720px){
+  /* the panel is the subject of the page, so on a wide sheet it takes
+     a real share of the fold rather than being a band the height of its
+     own text. The emptiness below it then reads as margin instead of as
+     the other half of the screen. */
   .bnow{grid-template-columns:minmax(0,1fr) auto;
     grid-template-areas:"lab go" "no go" "at go" "state go";
-    align-items:start}
+    align-items:start;align-content:center;
+    min-height:clamp(240px,32vh,400px);
+    padding-block:clamp(24px,4vw,44px)}
   .bnow__go{align-self:center;margin-top:0}
 }
 .bnow--live{background:var(--ink);color:var(--paper);border-color:var(--ink);
