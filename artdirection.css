@@ -32,15 +32,6 @@
 
 .tone{position:absolute;pointer-events:none;z-index:0;
   background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
-.tone--coarse{background-image:var(--tone-dot-b);background-size:var(--tone-cell-b)}
-.tone--line{background-image:var(--tone-line)}
-
-/* a tone that fades out, the way a sheet is scraped back with a blade
-   rather than stopping on a hard line */
-.tone--fade{-webkit-mask-image:linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%);
-  mask-image:linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%)}
-.tone--fade-r{-webkit-mask-image:linear-gradient(to left, #000 0%, #000 30%, transparent 92%);
-  mask-image:linear-gradient(to left, #000 0%, #000 30%, transparent 92%)}
 
 /* ─────────────────────────────────────────────────────────────────
    2. PANEL HIERARCHY
@@ -164,7 +155,7 @@
 .authp .input{width:100%;box-sizing:border-box;min-width:0}
 
 .authp__err{margin:0 0 var(--s4);padding:9px 12px;
-  border-left:4px solid var(--ink);background:var(--v1);
+  border-left:4px solid var(--ink);background:var(--paper);
   font:500 12.5px/1.45 var(--f-body);color:var(--ink)}
 
 .authp__act{display:flex;align-items:center;gap:var(--s4);flex-wrap:wrap}
@@ -215,9 +206,9 @@
   grid-template-columns:repeat(auto-fit,minmax(min(100%,128px),1fr))}
 .bstats--tight{grid-template-columns:repeat(auto-fit,minmax(min(100%,108px),1fr))}
 .bstat{padding:var(--s4);border:var(--rule-hair) solid var(--ink)}
-.bstat b{display:block;font-family:var(--f-display);font-weight:400;
+.bstat b{display:block;font-family:var(--f-head);font-weight:400;
   font-size:clamp(22px,2.4vw,30px);line-height:1;letter-spacing:-.02em}
-.bstat span{display:block;margin-top:var(--s3);font:500 10px/1.3 var(--f-label);
+.bstat span{display:block;margin-top:var(--s3);font:500 10px/1.3 var(--f-body);
   letter-spacing:.18em;color:var(--tone)}
 
 /* THE REGISTER.
@@ -236,7 +227,7 @@
    narrow. */
 .blist{list-style:none;margin:0;padding:0}
 .brow{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2) var(--s3);
-  padding:var(--s4) 0;border-bottom:var(--rule-hair) solid var(--v2);
+  padding:var(--s4) 0;border-bottom:var(--rule-hair) solid var(--tint);
   cursor:pointer;min-width:0}
 .brow > *{flex:none;min-width:0}
 .brow__no{flex:1 0 100%}
@@ -257,23 +248,23 @@
 }
 .brow--reward{cursor:default}
 .brow:last-child{border-bottom:0}
-.brow:hover,.brow:focus-visible{background:var(--v1);outline:0}
+.brow:hover,.brow:focus-visible{background:var(--paper);outline:0}
 .brow__no{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;
   color:var(--tone);white-space:nowrap}
 .brow__mid{min-width:0}
 .brow__mid b{display:block;font-size:14px}
 .brow__mid .muted{display:block;font-size:12px;margin-top:2px}
-.brow__n{font-family:var(--f-display);font-size:19px;line-height:1;text-align:right}
+.brow__n{font-family:var(--f-head);font-size:19px;line-height:1;text-align:right}
 .brow__sub{font-size:11px;font-family:var(--f-mono)}
 
 /* state without colour: filled, outlined, or quiet */
-.bstate{font:500 9.5px/1 var(--f-mono);letter-spacing:.16em;
+.bstate{font:400 clamp(11px,1vw,13px)/1 var(--f-body);letter-spacing:.1em;
   padding:5px 8px;white-space:nowrap;border:1.5px solid var(--ink)}
 .bstate--open{background:var(--ink);color:var(--paper)}
 .bstate--upcoming{background:none;color:var(--ink)}
-.bstate--ended,.bstate--past{background:none;color:var(--v3);border-color:var(--v3)}
+.bstate--ended,.bstate--past{background:none;color:var(--tone);border-color:var(--tone)}
 
-.bdetail__name{font-family:var(--f-display);font-size:clamp(26px,3.4vw,42px);
+.bdetail__name{font-family:var(--f-head);font-size:clamp(26px,3.4vw,42px);
   line-height:1;margin:4px 0 var(--s5);text-transform:uppercase;letter-spacing:-.03em}
 
 .bfilters{display:grid;gap:var(--s3);grid-template-columns:2fr 1fr;
@@ -293,7 +284,7 @@
 .bform .btn{margin-top:var(--s4)}
 
 .bcount{display:flex;align-items:baseline;gap:var(--s3);margin:var(--s5) 0 var(--s3)}
-.bcount b{font-family:var(--f-display);font-size:clamp(28px,3.6vw,44px);line-height:1}
+.bcount b{font-family:var(--f-head);font-size:clamp(28px,3.6vw,44px);line-height:1}
 .picker--sub{margin-bottom:0}
 
 /* A register of dense rows is a sideways table on a narrow column and a
@@ -332,7 +323,7 @@
 .setupbox p:last-child{margin-bottom:0}
 .setupbox__hint{color:var(--tone)}
 .setupbox code{font-family:var(--f-mono);font-size:11.5px;
-  border-bottom:1px solid var(--v3)}
+  border-bottom:1px solid var(--tone)}
 /* a failed connection is a heavier statement than a missing one */
 .setupbox--warn{border-width:var(--rule);background-image:none}
 
@@ -348,7 +339,7 @@
 .bmile{display:grid;grid-template-columns:auto 1fr;align-items:start;
   gap:var(--s4);padding:var(--s4) 0;border-bottom:var(--rule-hair) solid var(--tone)}
 .bmile:last-child{border-bottom:0}
-.bmile__no{font-family:var(--f-display);font-size:clamp(24px,3vw,34px);
+.bmile__no{font-family:var(--f-head);font-size:clamp(24px,3vw,34px);
   line-height:1;min-width:2.2ch;text-align:right}
 .bmile__mid{min-width:0}
 .bmile__mid b{display:block;font-size:14px}
@@ -387,7 +378,7 @@
    modal layer is introduced and nothing is dismissed by a stray tap
    outside it. Only rows with zero attendance render the control. */
 .brow__del{border:var(--rule-hair) solid var(--ink);background:none;
-  color:var(--ink);font:500 9.5px/1 var(--f-mono);letter-spacing:.14em;
+  color:var(--ink);font:400 clamp(11px,1vw,12.5px)/1 var(--f-body);letter-spacing:.08em;
   padding:6px 9px;cursor:pointer}
 .brow__del:hover,.brow__del:focus-visible{background:var(--ink);color:var(--paper)}
 /* Rows without a delete control still reserve its width, so the count
@@ -397,7 +388,7 @@
    control — a 1px stub left the counts stepping in and out. */
 .brow__del--off{visibility:hidden}
 .brow__del--off::before{content:"Delete"}
-.brow--confirm{background:var(--v1)}
+.brow--confirm{background:var(--paper)}
 .bconfirm{display:flex;gap:var(--s3);align-items:center;flex-wrap:wrap}
 .bconfirm .btn{padding:8px 14px;font-size:11px}
 /* The confirm pair wraps to its own line when the row cannot hold it,
@@ -438,9 +429,9 @@
   border-top:var(--edge) solid var(--ink)}
 .bstat{border:0!important;background:none!important;
   padding:clamp(13px,1.8vw,20px) clamp(12px,1.6vw,18px) clamp(13px,1.8vw,20px) 0;
-  border-bottom:var(--rule-hair) solid var(--v3)!important}
+  border-bottom:var(--rule-hair) solid var(--tone)!important}
 .bstat + .bstat{padding-left:clamp(12px,1.6vw,18px);
-  border-left:var(--rule-hair) solid var(--v3)!important}
+  border-left:var(--rule-hair) solid var(--tone)!important}
 .bstat:first-child b{font-size:clamp(38px,5.2vw,72px);line-height:.86}
 .bstat:first-child{grid-column:1/-1;padding-left:0;
   border-left:0!important;border-bottom-color:var(--ink)!important}
@@ -496,7 +487,7 @@
    ══════════════════════════════════════════════════════════════════ */
 .empty-reg{position:relative;padding:clamp(28px,5vw,64px) 0 clamp(24px,4vw,52px)}
 .empty-reg::before{content:"";position:absolute;left:0;right:0;top:0;
-  height:var(--edge-thin);background:var(--v3)}
+  height:var(--edge-thin);background:var(--tone)}
 .empty{display:grid;gap:clamp(16px,3vw,34px);align-items:center;
   grid-template-columns:auto minmax(0,1fr);
   border:0;background:none;padding:0;min-height:0}
@@ -512,12 +503,12 @@
    list rather than moving to the filled one. */
 .empty__seal svg circle,.empty__seal svg polygon,
 .empty__seal svg path,.empty__seal svg line{
-  fill:none;stroke:var(--v3);stroke-width:2;vector-effect:non-scaling-stroke}
+  fill:none;stroke:var(--tone);stroke-width:2;vector-effect:non-scaling-stroke}
 /* the void: the seal is present, the mark inside it is not */
 .empty__void{position:absolute;left:50%;top:50%;width:56%;height:var(--edge-thin);
-  background:var(--v3);transform:translate(-50%,-50%) rotate(-32deg)}
+  background:var(--tone);transform:translate(-50%,-50%) rotate(-32deg)}
 .empty__body{min-width:0}
-.empty__title{font-family:var(--f-display);text-transform:uppercase;
+.empty__title{font-family:var(--f-head);text-transform:uppercase;
   font-size:clamp(17px,2.4vw,30px);line-height:1.02;letter-spacing:-.01em;
   margin-top:clamp(7px,1vw,11px);color:var(--ink)}
 .empty__note{margin-top:clamp(7px,1vw,11px);max-width:52ch;
@@ -787,12 +778,6 @@
   letter-spacing:.2em;color:var(--ink-2)}
 .anno::before{content:"";width:clamp(10px,1.4vw,20px);height:var(--rule-hair);
   background:currentColor;flex:none}
-/* The bright cinnabar is a MARK colour, not a text colour: #E53935 on
-   this paper is 3.94:1, and an annotation is 9.5px, which needs 4.5.
-   The pressed-harder step of the same ink is 5.15:1 and reads as the
-   same seal — so small red type uses it and the big struck marks keep
-   the bright one. */
-.anno--seal{color:var(--seal-deep)}
 
 /* ── SPEED LINES. Direction, not texture: they always run TOWARD the
    thing that matters and they fade out behind it. */
@@ -898,7 +883,7 @@ select.input:focus-visible{outline:none}
 /* the one cinnabar mark the docket is allowed: the corner that says
    which slot it belongs to */
 .sealmeta::before{content:"";position:absolute;left:-1px;top:-1px;
-  width:10px;height:10px;border:var(--rule) solid var(--seal);
+  width:10px;height:10px;border:var(--rule) solid var(--ink);
   border-right:0;border-bottom:0}
 
 /* A pointer that cannot hover has nothing to reveal on the way past, so
@@ -938,7 +923,7 @@ select.input:focus-visible{outline:none}
 
 @keyframes busyHold{
   from{border-color:var(--ink)}
-  to  {border-color:var(--v3)}
+  to  {border-color:var(--tone)}
 }
 @keyframes busyBar{
   from{transform:scaleX(.12);transform-origin:left}
@@ -977,7 +962,7 @@ select.input:focus-visible{outline:none}
    .btn--go is the primary action everywhere in the app, but outside the
    auth screen it had no treatment at all -- "Open check-in" and "Delete"
    rendered identically to "Cancel". Filling it with ink is the same move
-   .btn--hot already makes, so this adds hierarchy without adding a new
+   the ink button already makes, so this adds hierarchy without a new
    visual language.
 
    :active and :focus-visible were missing entirely. The hover lift had
@@ -1127,10 +1112,6 @@ select.input:focus-visible{outline:none}
    weight, and a count. */
 .ahead{position:relative;padding-top:clamp(14px,2vw,22px);
   margin-top:clamp(26px,4vw,56px)}
-.ahead__rule{position:absolute;left:0;right:0;top:0;
-  height:var(--edge-thin);background:var(--ink)}
-.ahead__head{display:flex;align-items:baseline;justify-content:space-between;
-  gap:var(--s3);flex-wrap:wrap;margin-bottom:clamp(12px,1.8vw,20px)}
 .ahead .h2{color:var(--ink)}
 
 

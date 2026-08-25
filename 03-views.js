@@ -120,8 +120,12 @@ const C = {
     </section>`;
   },
 
-  /* THE ACTION. One button, ink, with the meeting it acts on set
-     underneath it in plain reading. The chamber it replaces was four
+  /* THE ACTION. One clean ink mass with the verb on it, beside a card
+     that already carries ten symbols. The swirl used to sit inside this
+     panel: at 15% it was an invisible texture, and at any strength that
+     would have made it visible it competed with both the verb and the
+     card's marks. The swirl belongs where it is the subject — the
+     opening spread, and the code on the projector. The chamber it replaces was four
      corner marks, a crosshair, a speed-line field and a TARGET LIVE
      readout wrapped around a verb — five graphics saying "press me"
      where ink on paper already says it. */
@@ -133,7 +137,6 @@ const C = {
        placed on it, and it keeps the verb's corner clear. */
     return `<div class="act ${live ? 'act--live' : ''}" data-enter>
       <button class="act__btn" data-go="${go}">
-        <svg class="act__seal" viewBox="0 0 100 100" aria-hidden="true">${sealArt()}</svg>
         <span class="act__verb">${esc(verb)}</span>
         <span class="act__sub">${esc(sub)}</span>
       </button>
@@ -311,6 +314,10 @@ const Views = {
           server accepts a scan, and the card carries the tier you are on.</p>
       </header>
 
+      <!-- The card leads and the ink panel runs off the right edge of
+           the sheet beside it. The two used to be equal-weight
+           rectangles side by side; a panel that bleeds is the thing
+           that stops a row of boxes reading as a row of boxes. -->
       <div class="deck" data-enter>
         ${C.sealGrid()}
         ${action}
@@ -543,17 +550,24 @@ const Views = {
        What is left is what only this page can answer: who is signed
        in, what their standing is, and how to sign out. */
     return `<div class="view view--member">
-      <header class="rechead" data-enter>
+      <header class="rechead rechead--tight" data-enter>
         <h1 class="title rechead__title">Member</h1>
-        <p class="rechead__note">Your account and your standing for the year.
-          The meeting-by-meeting record is under Record; the rungs are under Rewards.</p>
       </header>
 
-      <section class="who" data-enter>
-        <p class="who__name">${esc(name)}</p>
-        <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
-          handle !== name ? ` / ${esc(handle)}` : ''}</p>
-      </section>
+      <!-- A CHARACTER SHEET. The identity is an ink plate carrying the
+           name, and the member's own card sits beside it — the object
+           the whole product is about, on the page that is about them.
+           The prose note that used to sit here was a nav map: it told
+           you the record was under Record and the rungs under Rewards,
+           which the nav already does. -->
+      <div class="sheet" data-enter>
+        <section class="who">
+          <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
+            handle !== name ? ` / ${esc(handle)}` : ''}</p>
+          <p class="who__name">${esc(name)}</p>
+        </section>
+        ${C.sealGrid()}
+      </div>
 
       <section class="standing-band" data-enter>
         <p class="standing-band__fig">${pad(total)}</p>
@@ -607,8 +621,12 @@ const Views = {
 
       <div class="spread" data-enter>
 
-        <div class="spread__art" aria-hidden="true">
-          <svg class="spread__seal" viewBox="0 0 100 100">${sealArt()}</svg>
+        <!-- THE INK FIELD. The swirl is knocked out of it at full
+             strength and cropped by two edges. It used to sit behind the
+             whole page at 13% opacity, which is a watermark: enormous,
+             correctly cropped, and contributing nothing. -->
+        <div class="spread__field crop" aria-hidden="true">
+          <svg class="spread__seal crop__art" viewBox="0 0 100 100">${sealArt()}</svg>
         </div>
 
         <header class="spread__head">

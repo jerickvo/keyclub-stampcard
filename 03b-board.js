@@ -392,28 +392,41 @@ const BoardUI = {
 
     const isOpen = Boolean(sel.check_in_open);
 
-    return `<div class="panel bpanel">
+    return `<div class="bpanel">
       <div class="picker picker--sub">
         ${options.map(o => `<button class="chip chip--pick ${o.id === sel.id ? 'chip--on' : ''}"
           data-bpick="${o.id}">GM ${pad(o.meeting_number)}</button>`).join('')}
       </div>
 
-      <div class="qrpanel__head" style="margin-top:var(--s4)">
-        <span class="qrpanel__no">GM ${pad(sel.meeting_number)}</span>
-        <span class="qrpanel__when">${esc(fmtDay(sel.meeting_date))} / ${esc(sel.start_time)} / MPR</span>
-      </div>
+      <!-- THE PROJECTOR. This screen is read from across a room, so it
+           is composed for that distance: an ink field carrying the
+           meeting and the live count, and the code as the one bright
+           plate on it. It used to be a QR on white with two small
+           labels, 87% empty paper. -->
+      <section class="proj ${isOpen ? 'proj--live' : ''}">
+        <div class="proj__side">
+          <p class="proj__lab">${isOpen ? 'Scan this' : 'Not open yet'}</p>
+          <p class="proj__no">GM ${pad(sel.meeting_number)}</p>
+          <p class="proj__when">${esc(fmtDay(sel.meeting_date))} / ${esc(sel.start_time)} / MPR</p>
+          ${isOpen ? `
+            <p class="proj__count"><b id="attCount">-</b><span>checked in</span></p>
+            <button class="proj__ctl" type="button" data-bend="${esc(sel.id)}">Close check-in</button>
+          ` : `
+            <p class="proj__shut">Nobody can check in until this is open.</p>
+            <button class="proj__ctl proj__ctl--go" type="button" data-bstart="${esc(sel.id)}">Open check-in</button>
+          `}
+        </div>
 
-      ${isOpen ? `
-        <!-- nothing is drawn over the code itself: a screentone or an
-             ink border across a QR is a scan failure, not a flourish -->
-        <div class="qrpanel__code qrpanel__code--big" id="qrBox"></div>
-        <div class="bcount"><span class="kicker">Checked in</span>
-          <b id="attCount">-</b></div>
-        <button class="btn" data-bend="${esc(sel.id)}" style="margin-top:var(--s4)">Close check-in</button>
-      ` : `
-        <p class="muted" style="margin-top:var(--s4)">Check-in is closed for this meeting.</p>
-        <button class="btn btn--go" data-bstart="${esc(sel.id)}" style="margin-top:var(--s4)">Open check-in</button>
-      `}
+        ${isOpen ? `
+          <!-- nothing is drawn over the code itself: a screentone or an
+               ink border across a QR is a scan failure, not a flourish -->
+          <div class="proj__plate"><div class="qrpanel__code" id="qrBox"></div></div>
+        ` : `
+          <div class="proj__plate proj__plate--empty" aria-hidden="true">
+            <svg class="proj__seal" viewBox="0 0 100 100">${sealArt()}</svg>
+          </div>
+        `}
+      </section>
     </div>`;
   },
 };
