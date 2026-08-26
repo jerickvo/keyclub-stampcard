@@ -303,30 +303,34 @@ select.input{padding-right:var(--s4)}
   text-transform:uppercase;color:var(--ink)}
 .wellflare{display:none}
 
-/* ── the blade: a razor with an ink core and a paper edge (or the
-   inverse on an ink field). Grows from its centre — a strike, not a
-   wipe — and it is thick enough to read at arm's length. ── */
-.blade{position:absolute;left:50%;top:50%;width:210vmax;height:var(--bth,16px);
-  margin-left:-105vmax;margin-top:calc(var(--bth,16px) / -2);
-  background:var(--ink);
-  box-shadow:0 0 0 2px var(--paper),0 0 0 3.5px var(--ink);
-  will-change:transform,opacity}
-.blade--paper{background:var(--paper);
-  box-shadow:0 0 0 2px var(--ink),0 0 0 3.5px var(--paper)}
+/* ── the blade: a tapered, slightly irregular SVG sliver — pointed
+   ends, widest at the impact region, with a razor core of the opposite
+   value. The wrapper sits ON the cut line and rotates about its
+   centre; the inner layer sweeps from the entry tip. ── */
+.blade2{position:absolute;pointer-events:none;will-change:transform,opacity}
+.blade2__s{position:absolute;inset:0;display:block;
+  transform-origin:0 50%;will-change:transform,opacity}
+.blade2 svg{display:block;width:100%;height:100%}
+.blade2 .b-body{fill:var(--ink)}
+.blade2 .b-core{fill:var(--paper)}
+.blade2--paper .b-body{fill:var(--paper)}
+.blade2--paper .b-core{fill:var(--ink)}
 
-/* ── the page cut: two ink sheets sweep the viewport diagonally, the
-   swap happens at full cover, and they carry their own paper edge so
-   the crossing reads as a blade, not a fade. ── */
+/* ── the page cut: the OUTGOING page itself, frozen into fragments
+   along two real cut lines. The fragments are clipped clones of the
+   live page, so there is never a cover and never a black frame — the
+   page stays the subject until its own pieces slide away. ── */
 .pcut{position:absolute;inset:0;z-index:6}
-.pcut__sheet{position:absolute;left:50%;top:50%;width:300vmax;height:300vmax;
-  margin:-150vmax 0 0 -150vmax;background:var(--ink);
-  border-block:3px solid var(--paper);
-  will-change:transform}
+.pcut__piece{position:absolute;inset:0;will-change:transform}
+.pcut__page{position:absolute;pointer-events:none;background:var(--paper)}
+.pcut__page > *{width:100%;height:100%}
 
-/* the welcome: a solid ink panel in two halves along the blade's line.
-   Each half carries the panel AND its copy of the word, so when the
-   halves shear the whole scene is visibly cut, word included. */
+/* the welcome: one INTACT panel layer (the only one that plays), and
+   two clipped halves that stay display:none until the blade's contact
+   swaps them in pixel-for-pixel. The word is never split before the
+   cut because the split copies are simply not rendered. */
 .wcut{position:absolute;inset:0;z-index:4}
+.wcut__whole{position:absolute;inset:0}
 .wcut__h{position:absolute;inset:0}
 .wcut__h--a{clip-path:polygon(0 0,100% 0,100% 38%,0 62%)}
 .wcut__h--b{clip-path:polygon(0 62%,100% 38%,100% 100%,0 100%)}
@@ -341,11 +345,14 @@ select.input{padding-right:var(--s4)}
    over an ink slab. The pieces stay fully opaque for the whole fall —
    they leave the screen, they do not dissolve — and the ink layer
    behind them is what shows through the cracks while the wall stands. */
-.waffle{position:absolute;inset:0;z-index:5;
-  perspective:1100px;transform-style:preserve-3d}
+/* perspective only — no preserve-3d: each piece renders flattened (so
+   its slab and page can never z-fight) while rotateX still reads as a
+   3D tilt through the parent's perspective */
+.waffle{position:absolute;inset:0;z-index:5;perspective:1100px}
 .waffle__ink{position:absolute;inset:0}
 .waffle__piece{position:absolute;inset:0;will-change:transform}
-.waffle__slab{position:absolute;inset:0;transform:translate(6px,8px)}
+.waffle__slab{position:absolute;inset:0;z-index:0;transform:translate(6px,8px)}
+.waffle__page{z-index:1}
 /* the ink — behind the wall and on the slab edges — only exists once
    the wall has visibly cracked; before that the clones ARE the frame,
    so a slow first rasterization can never flash black */
@@ -388,9 +395,10 @@ select.input{padding-right:var(--s4)}
    paper. Both halves carry the full poster, clipped along the blade
    line, so the final cut visibly divides the scene. */
 .boot{position:fixed;inset:0;z-index:200;overflow:hidden}
-/* the ink lives on the poster halves, not the root — when they fly
-   apart the app underneath is what shows through */
+/* the ink lives on the poster layers, not the root — when the halves
+   fly apart the app underneath is what shows through */
 .boot.is-done{display:none}
+.boot__whole{position:absolute;inset:0}
 .boot__half{position:absolute;inset:0;will-change:transform}
 .boot__half--a{clip-path:polygon(0 0,100% 0,100% 40%,0 60%)}
 .boot__half--b{clip-path:polygon(0 60%,100% 40%,100% 100%,0 100%)}

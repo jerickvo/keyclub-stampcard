@@ -321,10 +321,12 @@ document.addEventListener('submit', async e => {
   try {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
-    /* the ink panel mounts synchronously, so the home render below
-       happens invisibly beneath it and the reveal is the panel's cut */
+    /* the ink panel mounts first; the home render waits two frames so
+       the page beneath can never visibly change before the panel is
+       actually on screen */
     FX.welcomeCut(up ? 'Joined' : 'Welcome');
-    go('home', { instant:true });
+    if (Motion.off){ go('home', { instant:true }); }
+    else requestAnimationFrame(() => requestAnimationFrame(() => go('home', { instant:true })));
   } catch (err){
     authErr(err && err.message ? err.message : 'Something went wrong. Try again.');
     authBusy(false);

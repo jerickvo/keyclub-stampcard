@@ -120,15 +120,26 @@
 </div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
+<!-- The poster exists as ONE piece until the blade reaches it: the
+     whole layer is what plays; the two clipped halves stay display:none
+     until the cut's contact moment, when they replace it pixel-for-
+     pixel and shear apart. -->
 <div class="boot" id="boot" aria-hidden="true">
-  <div class="boot__half boot__half--a"><div class="boot__poster">
+  <div class="boot__whole"><div class="boot__poster">
     <span class="boot__seal"></span>
     <div class="boot__type">
       <p class="boot__kicker">Key Club attendance</p>
       <p class="boot__word">Keystamp</p>
     </div>
   </div></div>
-  <div class="boot__half boot__half--b"><div class="boot__poster">
+  <div class="boot__half boot__half--a" style="display:none"><div class="boot__poster">
+    <span class="boot__seal"></span>
+    <div class="boot__type">
+      <p class="boot__kicker">Key Club attendance</p>
+      <p class="boot__word">Keystamp</p>
+    </div>
+  </div></div>
+  <div class="boot__half boot__half--b" style="display:none"><div class="boot__poster">
     <span class="boot__seal"></span>
     <div class="boot__type">
       <p class="boot__kicker">Key Club attendance</p>
