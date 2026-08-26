@@ -9,10 +9,7 @@
    membership status, no controls that do nothing. The one real setting,
    reduced motion, stays in the header where it is always reachable.
    ══════════════════════════════════════════════════════════════════ */
-/* The five screens are chapters of one volume. The numbering is not
-   decoration — it is the navigation model, and it is what makes moving
-   between screens feel like turning to a section rather than clicking a
-   tab. Titles stay plain words; the chapter number carries the framing. */
+
 const MEMBER_NAV = [
   { id:'home',    label:'Home',    icon:'home',   ch:'01', title:'The Card'   },
   { id:'record',  label:'Record',  icon:'record', ch:'02', title:'The Record' },
@@ -21,10 +18,6 @@ const MEMBER_NAV = [
   { id:'profile', label:'Member',  icon:'member', ch:'05', title:'The Member' },
 ];
 
-/* A board account is not a member account with an extra button. It gets
-   its own chapters through the same nav component — same numerals, same
-   rail, same tab bar — so it reads as the same book, not a control
-   panel bolted on. */
 const BOARD_NAV = [
   { id:'board',    label:'Club Tools', icon:'home',   ch:'01', title:'Club Tools' },
   { id:'bmeet',    label:'Meetings',   icon:'record', ch:'02', title:'Meetings'   },
@@ -32,10 +25,7 @@ const BOARD_NAV = [
   { id:'bmembers', label:'Members',    icon:'member', ch:'04', title:'Members'    },
 ];
 
-const NAV = MEMBER_NAV;                       /* kept: existing callers */
 const navFor = () => (Store.isBoard ? BOARD_NAV : MEMBER_NAV);
-const chapterOf = id =>
-  BOARD_NAV.find(n => n.id === id) || MEMBER_NAV.find(n => n.id === id) || { ch:'-', title:'' };
 
 const ROUTES = MEMBER_NAV.map(n => n.id)
   .concat(BOARD_NAV.map(n => n.id), 'auth');
@@ -49,13 +39,6 @@ const ROUTES = MEMBER_NAV.map(n => n.id)
 const AuthUI = {
   mode:'in', busy:false,
 
-  /* Three different problems used to render as one sentence that read
-     like the app was broken. They are now told apart:
-       unconfigured   a developer has not connected a project yet —
-                      this is a setup instruction, not a user error
-       unavailable    configured, but the client could not start
-       live           normal operation, no notice at all
-     Students never see the first two once a project is connected. */
   setupNotice(){
     const st = Backend.status;
     if (st === 'live') return '';        /* normal operation says nothing */
@@ -117,8 +100,7 @@ function hashRoute(){
 function paintBrand(){
   const el = $('#railBrand');
   if (!el) return;
-  /* "Vol. 01 · five chapters" is gone. It was magazine costume on a
-     navigation rail, and it counted the tabs sitting directly under it. */
+
   el.innerHTML = wordmark();
 }
 
@@ -129,10 +111,6 @@ function paintNav(){
 
   navFor().forEach(n => {
     const cur = current === n.id ? ' aria-current="page"' : '';
-    /* The chapter numeral above each label is gone. It numbered five
-       words that already read fine, and numbering navigation is a
-       graphic treatment standing in for a hierarchy the labels do not
-       need. The desktop rail keeps its icon; the tab bar stays text. */
     tabs.insertAdjacentHTML('beforeend',
       `<button class="tab" data-go="${n.id}"${cur}><span>${n.label}</span></button>`);
     rail.insertAdjacentHTML('beforeend',
@@ -157,7 +135,7 @@ async function go(id){
   const view = $('#view');
   if (view.firstChild){
     navigating = true;
-    FX.pageCutTransition();               /* the cut runs while the old view is pulled away */
+    FX.pageCutTransition();
     await Motion.exit(view);
     navigating = false;
   }
@@ -165,14 +143,12 @@ async function go(id){
   current = id;
   syncHash(id);
   view.style.opacity = ''; view.style.transform = '';
-  Reveal.clear();                      /* the old view's parked panels go with it */
+  Reveal.clear();
   document.documentElement.dataset.screen = id;   /* CSS lays out each spread by name */
   /* One surface for the whole app: warm paper. Black is manga ink --
      spotted blacks, panel frames, active states, the scanner border --
      and is never used as a page-level theme. */
-  /* The `CH. 01 / 05` rune that used to run up the right edge is gone
-     with the rest of the volume-and-chapter costume. It numbered the
-     five tabs sitting in the rail beside it. */
+
   view.innerHTML = Views[id]();
   paintNav();
   try { scrollTo({ top:0, behavior:Motion.off ? 'auto' : 'smooth' }); } catch (_) { scrollTo(0, 0); }
@@ -188,7 +164,7 @@ function playViewIntro(id){
   if (id === 'home'){
     const p = Rules.progress();
     Motion.countUp($('#heroNum'), p.total);
-    /* the home gauge is gone — the stamp array is the progress now */
+
     setTimeout(() => FX.sealReveal($('.hero__ring'), { dur:620, spin:-20 }), 220);
     FX.sealGrid($('#seals'));
 
@@ -221,11 +197,7 @@ function playViewIntro(id){
 
 function afterRender(id){
   if (booted) playViewIntro(id);
-  /* The form is destroyed and rebuilt on every render, so the busy flag
-     has to be cleared here rather than only in the submit handler. It
-     previously survived a successful sign-in — go('home') tore the form
-     down before authBusy(false) ran — which left AuthUI.busy stuck true
-     and made the auth screen permanently unusable after signing out. */
+
   if (id === 'auth') AuthUI.busy = false;
   if (id === 'scan'){ paintDemoHint(); Scanner.start(); }
   if (BOARD_ROUTES.includes(id)){ loadBoard(); }
@@ -241,15 +213,6 @@ function paintDemoHint(){
   if (box){ box.hidden = true; box.innerHTML = ''; }
 }
 
-/* Restored: this was removed by accident when the demo hint was
-   spliced out of this file. paintIdentity() and boot both call it, so
-   its absence threw on every render. */
-
-/* ══════════════════════════════════════════════════════════════════
-   INTERACTION — restored after the demo-hint splice removed it.
-
-   All delegated on document so every handler survives a re-render.
-   ══════════════════════════════════════════════════════════════════ */
 function authErr(msg){
   const box = $('#authErr');
   if (!box) return;
@@ -364,8 +327,7 @@ document.addEventListener('click', e => {
   /* ── board ── */
   const btab = e.target.closest('[data-btab]');
   if (btab){
-    /* the in-pane buttons ("Open check-in", "Schedule one") now move
-       between board chapters rather than swapping a tab in place */
+
     const toRoute = { club:'board', meetings:'bmeet', session:'bcheckin', progress:'bmembers' };
     Object.assign(BoardUI, { memberDetail:null, meetingDetail:null, page:1 });
     go(toRoute[btab.dataset.btab] || 'board');
@@ -581,13 +543,7 @@ addEventListener('resize', () => {
    ══════════════════════════════════════════════════════════════════ */
 /* anime.js is a plain script loaded above this one, so by the time we get
    here it is either present or it failed — either way we can start now. */
-/* ── BOOT IS NOW ASYNC ──────────────────────────────────────────────
-   The store used to be a literal, so the first render could happen
-   immediately. It is now a read-through cache, so the backend is
-   attached and the snapshot hydrated BEFORE the first paint. The boot
-   curtain is already covering the screen while this happens, so the
-   wait is inside the existing title-card animation rather than added
-   to it. */
+
 (async () => {
   await Backend.init();
   await Store.hydrate();
@@ -595,9 +551,6 @@ addEventListener('resize', () => {
      sign-in) so views never read a stale count */
   Store.onChange(() => { if (current) go(current, true); paintIdentity(); paintBrand(); });
 
-  /* the chapter count follows whichever navigation is in force, and is
-     repainted on change: signing in as board without reloading used to
-     leave the rail claiming five chapters next to four */
   paintBrand();
   $('#barBrand').innerHTML  = wordmark();
   paintIdentity();

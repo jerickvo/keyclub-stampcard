@@ -94,21 +94,12 @@ const Scanner = {
       ret.classList.toggle('reticle--live', state === 'live');
       ret.classList.toggle('reticle--good', state === 'good' || state === 'hit');
       ret.classList.toggle('reticle--bad',  state === 'bad');
-      /* 'busy' is the wait on the server, and it used to toggle
-         nothing at all: the sweep stopped, the corners fell back to
-         their default weight, and the frame read as a scanner that had
-         given up rather than one that was working. It has a look now. */
+
       ret.classList.toggle('reticle--busy', state === 'busy');
     }
-    /* The rig used to carry a second readout of its own — SYS.ARMING,
-       SYS.TRACKING, SYS.LOCK — restating this same state in invented
-       telemetry beside the sentence that already said it plainly. The
-       status line below the frame is the whole report now. */
+
     viewer?.classList.toggle('viewer--hit', state === 'good' || state === 'hit');
-    /* A refusal is not a small red sentence under the frame. The frame
-       itself answers — see .viewer--bad. The class is removed and
-       re-added so a second bad scan in a row replays the reaction
-       instead of sitting on a finished animation. */
+
     if (viewer){
       viewer.classList.remove('viewer--bad');
       if (state === 'bad'){ void viewer.offsetWidth; viewer.classList.add('viewer--bad'); }
@@ -148,26 +139,12 @@ const Scanner = {
     this.loop(video);
   },
 
-  /* The waiting mark, shown while the browser asks for camera
-     permission and while the feed spins up.
-
-     Its two circles carried a stroke-dasharray and nothing else — no
-     fill, no stroke. An SVG shape with no fill declared defaults to
-     BLACK and to no stroke at all, so the dash pattern described an
-     outline that was never drawn and both circles painted as solid
-     discs: one black blob over the whole reticle, which is what a
-     member saw while deciding whether to grant camera access. Every
-     other mark in this app is built by SVG() or seal(), which set
-     fill:none and stroke:currentColor; this one was hand-rolled and
-     inherited neither. It had no CSS either — .loader is styled
-     nowhere — so nothing constrained its size. */
   showLoader(){
     const ret = $('#reticle');
     if (!ret || $('#camLoader')) return;
     const l = document.createElement('div');
     l.className = 'loader'; l.id = 'camLoader';
-    /* the reticle's compass marks step back while the mark is turning,
-       so the one moving thing on the frame is the one you look at */
+
     ret.classList.add('reticle--wait');
     /* two opposed arcs per ring rather than one, so the mark reads as a
        thing that is turning instead of as a stray scratch on the frame */
@@ -220,11 +197,6 @@ const Scanner = {
         body:'Camera access only works over https. Type the code printed under the seal instead.' },
     }[kind];
 
-    /* The dead end says what broke and what to do about it. It used
-       to lead with a bracketed fault code — ERR.PERM, ERR.CAM,
-       ERR.HTTPS — invented for this screen, resolving to nothing, and
-       naming a system that does not exist. The sentence under it
-       already carried the whole message. */
     viewer.innerHTML = `<div class="stall">
       <h2 class="stall__title">${copy.title}</h2>
       <p class="stall__note">${copy.body}</p>
@@ -321,12 +293,7 @@ async function submitSeal(raw, fromCamera){
    again rather than leaving the member to guess whether it is still
    on. The human sentence is not lost; it is in the toast beside it. */
 function rejectVisual(code){
-  /* The frame used to report a refusal as an invented fault code —
-     REJ.FORMAT, REJ.EXPIRED, ERR.SVC — a thirteen-entry table naming a
-     system that does not exist. The reason for the refusal is already
-     written in plain words in the toast beside the frame, so the frame
-     says the short version of the same thing rather than a second,
-     made-up one. */
+
   Scanner.setState('bad', scanMessage(code)[0]);
   FX.scanReject();
   setTimeout(() => {

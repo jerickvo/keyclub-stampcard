@@ -34,15 +34,6 @@ const Motion = {
                    duration:130, ease:'inQuad' });
   },
 
-  /* THE STRIKE. This was a Material ripple — a circle expanding from
-     the pointer over 560ms on an outQuad. That gesture belongs to a
-     different design language entirely: it is soft, it is round, and
-     it is the single most recognisable "generic app" motion there is.
-
-     A control in this system is struck, not rippled. The whole face
-     inverts for two frames and cuts back. No travel, no curve, no
-     radius, nothing to follow with the eye — you register that it
-     happened rather than watching it happen. */
   ripple(btn){
     if (this.off) return;
     const s = document.createElement('span');
@@ -124,10 +115,6 @@ const releaseTransform = els => {
 const Reveal = {
   io: null,
 
-  /* Below the fold and above it are the same event, so they are the
-     same motion: the panel cuts in, then its heavy type is driven down
-     after it. This used to drift and skew on an eased curve while the
-     top of the page cut — two different entrances for one page. */
   enter(el){
     clearTimeout(el._revealFuse);
     if (el.dataset.revealed) return;
@@ -157,7 +144,6 @@ const Reveal = {
     }, 6000);
   },
 
-  /* the old view's nodes are gone; drop the observer with them */
   clear(){ this.io?.disconnect(); this.io = null; },
 };
 

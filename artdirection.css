@@ -1,125 +1,17 @@
-/* ══════════════════════════════════════════════════════════════════
-   KEYSTAMP — ART DIRECTION LAYER
-   loaded last: it composes the page, it does not re-plumb it.
 
-   The brief: stop decorating a dashboard with manga elements and
-   design the interface as a manga page. The difference in practice is
-   that a dashboard is a grid of equal cards and a manga page is a
-   composition of unequal panels — one panel dominates, the rest
-   support it, and the gutters between them are as designed as the
-   panels. Everything below serves that, and nothing below changes
-   layout mechanics that the responsive pass established: no fixed
-   widths, no desktop-only positioning, no new overflow.
-   ══════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────────────────────────────────────────────────────
-   1. SCREENTONE AS MATERIAL
-
-   Tone in manga is not a background texture, it is something you cut
-   to a shape and lay into a panel. So these are defined as reusable
-   *fills* with real dot geometry (60-line and 85-line equivalents,
-   at the two densities a tone sheet actually comes in), and they get
-   applied to shaped regions — wedges, bands, cropped corners — not
-   to whole rectangles.
-   ───────────────────────────────────────────────────────────────── */
 :root{
   --tone-dot-a:radial-gradient(circle at 50% 50%, var(--ink) 0 1.05px, transparent 1.15px);
-  --tone-dot-b:radial-gradient(circle at 50% 50%, var(--ink) 0 1.6px, transparent 1.7px);
-  --tone-line:repeating-linear-gradient(72deg, var(--ink) 0 1px, transparent 1px 5px);
   --tone-cell-a:5px 5px;
-  --tone-cell-b:7px 7px;
-}
+  }
 
 .tone{position:absolute;pointer-events:none;z-index:0;
   background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
 
-/* ─────────────────────────────────────────────────────────────────
-   2. PANEL HIERARCHY
-
-   Three weights of edge, assigned by a panel's rank on the page, so
-   that "which panel matters" is legible before a word is read. The
-   ink SVG already varies line weight along each edge; this varies it
-   BETWEEN panels, which is the part that carries hierarchy.
-   ───────────────────────────────────────────────────────────────── */
 [data-rank="lead"]{--ink-w:4.4}
 [data-rank="mid"]{--ink-w:2.8}
 [data-rank="quiet"]{--ink-w:1.6}
 
-/* ─────────────────────────────────────────────────────────────────
-   3. TYPOGRAPHY ROLES
-
-   Four jobs, four treatments, so type carries structure instead of
-   size alone: display (the number), utility (metadata), narrative
-   (sentences), graphic (type used as artwork).
-   ───────────────────────────────────────────────────────────────── */
-
-
-/* ─────────────────────────────────────────────────────────────────
-   4. THE STAMP PANEL — the page's hero
-
-   The number is the subject of the whole product, so it is treated
-   as artwork: oversized, sitting ON a wedge of tone, with the target
-   stated once beside it and the travel toward that target shown as a
-   ruled bar rather than a rounded meter. The number is allowed to
-   overshoot its own tone block — a figure escaping its panel is the
-   asymmetry the brief asks for, and it costs nothing in layout
-   because the tone is absolutely positioned behind it.
-   ───────────────────────────────────────────────────────────────── */
-
-
-/* THE TONE WEDGE HAD NOTHING TO BE CROPPED BY, SO IT GOES.
-
-   It started under the count, where a screentone behind 11px mono
-   made the label unreadable. I moved it beside the figure; that fixed
-   the legibility and created a worse problem. Once the hero lost its
-   panel border there was no edge anywhere near it, and masking it
-   into a soft corner just produced a rectangle of grey dots hanging
-   in open paper with two hard sides — a rendering fault, not
-   pressure.
-
-   Screentone in manga is always bounded: by a panel edge, by a
-   figure, by a field of speed lines. This one is bounded by nothing
-   and there is no honest edge to give it here. What the count needs
-   beside it is air. Tone is still used where it has a boundary — the
-   chamber's rake, the live record row's band.
-   ───────────────────────────────────────────────────────────────── */
-
-
-
-/* ─────────────────────────────────────────────────────────────────
-   5. THE SCAN PANEL — the action panel
-
-   Given the treatment an action beat gets: the solid black frame,
-   the word set large and tight, speed lines raking across it, and a
-   single directional mark. It is the only black-filled panel on the
-   page, which is what makes it read as the thing to do.
-   ───────────────────────────────────────────────────────────────── */
-
-
-/* ─────────────────────────────────────────────────────────────────
-   6. GUTTERS AND RHYTHM
-
-   A manga page's gutters are unequal on purpose: a wide gutter is a
-   beat of silence, a tight one means two panels belong together. The
-   responsive pass established the spacing scale; this only varies it
-   between specific joins so the page reads as phrased rather than
-   evenly spaced.
-   ───────────────────────────────────────────────────────────────── */
-
-
-/* ─────────────────────────────────────────────────────────────────
-   7. MOBILE — a narrow manga page, not a squeezed spread
-
-   Same compositional logic at a different aspect: the hero still
-   dominates, the tone wedge still anchors the number, but panels run
-   full-measure and the rhythm is carried by gutter size rather than
-   by column width. Nothing here introduces a fixed width.
-   ───────────────────────────────────────────────────────────────── */
-/* The chamfer is a proportion of the panel, not a fixed bite. At 320px
-   a 26px corner removes real estate the content needs; at 1440px the
-   same 26px is invisible. One fluid value replaces the three states
-   this used to have (26px / 18px / none), and it scales continuously
-   instead of snapping at 400px and 900px. */
 :root{--chamfer:clamp(12px,2.2vw,30px)}
 
 [data-rank="lead"]{--ink-w:3.6}
@@ -128,27 +20,7 @@
   [data-rank="lead"]{--ink-w:4.4}
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   8. RANK ASSIGNMENT
-
-   Which panel is the lead on each page. Done here rather than in the
-   view functions so the markup stays markup — and so the hierarchy
-   can be re-art-directed without touching logic.
-
-   A page gets ONE lead. That is the whole point: if two panels shout,
-   neither does.
-   ───────────────────────────────────────────────────────────────── */
 :root{--ink-w:2.8}
-
-/* ─────────────────────────────────────────────────────────────────
-   10. THE CHAPTER NAMEPLATE
-
-   Chapter openings in manga are a rule and a number, not a boxed
-   header. The panel border is dropped in favour of a heavy baseline
-   rule that the title sits on, which also frees the vertical space
-   the old boxed header was spending on nothing.
-   ───────────────────────────────────────────────────────────────── */
-
 
 .authp__f{display:block;margin-bottom:var(--s4)}
 .authp__f .kicker{display:block;margin-bottom:6px}
@@ -162,10 +34,6 @@
 .authp__act .btn--go{min-height:44px;padding:0 var(--s5)}
 .authp__act .btn--go[disabled]{opacity:.55;cursor:progress}
 
-/* The action row is full-width where a thumb reaches for it and
-   natural-width where a cursor does — and it wraps rather than
-   overflowing in between. */
-
 .authp__act{gap:var(--s3)}
 .authp__act .btn--go{flex:1 1 100%;justify-content:center}
 @media(min-width:768px){
@@ -174,27 +42,11 @@
   .authp__act .btn--go{flex:0 0 auto;min-width:12ch}
 }
 
-/* Signed out there is nothing to navigate to — every chapter bounces
-   straight back to this screen — so the rail and tab bar are hidden
-   rather than offered and refused. The auth spread becomes the whole
-   page, which is also why it reads as the first page of the book. */
 [data-screen="auth"] .rail__nav,
 [data-screen="auth"] #railInd,
 [data-screen="auth"] .tabs{display:none}
-[data-screen="auth"] main#view{padding-bottom:var(--space-chapter)}
+[data-screen="auth"] main#view{padding-bottom:var(--space-block)}
 
-/* ─────────────────────────────────────────────────────────────────
-   12. BOARD
-
-   Administration built from the same parts as the member spreads:
-   panels, rules, screentone, ink. State is carried by weight, case
-   and a rule — never by a coloured badge, because there is no colour
-   in this system to spend on it.
-   ───────────────────────────────────────────────────────────────── */
-/* A division of the sheet, not a box on it. The pane used to carry a
-   3.2px border of its own, so every board screen drew a second frame
-   immediately under the page's title rule with an empty band between
-   the two. The section rules below are the only divisions it needs. */
 .bpanel{position:relative;padding:0}
 .bpanel--wait{opacity:.7}
 .bempty{margin:var(--s4) 0;font-size:13px}
@@ -211,20 +63,6 @@
 .bstat span{display:block;margin-top:var(--s3);font:500 10px/1.3 var(--f-body);
   letter-spacing:.18em;color:var(--tone)}
 
-/* THE REGISTER.
-
-   One component, four row shapes: a meeting (id, when, state, count,
-   delete), a member (who, stamps, rewards), a reward (name, state) and
-   a delete confirmation (what, the two buttons). It was a four-column
-   grid with per-shape column overrides in two different files, which
-   fought each other — the meeting row ended up with its identifier,
-   its date and its state each on a line of their own and the count
-   stranded beside an empty box.
-
-   A wrapping flex row describes all four without knowing which one it
-   has: the middle block takes the slack, everything else takes its own
-   width, and the identifier leads its own line while the column is
-   narrow. */
 .blist{list-style:none;margin:0;padding:0}
 .brow{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2) var(--s3);
   padding:var(--s4) 0;border-bottom:var(--rule-hair) solid var(--tint);
@@ -236,11 +74,7 @@
   .brow{flex-wrap:nowrap;padding:var(--s3) 0}
   .brow__no{flex:none}
 }
-/* Both halves of a register row are declared `role="button"` in the
-   markup, and the identifier is a single 16px line of mono. A pointer
-   gets the 24px floor that keeps it a real target without changing how
-   the row looks; a finger gets the same 44px floor every other control
-   in the app takes. */
+
 .brow__no,.brow__mid{display:flex;flex-direction:column;justify-content:center;
   min-height:24px}
 @media (pointer:coarse){
@@ -282,20 +116,8 @@
 .bform .kicker{display:block;margin-bottom:5px}
 .bform .input{width:100%;box-sizing:border-box;min-width:0}
 .bform .btn{margin-top:var(--s4)}
-
-.bcount{display:flex;align-items:baseline;gap:var(--s3);margin:var(--s5) 0 var(--s3)}
-.bcount b{font-family:var(--f-head);font-size:clamp(28px,3.6vw,44px);line-height:1}
 .picker--sub{margin-bottom:0}
 
-/* A register of dense rows is a sideways table on a narrow column and a
-   readable table on a wide one. The base is the stacked block; the
-   columns come back at the tablet tier.
-
-   The form grid was `repeat(auto-fit,minmax(150px,1fr))` with two
-   width overrides fighting it. auto-fit already answers the question —
-   the floor just has to be one the narrowest column can hold, and
-   `min(100%,...)` stops a 150px floor from overflowing a 140px
-   column, which is what forced the 400px exception. */
 .bpanel{padding:var(--s4)}
 .bfilters{grid-template-columns:1fr}
 .bform__grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr))}
@@ -307,13 +129,6 @@
   .bpage{justify-content:space-between}
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   13. SETUP NOTICE
-
-   A developer-facing message, built from the same parts as everything
-   else so it does not look like a browser error dropped into the page.
-   Screentone marks it as an aside rather than content.
-   ───────────────────────────────────────────────────────────────── */
 .setupbox{margin-top:var(--s5);padding:var(--s4);
   border:var(--rule-hair) solid var(--ink);position:relative;isolation:isolate;
   background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
@@ -326,14 +141,6 @@
   border-bottom:1px solid var(--tone)}
 /* a failed connection is a heavier statement than a missing one */
 .setupbox--warn{border-width:var(--rule);background-image:none}
-
-/* ── BOARD: club information hub ──────────────────────────────────
-   The board is another page of the same manga, so everything below
-   reuses the panel rules, the display face and the two inks. No new
-   palette, no cards, no gradients. */
-
-
-
 
 .bmiles{margin-top:var(--s2)}
 .bmile{display:grid;grid-template-columns:auto 1fr;align-items:start;
@@ -356,36 +163,12 @@
    because it has to read from the back of the MPR, and the quiet zone
    around it is padding on a white field — a QR needs that margin to
    decode reliably, so it is not decoration to trim. */
-.qrpanel__code--big{max-width:min(660px,86vw);padding:var(--s6)}
-/* The base rule is `display:grid; place-items:center`, which sizes the
-   grid track to the SVG's own intrinsic width. `width:100%` on the SVG
-   then resolves against a track that is itself sized by the SVG -- so it
-   collapses to the intrinsic 43-unit viewBox instead of filling the
-   panel. Switching to block layout gives the percentage a real box to
-   resolve against. */
-.qrpanel__code--big{display:block}
-.qrpanel__code--big svg,
-.qrpanel__code--big canvas,
-.qrpanel__code--big img{width:100%!important;height:auto!important;
-  aspect-ratio:1/1;display:block;margin-inline:auto}
-.qrpanel__code--big{max-width:100%;padding:var(--s5)}
-@media(min-width:768px){
-  .qrpanel__code--big{max-width:min(660px,86vw);padding:var(--s6)}
-}
 
-/* ── delete a meeting ─────────────────────────────────────────────
-   The action sits in the row it affects and confirms in place, so no
-   modal layer is introduced and nothing is dismissed by a stray tap
-   outside it. Only rows with zero attendance render the control. */
 .brow__del{border:var(--rule-hair) solid var(--ink);background:none;
   color:var(--ink);font:400 clamp(11px,1vw,12.5px)/1 var(--f-body);letter-spacing:.08em;
   padding:6px 9px;cursor:pointer}
 .brow__del:hover,.brow__del:focus-visible{background:var(--ink);color:var(--paper)}
-/* Rows without a delete control still reserve its width, so the count
-   column stays true down the register. `visibility:hidden` keeps the
-   box and its generated text out of the accessibility tree and off the
-   page while still taking up exactly as much room as the real
-   control — a 1px stub left the counts stepping in and out. */
+
 .brow__del--off{visibility:hidden}
 .brow__del--off::before{content:"Delete"}
 .brow--confirm{background:var(--paper)}
@@ -400,31 +183,20 @@
   .bconfirm .btn{flex:0 0 auto}
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   CLUB TOOLS — THE SAME SHEET
-
-   The board account keeps its own chapters and its own routing; what
-   it does not get is a different design system. Its outer panel was a
-   frame around the whole page and its figures were four plates, which
-   is the member dashboard's old problem wearing a different hat.
-   Registered divisions and a ruled figure strip, same as everywhere.
-
-   The one thing kept framed is the live meeting, because on this
-   screen that IS the lead — it floods to ink and carries the code.
-   ══════════════════════════════════════════════════════════════════ */
 [data-screen^="b"] #boardPane > .bpanel,
 [data-screen="board"] #boardPane > .bpanel{border:0;background:none;
   padding:0}
 .bsec{position:relative;padding-top:clamp(14px,2vw,22px);margin-top:clamp(18px,2.6vw,30px)}
 .bsec::before{content:"";position:absolute;left:0;right:0;top:0;
   height:var(--edge-thin);background:var(--ink)}
-/* The pane's first section already sits under the page title's rule.
-   Drawing its own on top of that put two rules across the sheet with a
-   band of empty paper between them, on every board screen. */
+
 #boardPane > .bpanel > .bsec:first-child{padding-top:0;margin-top:0}
 #boardPane > .bpanel > .bsec:first-child::before{content:none}
 
-/* the figures: a ruled strip, one leading */
+/* the figures: a ruled strip, one leading.
+   The !important flags are load-bearing: identity.css loads after
+   this file and re-declares .bstat as bordered boxes with an ink
+   first cell; these flags are what keep the strip. */
 .bstats{display:grid;gap:0;grid-template-columns:repeat(2,minmax(0,1fr));
   border-top:var(--edge) solid var(--ink)}
 .bstat{border:0!important;background:none!important;
@@ -440,51 +212,20 @@
   .bstat:nth-child(2){padding-left:0;border-left:0!important}
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   THE NAVIGATION PILLAR
-
-   The numeral leads and the label sits under it on its own baseline,
-   so the column reads as a contents page rather than as a menu. The
-   active state is a STRUCTURAL LINE that runs from the numeral out
-   through the pillar's edge and into the canvas — the chapter you are
-   in is physically connected to the sheet, which is a thing a grey
-   pill can never say.
-   ══════════════════════════════════════════════════════════════════ */
 @media(min-width:1024px){
   .rail__link{grid-template-columns:1fr!important;
     align-items:start!important;gap:2px!important;
     padding:clamp(10px,1.1vw,16px) var(--s3) clamp(10px,1.1vw,16px) 0!important}
   .rail__link span:not(.rail__no){font-size:clamp(9.5px,.72vw,11px);
     letter-spacing:.3em;align-self:start}
-  /* No underline on the numeral: it landed exactly where the label
-     sits and the two collided. The connector out to the canvas is the
-     active mark, and it is a better one — it says which chapter the
-     sheet belongs to rather than just which item is selected. */
+
   .rail__link span:not(.rail__no){margin-top:3px}
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   MEMBER — THE FIGURES ARE NOT FOUR CARDS
-
-   Four bordered plates in a 2x2 grid is an admin dashboard, and it is
-   what the Member page opened its content with. The figures are a
-   ruled strip now: one leads at display size, the other three are
-   readings under it, divided by hairlines rather than boxed.
-   ══════════════════════════════════════════════════════════════════ */
 /* the credential band and the milestone ledger were the last two
    boxes on the page; they are divisions of the sheet like everything
    else now */
 
-
-/* ══════════════════════════════════════════════════════════════════
-   EMPTY STATES — THE UNSTRUCK SEAL
-
-   Not a grey box with a centred paragraph. The seal that has not been
-   pressed, drawn at a size that makes it the subject, with the record
-   it would carry stated beside it as metadata. The void mark across
-   its middle is what says "nothing here" — a structural signal, not a
-   sentence and not a colour.
-   ══════════════════════════════════════════════════════════════════ */
 .empty-reg{position:relative;padding:clamp(28px,5vw,64px) 0 clamp(24px,4vw,52px)}
 .empty-reg::before{content:"";position:absolute;left:0;right:0;top:0;
   height:var(--edge-thin);background:var(--tone)}
@@ -494,13 +235,7 @@
 .empty__seal{position:relative;flex:none;
   width:clamp(74px,12vw,132px);aspect-ratio:1}
 .empty__seal svg{width:100%;height:100%;display:block;opacity:.5}
-/* THE ONE PLACE THE MARK IS DRAWN AS LINE, ON PURPOSE.
 
-   Everywhere else the seal is a filled silhouette, because that is
-   what the artwork is. Here the whole point is that nothing has been
-   pressed yet — so the mark is set as its own outline, the shape of an
-   impression with no ink in it. `path` therefore stays in the stroked
-   list rather than moving to the filled one. */
 .empty__seal svg circle,.empty__seal svg polygon,
 .empty__seal svg path,.empty__seal svg line{
   fill:none;stroke:var(--tone);stroke-width:2;vector-effect:non-scaling-stroke}
@@ -514,148 +249,15 @@
 .empty__note{margin-top:clamp(7px,1vw,11px);max-width:52ch;
   font-size:clamp(12.5px,1vw,14.5px);line-height:1.55;color:var(--ink-2)}
 
-/* ══════════════════════════════════════════════════════════════════
-   THE RIG — the viewfinder is mounted, not placed
 
-   Scan was a bordered rectangle with a camera in it, stacked above a
-   bordered rectangle with a field in it. Two blocks, no tension, and
-   nothing anywhere saying what the instrument was doing.
-
-   The frame is a rig now: a reading bar ruled across the top edge, a
-   vertical rune down the side, and the viewfinder held between them.
-   The readings are real — the optics the camera opened, the code
-   format the reader accepts, and the live status, which is the one
-   cinnabar mark on the screen while the target is armed.
-   ══════════════════════════════════════════════════════════════════ */
-
-
-/* ══════════════════════════════════════════════════════════════════
-   ACTIVATION AND INTERRUPTION
-
-   The rig looked the same whether the camera was tracking or dead.
-   Two states now change the COMPOSITION, not just a label.
-
-   TRACKING. Speed lines rake in from both sides of the frame at the
-   system's 60 degrees, and the reading bar's rule thickens. The
-   viewfinder stops being a picture in a box and becomes the thing
-   everything else is pointing at.
-
-   REFUSED. A hard diagonal cut is thrown across the rig and the
-   reading bar's rule breaks. This is the interruption the failure
-   state was missing — the frame flashing was an event inside the
-   viewfinder, but nothing around it registered that anything had
-   happened. Both are drawn, not animated, so reduced motion keeps
-   them.
-   ══════════════════════════════════════════════════════════════════ */
-
-
-/* ══════════════════════════════════════════════════════════════════
-   SCAN — THE VIEWFINDER AND THE TERMINAL
-
-   The frame reads as an instrument now rather than as a panel with a
-   camera in it: the targeting brackets are heavy and set INSIDE the
-   frame, so the box has a housing and a target rather than one edge
-   doing both jobs.
-
-   The manual field was a bordered box holding an input and a dashed
-   ghost button — a form. It is a terminal: a rule under the line, the
-   prompt in front of it, the commit struck solid. And exactly ONE red
-   mark on the screen, which is the target; the rule and the prompt
-   were both cinnabar too, so a screen with a fault code on it was
-   showing three.
-   ══════════════════════════════════════════════════════════════════ */
-
-
-/* ══════════════════════════════════════════════════════════════════
-   THE REWARD DOSSIER
-
-   State IS the design here — the three tiers must not be three of the
-   same object. Sealed is a document you have not earned and reads as
-   one: unframed, quiet, its numeral in tone. Ready takes the page's
-   only frame and its only red mark. Claimed floods to ink, which is
-   where this screen spends its concentrated black.
-   ══════════════════════════════════════════════════════════════════ */
-
-
-/* ══════════════════════════════════════════════════════════════════
-   PANEL ROLE — HERO, SUPPORT, MICRO
-
-   Three sealed tiers were three of the same object drawn at the same
-   size: the one you are a single stamp away from and the one you are
-   twenty-one away from occupied identical space. State was doing the
-   work but SCALE was not, so the page read as a list.
-
-   The nearest tier is the hero of the spread — its numeral is set at
-   masthead scale, its slot array is tall enough to be a mass rather
-   than a legend, and it holds the measure alone. The rest are micro:
-   half the width, a third of the height, numerals in tone. That is
-   the difference between a manga page and a table of rows.
-   ══════════════════════════════════════════════════════════════════ */
-
-
-/* ══════════════════════════════════════════════════════════════════
-   THE CHAPTER MASTHEAD
-
-   Record, Scan, Rewards, Member and Club Tools each opened with the
-   page title inside a bordered box the full width of the canvas — the
-   same header card five times, and the first thing you see on four of
-   the five screens. They are mastheads now, on the same structure
-   Home's nameplate uses: one heavy rule, the title crossing it, the
-   kicker set as an annotation in the margin. Five screens, one
-   opening gesture, no frames.
-   ══════════════════════════════════════════════════════════════════ */
-
-/* Auth radiates speed lines from behind the whole spread, and with
-   the masthead frameless they were running straight through SIGN IN —
-   the title sat on a hatched band and read as an artefact. The
-   masthead keeps its own paper under it there; the lines belong
-   around the composition, not across its loudest word. */
-:root{--t-chapter:clamp(38px,10vw,84px)}
-@media(min-width:1024px){ :root{--t-chapter:clamp(56px,6.4vw,112px)} }
-
-/* ── THE SCREEN VARIES IN DENSITY ─────────────────────────────────
-   One dot size at one spacing across every surface is a texture doing
-   no work. It tightens under the chapters that carry a lot of
-   structure and opens up where the page is meant to breathe, so the
-   paper itself has a grain that changes between chapters. */
 [data-screen="board"] body{--tone-wide:16px}
 [data-screen="home"] body{--tone-wide:22px}
-
-/* ── THE GHOST WORD IS CROPPED, NOT PLACED ────────────────────────
-   The sound effect behind each masthead sat inside the measure with
-   air around it, which makes it an illustration rather than a layer.
-   It is cropped now — pushed off the right edge and up under the
-   rule, so the page interrupts the word.
-
-   Raising its opacity was the wrong lever and I tried it first: at
-   .55 the ghost competed with the masthead in front of it and the
-   chapter title stopped being the loudest thing on the page.
-   Position is what makes it read as a layer; value keeps it behind. */
-/* ══════════════════════════════════════════════════════════════════
-   SOUND EFFECTS — SCALE AND CROP, NOT OPACITY
-
-   Every chapter carries ONE impact word in the vocabulary of what
-   happens there: STAMP, LOG, LOCK, UNSEAL, IDENT, ENTER. It is not a
-   caption and not a watermark.
-
-   What makes it read as a manga sound effect is that it is far too
-   big for the space and the page cuts it off. Roughly a third of the
-   word is outside the viewport; the letters that remain are taller
-   than the chapter title. Value stays low, because I established the
-   hard way that brightening a ghost word makes it compete with the
-   masthead instead of sitting behind it — the loudness has to come
-   from size and from the crop, not from ink.
-
-   Scan's tilts to the system's 60 degrees, because that page is the
-   one about direction. */
-
 
 /* ── THE CREDENTIAL BAND ──────────────────────────────────────────
    A wide thin strip with a small seal marooned at one end — the
    weakest composition left in the app. The seal is the subject: real
    size, cropped by the top of its own division, identification set
    against it. */
-
 
 /* ══════════════════════════════════════════════════════════════════
    THE HEXAGON IS THE GEOMETRY
@@ -672,104 +274,18 @@
    different places. One angle, taken from the mark, is what makes a
    cut on Record and a wedge on Home look like the same hand.
 
-   And the CUT is a motif carried by every chapter's lead panel now,
    not a thing that happens on Home: whatever leads a screen is the
    thing with a corner taken out of it.
    ══════════════════════════════════════════════════════════════════ */
-:root{--cut-a:60deg; --run-a:60deg}
-
-/* ══════════════════════════════════════════════════════════════════
-   THE STAMP SHEET — ONE INK MASS, NOT NINE SQUARES
-
-   Nine black cells with a paper gutter between each pair is nine small
-   black UI elements, which is exactly the "scattered ink" the whole
-   system is supposed to avoid. It also read as a contact sheet: ten
-   identical tiles in a straight line, a data display rather than a
-   composition.
-
-   The gutter between cells is gone. Earned stamps now abut, so they
-   fuse into ONE solid black field with the unearned slots punched out
-   of it — the eye gets a single ink mass whose SHAPE is the record.
-   A hairline of paper inside each filled cell keeps them countable.
-
-   The sheet is also cut on the diagonal at its trailing corner. That
-   is the one structural diagonal on the page and it is doing a job:
-   the record is unfinished, so the sheet is not a closed rectangle.
-   ══════════════════════════════════════════════════════════════════ */
+:root{--run-a:60deg}
 
 :root{--sheet-cut:clamp(22px,3.4vw,54px)}
-
-/* ══════════════════════════════════════════════════════════════════
-   HOME — ONE SHEET, FOUR CHAMBERS
-
-   The dashboard was six bordered boxes stacked with one gutter
-   between them: nameplate, count, chamber, stamp array, and two
-   closers. Every one the same weight, every one aligned to the same
-   two edges. That is a tray of cards however manga the contents are,
-   and it is the single reason the page reads as SaaS.
-
-   It is a sheet divided by rules now. The count and the stamp array
-   are ONE chamber — the number states the total and the array is that
-   total made physical, so putting them in separate cards was saying
-   they were separate facts. The closers lose their frames entirely
-   and become registered divisions. The action chamber keeps a frame,
-   because it is the one thing on the page you are meant to hit, and
-   the frame is what makes it a target rather than a region.
-   ══════════════════════════════════════════════════════════════════ */
-
-/* ── the count chamber: no card, no chamfer, no ink block ────────── */
-
-
-/* ── the stamp array: directly on the paper ──────────────────────── */
-
-
-/* ── the closers: registered divisions, not cards ────────────────── */
-
-
-/* ══════════════════════════════════════════════════════════════════
-   THE NAMEPLATE
-
-   It was the member's name, set large, inside a bordered box the full
-   width of the canvas — which is a header card, and a header card is
-   what every product on the internet opens with. Enormous type that
-   touches nothing is not structural; it is just big.
-
-   So the frame is gone and the name is bled off the LEFT edge of the
-   canvas: it starts outside the measure and crosses into it, sitting
-   ON the register rule rather than inside anything. The rule stops
-   where the name lands, so the type interrupts the sheet. The margin
-   the name leaves on the right carries the two facts worth stating —
-   system state, and how far there is to go.
-   ══════════════════════════════════════════════════════════════════ */
 
 :root{--bleed-l:0px}
 @media(min-width:768px){ :root{--bleed-l:clamp(6px,1.2vw,18px)} }
 @media(min-width:1024px){
   :root{--bleed-l:clamp(10px,1.6vw,26px)}
 }
-
-/* ══════════════════════════════════════════════════════════════════
-   THE KEYSTAMP GRAPHIC LANGUAGE
-
-   Seven primitives, each with ONE job. They are what makes Record and
-   Scan and Rewards read as the same product while looking nothing
-   alike — the alternative is decoration, which is what a symbol
-   becomes the moment it appears somewhere it has no reason to be.
-
-     .brk      targeting brackets — this area is a target
-     .xhair    crosshair — the exact point of action
-     .anno     technical annotation — a fact the system knows
-     .speed    directional lines — force applied in a direction
-     .reg      the register rule — a division of the sheet
-
-   Every one is drawn in CSS off currentColor, so a primitive inverts
-   correctly the moment it lands inside an ink field.
-   ══════════════════════════════════════════════════════════════════ */
-
-/* ── BRACKETS. Four corners, drawn with gradients on one box so a
-   target needs no extra elements. --brk sets arm length, --brk-w
-   weight, --brk-i how far inside the box they sit. */
-
 
 /* ── ANNOTATION. A fact, set in mono, tied to what it describes by a
    short leader rule. Never a caption; always a reading. */
@@ -779,49 +295,9 @@
 .anno::before{content:"";width:clamp(10px,1.4vw,20px);height:var(--rule-hair);
   background:currentColor;flex:none}
 
-/* ── SPEED LINES. Direction, not texture: they always run TOWARD the
-   thing that matters and they fade out behind it. */
-.speed{position:relative;overflow:hidden}
-.speed::before{content:"";position:absolute;inset:0;z-index:0;
-  pointer-events:none;
-  background-image:repeating-linear-gradient(var(--speed-a,68deg),
-    currentColor 0 1px, transparent 1px var(--speed-gap,9px));
-  opacity:var(--speed-o,.14);
-  -webkit-mask-image:linear-gradient(var(--speed-a,68deg),#000,transparent 72%);
-          mask-image:linear-gradient(var(--speed-a,68deg),#000,transparent 72%)}
-
-/* ══════════════════════════════════════════════════════════════════
-   THE REGISTER — the page is a ruled sheet, not a tray of boxes.
-
-   The audit's finding was one thing repeated: every section on every
-   screen was a bordered rectangle of the same weight, stacked with the
-   same gutter. Six frames on Home, three identical cards on Rewards,
-   four stat boxes on Member. That is what makes an interface read as
-   assembled rather than composed, and no amount of manga detail
-   applied INSIDE those boxes can fix it, because the boxes are the
-   thing you see first.
-
-   A registered section has NO frame. It is defined the way a plate is
-   registered on a press: one heavy rule ruled across the full measure
-   above it, and a short tick dropping from the left end of that rule.
-   Sections then read as divisions of one continuous sheet — which is
-   exactly what a manga page is — instead of as objects placed on it.
-
-   The frame is not gone from the system; it is now WORTH something.
-   One panel per screen keeps it, and that panel is the lead.
-   ══════════════════════════════════════════════════════════════════ */
-
-.reg > .panel,
 .panel.reg{border:0;background:none;height:auto;
   padding:var(--space-panel-lg) 0 var(--space-panel-lg)}
 
-/* ── BOARD: THE SAME INSTRUMENT (§38) ──────────────────────────────
-   The member's reward gauges were rebuilt as discrete stamp tracks —
-   a struck register, not a filling tube. The board's milestone bars
-   went on being smooth fills, so the club's two audiences were reading
-   the same figure off two different instruments. Ten divisions, the
-   same overlay technique, keyed to tenths because this bar is a share
-   of members rather than a count of stamps. */
 .bmile__bar{position:relative;overflow:hidden}
 .bmile__bar::after{content:"";position:absolute;inset:0;
   pointer-events:none;z-index:2;
@@ -843,32 +319,8 @@ select.input{appearance:none;-webkit-appearance:none;
   background-repeat:no-repeat}
 select.input:focus-visible{outline:none}
 
-/* ── THE MEMBER CHAPTER (§38) ──────────────────────────────────────
-   The credential strip: the seal, who this is, and one sentence of
-   real state. It used to be a 70px mark and a 20px name in a panel
-   tall enough for a headline, which is why the page opened on nothing.
-   The nameplate above it now carries the name, so this panel can be
-   what it always should have been — a quiet identification band. */
-
-
-/* ── THE MILESTONE LEDGER ──────────────────────────────────────────
-   The same three milestones the Rewards chapter renders in full. This
-   is the ledger of them, not a second card design: a ruled monospace
-   register, one line each, reading tier / name / state / distance.
-   One design system, two levels of detail. */
-
-
-/* ── THE SLOT DOSSIER (§26) ────────────────────────────────────────
-   Hover or focus a landed stamp and the check-in behind it is stated:
-   meeting number, date, time, method, room. It is a docket rather than
-   a tooltip — no radius, no shadow, no arrow, no fade. It is either
-   there or it is not, on the same 60ms cut as everything else.
-
-   Anchored to the slot and drawn OVER the grid rather than inside it,
-   so a 5-column card does not have to reserve room for a panel that is
-   almost never visible. It flips to the left half of the card and up
-   from the bottom row by asking where the slot is via :nth-child, not
-   by measuring anything at runtime. */
+/* ── THE SLOT DOCKET ─────────────────────────────────────────────
+   Hover or focus a landed stamp and the check-in behind it is stated. */
 .sealmeta{position:absolute;left:calc(100% - 2px);top:-2px;z-index:40;
   display:none;width:max-content;min-width:132px;
   padding:9px 11px;background:var(--paper);
@@ -895,10 +347,8 @@ select.input:focus-visible{outline:none}
 
 /* ── FAULT CODE ───────────────────────────────────────────────────
    A bracketed monospace token, drawn in CSS so the brackets are the
-   system's targeting marks rather than characters that would set in
    whatever the mono face happens to have. Cinnabar, because a dead
    scanner is the one place on this screen the target never lights. */
-
 
 /* ── SCANNER STATES ───────────────────────────────────────────────
    These classes were toggled in JS and styled nowhere, so a successful
@@ -907,19 +357,6 @@ select.input:focus-visible{outline:none}
    weight, fill and inversion rather than by hue, because this theme has
    no hue to spend: every accent token resolves to ink. That also
    satisfies "not by colour alone" for free. */
-
-
-/* ── WAITING FOR THE CAMERA ───────────────────────────────────────
-   The frame's own marks recede while the loader turns, so the moving
-   mark is the one thing there is to look at. */
-
-
-/* ── WORKING ──────────────────────────────────────────────────────
-   The code is read and the server has not answered yet. The corners
-   hold at full weight — the frame has hold of something — and blink on
-   a two-step cycle, while the sweep line parks dead centre. Held plus
-   blinking cannot be confused with the searching state (sweeping, thin)
-   or with the refusal (filled, still). */
 
 @keyframes busyHold{
   from{border-color:var(--ink)}
@@ -930,19 +367,6 @@ select.input:focus-visible{outline:none}
   to  {transform:scaleX(1);transform-origin:left}
 }
 
-/* ── REFUSED ──────────────────────────────────────────────────────
-   "The UI shouldn't just show a small red error text; the central
-   frame should snap violently and flash starkly."
-
-   So it does. The frame floods to solid ink three times in 270ms and
-   kicks sideways — `steps()`, so every change is a cut with nothing
-   in between. You cannot miss it and you cannot mistake it for the
-   success state, which tightens quietly instead. */
-
-/* Floods to PAPER, not ink. The viewfinder is already a black box, so
-   an ink flash over it was a change nobody could see — the loud move
-   on a dark field is inversion. Three white cuts over the camera feed
-   in 270ms. */
 @keyframes refuse{
   0%,100%{box-shadow:inset 0 0 0 0 var(--paper)}
   50%    {box-shadow:inset 0 0 0 100vmax var(--paper)}
@@ -983,90 +407,21 @@ select.input:focus-visible{outline:none}
    this theme has no red to spend */
 .bconfirm .btn--go{background:var(--ink);border-width:var(--edge-thin)}
 
-
-
-
-
-/* ══════════════════════════════════════════════════════════════════
-   THE CHAPTER CLOSE
-
-   Rewards ended two-thirds down a tall viewport with a third of the
-   page left blank and nothing bounding it, which does not read as a
-   rest — it reads as a page that stopped. Manga leaves plenty of
-   space empty, but a beat is always enclosed by something.
-
-   This is the bottom rule of the spread. It is pushed to the foot of
-   the canvas, so the empty area above it becomes a panel with nothing
-   in it rather than an unfinished page, and it carries the two facts
-   a chapter ends on: where the reader stands, and which chapter this
-   was.
-   ══════════════════════════════════════════════════════════════════ */
 .close{position:relative;display:flex;align-items:baseline;
   justify-content:space-between;gap:var(--s3);flex-wrap:wrap;
   padding-top:clamp(12px,1.6vw,18px)}
-/* the chapter mark hangs off the rule at the leading corner, the same
-   registration tick the closers on Home use */
+
 .close::after{content:"";position:absolute;left:0;top:0;
   width:var(--edge-heavy);height:clamp(12px,1.6vw,20px);background:var(--ink)}
 
-/* The rest before it is a FIXED beat, not whatever the viewport has
-   left over. Stretching the close to the foot of the canvas ties the
-   size of the pause to the height of the window, which means the same
-   page reads as a considered rest on one screen and as an abandoned
-   one on another. A bounded gap is the same beat everywhere. */
 .close{margin-top:clamp(44px,9vh,116px)}
 
-
-/* ══════════════════════════════════════════════════════════════════
-   HOME — WHAT THE CLOSERS DO AND DO NOT SAY
-
-   The meeting numeral behind the closing entries rendered at 44px and
-   7% — too small to read as a layer and too faint to read as a fact,
-   which makes it the one thing on the page doing no job at all. On
-   Record it is a real device, set at display scale and cropped by the
-   row it belongs to. Here it just produced a grey smudge that looked
-   like a rendering fault. It goes.
-
-   The two closers also stop being the same object: what is happening
-   now is the support panel and keeps full type; what was last stamped
-   is the micro panel and is set down to a footnote.
-   ══════════════════════════════════════════════════════════════════ */
-
-
-
-
-/* ══════════════════════════════════════════════════════════════════
-   THE VERDICT IS ONE FRAME, NOT A DIALOG
-
-   Everything about the moment was right except its ARRANGEMENT: seal
-   centred, word centred under it, three lines of centred metadata
-   under that, all inside a 46ch measure with even air on both sides.
-   That is a centred modal — the single most generic composition an
-   interface has, and putting a manga sound effect inside one does not
-   make it a manga panel.
-
-   So the frame is composed. The word runs past the measure and is
-   CROPPED by the edge of the screen, which is what makes it read as
-   too loud for the space it is in rather than as large type placed in
-   a box. The block sits off-centre and everything under the word is
-   set flush to its leading edge, so the metadata reads as a caption
-   registered to the impact instead of as a stack of centred labels.
-   The seal is pushed up and out of the measure to the trailing side —
-   the impression the word came out of, not a logo above a heading.
-   ══════════════════════════════════════════════════════════════════ */
-/* (0,2,0) throughout: identity.css sets the verdict's type and colour
-   and loads after this file, so a single-class rule here loses every
-   tie. Scoping to the panel keeps the two files' jobs separate — that
-   one still owns what the mark IS, this one owns where it sits. */
 .verdict .verdict__inner{text-align:left;max-width:min(42ch,100%);
   margin-inline:0 auto;
   padding-left:max(var(--s6), 6vw)}
 .verdict .verdict__state{white-space:nowrap;
   font-size:clamp(68px,23vw,380px);
-  /* CROPPED ON BOTH SIDES. The word starts outside the measure and
-     runs past the trailing edge; the fixed panel clips, so the crop
-     is the frame's own edge. A word that fits is a word that was
-     placed — this one is too loud for the space it landed in. */
+
   margin-left:min(-2vw,-14px);margin-right:-46vw;
   transform:rotate(-2.4deg);transform-origin:left center}
 .verdict .verdict__seal{margin:0 0 0 auto;margin-right:min(6vw,90px);
@@ -1082,15 +437,6 @@ select.input:focus-visible{outline:none}
 .verdict .verdict__title::before{content:"";position:absolute;left:0;top:0;
   width:min(52%,320px);height:var(--edge-heavy);background:var(--ink)}
 
-/* THE FIELD BEHIND THE IMPACT IS THE MARK.
-
-   When the seal was a line drawing this had to fight it: its strokes
-   were specified in a 100-unit viewBox, so at 844px the arms scaled to
-   46px each and fused into a soft grey disc across half the frame, and
-   the fix was to redraw it at hairline weight. The seal is traced
-   artwork now and scales the way a logo does, so the field is simply
-   the mark at full size behind the word that just landed. Only the
-   registration furniture still needs stroking. */
 .verdict .verdict__field path{fill:var(--ink);stroke:none}
 .verdict .verdict__field circle,
 .verdict .verdict__field line,
@@ -1104,25 +450,7 @@ select.input:focus-visible{outline:none}
   .verdict .verdict__seal{margin-right:min(4vw,40px)}
 }
 
-/* ── 2. WHAT HAS NOT HAPPENED YET ─────────────────────────────────
-   Record's scheduled meetings had a heading in --faint set with an
-   inline style, no rule, and a full chapter gap above it. It read as
-   an unfinished section rather than as the part of the record that
-   is still ahead. It is a division now: a rule, a heading at section
-   weight, and a count. */
 .ahead{position:relative;padding-top:clamp(14px,2vw,22px);
   margin-top:clamp(26px,4vw,56px)}
 .ahead .h2{color:var(--ink)}
-
-
-/* ══════════════════════════════════════════════════════════════════
-   THE ACCOUNT BLOCK — SIGN OUT BELOW THE RAIL
-
-   The only sign-out control lived in the desktop rail, which is
-   display:none under 1024. Every phone and every tablet therefore had
-   no way out of the session. This is the same control, on the account
-   chapter, reachable from the tab bar at any width. It stands down at
-   1024 where the rail returns and carries it again, so the app never
-   shows two.
-   ══════════════════════════════════════════════════════════════════ */
 

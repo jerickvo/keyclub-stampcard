@@ -2,33 +2,6 @@
 /* keystamp — the FX choreography layer and the named sequences
    Loaded in order by index.html. Order matters. */
 
-/* ══════════════════════════════════════════════════════════════════
-   9. FX — the choreography layer.
-
-   Everything is built from five primitives, and every named sequence
-   below is a timeline over those primitives rather than a one-off
-   animation. That is the difference between choreography and effects:
-   a cut in the loading screen and a cut on the scanner are the same
-   object with different parameters.
-
-     Slash    the cut — anticipation, instantaneous travel, aftermath
-     Impact   scrim, flash, shards, sparks, rings, frame shake
-     Lines    speed lines racing out from a focal point
-     Field    the ritual structure that forms behind big moments
-     Ambient  pulls the background down so an impact lands in silence
-
-   Shape of a cut: the body is charcoal, there is exactly one
-   bone-white razor edge, the tail runs a shade lighter, and a single
-   short mid-grey tick sits near the end — about 6% of the shape.
-   (The palette was crimson/burgundy in an earlier revision; the app is
-   strictly monochrome now, so the accent is a value, not a hue.) It overshoots its own length
-   during travel, which is the motion blur. It is never a glowing line
-   left sitting on screen.
-
-   Sound hooks: each sequence below is written as discrete beats with
-   gaps between them (cut · silence · impact), so an audio cue can be
-   dropped on any beat later without re-timing anything.
-   ══════════════════════════════════════════════════════════════════ */
 /* The entrance's whole timing vocabulary, in one place and in
    milliseconds, because every value in it is a cut rather than a curve
    and the only thing left to tune is when each cut happens. */
@@ -50,10 +23,9 @@ const MECH = {
    tables are evaluated at load and anime may not be there at all. */
 const STEP = n => (typeof steps === 'function' ? steps(n) : undefined);
 
-/* The type heavy enough to be driven rather than revealed. Everything
-   else on a panel is structure and arrives with the frame. */
-const SLAM_SEL = '.title,.hero__num,.strike__verb,.tech__name,.who__name,'
-               + '.stat b,.qrpanel__no,.entry__gain';
+const SLAM_SEL = '.title,.spread__wm,.count__num b,.tally__fig,'
+               + '.ladder__fig,.standing-band__fig,.who__name,'
+               + '.proj__no,.bnow__no';
 
 const EASE = {
   CUT:    cubicBezier(.03,.9,.1,1),      /* near-instant travel */
@@ -333,18 +305,7 @@ const Ambient = {
    ══════════════════════════════════════════════════════════════════ */
 const FX = {
 
-  /* ── primitives, exposed by name ───────────────────────────── */
-  slash(o){ Slash.create(o); },
-  slashBarrage(n, o){ Slash.barrage(n, o); },
-  speedLines(o){ Lines.burst(o); },
-
   /* one frame of violence: dark · blown contrast · a word · a cut · shake */
-  /* The impact frame used to flash a kanji behind the word — 記録 on
-     sign-in, 完了 on a claim, 認証 on a stamp, 出席記録 under the boot
-     title. None of the app's four typefaces contains a CJK glyph, so
-     every one of them was drawn by whatever face the operating system
-     happened to substitute: decoration in a language the interface does
-     not otherwise speak, set in a font the design does not own. */
   impactFrame({ word = '', angle = -20, host = null, hot = true } = {}){
     if (Motion.off) return;
     const parent = host || $('#fx');
@@ -394,32 +355,11 @@ const FX = {
             delay, ease:EASE.ENERGY });
   },
 
-  /* ── navigation: the old view is cut away ── */
   pageCutTransition(){
     if (Motion.off) return;
     Slash.create({ type:'A', angle:-17, afterimage:false });
   },
 
-  /* Panels arrive in reading order, but only the ones you can actually
-     see. A screen like Record is three times the height of the window,
-     and animating the bottom of it while you are looking at the top
-     spends the entrance on nothing — worse, by the time you scroll down
-     it has already happened, so the page below the fold always looks
-     static. Everything past the fold gets parked and handed to Reveal.
-
-     TWO PHASES (§16). The old entrance was one gesture: every panel
-     drifted in from 12px right with a 1.4deg skew on an eased curve,
-     which is a card sliding onto a screen — the vocabulary of an app,
-     and the one soft motion left in a system that otherwise cuts.
-
-     Structure lands first: the panel CUTS in, one step, no travel and
-     no fade, the way a plate drops into register. Its heavy type is
-     held back and slams down a beat later in three hard steps. What
-     you read is the frame arriving and then the word hitting it.
-
-     The stagger is flat for the same reason. An eased one was chosen
-     to read "like a hand turning pages"; a hand is exactly what this
-     system is not. */
   pageEntrance(scope){
     const els = [...scope.querySelectorAll('[data-enter]')];
     if (Motion.off || !els.length) return;
@@ -467,13 +407,6 @@ const FX = {
     animate(cells, { opacity:[0, 1], scale:[.86, 1],
             delay:stagger(44, { grid:[cols, rows], from:'first', start:120 }),
             ease:spring({ mass:1, stiffness:94, damping:13, velocity:0 }) });
-  },
-
-  hoverCut(btn){
-    if (Motion.off || btn.dataset.cutting) return;
-    btn.dataset.cutting = '1';
-    Slash.create({ type:'A', angle:-11, host:btn, afterimage:false, hot:false });
-    setTimeout(() => delete btn.dataset.cutting, 380);
   },
 
   /* ── scanner: the frame snaps shut on the code ── */
@@ -536,23 +469,9 @@ const FX = {
     aset([P.state, P.title, P.delta, P.meet], { opacity:0 });
     aset(box, { opacity:0 });
 
-    /* THE STAMP LANDS.
-
-       This used to be a 900ms build: the structure eased up over
-       740ms, the word faded in with a translate, the title arrived on
-       an overshoot curve. Read as a sequence of animations rather than
-       as an event — and a stamp is not a sequence. It is one impact
-       with consequences.
-
-       Now: the structure draws (that part is a press being aligned),
-       then at 300ms everything stops for one frame, and SEALED is
-       simply THERE — no fade, no travel, full size, off square. The
-       marks around it snap in after, in steps, like the register
-       settling. Nothing in the impact eases. */
     createTimeline({ onComplete:() => setTimeout(finish, 200) })
       .add(box, { opacity:[0, 1], duration:1, ease:STEP(1) }, 0)
-      /* alignment: the press coming down. This is the only part of the
-         sequence allowed a curve, and it is under the word, not on it */
+
       .add(field, { opacity:[0, .5], scale:[.42, 1], rotate:[-22, 0],
              duration:300, ease:EASE.ENERGY }, 40)
       .add(createDrawable(fieldStrokes), { draw:['0 0', '0 1'],
@@ -561,7 +480,6 @@ const FX = {
              duration:200, delay:stagger(7), ease:'linear' }, 90)
       .add(P.seal, { rotate:[-10, 0], scale:[.86, 1], duration:240, ease:EASE.ENERGY }, 90)
 
-      /* 300ms: THE PRESS. Full size, instantly, nothing to watch. */
       /* opacity ONLY. Animating scale here writes an inline transform,
          and that silently overrode the -3.2deg the stamp is struck at
          — the mark landed square, which is the one thing a hand-
@@ -579,8 +497,6 @@ const FX = {
       .add(P.seal,  { opacity:[1, .16], duration:160, ease:STEP(3) }, 560)
       .add(field,   { opacity:[.16, 0], duration:160, ease:STEP(3) }, 560);
 
-    /* the cuts run on their own clocks so the timeline can't smooth
-       them out, and all of them land ON the press rather than around it */
     setTimeout(() => Impact.flash(.3, { dur:44 }), 298);
     setTimeout(() => Slash.create({ type:'B', angle:-24 }), 300);
     setTimeout(() => Slash.cross({ angle:-58 }), 336);
@@ -588,7 +504,6 @@ const FX = {
     setTimeout(() => Impact.shake($('.verdict__inner'), 7, 90), 300);
   },
 
-  /* the stamp landing on the grid, once the dashboard is back */
   stampLand(cell){
     if (!cell || Motion.off) return;
     const svg = cell.querySelector('svg');
@@ -611,11 +526,6 @@ const FX = {
     setTimeout(() => Impact.shake($('#shell'), 4, 90), 300);
   },
 
-  /* ── a rung comes within reach ──
-     The row is cut once and the claim struck. This used to fracture a
-     drawn seal across a full-height dossier panel; the dossier is a
-     ledger line now, so the reaction is one cut at that scale rather
-     than a panel-sized set piece on a 60px row. */
   rewardUnlock(row){
     if (Motion.off || !row) return;
     const claim = row.querySelector('.tier__claim');
@@ -670,14 +580,6 @@ Object.assign(FX, {
     aset(markStrokes, { opacity:1 });
     aset(title, { opacity:0 });
 
-    /* one clock for the whole title card.
-
-       These beats used to be a timeline plus eight loose setTimeouts.
-       Two clocks means two ways to drift: minimise the tab and rAF
-       stops while setTimeout keeps going, so the cuts fire against a
-       frozen seal. anime.js can hold a target-less step purely as a
-       timer, so every beat now hangs off the same timeline and they
-       pause and resume together. */
     const tl = createTimeline({ onComplete:done });
     const beat = (at, fn) => tl.add({ duration:1, onBegin:fn }, at);
 
@@ -717,14 +619,6 @@ Object.assign(FX, {
       Impact.shards(boot, 14, -18);
     });
 
-    /* three ways out, all idempotent. The timeline's own complete is the
-       one that should fire; tl itself (not a `.finished` property —
-       anime.js v4 timelines have no such thing, and reading it threw
-       synchronously, which skipped straight to the outer catch and
-       dropped the boot curtain before the title card had even started)
-       covers a rejected or replaced instance, and the timer covers the
-       case where the clock stops altogether. The curtain comes up
-       either way. */
     tl.then(done, done);
     setTimeout(() => { reveal(); done(); }, 2600);
   },

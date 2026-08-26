@@ -14,15 +14,7 @@ const memberName = () => (Store.user && Store.user.name) || 'Member';
    ══════════════════════════════════════════════════════════════════ */
 const C = {
   /* the giant cropped word behind a view */
-  /* Every chapter carries the same three marks: the kicker as an
-     annotation, the title as the masthead, and an edge rune stating
-     which chapter of the volume this is. The rune is what makes five
-     differently-composed screens read as one document. */
-  /* THE MASTHEAD. A title and, when there is one, a line of plain
-     reading under it. The kicker is gone: it named the same thing the
-     title names one line lower, which is a label explaining a label.
-     So are the diagonal rake, the volume rune and the edge kanji —
-     three marks that reported nothing about the page they sat on. */
+
   /* ── the stat plate: a character status readout, not a summary card ── */
   /* THE COUNT. It is the card's masthead and it is set ON the card,
      not in a panel beside it: a printed stamp card carries its own
@@ -44,11 +36,6 @@ const C = {
     </div>`;
   },
 
-  /* ONE RUNG. A ledger line, not a dossier: the tier number, the
-     name, what you can do about it, and the distance. The panel it
-     replaces carried a ten-to-thirty cell progress array of its own,
-     which at phone width drew thirty three-pixel slivers and said
-     nothing the number beside it did not already say. */
   tier(r, total){
     const open  = total >= r.required;
     const ready = open && !r.claimed;
@@ -73,7 +60,8 @@ const C = {
      stamp snaps flat, which is what makes the grid feel struck by hand ── */
   sealGrid(){
     const p = Rules.progress();
-    /* THE SLOT DOSSIER (§26).
+    /* Every filled slot carries the docket for the check-in it
+       represents, revealed on hover or focus.
 
        A landed stamp was a black square and nothing else: the record of
        WHICH meeting it came from lived only on another screen. Every
@@ -99,18 +87,15 @@ const C = {
 
       const rec = state === 'set' ? chrono[p.floor + i] : null;
       const mtg = rec ? Store.meetings.find(m => m.id === rec.meetingId) : null;
-      /* The dossier is only offered when there is something in it. A
-         stamp whose meeting has since been deleted still counts — it
-         just has no docket to show, so it does not become a tab stop
-         that opens an empty card. */
-      const dossier = rec && mtg ? C.sealMeta(rec, mtg) : '';
+
+      const docket = rec && mtg ? C.sealMeta(rec, mtg) : '';
 
       return `<li class="seal ${state ? 'seal--' + state : ''}${last}" data-seal="${state || 'empty'}" style="${tilt}"${
-        dossier ? ` tabindex="0" aria-label="Stamp ${pad(p.floor + i + 1)}: general meeting ${
+        docket ? ` tabindex="0" aria-label="Stamp ${pad(p.floor + i + 1)}: general meeting ${
           mtg.no}, ${fmtDate(mtg.date)}, checked in at ${fmtTime(rec.at)}"` : ''}>
         <svg viewBox="0 0 64 64" aria-hidden="true"><g class="seal__mark">${stampMark(p.floor + i)}</g></svg>
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
-        ${dossier}
+        ${docket}
       </li>`;
     }).join('');
 
@@ -120,21 +105,8 @@ const C = {
     </section>`;
   },
 
-  /* THE ACTION. One clean ink mass with the verb on it, beside a card
-     that already carries ten symbols. The swirl used to sit inside this
-     panel: at 15% it was an invisible texture, and at any strength that
-     would have made it visible it competed with both the verb and the
-     card's marks. The swirl belongs where it is the subject — the
-     opening spread, and the code on the projector. The chamber it replaces was four
-     corner marks, a crosshair, a speed-line field and a TARGET LIVE
-     readout wrapped around a verb — five graphics saying "press me"
-     where ink on paper already says it. */
   strike({ verb, sub, go, live = false, calm = false }){
-    /* The one place the swirl appears on this screen, and it is the
-       right one: the mark you are pressing for, on the thing you press.
-       It is cropped by the panel rather than centred in it — a mark
-       that runs off the edge reads as printed on the page instead of
-       placed on it, and it keeps the verb's corner clear. */
+
     return `<div class="act ${live ? 'act--live' : ''}" data-enter>
       <button class="act__btn" data-go="${go}">
         <span class="act__verb">${esc(verb)}</span>
@@ -233,12 +205,6 @@ const C = {
   },
 };
 
-/* ══════════════════════════════════════════════════════════════════
-   8. VIEWS
-   Five destinations. The dashboard leads with the count because that
-   is the thing a member opens the app to see; everything else on it
-   answers "what do I do next".
-   ══════════════════════════════════════════════════════════════════ */
 const Views = {
   /* Shown instead of any figure derived from attendance when the
      snapshot could not be loaded. Rendering 0 stamps here would tell a
@@ -269,10 +235,6 @@ const Views = {
     const next = Store.nextMeeting();
     const done = open && Store.attended(open.id);
 
-    /* ONE ACTION. The verb is a verb and nothing else; which meeting it
-       acts on, and when, is the reading under it. The two used to be
-       welded into one long display line that broke after "GM" and left
-       the number orphaned on the next row. */
     let action;
     if (open && !done)
       action = C.strike({ verb:'Check in',
@@ -289,14 +251,6 @@ const Views = {
       action = C.strike({ verb:'Scan a code',
                           sub:'No meeting is taking check-ins right now', go:'scan' });
 
-    /* THE CARD IS THE PAGE. Home is one object — the count set on the
-       card that carries it — one action, and the meetings still ahead.
-
-       It used to also carry two meeting entries under the action, and
-       the first of them was the same meeting the action panel was
-       already showing: the same number, the same date, the same room,
-       restated two hundred pixels lower. Both are gone. What is left
-       below the deck is the only thing Home did not already say. */
     const showing = open ? open.id : next ? next.id : null;
     const ahead = Store.meetings
       .filter(m => m.upcoming && m.id !== showing)
@@ -421,12 +375,7 @@ const Views = {
   },
 
   scan(){
-    /* WHAT THE CAMERA IS FOR. The rig used to state its own condition
-       in invented telemetry — OPT.CAM // 1280, FMT.M##/XXXXXX,
-       SYS.TRACKING, a rune reading TARGETING down the right edge —
-       none of which was ever a fact about anything. The one piece of
-       real state the page has is which meeting is taking check-ins,
-       and it was the one thing the page did not say. */
+
     const open = Store.openMeeting();
     const done = open && Store.attended(open.id);
     const standing = !open
@@ -496,9 +445,7 @@ const Views = {
      all keep working unchanged. Every number below is rendered from
      data the board-data function returned; nothing is computed or
      stored locally. */
-  /* Each board route is a chapter of the same spread. The internal chip
-     row is gone: the nav rail already says where you are, and two levels
-     of tabs for four screens was one level too many. */
+
   boardSpread(title){
     return `<div class="view view--board">
       <header class="rechead" data-enter>
@@ -515,18 +462,6 @@ const Views = {
   bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Check-In'); },
   bmembers(){  BoardUI.tab = 'progress'; return this.boardSpread('Members'); },
 
-  /* ── MEMBER — the credential page (§38) ───────────────────────────
-     This was the one spread that did not belong to the system. It
-     opened with the member's name at 20px inside a mostly empty panel
-     while every other chapter opened with a display-size nameplate; its
-     four figures were rendered at identical weight, so the page had no
-     headline; and its Milestones list was a THIRD card design for
-     content the Rewards chapter already owns.
-
-     It is a chapter now. Same nameplate as Record, Rewards and Club
-     Tools; one figure carrying the page and three supporting it; and
-     the milestones reduced to a register — the Rewards chapter holds
-     the full treatment, this one holds the ledger of it. */
   profile(){
     if (Store.failed) return this.loadFailure('Member');
     const held     = Store.heldMeetings();
@@ -593,30 +528,10 @@ const Views = {
     </div>`;
   },
 
-  /* ── AUTH ────────────────────────────────────────────────────────
-     Composed from the same parts as every other spread: a chapter
-     nameplate, one lead panel, screentone behind the figure. It is a
-     manga page that happens to contain two fields, not a login box
-     dropped into a manga site. */
   auth(){
     const mode = AuthUI.mode;                 /* 'in' | 'up' */
     const up = mode === 'up';
-    /* THE OPENING SPREAD.
 
-       A sign-in screen is the one page every member sees before they
-       have anything to look at, so it is the page that has to say what
-       this product is. It was a grey card floating in the middle of a
-       blank sheet — competent and completely anonymous.
-
-       It is a manga opening panel now: the seal at enormous size,
-       cropped hard by the left edge of the sheet so it reads as printed
-       rather than placed; the wordmark set in the display face across
-       it; and the form dropped into the lower-right quarter as a small
-       dense block of ink. The composition is deliberately unbalanced —
-       the weight sits low and right, the mark sits high and left — and
-       that diagonal is the whole of the drama. No frame around it, no
-       decoration in it, and nothing between the member and the two
-       fields they came here to fill in. */
     return `<div class="view view--auth">
 
       <div class="spread" data-enter>

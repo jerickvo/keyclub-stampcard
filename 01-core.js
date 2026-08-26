@@ -37,10 +37,7 @@ const ASSETS = {
 /* used by the schedule and the store, both of which run on load */
 const pad = n => String(n).padStart(2, '0');
 
-const HEX = '50,16 79.4,33 79.4,67 50,84 20.6,67 20.6,33';
-
 /* the key device on its own — legible down to 14px */
-const KEY = `<path d="M50 29 68.5 64.5h-37Z"/><path d="M38.5 56.5h23"/><circle cx="50" cy="45.5" r="3.6"/>`;
 
 function ticks(n, r1, r2, hotEvery){
   let out = '';
@@ -121,9 +118,7 @@ const SVG = (b) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
   stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true">${b}</svg>`;
 
 const ICON = {
-  /* the five below are the rail's, and the rail hides them in favour of
-     its chapter numerals — kept as the fallback the markup still asks
-     for, redrawn so the fallback is not the odd one out */
+
   home:   SVG('<path d="M3.5 11 12 4l8.5 7"/><path d="M6 11v9h12v-9"/><path d="M10 20v-5h4v5"/>'),
   record: SVG('<path d="M5 3.5h14v17l-7-3.5-7 3.5z"/><path d="M9 9h6M9 12.5h4"/>'),
   scan:   SVG('<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><path d="M4 12h16"/>'),
@@ -278,11 +273,6 @@ const stampMark = (ordinal) => {
 const wordmark = () => `<span class="mark">${logoMark()}<span class="mark__word">Key<b>stamp</b></span></span>`;
 
 /* ══════════════════════════════════════════════════════════════════
-   2. STORE — Key Club general meetings. Nothing invented beyond the
-   sample data itself. Every read goes through a method, so swapping in
-   Supabase touches this object and nothing else.
-   ══════════════════════════════════════════════════════════════════ */
-/* ══════════════════════════════════════════════════════════════════
    2a. SCHEDULE — every general meeting falls on a Wednesday, in the MPR.
 
    Dates are not typed in by hand anywhere. They are generated from one
@@ -348,12 +338,7 @@ const Store = {
   /* Pull everything this member is allowed to see. Called at boot and
      after any write. Failure leaves the snapshot empty rather than
      stale-but-wrong. */
-  /* `loadError` is the difference between "you have no stamps" and
-     "we could not find out how many stamps you have". Those used to be
-     the same screen: every fetch below was `.catch(() => [])`, so a
-     database outage rendered as 00/10 with an empty record — a member
-     would reasonably conclude their attendance had been deleted. The
-     failure is now carried, and the views say so instead of lying. */
+
   loadError: null,
 
   async hydrate(){
@@ -456,11 +441,7 @@ const Store = {
   attended(id){ return this.scans.some(s => s.meetingId === id); },
   scanFor(id){ return this.scans.find(s => s.meetingId === id) || null; },
   openMeeting(){ return this.meetings.find(m => m.open) || null; },
-  /* The soonest meeting still ahead. This used to reverse the array and
-     take the first upcoming one, which is only "next" if the source
-     happens to return meetings newest-first; against an ascending list
-     it returned the furthest meeting on the calendar. Sorted by date,
-     it is right whatever order the rows arrive in. */
+
   nextMeeting(){
     return [...this.meetings].filter(m => m.upcoming)
       .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)[0] || null;
