@@ -285,6 +285,7 @@ select.input{padding-right:var(--s4)}
 
 /* the welcome, in two halves along the blade's line */
 .wcut{position:absolute;inset:0;z-index:4}
+.wcut__dim{position:absolute;inset:0;background:var(--ink);opacity:0}
 .wcut__h{position:absolute;inset:0;display:grid;place-items:center}
 .wcut__h span{font-family:var(--f-display);
   font-size:clamp(52px,14vw,160px);line-height:1;padding-bottom:.2em;
@@ -292,12 +293,13 @@ select.input{padding-right:var(--s4)}
 .wcut__h--a{clip-path:polygon(0 0,100% 0,100% 42%,0 58%)}
 .wcut__h--b{clip-path:polygon(0 58%,100% 42%,100% 100%,0 100%)}
 
-/* the dismantled page: a grid of loose tiles */
-.waffle{position:absolute;inset:0;z-index:5;display:grid;
-  grid-template-columns:repeat(var(--wc,6),1fr);
-  grid-template-rows:repeat(var(--wr,4),1fr)}
-.waffle__c{background:var(--paper);border:1px solid var(--ink);box-sizing:border-box}
-.waffle__c--ink{background:var(--ink)}
+/* the dismantled page: tiles that each clip a clone of the shell, so
+   the falling pieces are fragments of the actual rendered page */
+.waffle{position:absolute;inset:0;z-index:5}
+.waffle__c{position:absolute;overflow:hidden;background:var(--paper);
+  box-shadow:0 0 0 1px var(--ink)}
+.waffle__page{position:absolute;pointer-events:none}
+.waffle__page > *{width:100%;height:100%}
 .fxdefs{position:absolute;width:0;height:0}
 
 /* ══════════════════ TABS — the held-device navigation ══════════════

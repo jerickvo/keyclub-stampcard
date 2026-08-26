@@ -163,7 +163,7 @@ const Impact = {
     if (!el || Motion.off) return;
     const rad = (angle + 90) * Math.PI / 180;
     animate(el, { translateX:[0, Math.cos(rad) * px, 0], translateY:[0, Math.sin(rad) * px, 0],
-      duration:140, ease:EASE.CUT, complete(){ el.style.transform = ''; } });
+      duration:140, ease:EASE.CUT, onComplete(){ Motion.settle(el); } });
   },
 
   /* the frame itself takes the hit */
@@ -171,7 +171,7 @@ const Impact = {
     if (!el || Motion.off) return;
     animate(el, { translateX:[0, -px, px * .7, -px * .35, 0],
       translateY:[0, px * .5, -px * .4, px * .2, 0],
-      duration:dur, ease:'linear', complete(){ el.style.transform = ''; } });
+      duration:dur, ease:'linear', onComplete(){ Motion.settle(el); } });
   },
 
   shards(host, count, angle){
@@ -352,7 +352,7 @@ const FX = {
     animate(createDrawable(strokes), { draw:['0 0', '0 1'],
             duration:dur, delay:stagger(9, { start:delay }), ease:EASE.OUT });
     animate(svg, { rotate:[spin, 0], scale:[.82, 1], duration:dur + 140,
-            delay, ease:EASE.ENERGY });
+            delay, ease:EASE.ENERGY, onComplete(){ releaseTransform(svg); } });
   },
 
   /* the page is cut away: a heavy diagonal, a crossing thin cut, one
@@ -364,83 +364,134 @@ const FX = {
     Impact.flash(.2, { delay:34, dur:46 });
   },
 
-  /* the welcome is sliced. The word lands, a blade goes through it,
-     the two halves shear apart along the cut while thinner cuts cross
-     the screen behind it. Under a second, then the page. */
+  /* the welcome is sliced. The word lands and HOLDS, the blade goes
+     through it, the halves shear apart while thinner cuts cross behind,
+     then everything falls away. ~1.5s, and every beat is visible.
+     It owns its own backdrop, so the page-cut scrim cannot stomp it. */
   welcomeCut(word = 'Welcome'){
     if (Motion.off) return;
     const fx = $('#fx'); if (!fx) return;
 
-    Impact.scrim(.62, { dur:620 });
-
     const el = document.createElement('div');
     el.className = 'wcut';
     el.innerHTML =
+      `<span class="wcut__dim"></span>` +
       `<div class="wcut__h wcut__h--a"><span>${esc(word)}</span></div>` +
       `<div class="wcut__h wcut__h--b"><span>${esc(word)}</span></div>`;
     fx.appendChild(el);
+    const dim = el.querySelector('.wcut__dim');
     const a = el.querySelector('.wcut__h--a'), b = el.querySelector('.wcut__h--b');
 
-    createTimeline({ onComplete:() => el.remove() })
-      .add(el, { opacity:[0, 1], scale:[1.3, 1], skewX:[-8, 0], duration:120, ease:EASE.CUT }, 0)
-      .add(a,  { translateX:[0, -30], translateY:[0, -16], rotate:[0, -1.6],
-                 duration:220, ease:EASE.OUT }, 340)
-      .add(b,  { translateX:[0, 34],  translateY:[0, 18],  rotate:[0, 1.8],
-                 duration:220, ease:EASE.OUT }, 340)
-      .add(el, { opacity:[1, 0], duration:150, ease:'inQuad' }, 580);
+    /* 0 the word lands · 150-590 it holds · 590 the blade · 740 the
+       halves shear · 800+ background cuts · 1230 gone */
+    animate(dim, { opacity:[0, .62], duration:240, ease:'outQuad' });
+    animate(dim, { opacity:[.62, 0], duration:280, delay:1200, ease:'inQuad' });
 
-    Slash.create({ type:'B', angle:-12, delay:236 });
-    Slash.create({ type:'D', angle:-58, offset:-90, delay:330 });
-    Slash.create({ type:'D', angle: 24, offset:100, delay:392 });
-    setTimeout(() => Impact.shards(fx, 12, -12), 330);
-    setTimeout(() => Impact.shake($('#shell'), 7, 110), 340);
+    aset([a, b], { opacity:0 });
+    animate([a, b], { opacity:[0, 1], scale:[1.32, 1], skewX:[-8, 0],
+                      duration:150, ease:EASE.CUT });
+    animate([a, b], { scale:[1, 1.014], duration:400, delay:210, ease:'inOutSine' });
+
+    Slash.create({ type:'B', angle:-12, delay:590 });
+    animate(a, { translateX:-34, translateY:-18, rotate:-1.8,
+                 duration:320, delay:740, ease:EASE.OUT });
+    animate(b, { translateX:38, translateY:20, rotate:2.0,
+                 duration:320, delay:740, ease:EASE.OUT });
+    Slash.create({ type:'D', angle:-58, offset:-90, delay:820 });
+    Slash.create({ type:'D', angle: 24, offset:100, delay:900 });
+    setTimeout(() => Impact.shards(fx, 12, -12), 750);
+    setTimeout(() => Impact.shake($('#shell'), 7, 110), 760);
+
+    animate([a, b], { opacity:[1, 0], duration:220, delay:1230, ease:'inQuad' });
+    setTimeout(() => el.remove(), 1540);
   },
 
-  /* sign-out: the dismantle. A grid of cuts goes across the page, the
-     page breaks into tiles, the tiles fall away. onCovered fires at
-     full cover, so the caller swaps the page under the debris. */
+  /* sign-out: the dismantle. A grid of cuts crosses the page, the page
+     itself breaks into tiles — each tile clips a live clone of the
+     rendered page, so the fragments ARE the page — and the pieces fall
+     away, rotating, over the sign-in screen underneath. onCovered
+     fires at full cover, so the caller swaps the real page while the
+     copy hangs in pieces. */
   waffleOut(onCovered){
     const fin = typeof onCovered === 'function' ? onCovered : () => {};
     if (Motion.off) return void fin();
-    const fx = $('#fx'); if (!fx) return void fin();
+    const fx = $('#fx'), shell = $('#shell');
+    if (!fx || !shell) return void fin();
 
-    for (let i = 0; i < 3; i++)
-      Slash.create({ type:'D', angle:-7, offset:(i - 1) * (innerHeight * .3),
-                     delay:i * 34, afterimage:false });
-    for (let i = 0; i < 4; i++)
-      Slash.create({ type:'D', angle:83, along:(i - 1.5) * (innerWidth * .24),
-                     delay:58 + i * 30, afterimage:false });
+    const W = innerWidth, H = innerHeight, sy = scrollY;
+    const cols = W > 700 ? 5 : 3, rows = W > 700 ? 4 : 5;
 
+    /* Each tile carries a clone of the shell. The sign-in page renders
+       underneath while the pieces hang, and its [data-screen="auth"]
+       rules would restyle the clones too (the rail collapses and every
+       fragment shifts) — so the layout the clones depend on is frozen
+       inline at clone time. */
+    const snap = () => {
+      const cl = shell.cloneNode(true);
+      const freeze = (sel, props) => {
+        const src = sel ? shell.querySelector(sel) : shell;
+        const dst = sel ? cl.querySelector(sel) : cl;
+        if (!src || !dst) return;
+        const cs = getComputedStyle(src);
+        props.forEach(p => { dst.style[p] = cs[p]; });
+      };
+      freeze(null, ['gridTemplateColumns']);
+      freeze('.rail', ['display']);
+      freeze('.rail__nav', ['display']);
+      freeze('.topbar', ['display']);
+      freeze('main', ['padding']);
+      return cl;
+    };
+
+    /* the slash grid: the cut lines land first, drawn edge to edge */
+    for (let i = 1; i < rows; i++)
+      Slash.create({ type:'D', angle:-4, offset:(i / rows - .5) * H,
+                     delay:i * 26, afterimage:false });
+    for (let i = 1; i < cols; i++)
+      Slash.create({ type:'D', angle:87, along:(i / cols - .5) * W,
+                     delay:40 + i * 26, afterimage:false });
+
+    /* the page, in tiles: each cell clips its own clone of the shell */
     const grid = document.createElement('div');
     grid.className = 'waffle';
-    const cols = innerWidth > 700 ? 6 : 4, rows = innerWidth > 700 ? 4 : 6;
-    grid.style.setProperty('--wc', cols);
-    grid.style.setProperty('--wr', rows);
     const cells = [];
-    for (let i = 0; i < cols * rows; i++){
-      const c = document.createElement('span');
-      c.className = 'waffle__c' + (roll(i) < .16 ? ' waffle__c--ink' : '');
-      grid.appendChild(c); cells.push(c);
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++){
+      const x = Math.round(c * W / cols), y = Math.round(r * H / rows);
+      const w = Math.round((c + 1) * W / cols) - x, h = Math.round((r + 1) * H / rows) - y;
+      const cell = document.createElement('div');
+      cell.className = 'waffle__c';
+      cell.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px`;
+      const page = document.createElement('div');
+      page.className = 'waffle__page';
+      page.style.cssText = `width:${W}px;height:${H}px;left:${-x}px;top:${-y - sy}px`;
+      page.appendChild(snap());
+      cell.appendChild(page);
+      grid.appendChild(cell);
+      cells.push(cell);
     }
     fx.appendChild(grid);
-    aset(grid, { opacity:0 });
 
-    const t0 = 210;
-    setTimeout(() => { aset(grid, { opacity:1 }); fin(); }, t0);
-    cells.forEach((c, i) => {
-      const r = roll(i);
-      const cx = i % cols - (cols - 1) / 2, cy = ((i / cols) | 0) - (rows - 1) / 2;
-      animate(c, {
-        translateX: cx * 34 + (r - .5) * 90,
-        translateY: cy * 26 + 140 + r * 170,
-        rotate: (r - .5) * 34,
-        opacity: [1, 0],
-        duration: 300 + r * 140,
-        delay: t0 + 40 + r * 110 + (cy + 2) * 24,
+    const t0 = 150;                     /* cuts have crossed; tiles hold */
+    setTimeout(fin, t0 + 60);           /* swap the real page under the copy */
+
+    cells.forEach((cell, i) => {
+      const r = roll(i), row = (i / cols) | 0, col = i % cols;
+      /* the seams open: a hair of separation makes the grid read as cut */
+      animate(cell, { translateX:(col - (cols - 1) / 2) * 3,
+                      translateY:(row - (rows - 1) / 2) * 2.4,
+                      duration:130, delay:t0, ease:EASE.OUT });
+      /* then the pieces drop, rotating, lower rows first */
+      animate(cell, {
+        translateY: H * (.7 + r * .8),
+        translateX: (col - (cols - 1) / 2) * (26 + r * 40),
+        rotate: (r - .5) * 26,
+        opacity: [1, 1, 0],
+        duration: 620 + r * 240,
+        delay: t0 + 170 + (rows - 1 - row) * 40 + r * 90,
         ease: 'inQuad',
       });
     });
-    setTimeout(() => grid.remove(), 1150);
+    setTimeout(() => grid.remove(), 1900);
   },
 
   pageEntrance(scope){
@@ -489,7 +540,10 @@ const FX = {
     aset(cells, { opacity:0, scale:.86 });
     animate(cells, { opacity:[0, 1], scale:[.86, 1],
             delay:stagger(44, { grid:[cols, rows], from:'first', start:120 }),
-            ease:spring({ mass:1, stiffness:94, damping:13, velocity:0 }) });
+            ease:spring({ mass:1, stiffness:94, damping:13, velocity:0 }),
+            onComplete(){ cells.forEach(c => { c.style.opacity = '';
+              /* keep --press-tilt custom prop; drop the spring's inline transform */
+              c.style.transform = ''; }); } });
   },
 
   /* ── scanner: the frame snaps shut on the code ── */
