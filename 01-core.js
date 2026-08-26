@@ -90,8 +90,8 @@ function sealArt(){
 }
 
 /* level 1 slot glyph · 2 medium · 3 full sigil · 4 the arena structure.
-   The levels no longer change the weight of the mark — it is artwork
-   now, not a stroke — they change what is registered around it. */
+   The levels never change the weight of the mark — it is artwork, not
+   a stroke — they change what is registered around it. */
 function seal(level = 3){
   if (level <= 2) return sealArt();
   if (level === 3) return `${sealArt()}
@@ -282,12 +282,10 @@ const wordmark = () => `<span class="mark"><span class="mark__word">Key<b>stamp<
    future meeting cannot silently land on a Tuesday because someone
    mistyped a date or the interval changed.
    ══════════════════════════════════════════════════════════════════ */
-/* Schedule keeps only its DATE MATHS. It is no longer a source of
-   meetings — the board creates real meeting rows and the client reads
-   them. What survives is the guarantee that any date the board tools
-   propose lands on a Wednesday, which is a club rule, not sample data.
-   `build()` and the ANCHOR/EVERY_DAYS generators are gone: the app no
-   longer invents a season. */
+/* Schedule is DATE MATHS only — never a source of meetings. The board
+   creates real meeting rows and the client reads them; what lives here
+   is the guarantee that any date the board tools propose lands on a
+   Wednesday, which is a club rule, not sample data. */
 const Schedule = {
   TIME: '3:15 PM',
   PLACE: 'MPR',              /* every meeting is held in the MPR */
@@ -478,11 +476,9 @@ const Store = {
 /* ══════════════════════════════════════════════════════════════════
    QR ATTENDANCE — where verification lives now
 
-   Nothing in this file can grant a stamp any more. The prototype
-   verifier that used to sit here (an FNV hash over a secret compiled
-   into this very file) has been deleted, not disabled: any secret the
-   browser holds is a secret the member holds, so it could never be
-   more than a demo.
+   Nothing in this file can grant a stamp. Any secret the browser holds
+   is a secret the member holds, so client-side verification could
+   never be more than a demo — verification stays on the server.
 
    Production flow:
 

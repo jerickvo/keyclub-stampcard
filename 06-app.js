@@ -183,10 +183,7 @@ function playViewIntro(id){
   }
 
   if (id === 'rewards'){
-    /* the unlock plays once per reward per session, not on every visit.
-       The slot-array strike went with the arrays: each tier used to
-       redraw the whole card as its own progress bar, and the page shows
-       one scale for all three now. */
+    /* the unlock plays once per reward per session, not on every visit */
     $$('[data-reward]').forEach(row => {
       if (!row.classList.contains('tier--ready')) return;
       const rid = row.dataset.reward;

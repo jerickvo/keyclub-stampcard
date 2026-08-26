@@ -1,8 +1,7 @@
 "use strict";
 /* The signed-in member's name, or a neutral stand-in when there is no
-   session. Views used to read Store.user.name directly, which assumed
-   a user always existed — true only because the prototype hardcoded
-   one. With real auth the signed-out state is a normal state. */
+   session — with real auth the signed-out state is a normal state, so
+   no view may assume Store.user exists. */
 const memberName = () => (Store.user && Store.user.name) || 'Member';
 /* keystamp — components and the five screens
    Loaded in order by index.html. Order matters. */
@@ -388,14 +387,9 @@ const Views = {
         <span class="standing__at">${standing.at}</span>
       </p>
 
-      <!-- THE FRAME. Four corner marks and a status line. Everything
-           else that used to be mounted on it — a crosshair, a dashed
-           compass ring, twenty-four tick marks, a sweeping scan line,
-           a second set of inner brackets, and the club seal painted
-           over the middle of the camera image — was a graphic saying
-           "this is a camera" to someone already looking through one.
-           The seal was worse than redundant: it sat exactly where the
-           code you are trying to read has to go. -->
+      <!-- THE FRAME. Four corner marks and a status line, nothing
+           mounted over the image: any scanner decoration would sit
+           exactly where the code being read has to go. -->
       <div class="viewer" id="viewer" data-enter>
         <video id="cam" playsinline muted autoplay></video>
         <div class="viewer__scrim" aria-hidden="true"></div>
@@ -462,19 +456,9 @@ const Views = {
     const handle   = (Store.user && Store.user.username) || name;
     const role     = Store.isBoard ? 'Board' : 'Member';
 
-    /* THE ACCOUNT PAGE SAYS EACH THING ONCE.
-
-       It used to open with the username set as a display headline —
-       twenty digits of it at 110px inside a box — then print the same
-       string again in the identity band underneath, and again in the
-       desktop rail. Beside it sat CARD TIER 10, a label naming nothing
-       the product has, and a sentence reading "06 stamps struck across
-       6 of 14 meetings held" directly above a figure grid stating the
-       same two numbers. Below all of it, the three reward milestones
-       were listed in full — the entire Rewards page, restated.
-
-       What is left is what only this page can answer: who is signed
-       in, what their standing is, and how to sign out. */
+    /* THE ACCOUNT PAGE SAYS EACH THING ONCE: who is signed in, what
+       their standing is, and how to sign out — nothing another page
+       already answers. */
     return `<div class="view view--member">
       <header class="rechead rechead--tight" data-enter>
         <h1 class="title rechead__title">Member</h1>
@@ -482,15 +466,14 @@ const Views = {
 
       <!-- A CHARACTER SHEET. The identity is an ink plate carrying the
            name, and the member's own card sits beside it — the object
-           the whole product is about, on the page that is about them.
-           The prose note that used to sit here was a nav map: it told
-           you the record was under Record and the rungs under Rewards,
-           which the nav already does. -->
+           the whole product is about, on the page that is about them. -->
       <div class="sheet" data-enter>
         <section class="who">
-          <span class="who__seal" aria-hidden="true">${brandSeal('kci')}</span>
+          <!-- the organizational letterhead: International leads, the
+               district seconds it, both knocked out of the ink and set
+               as one lockup -->
+          <div class="who__marks" aria-hidden="true">${brandSeal('kci')}${brandSeal('cnh')}</div>
           <div class="who__id">
-            <span class="who__seal2" aria-hidden="true">${brandSeal('cnh')}</span>
             <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
               handle !== name ? ` / ${esc(handle)}` : ''}</p>
             <p class="who__name">${esc(name)}</p>
@@ -532,9 +515,8 @@ const Views = {
       <div class="spread" data-enter>
 
         <!-- THE INK FIELD. The swirl is knocked out of it at full
-             strength and cropped by two edges. It used to sit behind the
-             whole page at 13% opacity, which is a watermark: enormous,
-             correctly cropped, and contributing nothing. -->
+             strength and cropped by two edges — a printed panel, not a
+             watermark. -->
         <div class="spread__field crop" aria-hidden="true">
           <svg class="spread__seal crop__art" viewBox="0 0 100 100">${sealArt()}</svg>
           <!-- the International seal is knocked out of the ink field

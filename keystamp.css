@@ -80,6 +80,15 @@ body{
   mask-image:linear-gradient(35deg,#000 26%,transparent 72%)}
 .ground__tone{position:absolute;top:0;bottom:0;right:clamp(10px,1.4vw,22px);
   width:1px;background:var(--tint);opacity:.6}
+/* the world itself carries the cut: one enormous, faint slash form
+   crossing the ground diagonally. It sits under every panel, so the
+   page reads as a scene that has been through a blade — felt more than
+   noticed, and never behind body text on paper alone. */
+.ground__slash{position:absolute;left:-6%;right:-6%;top:34%;
+  height:clamp(70px,14vh,150px);transform:rotate(-11deg);
+  background:var(--tint);opacity:.55;
+  clip-path:polygon(0 55%,9% 34%,28% 16%,52% 6%,74% 16%,100% 44%,
+                    92% 62%,66% 86%,38% 94%,12% 76%)}
 .ground__vig,.ground__grain{display:none}
 .arena{display:none}
 .backdrop{position:absolute;inset:0;background-repeat:repeat;
@@ -468,6 +477,13 @@ html,body{overflow-x:clip;max-width:100%}
    ══════════════════════════════════════════════════════════════════ */
 
 .rail__link{position:relative}
+/* the selected chapter carries a small blade tick — the same cut
+   language the transitions speak, at interface scale */
+.rail__link[aria-current]::before{content:'';position:absolute;
+  right:10px;top:50%;width:14px;height:5px;
+  transform:translateY(-50%) rotate(-16deg);
+  background:var(--ink);
+  clip-path:polygon(0 50%,22% 4%,100% 32%,100% 68%,22% 96%)}
 
 .rig{isolation:isolate}
 
