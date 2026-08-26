@@ -126,36 +126,42 @@ function placeIndicators(){
   Motion.indicator($('#railInd'), $('#railNav .rail__link[aria-current]'), 'y');
 }
 
-async function go(id){
+async function go(id, opts = {}){
+  if (opts === true) opts = { instant:true };   /* legacy boolean form */
   if (!ROUTES.includes(id)) id = 'home';
   id = gate(id);
   if (navigating) return;
   if (current === 'scan' && id !== 'scan') Scanner.stop();
 
   const view = $('#view');
-  if (view.firstChild){
+  const render = () => {
+    current = id;
+    syncHash(id);
+    Motion.settle(view);          /* identity in anime's cache too, or a
+                                     later cut-push resurrects a stale skew */
+    Reveal.clear();
+    document.documentElement.dataset.screen = id; /* CSS lays out each spread by name */
+    /* One surface for the whole app: warm paper. Black is manga ink --
+       spotted blacks, panel frames, active states, the scanner border --
+       and is never used as a page-level theme. */
+    view.innerHTML = Views[id]();
+    paintNav();
+    try { scrollTo(0, 0); } catch (_) {}
+    afterRender(id);
+    view.focus({ preventScroll:true });
+  };
+
+  /* The outgoing page stands untouched until the ink sheets cover it;
+     the swap happens under full cover, so there is never a blank or a
+     half-faded midpoint. opts.instant renders directly — used when a
+     covering sequence (welcome, the sign-out wall) is already up. */
+  if (view.firstChild && booted && !opts.instant && !Motion.off){
     navigating = true;
-    FX.pageCutTransition();
-    await Motion.exit(view);
+    await FX.pageCut(() => { render(); FX.slamType(view, 40); });
     navigating = false;
+  } else {
+    render();
   }
-
-  current = id;
-  syncHash(id);
-  Motion.settle(view);            /* identity in anime's cache too, or a
-                                     later cut-push resurrects the exit skew */
-  Reveal.clear();
-  document.documentElement.dataset.screen = id;   /* CSS lays out each spread by name */
-  /* One surface for the whole app: warm paper. Black is manga ink --
-     spotted blacks, panel frames, active states, the scanner border --
-     and is never used as a page-level theme. */
-
-  view.innerHTML = Views[id]();
-  paintNav();
-  try { scrollTo({ top:0, behavior:Motion.off ? 'auto' : 'smooth' }); } catch (_) { scrollTo(0, 0); }
-  if (booted) FX.pageEntrance(view);
-  afterRender(id);
-  view.focus({ preventScroll:true });
 }
 
 const seenUnlocked = new Set();
@@ -315,8 +321,10 @@ document.addEventListener('submit', async e => {
   try {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
+    /* the ink panel mounts synchronously, so the home render below
+       happens invisibly beneath it and the reveal is the panel's cut */
     FX.welcomeCut(up ? 'Joined' : 'Welcome');
-    go('home');
+    go('home', { instant:true });
   } catch (err){
     authErr(err && err.message ? err.message : 'Something went wrong. Try again.');
     authBusy(false);
@@ -375,7 +383,7 @@ document.addEventListener('click', e => {
   const reload = e.target.closest('[data-reload]');
   if (reload){
     reload.disabled = true; reload.textContent = 'Retrying…';
-    Store.hydrate().then(() => go(current, true));
+    Store.hydrate().then(() => go(current, { instant:true }));
     return;
   }
 
@@ -414,13 +422,18 @@ document.addEventListener('click', e => {
 
   const out = e.target.closest('[data-signout]');
   if (out){
-    Store.signOut()
-      .then(() => FX.waffleOut(() => {
+    /* the wall freezes the CURRENT page first; only then does the real
+       sign-out (and the auth render) happen, invisibly beneath it */
+    FX.waffleOut({
+      swap: () => Store.signOut().then(() => {
+        AuthUI.mode = 'in';       /* whoever signs in next starts at Sign in,
+                                     not at the last account's Create form */
         toast({ key:'auth', title:'Signed out' });
-        go('auth');
-      }))
-      .catch(() => toast({ key:'auth', bad:true, title:'Could not sign out',
-                           detail:'Check your connection and try again.' }));
+        go('auth', { instant:true });
+      }),
+      fail: () => toast({ key:'auth', bad:true, title:'Could not sign out',
+                          detail:'Check your connection and try again.' }),
+    });
     return;
   }
 
@@ -526,8 +539,10 @@ function paintMotionBtn(){
   b.setAttribute('aria-pressed', String(Motion.forced));
   b.setAttribute('aria-label', Motion.forced ? 'Reduced motion is on. Turn animations back on.'
                                              : 'Reduced motion is off. Turn animations off.');
+  /* the chip says what state it is IN, not a bare noun: an unlabeled
+     "MOTION" chip read as debug furniture */
   b.innerHTML = (Motion.forced ? ICON.still : ICON.waves) +
-                `<span>${Motion.forced ? 'Still' : 'Motion'}</span>`;
+                `<span>Motion ${Motion.forced ? 'off' : 'on'}</span>`;
 }
 
 addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); });
@@ -553,7 +568,9 @@ addEventListener('resize', () => {
   await Store.hydrate();
   /* re-render whenever the snapshot changes (a check-in, a claim, a
      sign-in) so views never read a stale count */
-  Store.onChange(() => { if (current) go(current, true); paintIdentity(); paintBrand(); });
+  /* a data refresh re-renders in place — it is not a navigation, so it
+     never draws the page-cut */
+  Store.onChange(() => { if (current) go(current, { instant:true }); paintIdentity(); paintBrand(); });
 
   paintBrand();
   $('#barBrand').innerHTML  = wordmark();

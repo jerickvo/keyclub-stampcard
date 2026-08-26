@@ -7,33 +7,16 @@
 <title>Keystamp</title>
 <meta name="description" content="Key Club attendance">
 
-<!-- ─────────────────────────────────────────────────────────────
-     BRAND ASSETS — one mark, one place.
-
-     Every path here is a real file under assets/brand/. What was here
-     before was half broken and half wrong: the manifest pointed at
-     assets/icons/* which did not exist, favicon.ico / favicon-32.png /
-     apple-touch-icon.png at the repo root were referenced by nothing
-     at all, and the tab icon was an inline data URI still drawing the
-     retired hexagon mark — which is why the browser tab never matched
-     the app.
-
-     assets/brand/favicon.svg carries explicit colours rather than
-     currentColor: a standalone tab icon has nothing to inherit from.
-     assets/brand/app-logo.svg is the in-page mark and does use
-     currentColor, so it takes the ink colour wherever it is placed.
-     ───────────────────────────────────────────────────────────── -->
-<link rel="icon" href="assets/brand/favicon.svg" type="image/svg+xml">
-<link rel="icon" href="assets/brand/favicon-32.png" sizes="32x32" type="image/png">
-<link rel="shortcut icon" href="assets/brand/favicon.ico" sizes="any">
-<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<!-- There is deliberately no tab icon: the retired Keystamp mark is
+     gone and nothing replaces it. rel="icon" pointing at nothing stops
+     the browser requesting /favicon.ico on its own. -->
+<link rel="icon" href="data:,">
 <link rel="manifest" href="site.webmanifest">
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="Keystamp">
 <meta property="og:description" content="Key Club attendance">
-<meta property="og:image" content="assets/brand/og.png">
-<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Keystamp">
 <meta name="twitter:description" content="Key Club attendance">
 
@@ -138,11 +121,20 @@
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <div class="boot" id="boot" aria-hidden="true">
-  <svg class="boot__seal" id="bootSeal" viewBox="0 0 100 100"></svg>
-  <div class="boot__title" id="bootTitle">
-    <span class="boot__half boot__half--a">Keystamp</span>
-    <span class="boot__half boot__half--b">Keystamp</span>
-  </div>
+  <div class="boot__half boot__half--a"><div class="boot__poster">
+    <span class="boot__seal"></span>
+    <div class="boot__type">
+      <p class="boot__kicker">Key Club attendance</p>
+      <p class="boot__word">Keystamp</p>
+    </div>
+  </div></div>
+  <div class="boot__half boot__half--b"><div class="boot__poster">
+    <span class="boot__seal"></span>
+    <div class="boot__type">
+      <p class="boot__kicker">Key Club attendance</p>
+      <p class="boot__word">Keystamp</p>
+    </div>
+  </div></div>
 </div>
 
 <!-- ─────────────────────────────────────────────────────────────

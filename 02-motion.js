@@ -33,22 +33,6 @@ const Motion = {
     el.style.opacity = '';
   },
 
-  exit(scope){
-    if (this.off) return Promise.resolve();
-    /* anime.js v4's animate() return value is itself thenable — it
-       resolves when the animation completes. There is no `.finished`
-       property on it (that was a v3/WAAPI habit); reading it just
-       gives `undefined`, and `await undefined` resolves on the next
-       microtask instead of waiting ~130ms for the real exit to play
-       out. That let the caller reset the view's inline style while
-       this animation was still running, and the animation then kept
-       writing opacity/transform over the reset for its full duration
-       — landing the freshly-rendered next page at opacity:0. */
-    /* out along the blade's line; Motion.settle() in go() resets both
-       the inline style and anime's transform cache afterwards */
-    return animate(scope, { opacity:[1,0], translateX:[0,-24], translateY:[0,8],
-                   skewX:[0,-3], duration:150, ease:'inQuad' });
-  },
 
   ripple(btn){
     if (this.off) return;

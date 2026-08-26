@@ -131,6 +131,27 @@ const Slash = {
   },
 };
 
+/* ── the blade: a div razor, thick enough to actually see. Grows from
+   its centre in one hard sweep, holds as the cut line, collapses. The
+   paper variant is the same razor for ink fields. ── */
+const Blade = {
+  strike({ angle = -19, x = 0, y = 0, th = 16, paper = false, host = null,
+           delay = 0, sweep = 95, hold = 150 } = {}){
+    if (Motion.off) return;
+    const parent = host || $('#fx');
+    if (!parent) return;
+    const el = document.createElement('i');
+    el.className = 'blade' + (paper ? ' blade--paper' : '');
+    el.style.setProperty('--bth', th + 'px');
+    parent.appendChild(el);
+    aset(el, { rotate:angle, translateX:x, translateY:y, scaleX:.02, opacity:1 });
+    createTimeline({ onComplete:() => el.remove() })
+      .add(el, { scaleX:[.02, 1], duration:sweep, delay, ease:EASE.CUT })
+      .add(el, { scaleX:1, duration:hold })
+      .add(el, { scaleY:[1, .06], opacity:[1, 0], duration:90, ease:'inQuad' });
+  },
+};
+
 const Impact = {
   /* the anticipation beat: everything dips before the cut lands */
   scrim(peak, { delay = 0, host = null, dur = 180 } = {}){
@@ -355,69 +376,110 @@ const FX = {
             delay, ease:EASE.ENERGY, onComplete(){ releaseTransform(svg); } });
   },
 
-  /* the page is cut away: a heavy diagonal, a crossing thin cut, one
-     frame of paper flash. Still ~200ms — quick but unmistakable. */
-  pageCutTransition(){
-    if (Motion.off) return;
-    Slash.create({ type:'C', angle:-19, afterimage:false });
-    Slash.create({ type:'D', angle:-64, offset:64, delay:44, afterimage:false });
-    Impact.flash(.2, { delay:34, dur:46 });
+  /* the page is cut away. Two ink sheets sweep the viewport on
+     diagonals, the swap happens under full cover, and they leave the
+     other way. No scrim, no fade: the outgoing page stands untouched
+     until the ink crosses it. swap() runs at the covered midpoint.
+     Resolves when the cut is finished. ~360ms. */
+  pageCut(swap){
+    const doSwap = typeof swap === 'function' ? swap : () => {};
+    const fx = $('#fx');
+    if (Motion.off || !fx){ doSwap(); return Promise.resolve(); }
+
+    return new Promise(res => {
+      const el = document.createElement('div');
+      el.className = 'pcut';
+      el.innerHTML = '<div class="pcut__sheet"></div><div class="pcut__sheet"></div>';
+      fx.appendChild(el);
+      const [A, B] = el.children;
+      const D = Math.hypot(innerWidth, innerHeight) * 1.15;
+      /* each sheet travels perpendicular to its own blade line */
+      const path = (n, deg, t) => {
+        const px = -Math.sin(deg * Math.PI / 180), py = Math.cos(deg * Math.PI / 180);
+        aset(n, { rotate:deg, translateX:-D * px, translateY:-D * py });
+        createTimeline()
+          .add(n, { translateX:[-D * px, 0], translateY:[-D * py, 0],
+                    duration:130, delay:t, ease:'inQuad' })
+          .add(n, { translateX:0, duration:55 })
+          .add(n, { translateX:[0, D * px], translateY:[0, D * py],
+                    duration:150, ease:'inQuad' });
+      };
+      path(A, -19, 0);
+      path(B, -64, 55);
+      /* the crossing: one paper razor along the first sheet's line,
+         one frame of blown paper, and the page swap under it all */
+      Blade.strike({ angle:-19, paper:true, th:10, delay:120, sweep:60, hold:90 });
+      Impact.flash(.5, { host:el, delay:140, dur:44 });
+      setTimeout(doSwap, 150);
+      setTimeout(() => { el.remove(); res(); }, 420);
+    });
   },
 
-  /* the welcome is sliced. The word lands and HOLDS, the blade goes
-     through it, the halves shear apart while thinner cuts cross behind,
-     then everything falls away. ~1.5s, and every beat is visible.
-     It owns its own backdrop, so the page-cut scrim cannot stomp it. */
+  /* the welcome: a solid ink panel snaps over the scene, the word slams
+     in, a paper blade goes visibly through both, the halves shear a few
+     pixels along the cut, background blades cross, then the two panel
+     halves fly apart and reveal the page. No dim, no gray — every state
+     is ink or paper at full strength. ~1.5s. */
   welcomeCut(word = 'Welcome'){
     if (Motion.off) return;
     const fx = $('#fx'); if (!fx) return;
 
+    const half = `<div class="wcut__panel"><span class="wcut__word">${esc(word)}</span></div>`;
     const el = document.createElement('div');
     el.className = 'wcut';
     el.innerHTML =
-      `<span class="wcut__dim"></span>` +
-      `<div class="wcut__h wcut__h--a"><span>${esc(word)}</span></div>` +
-      `<div class="wcut__h wcut__h--b"><span>${esc(word)}</span></div>`;
+      `<div class="wcut__h wcut__h--a">${half}</div>` +
+      `<div class="wcut__h wcut__h--b">${half}</div>`;
     fx.appendChild(el);
-    const dim = el.querySelector('.wcut__dim');
     const a = el.querySelector('.wcut__h--a'), b = el.querySelector('.wcut__h--b');
+    const words = el.querySelectorAll('.wcut__word');
 
-    /* 0 the word lands · 150-590 it holds · 590 the blade · 740 the
-       halves shear · 800+ background cuts · 1230 gone */
-    animate(dim, { opacity:[0, .62], duration:240, ease:'outQuad' });
-    animate(dim, { opacity:[.62, 0], duration:280, delay:1200, ease:'inQuad' });
+    /* the cut line the clip paths draw: 38%→62% across the width */
+    const seamDeg = -Math.atan2(innerHeight * .24, innerWidth) * 180 / Math.PI;
+    const pxv = -Math.sin(seamDeg * Math.PI / 180), pyv = Math.cos(seamDeg * Math.PI / 180);
+    const D = Math.hypot(innerWidth, innerHeight);
 
-    aset([a, b], { opacity:0 });
-    animate([a, b], { opacity:[0, 1], scale:[1.32, 1], skewX:[-8, 0],
-                      duration:150, ease:EASE.CUT });
-    animate([a, b], { scale:[1, 1.014], duration:400, delay:210, ease:'inOutSine' });
+    /* 0 panel on · 80 word slams · 340-700 hold · 760 blade through ·
+       860 shear · 900+ background blades · 1080 halves fly · ~1480 gone */
+    aset(words, { opacity:0 });
+    animate(words, { opacity:[0, 1], scale:[1.5, 1], duration:130,
+                     delay:80, ease:STEP(3) });
+    setTimeout(() => Impact.shake(el, 7, 110), 200);
+    Impact.flash(.22, { host:el, delay:210, dur:40 });
+    animate(words, { scale:[1, 1.012], duration:360, delay:340, ease:'inOutSine' });
 
-    Slash.create({ type:'B', angle:-12, delay:590 });
-    animate(a, { translateX:-34, translateY:-18, rotate:-1.8,
-                 duration:320, delay:740, ease:EASE.OUT });
-    animate(b, { translateX:38, translateY:20, rotate:2.0,
-                 duration:320, delay:740, ease:EASE.OUT });
-    Slash.create({ type:'D', angle:-58, offset:-90, delay:820 });
-    Slash.create({ type:'D', angle: 24, offset:100, delay:900 });
-    setTimeout(() => Impact.shards(fx, 12, -12), 750);
-    setTimeout(() => Impact.shake($('#shell'), 7, 110), 760);
+    Blade.strike({ angle:seamDeg, paper:true, th:13, delay:760, sweep:85, hold:170 });
+    Impact.flash(.3, { host:el, delay:850, dur:44 });
+    setTimeout(() => Impact.shake(el, 6, 100), 850);
+    animate(a, { translateX:-pxv * 5, translateY:-pyv * 5, duration:70,
+                 delay:860, ease:STEP(2) });
+    animate(b, { translateX: pxv * 5, translateY: pyv * 5, duration:70,
+                 delay:860, ease:STEP(2) });
+    Blade.strike({ angle:seamDeg - 44, paper:true, th:6, y:-110, delay:920, sweep:70, hold:90 });
+    Blade.strike({ angle:seamDeg + 38, paper:true, th:6, y:120, delay:990, sweep:70, hold:90 });
 
-    animate([a, b], { opacity:[1, 0], duration:220, delay:1230, ease:'inQuad' });
-    setTimeout(() => el.remove(), 1540);
+    animate(a, { translateX:[-pxv * 5, -pxv * D * .85],
+                 translateY:[-pyv * 5, -pyv * D * .85],
+                 rotate:-1.4, duration:360, delay:1080, ease:'inQuad' });
+    animate(b, { translateX:[ pxv * 5,  pxv * D * .85],
+                 translateY:[ pyv * 5,  pyv * D * .85],
+                 rotate:1.4, duration:360, delay:1080, ease:'inQuad' });
+    setTimeout(() => el.remove(), 1500);
   },
 
-  /* sign-out: the wall comes down. The page stands as a solid wall,
-     two huge blades strike across it, the cut lattice appears, and the
-     wall breaks into thick, irregular pieces — each one a clipped clone
-     of the rendered page over an ink backing that reads as the slab's
-     edge — which tumble away in 3D and reveal the sign-in screen.
-     onCovered fires at full cover, so the caller swaps the real page
-     while the copy hangs in pieces. */
-  waffleOut(onCovered){
-    const fin = typeof onCovered === 'function' ? onCovered : () => {};
-    if (Motion.off) return void fin();
+  /* sign-out: the wall comes down. The CURRENT page is frozen into a
+     wall of clones FIRST — before any state changes — then the real app
+     signs out invisibly beneath it. Two blades strike, thin lattice
+     cuts follow, the wall visibly cracks into slabs (ink shows in the
+     seams), holds one beat, and the pieces fall under gravity at full
+     opacity until they leave the screen. swap() runs once the wall is
+     up; fail() reports a sign-out that could not happen. */
+  waffleOut({ swap, fail } = {}){
+    const doSwap = typeof swap === 'function' ? swap : () => {};
+    const oops   = typeof fail === 'function' ? fail : () => {};
     const fx = $('#fx'), shell = $('#shell');
-    if (!fx || !shell) return void fin();
+    if (Motion.off || !fx || !shell)
+      return void Promise.resolve().then(doSwap).catch(oops);
 
     const W = innerWidth, H = innerHeight, sy = scrollY;
     const cols = W > 700 ? 5 : 3, rows = 4;
@@ -441,19 +503,7 @@ const FX = {
       return cl;
     };
 
-    /* 1 · the strikes: two big blades cross the wall, then the lattice */
-    Slash.create({ type:'B', angle:-19 });
-    Slash.create({ type:'B', angle:-64, offset:40, delay:120 });
-    Impact.flash(.3, { delay:60, dur:50 });
-    Impact.shake($('#shell'), 9, 140);
-    for (let i = 1; i < rows; i++)
-      Slash.create({ type:'D', angle:-6, offset:(i / rows - .5) * H,
-                     delay:200 + i * 24, afterimage:false });
-    for (let i = 1; i < cols; i++)
-      Slash.create({ type:'D', angle:86, along:(i / cols - .5) * W,
-                     delay:230 + i * 24, afterimage:false });
-
-    /* 2 · the cut lattice: a jittered grid, so the pieces read as
+    /* the cut lattice: a jittered grid, so the pieces read as
        slash-cut slabs rather than machine tiles */
     const jx = W / cols * .13, jy = H / rows * .13;
     const px = [], py = [];
@@ -467,6 +517,9 @@ const FX = {
 
     const grid = document.createElement('div');
     grid.className = 'waffle';
+    const inkback = document.createElement('div');
+    inkback.className = 'waffle__ink';
+    grid.appendChild(inkback);
     const pieces = [];
     for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++){
       const quad = [[px[r][c], py[r][c]], [px[r][c + 1], py[r][c + 1]],
@@ -489,32 +542,63 @@ const FX = {
     }
     fx.appendChild(grid);
 
-    const t0 = 340;
-    setTimeout(fin, t0 + 60);
+    /* the wall is up and pixel-identical to the page it froze. Two
+       frames later — once the pieces are committed to the screen — the
+       real app signs out beneath it, invisibly. The ink layer behind
+       the wall stays clear until the crack needs it, so a slow first
+       rasterization of the clones can never flash black. */
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      Promise.resolve().then(doSwap).catch(oops);
+    }));
 
-    /* 3 · the pieces nearest the first blade go first: stagger by
-       distance from the -19deg cut through the centre */
+    /* 1 · the strikes: two heavy blades, then the thin lattice cuts */
+    Blade.strike({ angle:-19, th:20, delay:50, hold:300 });
+    Blade.strike({ angle:-64, th:15, delay:160, x:36, hold:250 });
+    Impact.flash(.35, { delay:130, dur:46 });
+    setTimeout(() => Impact.shake(grid, 9, 140), 140);
+    for (let i = 1; i < rows; i++)
+      Blade.strike({ angle:-6 + (roll(i) - .5) * 6, th:5, y:(i / rows - .5) * H,
+                     delay:230 + i * 26, sweep:70, hold:110 });
+    for (let i = 1; i < cols; i++)
+      Blade.strike({ angle:86 + (roll(i + 3) - .5) * 6, th:5, x:(i / cols - .5) * W,
+                     delay:255 + i * 26, sweep:70, hold:110 });
+
+    /* 2 · the crack: the slabs part a few pixels and the ink behind
+       the wall shows through the seams. The wall HOLDS one beat. */
+    const t1 = 400;
+    setTimeout(() => grid.classList.add('is-cracked'), t1 - 50);
+    pieces.forEach(p => {
+      animate(p.el, { translateX:(p.cx - W / 2) * .014, translateY:(p.cy - H / 2) * .014,
+                      duration:90, delay:t1 + p.r * 50, ease:STEP(2) });
+    });
+    setTimeout(() => Impact.shake(grid, 2, 90), t1 + 160);
+
+    /* 3 · detach + gravity: nearest the first blade goes first. The
+       pieces stay solid — they leave the bottom of the screen, they
+       never dissolve. */
     const nx = Math.sin(-19 * Math.PI / 180), ny = -Math.cos(-19 * Math.PI / 180);
     let dmax = 1;
     pieces.forEach(p => { p.d = Math.abs((p.cx - W / 2) * ny - (p.cy - H / 2) * nx);
                           dmax = Math.max(dmax, p.d); });
+    const t2 = 640;
+    let last = 0;
     pieces.forEach(p => {
-      const seam = 60 + (p.d / dmax) * 240 + p.r * 90;
-      animate(p.el, { translateX:(p.cx - W / 2) * .04, translateY:(p.cy - H / 2) * .03,
-                      duration:150, delay:t0 + seam * .4, ease:EASE.OUT });
+      const seam = (p.d / dmax) * 180 + p.r * 90;
+      const dur = 540 + p.r * 260;
+      last = Math.max(last, t2 + seam + dur);
       animate(p.el, {
-        translateY: H * (.85 + p.r * .7),
-        translateX: (p.cx - W / 2) * (.3 + p.r * .5),
-        rotateX: -(24 + p.r * 46),
-        rotateY: (p.r - .5) * 40,
-        rotateZ: (p.r - .5) * 24,
-        opacity: [1, 1, 0],
-        duration: 680 + p.r * 320,
-        delay: t0 + 160 + seam,
+        translateY: H * 1.45 + p.r * H * .3,
+        translateX: (p.cx - W / 2) * (.10 + p.r * .22),
+        rotateZ: (p.r - .5) * (26 + p.r * 20),
+        rotateX: -(8 + p.r * 24),
+        duration: dur,
+        delay: t2 + seam,
         ease: 'inQuad',
       });
     });
-    setTimeout(() => grid.remove(), 2200);
+    /* the dark behind the wall gives way as the gaps open */
+    setTimeout(() => inkback.remove(), t2 + 130);
+    setTimeout(() => grid.remove(), last + 80);
   },
 
   pageEntrance(scope){
@@ -699,79 +783,72 @@ const FX = {
   }
 };
 
-/* ── loading: the app is cut into existence ─────────────────────────
-   Ten beats in about 1.7 seconds. It is a title card, not a spinner,
-   so it never loops and never waits on anything — the interface is
-   already rendered behind the curtain while this plays.
+/* ── loading: one ink poster, then the blade takes it apart ─────────
+   A title card, not a spinner — it never loops and never waits on
+   anything; the interface is already rendered behind the curtain.
 
-     1  a small seal surfaces out of black
-     2  one instant cut
-     3  a single frame of blown-out contrast
-     4  three diagonal cuts in quick succession
-     5  speed lines explode outward
-     6  the mark resolves
-     7  the title lands
-     8  a last cut goes through the title
-     9  the halves shear apart and everything collapses
-    10  the interface arrives
+   The first painted frame is already the poster: solid ink, the KCI
+   seal knocked out in paper and cropped by the left edge. The type
+   slams in, holds, a paper blade goes through the whole card, the two
+   halves shear and fly apart, and the app is standing underneath.
+   Every state is ink or paper at full strength — no gray.
    ─────────────────────────────────────────────────────────────────── */
 Object.assign(FX, {
   loadingSequence(onReveal){
-    const boot = $('#boot'), sealEl = $('#bootSeal');
-    const title = $('#bootTitle');
+    const boot = $('#boot');
     const halves = $$('.boot__half');
+    const seals = $$('.boot__seal');
+    const words = $$('.boot__word'), kickers = $$('.boot__kicker');
 
     /* both of these are idempotent on purpose. The curtain is a solid
-       black layer over the whole app, so "lift it exactly once, from
-       exactly one callback" is a bad bet — anything that stops the
-       clock strands the page. Make them safe to call twice and then
-       call them from more than one place. */
+       layer over the whole app, so "lift it exactly once, from exactly
+       one callback" is a bad bet — anything that stops the clock
+       strands the page. Safe to call twice, called from two places. */
     let lifted = false, revealed = false;
     const done = () => { if (lifted) return; lifted = true; boot.classList.add('is-done'); };
     const reveal = () => { if (revealed) return; revealed = true; onReveal(); };
 
-    sealEl.innerHTML = seal(4);
+    seals.forEach(s => { s.innerHTML = brandSeal('kci'); });
 
     if (Motion.off){ reveal(); return void done(); }
 
-    const sealStrokes = sealEl.querySelectorAll('circle,polygon,path,line');
-    aset(title, { opacity:0 });
+    /* the same seam the clip paths draw: 40%→60% across the width */
+    const seamDeg = -Math.atan2(innerHeight * .20, innerWidth) * 180 / Math.PI;
+    const pxv = -Math.sin(seamDeg * Math.PI / 180), pyv = Math.cos(seamDeg * Math.PI / 180);
+    const D = Math.hypot(innerWidth, innerHeight);
 
-    const tl = createTimeline({ onComplete:done });
-    const beat = (at, fn) => tl.add({ duration:1, onBegin:fn }, at);
+    /* 0 the poster stands · 90 the seal presses · 260 the kicker ·
+       330 the title slams · hold · 900 the blade · 1010 shear ·
+       1130 the halves fly and the app is revealed · 1560 done */
+    animate(seals, { scale:[1.06, 1], rotate:[-6, -8], duration:110,
+                     delay:90, ease:STEP(2) });
+    aset(kickers, { opacity:0 });
+    aset(words, { opacity:0 });
+    animate(kickers, { opacity:[0, 1], duration:1, delay:260, ease:STEP(1) });
+    animate(words, { opacity:[0, 1], scale:[1.4, 1], duration:130,
+                     delay:330, ease:STEP(3) });
+    setTimeout(() => Impact.shake(boot, 7, 110), 440);
+    Impact.flash(.24, { host:boot, delay:450, dur:42 });
 
-    tl
-      /* 1 · a seal surfaces */
-      .add(sealEl, { opacity:[0, .78], scale:[.86, 1], duration:200, ease:EASE.CALM }, 50)
-      .add(createDrawable(sealStrokes), { draw:['0 0', '0 1'],
-             duration:520, delay:stagger(4), ease:EASE.OUT }, 70)
-      .add(sealEl, { opacity:[.78, .16], scale:[1, 1.07], duration:320, ease:EASE.OUT }, 320)
-      /* 6 · the title lands */
-      .add(title, { opacity:[0, 1], scale:[1.14, 1], duration:170, ease:EASE.CUT }, 640)
-      /* 9 · collapse */
-      .add(sealEl, { opacity:0, duration:180, ease:EASE.CALM }, 1030)
-      .add(boot, { opacity:[1, 0], duration:280, ease:EASE.CALM, onBegin:reveal }, 1200)
-      /* 8 · the halves shear apart along the last cut */
-      .add(halves[0], { translateX:-9, translateY:-27, rotate:-1.4,
-             opacity:[1, 0], duration:300, ease:EASE.OUT }, 995)
-      .add(halves[1], { translateX:9, translateY:27, rotate:1.4,
-             opacity:[1, 0], duration:300, ease:EASE.OUT }, 995);
+    Blade.strike({ angle:seamDeg, paper:true, th:14, host:boot,
+                   delay:900, sweep:85, hold:160 });
+    Impact.flash(.3, { host:boot, delay:990, dur:44 });
+    setTimeout(() => Impact.shake(boot, 6, 100), 990);
 
-    /* the cuts, on the same clock as everything else */
-    const cut = o => Slash.create({ ...o, host:boot });
-    beat(200, () => cut({ type:'B', angle:-27 }));                                    /* 2 */
-    beat(240, () => Impact.flash(.34, { host:boot, dur:52 }));                        /* 3 */
-    beat(310, () => cut({ type:'D', angle:52, offset:-96 }));                         /* 4 */
-    beat(352, () => cut({ type:'D', angle:-64, offset:70 }));
-    beat(430, () => Lines.burst({ host:boot, count:30, reach:480, dur:340, hot:true }));  /* 5 */
-    beat(442, () => Impact.ring(boot, { size:120, scale:4.4, dur:700 }));
-    beat(940, () => {                                                                /* 8 */
-      cut({ type:'B', angle:-18 });
-      Impact.flash(.3, { host:boot, delay:26, dur:48 });
-      Impact.shards(boot, 14, -18);
-    });
+    animate(halves[0], { translateX:-pxv * 5, translateY:-pyv * 5,
+                         duration:70, delay:1010, ease:STEP(2) });
+    animate(halves[1], { translateX: pxv * 5, translateY: pyv * 5,
+                         duration:70, delay:1010, ease:STEP(2) });
 
-    tl.then(done, done);
-    setTimeout(() => { reveal(); done(); }, 2400);
+    setTimeout(reveal, 1120);
+    animate(halves[0], { translateX:[-pxv * 5, -pxv * D * .85],
+                         translateY:[-pyv * 5, -pyv * D * .85],
+                         rotate:-1.2, duration:400, delay:1130, ease:'inQuad' });
+    animate(halves[1], { translateX:[ pxv * 5,  pxv * D * .85],
+                         translateY:[ pyv * 5,  pyv * D * .85],
+                         rotate:1.2, duration:400, delay:1130, ease:'inQuad',
+                         onComplete:done });
+
+    setTimeout(() => { reveal(); done(); }, 3000);
   },
 });

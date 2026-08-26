@@ -489,8 +489,8 @@ const Views = {
       <div class="sheet" data-enter>
         <section class="who">
           <span class="who__seal" aria-hidden="true">${brandSeal('kci')}</span>
-          <span class="who__seal2" aria-hidden="true">${brandSeal('cnh')}</span>
           <div class="who__id">
+            <span class="who__seal2" aria-hidden="true">${brandSeal('cnh')}</span>
             <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
               handle !== name ? ` / ${esc(handle)}` : ''}</p>
             <p class="who__name">${esc(name)}</p>
@@ -501,7 +501,7 @@ const Views = {
 
       <section class="standing-band" data-enter>
         <p class="standing-band__fig">${pad(total)}</p>
-        <p class="standing-band__of">${total === 1 ? 'stamp' : 'stamps'} this year</p>
+        <p class="standing-band__of">${total === 1 ? 'stamp' : 'stamps'} collected</p>
         <dl class="standing-band__rest">
           <div><dt>Meetings attended</dt><dd>${pad(attended)} of ${pad(held.length)}</dd></div>
           <div><dt>Attendance rate</dt><dd>${Store.attendanceRate()}%</dd></div>
@@ -537,10 +537,14 @@ const Views = {
              correctly cropped, and contributing nothing. -->
         <div class="spread__field crop" aria-hidden="true">
           <svg class="spread__seal crop__art" viewBox="0 0 100 100">${sealArt()}</svg>
+          <!-- the International seal is knocked out of the ink field
+               itself — no disc, no surround: it is printed IN the
+               field, balancing the wordmark across the fold -->
+          <span class="spread__kci">${brandSeal('kci')}</span>
         </div>
 
         <header class="spread__head">
-          <p class="spread__sub">${brandSeal('kci','spread__kci')}<span>Key Club attendance</span></p>
+          <p class="spread__sub"><span>Key Club attendance</span></p>
           <h1 class="spread__wm">Keystamp</h1>
         </header>
 
