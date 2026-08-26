@@ -14,28 +14,6 @@ const memberName = () => (Store.user && Store.user.name) || 'Member';
 const C = {
   /* the giant cropped word behind a view */
 
-  /* ── the stat plate: a character status readout, not a summary card ── */
-  /* THE COUNT. It is the card's masthead and it is set ON the card,
-     not in a panel beside it: a printed stamp card carries its own
-     title row, and putting the number anywhere else made two objects
-     compete to say one thing. No ring, no ticks, no frame — the
-     numeral at display size against paper is the whole device. */
-  count(){
-    const p = Rules.progress();
-    const next = Store.rewards.find(r => r.required === p.next);
-    const line = !p.next ? 'Every reward unlocked'
-      : p.remaining === 0 ? `${next.name} is ready to claim`
-      : `${p.remaining} more until ${next.name.toLowerCase()}`;
-    const cardNo = Math.floor(p.floor / p.span) + 1;
-    return `<div class="count">
-      <p class="count__num"><b>${pad(p.filled)}</b><span>/ ${p.span}</span></p>
-      <div class="count__foot">
-        <span class="count__label">stamps on card ${pad(cardNo)}</span>
-        <span class="count__line">${esc(line)}</span>
-      </div>
-    </div>`;
-  },
-
   tier(r, total){
     const open  = total >= r.required;
     const ready = open && !r.claimed;
@@ -57,53 +35,75 @@ const C = {
     </div>`;
   },
 
-  /* ── ten struck marks. Empty slots sit at slight angles; a landed
-     stamp snaps flat, which is what makes the grid feel struck by hand ── */
+  /* ── THE CARD FACE. One printed collectible object: an ink identity
+     panel (card number, the count, what the card leads to) and a paper
+     field where the ten slots are HAND-PLACED — different sizes,
+     slight leans, a dotted collection route running slot to slot, and
+     the tenth slot largest because it IS the reward. The slot
+     coordinates live in the stylesheet with a separate portrait
+     composition for narrow cards.
+
+     Sorted chronologically here rather than trusted from the backend,
+     which returns newest first: slot N of the card is the Nth stamp
+     ever earned, so the field reads along the route as history. */
   sealGrid(){
     const p = Rules.progress();
-    /* Every filled slot carries the docket for the check-in it
-       represents, revealed on hover or focus.
-
-       A landed stamp was a black square and nothing else: the record of
-       WHICH meeting it came from lived only on another screen. Every
-       filled slot now carries the docket for the check-in it represents,
-       revealed on hover or focus.
-
-       Sorted chronologically here rather than trusted from the backend,
-       which returns newest first: slot N of the card is the Nth stamp
-       ever earned, so the grid reads left-to-right as history. */
     const chrono = [...Store.scans]
       .sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
+    const goal = Store.rewards.find(r => r.required === p.floor + p.span) || null;
+    const cardNo = Math.floor(p.floor / 10) + 1;
+    const full = p.filled >= p.span;
 
     const cells = Array.from({ length:p.span }, (_, i) => {
       const state = i < p.filled ? 'set' : i === p.filled ? 'next' : '';
-      const last = state === 'set' && i === p.filled - 1 ? ' seal--last seal--hero' : '';
-      /* The stamped tilt moved onto the EARNED slots. A slot you have
-         not filled is a blank space on a printed card and sits square;
-         a stamp is pressed by hand and lands a degree or two off. The
-         rotation is carried on the mark rather than on the cell so the
-         card's ruling stays straight. */
+      const hero = state === 'set' && i === p.filled - 1 ? ' seal--hero' : '';
+      const mile = i === p.span - 1 ? ' seal--mile' : '';
+      /* a stamp is pressed by hand and lands a degree or two off; the
+         mark's own tilt rides a custom prop so the slot frame and the
+         impression can lean by different amounts */
       const tilt = state === 'set'
         ? `--press-tilt:${[-2.1, 1.4, -1.2, 2.3, -1.7][i % 5]}deg` : '';
 
       const rec = state === 'set' ? chrono[p.floor + i] : null;
       const mtg = rec ? Store.meetings.find(m => m.id === rec.meetingId) : null;
-
       const docket = rec && mtg ? C.sealMeta(rec, mtg) : '';
 
-      return `<li class="seal ${state ? 'seal--' + state : ''}${last}" data-seal="${state || 'empty'}" style="${tilt}"${
+      return `<li class="seal ${state ? 'seal--' + state : ''}${hero}${mile}" data-seal="${state || 'empty'}" style="${tilt}"${
         docket ? ` tabindex="0" aria-label="Stamp ${pad(p.floor + i + 1)}: general meeting ${
           mtg.no}, ${fmtDate(mtg.date)}, checked in at ${fmtTime(rec.at)}"` : ''}>
         <svg viewBox="0 0 64 64" aria-hidden="true"><g class="seal__mark">${stampMark(p.floor + i)}</g></svg>
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
+        ${mile && goal ? `<span class="seal__tag">${esc(goal.name)}</span>` : ''}
         ${docket}
       </li>`;
     }).join('');
 
-    const full = p.filled >= p.span;
+    /* the collection route: a dotted path joining the slot centres in
+       order, one polyline per composition */
+    const route =
+      `<svg class="card__route card__route--l" viewBox="0 0 100 48.8" preserveAspectRatio="none" aria-hidden="true">
+        <polyline points="8,11.7 24,17.3 40,10.7 56,16.3 72,10.0 89,15.3 78,32.4 60,36.1 42,32.2 18,35.1"/></svg>` +
+      `<svg class="card__route card__route--p" viewBox="0 0 100 128" preserveAspectRatio="none" aria-hidden="true">
+        <polyline points="16,18 45,19 76,18.2 84,41.5 54,40.3 22,42.1 15,65.8 46,67.5 77,65.2 42,97.7"/></svg>`;
+
+    const say = full
+      ? 'Card complete — claim it in Rewards'
+      : `${p.remaining} more until ${goal ? goal.name.toLowerCase() : 'the next reward'}`;
+
     return `<section class="card${full ? ' card--full' : ''}" data-enter>
-      ${C.count()}
-      <ul class="seals" id="seals" aria-label="${p.filled} of ${p.span} stamps in this tier">${cells}</ul>
+      <div class="card__face">
+        <div class="card__id">
+          <span class="card__cardno">Card ${pad(cardNo)}</span>
+          <p class="card__num"><b>${pad(p.filled)}</b><span>/ ${p.span}</span></p>
+          <span class="card__idrule" aria-hidden="true"></span>
+          <p class="card__goal">${esc(say)}</p>
+        </div>
+        <div class="card__field">
+          ${route}
+          <ol class="seals" id="seals" aria-label="${p.filled} of ${p.span} stamps in this tier">${cells}</ol>
+          <span class="card__edge" aria-hidden="true">Keystamp · Key Club attendance · Cali-Nev-Ha</span>
+        </div>
+      </div>
       ${full ? '<span class="card__punch" aria-hidden="true">Card full</span>' : ''}
     </section>`;
   },
@@ -469,11 +469,14 @@ const Views = {
            the whole product is about, on the page that is about them. -->
       <div class="sheet" data-enter>
         <section class="who">
-          <!-- the organizational letterhead: International leads, the
-               district seconds it, both knocked out of the ink and set
-               as one lockup -->
-          <div class="who__marks" aria-hidden="true">${brandSeal('kci')}${brandSeal('cnh')}</div>
+          <!-- an organizational document, not a sticker sheet:
+               International is the letterhead mark at the top of the
+               plate; the district seal sits ON the signature rule at
+               the right, half over it, the way an embossed seal sits
+               on a certificate line. The name below stays dominant. -->
+          <div class="who__mark" aria-hidden="true">${brandSeal('kci')}</div>
           <div class="who__id">
+            <span class="who__cnh" aria-hidden="true">${brandSeal('cnh')}</span>
             <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
               handle !== name ? ` / ${esc(handle)}` : ''}</p>
             <p class="who__name">${esc(name)}</p>
