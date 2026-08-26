@@ -440,7 +440,18 @@ button,input,select,textarea{font-family:inherit}
 .spread__sub{margin:0 0 var(--s3);font-size:var(--t-caption);
   letter-spacing:.16em;color:var(--tint);
   display:flex;align-items:center;gap:clamp(8px,1.4vw,14px)}
-.spread__kci{width:clamp(36px,5vw,56px);height:auto;flex:none;display:block}
+.spread__kci{width:clamp(46px,6vw,72px);height:auto;flex:none;display:block}
+.spread__kci .brandseal{width:100%;height:auto;display:block}
+
+/* ── THE CLUB SEALS, MONOCHROME ─────────────────────────────────────
+   The traced artwork paints with two slots: --si (its ink) and --sp
+   (its paper). Default is black on paper; the three current placements
+   all sit on ink panels, so they knock out to paper. This is a value
+   swap only — the geometry is the traced reference's. */
+.brandseal{--si:var(--ink);--sp:var(--paper)}
+.spread__kci .brandseal,
+.who__seal .brandseal,
+.proj__kci .brandseal{--si:var(--paper);--sp:var(--ink)}
 .spread__wm{font-family:var(--f-display);text-transform:uppercase;
   font-size:clamp(52px,15vw,124px);line-height:.9;letter-spacing:.01em;
   margin:0;padding-bottom:.06em}
