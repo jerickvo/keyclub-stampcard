@@ -257,7 +257,8 @@ const BoardUI = {
   createForm(){
     const f = this.form || {};
     return `<form class="bform" id="meetingForm">
-      <h2 class="h2 bsec" style="margin-top:0">Schedule a General Meeting</h2>
+      <h2 class="h2 bsec bform__head" style="margin-top:0">Schedule a General Meeting
+        <span class="bform__seal" aria-hidden="true">${brandSeal('cnh')}</span></h2>
 
       <div class="bform__grid">
         <label class="field"><span class="kicker">Meeting number</span>

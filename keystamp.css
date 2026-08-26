@@ -104,8 +104,13 @@ body{
 .ground__vig,.ground__grain{display:none}
 
 /* ── each screen recomposes the same ground language: the slash moves
-   and turns, the tone fields swap weight, and the auth spread (its own
-   full-bleed composition) clears the furniture entirely ── */
+   and turns, the tone fields swap weight, and two free layers (d1, d2)
+   become a DIFFERENT element on every page — line clusters, panel
+   fragments, viewfinder corners, tonal steps, ring segments — so no
+   page repeats another's decoration. The auth spread (its own
+   full-bleed composition) clears the furniture entirely. ── */
+.ground__d1,.ground__d2{position:absolute;display:none;pointer-events:none}
+
 [data-screen="record"] .ground__slash{top:20%;transform:rotate(-23deg)}
 [data-screen="record"] .ground::before{width:30vw;height:76vh}
 [data-screen="scan"] .ground__slash{top:62%;transform:rotate(-7deg);opacity:.4}
@@ -119,7 +124,99 @@ body{
 [data-screen="bmeet"] .ground::before{width:52vw;height:44vh}
 [data-screen="auth"] .ground__bleed,
 [data-screen="auth"] .ground__corner,
+[data-screen="auth"] .ground__d1,
+[data-screen="auth"] .ground__d2,
 [data-screen="auth"] .ground__tone{display:none}
+
+/* HOME · a speed-line wedge low left, and a cropped empty panel frame
+   running off the right edge */
+[data-screen="home"] .ground__d1{display:block;left:-3%;bottom:6%;
+  width:clamp(160px,22vw,320px);height:clamp(90px,12vw,170px);
+  transform:rotate(-14deg);opacity:.6;
+  background:repeating-linear-gradient(-14deg,var(--tint) 0 3px,transparent 3px 14px);
+  -webkit-mask-image:linear-gradient(76deg,#000 40%,transparent 85%);
+  mask-image:linear-gradient(76deg,#000 40%,transparent 85%)}
+[data-screen="home"] .ground__d2{display:block;right:-8%;top:56%;
+  width:clamp(180px,24vw,360px);height:clamp(120px,16vw,240px);
+  border:3px solid var(--tint);transform:rotate(-4deg)}
+
+/* RECORD · a coarse halftone disc cropped by the lower right (the
+   ledger itself is dense; one quiet form is enough) */
+[data-screen="record"] .ground__d2{display:block;right:-6%;bottom:-10%;
+  width:clamp(220px,26vw,420px);aspect-ratio:1;border-radius:50%;
+  background-image:radial-gradient(circle,var(--tone-page) 0 2px,transparent 2.4px);
+  background-size:12px 12px;opacity:.5;
+  -webkit-mask-image:radial-gradient(circle,#000 55%,transparent 72%);
+  mask-image:radial-gradient(circle,#000 55%,transparent 72%)}
+
+/* SCAN · one huge viewfinder corner top-left, and a ring segment off
+   the right edge */
+[data-screen="scan"] .ground__d1{display:block;left:4%;top:12%;
+  width:clamp(90px,12vw,190px);height:clamp(90px,12vw,190px);
+  border-left:4px solid var(--tint);border-top:4px solid var(--tint)}
+[data-screen="scan"] .ground__d2{display:block;right:-14%;top:22%;
+  width:clamp(240px,30vw,460px);aspect-ratio:1;border-radius:50%;
+  border:clamp(14px,2vw,26px) solid var(--tint);opacity:.55}
+
+/* REWARDS · three ascending tonal steps against the right edge, and a
+   thin diagonal line pair high left */
+[data-screen="rewards"] .ground__d1{display:block;right:0;bottom:10%;
+  width:clamp(120px,15vw,240px);height:clamp(180px,26vh,320px);opacity:.8;
+  background:linear-gradient(to top,var(--tint) 0 30%,transparent 30% 36%,
+    var(--tint) 36% 60%,transparent 60% 66%,var(--tint) 66% 84%,transparent 84%);
+  -webkit-mask-image:linear-gradient(260deg,#000 55%,transparent 92%);
+  mask-image:linear-gradient(260deg,#000 55%,transparent 92%)}
+[data-screen="rewards"] .ground__d2{display:block;left:8%;top:14%;
+  width:clamp(140px,18vw,280px);height:14px;transform:rotate(-24deg);
+  border-top:2px solid var(--tint);border-bottom:5px solid var(--tint)}
+
+/* MEMBER · a broad tone arc under the lower right, and sparse
+   registration crosses upper left */
+[data-screen="profile"] .ground__d1{display:block;right:-10%;bottom:-16%;
+  width:clamp(260px,34vw,540px);aspect-ratio:1;border-radius:50%;
+  border:clamp(20px,3vw,40px) solid var(--tint);opacity:.6;
+  -webkit-mask-image:linear-gradient(315deg,#000 45%,transparent 75%);
+  mask-image:linear-gradient(315deg,#000 45%,transparent 75%)}
+[data-screen="profile"] .ground__d2{display:block;left:6%;top:10%;
+  width:clamp(120px,16vw,240px);height:clamp(90px,12vw,180px);opacity:.7;
+  background-image:
+    linear-gradient(var(--tint) 0 2px,transparent 2px),
+    linear-gradient(90deg,var(--tint) 0 2px,transparent 2px);
+  background-size:56px 44px,56px 44px;
+  background-position:0 0,7px -7px;background-repeat:repeat;
+  -webkit-mask-image:radial-gradient(ellipse,#000 30%,transparent 75%);
+  mask-image:radial-gradient(ellipse,#000 30%,transparent 75%)}
+
+/* CLUB TOOLS · a pair of empty offset panel frames top right */
+[data-screen="board"] .ground__d1{display:block;right:-4%;top:10%;
+  width:clamp(160px,20vw,320px);height:clamp(100px,13vw,210px);
+  border:3px solid var(--tint);transform:rotate(3deg)}
+[data-screen="board"] .ground__d2{display:block;right:-1%;top:16%;
+  width:clamp(140px,17vw,280px);height:clamp(90px,11vw,180px);
+  border:2px solid var(--tint);transform:rotate(-2deg)}
+
+/* MEETINGS · ledger rules against the right edge */
+[data-screen="bmeet"] .ground__d1{display:block;right:0;top:20%;
+  width:clamp(80px,10vw,170px);height:clamp(200px,34vh,380px);opacity:.7;
+  background:repeating-linear-gradient(var(--tint) 0 2px,transparent 2px 22px);
+  -webkit-mask-image:linear-gradient(260deg,#000 40%,transparent 90%);
+  mask-image:linear-gradient(260deg,#000 40%,transparent 90%)}
+
+/* CHECK-IN · the projector's beam: a faint widening wedge from the top */
+[data-screen="bcheckin"] .ground__d1{display:block;left:30%;right:6%;
+  top:0;height:70vh;opacity:.5;background:var(--tint);
+  clip-path:polygon(46% 0,54% 0,100% 100%,0 100%);
+  -webkit-mask-image:linear-gradient(#000 20%,transparent 95%);
+  mask-image:linear-gradient(#000 20%,transparent 95%)}
+
+/* MEMBERS · a roster of short dashes low left */
+[data-screen="bmembers"] .ground__d1{display:block;left:3%;bottom:8%;
+  width:clamp(140px,18vw,300px);height:clamp(120px,16vh,220px);opacity:.7;
+  background-image:linear-gradient(var(--tint) 0 3px,transparent 3px);
+  background-size:38px 26px;background-repeat:repeat;
+  -webkit-mask-image:linear-gradient(35deg,#000 40%,transparent 85%);
+  mask-image:linear-gradient(35deg,#000 40%,transparent 85%)}
+
 /* under the mobile tab bar the bracket would collide with the tabs */
 @media(max-width:700px){
   .ground__corner{bottom:calc(var(--tabs-h,64px) + 14px)}
@@ -361,12 +458,17 @@ select.input{padding-right:var(--s4)}
 .blade2 .b-core{fill:var(--paper)}
 .blade2--paper .b-body{fill:var(--paper)}
 .blade2--paper .b-core{fill:var(--ink)}
+/* the afterimage: the same stroke one beat behind, in tone — the
+   trail a violent cut leaves, never a glow */
+.blade2--ghost{z-index:9}
+.blade2--ghost .b-body{fill:var(--tone)}
+.blade2--ghost .b-core{fill:transparent}
 
 /* ── the page cut: the OUTGOING page itself, frozen into fragments
    along two real cut lines. The fragments are clipped clones of the
    live page, so there is never a cover and never a black frame — the
    page stays the subject until its own pieces slide away. ── */
-.pcut{position:absolute;inset:0;z-index:6}
+.pcut{position:absolute;inset:0;z-index:6;perspective:1100px}
 .pcut__piece{position:absolute;inset:0;will-change:transform;
   background-color:var(--paper);background-repeat:no-repeat;
   background-position:0 0}
