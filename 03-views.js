@@ -101,9 +101,11 @@ const C = {
       </li>`;
     }).join('');
 
-    return `<section class="card" data-enter>
+    const full = p.filled >= p.span;
+    return `<section class="card${full ? ' card--full' : ''}" data-enter>
       ${C.count()}
       <ul class="seals" id="seals" aria-label="${p.filled} of ${p.span} stamps in this tier">${cells}</ul>
+      ${full ? '<span class="card__punch" aria-hidden="true">Card full</span>' : ''}
     </section>`;
   },
 
@@ -487,6 +489,7 @@ const Views = {
       <div class="sheet" data-enter>
         <section class="who">
           <span class="who__seal" aria-hidden="true">${brandSeal('kci')}</span>
+          <span class="who__seal2" aria-hidden="true">${brandSeal('cnh')}</span>
           <div class="who__id">
             <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
               handle !== name ? ` / ${esc(handle)}` : ''}</p>

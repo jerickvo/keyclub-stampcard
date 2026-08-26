@@ -57,9 +57,29 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 
+/* ══ THE GROUND ═════════════════════════════════════════════════════
+   The page floor. Not a flat sheet and not wallpaper: two placed tonal
+   fields at opposite corners and a hairline press rule, all light
+   enough to sit under any panel without touching the reading. Each
+   screen adds its own composed field on top of this. */
 .ground{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
   background:var(--paper)}
-.ground__tone{display:none}
+.ground::before{content:"";position:absolute;top:-4vh;right:-6vw;
+  width:44vw;height:52vh;
+  background-image:radial-gradient(circle at 50% 50%, var(--tone-page) 0 1px, transparent 1.1px);
+  background-size:7px 7px;
+  clip-path:polygon(24% 0,100% 0,100% 100%);
+  -webkit-mask-image:linear-gradient(215deg,#000 30%,transparent 78%);
+  mask-image:linear-gradient(215deg,#000 30%,transparent 78%)}
+.ground::after{content:"";position:absolute;left:-5vw;bottom:-6vh;
+  width:30vw;height:34vh;
+  background-image:radial-gradient(circle at 50% 50%, var(--tone-page) 0 1.6px, transparent 1.75px);
+  background-size:10px 10px;
+  clip-path:polygon(0 0,100% 100%,0 100%);
+  -webkit-mask-image:linear-gradient(35deg,#000 26%,transparent 72%);
+  mask-image:linear-gradient(35deg,#000 26%,transparent 72%)}
+.ground__tone{position:absolute;top:0;bottom:0;right:clamp(10px,1.4vw,22px);
+  width:1px;background:var(--tint);opacity:.6}
 .ground__vig,.ground__grain{display:none}
 .arena{display:none}
 .backdrop{position:absolute;inset:0;background-repeat:repeat;
@@ -293,12 +313,14 @@ select.input{padding-right:var(--s4)}
 .wcut__h--a{clip-path:polygon(0 0,100% 0,100% 42%,0 58%)}
 .wcut__h--b{clip-path:polygon(0 58%,100% 42%,100% 100%,0 100%)}
 
-/* the dismantled page: tiles that each clip a clone of the shell, so
-   the falling pieces are fragments of the actual rendered page */
-.waffle{position:absolute;inset:0;z-index:5}
-.waffle__c{position:absolute;overflow:hidden;background:var(--paper);
-  box-shadow:0 0 0 1px var(--ink)}
-.waffle__page{position:absolute;pointer-events:none}
+/* the broken wall: each piece is a clipped clone of the rendered page
+   over an ink slab, tumbling in 3D as it falls */
+.waffle{position:absolute;inset:0;z-index:5;
+  perspective:1100px;transform-style:preserve-3d}
+.waffle__piece{position:absolute;inset:0;will-change:transform,opacity}
+.waffle__slab{position:absolute;inset:0;background:var(--ink);
+  transform:translate(6px,8px)}
+.waffle__page{position:absolute;pointer-events:none;background:var(--paper)}
 .waffle__page > *{width:100%;height:100%}
 .fxdefs{position:absolute;width:0;height:0}
 
@@ -366,13 +388,10 @@ select.input{padding-right:var(--s4)}
   background:var(--ink);color:var(--paper);font-family:var(--f-mono);font-size:12px;
   line-height:1.5;border-top:var(--rule) solid var(--ink);word-break:break-word}
 
-.rail__brand svg,.rail__brand img{width:44px;height:44px;display:block}
 
-.rail__brand svg *{fill:var(--ink)!important;stroke:none!important}
 .rail__brand,.topbar #barBrand{font-family:var(--f-head);font-size:15px;
   text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
 #barBrand svg{width:26px;height:26px}
-#barBrand svg *{fill:var(--ink)!important;stroke:none!important}
 
 .lines line,.lines path,.slash path,.slash rect{stroke:var(--ink);fill:var(--ink)}          /* it sits under the number at this width */
 /* Callouts clear the tab bar AND the home indicator, so a message never

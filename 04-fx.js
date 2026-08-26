@@ -406,12 +406,13 @@ const FX = {
     setTimeout(() => el.remove(), 1540);
   },
 
-  /* sign-out: the dismantle. A grid of cuts crosses the page, the page
-     itself breaks into tiles — each tile clips a live clone of the
-     rendered page, so the fragments ARE the page — and the pieces fall
-     away, rotating, over the sign-in screen underneath. onCovered
-     fires at full cover, so the caller swaps the real page while the
-     copy hangs in pieces. */
+  /* sign-out: the wall comes down. The page stands as a solid wall,
+     two huge blades strike across it, the cut lattice appears, and the
+     wall breaks into thick, irregular pieces — each one a clipped clone
+     of the rendered page over an ink backing that reads as the slab's
+     edge — which tumble away in 3D and reveal the sign-in screen.
+     onCovered fires at full cover, so the caller swaps the real page
+     while the copy hangs in pieces. */
   waffleOut(onCovered){
     const fin = typeof onCovered === 'function' ? onCovered : () => {};
     if (Motion.off) return void fin();
@@ -419,13 +420,10 @@ const FX = {
     if (!fx || !shell) return void fin();
 
     const W = innerWidth, H = innerHeight, sy = scrollY;
-    const cols = W > 700 ? 5 : 3, rows = W > 700 ? 4 : 5;
+    const cols = W > 700 ? 5 : 3, rows = 4;
 
-    /* Each tile carries a clone of the shell. The sign-in page renders
-       underneath while the pieces hang, and its [data-screen="auth"]
-       rules would restyle the clones too (the rail collapses and every
-       fragment shifts) — so the layout the clones depend on is frozen
-       inline at clone time. */
+    /* the page clones must not restyle when the auth screen renders
+       underneath, so the layout they depend on is frozen inline */
     const snap = () => {
       const cl = shell.cloneNode(true);
       const freeze = (sel, props) => {
@@ -443,55 +441,80 @@ const FX = {
       return cl;
     };
 
-    /* the slash grid: the cut lines land first, drawn edge to edge */
+    /* 1 · the strikes: two big blades cross the wall, then the lattice */
+    Slash.create({ type:'B', angle:-19 });
+    Slash.create({ type:'B', angle:-64, offset:40, delay:120 });
+    Impact.flash(.3, { delay:60, dur:50 });
+    Impact.shake($('#shell'), 9, 140);
     for (let i = 1; i < rows; i++)
-      Slash.create({ type:'D', angle:-4, offset:(i / rows - .5) * H,
-                     delay:i * 26, afterimage:false });
+      Slash.create({ type:'D', angle:-6, offset:(i / rows - .5) * H,
+                     delay:200 + i * 24, afterimage:false });
     for (let i = 1; i < cols; i++)
-      Slash.create({ type:'D', angle:87, along:(i / cols - .5) * W,
-                     delay:40 + i * 26, afterimage:false });
+      Slash.create({ type:'D', angle:86, along:(i / cols - .5) * W,
+                     delay:230 + i * 24, afterimage:false });
 
-    /* the page, in tiles: each cell clips its own clone of the shell */
+    /* 2 · the cut lattice: a jittered grid, so the pieces read as
+       slash-cut slabs rather than machine tiles */
+    const jx = W / cols * .13, jy = H / rows * .13;
+    const px = [], py = [];
+    for (let r = 0; r <= rows; r++){ px.push([]); py.push([]);
+      for (let c = 0; c <= cols; c++){
+        const edgeX = c === 0 || c === cols, edgeY = r === 0 || r === rows;
+        const bx = c * W / cols, by = r * H / rows;
+        px[r].push(edgeX ? (c === 0 ? -2 : W + 2) : bx + (roll(r * 7 + c) - .5) * 2 * jx);
+        py[r].push(edgeY ? (r === 0 ? -2 : H + 2) : by + (roll(r * 3 + c * 5) - .5) * 2 * jy);
+      }}
+
     const grid = document.createElement('div');
     grid.className = 'waffle';
-    const cells = [];
+    const pieces = [];
     for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++){
-      const x = Math.round(c * W / cols), y = Math.round(r * H / rows);
-      const w = Math.round((c + 1) * W / cols) - x, h = Math.round((r + 1) * H / rows) - y;
-      const cell = document.createElement('div');
-      cell.className = 'waffle__c';
-      cell.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px`;
+      const quad = [[px[r][c], py[r][c]], [px[r][c + 1], py[r][c + 1]],
+                    [px[r + 1][c + 1], py[r + 1][c + 1]], [px[r + 1][c], py[r + 1][c]]];
+      const cxp = quad.reduce((s, p) => s + p[0], 0) / 4;
+      const cyp = quad.reduce((s, p) => s + p[1], 0) / 4;
+      const piece = document.createElement('div');
+      piece.className = 'waffle__piece';
+      piece.style.clipPath = 'polygon(' + quad.map(p => `${p[0].toFixed(1)}px ${p[1].toFixed(1)}px`).join(',') + ')';
+      piece.style.transformOrigin = `${cxp.toFixed(1)}px ${cyp.toFixed(1)}px`;
+      const back = document.createElement('div');
+      back.className = 'waffle__slab';
       const page = document.createElement('div');
       page.className = 'waffle__page';
-      page.style.cssText = `width:${W}px;height:${H}px;left:${-x}px;top:${-y - sy}px`;
+      page.style.cssText = `width:${W}px;height:${H}px;left:0;top:${-sy}px`;
       page.appendChild(snap());
-      cell.appendChild(page);
-      grid.appendChild(cell);
-      cells.push(cell);
+      piece.appendChild(back); piece.appendChild(page);
+      grid.appendChild(piece);
+      pieces.push({ el:piece, cx:cxp, cy:cyp, r:roll(r * cols + c) });
     }
     fx.appendChild(grid);
 
-    const t0 = 150;                     /* cuts have crossed; tiles hold */
-    setTimeout(fin, t0 + 60);           /* swap the real page under the copy */
+    const t0 = 340;
+    setTimeout(fin, t0 + 60);
 
-    cells.forEach((cell, i) => {
-      const r = roll(i), row = (i / cols) | 0, col = i % cols;
-      /* the seams open: a hair of separation makes the grid read as cut */
-      animate(cell, { translateX:(col - (cols - 1) / 2) * 3,
-                      translateY:(row - (rows - 1) / 2) * 2.4,
-                      duration:130, delay:t0, ease:EASE.OUT });
-      /* then the pieces drop, rotating, lower rows first */
-      animate(cell, {
-        translateY: H * (.7 + r * .8),
-        translateX: (col - (cols - 1) / 2) * (26 + r * 40),
-        rotate: (r - .5) * 26,
+    /* 3 · the pieces nearest the first blade go first: stagger by
+       distance from the -19deg cut through the centre */
+    const nx = Math.sin(-19 * Math.PI / 180), ny = -Math.cos(-19 * Math.PI / 180);
+    let dmax = 1;
+    pieces.forEach(p => { p.d = Math.abs((p.cx - W / 2) * ny - (p.cy - H / 2) * nx);
+                          dmax = Math.max(dmax, p.d); });
+    pieces.forEach(p => {
+      const seam = 60 + (p.d / dmax) * 240 + p.r * 90;
+      animate(p.el, { translateX:(p.cx - W / 2) * .04, translateY:(p.cy - H / 2) * .03,
+                      duration:150, delay:t0 + seam * .4, ease:EASE.OUT });
+      animate(p.el, {
+        translateY: H * (.85 + p.r * .7),
+        translateX: (p.cx - W / 2) * (.3 + p.r * .5),
+        rotateX: -(24 + p.r * 46),
+        rotateY: (p.r - .5) * 40,
+        rotateZ: (p.r - .5) * 24,
         opacity: [1, 1, 0],
-        duration: 620 + r * 240,
-        delay: t0 + 170 + (rows - 1 - row) * 40 + r * 90,
+        duration: 680 + p.r * 320,
+        delay: t0 + 160 + seam,
         ease: 'inQuad',
       });
     });
-    setTimeout(() => grid.remove(), 1900);
+    setTimeout(() => grid.remove(), 2200);
   },
 
   pageEntrance(scope){

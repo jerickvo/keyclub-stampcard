@@ -345,6 +345,13 @@ main#view:focus,main#view:focus-visible{outline:none}
 .card{position:relative;border:var(--edge-card) solid var(--ink);
   background:var(--paper);width:100%;
   box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
+.card__punch{position:absolute;z-index:2;right:clamp(14px,3vw,40px);
+  top:44%;transform:rotate(-11deg);
+  font-family:var(--f-head);text-transform:uppercase;line-height:1;
+  font-size:clamp(30px,6vw,64px);color:var(--ink);
+  border:var(--edge-frame) solid var(--ink);background:var(--paper);
+  padding:.16em .45em;box-shadow:var(--s2) var(--s2) 0 var(--ink);
+  pointer-events:none}
 
 /* The title row of a printed card: the count at full display scale, a
    rule under it, and the two readings sharing the line below. */
@@ -367,12 +374,15 @@ main#view:focus,main#view:focus-visible{outline:none}
 
 /* each cell is its own printed stamp: framed, seated on a hard offset,
    pressed a hair off true. The tilt rides the tile as well as the mark,
-   at a third strength, so the card reads hand-pressed, not broken. */
+   at a third strength, and alternate tiles sit a couple of pixels off
+   the row line, so the card reads hand-pressed, not machine-set. */
 .seal{position:relative;aspect-ratio:1;display:grid;place-items:center;
   background:var(--paper);min-width:0;
   border:var(--edge-panel) solid var(--ink);
   box-shadow:2.5px 2.5px 0 var(--ink);
-  transform:rotate(calc(var(--press-tilt,0deg) / 3))}
+  transform:rotate(calc(var(--press-tilt,0deg) / 3)) translateY(var(--seat,0px))}
+.seal:nth-child(2n){--seat:2px}
+.seal:nth-child(3n){--seat:-2px}
 /* an empty slot: a toned blank waiting for ink */
 .seal[data-seal="empty"]{border-color:var(--tone);box-shadow:none;
   background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
@@ -392,9 +402,12 @@ main#view:focus,main#view:focus-visible{outline:none}
    strongest unearned thing on the card. */
 /* the next one to earn: paper cleared of tone inside a heavy keyline —
    the one empty box on the card that is asking for something */
+/* the slot being worked toward: the loudest unearned thing on the card */
 .seal--next{background-image:none;
   border-width:var(--edge-frame);
-  box-shadow:3px 3px 0 var(--ink)}
+  box-shadow:3.5px 3.5px 0 var(--ink);
+  transform:rotate(calc(var(--press-tilt,0deg) / 3)) translateY(var(--seat,0px)) scale(1.05);
+  z-index:1}
 .seal--next .seal__mark path{fill:var(--ink)}
 .seal--next .seal__no{color:var(--ink-2)}
 
@@ -521,8 +534,12 @@ button,input,select,textarea{font-family:inherit}
 .spread__sub{margin:0 0 var(--s3);font-size:var(--t-caption);
   letter-spacing:.16em;color:var(--tint);
   display:flex;align-items:center;gap:clamp(8px,1.4vw,14px)}
-.spread__kci{width:clamp(46px,6vw,72px);height:auto;flex:none;display:block}
-.spread__kci .brandseal{width:100%;height:auto;display:block}
+.spread__kci{width:clamp(52px,6.6vw,80px);height:auto;flex:none;display:block;
+  background:var(--paper);border-radius:50%;
+  padding:clamp(3px,.4vw,5px);
+  box-shadow:0 0 0 clamp(2px,.3vw,3px) var(--ink)}
+.spread__kci .brandseal{width:100%;height:auto;display:block;
+  --si:var(--ink);--sp:var(--paper)}
 
 /* ── THE CLUB SEALS, MONOCHROME ─────────────────────────────────────
    The traced artwork paints with two slots: --si (its ink) and --sp
@@ -530,7 +547,6 @@ button,input,select,textarea{font-family:inherit}
    all sit on ink panels, so they knock out to paper. This is a value
    swap only — the geometry is the traced reference's. */
 .brandseal{--si:var(--ink);--sp:var(--paper)}
-.spread__kci .brandseal,
 .who__seal .brandseal,
 .proj__kci .brandseal{--si:var(--paper);--sp:var(--ink)}
 .spread__wm{font-family:var(--f-display);text-transform:uppercase;
@@ -586,8 +602,8 @@ button,input,select,textarea{font-family:inherit}
     grid-template-rows:auto;
     column-gap:0;align-content:center;
     padding-block:clamp(40px,7vh,96px)}
-  /* the brand owns the TOP of the field; centring it put the wordmark
-     exactly where the swirl peaks on short viewports */
+  /* the brand block is pinned to the top of the field: the swirl owns
+     the lower half, and on short viewports the two must never meet */
   .spread__head{grid-row:1;align-self:start;
     margin-top:calc(clamp(40px,7vh,96px) * -1);
     padding-top:clamp(28px,6vh,64px)}
@@ -863,8 +879,7 @@ button,input,select,textarea{font-family:inherit}
     gap:var(--s5) var(--s5);align-content:start}
   .view--scan > .rechead{grid-area:head}
   .view--scan > .standing{grid-area:standing}
-  .view--scan > .viewer{grid-area:viewer;max-height:none;
-    margin-left:calc(var(--gutter) * -1);border-left:0}
+  .view--scan > .viewer{grid-area:viewer;max-height:none}
 
   .view--scan > .manual{grid-area:manual;align-self:end}
 }
@@ -968,21 +983,29 @@ button,input,select,textarea{font-family:inherit}
 
 .sheet{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr);
   align-items:start}
-.who{position:relative;display:grid;align-content:end;gap:var(--s4);
+.who{position:relative;display:grid;gap:var(--s4);
+  grid-template-rows:minmax(clamp(210px,30vw,330px),1fr) auto;
   isolation:isolate;overflow:hidden;
   background:var(--ink);color:var(--paper);
   padding:clamp(18px,3vw,32px);
   margin-left:calc(var(--gutter) * -1);
-  padding-left:max(var(--gutter),clamp(18px,3vw,32px));
-  min-height:clamp(240px,36vw,400px)}
-/* the club seal is the plate's graphic: large, knocked out, pressed
-   into the upper-right corner and cropped by the plate's edge */
+  padding-left:max(var(--gutter),clamp(18px,3vw,32px))}
+/* the credential strip owns the plate's first grid row and the name
+   the second — vertical separation the layout enforces, so a long
+   username and the seals can never crowd each other. International is
+   cropped by the plate's corner; the district seal sits in flow
+   beneath it. */
 .who__seal{position:absolute;z-index:0;
-  top:calc(clamp(150px,22vw,260px) * -.16);
-  right:calc(clamp(150px,22vw,260px) * -.14);
-  width:clamp(150px,22vw,260px)}
+  top:calc(clamp(140px,20vw,240px) * -.16);
+  right:calc(clamp(140px,20vw,240px) * -.14);
+  width:clamp(140px,20vw,240px)}
 .who__seal .brandseal{width:100%;height:auto;display:block}
-.who__id{position:relative;z-index:1}
+.who__seal2{grid-row:1;align-self:end;justify-self:end;
+  margin:0 clamp(4px,1vw,14px) clamp(2px,.6vw,10px) 0;
+  width:clamp(76px,9.5vw,116px)}
+.who__seal2 .brandseal{width:100%;height:auto;display:block;
+  --si:var(--paper);--sp:var(--ink)}
+.who__id{grid-row:2;position:relative;z-index:1;align-self:end}
 .who__id{display:grid;gap:3px}
 /* the name is set in the header face — the display face's thin strokes
    were unreadable at this size on ink */
