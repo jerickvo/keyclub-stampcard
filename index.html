@@ -176,8 +176,13 @@ body{
 .ground__vig,.ground__grain{display:none}
 
 /* ── each screen recomposes the same ground language: the slash moves
-   and turns, the tone fields swap weight, and the auth spread (its own
-   full-bleed composition) clears the furniture entirely ── */
+   and turns, the tone fields swap weight, and two free layers (d1, d2)
+   become a DIFFERENT element on every page — line clusters, panel
+   fragments, viewfinder corners, tonal steps, ring segments — so no
+   page repeats another's decoration. The auth spread (its own
+   full-bleed composition) clears the furniture entirely. ── */
+.ground__d1,.ground__d2{position:absolute;display:none;pointer-events:none}
+
 [data-screen="record"] .ground__slash{top:20%;transform:rotate(-23deg)}
 [data-screen="record"] .ground::before{width:30vw;height:76vh}
 [data-screen="scan"] .ground__slash{top:62%;transform:rotate(-7deg);opacity:.4}
@@ -191,7 +196,99 @@ body{
 [data-screen="bmeet"] .ground::before{width:52vw;height:44vh}
 [data-screen="auth"] .ground__bleed,
 [data-screen="auth"] .ground__corner,
+[data-screen="auth"] .ground__d1,
+[data-screen="auth"] .ground__d2,
 [data-screen="auth"] .ground__tone{display:none}
+
+/* HOME · a speed-line wedge low left, and a cropped empty panel frame
+   running off the right edge */
+[data-screen="home"] .ground__d1{display:block;left:-3%;bottom:6%;
+  width:clamp(160px,22vw,320px);height:clamp(90px,12vw,170px);
+  transform:rotate(-14deg);opacity:.6;
+  background:repeating-linear-gradient(-14deg,var(--tint) 0 3px,transparent 3px 14px);
+  -webkit-mask-image:linear-gradient(76deg,#000 40%,transparent 85%);
+  mask-image:linear-gradient(76deg,#000 40%,transparent 85%)}
+[data-screen="home"] .ground__d2{display:block;right:-8%;top:56%;
+  width:clamp(180px,24vw,360px);height:clamp(120px,16vw,240px);
+  border:3px solid var(--tint);transform:rotate(-4deg)}
+
+/* RECORD · a coarse halftone disc cropped by the lower right (the
+   ledger itself is dense; one quiet form is enough) */
+[data-screen="record"] .ground__d2{display:block;right:-6%;bottom:-10%;
+  width:clamp(220px,26vw,420px);aspect-ratio:1;border-radius:50%;
+  background-image:radial-gradient(circle,var(--tone-page) 0 2px,transparent 2.4px);
+  background-size:12px 12px;opacity:.5;
+  -webkit-mask-image:radial-gradient(circle,#000 55%,transparent 72%);
+  mask-image:radial-gradient(circle,#000 55%,transparent 72%)}
+
+/* SCAN · one huge viewfinder corner top-left, and a ring segment off
+   the right edge */
+[data-screen="scan"] .ground__d1{display:block;left:4%;top:12%;
+  width:clamp(90px,12vw,190px);height:clamp(90px,12vw,190px);
+  border-left:4px solid var(--tint);border-top:4px solid var(--tint)}
+[data-screen="scan"] .ground__d2{display:block;right:-14%;top:22%;
+  width:clamp(240px,30vw,460px);aspect-ratio:1;border-radius:50%;
+  border:clamp(14px,2vw,26px) solid var(--tint);opacity:.55}
+
+/* REWARDS · three ascending tonal steps against the right edge, and a
+   thin diagonal line pair high left */
+[data-screen="rewards"] .ground__d1{display:block;right:0;bottom:10%;
+  width:clamp(120px,15vw,240px);height:clamp(180px,26vh,320px);opacity:.8;
+  background:linear-gradient(to top,var(--tint) 0 30%,transparent 30% 36%,
+    var(--tint) 36% 60%,transparent 60% 66%,var(--tint) 66% 84%,transparent 84%);
+  -webkit-mask-image:linear-gradient(260deg,#000 55%,transparent 92%);
+  mask-image:linear-gradient(260deg,#000 55%,transparent 92%)}
+[data-screen="rewards"] .ground__d2{display:block;left:8%;top:14%;
+  width:clamp(140px,18vw,280px);height:14px;transform:rotate(-24deg);
+  border-top:2px solid var(--tint);border-bottom:5px solid var(--tint)}
+
+/* MEMBER · a broad tone arc under the lower right, and sparse
+   registration crosses upper left */
+[data-screen="profile"] .ground__d1{display:block;right:-10%;bottom:-16%;
+  width:clamp(260px,34vw,540px);aspect-ratio:1;border-radius:50%;
+  border:clamp(20px,3vw,40px) solid var(--tint);opacity:.6;
+  -webkit-mask-image:linear-gradient(315deg,#000 45%,transparent 75%);
+  mask-image:linear-gradient(315deg,#000 45%,transparent 75%)}
+[data-screen="profile"] .ground__d2{display:block;left:6%;top:10%;
+  width:clamp(120px,16vw,240px);height:clamp(90px,12vw,180px);opacity:.7;
+  background-image:
+    linear-gradient(var(--tint) 0 2px,transparent 2px),
+    linear-gradient(90deg,var(--tint) 0 2px,transparent 2px);
+  background-size:56px 44px,56px 44px;
+  background-position:0 0,7px -7px;background-repeat:repeat;
+  -webkit-mask-image:radial-gradient(ellipse,#000 30%,transparent 75%);
+  mask-image:radial-gradient(ellipse,#000 30%,transparent 75%)}
+
+/* CLUB TOOLS · a pair of empty offset panel frames top right */
+[data-screen="board"] .ground__d1{display:block;right:-4%;top:10%;
+  width:clamp(160px,20vw,320px);height:clamp(100px,13vw,210px);
+  border:3px solid var(--tint);transform:rotate(3deg)}
+[data-screen="board"] .ground__d2{display:block;right:-1%;top:16%;
+  width:clamp(140px,17vw,280px);height:clamp(90px,11vw,180px);
+  border:2px solid var(--tint);transform:rotate(-2deg)}
+
+/* MEETINGS · ledger rules against the right edge */
+[data-screen="bmeet"] .ground__d1{display:block;right:0;top:20%;
+  width:clamp(80px,10vw,170px);height:clamp(200px,34vh,380px);opacity:.7;
+  background:repeating-linear-gradient(var(--tint) 0 2px,transparent 2px 22px);
+  -webkit-mask-image:linear-gradient(260deg,#000 40%,transparent 90%);
+  mask-image:linear-gradient(260deg,#000 40%,transparent 90%)}
+
+/* CHECK-IN · the projector's beam: a faint widening wedge from the top */
+[data-screen="bcheckin"] .ground__d1{display:block;left:30%;right:6%;
+  top:0;height:70vh;opacity:.5;background:var(--tint);
+  clip-path:polygon(46% 0,54% 0,100% 100%,0 100%);
+  -webkit-mask-image:linear-gradient(#000 20%,transparent 95%);
+  mask-image:linear-gradient(#000 20%,transparent 95%)}
+
+/* MEMBERS · a roster of short dashes low left */
+[data-screen="bmembers"] .ground__d1{display:block;left:3%;bottom:8%;
+  width:clamp(140px,18vw,300px);height:clamp(120px,16vh,220px);opacity:.7;
+  background-image:linear-gradient(var(--tint) 0 3px,transparent 3px);
+  background-size:38px 26px;background-repeat:repeat;
+  -webkit-mask-image:linear-gradient(35deg,#000 40%,transparent 85%);
+  mask-image:linear-gradient(35deg,#000 40%,transparent 85%)}
+
 /* under the mobile tab bar the bracket would collide with the tabs */
 @media(max-width:700px){
   .ground__corner{bottom:calc(var(--tabs-h,64px) + 14px)}
@@ -433,12 +530,17 @@ select.input{padding-right:var(--s4)}
 .blade2 .b-core{fill:var(--paper)}
 .blade2--paper .b-body{fill:var(--paper)}
 .blade2--paper .b-core{fill:var(--ink)}
+/* the afterimage: the same stroke one beat behind, in tone — the
+   trail a violent cut leaves, never a glow */
+.blade2--ghost{z-index:9}
+.blade2--ghost .b-body{fill:var(--tone)}
+.blade2--ghost .b-core{fill:transparent}
 
 /* ── the page cut: the OUTGOING page itself, frozen into fragments
    along two real cut lines. The fragments are clipped clones of the
    live page, so there is never a cover and never a black frame — the
    page stays the subject until its own pieces slide away. ── */
-.pcut{position:absolute;inset:0;z-index:6}
+.pcut{position:absolute;inset:0;z-index:6;perspective:1100px}
 .pcut__piece{position:absolute;inset:0;will-change:transform;
   background-color:var(--paper);background-repeat:no-repeat;
   background-position:0 0}
@@ -1611,7 +1713,7 @@ main#view:focus,main#view:focus-visible{outline:none}
 .view--home{display:flex;flex-direction:column;gap:var(--s4)}
 /* on Home the card is the hero object: give its field real presence
    so the page composition anchors on it */
-.view--home .card__field{min-height:clamp(220px,24vw,330px)}
+.view--home .card__field{min-height:clamp(300px,36vw,470px)}
 
 /* ── THE CARD ────────────────────────────────────────────────────────
    One printed collectible object with two zones: an ink identity
@@ -1625,7 +1727,9 @@ main#view:focus,main#view:focus-visible{outline:none}
 .card{position:relative;border:var(--edge-card) solid var(--ink);
   background:var(--paper);width:100%;
   container-type:inline-size;
-  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
+  /* the throw is TONE: an ink shadow would swallow the masthead's ink
+     edge and the card would lose its left side into its own shadow */
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
 .card__punch{position:absolute;z-index:3;left:50%;top:46%;
   transform:translate(-50%,-50%) rotate(-11deg);
   font-family:var(--f-head);text-transform:uppercase;line-height:1;
@@ -1651,6 +1755,12 @@ main#view:focus,main#view:focus-visible{outline:none}
   clip-path:polygon(0 40%,14% 6%,58% 0,90% 26%,100% 60%,55% 100%,8% 72%)}
 .card__goal{margin:0;font-size:var(--t-body);opacity:.85;
   max-width:22ch}
+/* the organization's mark closes the masthead: this is a Key Club
+   object, and the card face is where that is said */
+.card__kci{display:block;margin-top:auto;padding-top:clamp(8px,2cqw,16px)}
+.card__kci .brandseal{display:block;height:auto;
+  width:clamp(54px,11cqw,84px);opacity:.92;
+  --si:var(--paper);--sp:var(--ink)}
 
 /* the field: aspect-locked so the hand-placed layout is a fixed
    composition, not a reflowing grid */
@@ -1679,12 +1789,12 @@ main#view:focus,main#view:focus-visible{outline:none}
 
 .seals{position:absolute;inset:0;list-style:none;margin:0;padding:0}
 
-/* one slot: an absolutely seated square, leaning its own way */
+/* one slot: not a box — the stamp's own rough silhouette, absolutely
+   seated on the card, leaning its own way. The box is only geometry;
+   everything visible is drawn by the silhouette paths. */
 .seal{position:absolute;display:grid;place-items:center;
   width:var(--s);aspect-ratio:1;left:var(--x);top:var(--y);
-  background:var(--paper);min-width:0;
-  border:var(--edge-panel) solid var(--ink);
-  box-shadow:2.5px 2.5px 0 var(--ink);
+  min-width:0;
   transform:rotate(var(--lean,0deg))}
 
 /* the PORTRAIT composition (narrow card): three staggered ranks and
@@ -1716,68 +1826,76 @@ main#view:focus,main#view:focus-visible{outline:none}
   .card__field{aspect-ratio:auto;height:100%;min-height:190px}
   .card__route--l{display:block}
   .card__route--p{display:none}
-  .seal:nth-child(1){--x:0.5%; --y:8.5%; --s:15%;--lean:-2.5deg}
-  .seal:nth-child(2){--x:17%;  --y:21%;  --s:14%;--lean:1.5deg}
-  .seal:nth-child(3){--x:32.5%;--y:6.5%; --s:15%;--lean:-1deg}
-  .seal:nth-child(4){--x:49%;  --y:19%;  --s:14%;--lean:2deg}
-  .seal:nth-child(5){--x:64%;  --y:4%;   --s:16%;--lean:-2deg}
-  .seal:nth-child(6){--x:82.5%;--y:18%;  --s:13%;--lean:1deg}
-  .seal:nth-child(7){--x:71%;  --y:52%;  --s:14%;--lean:-1.5deg}
-  .seal:nth-child(8){--x:52.5%;--y:58.6%;--s:15%;--lean:2.2deg}
-  .seal:nth-child(9){--x:35%;  --y:51.6%;--s:14%;--lean:-2deg}
-  .seal:nth-child(10){--x:7.5%;--y:50.5%;--s:21%;--lean:-3deg}
+  /* a SNAKE: four across, turn, three back, turn, and the route ends
+     on the big rosette in the far corner */
+  .seal:nth-child(1){--x:2%;   --y:6%;  --s:17%;--lean:-2.5deg}
+  .seal:nth-child(2){--x:21%;  --y:14%; --s:16%;--lean:1.5deg}
+  .seal:nth-child(3){--x:39%;  --y:5%;  --s:17%;--lean:-1deg}
+  .seal:nth-child(4){--x:58%;  --y:13%; --s:16%;--lean:2deg}
+  .seal:nth-child(5){--x:76%;  --y:26%; --s:18%;--lean:-2deg}
+  .seal:nth-child(6){--x:52%;  --y:36%; --s:16%;--lean:1deg}
+  .seal:nth-child(7){--x:28%;  --y:32%; --s:17%;--lean:-1.5deg}
+  .seal:nth-child(8){--x:4%;   --y:48%; --s:16%;--lean:2.2deg}
+  .seal:nth-child(9){--x:30%;  --y:62%; --s:17%;--lean:-2deg}
+  .seal:nth-child(10){--x:60%; --y:58%; --s:26%;--lean:-3deg}
 }
 
-/* EMPTY — a printed well waiting for its stamp: a thin printed frame
-   with a second rule inside it (the double keyline of a form that
-   expects ink) and the symbol as the faintest possible watermark. */
-.seal[data-seal="empty"]{border-width:var(--edge-rule);box-shadow:none}
-.seal[data-seal="empty"]::before{content:'';position:absolute;inset:7%;
-  border:1px solid var(--ink);opacity:.28;pointer-events:none}
+.seal > svg{width:100%;height:100%;display:block;overflow:visible}
+.sf-back,.sf-face{fill:none}
+.seal__mark path{stroke:none}
+
+/* EMPTY — the printed seat: the stamp's own silhouette, outlined on
+   the card with the ghost of its artwork. Quiet, but drawn. */
+.seal[data-seal="empty"] .sf-face{stroke:var(--ink);stroke-width:1.1;
+  opacity:.42}
 .seal[data-seal="empty"] .seal__mark{opacity:.08}
 .seal[data-seal="empty"] .seal__mark path{fill:var(--ink)}
-.seals .seal svg{width:84%;height:84%;display:block}
-.seal__mark path{fill:var(--tone);stroke:none}
-.seal__no{position:absolute;right:6%;bottom:4%;
-  font:500 clamp(8px,1.8cqw,11px)/1 var(--f-mono);color:var(--tone)}
+.seal[data-seal="empty"] .seal__no{color:var(--tone)}
 
-/* EARNED — solid ink, pressed a hair off true, with a paper keyline
-   just inside the edge: the printed border every real stamp carries */
-.seal--set{background:var(--ink);background-image:none}
-.seal--set::before{content:'';position:absolute;inset:5.5%;
-  border:1.5px solid var(--paper);pointer-events:none;
-  transform:rotate(calc(var(--press-tilt,0deg) / 2))}
+/* EARNED — an ink impression on its own paper backing piece, pressed
+   a degree off true. The shadow is TONE and follows the silhouette,
+   and the paper deckle keeps two overlapping stamps two objects. */
+.seal--set{filter:drop-shadow(2.5px 3px 0 var(--tone))}
+.seal--set .sf-back{fill:var(--paper);stroke:var(--tone);
+  stroke-width:.8}
+.seal--set .sf-face{fill:var(--ink)}
+.seal--set .sf-press{transform-box:fill-box;transform-origin:center;
+  transform:rotate(var(--press-tilt,0deg))}
 .seal--set .seal__mark path{fill:var(--paper)}
-.seal--set .seal__no{color:var(--paper);opacity:.55}
-.seal--set .seal__mark{transform:rotate(var(--press-tilt,0deg));
-  transform-origin:50% 50%}
-/* the freshest press carries the heaviest seat */
-.seal--hero{box-shadow:4px 4px 0 var(--ink);z-index:1}
+.seal--set .seal__no{color:var(--ink-2)}
+/* the freshest press sits proudest */
+.seal--hero{filter:drop-shadow(3.5px 4.5px 0 var(--tone));z-index:1}
+.seal--hero .sf-back{stroke-width:1.2}
 
-/* NEXT — the slot being worked toward: heaviest keyline, ringed by
-   hand — the annotation that tells you where the story continues */
-.seal--next{background-image:none;
-  border-width:var(--edge-frame);
-  box-shadow:3.5px 3.5px 0 var(--ink);
-  z-index:1}
+/* NEXT — the seat being worked toward: the silhouette at full ink
+   weight, ringed by hand — the annotation that says where the story
+   continues */
+.seal--next{z-index:1}
+.seal--next .sf-face{stroke:var(--ink);stroke-width:2.6;opacity:1}
+.seal--next .seal__mark{opacity:.16}
 .seal--next .seal__mark path{fill:var(--ink)}
 .seal--next .seal__no{color:var(--ink-2)}
-.seal--next::after{content:'';position:absolute;inset:-9%;
+.seal--next::after{content:'';position:absolute;inset:-8%;
   border:2.5px solid var(--ink);
   border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;
   transform:rotate(-5deg);pointer-events:none}
 
-/* MILESTONE — the tenth slot is the reward itself: a double-keyline
-   seat with the reward's name printed inside its bottom edge */
-.seal--mile[data-seal="empty"]::before{inset:4.5%;
-  border-width:2px;opacity:.4}
-.seal--mile svg{align-self:start;margin-top:6%}
-.seal__tag{position:absolute;left:50%;bottom:6.5%;
-  transform:translateX(-50%);max-width:94%;overflow:hidden;
+/* the printed index of each specimen, set on the card beside it */
+.seal__no{position:absolute;right:0;bottom:1%;
+  font:500 clamp(8px,1.8cqw,11px)/1 var(--f-mono);color:var(--tone)}
+
+/* MILESTONE — the tenth seat is a rosette because it IS the reward,
+   its name printed in the seat */
+.seal--mile[data-seal="empty"] .sf-face{stroke-width:1.6;opacity:.5}
+.seal__tag{position:absolute;left:50%;bottom:13%;
+  transform:translateX(-50%);max-width:88%;overflow:hidden;
   font:500 clamp(8px,1.6cqw,11px)/1 var(--f-mono);
   text-transform:uppercase;letter-spacing:.1em;color:var(--ink-2);
   white-space:nowrap}
-.seal--set .seal__tag{color:var(--paper);opacity:.75}
+/* on the pressed rosette the name rides its own ink banner, so it
+   stays readable across the jagged silhouette edge */
+.seal--set .seal__tag{color:var(--paper);bottom:14%;
+  background:var(--ink);padding:.25em .5em}
 
 /* LOCKED — defined for the contract; the attendance model does not
    emit it today. */
@@ -1936,6 +2054,12 @@ button,input,select,textarea{font-family:inherit}
    swap only — the geometry is the traced reference's. */
 .brandseal{--si:var(--ink);--sp:var(--paper)}
 .proj__kci .brandseal{--si:var(--paper);--sp:var(--ink)}
+/* the district countersigns the meeting the board is scheduling */
+.bform__head{display:flex;align-items:center;
+  justify-content:space-between;gap:12px}
+.bform__seal{flex:none;width:clamp(30px,3vw,46px)}
+.bform__seal .brandseal{display:block;width:100%;height:auto;
+  --si:var(--paper);--sp:var(--ink)}
 .spread__wm{font-family:var(--f-display);text-transform:uppercase;
   font-size:clamp(52px,15vw,124px);line-height:.9;letter-spacing:.01em;
   margin:0;padding-bottom:.06em}
@@ -2387,35 +2511,40 @@ button,input,select,textarea{font-family:inherit}
   padding:clamp(18px,3vw,32px);
   margin-left:calc(var(--gutter) * -1);
   padding-left:max(var(--gutter),clamp(18px,3vw,32px))}
-/* ONE composition: an organizational certificate. International is
-   the letterhead mark at the top; the district seal is seated ON the
-   signature rule at the right — half above, half below, the way an
-   embossed seal sits on a certificate line — at a clear second scale.
-   The name below the rule stays the primary personal line. Everything
-   is sized from the PLATE (container units), so nothing can clip on
-   the narrow desktop column. */
-.who__mark{grid-row:1;align-self:start}
-.who__mark .brandseal{display:block;height:auto;
-  width:clamp(96px,36cqw,164px);
+/* ONE composition, three layers of weight: the letterhead LOCKUP at
+   the top (the International seal with the organization named beside
+   it — a mark with words is placed; a mark alone floats), the
+   district emblem as one large tone watermark bleeding off the lower
+   corner, and the member's name as the dominant line over it.
+   Everything is sized from the PLATE (container units), so nothing
+   can clip on the narrow desktop column. */
+.who__mark{grid-row:1;align-self:start;position:relative;z-index:1;
+  display:flex;align-items:center;gap:clamp(10px,3cqw,18px)}
+.who__mark .brandseal{display:block;height:auto;flex:none;
+  width:clamp(64px,24cqw,108px);
   --si:var(--paper);--sp:var(--ink)}
+.who__org{display:block;font:500 clamp(9px,2.2cqw,12px)/1.5 var(--f-mono);
+  text-transform:uppercase;letter-spacing:.18em;color:var(--paper);
+  opacity:.85}
+.who__org b{display:block;font-weight:500;color:var(--tint)}
+/* the district emblem: large, quiet, cropped by the plate's own edge —
+   tone on ink, never black on black */
+.who__emblem{position:absolute;right:-9%;bottom:-11%;z-index:0;
+  width:clamp(190px,64cqw,320px);pointer-events:none}
+.who__emblem .brandseal{display:block;height:auto;width:100%;
+  opacity:.42;
+  --si:var(--tone);--sp:transparent}
 .who__id{grid-row:2;position:relative;z-index:1;align-self:end;
   display:grid;gap:3px;
   border-top:var(--edge-rule) solid var(--tint);
   padding-top:clamp(10px,1.6vw,16px)}
-.who__cnh{position:absolute;right:clamp(6px,3cqw,18px);top:0;
-  transform:translateY(-52%)}
-.who__cnh .brandseal{display:block;height:auto;
-  width:clamp(62px,27cqw,108px);
-  --si:var(--paper);--sp:var(--ink)}
 /* the name is set in the header face — the display face's thin strokes
    were unreadable at this size on ink */
 .who__name{margin:0;font-family:var(--f-head);text-transform:uppercase;
   line-height:.95;font-size:clamp(26px,3.6vw,46px);color:var(--paper);
   overflow-wrap:anywhere;padding-bottom:.04em}
 .who__hand{margin:0;font-size:var(--t-caption);color:var(--tint);
-  line-height:1.3;overflow-wrap:anywhere;letter-spacing:.1em;
-  /* the hand line clears the seal seated on the rule above it */
-  padding-right:clamp(60px,26cqw,108px)}
+  line-height:1.3;overflow-wrap:anywhere;letter-spacing:.1em}
 
 @media(min-width:900px){
   .sheet{grid-template-columns:minmax(0,34fr) minmax(0,66fr);
@@ -2423,7 +2552,7 @@ button,input,select,textarea{font-family:inherit}
   /* the member card face carries more field than the home card, so
      the two columns land at kindred heights without stretching the
      composition apart */
-  .view--member .card__field{min-height:clamp(230px,26vw,340px)}
+  .view--member .card__field{min-height:clamp(280px,32vw,430px)}
   /* past this width the nav rail owns the left edge: the plate keeps a
      real gutter from it instead of sliding underneath */
   .who{margin-left:0;padding-left:clamp(18px,3vw,32px)}
@@ -2684,6 +2813,8 @@ button,input,select,textarea{font-family:inherit}
   <div class="ground__slash"></div>
   <div class="ground__bleed"></div>
   <div class="ground__corner"></div>
+  <div class="ground__d1"></div>
+  <div class="ground__d2"></div>
   <div class="arena" id="arena"></div>
   <div class="ground__tone"></div>
   <div class="ground__vig"></div>
@@ -16738,6 +16869,52 @@ const memberName = () => (Store.user && Store.user.name) || 'Member';
    Every surface is a panel with a registration ghost behind it. There
    are no rounded cards anywhere in this file.
    ══════════════════════════════════════════════════════════════════ */
+/* ── STAMP SILHOUETTES ────────────────────────────────────────────────
+   A collected stamp is not a square with a circle in it. Each slot is
+   drawn as a rough SILHOUETTE — a hand-pressed seal, a pasted label, a
+   tilted lozenge, a cut plate, and one rosette for the milestone —
+   with a paper backing piece slightly larger than the ink face, so a
+   stamp reads as an object pasted onto the card and two overlapping
+   stamps never merge into one black mass. The jitter is seeded per
+   slot: every stamp is slightly its own, inside one system. */
+const stampJit = (seed, k) => Math.sin(seed * 127.1 + k * 311.7) * .5 + .5;
+function stampShape(kind, seed, grow = 0){
+  const J = k => (stampJit(seed, k) - .5);
+  const pts = [];
+  const push = (x, y) => pts.push(x.toFixed(1) + ' ' + y.toFixed(1));
+  if (kind === 'seal' || kind === 'burst'){
+    const n  = kind === 'seal' ? 18 : 24;
+    const r0 = (kind === 'seal' ? 27 : 29) + grow;
+    const r1 = (kind === 'seal' ? 27 : 22.5) + grow;
+    for (let i = 0; i < n; i++){
+      const a = i / n * 2 * Math.PI - Math.PI / 2;
+      const r = (i % 2 ? r1 : r0) + J(i) * 2.8;
+      push(32 + Math.cos(a) * r, 32 + Math.sin(a) * r);
+    }
+  } else {
+    /* label · diamond · plate: a corner list walked with jittered
+       midpoints, so every edge is a little off-true */
+    const g = grow;
+    const C4 = kind === 'label'
+      ? [[15 - g, 5 - g], [49 + g, 5 - g], [49 + g, 59 + g], [15 - g, 59 + g]]
+      : kind === 'diamond'
+      ? [[32, 3 - g], [61 + g, 32], [32, 61 + g], [3 - g, 32]]
+      : [[13 - g, 4 - g], [51 + g, 4 - g], [60 + g, 22], [60 + g, 42],
+         [51 + g, 60 + g], [13 - g, 60 + g], [4 - g, 42], [4 - g, 22]];
+    C4.forEach(([x, y], i) => {
+      const [nx, ny] = C4[(i + 1) % C4.length];
+      push(x + J(i) * 2.4, y + J(i + 9) * 2.4);
+      push((x + nx) / 2 + J(i + 17) * 2, (y + ny) / 2 + J(i + 23) * 2);
+    });
+  }
+  return 'M' + pts.join('L') + 'Z';
+}
+/* the archetype rotation: controlled variation along the route */
+const STAMP_KIND = i =>
+  i === 9 ? 'burst' : ['seal', 'label', 'diamond', 'seal', 'plate',
+                       'label', 'seal', 'diamond', 'plate'][i % 9];
+const STAMP_FIT = { seal:.6, burst:.46, label:.5, diamond:.5, plate:.58 };
+
 const C = {
   /* the giant cropped word behind a view */
 
@@ -16795,10 +16972,22 @@ const C = {
       const mtg = rec ? Store.meetings.find(m => m.id === rec.meetingId) : null;
       const docket = rec && mtg ? C.sealMeta(rec, mtg) : '';
 
-      return `<li class="seal ${state ? 'seal--' + state : ''}${hero}${mile}" data-seal="${state || 'empty'}" style="${tilt}"${
+      const kind = STAMP_KIND(i);
+      const seed = p.floor + i + 1;
+      const fit  = STAMP_FIT[kind];
+      /* the rosette's artwork rides high so the reward name has the
+         lower valley to itself */
+      const dy   = kind === 'burst' ? -4 : 0;
+      return `<li class="seal seal--k-${kind} ${state ? 'seal--' + state : ''}${hero}${mile}" data-seal="${state || 'empty'}" style="${tilt}"${
         docket ? ` tabindex="0" aria-label="Stamp ${pad(p.floor + i + 1)}: general meeting ${
           mtg.no}, ${fmtDate(mtg.date)}, checked in at ${fmtTime(rec.at)}"` : ''}>
-        <svg viewBox="0 0 64 64" aria-hidden="true"><g class="seal__mark">${stampMark(p.floor + i)}</g></svg>
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <path class="sf-back" d="${stampShape(kind, seed * 3 + 1, 3.4)}"/>
+          <g class="sf-press">
+            <path class="sf-face" d="${stampShape(kind, seed, 0)}"/>
+            <g class="seal__mark" transform="translate(${(32 - 32 * fit).toFixed(1)} ${(32 - 32 * fit + dy).toFixed(1)}) scale(${fit})">${stampMark(p.floor + i)}</g>
+          </g>
+        </svg>
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
         ${mile && goal ? `<span class="seal__tag">${esc(goal.name)}</span>` : ''}
         ${docket}
@@ -16806,12 +16995,12 @@ const C = {
     }).join('');
 
     /* the collection route: a dotted path joining the slot centres in
-       order, one polyline per composition */
+       order, one polyline per composition (y in straight percent) */
     const route =
-      `<svg class="card__route card__route--l" viewBox="0 0 100 48.8" preserveAspectRatio="none" aria-hidden="true">
-        <polyline points="8,11.7 24,17.3 40,10.7 56,16.3 72,10.0 89,15.3 78,32.4 60,36.1 42,32.2 18,35.1"/></svg>` +
-      `<svg class="card__route card__route--p" viewBox="0 0 100 128" preserveAspectRatio="none" aria-hidden="true">
-        <polyline points="16,18 45,19 76,18.2 84,41.5 54,40.3 22,42.1 15,65.8 46,67.5 77,65.2 42,97.7"/></svg>`;
+      `<svg class="card__route card__route--l" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <polyline points="10.5,13 29,20.5 47.5,12 66,19.5 85,33.5 60,42.5 36.5,39 12,54.5 38.5,69 73,68.5"/></svg>` +
+      `<svg class="card__route card__route--p" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <polyline points="16,14.1 45,14.9 76,14.2 84,32.4 54,31.5 22,32.9 16.5,51.4 46,52.7 77,50.9 42,76.3"/></svg>`;
 
     const say = full
       ? 'Card complete — claim it in Rewards'
@@ -16824,6 +17013,7 @@ const C = {
           <p class="card__num"><b>${pad(p.filled)}</b><span>/ ${p.span}</span></p>
           <span class="card__idrule" aria-hidden="true"></span>
           <p class="card__goal">${esc(say)}</p>
+          <span class="card__kci" aria-hidden="true">${brandSeal('kci')}</span>
         </div>
         <div class="card__field">
           ${route}
@@ -17196,14 +17386,18 @@ const Views = {
            the whole product is about, on the page that is about them. -->
       <div class="sheet" data-enter>
         <section class="who">
-          <!-- an organizational document, not a sticker sheet:
-               International is the letterhead mark at the top of the
-               plate; the district seal sits ON the signature rule at
-               the right, half over it, the way an embossed seal sits
-               on a certificate line. The name below stays dominant. -->
-          <div class="who__mark" aria-hidden="true">${brandSeal('kci')}</div>
+          <!-- an organizational identity plate, composed, not
+               stickered: the letterhead LOCKUP at the top (the
+               International seal with the organization named beside
+               it), the district emblem as one large quiet watermark
+               anchoring the lower corner, and the member's name as
+               the dominant line across it. -->
+          <div class="who__mark" aria-hidden="true">
+            ${brandSeal('kci')}
+            <span class="who__org">Key Club International<b>Cali-Nev-Ha District</b></span>
+          </div>
+          <span class="who__emblem" aria-hidden="true">${brandSeal('cnh')}</span>
           <div class="who__id">
-            <span class="who__cnh" aria-hidden="true">${brandSeal('cnh')}</span>
             <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
               handle !== name ? ` / ${esc(handle)}` : ''}</p>
             <p class="who__name">${esc(name)}</p>
@@ -17563,7 +17757,8 @@ const BoardUI = {
   createForm(){
     const f = this.form || {};
     return `<form class="bform" id="meetingForm">
-      <h2 class="h2 bsec" style="margin-top:0">Schedule a General Meeting</h2>
+      <h2 class="h2 bsec bform__head" style="margin-top:0">Schedule a General Meeting
+        <span class="bform__seal" aria-hidden="true">${brandSeal('cnh')}</span></h2>
 
       <div class="bform__grid">
         <label class="field"><span class="kicker">Meeting number</span>
@@ -18087,7 +18282,7 @@ const Blade = {
       <polygon class="b-core" points="${ctop} ${cbot}"/></svg>`;
   },
 
-  strike({ line, th = 18, paper = false, host = null,
+  strike({ line, th = 18, paper = false, ghost = false, host = null,
            delay = 0, sweep = 75, hold = 130, len = null } = {}){
     if (Motion.off) return delay;
     const parent = host || $('#fx');
@@ -18097,7 +18292,8 @@ const Blade = {
     /* wrapper rotates about its centre so the stroke lies exactly on
        the cut line; the inner layer sweeps from the entry tip */
     const el = document.createElement('i');
-    el.className = 'blade2' + (paper ? ' blade2--paper' : '');
+    el.className = 'blade2' + (paper ? ' blade2--paper' : '')
+                            + (ghost ? ' blade2--ghost' : '');
     el.style.cssText = `left:${line.x}px;top:${line.y}px;width:${L}px;height:${th * 2}px;` +
       `margin:${-th}px 0 0 ${-L / 2}px`;
     el.innerHTML = `<span class="blade2__s">${this.svg(seq)}</span>`;
@@ -18433,18 +18629,50 @@ const FX = {
         const c2 = Blade.strike({ line:L2, th:13, delay:70, sweep:100, hold:240 });
         setTimeout(() => { seam(L2, 1, 3.5); Impact.pop(ov); }, c2);
 
-        /* removal ALONG the cut geometry after a readable divided hold */
-        const D = Math.hypot(W, H) * 1.15;
-        const t2 = c2 + 210;
+        /* removal by GRAVITY: the cut pieces lose their support in cut
+           order and DROP — heavier chunks lag and turn slowly, light
+           ones tumble — revealing the page beneath. */
+        const t2 = c2 + 260;
+        const avg = Math.sqrt(W * H / frags.length);
+        let dmax = 1;
+        for (const f of frags){
+          f.d = Math.abs(CutGeo.side(L1, f.cx, f.cy));
+          dmax = Math.max(dmax, f.d);
+        }
         frags.forEach((f, i) => {
-          const tx = f.ox + f.sides[0] * L1.nx * D + f.sides[1] * L2.nx * D * .16;
-          const ty = f.oy + f.sides[0] * L1.ny * D + f.sides[1] * L2.ny * D * .16;
-          animate(f.el, { translateX:[f.ox, tx], translateY:[f.oy, ty],
-            rotate:f.sides[0] * (1.6 + roll(i + seq) * 2),
-            duration:400 + roll(i * 3 + seq) * 110,
-            delay:t2 + i * 32, ease:'inQuad' });
+          const r1 = roll(i * 3 + seq), r2 = roll(i * 5 + seq + 1), r3 = roll(i * 7 + seq + 2);
+          const mass = Math.max(.6, Math.sqrt(f.area) / avg);
+          f.rel = t2 + (f.d / dmax) * 140 + r1 * 90;
+          f.vx  = ((f.cx - W * .5) / W) * 90 + (r2 - .5) * 60;
+          f.vy  = 30 + r3 * 120;
+          f.g   = (7800 + r1 * 2400) / mass;
+          f.vr  = (r2 - .5) * 240 / mass;
+          f.vt  = (r3 - .5) * 90 / mass;
+          f.x = f.ox; f.y = f.oy; f.rot = 0; f.tilt = 0; f.done = false;
         });
-        setTimeout(() => { ov.remove(); snap.release(); res(); }, t2 + 680);
+        const t0 = performance.now();
+        let prev = t0, live = frags.length, ended = false;
+        const gone = () => { if (ended) return; ended = true;
+          ov.remove(); snap.release(); res(); };
+        const step = now => {
+          const dt = Math.min(.034, (now - prev) / 1000); prev = now;
+          const tms = now - t0;
+          for (const f of frags){
+            if (f.done || tms < f.rel) continue;
+            f.vy  += f.g * dt;
+            f.x   += f.vx * dt; f.y += f.vy * dt;
+            f.rot += f.vr * dt; f.tilt += f.vt * dt;
+            f.el.style.transform =
+              `translate(${f.x.toFixed(1)}px,${f.y.toFixed(1)}px) ` +
+              `rotate(${f.rot.toFixed(2)}deg) rotateX(${f.tilt.toFixed(2)}deg)`;
+            if (f.cy + f.y - f.rad > H + 60){ f.done = true; live--; }
+          }
+          if (live > 0 && now - t0 < 2400) requestAnimationFrame(step);
+          else gone();
+        };
+        requestAnimationFrame(step);
+        /* hard safety: the overlay can never outlive the sequence */
+        setTimeout(gone, 2600);
       });
     });
   },
@@ -18565,10 +18793,11 @@ const FX = {
     /* the freeze renders while the wind-up plays over the live page */
     const snapP = Snapshot.take();
 
-    /* ── anticipation: the air moves first. A dip, then two thin
-       wind-up streaks flick through on the hero's direction before the
-       real blade enters. ── */
-    Impact.scrim(.12, { delay:60 });
+    /* ── anticipation: the air moves first. A dip, two thin wind-up
+       streaks flick through on the hero's direction, then a held
+       breath of stillness — nothing moves — before the blade enters.
+       The pause is what makes the impact land. ── */
+    Impact.scrim(.16, { delay:60 });
     Blade.strike({ line:CutGeo.line(hero.x + hero.nx * 150, hero.y + hero.ny * 150,
                    hero.deg - 2), th:4, delay:90, sweep:70, hold:60, len:D * .55 });
     Blade.strike({ line:CutGeo.line(hero.x - hero.nx * 180, hero.y - hero.ny * 180,
@@ -18576,9 +18805,12 @@ const FX = {
 
     /* ── THE hero slash: one massive stroke — thick tapered body,
        razor core, a long fan of parallel streaks — crossing the whole
-       page. ── */
-    const c0 = Blade.volley({ line:hero, seed:seq, delay:260, spread:150,
+       page, with a tone afterimage dragging one beat behind it. ── */
+    const c0 = Blade.volley({ line:hero, seed:seq, delay:300, spread:150,
       main:{ th:mob ? 46 : 76, sweep:230, hold:560 }, streaks:mob ? 3 : 5 });
+    Blade.strike({ line:CutGeo.line(hero.x + hero.nx * 26, hero.y + hero.ny * 26,
+                   hero.deg), th:(mob ? 46 : 76) * .55, ghost:true,
+                   delay:360, sweep:250, hold:420, len:D * 1.5 });
 
     Promise.all([snapP, wait(c0)]).then(([snap]) => {
       const frags = CutGeo.shatter(W, H, lines);
@@ -18618,9 +18850,9 @@ const FX = {
          the hero seam cracks WIDE now — this is its contact moment */
       lines.forEach((L, k) => { if (k > 0) seam(L, k, -0.4); });
       grid.classList.add('is-cracked');
-      seam(hero, 0, 10);
+      seam(hero, 0, 12);
       Impact.pop();
-      Impact.shake(grid, 13, 170);
+      Impact.shake(grid, 15, 180);
 
       /* ── the follow-through: counter-cut, then the varied strokes,
          each opening ITS seam at ITS contact ── */

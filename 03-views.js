@@ -11,6 +11,52 @@ const memberName = () => (Store.user && Store.user.name) || 'Member';
    Every surface is a panel with a registration ghost behind it. There
    are no rounded cards anywhere in this file.
    ══════════════════════════════════════════════════════════════════ */
+/* ── STAMP SILHOUETTES ────────────────────────────────────────────────
+   A collected stamp is not a square with a circle in it. Each slot is
+   drawn as a rough SILHOUETTE — a hand-pressed seal, a pasted label, a
+   tilted lozenge, a cut plate, and one rosette for the milestone —
+   with a paper backing piece slightly larger than the ink face, so a
+   stamp reads as an object pasted onto the card and two overlapping
+   stamps never merge into one black mass. The jitter is seeded per
+   slot: every stamp is slightly its own, inside one system. */
+const stampJit = (seed, k) => Math.sin(seed * 127.1 + k * 311.7) * .5 + .5;
+function stampShape(kind, seed, grow = 0){
+  const J = k => (stampJit(seed, k) - .5);
+  const pts = [];
+  const push = (x, y) => pts.push(x.toFixed(1) + ' ' + y.toFixed(1));
+  if (kind === 'seal' || kind === 'burst'){
+    const n  = kind === 'seal' ? 18 : 24;
+    const r0 = (kind === 'seal' ? 27 : 29) + grow;
+    const r1 = (kind === 'seal' ? 27 : 22.5) + grow;
+    for (let i = 0; i < n; i++){
+      const a = i / n * 2 * Math.PI - Math.PI / 2;
+      const r = (i % 2 ? r1 : r0) + J(i) * 2.8;
+      push(32 + Math.cos(a) * r, 32 + Math.sin(a) * r);
+    }
+  } else {
+    /* label · diamond · plate: a corner list walked with jittered
+       midpoints, so every edge is a little off-true */
+    const g = grow;
+    const C4 = kind === 'label'
+      ? [[15 - g, 5 - g], [49 + g, 5 - g], [49 + g, 59 + g], [15 - g, 59 + g]]
+      : kind === 'diamond'
+      ? [[32, 3 - g], [61 + g, 32], [32, 61 + g], [3 - g, 32]]
+      : [[13 - g, 4 - g], [51 + g, 4 - g], [60 + g, 22], [60 + g, 42],
+         [51 + g, 60 + g], [13 - g, 60 + g], [4 - g, 42], [4 - g, 22]];
+    C4.forEach(([x, y], i) => {
+      const [nx, ny] = C4[(i + 1) % C4.length];
+      push(x + J(i) * 2.4, y + J(i + 9) * 2.4);
+      push((x + nx) / 2 + J(i + 17) * 2, (y + ny) / 2 + J(i + 23) * 2);
+    });
+  }
+  return 'M' + pts.join('L') + 'Z';
+}
+/* the archetype rotation: controlled variation along the route */
+const STAMP_KIND = i =>
+  i === 9 ? 'burst' : ['seal', 'label', 'diamond', 'seal', 'plate',
+                       'label', 'seal', 'diamond', 'plate'][i % 9];
+const STAMP_FIT = { seal:.6, burst:.46, label:.5, diamond:.5, plate:.58 };
+
 const C = {
   /* the giant cropped word behind a view */
 
@@ -68,10 +114,22 @@ const C = {
       const mtg = rec ? Store.meetings.find(m => m.id === rec.meetingId) : null;
       const docket = rec && mtg ? C.sealMeta(rec, mtg) : '';
 
-      return `<li class="seal ${state ? 'seal--' + state : ''}${hero}${mile}" data-seal="${state || 'empty'}" style="${tilt}"${
+      const kind = STAMP_KIND(i);
+      const seed = p.floor + i + 1;
+      const fit  = STAMP_FIT[kind];
+      /* the rosette's artwork rides high so the reward name has the
+         lower valley to itself */
+      const dy   = kind === 'burst' ? -4 : 0;
+      return `<li class="seal seal--k-${kind} ${state ? 'seal--' + state : ''}${hero}${mile}" data-seal="${state || 'empty'}" style="${tilt}"${
         docket ? ` tabindex="0" aria-label="Stamp ${pad(p.floor + i + 1)}: general meeting ${
           mtg.no}, ${fmtDate(mtg.date)}, checked in at ${fmtTime(rec.at)}"` : ''}>
-        <svg viewBox="0 0 64 64" aria-hidden="true"><g class="seal__mark">${stampMark(p.floor + i)}</g></svg>
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <path class="sf-back" d="${stampShape(kind, seed * 3 + 1, 3.4)}"/>
+          <g class="sf-press">
+            <path class="sf-face" d="${stampShape(kind, seed, 0)}"/>
+            <g class="seal__mark" transform="translate(${(32 - 32 * fit).toFixed(1)} ${(32 - 32 * fit + dy).toFixed(1)}) scale(${fit})">${stampMark(p.floor + i)}</g>
+          </g>
+        </svg>
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
         ${mile && goal ? `<span class="seal__tag">${esc(goal.name)}</span>` : ''}
         ${docket}
@@ -79,12 +137,12 @@ const C = {
     }).join('');
 
     /* the collection route: a dotted path joining the slot centres in
-       order, one polyline per composition */
+       order, one polyline per composition (y in straight percent) */
     const route =
-      `<svg class="card__route card__route--l" viewBox="0 0 100 48.8" preserveAspectRatio="none" aria-hidden="true">
-        <polyline points="8,11.7 24,17.3 40,10.7 56,16.3 72,10.0 89,15.3 78,32.4 60,36.1 42,32.2 18,35.1"/></svg>` +
-      `<svg class="card__route card__route--p" viewBox="0 0 100 128" preserveAspectRatio="none" aria-hidden="true">
-        <polyline points="16,18 45,19 76,18.2 84,41.5 54,40.3 22,42.1 15,65.8 46,67.5 77,65.2 42,97.7"/></svg>`;
+      `<svg class="card__route card__route--l" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <polyline points="10.5,13 29,20.5 47.5,12 66,19.5 85,33.5 60,42.5 36.5,39 12,54.5 38.5,69 73,68.5"/></svg>` +
+      `<svg class="card__route card__route--p" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <polyline points="16,14.1 45,14.9 76,14.2 84,32.4 54,31.5 22,32.9 16.5,51.4 46,52.7 77,50.9 42,76.3"/></svg>`;
 
     const say = full
       ? 'Card complete — claim it in Rewards'
@@ -97,6 +155,7 @@ const C = {
           <p class="card__num"><b>${pad(p.filled)}</b><span>/ ${p.span}</span></p>
           <span class="card__idrule" aria-hidden="true"></span>
           <p class="card__goal">${esc(say)}</p>
+          <span class="card__kci" aria-hidden="true">${brandSeal('kci')}</span>
         </div>
         <div class="card__field">
           ${route}
@@ -469,14 +528,18 @@ const Views = {
            the whole product is about, on the page that is about them. -->
       <div class="sheet" data-enter>
         <section class="who">
-          <!-- an organizational document, not a sticker sheet:
-               International is the letterhead mark at the top of the
-               plate; the district seal sits ON the signature rule at
-               the right, half over it, the way an embossed seal sits
-               on a certificate line. The name below stays dominant. -->
-          <div class="who__mark" aria-hidden="true">${brandSeal('kci')}</div>
+          <!-- an organizational identity plate, composed, not
+               stickered: the letterhead LOCKUP at the top (the
+               International seal with the organization named beside
+               it), the district emblem as one large quiet watermark
+               anchoring the lower corner, and the member's name as
+               the dominant line across it. -->
+          <div class="who__mark" aria-hidden="true">
+            ${brandSeal('kci')}
+            <span class="who__org">Key Club International<b>Cali-Nev-Ha District</b></span>
+          </div>
+          <span class="who__emblem" aria-hidden="true">${brandSeal('cnh')}</span>
           <div class="who__id">
-            <span class="who__cnh" aria-hidden="true">${brandSeal('cnh')}</span>
             <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
               handle !== name ? ` / ${esc(handle)}` : ''}</p>
             <p class="who__name">${esc(name)}</p>

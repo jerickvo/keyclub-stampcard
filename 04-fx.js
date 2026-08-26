@@ -323,7 +323,7 @@ const Blade = {
       <polygon class="b-core" points="${ctop} ${cbot}"/></svg>`;
   },
 
-  strike({ line, th = 18, paper = false, host = null,
+  strike({ line, th = 18, paper = false, ghost = false, host = null,
            delay = 0, sweep = 75, hold = 130, len = null } = {}){
     if (Motion.off) return delay;
     const parent = host || $('#fx');
@@ -333,7 +333,8 @@ const Blade = {
     /* wrapper rotates about its centre so the stroke lies exactly on
        the cut line; the inner layer sweeps from the entry tip */
     const el = document.createElement('i');
-    el.className = 'blade2' + (paper ? ' blade2--paper' : '');
+    el.className = 'blade2' + (paper ? ' blade2--paper' : '')
+                            + (ghost ? ' blade2--ghost' : '');
     el.style.cssText = `left:${line.x}px;top:${line.y}px;width:${L}px;height:${th * 2}px;` +
       `margin:${-th}px 0 0 ${-L / 2}px`;
     el.innerHTML = `<span class="blade2__s">${this.svg(seq)}</span>`;
@@ -669,18 +670,50 @@ const FX = {
         const c2 = Blade.strike({ line:L2, th:13, delay:70, sweep:100, hold:240 });
         setTimeout(() => { seam(L2, 1, 3.5); Impact.pop(ov); }, c2);
 
-        /* removal ALONG the cut geometry after a readable divided hold */
-        const D = Math.hypot(W, H) * 1.15;
-        const t2 = c2 + 210;
+        /* removal by GRAVITY: the cut pieces lose their support in cut
+           order and DROP — heavier chunks lag and turn slowly, light
+           ones tumble — revealing the page beneath. */
+        const t2 = c2 + 260;
+        const avg = Math.sqrt(W * H / frags.length);
+        let dmax = 1;
+        for (const f of frags){
+          f.d = Math.abs(CutGeo.side(L1, f.cx, f.cy));
+          dmax = Math.max(dmax, f.d);
+        }
         frags.forEach((f, i) => {
-          const tx = f.ox + f.sides[0] * L1.nx * D + f.sides[1] * L2.nx * D * .16;
-          const ty = f.oy + f.sides[0] * L1.ny * D + f.sides[1] * L2.ny * D * .16;
-          animate(f.el, { translateX:[f.ox, tx], translateY:[f.oy, ty],
-            rotate:f.sides[0] * (1.6 + roll(i + seq) * 2),
-            duration:400 + roll(i * 3 + seq) * 110,
-            delay:t2 + i * 32, ease:'inQuad' });
+          const r1 = roll(i * 3 + seq), r2 = roll(i * 5 + seq + 1), r3 = roll(i * 7 + seq + 2);
+          const mass = Math.max(.6, Math.sqrt(f.area) / avg);
+          f.rel = t2 + (f.d / dmax) * 140 + r1 * 90;
+          f.vx  = ((f.cx - W * .5) / W) * 90 + (r2 - .5) * 60;
+          f.vy  = 30 + r3 * 120;
+          f.g   = (7800 + r1 * 2400) / mass;
+          f.vr  = (r2 - .5) * 240 / mass;
+          f.vt  = (r3 - .5) * 90 / mass;
+          f.x = f.ox; f.y = f.oy; f.rot = 0; f.tilt = 0; f.done = false;
         });
-        setTimeout(() => { ov.remove(); snap.release(); res(); }, t2 + 680);
+        const t0 = performance.now();
+        let prev = t0, live = frags.length, ended = false;
+        const gone = () => { if (ended) return; ended = true;
+          ov.remove(); snap.release(); res(); };
+        const step = now => {
+          const dt = Math.min(.034, (now - prev) / 1000); prev = now;
+          const tms = now - t0;
+          for (const f of frags){
+            if (f.done || tms < f.rel) continue;
+            f.vy  += f.g * dt;
+            f.x   += f.vx * dt; f.y += f.vy * dt;
+            f.rot += f.vr * dt; f.tilt += f.vt * dt;
+            f.el.style.transform =
+              `translate(${f.x.toFixed(1)}px,${f.y.toFixed(1)}px) ` +
+              `rotate(${f.rot.toFixed(2)}deg) rotateX(${f.tilt.toFixed(2)}deg)`;
+            if (f.cy + f.y - f.rad > H + 60){ f.done = true; live--; }
+          }
+          if (live > 0 && now - t0 < 2400) requestAnimationFrame(step);
+          else gone();
+        };
+        requestAnimationFrame(step);
+        /* hard safety: the overlay can never outlive the sequence */
+        setTimeout(gone, 2600);
       });
     });
   },
@@ -801,10 +834,11 @@ const FX = {
     /* the freeze renders while the wind-up plays over the live page */
     const snapP = Snapshot.take();
 
-    /* ── anticipation: the air moves first. A dip, then two thin
-       wind-up streaks flick through on the hero's direction before the
-       real blade enters. ── */
-    Impact.scrim(.12, { delay:60 });
+    /* ── anticipation: the air moves first. A dip, two thin wind-up
+       streaks flick through on the hero's direction, then a held
+       breath of stillness — nothing moves — before the blade enters.
+       The pause is what makes the impact land. ── */
+    Impact.scrim(.16, { delay:60 });
     Blade.strike({ line:CutGeo.line(hero.x + hero.nx * 150, hero.y + hero.ny * 150,
                    hero.deg - 2), th:4, delay:90, sweep:70, hold:60, len:D * .55 });
     Blade.strike({ line:CutGeo.line(hero.x - hero.nx * 180, hero.y - hero.ny * 180,
@@ -812,9 +846,12 @@ const FX = {
 
     /* ── THE hero slash: one massive stroke — thick tapered body,
        razor core, a long fan of parallel streaks — crossing the whole
-       page. ── */
-    const c0 = Blade.volley({ line:hero, seed:seq, delay:260, spread:150,
+       page, with a tone afterimage dragging one beat behind it. ── */
+    const c0 = Blade.volley({ line:hero, seed:seq, delay:300, spread:150,
       main:{ th:mob ? 46 : 76, sweep:230, hold:560 }, streaks:mob ? 3 : 5 });
+    Blade.strike({ line:CutGeo.line(hero.x + hero.nx * 26, hero.y + hero.ny * 26,
+                   hero.deg), th:(mob ? 46 : 76) * .55, ghost:true,
+                   delay:360, sweep:250, hold:420, len:D * 1.5 });
 
     Promise.all([snapP, wait(c0)]).then(([snap]) => {
       const frags = CutGeo.shatter(W, H, lines);
@@ -854,9 +891,9 @@ const FX = {
          the hero seam cracks WIDE now — this is its contact moment */
       lines.forEach((L, k) => { if (k > 0) seam(L, k, -0.4); });
       grid.classList.add('is-cracked');
-      seam(hero, 0, 10);
+      seam(hero, 0, 12);
       Impact.pop();
-      Impact.shake(grid, 13, 170);
+      Impact.shake(grid, 15, 180);
 
       /* ── the follow-through: counter-cut, then the varied strokes,
          each opening ITS seam at ITS contact ── */
