@@ -147,9 +147,29 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 
+/* ══ THE GROUND ═════════════════════════════════════════════════════
+   The page floor. Not a flat sheet and not wallpaper: two placed tonal
+   fields at opposite corners and a hairline press rule, all light
+   enough to sit under any panel without touching the reading. Each
+   screen adds its own composed field on top of this. */
 .ground{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
   background:var(--paper)}
-.ground__tone{display:none}
+.ground::before{content:"";position:absolute;top:-4vh;right:-6vw;
+  width:44vw;height:52vh;
+  background-image:radial-gradient(circle at 50% 50%, var(--tone-page) 0 1px, transparent 1.1px);
+  background-size:7px 7px;
+  clip-path:polygon(24% 0,100% 0,100% 100%);
+  -webkit-mask-image:linear-gradient(215deg,#000 30%,transparent 78%);
+  mask-image:linear-gradient(215deg,#000 30%,transparent 78%)}
+.ground::after{content:"";position:absolute;left:-5vw;bottom:-6vh;
+  width:30vw;height:34vh;
+  background-image:radial-gradient(circle at 50% 50%, var(--tone-page) 0 1.6px, transparent 1.75px);
+  background-size:10px 10px;
+  clip-path:polygon(0 0,100% 100%,0 100%);
+  -webkit-mask-image:linear-gradient(35deg,#000 26%,transparent 72%);
+  mask-image:linear-gradient(35deg,#000 26%,transparent 72%)}
+.ground__tone{position:absolute;top:0;bottom:0;right:clamp(10px,1.4vw,22px);
+  width:1px;background:var(--tint);opacity:.6}
 .ground__vig,.ground__grain{display:none}
 .arena{display:none}
 .backdrop{position:absolute;inset:0;background-repeat:repeat;
@@ -383,12 +403,14 @@ select.input{padding-right:var(--s4)}
 .wcut__h--a{clip-path:polygon(0 0,100% 0,100% 42%,0 58%)}
 .wcut__h--b{clip-path:polygon(0 58%,100% 42%,100% 100%,0 100%)}
 
-/* the dismantled page: tiles that each clip a clone of the shell, so
-   the falling pieces are fragments of the actual rendered page */
-.waffle{position:absolute;inset:0;z-index:5}
-.waffle__c{position:absolute;overflow:hidden;background:var(--paper);
-  box-shadow:0 0 0 1px var(--ink)}
-.waffle__page{position:absolute;pointer-events:none}
+/* the broken wall: each piece is a clipped clone of the rendered page
+   over an ink slab, tumbling in 3D as it falls */
+.waffle{position:absolute;inset:0;z-index:5;
+  perspective:1100px;transform-style:preserve-3d}
+.waffle__piece{position:absolute;inset:0;will-change:transform,opacity}
+.waffle__slab{position:absolute;inset:0;background:var(--ink);
+  transform:translate(6px,8px)}
+.waffle__page{position:absolute;pointer-events:none;background:var(--paper)}
 .waffle__page > *{width:100%;height:100%}
 .fxdefs{position:absolute;width:0;height:0}
 
@@ -456,13 +478,10 @@ select.input{padding-right:var(--s4)}
   background:var(--ink);color:var(--paper);font-family:var(--f-mono);font-size:12px;
   line-height:1.5;border-top:var(--rule) solid var(--ink);word-break:break-word}
 
-.rail__brand svg,.rail__brand img{width:44px;height:44px;display:block}
 
-.rail__brand svg *{fill:var(--ink)!important;stroke:none!important}
 .rail__brand,.topbar #barBrand{font-family:var(--f-head);font-size:15px;
   text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
 #barBrand svg{width:26px;height:26px}
-#barBrand svg *{fill:var(--ink)!important;stroke:none!important}
 
 .lines line,.lines path,.slash path,.slash rect{stroke:var(--ink);fill:var(--ink)}          /* it sits under the number at this width */
 /* Callouts clear the tab bar AND the home indicator, so a message never
@@ -1452,6 +1471,13 @@ main#view:focus,main#view:focus-visible{outline:none}
 .card{position:relative;border:var(--edge-card) solid var(--ink);
   background:var(--paper);width:100%;
   box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
+.card__punch{position:absolute;z-index:2;right:clamp(14px,3vw,40px);
+  top:44%;transform:rotate(-11deg);
+  font-family:var(--f-head);text-transform:uppercase;line-height:1;
+  font-size:clamp(30px,6vw,64px);color:var(--ink);
+  border:var(--edge-frame) solid var(--ink);background:var(--paper);
+  padding:.16em .45em;box-shadow:var(--s2) var(--s2) 0 var(--ink);
+  pointer-events:none}
 
 /* The title row of a printed card: the count at full display scale, a
    rule under it, and the two readings sharing the line below. */
@@ -1474,12 +1500,15 @@ main#view:focus,main#view:focus-visible{outline:none}
 
 /* each cell is its own printed stamp: framed, seated on a hard offset,
    pressed a hair off true. The tilt rides the tile as well as the mark,
-   at a third strength, so the card reads hand-pressed, not broken. */
+   at a third strength, and alternate tiles sit a couple of pixels off
+   the row line, so the card reads hand-pressed, not machine-set. */
 .seal{position:relative;aspect-ratio:1;display:grid;place-items:center;
   background:var(--paper);min-width:0;
   border:var(--edge-panel) solid var(--ink);
   box-shadow:2.5px 2.5px 0 var(--ink);
-  transform:rotate(calc(var(--press-tilt,0deg) / 3))}
+  transform:rotate(calc(var(--press-tilt,0deg) / 3)) translateY(var(--seat,0px))}
+.seal:nth-child(2n){--seat:2px}
+.seal:nth-child(3n){--seat:-2px}
 /* an empty slot: a toned blank waiting for ink */
 .seal[data-seal="empty"]{border-color:var(--tone);box-shadow:none;
   background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
@@ -1499,9 +1528,12 @@ main#view:focus,main#view:focus-visible{outline:none}
    strongest unearned thing on the card. */
 /* the next one to earn: paper cleared of tone inside a heavy keyline —
    the one empty box on the card that is asking for something */
+/* the slot being worked toward: the loudest unearned thing on the card */
 .seal--next{background-image:none;
   border-width:var(--edge-frame);
-  box-shadow:3px 3px 0 var(--ink)}
+  box-shadow:3.5px 3.5px 0 var(--ink);
+  transform:rotate(calc(var(--press-tilt,0deg) / 3)) translateY(var(--seat,0px)) scale(1.05);
+  z-index:1}
 .seal--next .seal__mark path{fill:var(--ink)}
 .seal--next .seal__no{color:var(--ink-2)}
 
@@ -1628,8 +1660,12 @@ button,input,select,textarea{font-family:inherit}
 .spread__sub{margin:0 0 var(--s3);font-size:var(--t-caption);
   letter-spacing:.16em;color:var(--tint);
   display:flex;align-items:center;gap:clamp(8px,1.4vw,14px)}
-.spread__kci{width:clamp(46px,6vw,72px);height:auto;flex:none;display:block}
-.spread__kci .brandseal{width:100%;height:auto;display:block}
+.spread__kci{width:clamp(52px,6.6vw,80px);height:auto;flex:none;display:block;
+  background:var(--paper);border-radius:50%;
+  padding:clamp(3px,.4vw,5px);
+  box-shadow:0 0 0 clamp(2px,.3vw,3px) var(--ink)}
+.spread__kci .brandseal{width:100%;height:auto;display:block;
+  --si:var(--ink);--sp:var(--paper)}
 
 /* ── THE CLUB SEALS, MONOCHROME ─────────────────────────────────────
    The traced artwork paints with two slots: --si (its ink) and --sp
@@ -1637,7 +1673,6 @@ button,input,select,textarea{font-family:inherit}
    all sit on ink panels, so they knock out to paper. This is a value
    swap only — the geometry is the traced reference's. */
 .brandseal{--si:var(--ink);--sp:var(--paper)}
-.spread__kci .brandseal,
 .who__seal .brandseal,
 .proj__kci .brandseal{--si:var(--paper);--sp:var(--ink)}
 .spread__wm{font-family:var(--f-display);text-transform:uppercase;
@@ -1693,8 +1728,8 @@ button,input,select,textarea{font-family:inherit}
     grid-template-rows:auto;
     column-gap:0;align-content:center;
     padding-block:clamp(40px,7vh,96px)}
-  /* the brand owns the TOP of the field; centring it put the wordmark
-     exactly where the swirl peaks on short viewports */
+  /* the brand block is pinned to the top of the field: the swirl owns
+     the lower half, and on short viewports the two must never meet */
   .spread__head{grid-row:1;align-self:start;
     margin-top:calc(clamp(40px,7vh,96px) * -1);
     padding-top:clamp(28px,6vh,64px)}
@@ -1970,8 +2005,7 @@ button,input,select,textarea{font-family:inherit}
     gap:var(--s5) var(--s5);align-content:start}
   .view--scan > .rechead{grid-area:head}
   .view--scan > .standing{grid-area:standing}
-  .view--scan > .viewer{grid-area:viewer;max-height:none;
-    margin-left:calc(var(--gutter) * -1);border-left:0}
+  .view--scan > .viewer{grid-area:viewer;max-height:none}
 
   .view--scan > .manual{grid-area:manual;align-self:end}
 }
@@ -2075,21 +2109,29 @@ button,input,select,textarea{font-family:inherit}
 
 .sheet{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr);
   align-items:start}
-.who{position:relative;display:grid;align-content:end;gap:var(--s4);
+.who{position:relative;display:grid;gap:var(--s4);
+  grid-template-rows:minmax(clamp(210px,30vw,330px),1fr) auto;
   isolation:isolate;overflow:hidden;
   background:var(--ink);color:var(--paper);
   padding:clamp(18px,3vw,32px);
   margin-left:calc(var(--gutter) * -1);
-  padding-left:max(var(--gutter),clamp(18px,3vw,32px));
-  min-height:clamp(240px,36vw,400px)}
-/* the club seal is the plate's graphic: large, knocked out, pressed
-   into the upper-right corner and cropped by the plate's edge */
+  padding-left:max(var(--gutter),clamp(18px,3vw,32px))}
+/* the credential strip owns the plate's first grid row and the name
+   the second — vertical separation the layout enforces, so a long
+   username and the seals can never crowd each other. International is
+   cropped by the plate's corner; the district seal sits in flow
+   beneath it. */
 .who__seal{position:absolute;z-index:0;
-  top:calc(clamp(150px,22vw,260px) * -.16);
-  right:calc(clamp(150px,22vw,260px) * -.14);
-  width:clamp(150px,22vw,260px)}
+  top:calc(clamp(140px,20vw,240px) * -.16);
+  right:calc(clamp(140px,20vw,240px) * -.14);
+  width:clamp(140px,20vw,240px)}
 .who__seal .brandseal{width:100%;height:auto;display:block}
-.who__id{position:relative;z-index:1}
+.who__seal2{grid-row:1;align-self:end;justify-self:end;
+  margin:0 clamp(4px,1vw,14px) clamp(2px,.6vw,10px) 0;
+  width:clamp(76px,9.5vw,116px)}
+.who__seal2 .brandseal{width:100%;height:auto;display:block;
+  --si:var(--paper);--sp:var(--ink)}
+.who__id{grid-row:2;position:relative;z-index:1;align-self:end}
 .who__id{display:grid;gap:3px}
 /* the name is set in the header face — the display face's thin strokes
    were unreadable at this size on ink */
@@ -15736,34 +15778,24 @@ const ICON = {
 };
 
 /* ══════════════════════════════════════════════════════════════════
-   THREE MARKS, THREE JOBS
+   THE MARKS
 
-   The app had one mark doing every job — brand, stamp, progress,
-   empty state, scanner, reward — which is how a symbol stops meaning
-   anything. There are three now and they are not interchangeable:
-
-     LOGO   the keyway plate. Keystamp's brand mark, and only that:
-            rail, topbar, sign-in, favicon, installed-app icon. A
-            struck plate with a key's aperture cut out of it, its
-            leading corner taken off at the system's 60 degrees.
-            Solid mass, because a brand mark has to survive 16px in a
-            tab strip and a flat colour fill in an app grid.
+   There is deliberately NO Keystamp brand mark: the final logo has not
+   been designed yet, so the brand is carried by the wordmark alone
+   until the real artwork arrives. The marks that do exist each have
+   one job:
 
      STAMPS the ten Sacred Treasures, traced from the supplied
             reference drawing. The stamp-card artwork: slot N of the
-            card carries treasure N, so a filled card is the whole set
-            rather than one mark repeated. Slots and earned stamps
-            only — never the brand, never decoration.
+            card carries treasure N. Slots and earned stamps only —
+            never the brand, never decoration.
 
-     SEAL   the traced artwork (see below). Decoration and ceremony
-            only: the scanner's target, the impact frame, empty
-            states, the credential band. Never the brand, never a slot.
+     SEAL   the traced swirl (see below). Decoration and ceremony only:
+            the scanner's target, the impact frame, empty states.
 
-   If ASSETS.logo is set, that image replaces the brand mark.
+     CLUB   the two traced Key Club seals (below): organizational
+            identity on Sign In, Member and the board pages.
    ══════════════════════════════════════════════════════════════════ */
-const logoMark = (cls = 'mark__seal') => ASSETS.logo
-  ? `<img class="${cls}" src="${ASSETS.logo}" alt="" aria-hidden="true">`
-  : LOGO.replace('class="mark__seal"', `class="${cls}"`);
 
 /* ── THE TWO CLUB SEALS — automated traces of the official artwork ──
    Reconstructed from the supplied reference images by thresholding and
@@ -15787,17 +15819,7 @@ const CNH_SEAL = `
 const brandSeal = (which, cls = '') => (which === 'cnh' ? CNH_SEAL : KCI_SEAL)
   .replace('class="brandseal"', `class="brandseal ${cls}"`);
 
-/* THE KEYWAY PLATE. One path, evenodd: the plate, then the bore, the
-   slot and the ward knocked out of it. Drawn as a filled silhouette
-   rather than strokes so it holds together at a favicon's size and
-   can be poured into a single flat colour for an app icon. */
-const LOGO = `
-<svg class="mark__seal" viewBox="0 0 32 32" aria-hidden="true">
-  <path fill="currentColor" fill-rule="evenodd" d="M9.8 2.2H29V30H3.8V12.6Z
-    M16.5 6.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 1 0 0-9Z
-    M14.2 13.8h4.6V25.8h-4.6Z
-    M9.9 18.3h4.3V22.1H9.9Z"/>
-</svg>`;
+
 
 /* THE TEN STAMPS — RECONSTRUCTED, NOT DESIGNED.
 
@@ -15876,7 +15898,7 @@ const stampMark = (ordinal) => {
   return `<path fill-rule="evenodd" d="${s.d}"/>`;
 };
 
-const wordmark = () => `<span class="mark">${logoMark()}<span class="mark__word">Key<b>stamp</b></span></span>`;
+const wordmark = () => `<span class="mark"><span class="mark__word">Key<b>stamp</b></span></span>`;
 
 /* ══════════════════════════════════════════════════════════════════
    2a. SCHEDULE — every general meeting falls on a Wednesday, in the MPR.
@@ -16509,9 +16531,11 @@ const C = {
       </li>`;
     }).join('');
 
-    return `<section class="card" data-enter>
+    const full = p.filled >= p.span;
+    return `<section class="card${full ? ' card--full' : ''}" data-enter>
       ${C.count()}
       <ul class="seals" id="seals" aria-label="${p.filled} of ${p.span} stamps in this tier">${cells}</ul>
+      ${full ? '<span class="card__punch" aria-hidden="true">Card full</span>' : ''}
     </section>`;
   },
 
@@ -16895,6 +16919,7 @@ const Views = {
       <div class="sheet" data-enter>
         <section class="who">
           <span class="who__seal" aria-hidden="true">${brandSeal('kci')}</span>
+          <span class="who__seal2" aria-hidden="true">${brandSeal('cnh')}</span>
           <div class="who__id">
             <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
               handle !== name ? ` / ${esc(handle)}` : ''}</p>
@@ -17853,12 +17878,13 @@ const FX = {
     setTimeout(() => el.remove(), 1540);
   },
 
-  /* sign-out: the dismantle. A grid of cuts crosses the page, the page
-     itself breaks into tiles — each tile clips a live clone of the
-     rendered page, so the fragments ARE the page — and the pieces fall
-     away, rotating, over the sign-in screen underneath. onCovered
-     fires at full cover, so the caller swaps the real page while the
-     copy hangs in pieces. */
+  /* sign-out: the wall comes down. The page stands as a solid wall,
+     two huge blades strike across it, the cut lattice appears, and the
+     wall breaks into thick, irregular pieces — each one a clipped clone
+     of the rendered page over an ink backing that reads as the slab's
+     edge — which tumble away in 3D and reveal the sign-in screen.
+     onCovered fires at full cover, so the caller swaps the real page
+     while the copy hangs in pieces. */
   waffleOut(onCovered){
     const fin = typeof onCovered === 'function' ? onCovered : () => {};
     if (Motion.off) return void fin();
@@ -17866,13 +17892,10 @@ const FX = {
     if (!fx || !shell) return void fin();
 
     const W = innerWidth, H = innerHeight, sy = scrollY;
-    const cols = W > 700 ? 5 : 3, rows = W > 700 ? 4 : 5;
+    const cols = W > 700 ? 5 : 3, rows = 4;
 
-    /* Each tile carries a clone of the shell. The sign-in page renders
-       underneath while the pieces hang, and its [data-screen="auth"]
-       rules would restyle the clones too (the rail collapses and every
-       fragment shifts) — so the layout the clones depend on is frozen
-       inline at clone time. */
+    /* the page clones must not restyle when the auth screen renders
+       underneath, so the layout they depend on is frozen inline */
     const snap = () => {
       const cl = shell.cloneNode(true);
       const freeze = (sel, props) => {
@@ -17890,55 +17913,80 @@ const FX = {
       return cl;
     };
 
-    /* the slash grid: the cut lines land first, drawn edge to edge */
+    /* 1 · the strikes: two big blades cross the wall, then the lattice */
+    Slash.create({ type:'B', angle:-19 });
+    Slash.create({ type:'B', angle:-64, offset:40, delay:120 });
+    Impact.flash(.3, { delay:60, dur:50 });
+    Impact.shake($('#shell'), 9, 140);
     for (let i = 1; i < rows; i++)
-      Slash.create({ type:'D', angle:-4, offset:(i / rows - .5) * H,
-                     delay:i * 26, afterimage:false });
+      Slash.create({ type:'D', angle:-6, offset:(i / rows - .5) * H,
+                     delay:200 + i * 24, afterimage:false });
     for (let i = 1; i < cols; i++)
-      Slash.create({ type:'D', angle:87, along:(i / cols - .5) * W,
-                     delay:40 + i * 26, afterimage:false });
+      Slash.create({ type:'D', angle:86, along:(i / cols - .5) * W,
+                     delay:230 + i * 24, afterimage:false });
 
-    /* the page, in tiles: each cell clips its own clone of the shell */
+    /* 2 · the cut lattice: a jittered grid, so the pieces read as
+       slash-cut slabs rather than machine tiles */
+    const jx = W / cols * .13, jy = H / rows * .13;
+    const px = [], py = [];
+    for (let r = 0; r <= rows; r++){ px.push([]); py.push([]);
+      for (let c = 0; c <= cols; c++){
+        const edgeX = c === 0 || c === cols, edgeY = r === 0 || r === rows;
+        const bx = c * W / cols, by = r * H / rows;
+        px[r].push(edgeX ? (c === 0 ? -2 : W + 2) : bx + (roll(r * 7 + c) - .5) * 2 * jx);
+        py[r].push(edgeY ? (r === 0 ? -2 : H + 2) : by + (roll(r * 3 + c * 5) - .5) * 2 * jy);
+      }}
+
     const grid = document.createElement('div');
     grid.className = 'waffle';
-    const cells = [];
+    const pieces = [];
     for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++){
-      const x = Math.round(c * W / cols), y = Math.round(r * H / rows);
-      const w = Math.round((c + 1) * W / cols) - x, h = Math.round((r + 1) * H / rows) - y;
-      const cell = document.createElement('div');
-      cell.className = 'waffle__c';
-      cell.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px`;
+      const quad = [[px[r][c], py[r][c]], [px[r][c + 1], py[r][c + 1]],
+                    [px[r + 1][c + 1], py[r + 1][c + 1]], [px[r + 1][c], py[r + 1][c]]];
+      const cxp = quad.reduce((s, p) => s + p[0], 0) / 4;
+      const cyp = quad.reduce((s, p) => s + p[1], 0) / 4;
+      const piece = document.createElement('div');
+      piece.className = 'waffle__piece';
+      piece.style.clipPath = 'polygon(' + quad.map(p => `${p[0].toFixed(1)}px ${p[1].toFixed(1)}px`).join(',') + ')';
+      piece.style.transformOrigin = `${cxp.toFixed(1)}px ${cyp.toFixed(1)}px`;
+      const back = document.createElement('div');
+      back.className = 'waffle__slab';
       const page = document.createElement('div');
       page.className = 'waffle__page';
-      page.style.cssText = `width:${W}px;height:${H}px;left:${-x}px;top:${-y - sy}px`;
+      page.style.cssText = `width:${W}px;height:${H}px;left:0;top:${-sy}px`;
       page.appendChild(snap());
-      cell.appendChild(page);
-      grid.appendChild(cell);
-      cells.push(cell);
+      piece.appendChild(back); piece.appendChild(page);
+      grid.appendChild(piece);
+      pieces.push({ el:piece, cx:cxp, cy:cyp, r:roll(r * cols + c) });
     }
     fx.appendChild(grid);
 
-    const t0 = 150;                     /* cuts have crossed; tiles hold */
-    setTimeout(fin, t0 + 60);           /* swap the real page under the copy */
+    const t0 = 340;
+    setTimeout(fin, t0 + 60);
 
-    cells.forEach((cell, i) => {
-      const r = roll(i), row = (i / cols) | 0, col = i % cols;
-      /* the seams open: a hair of separation makes the grid read as cut */
-      animate(cell, { translateX:(col - (cols - 1) / 2) * 3,
-                      translateY:(row - (rows - 1) / 2) * 2.4,
-                      duration:130, delay:t0, ease:EASE.OUT });
-      /* then the pieces drop, rotating, lower rows first */
-      animate(cell, {
-        translateY: H * (.7 + r * .8),
-        translateX: (col - (cols - 1) / 2) * (26 + r * 40),
-        rotate: (r - .5) * 26,
+    /* 3 · the pieces nearest the first blade go first: stagger by
+       distance from the -19deg cut through the centre */
+    const nx = Math.sin(-19 * Math.PI / 180), ny = -Math.cos(-19 * Math.PI / 180);
+    let dmax = 1;
+    pieces.forEach(p => { p.d = Math.abs((p.cx - W / 2) * ny - (p.cy - H / 2) * nx);
+                          dmax = Math.max(dmax, p.d); });
+    pieces.forEach(p => {
+      const seam = 60 + (p.d / dmax) * 240 + p.r * 90;
+      animate(p.el, { translateX:(p.cx - W / 2) * .04, translateY:(p.cy - H / 2) * .03,
+                      duration:150, delay:t0 + seam * .4, ease:EASE.OUT });
+      animate(p.el, {
+        translateY: H * (.85 + p.r * .7),
+        translateX: (p.cx - W / 2) * (.3 + p.r * .5),
+        rotateX: -(24 + p.r * 46),
+        rotateY: (p.r - .5) * 40,
+        rotateZ: (p.r - .5) * 24,
         opacity: [1, 1, 0],
-        duration: 620 + r * 240,
-        delay: t0 + 170 + (rows - 1 - row) * 40 + r * 90,
+        duration: 680 + p.r * 320,
+        delay: t0 + 160 + seam,
         ease: 'inQuad',
       });
     });
-    setTimeout(() => grid.remove(), 1900);
+    setTimeout(() => grid.remove(), 2200);
   },
 
   pageEntrance(scope){

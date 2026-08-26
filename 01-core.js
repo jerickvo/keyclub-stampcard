@@ -152,34 +152,24 @@ const ICON = {
 };
 
 /* ══════════════════════════════════════════════════════════════════
-   THREE MARKS, THREE JOBS
+   THE MARKS
 
-   The app had one mark doing every job — brand, stamp, progress,
-   empty state, scanner, reward — which is how a symbol stops meaning
-   anything. There are three now and they are not interchangeable:
-
-     LOGO   the keyway plate. Keystamp's brand mark, and only that:
-            rail, topbar, sign-in, favicon, installed-app icon. A
-            struck plate with a key's aperture cut out of it, its
-            leading corner taken off at the system's 60 degrees.
-            Solid mass, because a brand mark has to survive 16px in a
-            tab strip and a flat colour fill in an app grid.
+   There is deliberately NO Keystamp brand mark: the final logo has not
+   been designed yet, so the brand is carried by the wordmark alone
+   until the real artwork arrives. The marks that do exist each have
+   one job:
 
      STAMPS the ten Sacred Treasures, traced from the supplied
             reference drawing. The stamp-card artwork: slot N of the
-            card carries treasure N, so a filled card is the whole set
-            rather than one mark repeated. Slots and earned stamps
-            only — never the brand, never decoration.
+            card carries treasure N. Slots and earned stamps only —
+            never the brand, never decoration.
 
-     SEAL   the traced artwork (see below). Decoration and ceremony
-            only: the scanner's target, the impact frame, empty
-            states, the credential band. Never the brand, never a slot.
+     SEAL   the traced swirl (see below). Decoration and ceremony only:
+            the scanner's target, the impact frame, empty states.
 
-   If ASSETS.logo is set, that image replaces the brand mark.
+     CLUB   the two traced Key Club seals (below): organizational
+            identity on Sign In, Member and the board pages.
    ══════════════════════════════════════════════════════════════════ */
-const logoMark = (cls = 'mark__seal') => ASSETS.logo
-  ? `<img class="${cls}" src="${ASSETS.logo}" alt="" aria-hidden="true">`
-  : LOGO.replace('class="mark__seal"', `class="${cls}"`);
 
 /* ── THE TWO CLUB SEALS — automated traces of the official artwork ──
    Reconstructed from the supplied reference images by thresholding and
@@ -203,17 +193,7 @@ const CNH_SEAL = `
 const brandSeal = (which, cls = '') => (which === 'cnh' ? CNH_SEAL : KCI_SEAL)
   .replace('class="brandseal"', `class="brandseal ${cls}"`);
 
-/* THE KEYWAY PLATE. One path, evenodd: the plate, then the bore, the
-   slot and the ward knocked out of it. Drawn as a filled silhouette
-   rather than strokes so it holds together at a favicon's size and
-   can be poured into a single flat colour for an app icon. */
-const LOGO = `
-<svg class="mark__seal" viewBox="0 0 32 32" aria-hidden="true">
-  <path fill="currentColor" fill-rule="evenodd" d="M9.8 2.2H29V30H3.8V12.6Z
-    M16.5 6.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 1 0 0-9Z
-    M14.2 13.8h4.6V25.8h-4.6Z
-    M9.9 18.3h4.3V22.1H9.9Z"/>
-</svg>`;
+
 
 /* THE TEN STAMPS — RECONSTRUCTED, NOT DESIGNED.
 
@@ -292,7 +272,7 @@ const stampMark = (ordinal) => {
   return `<path fill-rule="evenodd" d="${s.d}"/>`;
 };
 
-const wordmark = () => `<span class="mark">${logoMark()}<span class="mark__word">Key<b>stamp</b></span></span>`;
+const wordmark = () => `<span class="mark"><span class="mark__word">Key<b>stamp</b></span></span>`;
 
 /* ══════════════════════════════════════════════════════════════════
    2a. SCHEDULE — every general meeting falls on a Wednesday, in the MPR.
