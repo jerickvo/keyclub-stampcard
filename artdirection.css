@@ -156,7 +156,6 @@
 .bform .kicker{display:block;margin-bottom:5px}
 .bform .input{width:100%;box-sizing:border-box;min-width:0}
 .bform .btn{margin-top:var(--s4)}
-.picker--sub{margin-bottom:0}
 
 .bpanel{padding:var(--s4)}
 .bfilters{grid-template-columns:1fr}

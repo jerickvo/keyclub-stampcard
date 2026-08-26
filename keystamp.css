@@ -303,23 +303,54 @@ select.input{padding-right:var(--s4)}
   text-transform:uppercase;color:var(--ink)}
 .wellflare{display:none}
 
-/* the welcome, in two halves along the blade's line */
+/* ── the blade: a razor with an ink core and a paper edge (or the
+   inverse on an ink field). Grows from its centre — a strike, not a
+   wipe — and it is thick enough to read at arm's length. ── */
+.blade{position:absolute;left:50%;top:50%;width:210vmax;height:var(--bth,16px);
+  margin-left:-105vmax;margin-top:calc(var(--bth,16px) / -2);
+  background:var(--ink);
+  box-shadow:0 0 0 2px var(--paper),0 0 0 3.5px var(--ink);
+  will-change:transform,opacity}
+.blade--paper{background:var(--paper);
+  box-shadow:0 0 0 2px var(--ink),0 0 0 3.5px var(--paper)}
+
+/* ── the page cut: two ink sheets sweep the viewport diagonally, the
+   swap happens at full cover, and they carry their own paper edge so
+   the crossing reads as a blade, not a fade. ── */
+.pcut{position:absolute;inset:0;z-index:6}
+.pcut__sheet{position:absolute;left:50%;top:50%;width:300vmax;height:300vmax;
+  margin:-150vmax 0 0 -150vmax;background:var(--ink);
+  border-block:3px solid var(--paper);
+  will-change:transform}
+
+/* the welcome: a solid ink panel in two halves along the blade's line.
+   Each half carries the panel AND its copy of the word, so when the
+   halves shear the whole scene is visibly cut, word included. */
 .wcut{position:absolute;inset:0;z-index:4}
-.wcut__dim{position:absolute;inset:0;background:var(--ink);opacity:0}
-.wcut__h{position:absolute;inset:0;display:grid;place-items:center}
-.wcut__h span{font-family:var(--f-display);
-  font-size:clamp(52px,14vw,160px);line-height:1;padding-bottom:.2em;
-  text-transform:uppercase;color:var(--paper);white-space:nowrap}
-.wcut__h--a{clip-path:polygon(0 0,100% 0,100% 42%,0 58%)}
-.wcut__h--b{clip-path:polygon(0 58%,100% 42%,100% 100%,0 100%)}
+.wcut__h{position:absolute;inset:0}
+.wcut__h--a{clip-path:polygon(0 0,100% 0,100% 38%,0 62%)}
+.wcut__h--b{clip-path:polygon(0 62%,100% 38%,100% 100%,0 100%)}
+.wcut__panel{position:absolute;inset:0;background:var(--ink);
+  display:grid;place-items:center}
+.wcut__word{font-family:var(--f-head);
+  font-size:clamp(64px,15vw,190px);line-height:1;padding-bottom:.12em;
+  text-transform:uppercase;color:var(--paper);white-space:nowrap;
+  letter-spacing:.01em}
 
 /* the broken wall: each piece is a clipped clone of the rendered page
-   over an ink slab, tumbling in 3D as it falls */
+   over an ink slab. The pieces stay fully opaque for the whole fall —
+   they leave the screen, they do not dissolve — and the ink layer
+   behind them is what shows through the cracks while the wall stands. */
 .waffle{position:absolute;inset:0;z-index:5;
   perspective:1100px;transform-style:preserve-3d}
-.waffle__piece{position:absolute;inset:0;will-change:transform,opacity}
-.waffle__slab{position:absolute;inset:0;background:var(--ink);
-  transform:translate(6px,8px)}
+.waffle__ink{position:absolute;inset:0}
+.waffle__piece{position:absolute;inset:0;will-change:transform}
+.waffle__slab{position:absolute;inset:0;transform:translate(6px,8px)}
+/* the ink — behind the wall and on the slab edges — only exists once
+   the wall has visibly cracked; before that the clones ARE the frame,
+   so a slow first rasterization can never flash black */
+.waffle.is-cracked .waffle__ink,
+.waffle.is-cracked .waffle__slab{background:var(--ink)}
 .waffle__page{position:absolute;pointer-events:none;background:var(--paper)}
 .waffle__page > *{width:100%;height:100%}
 .fxdefs{position:absolute;width:0;height:0}
@@ -343,7 +374,7 @@ select.input{padding-right:var(--s4)}
 
 .tabs button{flex:1 1 0;min-width:0;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:3px;
-  min-height:var(--tabs-h);padding:8px 2px;background:none;border:0;cursor:pointer;
+  min-height:var(--tabs-h);padding:8px 6px;background:none;border:0;cursor:pointer;
   color:var(--ink);font:500 clamp(8px,2.2vw,9.5px)/1 var(--f-body);
   letter-spacing:0;
   white-space:nowrap;overflow:hidden}
@@ -351,19 +382,35 @@ select.input{padding-right:var(--s4)}
 .tabs button[aria-current="page"]{background:var(--ink);color:var(--paper)}
 .tabs__ind{display:none}
 
-.boot{position:fixed;inset:0;z-index:200;background:var(--paper);display:grid;
-  place-items:center;overflow:hidden}
+/* ── boot: one ink poster, then the blade takes it apart ─────────────
+   The whole card is ink from the first painted frame. The KCI seal is
+   knocked out in paper and cropped by the left edge; the title is
+   paper. Both halves carry the full poster, clipped along the blade
+   line, so the final cut visibly divides the scene. */
+.boot{position:fixed;inset:0;z-index:200;overflow:hidden}
+/* the ink lives on the poster halves, not the root — when they fly
+   apart the app underneath is what shows through */
 .boot.is-done{display:none}
-.boot__seal{position:absolute;width:min(44vmin,250px);height:min(44vmin,250px);opacity:0}
-.boot__seal circle,.boot__seal polygon,.boot__seal path,.boot__seal line{
-  fill:none;stroke:var(--ink);stroke-width:1;vector-effect:non-scaling-stroke}
-.boot__title{position:absolute;inset:0;display:grid;place-items:center;
-  opacity:0;pointer-events:none}
-.boot__half{grid-area:1/1;font-family:var(--f-display);
-  font-size:clamp(46px,15vw,116px);line-height:1;letter-spacing:-.01em;
-  text-transform:uppercase;color:var(--ink);white-space:nowrap}
-.boot__half--a{clip-path:polygon(-20% -20%,120% -20%,120% 34%,-20% 66%)}
-.boot__half--b{clip-path:polygon(-20% 66%,120% 34%,120% 120%,-20% 120%)}
+.boot__half{position:absolute;inset:0;will-change:transform}
+.boot__half--a{clip-path:polygon(0 0,100% 0,100% 40%,0 60%)}
+.boot__half--b{clip-path:polygon(0 60%,100% 40%,100% 100%,0 100%)}
+.boot__poster{position:absolute;inset:0;background:var(--ink)}
+.boot__poster .brandseal{--si:var(--paper);--sp:var(--ink)}
+.boot__seal{position:absolute;top:54%;left:0;
+  width:min(70vmin,530px);
+  transform:translate(-36%,-48%) rotate(-8deg)}
+.boot__seal svg{display:block;width:100%;height:auto}
+.boot__type{position:absolute;top:46%;left:max(31vw,min(43vmin,320px));
+  right:var(--gutter);transform:translateY(-50%)}
+.boot__kicker{font:500 clamp(10px,1.4vw,13px)/1 var(--f-mono);
+  letter-spacing:.3em;text-transform:uppercase;color:var(--paper)}
+.boot__word{font-family:var(--f-head);color:var(--paper);
+  font-size:clamp(56px,10.5vw,150px);line-height:.94;margin-top:14px;
+  text-transform:uppercase;white-space:nowrap}
+@media(max-width:700px){
+  .boot__seal{top:30%;width:min(96vmin,420px);transform:translate(-38%,-50%) rotate(-8deg)}
+  .boot__type{left:var(--gutter);right:var(--gutter);top:62%}
+}
 
 .shell{grid-template-columns:1fr}
 .rail{display:none}
@@ -530,6 +577,5 @@ main#view{padding-top:var(--space-tier);
 .btn svg,.motion-btn svg{width:16px;height:16px}
 .rail__nav button svg,.tabs button svg{width:18px;height:18px}
 .verdict__seal{width:min(30vmin,170px);height:min(30vmin,170px)}
-.boot__seal{width:min(40vmin,230px);height:min(40vmin,230px)}
 
 .kicker{display:inline-block}

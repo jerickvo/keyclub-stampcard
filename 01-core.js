@@ -23,7 +23,6 @@
      assets/logo/school-seal.png      shown on the member screen
      assets/headers/home-header.jpg   banner across the top of Home
      assets/backgrounds/paper.png     tiled texture behind everything
-     assets/icons/favicon.png         browser tab icon (see <head>)
 
    Set a value to null to keep the built-in vector version.
    ══════════════════════════════════════════════════════════════════ */

@@ -80,8 +80,10 @@ const BoardUI = {
     </div>`;
   },
 
+  /* an empty state is still a printed panel: a placard, not a bare
+     sentence on blank paper */
   empty(text){
-    return `<p class="muted bempty">${esc(text)}</p>`;
+    return `<div class="bempty" role="note"><p>${esc(text)}</p></div>`;
   },
 
   /* ── CLUB ─────────────────────────────────────────────────────
@@ -181,7 +183,8 @@ const BoardUI = {
               <span class="mplate__no">${r.n}</span>
               <span class="mplate__name">${esc(r.name)}</span>
               <span class="mplate__say">${known
-                ? `${count} member${count === 1 ? '' : 's'} there`
+                ? (count === 1 ? '1 member has reached it'
+                               : `${count} members have reached it`)
                 : 'Not available'}</span>
               <span class="bmile__bar" role="img"
                 aria-label="${known ? `${pct} percent of checked-in members` : 'unavailable'}">
@@ -245,7 +248,7 @@ const BoardUI = {
         <span class="muted">${esc(m.start_time)}${m.end_time ? '-' + esc(m.end_time) : ''} / ${esc(m.location || 'MPR')}</span>
       </span>
       <span class="bstate bstate--${m.state.toLowerCase()}">${m.state}</span>
-      <span class="brow__n">${m.attendance_count}</span>
+      <span class="brow__n"><b>${m.attendance_count}</b><span class="brow__nlab">checked in</span></span>
       ${m.attendance_count === 0
         ? `<button class="brow__del" data-bconfirm="${esc(m.id)}"
              aria-label="Delete GM ${pad(m.meeting_number)}">Delete</button>`
@@ -271,7 +274,7 @@ const BoardUI = {
       </div>
 
       <p class="authp__err" id="mErr" role="alert" aria-live="assertive" hidden></p>
-      <button class="btn btn--go" type="submit" id="mGo">Add to the calendar</button>
+      <button class="btn btn--go" type="submit" id="mGo">Schedule meeting</button>
     </form>`;
   },
 
@@ -302,8 +305,8 @@ const BoardUI = {
               <span class="muted">joined ${esc(fmtDay(m.created_at))}${
                 m.last_attendance ? ' / last seen ' + esc(fmtDay(m.last_attendance)) : ' / never checked in'}</span>
             </span>
-            <span class="brow__n">${m.stamps}</span>
-            <span class="brow__sub muted">${m.rewards_unlocked}/3</span>
+            <span class="brow__n"><b>${m.stamps}</b><span class="brow__nlab">stamps</span></span>
+            <span class="brow__sub muted">${m.rewards_unlocked}/3 rewards</span>
           </li>`).join('')}
         </ul>
         <div class="bpage">
@@ -408,8 +411,11 @@ const BoardUI = {
     const isOpen = Boolean(sel.check_in_open);
 
     return `<div class="bpanel">
-      <div class="picker picker--sub">
-        ${options.map(o => `<button class="chip chip--pick ${o.id === sel.id ? 'chip--on' : ''}"
+      <!-- the meeting picker is a row of tabs cut into the projector
+           panel's top edge, not a floating chip row -->
+      <div class="gmtabs" role="tablist">
+        ${options.map(o => `<button class="gmtab ${o.id === sel.id ? 'gmtab--on' : ''}"
+          role="tab" aria-selected="${o.id === sel.id}"
           data-bpick="${o.id}">GM ${pad(o.meeting_number)}</button>`).join('')}
       </div>
 
@@ -436,7 +442,10 @@ const BoardUI = {
         ${isOpen ? `
           <!-- nothing is drawn over the code itself: a screentone or an
                ink border across a QR is a scan failure, not a flourish -->
-          <div class="proj__plate"><div class="qrpanel__code" id="qrBox"></div></div>
+          <div class="proj__plate">
+            <div class="qrpanel__code" id="qrBox"></div>
+            <p class="proj__cap">GM ${pad(sel.meeting_number)} / scan to check in</p>
+          </div>
         ` : `
           <div class="proj__plate proj__plate--empty" aria-hidden="true">
             <svg class="proj__seal" viewBox="0 0 100 100">${sealArt()}</svg>

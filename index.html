@@ -15,33 +15,16 @@
 <title>Keystamp</title>
 <meta name="description" content="Key Club attendance">
 
-<!-- ─────────────────────────────────────────────────────────────
-     BRAND ASSETS — one mark, one place.
-
-     Every path here is a real file under assets/brand/. What was here
-     before was half broken and half wrong: the manifest pointed at
-     assets/icons/* which did not exist, favicon.ico / favicon-32.png /
-     apple-touch-icon.png at the repo root were referenced by nothing
-     at all, and the tab icon was an inline data URI still drawing the
-     retired hexagon mark — which is why the browser tab never matched
-     the app.
-
-     assets/brand/favicon.svg carries explicit colours rather than
-     currentColor: a standalone tab icon has nothing to inherit from.
-     assets/brand/app-logo.svg is the in-page mark and does use
-     currentColor, so it takes the ink colour wherever it is placed.
-     ───────────────────────────────────────────────────────────── -->
-<link rel="icon" href="assets/brand/favicon.svg" type="image/svg+xml">
-<link rel="icon" href="assets/brand/favicon-32.png" sizes="32x32" type="image/png">
-<link rel="shortcut icon" href="assets/brand/favicon.ico" sizes="any">
-<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<!-- There is deliberately no tab icon: the retired Keystamp mark is
+     gone and nothing replaces it. rel="icon" pointing at nothing stops
+     the browser requesting /favicon.ico on its own. -->
+<link rel="icon" href="data:,">
 <link rel="manifest" href="site.webmanifest">
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="Keystamp">
 <meta property="og:description" content="Key Club attendance">
-<meta property="og:image" content="assets/brand/og.png">
-<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Keystamp">
 <meta name="twitter:description" content="Key Club attendance">
 
@@ -393,23 +376,54 @@ select.input{padding-right:var(--s4)}
   text-transform:uppercase;color:var(--ink)}
 .wellflare{display:none}
 
-/* the welcome, in two halves along the blade's line */
+/* ── the blade: a razor with an ink core and a paper edge (or the
+   inverse on an ink field). Grows from its centre — a strike, not a
+   wipe — and it is thick enough to read at arm's length. ── */
+.blade{position:absolute;left:50%;top:50%;width:210vmax;height:var(--bth,16px);
+  margin-left:-105vmax;margin-top:calc(var(--bth,16px) / -2);
+  background:var(--ink);
+  box-shadow:0 0 0 2px var(--paper),0 0 0 3.5px var(--ink);
+  will-change:transform,opacity}
+.blade--paper{background:var(--paper);
+  box-shadow:0 0 0 2px var(--ink),0 0 0 3.5px var(--paper)}
+
+/* ── the page cut: two ink sheets sweep the viewport diagonally, the
+   swap happens at full cover, and they carry their own paper edge so
+   the crossing reads as a blade, not a fade. ── */
+.pcut{position:absolute;inset:0;z-index:6}
+.pcut__sheet{position:absolute;left:50%;top:50%;width:300vmax;height:300vmax;
+  margin:-150vmax 0 0 -150vmax;background:var(--ink);
+  border-block:3px solid var(--paper);
+  will-change:transform}
+
+/* the welcome: a solid ink panel in two halves along the blade's line.
+   Each half carries the panel AND its copy of the word, so when the
+   halves shear the whole scene is visibly cut, word included. */
 .wcut{position:absolute;inset:0;z-index:4}
-.wcut__dim{position:absolute;inset:0;background:var(--ink);opacity:0}
-.wcut__h{position:absolute;inset:0;display:grid;place-items:center}
-.wcut__h span{font-family:var(--f-display);
-  font-size:clamp(52px,14vw,160px);line-height:1;padding-bottom:.2em;
-  text-transform:uppercase;color:var(--paper);white-space:nowrap}
-.wcut__h--a{clip-path:polygon(0 0,100% 0,100% 42%,0 58%)}
-.wcut__h--b{clip-path:polygon(0 58%,100% 42%,100% 100%,0 100%)}
+.wcut__h{position:absolute;inset:0}
+.wcut__h--a{clip-path:polygon(0 0,100% 0,100% 38%,0 62%)}
+.wcut__h--b{clip-path:polygon(0 62%,100% 38%,100% 100%,0 100%)}
+.wcut__panel{position:absolute;inset:0;background:var(--ink);
+  display:grid;place-items:center}
+.wcut__word{font-family:var(--f-head);
+  font-size:clamp(64px,15vw,190px);line-height:1;padding-bottom:.12em;
+  text-transform:uppercase;color:var(--paper);white-space:nowrap;
+  letter-spacing:.01em}
 
 /* the broken wall: each piece is a clipped clone of the rendered page
-   over an ink slab, tumbling in 3D as it falls */
+   over an ink slab. The pieces stay fully opaque for the whole fall —
+   they leave the screen, they do not dissolve — and the ink layer
+   behind them is what shows through the cracks while the wall stands. */
 .waffle{position:absolute;inset:0;z-index:5;
   perspective:1100px;transform-style:preserve-3d}
-.waffle__piece{position:absolute;inset:0;will-change:transform,opacity}
-.waffle__slab{position:absolute;inset:0;background:var(--ink);
-  transform:translate(6px,8px)}
+.waffle__ink{position:absolute;inset:0}
+.waffle__piece{position:absolute;inset:0;will-change:transform}
+.waffle__slab{position:absolute;inset:0;transform:translate(6px,8px)}
+/* the ink — behind the wall and on the slab edges — only exists once
+   the wall has visibly cracked; before that the clones ARE the frame,
+   so a slow first rasterization can never flash black */
+.waffle.is-cracked .waffle__ink,
+.waffle.is-cracked .waffle__slab{background:var(--ink)}
 .waffle__page{position:absolute;pointer-events:none;background:var(--paper)}
 .waffle__page > *{width:100%;height:100%}
 .fxdefs{position:absolute;width:0;height:0}
@@ -433,7 +447,7 @@ select.input{padding-right:var(--s4)}
 
 .tabs button{flex:1 1 0;min-width:0;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:3px;
-  min-height:var(--tabs-h);padding:8px 2px;background:none;border:0;cursor:pointer;
+  min-height:var(--tabs-h);padding:8px 6px;background:none;border:0;cursor:pointer;
   color:var(--ink);font:500 clamp(8px,2.2vw,9.5px)/1 var(--f-body);
   letter-spacing:0;
   white-space:nowrap;overflow:hidden}
@@ -441,19 +455,35 @@ select.input{padding-right:var(--s4)}
 .tabs button[aria-current="page"]{background:var(--ink);color:var(--paper)}
 .tabs__ind{display:none}
 
-.boot{position:fixed;inset:0;z-index:200;background:var(--paper);display:grid;
-  place-items:center;overflow:hidden}
+/* ── boot: one ink poster, then the blade takes it apart ─────────────
+   The whole card is ink from the first painted frame. The KCI seal is
+   knocked out in paper and cropped by the left edge; the title is
+   paper. Both halves carry the full poster, clipped along the blade
+   line, so the final cut visibly divides the scene. */
+.boot{position:fixed;inset:0;z-index:200;overflow:hidden}
+/* the ink lives on the poster halves, not the root — when they fly
+   apart the app underneath is what shows through */
 .boot.is-done{display:none}
-.boot__seal{position:absolute;width:min(44vmin,250px);height:min(44vmin,250px);opacity:0}
-.boot__seal circle,.boot__seal polygon,.boot__seal path,.boot__seal line{
-  fill:none;stroke:var(--ink);stroke-width:1;vector-effect:non-scaling-stroke}
-.boot__title{position:absolute;inset:0;display:grid;place-items:center;
-  opacity:0;pointer-events:none}
-.boot__half{grid-area:1/1;font-family:var(--f-display);
-  font-size:clamp(46px,15vw,116px);line-height:1;letter-spacing:-.01em;
-  text-transform:uppercase;color:var(--ink);white-space:nowrap}
-.boot__half--a{clip-path:polygon(-20% -20%,120% -20%,120% 34%,-20% 66%)}
-.boot__half--b{clip-path:polygon(-20% 66%,120% 34%,120% 120%,-20% 120%)}
+.boot__half{position:absolute;inset:0;will-change:transform}
+.boot__half--a{clip-path:polygon(0 0,100% 0,100% 40%,0 60%)}
+.boot__half--b{clip-path:polygon(0 60%,100% 40%,100% 100%,0 100%)}
+.boot__poster{position:absolute;inset:0;background:var(--ink)}
+.boot__poster .brandseal{--si:var(--paper);--sp:var(--ink)}
+.boot__seal{position:absolute;top:54%;left:0;
+  width:min(70vmin,530px);
+  transform:translate(-36%,-48%) rotate(-8deg)}
+.boot__seal svg{display:block;width:100%;height:auto}
+.boot__type{position:absolute;top:46%;left:max(31vw,min(43vmin,320px));
+  right:var(--gutter);transform:translateY(-50%)}
+.boot__kicker{font:500 clamp(10px,1.4vw,13px)/1 var(--f-mono);
+  letter-spacing:.3em;text-transform:uppercase;color:var(--paper)}
+.boot__word{font-family:var(--f-head);color:var(--paper);
+  font-size:clamp(56px,10.5vw,150px);line-height:.94;margin-top:14px;
+  text-transform:uppercase;white-space:nowrap}
+@media(max-width:700px){
+  .boot__seal{top:30%;width:min(96vmin,420px);transform:translate(-38%,-50%) rotate(-8deg)}
+  .boot__type{left:var(--gutter);right:var(--gutter);top:62%}
+}
 
 .shell{grid-template-columns:1fr}
 .rail{display:none}
@@ -620,7 +650,6 @@ main#view{padding-top:var(--space-tier);
 .btn svg,.motion-btn svg{width:16px;height:16px}
 .rail__nav button svg,.tabs button svg{width:18px;height:18px}
 .verdict__seal{width:min(30vmin,170px);height:min(30vmin,170px)}
-.boot__seal{width:min(40vmin,230px);height:min(40vmin,230px)}
 
 .kicker{display:inline-block}
 
@@ -784,7 +813,6 @@ main#view{padding-top:var(--space-tier);
 .bform .kicker{display:block;margin-bottom:5px}
 .bform .input{width:100%;box-sizing:border-box;min-width:0}
 .bform .btn{margin-top:var(--s4)}
-.picker--sub{margin-bottom:0}
 
 .bpanel{padding:var(--s4)}
 .bfilters{grid-template-columns:1fr}
@@ -1291,9 +1319,19 @@ body{
 .brow__del{border-color:var(--tone);color:var(--ink-2)}
 .brow__del:hover,.brow__del:focus-visible{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
-/* the board form is a panel of the same book */
+/* the board form is a panel of the same book, its heading a band cut
+   into the panel's top edge */
 .bform{border:var(--edge-panel) solid var(--ink);background:var(--paper);
   padding:var(--s5);box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
+.bform .bsec{margin:calc(var(--s5) * -1) calc(var(--s5) * -1) var(--s4);
+  padding:var(--s2) var(--s4);border-bottom:0;
+  background:var(--ink);color:var(--paper);
+  font-family:var(--f-head);font-weight:400;text-transform:uppercase;
+  font-size:clamp(17px,2.4vw,24px);line-height:1.2}
+/* native pickers speak the app's voice: mono digits, ink accents, and
+   a light scheme so the browser chrome cannot go dark on its own */
+.bform .input,.bfilters .input{font-family:var(--f-mono);
+  color-scheme:light;accent-color:var(--ink)}
 /* the archive: held meetings hang off a heavy rule */
 .blist--held{border-left:var(--edge) solid var(--ink);
   padding-left:clamp(12px,2vw,22px)}
@@ -1322,8 +1360,44 @@ body{
   font-size:clamp(17px,2.4vw,24px);line-height:1.2;letter-spacing:.02em}
 .meetband--held{background:none;color:var(--ink);padding-inline:0;
   border-bottom:var(--edge) solid var(--ink)}
-.meetgrid .bsec{margin-top:0;border-bottom:0}
 .meetgrid .bsec::before{content:none}
+
+/* Coming up is a real framed panel — band flush at the top, the list
+   inside it — so the calendar reads as the page's dominant panel and
+   the archive as the register hanging beneath it */
+.meetgrid__up{border:var(--edge-panel) solid var(--ink);background:var(--paper);
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
+.meetgrid__up .meetband{margin:0}
+.meetgrid__up .blist{padding:0 var(--s4);margin:0}
+.meetgrid__up .bempty{border:0;box-shadow:none}
+
+/* the labelled counters on register rows */
+.brow__n{display:grid;justify-items:end;gap:1px;text-align:right}
+.brow__n b{font-weight:400;font-family:var(--f-head);
+  font-size:clamp(17px,2vw,22px);line-height:1}
+.brow__nlab{font:500 9.5px/1 var(--f-mono);letter-spacing:.08em;
+  color:var(--ink-2);text-transform:uppercase}
+
+/* meeting state is a printed chop, not a web pill: HELD is pressed in
+   ink a couple of degrees off true, UPCOMING is an open frame */
+.bstate{font-family:var(--f-head);font-weight:400;letter-spacing:.05em;
+  border:var(--edge-hair) solid var(--ink);border-radius:0}
+.bstate--past{background:var(--ink);color:var(--paper);border-color:var(--ink);
+  transform:rotate(-3deg)}
+.bstate--upcoming{border-width:var(--edge-panel);transform:rotate(1.6deg)}
+
+/* an empty state is a placard: framed, toned in one corner, spoken in
+   the header voice — the page stays composed with nothing in it */
+.bempty{position:relative;overflow:hidden;margin:0;
+  border:var(--edge-panel) solid var(--ink);background:var(--paper);
+  padding:clamp(20px,3.4vw,34px)}
+.bempty p{margin:0;position:relative;z-index:1;max-width:26ch;
+  font-family:var(--f-head);font-size:clamp(17px,2.2vw,24px);
+  text-transform:uppercase;color:var(--ink)}
+.bempty::before{content:'';position:absolute;right:0;bottom:0;
+  width:38%;height:76%;opacity:.55;
+  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
+  clip-path:polygon(30% 0,100% 0,100% 100%,0 100%)}
 
 /* ── MEMBERS: the club leads, the register follows ─────────────────
    One large figure for the roster, three milestone plates beside it,
@@ -1344,7 +1418,8 @@ body{
   grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr))}
 .mplate{display:grid;gap:4px;align-content:start;
   border:var(--edge-panel) solid var(--ink);background:var(--paper);
-  padding:clamp(12px,1.8vw,20px)}
+  padding:clamp(12px,1.8vw,20px);
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
 .mplate--lit{background:var(--ink);color:var(--paper)}
 .mplate--lit .bmile__bar{border-color:var(--paper)}
 .mplate--lit .bmile__fill{background:var(--paper)}
@@ -1509,26 +1584,35 @@ main#view:focus,main#view:focus-visible{outline:none}
   transform:rotate(calc(var(--press-tilt,0deg) / 3)) translateY(var(--seat,0px))}
 .seal:nth-child(2n){--seat:2px}
 .seal:nth-child(3n){--seat:-2px}
-/* an empty slot: a toned blank waiting for ink */
-.seal[data-seal="empty"]{border-color:var(--tone);box-shadow:none;
-  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
-  background-blend-mode:normal;opacity:.9}
+/* EMPTY — a printed well waiting for its stamp: a thin printed frame
+   with a second rule inside it (the double keyline of a form that
+   expects ink) and the symbol as the faintest possible watermark. No
+   tone fill, no dots: the well is paper, and the watermark is the
+   promise of the artwork. */
+.seal[data-seal="empty"]{border-width:var(--edge-rule);box-shadow:none}
+.seal[data-seal="empty"]::before{content:'';position:absolute;inset:7%;
+  border:1px solid var(--ink);opacity:.28;pointer-events:none}
+.seal[data-seal="empty"] .seal__mark{opacity:.08}
+.seal[data-seal="empty"] .seal__mark path{fill:var(--ink)}
 .seals .seal svg{width:84%;height:84%;display:block}
 .seal__mark path{fill:var(--tone);stroke:none}
 .seal__no{position:absolute;right:5%;bottom:3%;
   font:500 clamp(8px,2.1cqw,11px)/1 var(--f-mono);color:var(--tone)}
 
+/* EARNED — solid ink, pressed a hair off true, with a paper keyline
+   just inside the edge: the printed border every real stamp carries */
 .seal--set{background:var(--ink);background-image:none}
+.seal--set::before{content:'';position:absolute;inset:5.5%;
+  border:1.5px solid var(--paper);pointer-events:none;
+  transform:rotate(calc(var(--press-tilt,0deg) / 2))}
 .seal--set .seal__mark path{fill:var(--paper)}
 .seal--set .seal__no{color:var(--paper);opacity:.55}
 .seal--set .seal__mark{transform:rotate(var(--press-tilt,0deg));
   transform-origin:50% 50%}
 
-/* CURRENT — the next one to earn: ink on paper inside a keyline, the
-   strongest unearned thing on the card. */
-/* the next one to earn: paper cleared of tone inside a heavy keyline —
-   the one empty box on the card that is asking for something */
-/* the slot being worked toward: the loudest unearned thing on the card */
+/* NEXT — the slot being worked toward: heavy keyline, a shade larger,
+   and a hand-drawn ring around it, the way a person circles the thing
+   they mean */
 .seal--next{background-image:none;
   border-width:var(--edge-frame);
   box-shadow:3.5px 3.5px 0 var(--ink);
@@ -1536,6 +1620,10 @@ main#view:focus,main#view:focus-visible{outline:none}
   z-index:1}
 .seal--next .seal__mark path{fill:var(--ink)}
 .seal--next .seal__no{color:var(--ink-2)}
+.seal--next::after{content:'';position:absolute;inset:-9%;
+  border:2.5px solid var(--ink);
+  border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;
+  transform:rotate(-5deg);pointer-events:none}
 
 /* LOCKED — defined for the contract; the attendance model does not
    emit it today. */
@@ -1557,13 +1645,10 @@ main#view:focus,main#view:focus-visible{outline:none}
 .act__sub{font-size:var(--t-body);opacity:.7}
 .act__btn:hover{background:var(--ink);color:var(--paper)}
 
+/* the page's tone lives in the ground layer and in marks anchored to
+   panels — the free-floating corner slab that used to sit here outshouted
+   the content it decorated */
 .view--home{position:relative;display:flex;flex-direction:column;gap:var(--s4)}
-.view--home::before{content:"";position:absolute;z-index:-1;
-  top:clamp(120px,18vw,220px);right:calc(var(--gutter) * -1);
-  width:min(40%,460px);height:clamp(220px,36vw,420px);
-  background-image:radial-gradient(circle at 50% 50%, var(--ink) 0 1.7px, transparent 1.85px);
-  background-size:8px 8px;
-  clip-path:polygon(0 12%,100% 0,100% 88%,14% 100%)}
 .deck{display:grid;gap:var(--s4)}
 .deck__side{display:grid;gap:var(--s4);align-content:start;min-width:0}
 /* the live panel is cut at an angle: an action panel, not a card */
@@ -1583,8 +1668,14 @@ main#view:focus,main#view:focus-visible{outline:none}
   .deck{margin-top:calc(var(--s3) * -1)}
 }
 
-.ahead{display:flex;flex-direction:column;
+/* tone is anchored, not ambient: a small halftone wedge tucked behind
+   this panel's corner reads as print bleed from the panel itself */
+.ahead{position:relative;display:flex;flex-direction:column;
   border:var(--edge-panel) solid var(--ink);background:var(--paper)}
+.ahead::before{content:"";position:absolute;z-index:-1;
+  top:-9px;right:-11px;width:36%;height:56%;opacity:.65;
+  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
+  clip-path:polygon(18% 0,100% 0,100% 100%)}
 .ahead__mark{margin:0;padding:var(--s2) var(--s4);
   background:var(--ink);color:var(--paper);
   font-family:var(--f-head);text-transform:uppercase;
@@ -1660,12 +1751,16 @@ button,input,select,textarea{font-family:inherit}
 .spread__sub{margin:0 0 var(--s3);font-size:var(--t-caption);
   letter-spacing:.16em;color:var(--tint);
   display:flex;align-items:center;gap:clamp(8px,1.4vw,14px)}
-.spread__kci{width:clamp(52px,6.6vw,80px);height:auto;flex:none;display:block;
-  background:var(--paper);border-radius:50%;
-  padding:clamp(3px,.4vw,5px);
-  box-shadow:0 0 0 clamp(2px,.3vw,3px) var(--ink)}
+/* the International seal, knocked out of the ink field directly — a
+   printed mark in the field's top-right, balancing the wordmark. On
+   phones the band is shallow, so it stays modest; on the split spread
+   it grows with the fold. (span-qualified: the .crop child reset later
+   in this file would otherwise win the position tie) */
+.spread__field > span.spread__kci{position:absolute;z-index:1;
+  top:clamp(16px,4dvh,42px);right:clamp(14px,2.6vw,34px);
+  width:clamp(64px,8.5vw,132px)}
 .spread__kci .brandseal{width:100%;height:auto;display:block;
-  --si:var(--ink);--sp:var(--paper)}
+  --si:var(--paper);--sp:var(--ink)}
 
 /* ── THE CLUB SEALS, MONOCHROME ─────────────────────────────────────
    The traced artwork paints with two slots: --si (its ink) and --sp
@@ -1862,6 +1957,9 @@ button,input,select,textarea{font-family:inherit}
 .lrow--open{background:var(--ink);color:var(--paper);cursor:pointer;
   padding:var(--s4);margin:var(--s3) 0;border-bottom:0;
   width:auto;margin-right:calc(var(--gutter) * -1);
+  /* the band bleeds off the sheet, but its last word must not: the verb
+     keeps a gutter of its own inside the bleed */
+  padding-right:calc(var(--s4) + var(--gutter));
   box-shadow:var(--s2) var(--s2) 0 var(--tone)}
 .lrow--open .lrow__no{color:var(--paper)}
 .lrow--open .lrow__slot{border-color:var(--paper)}
@@ -2005,7 +2103,11 @@ button,input,select,textarea{font-family:inherit}
     gap:var(--s5) var(--s5);align-content:start}
   .view--scan > .rechead{grid-area:head}
   .view--scan > .standing{grid-area:standing}
-  .view--scan > .viewer{grid-area:viewer;max-height:none}
+  /* the viewer's height is budgeted against the viewport, not just its
+     column: on a short window (1306x685 laptops) the camera panel used
+     to run past the fold and take the code-entry panel with it */
+  .view--scan > .viewer{grid-area:viewer;
+    max-height:calc(100dvh - clamp(280px,34vh,360px));min-height:250px}
 
   .view--scan > .manual{grid-area:manual;align-self:end}
 }
@@ -2054,13 +2156,16 @@ button,input,select,textarea{font-family:inherit}
 .tier__say{margin-top:auto;padding-top:var(--s3);
   font-size:var(--t-caption);color:var(--ink-2)}
 
+/* a sealed plate is still printed in ink — the halftone is a thin
+   shading band along its top edge, not a fill, and the figure stays
+   full-strength so the ladder reads at a glance */
 .tier--sealed{position:relative;isolation:isolate;max-width:660px}
 .tier--sealed::before{content:"";position:absolute;inset:0;z-index:-1;
   background-image:radial-gradient(var(--ink) .9px,transparent 1px);
   background-size:7px 7px;
-  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 18%,transparent 40%);
-  mask-image:linear-gradient(to bottom,#000 0%,#000 18%,transparent 40%)}
-.tier--sealed .tier__at{color:var(--ink-2)}
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 8%,transparent 22%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 8%,transparent 22%)}
+.tier--sealed .tier__at{color:var(--ink)}
 
 /* READY — the one plate you can act on: full ink, and the only thing
    on the page carrying a verb. */
@@ -2101,42 +2206,42 @@ button,input,select,textarea{font-family:inherit}
 }
 
 .view--member{position:relative;display:flex;flex-direction:column;gap:var(--s5)}
-.view--member::before{content:"";position:absolute;z-index:-1;
-  top:calc(var(--s6) * -1);right:calc(var(--gutter) * -1);
-  width:min(46%,520px);height:clamp(180px,30vw,340px);
-  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
-  clip-path:polygon(22% 0,100% 0,100% 100%)}
 
 .sheet{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr);
   align-items:start}
 .who{position:relative;display:grid;gap:var(--s4);
-  grid-template-rows:minmax(clamp(210px,30vw,330px),1fr) auto;
+  grid-template-rows:minmax(clamp(170px,22vw,260px),1fr) auto;
   isolation:isolate;overflow:hidden;
   background:var(--ink);color:var(--paper);
   padding:clamp(18px,3vw,32px);
   margin-left:calc(var(--gutter) * -1);
   padding-left:max(var(--gutter),clamp(18px,3vw,32px))}
-/* the credential strip owns the plate's first grid row and the name
-   the second — vertical separation the layout enforces, so a long
-   username and the seals can never crowd each other. International is
-   cropped by the plate's corner; the district seal sits in flow
-   beneath it. */
+/* ONE composition, not two floating logos. International is the
+   primary identity seal: large, knocked out of the ink, cropped by the
+   plate's top-right corner so the black field visibly holds it. The
+   district mark is anchored ON the seam — the rule above the name —
+   half over, half under, at its right end: the way a small chop sits
+   on a printed signature line. The id block reserves the seam's right
+   end, so no username length can ever reach the mark. */
 .who__seal{position:absolute;z-index:0;
-  top:calc(clamp(140px,20vw,240px) * -.16);
-  right:calc(clamp(140px,20vw,240px) * -.14);
-  width:clamp(140px,20vw,240px)}
+  top:calc(clamp(200px,28vw,350px) * -.22);
+  right:calc(clamp(200px,28vw,350px) * -.15);
+  width:clamp(200px,28vw,350px)}
 .who__seal .brandseal{width:100%;height:auto;display:block}
-.who__seal2{grid-row:1;align-self:end;justify-self:end;
-  margin:0 clamp(4px,1vw,14px) clamp(2px,.6vw,10px) 0;
-  width:clamp(76px,9.5vw,116px)}
+.who__id{grid-row:2;position:relative;z-index:1;align-self:end;
+  display:grid;gap:3px;
+  border-top:var(--edge-rule) solid var(--tint);
+  padding-top:clamp(10px,1.6vw,16px);
+  padding-right:clamp(84px,11vw,120px)}
+.who__seal2{position:absolute;top:0;right:clamp(2px,.8vw,12px);
+  transform:translateY(-50%);
+  width:clamp(64px,8vw,96px)}
 .who__seal2 .brandseal{width:100%;height:auto;display:block;
   --si:var(--paper);--sp:var(--ink)}
-.who__id{grid-row:2;position:relative;z-index:1;align-self:end}
-.who__id{display:grid;gap:3px}
 /* the name is set in the header face — the display face's thin strokes
    were unreadable at this size on ink */
 .who__name{margin:0;font-family:var(--f-head);text-transform:uppercase;
-  line-height:.95;font-size:clamp(30px,5.4vw,60px);color:var(--paper);
+  line-height:.95;font-size:clamp(26px,3.6vw,46px);color:var(--paper);
   overflow-wrap:anywhere;padding-bottom:.04em}
 .who__hand{margin:0;font-size:var(--t-caption);color:var(--tint);
   line-height:1.3;overflow-wrap:anywhere;letter-spacing:.1em}
@@ -2214,17 +2319,24 @@ button,input,select,textarea{font-family:inherit}
     grid-template-areas:"now ident" "band band";align-items:stretch;
     column-gap:clamp(16px,2.2vw,32px)}
 }
-/* the identity plate: the district seal printed on its own paper plate,
-   so it reads as a second panel against the ink of the meeting */
-.bident{position:relative;display:grid;place-items:center;gap:var(--s3);
-  background:var(--paper);color:var(--ink);
+/* the identity plate speaks the same language as the member plate: an
+   ink field, the district seal knocked out and cropped by the plate's
+   corner, the caption set into the clear ground — printed, not boxed */
+.bident{position:relative;display:block;overflow:hidden;
+  background:var(--ink);color:var(--paper);
   border:var(--edge-frame) solid var(--ink);
   box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink);
-  padding:clamp(20px,3vw,36px);align-content:center}
-.bident__seal{width:clamp(120px,16vw,200px);display:block}
-.bident__seal .brandseal{width:100%;height:auto;display:block}
-.bident__line{margin:0;font-family:var(--f-head);
-  font-size:clamp(15px,1.6vw,20px);letter-spacing:.04em}
+  padding:clamp(16px,2.4vw,28px);min-height:clamp(140px,18vw,230px)}
+.bident__seal{position:absolute;display:block;
+  right:calc(clamp(160px,20vw,270px) * -.18);
+  bottom:calc(clamp(160px,20vw,270px) * -.24);
+  width:clamp(160px,20vw,270px)}
+.bident__seal .brandseal{width:100%;height:auto;display:block;
+  --si:var(--paper);--sp:var(--ink)}
+.bident__line{margin:0;position:relative;z-index:1;
+  font-family:var(--f-head);color:var(--paper);
+  font-size:clamp(16px,1.8vw,22px);letter-spacing:.04em;
+  max-width:10ch;line-height:1.12}
 
 .bnow{margin-right:calc(var(--gutter) * -1);border-right:0;
   display:grid;gap:2px var(--s5);
@@ -2252,7 +2364,10 @@ button,input,select,textarea{font-family:inherit}
   .bnow--none .bnow__go{align-self:start;margin-top:var(--s4)}
 }
 .bnow--live{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.bnow__lab{margin:0;font-size:var(--t-caption);color:var(--ink-2)}
+/* the header face collapses at caption sizes ("HAPPENI NG NOW"), so
+   the live label speaks mono with wide tracking instead */
+.bnow__lab{margin:0;font:500 var(--t-caption)/1.3 var(--f-mono);
+  letter-spacing:.24em;text-transform:uppercase;color:var(--ink-2)}
 .bnow--live .bnow__lab{color:var(--tint)}
 .bnow__no{margin:0;padding-bottom:.08em;
   font-family:var(--f-head);text-transform:uppercase;line-height:.9;
@@ -2309,7 +2424,18 @@ button,input,select,textarea{font-family:inherit}
    field, which is also the highest-contrast way to present something a
    phone camera has to find.
    ══════════════════════════════════════════════════════════════════ */
-.proj{display:grid;gap:0;margin-top:var(--s4);
+/* the meeting picker: tabs cut into the projector panel's top edge */
+.gmtabs{display:flex;flex-wrap:wrap;gap:0;margin-top:var(--s4);
+  position:relative;z-index:1}
+.gmtab{border:var(--edge-panel) solid var(--ink);border-bottom:0;
+  background:var(--paper);color:var(--ink);cursor:pointer;
+  padding:10px 15px;margin-bottom:calc(var(--edge-panel) * -1);
+  font:500 clamp(11px,1.2vw,13px)/1 var(--f-mono);letter-spacing:.06em}
+.gmtab + .gmtab{border-left:0}
+.gmtab--on{background:var(--ink);color:var(--paper)}
+.gmtab:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:2px}
+
+.proj{display:grid;gap:0;margin-top:0;
   grid-template-columns:minmax(0,1fr);
   border:var(--edge-panel) solid var(--ink)}
 
@@ -2345,8 +2471,19 @@ button,input,select,textarea{font-family:inherit}
 /* THE PLATE. Paper, and nothing printed on it — a quiet zone is what a
    camera needs, so the composition stops at the plate's edge. */
 .proj__plate{background:var(--paper);display:grid;place-items:center;
+  grid-template-rows:minmax(0,1fr) auto;
   padding:clamp(16px,3vw,32px);min-width:0}
-.proj__plate .qrpanel__code{width:100%;max-width:min(84vw,58vh,700px);aspect-ratio:1}
+/* the code is a printed plate: an ink frame with its own quiet paper
+   margin (a QR needs the quiet zone anyway) and a caption band under
+   it — a poster, not a floating bitmap */
+.proj__plate .qrpanel__code{width:100%;max-width:min(84vw,58vh,700px);aspect-ratio:1;
+  box-sizing:border-box;border:var(--edge-frame) solid var(--ink);
+  background:#fff;padding:clamp(10px,1.4vw,18px)}
+.proj__cap{margin:clamp(10px,1.6vw,16px) 0 0;justify-self:stretch;
+  border-top:var(--edge-panel) solid var(--ink);
+  padding-top:clamp(8px,1.2vw,12px);
+  font:500 clamp(10px,1.2vw,12.5px)/1.3 var(--f-mono);letter-spacing:.18em;
+  text-transform:uppercase;color:var(--ink);text-align:center}
 .proj__plate--empty{background:var(--tint);
   background-image:radial-gradient(var(--ink) .9px,transparent 1px);
   background-size:7px 7px;min-height:clamp(180px,40vw,320px)}
@@ -2461,11 +2598,20 @@ button,input,select,textarea{font-family:inherit}
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <div class="boot" id="boot" aria-hidden="true">
-  <svg class="boot__seal" id="bootSeal" viewBox="0 0 100 100"></svg>
-  <div class="boot__title" id="bootTitle">
-    <span class="boot__half boot__half--a">Keystamp</span>
-    <span class="boot__half boot__half--b">Keystamp</span>
-  </div>
+  <div class="boot__half boot__half--a"><div class="boot__poster">
+    <span class="boot__seal"></span>
+    <div class="boot__type">
+      <p class="boot__kicker">Key Club attendance</p>
+      <p class="boot__word">Keystamp</p>
+    </div>
+  </div></div>
+  <div class="boot__half boot__half--b"><div class="boot__poster">
+    <span class="boot__seal"></span>
+    <div class="boot__type">
+      <p class="boot__kicker">Key Club attendance</p>
+      <p class="boot__word">Keystamp</p>
+    </div>
+  </div></div>
 </div>
 
 <!-- ─────────────────────────────────────────────────────────────
@@ -15649,7 +15795,6 @@ const Backend = {
      assets/logo/school-seal.png      shown on the member screen
      assets/headers/home-header.jpg   banner across the top of Home
      assets/backgrounds/paper.png     tiled texture behind everything
-     assets/icons/favicon.png         browser tab icon (see <head>)
 
    Set a value to null to keep the built-in vector version.
    ══════════════════════════════════════════════════════════════════ */
@@ -16191,22 +16336,6 @@ const Motion = {
     el.style.opacity = '';
   },
 
-  exit(scope){
-    if (this.off) return Promise.resolve();
-    /* anime.js v4's animate() return value is itself thenable — it
-       resolves when the animation completes. There is no `.finished`
-       property on it (that was a v3/WAAPI habit); reading it just
-       gives `undefined`, and `await undefined` resolves on the next
-       microtask instead of waiting ~130ms for the real exit to play
-       out. That let the caller reset the view's inline style while
-       this animation was still running, and the animation then kept
-       writing opacity/transform over the reset for its full duration
-       — landing the freshly-rendered next page at opacity:0. */
-    /* out along the blade's line; Motion.settle() in go() resets both
-       the inline style and anime's transform cache afterwards */
-    return animate(scope, { opacity:[1,0], translateX:[0,-24], translateY:[0,8],
-                   skewX:[0,-3], duration:150, ease:'inQuad' });
-  },
 
   ripple(btn){
     if (this.off) return;
@@ -16919,8 +17048,8 @@ const Views = {
       <div class="sheet" data-enter>
         <section class="who">
           <span class="who__seal" aria-hidden="true">${brandSeal('kci')}</span>
-          <span class="who__seal2" aria-hidden="true">${brandSeal('cnh')}</span>
           <div class="who__id">
+            <span class="who__seal2" aria-hidden="true">${brandSeal('cnh')}</span>
             <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
               handle !== name ? ` / ${esc(handle)}` : ''}</p>
             <p class="who__name">${esc(name)}</p>
@@ -16931,7 +17060,7 @@ const Views = {
 
       <section class="standing-band" data-enter>
         <p class="standing-band__fig">${pad(total)}</p>
-        <p class="standing-band__of">${total === 1 ? 'stamp' : 'stamps'} this year</p>
+        <p class="standing-band__of">${total === 1 ? 'stamp' : 'stamps'} collected</p>
         <dl class="standing-band__rest">
           <div><dt>Meetings attended</dt><dd>${pad(attended)} of ${pad(held.length)}</dd></div>
           <div><dt>Attendance rate</dt><dd>${Store.attendanceRate()}%</dd></div>
@@ -16967,10 +17096,14 @@ const Views = {
              correctly cropped, and contributing nothing. -->
         <div class="spread__field crop" aria-hidden="true">
           <svg class="spread__seal crop__art" viewBox="0 0 100 100">${sealArt()}</svg>
+          <!-- the International seal is knocked out of the ink field
+               itself — no disc, no surround: it is printed IN the
+               field, balancing the wordmark across the fold -->
+          <span class="spread__kci">${brandSeal('kci')}</span>
         </div>
 
         <header class="spread__head">
-          <p class="spread__sub">${brandSeal('kci','spread__kci')}<span>Key Club attendance</span></p>
+          <p class="spread__sub"><span>Key Club attendance</span></p>
           <h1 class="spread__wm">Keystamp</h1>
         </header>
 
@@ -17100,8 +17233,10 @@ const BoardUI = {
     </div>`;
   },
 
+  /* an empty state is still a printed panel: a placard, not a bare
+     sentence on blank paper */
   empty(text){
-    return `<p class="muted bempty">${esc(text)}</p>`;
+    return `<div class="bempty" role="note"><p>${esc(text)}</p></div>`;
   },
 
   /* ── CLUB ─────────────────────────────────────────────────────
@@ -17201,7 +17336,8 @@ const BoardUI = {
               <span class="mplate__no">${r.n}</span>
               <span class="mplate__name">${esc(r.name)}</span>
               <span class="mplate__say">${known
-                ? `${count} member${count === 1 ? '' : 's'} there`
+                ? (count === 1 ? '1 member has reached it'
+                               : `${count} members have reached it`)
                 : 'Not available'}</span>
               <span class="bmile__bar" role="img"
                 aria-label="${known ? `${pct} percent of checked-in members` : 'unavailable'}">
@@ -17265,7 +17401,7 @@ const BoardUI = {
         <span class="muted">${esc(m.start_time)}${m.end_time ? '-' + esc(m.end_time) : ''} / ${esc(m.location || 'MPR')}</span>
       </span>
       <span class="bstate bstate--${m.state.toLowerCase()}">${m.state}</span>
-      <span class="brow__n">${m.attendance_count}</span>
+      <span class="brow__n"><b>${m.attendance_count}</b><span class="brow__nlab">checked in</span></span>
       ${m.attendance_count === 0
         ? `<button class="brow__del" data-bconfirm="${esc(m.id)}"
              aria-label="Delete GM ${pad(m.meeting_number)}">Delete</button>`
@@ -17291,7 +17427,7 @@ const BoardUI = {
       </div>
 
       <p class="authp__err" id="mErr" role="alert" aria-live="assertive" hidden></p>
-      <button class="btn btn--go" type="submit" id="mGo">Add to the calendar</button>
+      <button class="btn btn--go" type="submit" id="mGo">Schedule meeting</button>
     </form>`;
   },
 
@@ -17322,8 +17458,8 @@ const BoardUI = {
               <span class="muted">joined ${esc(fmtDay(m.created_at))}${
                 m.last_attendance ? ' / last seen ' + esc(fmtDay(m.last_attendance)) : ' / never checked in'}</span>
             </span>
-            <span class="brow__n">${m.stamps}</span>
-            <span class="brow__sub muted">${m.rewards_unlocked}/3</span>
+            <span class="brow__n"><b>${m.stamps}</b><span class="brow__nlab">stamps</span></span>
+            <span class="brow__sub muted">${m.rewards_unlocked}/3 rewards</span>
           </li>`).join('')}
         </ul>
         <div class="bpage">
@@ -17428,8 +17564,11 @@ const BoardUI = {
     const isOpen = Boolean(sel.check_in_open);
 
     return `<div class="bpanel">
-      <div class="picker picker--sub">
-        ${options.map(o => `<button class="chip chip--pick ${o.id === sel.id ? 'chip--on' : ''}"
+      <!-- the meeting picker is a row of tabs cut into the projector
+           panel's top edge, not a floating chip row -->
+      <div class="gmtabs" role="tablist">
+        ${options.map(o => `<button class="gmtab ${o.id === sel.id ? 'gmtab--on' : ''}"
+          role="tab" aria-selected="${o.id === sel.id}"
           data-bpick="${o.id}">GM ${pad(o.meeting_number)}</button>`).join('')}
       </div>
 
@@ -17456,7 +17595,10 @@ const BoardUI = {
         ${isOpen ? `
           <!-- nothing is drawn over the code itself: a screentone or an
                ink border across a QR is a scan failure, not a flourish -->
-          <div class="proj__plate"><div class="qrpanel__code" id="qrBox"></div></div>
+          <div class="proj__plate">
+            <div class="qrpanel__code" id="qrBox"></div>
+            <p class="proj__cap">GM ${pad(sel.meeting_number)} / scan to check in</p>
+          </div>
         ` : `
           <div class="proj__plate proj__plate--empty" aria-hidden="true">
             <svg class="proj__seal" viewBox="0 0 100 100">${sealArt()}</svg>
@@ -17600,6 +17742,27 @@ const Slash = {
         afterimage: i % 2 === 0,
       });
     }
+  },
+};
+
+/* ── the blade: a div razor, thick enough to actually see. Grows from
+   its centre in one hard sweep, holds as the cut line, collapses. The
+   paper variant is the same razor for ink fields. ── */
+const Blade = {
+  strike({ angle = -19, x = 0, y = 0, th = 16, paper = false, host = null,
+           delay = 0, sweep = 95, hold = 150 } = {}){
+    if (Motion.off) return;
+    const parent = host || $('#fx');
+    if (!parent) return;
+    const el = document.createElement('i');
+    el.className = 'blade' + (paper ? ' blade--paper' : '');
+    el.style.setProperty('--bth', th + 'px');
+    parent.appendChild(el);
+    aset(el, { rotate:angle, translateX:x, translateY:y, scaleX:.02, opacity:1 });
+    createTimeline({ onComplete:() => el.remove() })
+      .add(el, { scaleX:[.02, 1], duration:sweep, delay, ease:EASE.CUT })
+      .add(el, { scaleX:1, duration:hold })
+      .add(el, { scaleY:[1, .06], opacity:[1, 0], duration:90, ease:'inQuad' });
   },
 };
 
@@ -17827,69 +17990,110 @@ const FX = {
             delay, ease:EASE.ENERGY, onComplete(){ releaseTransform(svg); } });
   },
 
-  /* the page is cut away: a heavy diagonal, a crossing thin cut, one
-     frame of paper flash. Still ~200ms — quick but unmistakable. */
-  pageCutTransition(){
-    if (Motion.off) return;
-    Slash.create({ type:'C', angle:-19, afterimage:false });
-    Slash.create({ type:'D', angle:-64, offset:64, delay:44, afterimage:false });
-    Impact.flash(.2, { delay:34, dur:46 });
+  /* the page is cut away. Two ink sheets sweep the viewport on
+     diagonals, the swap happens under full cover, and they leave the
+     other way. No scrim, no fade: the outgoing page stands untouched
+     until the ink crosses it. swap() runs at the covered midpoint.
+     Resolves when the cut is finished. ~360ms. */
+  pageCut(swap){
+    const doSwap = typeof swap === 'function' ? swap : () => {};
+    const fx = $('#fx');
+    if (Motion.off || !fx){ doSwap(); return Promise.resolve(); }
+
+    return new Promise(res => {
+      const el = document.createElement('div');
+      el.className = 'pcut';
+      el.innerHTML = '<div class="pcut__sheet"></div><div class="pcut__sheet"></div>';
+      fx.appendChild(el);
+      const [A, B] = el.children;
+      const D = Math.hypot(innerWidth, innerHeight) * 1.15;
+      /* each sheet travels perpendicular to its own blade line */
+      const path = (n, deg, t) => {
+        const px = -Math.sin(deg * Math.PI / 180), py = Math.cos(deg * Math.PI / 180);
+        aset(n, { rotate:deg, translateX:-D * px, translateY:-D * py });
+        createTimeline()
+          .add(n, { translateX:[-D * px, 0], translateY:[-D * py, 0],
+                    duration:130, delay:t, ease:'inQuad' })
+          .add(n, { translateX:0, duration:55 })
+          .add(n, { translateX:[0, D * px], translateY:[0, D * py],
+                    duration:150, ease:'inQuad' });
+      };
+      path(A, -19, 0);
+      path(B, -64, 55);
+      /* the crossing: one paper razor along the first sheet's line,
+         one frame of blown paper, and the page swap under it all */
+      Blade.strike({ angle:-19, paper:true, th:10, delay:120, sweep:60, hold:90 });
+      Impact.flash(.5, { host:el, delay:140, dur:44 });
+      setTimeout(doSwap, 150);
+      setTimeout(() => { el.remove(); res(); }, 420);
+    });
   },
 
-  /* the welcome is sliced. The word lands and HOLDS, the blade goes
-     through it, the halves shear apart while thinner cuts cross behind,
-     then everything falls away. ~1.5s, and every beat is visible.
-     It owns its own backdrop, so the page-cut scrim cannot stomp it. */
+  /* the welcome: a solid ink panel snaps over the scene, the word slams
+     in, a paper blade goes visibly through both, the halves shear a few
+     pixels along the cut, background blades cross, then the two panel
+     halves fly apart and reveal the page. No dim, no gray — every state
+     is ink or paper at full strength. ~1.5s. */
   welcomeCut(word = 'Welcome'){
     if (Motion.off) return;
     const fx = $('#fx'); if (!fx) return;
 
+    const half = `<div class="wcut__panel"><span class="wcut__word">${esc(word)}</span></div>`;
     const el = document.createElement('div');
     el.className = 'wcut';
     el.innerHTML =
-      `<span class="wcut__dim"></span>` +
-      `<div class="wcut__h wcut__h--a"><span>${esc(word)}</span></div>` +
-      `<div class="wcut__h wcut__h--b"><span>${esc(word)}</span></div>`;
+      `<div class="wcut__h wcut__h--a">${half}</div>` +
+      `<div class="wcut__h wcut__h--b">${half}</div>`;
     fx.appendChild(el);
-    const dim = el.querySelector('.wcut__dim');
     const a = el.querySelector('.wcut__h--a'), b = el.querySelector('.wcut__h--b');
+    const words = el.querySelectorAll('.wcut__word');
 
-    /* 0 the word lands · 150-590 it holds · 590 the blade · 740 the
-       halves shear · 800+ background cuts · 1230 gone */
-    animate(dim, { opacity:[0, .62], duration:240, ease:'outQuad' });
-    animate(dim, { opacity:[.62, 0], duration:280, delay:1200, ease:'inQuad' });
+    /* the cut line the clip paths draw: 38%→62% across the width */
+    const seamDeg = -Math.atan2(innerHeight * .24, innerWidth) * 180 / Math.PI;
+    const pxv = -Math.sin(seamDeg * Math.PI / 180), pyv = Math.cos(seamDeg * Math.PI / 180);
+    const D = Math.hypot(innerWidth, innerHeight);
 
-    aset([a, b], { opacity:0 });
-    animate([a, b], { opacity:[0, 1], scale:[1.32, 1], skewX:[-8, 0],
-                      duration:150, ease:EASE.CUT });
-    animate([a, b], { scale:[1, 1.014], duration:400, delay:210, ease:'inOutSine' });
+    /* 0 panel on · 80 word slams · 340-700 hold · 760 blade through ·
+       860 shear · 900+ background blades · 1080 halves fly · ~1480 gone */
+    aset(words, { opacity:0 });
+    animate(words, { opacity:[0, 1], scale:[1.5, 1], duration:130,
+                     delay:80, ease:STEP(3) });
+    setTimeout(() => Impact.shake(el, 7, 110), 200);
+    Impact.flash(.22, { host:el, delay:210, dur:40 });
+    animate(words, { scale:[1, 1.012], duration:360, delay:340, ease:'inOutSine' });
 
-    Slash.create({ type:'B', angle:-12, delay:590 });
-    animate(a, { translateX:-34, translateY:-18, rotate:-1.8,
-                 duration:320, delay:740, ease:EASE.OUT });
-    animate(b, { translateX:38, translateY:20, rotate:2.0,
-                 duration:320, delay:740, ease:EASE.OUT });
-    Slash.create({ type:'D', angle:-58, offset:-90, delay:820 });
-    Slash.create({ type:'D', angle: 24, offset:100, delay:900 });
-    setTimeout(() => Impact.shards(fx, 12, -12), 750);
-    setTimeout(() => Impact.shake($('#shell'), 7, 110), 760);
+    Blade.strike({ angle:seamDeg, paper:true, th:13, delay:760, sweep:85, hold:170 });
+    Impact.flash(.3, { host:el, delay:850, dur:44 });
+    setTimeout(() => Impact.shake(el, 6, 100), 850);
+    animate(a, { translateX:-pxv * 5, translateY:-pyv * 5, duration:70,
+                 delay:860, ease:STEP(2) });
+    animate(b, { translateX: pxv * 5, translateY: pyv * 5, duration:70,
+                 delay:860, ease:STEP(2) });
+    Blade.strike({ angle:seamDeg - 44, paper:true, th:6, y:-110, delay:920, sweep:70, hold:90 });
+    Blade.strike({ angle:seamDeg + 38, paper:true, th:6, y:120, delay:990, sweep:70, hold:90 });
 
-    animate([a, b], { opacity:[1, 0], duration:220, delay:1230, ease:'inQuad' });
-    setTimeout(() => el.remove(), 1540);
+    animate(a, { translateX:[-pxv * 5, -pxv * D * .85],
+                 translateY:[-pyv * 5, -pyv * D * .85],
+                 rotate:-1.4, duration:360, delay:1080, ease:'inQuad' });
+    animate(b, { translateX:[ pxv * 5,  pxv * D * .85],
+                 translateY:[ pyv * 5,  pyv * D * .85],
+                 rotate:1.4, duration:360, delay:1080, ease:'inQuad' });
+    setTimeout(() => el.remove(), 1500);
   },
 
-  /* sign-out: the wall comes down. The page stands as a solid wall,
-     two huge blades strike across it, the cut lattice appears, and the
-     wall breaks into thick, irregular pieces — each one a clipped clone
-     of the rendered page over an ink backing that reads as the slab's
-     edge — which tumble away in 3D and reveal the sign-in screen.
-     onCovered fires at full cover, so the caller swaps the real page
-     while the copy hangs in pieces. */
-  waffleOut(onCovered){
-    const fin = typeof onCovered === 'function' ? onCovered : () => {};
-    if (Motion.off) return void fin();
+  /* sign-out: the wall comes down. The CURRENT page is frozen into a
+     wall of clones FIRST — before any state changes — then the real app
+     signs out invisibly beneath it. Two blades strike, thin lattice
+     cuts follow, the wall visibly cracks into slabs (ink shows in the
+     seams), holds one beat, and the pieces fall under gravity at full
+     opacity until they leave the screen. swap() runs once the wall is
+     up; fail() reports a sign-out that could not happen. */
+  waffleOut({ swap, fail } = {}){
+    const doSwap = typeof swap === 'function' ? swap : () => {};
+    const oops   = typeof fail === 'function' ? fail : () => {};
     const fx = $('#fx'), shell = $('#shell');
-    if (!fx || !shell) return void fin();
+    if (Motion.off || !fx || !shell)
+      return void Promise.resolve().then(doSwap).catch(oops);
 
     const W = innerWidth, H = innerHeight, sy = scrollY;
     const cols = W > 700 ? 5 : 3, rows = 4;
@@ -17913,19 +18117,7 @@ const FX = {
       return cl;
     };
 
-    /* 1 · the strikes: two big blades cross the wall, then the lattice */
-    Slash.create({ type:'B', angle:-19 });
-    Slash.create({ type:'B', angle:-64, offset:40, delay:120 });
-    Impact.flash(.3, { delay:60, dur:50 });
-    Impact.shake($('#shell'), 9, 140);
-    for (let i = 1; i < rows; i++)
-      Slash.create({ type:'D', angle:-6, offset:(i / rows - .5) * H,
-                     delay:200 + i * 24, afterimage:false });
-    for (let i = 1; i < cols; i++)
-      Slash.create({ type:'D', angle:86, along:(i / cols - .5) * W,
-                     delay:230 + i * 24, afterimage:false });
-
-    /* 2 · the cut lattice: a jittered grid, so the pieces read as
+    /* the cut lattice: a jittered grid, so the pieces read as
        slash-cut slabs rather than machine tiles */
     const jx = W / cols * .13, jy = H / rows * .13;
     const px = [], py = [];
@@ -17939,6 +18131,9 @@ const FX = {
 
     const grid = document.createElement('div');
     grid.className = 'waffle';
+    const inkback = document.createElement('div');
+    inkback.className = 'waffle__ink';
+    grid.appendChild(inkback);
     const pieces = [];
     for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++){
       const quad = [[px[r][c], py[r][c]], [px[r][c + 1], py[r][c + 1]],
@@ -17961,32 +18156,63 @@ const FX = {
     }
     fx.appendChild(grid);
 
-    const t0 = 340;
-    setTimeout(fin, t0 + 60);
+    /* the wall is up and pixel-identical to the page it froze. Two
+       frames later — once the pieces are committed to the screen — the
+       real app signs out beneath it, invisibly. The ink layer behind
+       the wall stays clear until the crack needs it, so a slow first
+       rasterization of the clones can never flash black. */
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      Promise.resolve().then(doSwap).catch(oops);
+    }));
 
-    /* 3 · the pieces nearest the first blade go first: stagger by
-       distance from the -19deg cut through the centre */
+    /* 1 · the strikes: two heavy blades, then the thin lattice cuts */
+    Blade.strike({ angle:-19, th:20, delay:50, hold:300 });
+    Blade.strike({ angle:-64, th:15, delay:160, x:36, hold:250 });
+    Impact.flash(.35, { delay:130, dur:46 });
+    setTimeout(() => Impact.shake(grid, 9, 140), 140);
+    for (let i = 1; i < rows; i++)
+      Blade.strike({ angle:-6 + (roll(i) - .5) * 6, th:5, y:(i / rows - .5) * H,
+                     delay:230 + i * 26, sweep:70, hold:110 });
+    for (let i = 1; i < cols; i++)
+      Blade.strike({ angle:86 + (roll(i + 3) - .5) * 6, th:5, x:(i / cols - .5) * W,
+                     delay:255 + i * 26, sweep:70, hold:110 });
+
+    /* 2 · the crack: the slabs part a few pixels and the ink behind
+       the wall shows through the seams. The wall HOLDS one beat. */
+    const t1 = 400;
+    setTimeout(() => grid.classList.add('is-cracked'), t1 - 50);
+    pieces.forEach(p => {
+      animate(p.el, { translateX:(p.cx - W / 2) * .014, translateY:(p.cy - H / 2) * .014,
+                      duration:90, delay:t1 + p.r * 50, ease:STEP(2) });
+    });
+    setTimeout(() => Impact.shake(grid, 2, 90), t1 + 160);
+
+    /* 3 · detach + gravity: nearest the first blade goes first. The
+       pieces stay solid — they leave the bottom of the screen, they
+       never dissolve. */
     const nx = Math.sin(-19 * Math.PI / 180), ny = -Math.cos(-19 * Math.PI / 180);
     let dmax = 1;
     pieces.forEach(p => { p.d = Math.abs((p.cx - W / 2) * ny - (p.cy - H / 2) * nx);
                           dmax = Math.max(dmax, p.d); });
+    const t2 = 640;
+    let last = 0;
     pieces.forEach(p => {
-      const seam = 60 + (p.d / dmax) * 240 + p.r * 90;
-      animate(p.el, { translateX:(p.cx - W / 2) * .04, translateY:(p.cy - H / 2) * .03,
-                      duration:150, delay:t0 + seam * .4, ease:EASE.OUT });
+      const seam = (p.d / dmax) * 180 + p.r * 90;
+      const dur = 540 + p.r * 260;
+      last = Math.max(last, t2 + seam + dur);
       animate(p.el, {
-        translateY: H * (.85 + p.r * .7),
-        translateX: (p.cx - W / 2) * (.3 + p.r * .5),
-        rotateX: -(24 + p.r * 46),
-        rotateY: (p.r - .5) * 40,
-        rotateZ: (p.r - .5) * 24,
-        opacity: [1, 1, 0],
-        duration: 680 + p.r * 320,
-        delay: t0 + 160 + seam,
+        translateY: H * 1.45 + p.r * H * .3,
+        translateX: (p.cx - W / 2) * (.10 + p.r * .22),
+        rotateZ: (p.r - .5) * (26 + p.r * 20),
+        rotateX: -(8 + p.r * 24),
+        duration: dur,
+        delay: t2 + seam,
         ease: 'inQuad',
       });
     });
-    setTimeout(() => grid.remove(), 2200);
+    /* the dark behind the wall gives way as the gaps open */
+    setTimeout(() => inkback.remove(), t2 + 130);
+    setTimeout(() => grid.remove(), last + 80);
   },
 
   pageEntrance(scope){
@@ -18171,80 +18397,73 @@ const FX = {
   }
 };
 
-/* ── loading: the app is cut into existence ─────────────────────────
-   Ten beats in about 1.7 seconds. It is a title card, not a spinner,
-   so it never loops and never waits on anything — the interface is
-   already rendered behind the curtain while this plays.
+/* ── loading: one ink poster, then the blade takes it apart ─────────
+   A title card, not a spinner — it never loops and never waits on
+   anything; the interface is already rendered behind the curtain.
 
-     1  a small seal surfaces out of black
-     2  one instant cut
-     3  a single frame of blown-out contrast
-     4  three diagonal cuts in quick succession
-     5  speed lines explode outward
-     6  the mark resolves
-     7  the title lands
-     8  a last cut goes through the title
-     9  the halves shear apart and everything collapses
-    10  the interface arrives
+   The first painted frame is already the poster: solid ink, the KCI
+   seal knocked out in paper and cropped by the left edge. The type
+   slams in, holds, a paper blade goes through the whole card, the two
+   halves shear and fly apart, and the app is standing underneath.
+   Every state is ink or paper at full strength — no gray.
    ─────────────────────────────────────────────────────────────────── */
 Object.assign(FX, {
   loadingSequence(onReveal){
-    const boot = $('#boot'), sealEl = $('#bootSeal');
-    const title = $('#bootTitle');
+    const boot = $('#boot');
     const halves = $$('.boot__half');
+    const seals = $$('.boot__seal');
+    const words = $$('.boot__word'), kickers = $$('.boot__kicker');
 
     /* both of these are idempotent on purpose. The curtain is a solid
-       black layer over the whole app, so "lift it exactly once, from
-       exactly one callback" is a bad bet — anything that stops the
-       clock strands the page. Make them safe to call twice and then
-       call them from more than one place. */
+       layer over the whole app, so "lift it exactly once, from exactly
+       one callback" is a bad bet — anything that stops the clock
+       strands the page. Safe to call twice, called from two places. */
     let lifted = false, revealed = false;
     const done = () => { if (lifted) return; lifted = true; boot.classList.add('is-done'); };
     const reveal = () => { if (revealed) return; revealed = true; onReveal(); };
 
-    sealEl.innerHTML = seal(4);
+    seals.forEach(s => { s.innerHTML = brandSeal('kci'); });
 
     if (Motion.off){ reveal(); return void done(); }
 
-    const sealStrokes = sealEl.querySelectorAll('circle,polygon,path,line');
-    aset(title, { opacity:0 });
+    /* the same seam the clip paths draw: 40%→60% across the width */
+    const seamDeg = -Math.atan2(innerHeight * .20, innerWidth) * 180 / Math.PI;
+    const pxv = -Math.sin(seamDeg * Math.PI / 180), pyv = Math.cos(seamDeg * Math.PI / 180);
+    const D = Math.hypot(innerWidth, innerHeight);
 
-    const tl = createTimeline({ onComplete:done });
-    const beat = (at, fn) => tl.add({ duration:1, onBegin:fn }, at);
+    /* 0 the poster stands · 90 the seal presses · 260 the kicker ·
+       330 the title slams · hold · 900 the blade · 1010 shear ·
+       1130 the halves fly and the app is revealed · 1560 done */
+    animate(seals, { scale:[1.06, 1], rotate:[-6, -8], duration:110,
+                     delay:90, ease:STEP(2) });
+    aset(kickers, { opacity:0 });
+    aset(words, { opacity:0 });
+    animate(kickers, { opacity:[0, 1], duration:1, delay:260, ease:STEP(1) });
+    animate(words, { opacity:[0, 1], scale:[1.4, 1], duration:130,
+                     delay:330, ease:STEP(3) });
+    setTimeout(() => Impact.shake(boot, 7, 110), 440);
+    Impact.flash(.24, { host:boot, delay:450, dur:42 });
 
-    tl
-      /* 1 · a seal surfaces */
-      .add(sealEl, { opacity:[0, .78], scale:[.86, 1], duration:200, ease:EASE.CALM }, 50)
-      .add(createDrawable(sealStrokes), { draw:['0 0', '0 1'],
-             duration:520, delay:stagger(4), ease:EASE.OUT }, 70)
-      .add(sealEl, { opacity:[.78, .16], scale:[1, 1.07], duration:320, ease:EASE.OUT }, 320)
-      /* 6 · the title lands */
-      .add(title, { opacity:[0, 1], scale:[1.14, 1], duration:170, ease:EASE.CUT }, 640)
-      /* 9 · collapse */
-      .add(sealEl, { opacity:0, duration:180, ease:EASE.CALM }, 1030)
-      .add(boot, { opacity:[1, 0], duration:280, ease:EASE.CALM, onBegin:reveal }, 1200)
-      /* 8 · the halves shear apart along the last cut */
-      .add(halves[0], { translateX:-9, translateY:-27, rotate:-1.4,
-             opacity:[1, 0], duration:300, ease:EASE.OUT }, 995)
-      .add(halves[1], { translateX:9, translateY:27, rotate:1.4,
-             opacity:[1, 0], duration:300, ease:EASE.OUT }, 995);
+    Blade.strike({ angle:seamDeg, paper:true, th:14, host:boot,
+                   delay:900, sweep:85, hold:160 });
+    Impact.flash(.3, { host:boot, delay:990, dur:44 });
+    setTimeout(() => Impact.shake(boot, 6, 100), 990);
 
-    /* the cuts, on the same clock as everything else */
-    const cut = o => Slash.create({ ...o, host:boot });
-    beat(200, () => cut({ type:'B', angle:-27 }));                                    /* 2 */
-    beat(240, () => Impact.flash(.34, { host:boot, dur:52 }));                        /* 3 */
-    beat(310, () => cut({ type:'D', angle:52, offset:-96 }));                         /* 4 */
-    beat(352, () => cut({ type:'D', angle:-64, offset:70 }));
-    beat(430, () => Lines.burst({ host:boot, count:30, reach:480, dur:340, hot:true }));  /* 5 */
-    beat(442, () => Impact.ring(boot, { size:120, scale:4.4, dur:700 }));
-    beat(940, () => {                                                                /* 8 */
-      cut({ type:'B', angle:-18 });
-      Impact.flash(.3, { host:boot, delay:26, dur:48 });
-      Impact.shards(boot, 14, -18);
-    });
+    animate(halves[0], { translateX:-pxv * 5, translateY:-pyv * 5,
+                         duration:70, delay:1010, ease:STEP(2) });
+    animate(halves[1], { translateX: pxv * 5, translateY: pyv * 5,
+                         duration:70, delay:1010, ease:STEP(2) });
 
-    tl.then(done, done);
-    setTimeout(() => { reveal(); done(); }, 2400);
+    setTimeout(reveal, 1120);
+    animate(halves[0], { translateX:[-pxv * 5, -pxv * D * .85],
+                         translateY:[-pyv * 5, -pyv * D * .85],
+                         rotate:-1.2, duration:400, delay:1130, ease:'inQuad' });
+    animate(halves[1], { translateX:[ pxv * 5,  pxv * D * .85],
+                         translateY:[ pyv * 5,  pyv * D * .85],
+                         rotate:1.2, duration:400, delay:1130, ease:'inQuad',
+                         onComplete:done });
+
+    setTimeout(() => { reveal(); done(); }, 3000);
   },
 });
 
@@ -18687,36 +18906,42 @@ function placeIndicators(){
   Motion.indicator($('#railInd'), $('#railNav .rail__link[aria-current]'), 'y');
 }
 
-async function go(id){
+async function go(id, opts = {}){
+  if (opts === true) opts = { instant:true };   /* legacy boolean form */
   if (!ROUTES.includes(id)) id = 'home';
   id = gate(id);
   if (navigating) return;
   if (current === 'scan' && id !== 'scan') Scanner.stop();
 
   const view = $('#view');
-  if (view.firstChild){
+  const render = () => {
+    current = id;
+    syncHash(id);
+    Motion.settle(view);          /* identity in anime's cache too, or a
+                                     later cut-push resurrects a stale skew */
+    Reveal.clear();
+    document.documentElement.dataset.screen = id; /* CSS lays out each spread by name */
+    /* One surface for the whole app: warm paper. Black is manga ink --
+       spotted blacks, panel frames, active states, the scanner border --
+       and is never used as a page-level theme. */
+    view.innerHTML = Views[id]();
+    paintNav();
+    try { scrollTo(0, 0); } catch (_) {}
+    afterRender(id);
+    view.focus({ preventScroll:true });
+  };
+
+  /* The outgoing page stands untouched until the ink sheets cover it;
+     the swap happens under full cover, so there is never a blank or a
+     half-faded midpoint. opts.instant renders directly — used when a
+     covering sequence (welcome, the sign-out wall) is already up. */
+  if (view.firstChild && booted && !opts.instant && !Motion.off){
     navigating = true;
-    FX.pageCutTransition();
-    await Motion.exit(view);
+    await FX.pageCut(() => { render(); FX.slamType(view, 40); });
     navigating = false;
+  } else {
+    render();
   }
-
-  current = id;
-  syncHash(id);
-  Motion.settle(view);            /* identity in anime's cache too, or a
-                                     later cut-push resurrects the exit skew */
-  Reveal.clear();
-  document.documentElement.dataset.screen = id;   /* CSS lays out each spread by name */
-  /* One surface for the whole app: warm paper. Black is manga ink --
-     spotted blacks, panel frames, active states, the scanner border --
-     and is never used as a page-level theme. */
-
-  view.innerHTML = Views[id]();
-  paintNav();
-  try { scrollTo({ top:0, behavior:Motion.off ? 'auto' : 'smooth' }); } catch (_) { scrollTo(0, 0); }
-  if (booted) FX.pageEntrance(view);
-  afterRender(id);
-  view.focus({ preventScroll:true });
 }
 
 const seenUnlocked = new Set();
@@ -18876,8 +19101,10 @@ document.addEventListener('submit', async e => {
   try {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
+    /* the ink panel mounts synchronously, so the home render below
+       happens invisibly beneath it and the reveal is the panel's cut */
     FX.welcomeCut(up ? 'Joined' : 'Welcome');
-    go('home');
+    go('home', { instant:true });
   } catch (err){
     authErr(err && err.message ? err.message : 'Something went wrong. Try again.');
     authBusy(false);
@@ -18936,7 +19163,7 @@ document.addEventListener('click', e => {
   const reload = e.target.closest('[data-reload]');
   if (reload){
     reload.disabled = true; reload.textContent = 'Retrying…';
-    Store.hydrate().then(() => go(current, true));
+    Store.hydrate().then(() => go(current, { instant:true }));
     return;
   }
 
@@ -18975,13 +19202,18 @@ document.addEventListener('click', e => {
 
   const out = e.target.closest('[data-signout]');
   if (out){
-    Store.signOut()
-      .then(() => FX.waffleOut(() => {
+    /* the wall freezes the CURRENT page first; only then does the real
+       sign-out (and the auth render) happen, invisibly beneath it */
+    FX.waffleOut({
+      swap: () => Store.signOut().then(() => {
+        AuthUI.mode = 'in';       /* whoever signs in next starts at Sign in,
+                                     not at the last account's Create form */
         toast({ key:'auth', title:'Signed out' });
-        go('auth');
-      }))
-      .catch(() => toast({ key:'auth', bad:true, title:'Could not sign out',
-                           detail:'Check your connection and try again.' }));
+        go('auth', { instant:true });
+      }),
+      fail: () => toast({ key:'auth', bad:true, title:'Could not sign out',
+                          detail:'Check your connection and try again.' }),
+    });
     return;
   }
 
@@ -19087,8 +19319,10 @@ function paintMotionBtn(){
   b.setAttribute('aria-pressed', String(Motion.forced));
   b.setAttribute('aria-label', Motion.forced ? 'Reduced motion is on. Turn animations back on.'
                                              : 'Reduced motion is off. Turn animations off.');
+  /* the chip says what state it is IN, not a bare noun: an unlabeled
+     "MOTION" chip read as debug furniture */
   b.innerHTML = (Motion.forced ? ICON.still : ICON.waves) +
-                `<span>${Motion.forced ? 'Still' : 'Motion'}</span>`;
+                `<span>Motion ${Motion.forced ? 'off' : 'on'}</span>`;
 }
 
 addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); });
@@ -19114,7 +19348,9 @@ addEventListener('resize', () => {
   await Store.hydrate();
   /* re-render whenever the snapshot changes (a check-in, a claim, a
      sign-in) so views never read a stale count */
-  Store.onChange(() => { if (current) go(current, true); paintIdentity(); paintBrand(); });
+  /* a data refresh re-renders in place — it is not a navigation, so it
+     never draws the page-cut */
+  Store.onChange(() => { if (current) go(current, { instant:true }); paintIdentity(); paintBrand(); });
 
   paintBrand();
   $('#barBrand').innerHTML  = wordmark();
