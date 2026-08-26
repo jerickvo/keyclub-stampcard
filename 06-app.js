@@ -84,6 +84,9 @@ function gate(id){
 
 let current = 'home';
 let navigating = false;
+/* a nav clicked while a cut is playing is intent, not noise: the LAST
+   destination asked for during the transition is honored when it ends */
+let pendingNav = null;
 let booted = false;
 
 function syncHash(id){
@@ -130,7 +133,7 @@ async function go(id, opts = {}){
   if (opts === true) opts = { instant:true };   /* legacy boolean form */
   if (!ROUTES.includes(id)) id = 'home';
   id = gate(id);
-  if (navigating) return;
+  if (navigating){ pendingNav = id; return; }
   if (current === 'scan' && id !== 'scan') Scanner.stop();
 
   const view = $('#view');
@@ -159,6 +162,10 @@ async function go(id, opts = {}){
     navigating = true;
     await FX.pageCut(() => { render(); FX.slamType(view, 40); });
     navigating = false;
+    if (pendingNav !== null){
+      const next = pendingNav; pendingNav = null;
+      if (next !== current) go(next);
+    }
   } else {
     render();
   }

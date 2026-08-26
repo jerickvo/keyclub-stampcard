@@ -205,25 +205,95 @@ const CutGeo = {
     p[0].toFixed(1) + 'px ' + p[1].toFixed(1) + 'px').join(',') + ')'; },
 };
 
-/* frozen clone of the live page, layout inlined so the auth screen
-   rendering underneath cannot restyle it. Shared by the transition and
-   the sign-out wall. */
-function snapShell(shell){
-  const cl = shell.cloneNode(true);
-  const freeze = (sel, props) => {
-    const src = sel ? shell.querySelector(sel) : shell;
-    const dst = sel ? cl.querySelector(sel) : cl;
-    if (!src || !dst) return;
-    const cs = getComputedStyle(src);
-    props.forEach(p => { dst.style[p] = cs[p]; });
-  };
-  freeze(null, ['gridTemplateColumns']);
-  freeze('.rail', ['display']);
-  freeze('.rail__nav', ['display']);
-  freeze('.topbar', ['display']);
-  freeze('main', ['padding']);
-  return cl;
-}
+/* ══ THE SNAPSHOT ════════════════════════════════════════════════════
+   The wall IS the page. The whole live document — markup, stylesheets,
+   embedded fonts, current form values, current scroll — is serialized
+   into an SVG foreignObject image rendered by the same engine at the
+   same viewport size, so the frozen surface the blades cut is the page
+   the user is actually looking at, not a rebuilt imitation. The result
+   is a blob URL every fragment paints as its background. */
+const Snapshot = {
+  /* stylesheet text is collected once per session: link-loaded sheets
+     (dev) cannot be fetched from inside an SVG image, so their rules
+     ride along as text; the built page's inline <style> blocks clone
+     with the document anyway and duplicating rules changes nothing */
+  _css: null,
+  css(){
+    if (this._css !== null) return this._css;
+    let out = '';
+    for (const sh of document.styleSheets){
+      let rules;
+      try { rules = sh.cssRules; } catch (_) { continue; }
+      if (!rules) continue;
+      for (const r of rules) out += r.cssText + '\n';
+    }
+    this._css = out;
+    return out;
+  },
+
+  take(){
+    const W = innerWidth, H = innerHeight;
+    const sy = scrollY, sx = scrollX;
+    const clone = document.documentElement.cloneNode(true);
+
+    /* current form state lives in properties, not attributes */
+    const live = document.querySelectorAll('input,textarea,select');
+    const dup  = clone.querySelectorAll('input,textarea,select');
+    live.forEach((el, i) => {
+      const c = dup[i]; if (!c) return;
+      if (el.tagName === 'TEXTAREA') c.textContent = el.value;
+      else if (el.tagName === 'SELECT'){
+        [...el.options].forEach((o, j) => {
+          const co = c.options && c.options[j];
+          if (co){ if (o.selected) co.setAttribute('selected', ''); else co.removeAttribute('selected'); }
+        });
+      } else {
+        c.setAttribute('value', el.value);
+        if (el.checked) c.setAttribute('checked', ''); else c.removeAttribute('checked');
+      }
+    });
+
+    /* the overlay stack is not part of the page being frozen */
+    clone.querySelectorAll(
+      'script,noscript,link[rel="stylesheet"],.fx,.boot,.verdict,.toasts,.blade2,.pcut,.waffle'
+    ).forEach(el => el.remove());
+
+    const head = clone.querySelector('head');
+    if (this.css()){
+      const sheet = document.createElement('style');
+      sheet.textContent = this.css();
+      (head || clone).insertBefore(sheet, (head || clone).firstChild);
+    }
+    /* freeze time and reproduce the scroll: a negative body margin
+       shifts the flow exactly scrollY while fixed elements (tabs bar,
+       ground) keep their own viewport anchoring, as on screen */
+    const freeze = document.createElement('style');
+    freeze.textContent =
+      `*{animation:none!important;transition:none!important;caret-color:transparent!important}` +
+      `html{overflow:hidden!important}` +
+      `body{margin:${-sy}px 0 0 ${-sx}px!important}`;
+    (head || clone).appendChild(freeze);
+
+    const markup = new XMLSerializer().serializeToString(clone);
+    const svg =
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">` +
+      `<foreignObject width="100%" height="100%">${markup}</foreignObject></svg>`;
+    const url = URL.createObjectURL(new Blob([svg], { type:'image/svg+xml;charset=utf-8' }));
+
+    /* decoded before use, so the wall can appear in the same frame the
+       live page hides — never a blank while the image rasterizes */
+    return new Promise(resolve => {
+      const img = new Image();
+      const out = { url, W, H, ok:true,
+                    release(){ try { URL.revokeObjectURL(url); } catch (_) {} } };
+      const done = () => resolve(out);
+      img.onload  = () => (img.decode ? img.decode().catch(() => {}) : Promise.resolve()).then(done);
+      img.onerror = () => { out.ok = false; done(); };
+      img.src = url;
+    });
+  },
+};
+const wait = ms => new Promise(r => setTimeout(r, ms));
 
 /* ══ THE BLADE ═══════════════════════════════════════════════════════
    Not a bar and not a capsule: a tapered, slightly irregular sliver —
@@ -539,80 +609,79 @@ const FX = {
             delay, ease:EASE.ENERGY, onComplete(){ releaseTransform(svg); } });
   },
 
-  /* the page is cut away — literally. The live page is frozen into
-     four fragments along two real cut lines, the blades cross those
-     exact lines, each seam opens at its blade's contact, and then the
-     fragments slide out along the first cut's normal, revealing the
-     next page already standing underneath. The outgoing page is the
-     visual subject for the whole transition: there is no cover, no
-     black frame, and nothing changes before its cut. ~560ms. */
+  /* the page is cut away — literally. The blade crosses the LIVE page;
+     nothing about it changes before contact. At contact the page is
+     replaced in one frame by a rendered snapshot of itself divided
+     along that exact line (the next page already standing underneath),
+     a second cut crosses, the divided page HOLDS long enough to read,
+     and then the pieces are taken out along the master cut's normal.
+     ~1.1s. */
   pageCut(swap){
     const doSwap = typeof swap === 'function' ? swap : () => {};
-    const fx = $('#fx'), shell = $('#shell');
-    if (Motion.off || !fx || !shell){ doSwap(); return Promise.resolve(); }
+    const fx = $('#fx');
+    if (Motion.off || !fx){ doSwap(); return Promise.resolve(); }
 
     return new Promise(res => {
-      const W = innerWidth, H = innerHeight, sy = scrollY;
+      const W = innerWidth, H = innerHeight;
       const seq = ++cutSeq;
-      /* two cut lines, varied a little per navigation */
-      const L1 = CutGeo.line(W * (.44 + roll(seq) * .12), H * (.42 + roll(seq + 1) * .16),
-                             -12 - roll(seq + 2) * 9);
-      const L2 = CutGeo.line(W * (.38 + roll(seq + 3) * .2), H * (.4 + roll(seq + 4) * .2),
-                             -55 - roll(seq + 5) * 16);
-      const frags = CutGeo.shatter(W, H, [L1, L2]);
+      /* two diagonal cut lines, varied a little per navigation */
+      const L1 = CutGeo.line(W * (.42 + roll(seq) * .16), H * (.4 + roll(seq + 1) * .2),
+                             -11 - roll(seq + 2) * 9);
+      const L2 = CutGeo.line(W * (.36 + roll(seq + 3) * .24), H * (.38 + roll(seq + 4) * .22),
+                             -50 - roll(seq + 5) * 18);
 
-      const ov = document.createElement('div');
-      ov.className = 'pcut';
-      for (const f of frags){
-        const piece = document.createElement('div');
-        piece.className = 'pcut__piece';
-        piece.style.clipPath = CutGeo.clip(f);
-        piece.style.transformOrigin = `${f.cx.toFixed(1)}px ${f.cy.toFixed(1)}px`;
-        const page = document.createElement('div');
-        page.className = 'pcut__page';
-        page.style.cssText = `width:${W}px;height:${H}px;left:0;top:${-sy}px`;
-        page.appendChild(snapShell(shell));
-        piece.appendChild(page);
-        ov.appendChild(piece);
-        f.el = piece; f.ox = 0; f.oy = 0;
-      }
-      fx.appendChild(ov);
+      /* the freeze renders while the blade travels over the live page */
+      const snapP = Snapshot.take();
+      const c1 = Blade.volley({ line:L1, seed:seq, delay:50, spread:80,
+        main:{ th:26, sweep:150, hold:430 }, streaks:3 });
 
-      /* the freeze is pixel-identical to the live page; only once it is
-         committed does the real page change underneath it */
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        try { doSwap(); } catch (_) {}
-      }));
+      Promise.all([snapP, wait(c1)]).then(([snap]) => {
+        const frags = CutGeo.shatter(W, H, [L1, L2]);
+        const ov = document.createElement('div');
+        ov.className = 'pcut';
+        for (const f of frags){
+          const piece = document.createElement('div');
+          piece.className = 'pcut__piece';
+          piece.style.cssText =
+            `clip-path:${CutGeo.clip(f)};` +
+            `transform-origin:${f.cx.toFixed(1)}px ${f.cy.toFixed(1)}px;` +
+            `background-image:url("${snap.url}");background-size:${snap.W}px ${snap.H}px`;
+          ov.appendChild(piece);
+          f.el = piece; f.ox = 0; f.oy = 0;
+        }
+        fx.appendChild(ov);
+        /* snapshot committed over the identical live pixels; the real
+           page changes beneath it, unseen */
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          try { doSwap(); } catch (_) {}
+        }));
 
-      const seam = (L, k, px) => { for (const f of frags){
-        f.ox += f.sides[k] * L.nx * px; f.oy += f.sides[k] * L.ny * px;
-        f.el.style.transform = `translate(${f.ox}px,${f.oy}px)`;
-      } };
-      /* overlap the seams a hair until each blade lands */
-      seam(L1, 0, -0.4); seam(L2, 1, -0.4);
+        const seam = (L, k, px) => { for (const f of frags){
+          f.ox += f.sides[k] * L.nx * px; f.oy += f.sides[k] * L.ny * px;
+          f.el.style.transform = `translate(${f.ox.toFixed(2)}px,${f.oy.toFixed(2)}px)`;
+        } };
+        /* the second seam stays overlapped a hair until ITS blade lands;
+           the first opens NOW — this is its contact moment */
+        seam(L2, 1, -0.4);
+        seam(L1, 0, 5);
+        Impact.shake(ov, 6, 100);
 
-      /* the main stroke travels visibly, with its streak fan; the page
-         divides at contact and then HOLDS divided long enough to read
-         "the page has been cut" before its pieces are taken away */
-      const c1 = Blade.volley({ line:L1, seed:seq, delay:40, spread:70,
-        main:{ th:22, sweep:135, hold:260 }, streaks:2 });
-      setTimeout(() => { seam(L1, 0, 4); Impact.shake(ov, 5, 90); }, c1);
-      const c2 = Blade.strike({ line:L2, th:13, delay:c1 + 90, sweep:95, hold:180 });
-      setTimeout(() => { seam(L2, 1, 3); Impact.pop(ov); }, c2);
+        const c2 = Blade.strike({ line:L2, th:13, delay:70, sweep:100, hold:240 });
+        setTimeout(() => { seam(L2, 1, 3.5); Impact.pop(ov); }, c2);
 
-      /* removal ALONG the cut geometry: each fragment leaves on the
-         first cut's normal, nudged by the second, slightly staggered */
-      const D = Math.hypot(W, H) * 1.15;
-      const t2 = c2 + 170;
-      frags.forEach((f, i) => {
-        const tx = f.ox + f.sides[0] * L1.nx * D + f.sides[1] * L2.nx * D * .16;
-        const ty = f.oy + f.sides[0] * L1.ny * D + f.sides[1] * L2.ny * D * .16;
-        animate(f.el, { translateX:[f.ox, tx], translateY:[f.oy, ty],
-          rotate:f.sides[0] * (1.4 + roll(i + seq) * 1.8),
-          duration:380 + roll(i * 3 + seq) * 90,
-          delay:t2 + i * 30, ease:'inQuad' });
+        /* removal ALONG the cut geometry after a readable divided hold */
+        const D = Math.hypot(W, H) * 1.15;
+        const t2 = c2 + 210;
+        frags.forEach((f, i) => {
+          const tx = f.ox + f.sides[0] * L1.nx * D + f.sides[1] * L2.nx * D * .16;
+          const ty = f.oy + f.sides[0] * L1.ny * D + f.sides[1] * L2.ny * D * .16;
+          animate(f.el, { translateX:[f.ox, tx], translateY:[f.oy, ty],
+            rotate:f.sides[0] * (1.6 + roll(i + seq) * 2),
+            duration:400 + roll(i * 3 + seq) * 110,
+            delay:t2 + i * 32, ease:'inQuad' });
+        });
+        setTimeout(() => { ov.remove(); snap.release(); res(); }, t2 + 680);
       });
-      setTimeout(() => { ov.remove(); res(); }, t2 + 610);
     });
   },
 
@@ -692,163 +761,176 @@ const FX = {
     setTimeout(() => el.remove(), 1450);
   },
 
-  /* sign-out: the wall comes down. The CURRENT page is frozen into
-     fragments computed from REAL intersecting cut lines — two hero
-     diagonals plus uneven vertical-ish and horizontal-ish cuts — so
-     the pieces have varied sizes and angled edges, not grid tiles.
-     Every blade is drawn along its own line, and each seam opens at
-     that blade's contact moment: cut, then crack, in order. The wall
-     holds visibly divided for a beat, then the pieces release under a
-     small rAF physics model (gravity, drift, spin, mass) and fall out
-     of the screen at full opacity. swap() runs once the wall has been
-     committed to the screen; fail() reports a sign-out that could not
-     happen. */
+  /* sign-out: the wall comes down. The page the user is looking at IS
+     the wall — it stays live and untouched until the hero blade's
+     contact, when a rendered snapshot of it (same engine, same
+     viewport, same pixels) replaces it already divided along that
+     exact line. The cut composition is ALL diagonals: one dominant
+     hero path, a counter-cut, and a few varied strokes, intersecting
+     into irregular polygons — different sizes, different side counts,
+     no underlying grid. Each further seam opens at its own blade's
+     contact; the wall holds visibly divided, sags, then collapses
+     under a small physics model (gravity, drift, spin, mass) at full
+     opacity, revealing the sign-in page. swap() runs once the wall has
+     been committed; fail() reports a sign-out that could not happen. */
   waffleOut({ swap, fail } = {}){
     const doSwap = typeof swap === 'function' ? swap : () => {};
     const oops   = typeof fail === 'function' ? fail : () => {};
-    const fx = $('#fx'), shell = $('#shell');
-    if (Motion.off || !fx || !shell)
+    const fx = $('#fx');
+    if (Motion.off || !fx)
       return void Promise.resolve().then(doSwap).catch(oops);
 
-    const W = innerWidth, H = innerHeight, sy = scrollY;
+    const W = innerWidth, H = innerHeight;
     const mob = W <= 700;
     const seq = ++cutSeq;
+    const D = Math.hypot(W, H);
 
-    /* ── the cut composition ── two hero diagonals, then uneven
-       vertical-ish and horizontal-ish cuts. Positions and angles are
-       jittered so no two sign-outs shatter the same way. */
-    const lines = [];
-    lines.push(CutGeo.line(W * .5,  H * .48, -19 + (roll(seq) - .5) * 6));
-    if (!mob)
-      lines.push(CutGeo.line(W * .58, H * .44, -64 + (roll(seq + 1) - .5) * 10));
-    const nv = mob ? 1 : 2, nh = 1;
-    for (let i = 1; i <= nv; i++)
-      lines.push(CutGeo.line(W * (i / (nv + 1)) + (roll(seq + 2 + i) - .5) * W * .14,
-                             H * .5, 90 + (roll(seq + 7 + i) - .5) * 15));
-    for (let i = 1; i <= nh; i++)
-      lines.push(CutGeo.line(W * .5,
-                             H * (i / (nh + 1)) + (roll(seq + 12 + i) - .5) * H * .18,
-                             (roll(seq + 17 + i) - .5) * 13));
-    const frags = CutGeo.shatter(W, H, lines);
+    /* ── the cut composition: nothing axis-aligned ── */
+    const hero = CutGeo.line(W * .5, H * .46, -16 + (roll(seq) - .5) * 7);
+    const lines = [hero,
+      CutGeo.line(W * (.56 + (roll(seq + 1) - .5) * .1),
+                  H * (.42 + (roll(seq + 2) - .5) * .1),
+                  -58 + (roll(seq + 3) - .5) * 12)];
+    const extra = mob ? [[.3, .62, 24]]
+                      : [[.28, .6, 21], [.7, .58, -34], [.44, .3, -78]];
+    extra.forEach(([ex, ey, deg], i) => lines.push(
+      CutGeo.line(W * (ex + (roll(seq + 4 + i) - .5) * .12),
+                  H * (ey + (roll(seq + 9 + i) - .5) * .14),
+                  deg + (roll(seq + 14 + i) - .5) * 10)));
 
-    /* ── the wall: every fragment is a clipped clone of the live page
-       over an ink slab (the wall's thickness) ── */
-    const grid = document.createElement('div');
-    grid.className = 'waffle';
-    const inkback = document.createElement('div');
-    inkback.className = 'waffle__ink';
-    grid.appendChild(inkback);
-    for (const f of frags){
-      const piece = document.createElement('div');
-      piece.className = 'waffle__piece';
-      piece.style.clipPath = CutGeo.clip(f);
-      piece.style.transformOrigin = `${f.cx.toFixed(1)}px ${f.cy.toFixed(1)}px`;
-      const back = document.createElement('div');
-      back.className = 'waffle__slab';
-      const page = document.createElement('div');
-      page.className = 'waffle__page';
-      page.style.cssText = `width:${W}px;height:${H}px;left:0;top:${-sy}px`;
-      page.appendChild(snapShell(shell));
-      piece.appendChild(back); piece.appendChild(page);
-      grid.appendChild(piece);
-      f.el = piece; f.ox = 0; f.oy = 0;
-    }
-    fx.appendChild(grid);
+    /* the freeze renders while the wind-up plays over the live page */
+    const snapP = Snapshot.take();
 
-    /* the wall is pixel-identical to the page it froze. Two frames
-       later — once it is committed — the real app signs out beneath
-       it, invisibly. The ink (backdrop and slab edges) stays clear
-       until the first crack, so a slow first rasterization of the
-       clones can never flash black. */
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      Promise.resolve().then(doSwap).catch(oops);
-    }));
+    /* ── anticipation: the air moves first. A dip, then two thin
+       wind-up streaks flick through on the hero's direction before the
+       real blade enters. ── */
+    Impact.scrim(.12, { delay:60 });
+    Blade.strike({ line:CutGeo.line(hero.x + hero.nx * 150, hero.y + hero.ny * 150,
+                   hero.deg - 2), th:4, delay:90, sweep:70, hold:60, len:D * .55 });
+    Blade.strike({ line:CutGeo.line(hero.x - hero.nx * 180, hero.y - hero.ny * 180,
+                   hero.deg + 3), th:3, delay:140, sweep:60, hold:50, len:D * .45 });
 
-    /* ── cut → crack, per line, in order. Each blade is drawn along
-       its own line; ITS seam opens at ITS contact moment. */
-    const seam = (L, k, px) => { for (const f of frags){
-      f.ox += f.sides[k] * L.nx * px; f.oy += f.sides[k] * L.ny * px;
-      f.el.style.transform = `translate(${f.ox.toFixed(2)}px,${f.oy.toFixed(2)}px)`;
-    } };
-    /* pieces start overlapped a hair on every seam, so clip-edge
-       anti-aliasing cannot draw a line before that seam's blade has
-       actually landed */
-    lines.forEach((L, k) => seam(L, k, -0.4));
-    /* ── THE hero slash. One massive stroke — thick tapered body,
-       razor core, a fan of long parallel streaks — travels visibly
-       across the wall. At ITS contact the wall splits WIDE along it:
-       the master cut everything else follows. ── */
-    let lastContact = 0;
-    lines.forEach((L, k) => {
-      let c;
-      if (k === 0){
-        c = Blade.volley({ line:L, seed:seq, delay:60, spread:110,
-          main:{ th:52, sweep:210, hold:460 }, streaks:mob ? 2 : 4 });
-        setTimeout(() => {
-          grid.classList.add('is-cracked');
-          seam(L, 0, 8);
-          Impact.pop();
-          Impact.shake(grid, 12, 160);
-        }, c);
-      } else {
-        const hero2 = k === 1 && !mob;
-        const delay = hero2 ? 380 : (mob ? 380 : 480) + (k - (mob ? 1 : 2)) * 55;
-        c = Blade.strike({ line:L, th:hero2 ? 15 : 5 + roll(seq + k) * 4,
-                           delay, sweep:hero2 ? 100 : 65, hold:hero2 ? 200 : 130 });
-        setTimeout(() => { seam(L, k, hero2 ? 3 : 1.6);
-          if (hero2) Impact.shake(grid, 4, 90); }, c);
-      }
-      lastContact = Math.max(lastContact, c);
-    });
+    /* ── THE hero slash: one massive stroke — thick tapered body,
+       razor core, a long fan of parallel streaks — crossing the whole
+       page. ── */
+    const c0 = Blade.volley({ line:hero, seed:seq, delay:260, spread:150,
+      main:{ th:mob ? 46 : 76, sweep:230, hold:560 }, streaks:mob ? 3 : 5 });
 
-    /* ── HOLD: the wall stands visibly divided ── */
-    const tHold = Math.ceil(lastContact) + 60;
-    setTimeout(() => Impact.shake(grid, 2, 80), tHold + 60);
-
-    /* ── release + fall: a real (small) physics model on rAF.
-       Pieces nearest the first cut go first; mass = fragment size:
-       light pieces accelerate and spin more, heavy slabs lag. */
-    const t2 = tHold + 180;
-    const avg = Math.sqrt(W * H / frags.length);
-    let dmax = 1;
-    for (const f of frags){
-      f.d = Math.abs(CutGeo.side(lines[0], f.cx, f.cy));
-      dmax = Math.max(dmax, f.d);
-    }
-    frags.forEach((f, i) => {
-      const r1 = roll(i * 3 + seq), r2 = roll(i * 5 + seq + 1), r3 = roll(i * 7 + seq + 2);
-      const mass = Math.max(.6, Math.sqrt(f.area) / avg);
-      f.rel  = t2 + (f.d / dmax) * 150 + r1 * 110;
-      f.vx   = ((f.cx - W * .5) / W) * 110 + (r2 - .5) * 70;
-      f.vy   = 60 + r3 * 180;
-      f.g    = (7400 + r1 * 2200) / mass;
-      f.vr   = (r2 - .5) * 220 / mass;
-      f.vt   = (r3 - .5) * 90 / mass;      /* rotateX tilt speed */
-      f.x = f.ox; f.y = f.oy; f.rot = 0; f.tilt = 0; f.done = false;
-    });
-    setTimeout(() => { try { inkback.remove(); } catch (_) {} }, t2 + 100);
-
-    const t0 = performance.now();
-    let prev = t0, live = frags.length;
-    const step = now => {
-      const dt = Math.min(.034, (now - prev) / 1000); prev = now;
-      const tms = now - t0;
+    Promise.all([snapP, wait(c0)]).then(([snap]) => {
+      const frags = CutGeo.shatter(W, H, lines);
+      const grid = document.createElement('div');
+      grid.className = 'waffle';
+      const inkback = document.createElement('div');
+      inkback.className = 'waffle__ink';
+      grid.appendChild(inkback);
       for (const f of frags){
-        if (f.done || tms < f.rel) continue;
-        f.vy  += f.g * dt;
-        f.x   += f.vx * dt; f.y += f.vy * dt;
-        f.rot += f.vr * dt; f.tilt += f.vt * dt;
-        f.el.style.transform =
-          `translate(${f.x.toFixed(1)}px,${f.y.toFixed(1)}px) ` +
-          `rotate(${f.rot.toFixed(2)}deg) rotateX(${f.tilt.toFixed(2)}deg)`;
-        if (f.cy + f.y - f.rad > H + 60){ f.done = true; live--; }
+        const piece = document.createElement('div');
+        piece.className = 'waffle__piece';
+        piece.style.cssText =
+          `clip-path:${CutGeo.clip(f)};` +
+          `transform-origin:${f.cx.toFixed(1)}px ${f.cy.toFixed(1)}px`;
+        const back = document.createElement('div');
+        back.className = 'waffle__slab';
+        const face = document.createElement('div');
+        face.className = 'waffle__face';
+        face.style.cssText =
+          `background-image:url("${snap.url}");background-size:${snap.W}px ${snap.H}px`;
+        piece.appendChild(back); piece.appendChild(face);
+        grid.appendChild(piece);
+        f.el = piece; f.ox = 0; f.oy = 0;
       }
-      if (live > 0 && now - t0 < 3000) requestAnimationFrame(step);
-      else grid.remove();
-    };
-    requestAnimationFrame(step);
-    /* hard safety: the overlay can never outlive the sequence */
-    setTimeout(() => { try { grid.remove(); } catch (_) {} }, 3200);
+      fx.appendChild(grid);
+      /* the wall replaces its identical live pixels in this frame; the
+         real app signs out beneath it, unseen */
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        Promise.resolve().then(doSwap).catch(oops);
+      }));
+
+      const seam = (L, k, px) => { for (const f of frags){
+        f.ox += f.sides[k] * L.nx * px; f.oy += f.sides[k] * L.ny * px;
+        f.el.style.transform = `translate(${f.ox.toFixed(2)}px,${f.oy.toFixed(2)}px)`;
+      } };
+      /* later seams stay overlapped a hair until their blades land;
+         the hero seam cracks WIDE now — this is its contact moment */
+      lines.forEach((L, k) => { if (k > 0) seam(L, k, -0.4); });
+      grid.classList.add('is-cracked');
+      seam(hero, 0, 10);
+      Impact.pop();
+      Impact.shake(grid, 13, 170);
+
+      /* ── the follow-through: counter-cut, then the varied strokes,
+         each opening ITS seam at ITS contact ── */
+      let last = 0;
+      lines.slice(1).forEach((L, j) => {
+        const k = j + 1, counter = j === 0;
+        const c = Blade.strike({ line:L,
+          th: counter ? 22 : 8 + roll(seq + k) * 5,
+          delay: counter ? 60 : 160 + (j - 1) * 95,
+          sweep: counter ? 110 : 75,
+          hold: counter ? 240 : 150 });
+        setTimeout(() => { seam(L, k, counter ? 5 : 2.2);
+          if (counter) Impact.shake(grid, 5, 100); }, c);
+        last = Math.max(last, c);
+      });
+
+      /* ── HOLD: the severed wall stands; then it gives — every piece
+         sags by its own weight before the fall ── */
+      const tHold = Math.ceil(last) + 90;
+      const t2 = tHold + 240;
+      const avg = Math.sqrt(W * H / frags.length);
+      let dmax = 1;
+      for (const f of frags){
+        f.d = Math.abs(CutGeo.side(hero, f.cx, f.cy));
+        dmax = Math.max(dmax, f.d);
+      }
+      setTimeout(() => {
+        Impact.shake(grid, 2, 90);
+        for (const f of frags){
+          const m = Math.max(.6, Math.sqrt(f.area) / avg);
+          f.oy += 1.2 * m;
+          f.el.style.transform = `translate(${f.ox.toFixed(2)}px,${f.oy.toFixed(2)}px)`;
+        }
+      }, tHold);
+
+      /* ── collapse: pieces nearest the hero cut go first; mass =
+         fragment size: light shards accelerate and spin more, heavy
+         slabs lag and turn slowly ── */
+      frags.forEach((f, i) => {
+        const r1 = roll(i * 3 + seq), r2 = roll(i * 5 + seq + 1), r3 = roll(i * 7 + seq + 2);
+        const mass = Math.max(.6, Math.sqrt(f.area) / avg);
+        f.rel  = t2 + (f.d / dmax) * 170 + r1 * 120;
+        f.vx   = ((f.cx - W * .5) / W) * 120 + (r2 - .5) * 80;
+        f.vy   = 60 + r3 * 190;
+        f.g    = (7400 + r1 * 2200) / mass;
+        f.vr   = (r2 - .5) * 260 / mass;
+        f.vt   = (r3 - .5) * 110 / mass;     /* rotateX tilt speed */
+        f.x = f.ox; f.y = f.oy; f.rot = 0; f.tilt = 0; f.done = false;
+      });
+      setTimeout(() => { try { inkback.remove(); } catch (_) {} }, t2 + 120);
+
+      const t0 = performance.now();
+      let prev = t0, live = frags.length;
+      const gone = () => { grid.remove(); snap.release(); };
+      const step = now => {
+        const dt = Math.min(.034, (now - prev) / 1000); prev = now;
+        const tms = now - t0;
+        for (const f of frags){
+          if (f.done || tms < f.rel) continue;
+          f.vy  += f.g * dt;
+          f.x   += f.vx * dt; f.y += f.vy * dt;
+          f.rot += f.vr * dt; f.tilt += f.vt * dt;
+          f.el.style.transform =
+            `translate(${f.x.toFixed(1)}px,${f.y.toFixed(1)}px) ` +
+            `rotate(${f.rot.toFixed(2)}deg) rotateX(${f.tilt.toFixed(2)}deg)`;
+          if (f.cy + f.y - f.rad > H + 60){ f.done = true; live--; }
+        }
+        if (live > 0 && now - t0 < 3200) requestAnimationFrame(step);
+        else gone();
+      };
+      requestAnimationFrame(step);
+      /* hard safety: the overlay can never outlive the sequence */
+      setTimeout(() => { try { gone(); } catch (_) {} }, 3500);
+    });
   },
 
   pageEntrance(scope){
@@ -883,23 +965,22 @@ const FX = {
             ease:STEP(3), onComplete:() => releaseTransform(marks) });
   },
 
-  /* The ten cells of the stamp card, rippling out across the grid rather
-     than running left to right. stagger()'s grid mode measures each
-     cell's distance from the origin cell and delays by that, so the wave
-     travels diagonally the way a block of stamps would actually ink. The
-     spring gives each cell its own settle instead of a shared curve, so
-     they do not land in lockstep. */
+  /* The ten slots of the card face, landing along the collection route
+     in order. Each slot springs in carrying its own lean (the
+     stylesheet transform would otherwise be masked by the inline
+     animation values), so nothing straightens and snaps at the end. */
   sealGrid(list){
     if (!list || Motion.off) return;
     const cells = list.querySelectorAll('.seal');
     if (!cells.length) return;
-    const cols = 5, rows = Math.ceil(cells.length / cols);
-    aset(cells, { opacity:0, scale:.86 });
+    aset(cells, { opacity:0 });
     animate(cells, { opacity:[0, 1], scale:[.86, 1],
-            delay:stagger(44, { grid:[cols, rows], from:'first', start:120 }),
+            rotate: el => (getComputedStyle(el).getPropertyValue('--lean') || '0deg').trim(),
+            delay:stagger(46, { start:120 }),
             ease:spring({ mass:1, stiffness:94, damping:13, velocity:0 }),
             onComplete(){ cells.forEach(c => { c.style.opacity = '';
-              /* keep --press-tilt custom prop; drop the spring's inline transform */
+              /* keep --press-tilt / --lean custom props; drop the
+                 spring's inline transform */
               c.style.transform = ''; }); } });
   },
 

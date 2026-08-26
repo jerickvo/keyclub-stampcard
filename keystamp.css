@@ -78,7 +78,7 @@ body{
   clip-path:polygon(0 0,100% 100%,0 100%);
   -webkit-mask-image:linear-gradient(35deg,#000 26%,transparent 72%);
   mask-image:linear-gradient(35deg,#000 26%,transparent 72%)}
-.ground__tone{position:absolute;top:0;bottom:0;right:clamp(10px,1.4vw,22px);
+.ground__tone{position:absolute;top:0;bottom:0;right:clamp(14px,1.8vw,28px);
   width:1px;background:var(--tint);opacity:.6}
 /* the world itself carries the cut: one enormous, faint slash form
    crossing the ground diagonally. It sits under every panel, so the
@@ -89,7 +89,41 @@ body{
   background:var(--tint);opacity:.55;
   clip-path:polygon(0 55%,9% 34%,28% 16%,52% 6%,74% 16%,100% 44%,
                     92% 62%,66% 86%,38% 94%,12% 76%)}
+/* the printed sheet has a BLEED: a torn ink strip down the outer edge,
+   under nothing, so the page never ends in bare flat paper */
+.ground__bleed{position:absolute;top:-2%;bottom:-2%;right:0;
+  width:clamp(7px,1vw,15px);background:var(--ink);
+  clip-path:polygon(28% 0,100% 0,100% 100%,40% 100%,12% 88%,52% 74%,
+                    22% 61%,58% 47%,18% 34%,50% 22%,20% 10%)}
+/* and a panel-corner bracket: the framing of a drawn page, not a
+   border around one */
+.ground__corner{position:absolute;right:clamp(24px,3vw,44px);
+  bottom:clamp(18px,2.6vh,34px);
+  width:clamp(44px,5vw,72px);height:clamp(44px,5vw,72px);
+  border-right:4px solid var(--ink);border-bottom:4px solid var(--ink)}
 .ground__vig,.ground__grain{display:none}
+
+/* ── each screen recomposes the same ground language: the slash moves
+   and turns, the tone fields swap weight, and the auth spread (its own
+   full-bleed composition) clears the furniture entirely ── */
+[data-screen="record"] .ground__slash{top:20%;transform:rotate(-23deg)}
+[data-screen="record"] .ground::before{width:30vw;height:76vh}
+[data-screen="scan"] .ground__slash{top:62%;transform:rotate(-7deg);opacity:.4}
+[data-screen="rewards"] .ground__slash{top:58%;transform:rotate(8deg)}
+[data-screen="rewards"] .ground::after{width:44vw;height:42vh}
+[data-screen="profile"] .ground__slash{top:24%;transform:rotate(-15deg)}
+[data-screen="board"] .ground__slash,
+[data-screen="bmeet"] .ground__slash,
+[data-screen="bcheckin"] .ground__slash,
+[data-screen="bmembers"] .ground__slash{top:42%;transform:rotate(14deg)}
+[data-screen="bmeet"] .ground::before{width:52vw;height:44vh}
+[data-screen="auth"] .ground__bleed,
+[data-screen="auth"] .ground__corner,
+[data-screen="auth"] .ground__tone{display:none}
+/* under the mobile tab bar the bracket would collide with the tabs */
+@media(max-width:700px){
+  .ground__corner{bottom:calc(var(--tabs-h,64px) + 14px)}
+}
 .arena{display:none}
 .backdrop{position:absolute;inset:0;background-repeat:repeat;
   background-size:340px;opacity:.07;filter:grayscale(1) contrast(1.6)}
@@ -316,7 +350,10 @@ select.input{padding-right:var(--s4)}
    ends, widest at the impact region, with a razor core of the opposite
    value. The wrapper sits ON the cut line and rotates about its
    centre; the inner layer sweeps from the entry tip. ── */
-.blade2{position:absolute;pointer-events:none;will-change:transform,opacity}
+/* blades ride above the wall overlays: the stroke must stay visible
+   over the surface it is cutting for the whole of its hold */
+.blade2{position:absolute;z-index:10;pointer-events:none;
+  will-change:transform,opacity}
 .blade2__s{position:absolute;inset:0;display:block;
   transform-origin:0 50%;will-change:transform,opacity}
 .blade2 svg{display:block;width:100%;height:100%}
@@ -330,9 +367,9 @@ select.input{padding-right:var(--s4)}
    live page, so there is never a cover and never a black frame — the
    page stays the subject until its own pieces slide away. ── */
 .pcut{position:absolute;inset:0;z-index:6}
-.pcut__piece{position:absolute;inset:0;will-change:transform}
-.pcut__page{position:absolute;pointer-events:none;background:var(--paper)}
-.pcut__page > *{width:100%;height:100%}
+.pcut__piece{position:absolute;inset:0;will-change:transform;
+  background-color:var(--paper);background-repeat:no-repeat;
+  background-position:0 0}
 
 /* the welcome: one INTACT panel layer (the only one that plays), and
    two clipped halves that stay display:none until the blade's contact
@@ -350,25 +387,27 @@ select.input{padding-right:var(--s4)}
   text-transform:uppercase;color:var(--paper);white-space:nowrap;
   letter-spacing:.01em}
 
-/* the broken wall: each piece is a clipped clone of the rendered page
-   over an ink slab. The pieces stay fully opaque for the whole fall —
-   they leave the screen, they do not dissolve — and the ink layer
-   behind them is what shows through the cracks while the wall stands. */
+/* the broken wall: each piece is a clipped window onto the page
+   snapshot over an ink slab. The pieces stay fully opaque for the
+   whole fall — they leave the screen, they do not dissolve — and the
+   ink layer behind them is what shows through the cracks while the
+   wall stands. */
 /* perspective only — no preserve-3d: each piece renders flattened (so
-   its slab and page can never z-fight) while rotateX still reads as a
+   its slab and face can never z-fight) while rotateX still reads as a
    3D tilt through the parent's perspective */
 .waffle{position:absolute;inset:0;z-index:5;perspective:1100px}
 .waffle__ink{position:absolute;inset:0}
 .waffle__piece{position:absolute;inset:0;will-change:transform}
 .waffle__slab{position:absolute;inset:0;z-index:0;transform:translate(6px,8px)}
-.waffle__page{z-index:1}
+/* the fragment face is the rendered snapshot of the live page */
+.waffle__face{position:absolute;inset:0;z-index:1;pointer-events:none;
+  background-color:var(--paper);background-repeat:no-repeat;
+  background-position:0 0}
 /* the ink — behind the wall and on the slab edges — only exists once
-   the wall has visibly cracked; before that the clones ARE the frame,
-   so a slow first rasterization can never flash black */
+   the wall has visibly cracked; before that the snapshot IS the frame,
+   so nothing can ever flash black under it */
 .waffle.is-cracked .waffle__ink,
 .waffle.is-cracked .waffle__slab{background:var(--ink)}
-.waffle__page{position:absolute;pointer-events:none;background:var(--paper)}
-.waffle__page > *{width:100%;height:100%}
 .fxdefs{position:absolute;width:0;height:0}
 
 /* ══════════════════ TABS — the held-device navigation ══════════════
