@@ -205,7 +205,7 @@ const BoardUI = {
 
       <h2 class="h2 bsec">Already held</h2>
       ${past.length
-        ? `<ul class="blist">${past.map(m => this.meetingRow(m)).join('')}</ul>`
+        ? `<ul class="blist blist--held">${past.map(m => this.meetingRow(m)).join('')}</ul>`
         : this.empty('No meetings yet.')}
     </div>`;
   },
@@ -415,6 +415,7 @@ const BoardUI = {
             <p class="proj__shut">Nobody can check in until this is open.</p>
             <button class="proj__ctl proj__ctl--go" type="button" data-bstart="${esc(sel.id)}">Open check-in</button>
           `}
+          <span class="proj__kci" aria-hidden="true">${brandSeal('kci')}</span>
         </div>
 
         ${isOpen ? `
