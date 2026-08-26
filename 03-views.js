@@ -596,6 +596,8 @@ const Views = {
           <h1 class="spread__wm">Keystamp</h1>
         </header>
 
+        <span class="spread__side" aria-hidden="true">Key Club International · Cali-Nev-Ha District</span>
+
         <form class="authp" id="authForm" novalidate>
           <p class="authp__title">${up ? 'Create account' : 'Sign in'}</p>
 
