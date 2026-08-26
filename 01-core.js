@@ -181,6 +181,95 @@ const logoMark = (cls = 'mark__seal') => ASSETS.logo
   ? `<img class="${cls}" src="${ASSETS.logo}" alt="" aria-hidden="true">`
   : LOGO.replace('class="mark__seal"', `class="${cls}"`);
 
+/* ── THE TWO CLUB SEALS — traced from the official artwork ─────────
+   Key Club International seal and the CNH (Cali-Nev-Ha) district
+   seal, reconstructed as vectors from the supplied reference images
+   the same way the swirl and the ten stamps were. Colors are the
+   real brand colors; these are identity, not decoration, so they are
+   never recolored into the ink system. */
+const KCI_SEAL = `
+<svg class="brandseal" viewBox="0 0 200 200" role="img" aria-label="Key Club International">
+  <defs>
+    <path id="kciLeaf" d="M0,-97.5 C 6,-95.5 9.5,-89.5 8,-81.5 C 3,-83.5 -1,-88.5 -1.5,-95.5 Z"/>
+    <path id="kciArcT" d="M 100,100 m -60,0 a 60,60 0 1 1 120,0" fill="none"/>
+    <path id="kciArcB" d="M 100,100 m -66,0 a 66,66 0 1 0 132,0" fill="none"/>
+  </defs>
+  <circle cx="100" cy="100" r="97" fill="#b58f1e"/>
+  <circle cx="100" cy="100" r="96" fill="#c9a227"/>
+  <g fill="#a37f15" transform="translate(100,100)">
+    <g id="kciRope">
+      <use href="#kciLeaf"/><use href="#kciLeaf" transform="rotate(10)"/>
+      <use href="#kciLeaf" transform="rotate(20)"/><use href="#kciLeaf" transform="rotate(30)"/>
+      <use href="#kciLeaf" transform="rotate(40)"/><use href="#kciLeaf" transform="rotate(50)"/>
+      <use href="#kciLeaf" transform="rotate(60)"/><use href="#kciLeaf" transform="rotate(70)"/>
+      <use href="#kciLeaf" transform="rotate(80)"/>
+    </g>
+    <use href="#kciRope" transform="rotate(90)"/>
+    <use href="#kciRope" transform="rotate(180)"/>
+    <use href="#kciRope" transform="rotate(270)"/>
+  </g>
+  <circle cx="100" cy="100" r="80" fill="#fff" stroke="#0b3d78" stroke-width="2.4"/>
+  <circle cx="100" cy="100" r="42" fill="#fff" stroke="#0b3d78" stroke-width="2.2"/>
+  <text font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="21"
+        fill="#0b3d78" letter-spacing="3.5"><textPath href="#kciArcT" startOffset="50%"
+        text-anchor="middle">KEY CLUB</textPath></text>
+  <text font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="16.5"
+        fill="#0b3d78" letter-spacing="1.6"><textPath href="#kciArcB" startOffset="50%"
+        text-anchor="middle">INTERNATIONAL</textPath></text>
+  <circle cx="39.5" cy="100" r="2.6" fill="#0b3d78"/>
+  <circle cx="160.5" cy="100" r="2.6" fill="#0b3d78"/>
+  <path fill="#0b3d78" d="M 75,66 L 92,66 L 92,95 L 117,66 L 134,66 L 107,97
+    L 134,138 L 116,138 L 96,107 L 92,112 L 92,138 L 75,138 Z"/>
+  <g fill="none" stroke="#c9a227">
+    <ellipse cx="101" cy="75.5" rx="9.5" ry="7" stroke-width="4.6"/>
+    <line x1="101" y1="82.5" x2="101" y2="131" stroke-width="4.6"/>
+  </g>
+  <path fill="#c9a227" d="M 101,118 h -8 v 4.6 h 8 Z M 101,126 h -11 v 4.8 h 11 Z"/>
+</svg>`;
+
+const CNH_SEAL = `
+<svg class="brandseal" viewBox="0 0 200 200" role="img" aria-label="Cali-Nev-Ha District">
+  <defs>
+    <path id="cnhArc" d="M 40.2,137.9 A 73,73 0 1 1 159.8,137.9" fill="none"/>
+    <g id="cnhBee">
+      <ellipse cx="0" cy="1.2" rx="2.6" ry="3.6" fill="#111"/>
+      <rect x="-2.6" y="0" width="5.2" height="1.3" fill="#ffd84a"/>
+      <rect x="-2.3" y="2.6" width="4.6" height="1.2" fill="#ffd84a"/>
+      <circle cx="0" cy="-3.2" r="1.9" fill="#111"/>
+      <ellipse cx="-2.9" cy="-1.6" rx="2.6" ry="1.4" fill="#fff" opacity=".92" transform="rotate(-32 -2.9 -1.6)"/>
+      <ellipse cx="2.9" cy="-1.6" rx="2.6" ry="1.4" fill="#fff" opacity=".92" transform="rotate(32 2.9 -1.6)"/>
+    </g>
+  </defs>
+  <circle cx="100" cy="96" r="93" fill="#ffd84a" stroke="#111" stroke-width="3.4"/>
+  <g fill="#111"><circle cx="100.0" cy="12.0" r="1.5"/><circle cx="108.8" cy="12.5" r="1.5"/><circle cx="117.5" cy="13.8" r="1.5"/><circle cx="126.0" cy="16.1" r="1.5"/><circle cx="134.2" cy="19.3" r="1.5"/><circle cx="142.0" cy="23.3" r="1.5"/><circle cx="149.4" cy="28.0" r="1.5"/><circle cx="156.2" cy="33.6" r="1.5"/><circle cx="162.4" cy="39.8" r="1.5"/><circle cx="168.0" cy="46.6" r="1.5"/><circle cx="172.7" cy="54.0" r="1.5"/><circle cx="176.7" cy="61.8" r="1.5"/><circle cx="179.9" cy="70.0" r="1.5"/><circle cx="182.2" cy="78.5" r="1.5"/><circle cx="183.5" cy="87.2" r="1.5"/><circle cx="184.0" cy="96.0" r="1.5"/><circle cx="183.5" cy="104.8" r="1.5"/><circle cx="182.2" cy="113.5" r="1.5"/><circle cx="179.9" cy="122.0" r="1.5"/><circle cx="176.7" cy="130.2" r="1.5"/><circle cx="23.3" cy="130.2" r="1.5"/><circle cx="20.1" cy="122.0" r="1.5"/><circle cx="17.8" cy="113.5" r="1.5"/><circle cx="16.5" cy="104.8" r="1.5"/><circle cx="16.0" cy="96.0" r="1.5"/><circle cx="16.5" cy="87.2" r="1.5"/><circle cx="17.8" cy="78.5" r="1.5"/><circle cx="20.1" cy="70.0" r="1.5"/><circle cx="23.3" cy="61.8" r="1.5"/><circle cx="27.3" cy="54.0" r="1.5"/><circle cx="32.0" cy="46.6" r="1.5"/><circle cx="37.6" cy="39.8" r="1.5"/><circle cx="43.8" cy="33.6" r="1.5"/><circle cx="50.6" cy="28.0" r="1.5"/><circle cx="58.0" cy="23.3" r="1.5"/><circle cx="65.8" cy="19.3" r="1.5"/><circle cx="74.0" cy="16.1" r="1.5"/><circle cx="82.5" cy="13.8" r="1.5"/><circle cx="91.2" cy="12.5" r="1.5"/></g>
+  <circle cx="100" cy="96" r="62" fill="none" stroke="#fff" stroke-width="3.4"/>
+  <circle cx="100" cy="96" r="60" fill="#111"/>
+  <g fill="#ffd84a">
+    <path d="M 64,58 L 89,58 L 89,86 L 108,114 L 108,125 L 97,125
+             C 87,118 77,107 70,94 C 65,84 63,72 64,58 Z"/>
+    <path d="M 94,58 L 123,58 L 123,86 L 117,113 L 112,113 L 94,82 Z"/>
+    <circle cx="58" cy="112" r="2.1"/><circle cx="63" cy="117" r="1.6"/>
+    <circle cx="68" cy="121" r="1.9"/><circle cx="74" cy="125" r="1.5"/>
+    <circle cx="80" cy="128" r="2.3"/>
+  </g>
+  <text font-family="'Arial Black','Arial Bold',Arial,sans-serif" font-weight="900" font-size="8.8"
+        fill="#111" letter-spacing=".85"><textPath href="#cnhArc" startOffset="50%"
+        text-anchor="middle">KEY CLUB INTERNATIONAL &#8226; CALI-NEV-HA DISTRICT</textPath></text>
+  <use href="#cnhBee" transform="translate(31,131) rotate(-38)"/>
+  <use href="#cnhBee" transform="translate(169,131) rotate(38)"/>
+  <use href="#cnhBee" transform="translate(100,182)"/>
+  <path d="M 12,140 L 30,136 L 30,158 L 12,162 Z" fill="#e7e4de" stroke="#111" stroke-width="2.4"/>
+  <path d="M 188,140 L 170,136 L 170,158 L 188,162 Z" fill="#e7e4de" stroke="#111" stroke-width="2.4"/>
+  <path d="M 26,135 C 60,142 140,142 174,135 L 174,157 C 140,164 60,164 26,157 Z"
+        fill="#fff" stroke="#111" stroke-width="2.6"/>
+  <text font-family="'Arial Black','Arial Bold',Arial,sans-serif" font-weight="900" font-size="9.6"
+        fill="#111" text-anchor="middle" x="100" y="153">&#8220; CARING - OUR WAY OF LIFE &#8221;</text>
+</svg>`;
+
+const brandSeal = (which, cls = '') => (which === 'cnh' ? CNH_SEAL : KCI_SEAL)
+  .replace('class="brandseal"', `class="brandseal ${cls}"`);
+
+
 /* THE KEYWAY PLATE. One path, evenodd: the plate, then the bore, the
    slot and the ward knocked out of it. Drawn as a filled silhouette
    rather than strokes so it holds together at a favicon's size and
@@ -466,6 +555,8 @@ const Store = {
      part is to scan, submit, and re-read what the server decided. */
   async claimReward(id){
     if (!this.user) throw new Error('Not signed in.');
+    const r = this.rewards.find(x => x.id === id);
+    if (r && this.totalStamps() < r.required) throw new Error('Not earned yet.');
     await Backend.claimReward(this.user.id, id);
     await this.hydrate();
     return this.rewards.find(x => x.id === id) || null;

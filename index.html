@@ -149,9 +149,7 @@ body{
 
 .ground{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
   background:var(--paper)}
-.ground__tone{position:absolute;inset:0;opacity:.05;
-  background-image:radial-gradient(var(--ink) 1px,transparent 1px);
-  background-size:6px 6px}
+.ground__tone{display:none}
 .ground__vig,.ground__grain{display:none}
 .arena{display:none}
 .backdrop{position:absolute;inset:0;background-repeat:repeat;
@@ -201,9 +199,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .panel{position:relative;z-index:1;background:var(--paper);
   border:var(--rule) solid var(--ink);border-radius:0;height:100%}
 .panel > *:not([data-layer]){position:relative;z-index:1}
-.panel::after{content:"";position:absolute;inset:0;pointer-events:none;
-  z-index:0;background-image:radial-gradient(var(--ink) 1px,transparent 1px);
-  background-size:5px 5px;opacity:.06}
+
 
 /* ── CASE, AND WHY THERE IS ALMOST NO text-transform HERE ──────────
    CC Wild Words is a unicase comic-lettering face: its lowercase and
@@ -376,6 +372,22 @@ select.input{padding-right:var(--s4)}
   font-family:var(--f-display);font-size:clamp(48px,13vw,150px);
   text-transform:uppercase;color:var(--ink)}
 .wellflare{display:none}
+
+/* the welcome, in two halves along the blade's line */
+.wcut{position:absolute;inset:0;z-index:4}
+.wcut__h{position:absolute;inset:0;display:grid;place-items:center}
+.wcut__h span{font-family:var(--f-display);
+  font-size:clamp(52px,14vw,160px);line-height:1;padding-bottom:.2em;
+  text-transform:uppercase;color:var(--paper);white-space:nowrap}
+.wcut__h--a{clip-path:polygon(0 0,100% 0,100% 42%,0 58%)}
+.wcut__h--b{clip-path:polygon(0 58%,100% 42%,100% 100%,0 100%)}
+
+/* the dismantled page: a grid of loose tiles */
+.waffle{position:absolute;inset:0;z-index:5;display:grid;
+  grid-template-columns:repeat(var(--wc,6),1fr);
+  grid-template-rows:repeat(var(--wr,4),1fr)}
+.waffle__c{background:var(--paper);border:1px solid var(--ink);box-sizing:border-box}
+.waffle__c--ink{background:var(--ink)}
 .fxdefs{position:absolute;width:0;height:0}
 
 /* ══════════════════ TABS — the held-device navigation ══════════════
@@ -411,9 +423,6 @@ select.input{padding-right:var(--s4)}
 .boot__seal{position:absolute;width:min(44vmin,250px);height:min(44vmin,250px);opacity:0}
 .boot__seal circle,.boot__seal polygon,.boot__seal path,.boot__seal line{
   fill:none;stroke:var(--ink);stroke-width:1;vector-effect:non-scaling-stroke}
-.boot__mark{position:relative;opacity:0}
-.boot__mark svg,.boot__mark img{width:94px;height:94px;object-fit:contain}
-.boot__mark path{fill:var(--ink);stroke:none}
 .boot__title{position:absolute;inset:0;display:grid;place-items:center;
   opacity:0;pointer-events:none}
 .boot__half{grid-area:1/1;font-family:var(--f-display);
@@ -452,7 +461,6 @@ select.input{padding-right:var(--s4)}
   text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
 #barBrand svg{width:26px;height:26px}
 #barBrand svg *{fill:var(--ink)!important;stroke:none!important}
-.boot__mark svg *{fill:var(--ink)!important;stroke:none!important}
 
 .lines line,.lines path,.slash path,.slash rect{stroke:var(--ink);fill:var(--ink)}          /* it sits under the number at this width */
 /* Callouts clear the tab bar AND the home indicator, so a message never
@@ -590,7 +598,6 @@ main#view{padding-top:var(--space-tier);
 .verdict__field,.qrpanel__code svg{width:100%;height:100%}
 .btn svg,.motion-btn svg{width:16px;height:16px}
 .rail__nav button svg,.tabs button svg{width:18px;height:18px}
-.boot__mark svg{width:88px;height:88px}
 .verdict__seal{width:min(30vmin,170px);height:min(30vmin,170px)}
 .boot__seal{width:min(40vmin,230px);height:min(40vmin,230px)}
 
@@ -603,10 +610,50 @@ main#view{padding-top:var(--space-tier);
 :root{
   --tone-dot-a:radial-gradient(circle at 50% 50%, var(--ink) 0 1.05px, transparent 1.15px);
   --tone-cell-a:5px 5px;
+  --gut:clamp(10px,1.6vw,18px);         /* the panel gutter            */
+  --pnl-off:clamp(5px,.9vw,9px);        /* printed plate offset        */
   }
+
+/* ══ MANGA PANEL SYSTEM ═════════════════════════════════════════════
+   One vocabulary, many compositions. Everything is :where() so a
+   page's own rules always win without fighting specificity.
+
+   .pnl        framed panel on paper
+   .pnl--ink   solid ink panel (spotted black)
+   .pnl--tone  screentone fill — dots as a deliberate field
+   .pnl--hair  hairline frame (a quiet panel)
+   .pnl--plate hard ink offset: the panel sits ON the page
+   .pnl--flush frameless region that still behaves like a panel
+   .grid-gtr   a gutter stack; data-split cuts it 64 / 73 / 55
+   .lap-t      pulls a panel up over the one before it
+   .tone       a placed screentone field (position it per page)
+   ═════════════════════════════════════════════════════════════════ */
+:where(.pnl){position:relative;border:var(--edge,3px) solid var(--ink);
+  background:var(--paper);min-width:0}
+:where(.pnl--ink){background:var(--ink);color:var(--paper)}
+:where(.pnl--tone){background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
+:where(.pnl--hair){border-width:var(--rule-hair,1px)}
+:where(.pnl--plate){box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
+:where(.pnl--flush){border:0}
+
+:where(.grid-gtr){display:grid;gap:var(--gut);min-width:0}
+@media(min-width:900px){
+  :where(.grid-gtr[data-split="64"]){grid-template-columns:6fr 4fr}
+  :where(.grid-gtr[data-split="73"]){grid-template-columns:7fr 3fr}
+  :where(.grid-gtr[data-split="55"]){grid-template-columns:1fr 1fr}
+}
+:where(.lap-t){margin-top:calc(var(--lap,28px) * -1);z-index:2}
 
 .tone{position:absolute;pointer-events:none;z-index:0;
   background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
+.tone--fine{background-image:radial-gradient(circle at 50% 50%, var(--ink) 0 .8px, transparent .9px);
+  background-size:4px 4px}
+.tone--coarse{background-image:radial-gradient(circle at 50% 50%, var(--ink) 0 1.7px, transparent 1.85px);
+  background-size:8px 8px}
+.tone--fade-b{-webkit-mask-image:linear-gradient(#000 40%,transparent);
+  mask-image:linear-gradient(#000 40%,transparent)}
+.tone--fade-r{-webkit-mask-image:linear-gradient(90deg,#000 40%,transparent);
+  mask-image:linear-gradient(90deg,#000 40%,transparent)}
 
 [data-rank="lead"]{--ink-w:4.4}
 [data-rank="mid"]{--ink-w:2.8}
@@ -645,7 +692,7 @@ main#view{padding-top:var(--space-tier);
 [data-screen="auth"] .rail__nav,
 [data-screen="auth"] #railInd,
 [data-screen="auth"] .tabs{display:none}
-[data-screen="auth"] main#view{padding-bottom:var(--space-block)}
+[data-screen="auth"] main#view{padding:0 0 var(--space-block)}
 
 .bpanel{position:relative;padding:0}
 .bpanel--wait{opacity:.7}
@@ -826,14 +873,15 @@ main#view{padding-top:var(--space-tier);
    boxes on the page; they are divisions of the sheet like everything
    else now */
 
-.empty-reg{position:relative;padding:clamp(28px,5vw,64px) 0 clamp(24px,4vw,52px)}
-.empty-reg::before{content:"";position:absolute;left:0;right:0;top:0;
-  height:var(--edge-thin);background:var(--tone)}
-.empty{display:grid;gap:clamp(16px,3vw,34px);align-items:center;
+.empty-reg{position:relative;padding:clamp(22px,4vw,48px) 0 clamp(24px,4vw,52px)}
+.empty{position:relative;display:grid;gap:clamp(18px,3.4vw,40px);align-items:center;
   grid-template-columns:auto minmax(0,1fr);
-  border:0;background:none;padding:0;min-height:0}
-.empty__seal{position:relative;flex:none;
-  width:clamp(74px,12vw,132px);aspect-ratio:1}
+  border:var(--edge-frame) solid var(--ink);background:var(--paper);
+  padding:clamp(22px,4vw,46px);max-width:760px;min-height:0;overflow:hidden;
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
+.empty__tone{right:0;top:0;width:34%;height:46%}
+.empty__seal{position:relative;flex:none;z-index:1;
+  width:clamp(92px,15vw,168px);aspect-ratio:1}
 .empty__seal svg{width:100%;height:100%;display:block;opacity:.5}
 
 .empty__seal svg circle,.empty__seal svg polygon,
@@ -842,7 +890,7 @@ main#view{padding-top:var(--space-tier);
 /* the void: the seal is present, the mark inside it is not */
 .empty__void{position:absolute;left:50%;top:50%;width:56%;height:var(--edge-thin);
   background:var(--tone);transform:translate(-50%,-50%) rotate(-32deg)}
-.empty__body{min-width:0}
+.empty__body{min-width:0;position:relative;z-index:1}
 .empty__title{font-family:var(--f-head);text-transform:uppercase;
   font-size:clamp(17px,2.4vw,30px);line-height:1.02;letter-spacing:-.01em;
   margin-top:clamp(7px,1vw,11px);color:var(--ink)}
@@ -1050,9 +1098,7 @@ select.input:focus-visible{outline:none}
   .verdict .verdict__seal{margin-right:min(4vw,40px)}
 }
 
-.ahead{position:relative;padding-top:clamp(14px,2vw,22px);
-  margin-top:clamp(26px,4vw,56px)}
-.ahead .h2{color:var(--ink)}
+
 
 
 </style>
@@ -1115,15 +1161,12 @@ select.input:focus-visible{outline:none}
   }
 
 /* ══ THE PAGE ══════════════════════════════════════════════════════
-   Paper is not flat. Real pulp has tooth, and a printed page has the
-   faint regular grid of the halftone screen under the art. Two very
-   low-contrast layers do that here: a fine dot screen and a warm
-   vignette toward the gutter. Both are cheap and neither moves. */
+   Clean paper. Screentone is composition, not wallpaper: it appears
+   only where a .tone field or a tone panel places it deliberately,
+   so the dots always sit next to clean areas instead of under
+   everything. */
 body{
-
   background-color:var(--paper);
-  background-image:radial-gradient(var(--tone-dot) .5px, transparent .6px);
-  background-size:var(--tone-page-size) var(--tone-page-size);
   color:var(--ink);
 }
 
@@ -1208,7 +1251,10 @@ body{
 /* milestone bars: fill is a spotted black on a line track */
 .bmile__bar{border:var(--edge-hair) solid var(--ink);background:var(--paper);height:10px}
 .bmile__fill{background:var(--ink)}
-.bmile__no{color:var(--ink)}
+.bmile__no{color:var(--ink);font-family:var(--f-head);
+  font-size:clamp(26px,4vw,44px);line-height:1}
+.brow--member .brow__mid b{font-family:var(--f-head);font-weight:400;
+  font-size:var(--t-sub);letter-spacing:.01em}
 
 /* rows read as a register: hairline rules, no boxes */
 .brow{border-bottom:var(--edge-hair) solid var(--tone)}
@@ -1225,7 +1271,11 @@ body{
 .brow__del:hover,.brow__del:focus-visible{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
 /* the board form is a panel of the same book */
-.bform{border-bottom:var(--edge) solid var(--ink);padding-bottom:var(--s5)}
+.bform{border:var(--edge-panel) solid var(--ink);background:var(--paper);
+  padding:var(--s5);box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
+/* the archive: held meetings hang off a heavy rule */
+.blist--held{border-left:var(--edge) solid var(--ink);
+  padding-left:clamp(12px,2vw,22px)}
 .bsec{border-bottom:var(--edge-thin) solid var(--ink);color:var(--ink)}
 
 .panel{box-shadow:none}
@@ -1338,11 +1388,8 @@ main#view:focus,main#view:focus-visible{outline:none}
 .view--home{display:flex;flex-direction:column;gap:var(--s4)}
 
 .card{position:relative;border:var(--edge-card) solid var(--ink);
-  background:var(--paper);width:100%}
-.card::after{content:"";position:absolute;inset:0;z-index:-1;
-  transform:translate(clamp(10px,2.4vw,20px),clamp(10px,2.4vw,20px));
-  background-image:radial-gradient(var(--ink) 1.25px,transparent 1.35px);
-  background-size:6px 6px}
+  background:var(--paper);width:100%;
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
 
 /* The title row of a printed card: the count at full display scale, a
    rule under it, and the two readings sharing the line below. */
@@ -1364,9 +1411,7 @@ main#view:focus,main#view:focus-visible{outline:none}
   list-style:none;margin:0;padding:0}
 
 .seal{position:relative;aspect-ratio:1;display:grid;place-items:center;
-  background:var(--paper);min-width:0;
-  background-image:radial-gradient(var(--ink) .9px,transparent 1px);
-  background-size:7px 7px}
+  background:var(--paper);min-width:0}
 .seals .seal svg{width:84%;height:84%;display:block}
 .seal__mark path{fill:var(--tone);stroke:none}
 .seal__no{position:absolute;right:5%;bottom:3%;
@@ -1391,13 +1436,13 @@ main#view:focus,main#view:focus-visible{outline:none}
    emit it today. */
 .seal[data-seal="locked"] .seal__mark{opacity:.4}
 
-.act{display:flex;max-width:760px}
+.act{display:flex}
 /* font-family is not optional here. A <button> does not inherit it, so
    without this line the button and everything inside it renders in the
    browser's default Arial — which is exactly what was happening. */
 .act__btn{position:relative;overflow:hidden;isolation:isolate;
   display:grid;align-content:end;gap:4px;
-  width:100%;min-height:clamp(138px,32vw,190px);
+  width:100%;min-height:clamp(96px,18vw,140px);
   padding:var(--s5);border:var(--edge-panel) solid var(--ink);
   background:var(--paper);color:var(--ink);text-align:left;cursor:pointer;
   font-family:var(--f-body)}
@@ -1409,31 +1454,34 @@ main#view:focus,main#view:focus-visible{outline:none}
 
 .view--home{display:flex;flex-direction:column;gap:var(--s4)}
 .deck{display:grid;gap:var(--s4)}
+.deck__side{display:grid;gap:var(--s4);align-content:start;min-width:0}
 
-/* the ink panel runs off the sheet on both layouts; on a phone it does
-   it under the card, on a wide sheet beside it */
-.deck > .act{margin-right:calc(var(--gutter) * -1)}
-.deck > .act .act__btn{border-right:0}
+/* the live ink panel still runs off the sheet */
+.deck .act--live{margin-right:calc(var(--gutter) * -1)}
+.deck .act--live .act__btn{border-right:0}
 
 @media(min-width:1024px){
   .deck{grid-template-columns:minmax(0,62fr) minmax(0,38fr);
-    gap:clamp(20px,2.6vw,40px);align-items:stretch}
-  .deck > .card,.deck > .act{max-width:none}
-  .deck > .act .act__btn{min-height:0}
+    gap:clamp(20px,2.6vw,40px);align-items:start}
+  .deck > .card{max-width:none}
+  /* the card presses up over the title rule: the object sits ON the page */
+  .deck{margin-top:calc(var(--s3) * -1)}
 }
 
-.ahead{display:flex;flex-direction:column}
-.ahead__mark{margin:0 0 var(--s2);padding-bottom:var(--s2);
-  border-bottom:var(--edge-panel) solid var(--ink);
+.ahead{display:flex;flex-direction:column;
+  border:var(--edge-panel) solid var(--ink)}
+.ahead__mark{margin:0;padding:var(--s2) var(--s4);
+  background:var(--ink);color:var(--paper);
   font-family:var(--f-head);text-transform:uppercase;
-  font-size:clamp(19px,3.6vw,26px);line-height:1}
-.ahead__list{list-style:none;margin:0;padding:0;
+  font-size:clamp(17px,3vw,22px);line-height:1.2}
+.ahead__list{list-style:none;margin:0;padding:0 var(--s4);
   display:flex;flex-direction:column}
 .ahead__row{display:grid;
   grid-template-columns:auto minmax(0,1fr) auto;
   align-items:baseline;gap:var(--s3);
   padding:clamp(9px,1.4vw,13px) 0;
   border-bottom:var(--edge-rule) solid var(--tint)}
+.ahead__row:last-child{border-bottom:0}
 .ahead__no{font-family:var(--f-head);line-height:1;
   font-size:clamp(21px,4.4vw,30px);color:var(--ink-2);
   min-width:2.4ch;letter-spacing:-.02em}
@@ -1479,20 +1527,25 @@ button,input,select,textarea{font-family:inherit}
   min-height:100dvh}
 
 .spread__field{position:absolute;
-  left:calc(var(--gutter) * -1);right:calc(var(--gutter) * -1);
-  top:calc(var(--gut-tier) * -1);height:var(--band);
+  left:0;right:0;
+  top:0;height:var(--band);
   background:var(--ink);z-index:0}
-/* Cropped into the field's lower-left corner, not centred in it. Centred,
-   it filled the band and printed straight through the masthead. */
-.spread__seal{position:absolute;
-  left:-34%;top:auto;bottom:-32%;width:min(86vw,430px);aspect-ratio:1;height:auto;
+/* Cropped into the field's lower-left corner, not centred in it.
+   Sized from the band, not the viewport: the swirl's visible height is
+   at most 58% of the field, so it cannot climb into the masthead no
+   matter how narrow the page gets. */
+.spread__seal{position:absolute;--swirl:min(86vw,430px,calc(var(--band) * .95));
+  left:calc(var(--swirl) * -.3);top:auto;bottom:calc(var(--swirl) * -.42);
+  width:var(--swirl);aspect-ratio:1;height:auto;
   fill:var(--paper);opacity:1}
 
 .spread__head{grid-row:1;position:relative;z-index:2;
   padding:clamp(26px,7vw,44px) var(--gutter) 0;
   color:var(--paper);align-self:start}
-.spread__sub{margin:0 0 var(--s2);font-size:var(--t-caption);
-  letter-spacing:.16em;color:var(--tint)}
+.spread__sub{margin:0 0 var(--s3);font-size:var(--t-caption);
+  letter-spacing:.16em;color:var(--tint);
+  display:flex;align-items:center;gap:clamp(8px,1.4vw,14px)}
+.spread__kci{width:clamp(36px,5vw,56px);height:auto;flex:none;display:block}
 .spread__wm{font-family:var(--f-display);text-transform:uppercase;
   font-size:clamp(52px,15vw,124px);line-height:.9;letter-spacing:.01em;
   margin:0;padding-bottom:.06em}
@@ -1504,7 +1557,8 @@ button,input,select,textarea{font-family:inherit}
   padding:clamp(20px,5vw,32px);
   display:flex;flex-direction:column;gap:var(--s4);
   max-width:460px;width:auto;box-sizing:border-box;
-  box-shadow:var(--s3) var(--s3) 0 var(--tone)}
+  box-shadow:0 0 0 var(--edge-panel) var(--paper),
+             var(--pnl-off) var(--pnl-off) 0 var(--edge-panel) var(--ink)}
 .authp__title{font-family:var(--f-head);text-transform:none;
   font-size:var(--t-head);line-height:1;margin:0}
 .authp__f{display:flex;flex-direction:column;gap:5px;min-width:0}
@@ -1547,8 +1601,9 @@ button,input,select,textarea{font-family:inherit}
     padding-block:clamp(40px,7vh,96px)}
   .spread__head{grid-row:1}
   .spread__field{right:auto;bottom:0;height:auto;
-    width:calc(54% + var(--gutter))}
-  .spread__seal{left:-30%;top:auto;bottom:-34%;width:min(64vw,720px)}
+    width:54%}
+  .spread__seal{--swirl:min(64vw,720px);
+    left:calc(var(--swirl) * -.3);bottom:calc(var(--swirl) * -.34)}
 
   .spread__head{grid-column:1;padding:0 var(--gutter);align-self:start}
   /* sized to its own column rather than to the viewport, so eight caps
@@ -1726,7 +1781,7 @@ button,input,select,textarea{font-family:inherit}
   isolation:isolate;overflow:hidden;
   width:100%;aspect-ratio:1;max-height:62vh;
   border:var(--edge-frame) solid var(--ink);background:var(--tint);
-  box-shadow:clamp(8px,1.6vw,14px) clamp(8px,1.6vw,14px) 0 var(--tone)}
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
 /* a code is square, so on a phone the frame is square: it fills the
    sheet instead of leaving a letterbox with half a screen under it. */
 @media(min-width:600px){ .viewer{aspect-ratio:4/3} }
@@ -1761,9 +1816,11 @@ button,input,select,textarea{font-family:inherit}
 .viewer__status{align-self:end;justify-self:center;z-index:3;
   padding:0 var(--s3) var(--s3);max-width:100%}
 .viewer__msg{display:inline-block;
-  padding:6px var(--s3);background:var(--paper);color:var(--ink);
-  font-size:var(--t-caption);line-height:1.25;text-align:center}
-.viewer__msg--hot{background:var(--ink);color:var(--paper)}
+  padding:7px var(--s4);background:var(--paper);color:var(--ink);
+  border:var(--edge-panel) solid var(--ink);
+  font-family:var(--f-head);font-size:clamp(14px,2.4vw,19px);
+  line-height:1.25;text-align:center;text-transform:uppercase}
+.viewer__msg--hot{background:var(--ink);color:var(--paper);border-color:var(--paper)}
 .viewer__msg--soft{color:var(--ink-2)}
 
 /* a good read floods the frame for one beat */
@@ -1785,8 +1842,10 @@ button,input,select,textarea{font-family:inherit}
 .stall__note{margin:0;max-width:46ch;font-size:var(--t-caption);
   line-height:1.45;color:var(--ink-2)}
 
-.manual{display:flex;flex-direction:column;gap:var(--s2);
-  border-top:var(--edge-panel) solid var(--ink);padding-top:var(--s3)}
+.manual{display:flex;flex-direction:column;gap:var(--s3);
+  border:var(--edge-panel) solid var(--ink);background:var(--paper);
+  padding:var(--s4)}
+.manual > .bubble:empty{display:none}
 .manual__lab{font-size:var(--t-caption);color:var(--ink-2);line-height:1.35}
 .manual__f{display:flex;gap:var(--s2);flex-wrap:wrap;align-items:stretch}
 .manual__in{flex:999 1 min(100%,14ch);min-width:0;
@@ -1811,10 +1870,10 @@ button,input,select,textarea{font-family:inherit}
     gap:var(--s5) var(--s5);align-content:start}
   .view--scan > .rechead{grid-area:head}
   .view--scan > .standing{grid-area:standing}
-  .view--scan > .viewer{grid-area:viewer;max-height:none}
+  .view--scan > .viewer{grid-area:viewer;max-height:none;
+    margin-left:calc(var(--gutter) * -1);border-left:0}
 
-  .view--scan > .manual{grid-area:manual;align-self:stretch;
-    justify-content:flex-end;border-top:0;padding-top:0}
+  .view--scan > .manual{grid-area:manual;align-self:end}
 }
 
 .view--rewards{display:flex;flex-direction:column;gap:var(--s5)}
@@ -1827,37 +1886,29 @@ button,input,select,textarea{font-family:inherit}
 .ladder__of{margin:0;font-size:var(--t-caption);color:var(--ink-2);
   line-height:1.2}
 
-.ladder__track{position:relative;width:100%;
-  margin-top:clamp(30px,5vw,46px);
-  height:clamp(38px,6vw,76px);
-  background:var(--tint);
-  background-image:radial-gradient(var(--ink) 1.25px,transparent 1.35px);
-  background-size:6px 6px;
-  border:var(--edge-panel) solid var(--ink)}
-.ladder__fill{position:absolute;inset:0 auto 0 0;width:var(--w,0%);
+/* the climb: a vertical rail whose ink is the count, with the three
+   plates hung off it at their rungs */
+.climb{display:grid;--rgap:clamp(16px,2.6vw,30px);
+  grid-template-columns:clamp(22px,3.4vw,40px) minmax(0,1fr);
+  column-gap:var(--rgap);margin-top:var(--s3)}
+.climb__rail{position:relative;border:var(--edge-panel) solid var(--ink);
+  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
+.climb__fill{position:absolute;left:0;right:0;top:0;height:var(--h,0%);
   background:var(--ink)}
+.climb__plates{display:flex;flex-direction:column;
+  gap:clamp(20px,3.4vw,40px);padding-block:clamp(4px,1vw,12px);min-width:0}
 
-.ladder__rung{position:absolute;top:0;bottom:0;left:var(--x,0%);
-  width:var(--edge-panel);background:var(--ink)}
-.ladder__rung b{position:absolute;left:50%;bottom:calc(100% + 6px);
-  transform:translateX(-50%);
-  font-family:var(--f-head);font-weight:inherit;line-height:1;
-  font-size:var(--t-sub);color:var(--ink-2)}
-/* a rung already behind you is drawn on the filled part of the track,
-   so it inverts to hold against the ink */
-.ladder__rung--past{background:var(--paper)}
-.ladder__rung--past b{color:var(--ink)}
-
-.tiers{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr)}
-@media(min-width:760px){
-  .tiers{grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:clamp(14px,2vw,26px)}
-}
-
-.tier{display:flex;flex-direction:column;align-items:flex-start;
+.tier{position:relative;display:flex;flex-direction:column;align-items:flex-start;
   gap:var(--s2);min-width:0;
   padding:clamp(16px,2.4vw,26px);
   border:var(--edge-panel) solid var(--ink);background:var(--paper)}
+/* the hook: every plate hangs off the rail. ::after, because sealed
+   plates spend ::before on their tone veil. */
+.tier::after{content:"";position:absolute;right:100%;top:clamp(22px,3.4vw,40px);
+  width:var(--rgap,20px);height:var(--edge-panel);background:var(--ink)}
+/* uneven hanging: the middle plate steps out */
+.climb__plates .tier:nth-child(2){margin-left:clamp(22px,5vw,72px)}
+.climb__plates .tier:nth-child(2)::after{width:calc(var(--rgap,20px) + clamp(22px,5vw,72px))}
 .tier__at{font-family:var(--f-head);line-height:.82;
   font-size:clamp(46px,8.5vw,86px);color:var(--ink)}
 .tier__body{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -1869,7 +1920,7 @@ button,input,select,textarea{font-family:inherit}
 .tier__say{margin-top:auto;padding-top:var(--s3);
   font-size:var(--t-caption);color:var(--ink-2)}
 
-.tier--sealed{position:relative;isolation:isolate}
+.tier--sealed{position:relative;isolation:isolate;max-width:660px}
 .tier--sealed::before{content:"";position:absolute;inset:0;z-index:-1;
   background-image:radial-gradient(var(--ink) .9px,transparent 1px);
   background-size:7px 7px;
@@ -1881,7 +1932,9 @@ button,input,select,textarea{font-family:inherit}
    on the page carrying a verb. */
 .tier--ready{background:var(--ink);color:var(--paper);
   border-color:var(--ink);
-  box-shadow:var(--s2) var(--s2) 0 var(--tone)}
+  margin-right:calc(var(--gutter) * -1);border-right:0;
+  padding-block:clamp(22px,3.4vw,38px)}
+.tier--ready .tier__at{font-size:clamp(58px,10vw,110px)}
 .tier--ready .tier__at{color:var(--paper)}
 .tier--ready .tier__desc{color:var(--tint)}
 .tier__claim{margin-top:auto;padding:10px var(--s4);cursor:pointer;
@@ -1895,7 +1948,15 @@ button,input,select,textarea{font-family:inherit}
 
 /* TAKEN — ink, but spent: the figure holds and everything else recedes,
    so a claimed plate reads as history rather than as a second offer. */
-.tier--claimed{background:var(--ink);color:var(--tint);border-color:var(--ink)}
+.tier--claimed{background:var(--ink);color:var(--tint);border-color:var(--ink);
+  max-width:700px}
+/* the cancellation: a punched CLAIMED across the plate */
+.tier__punch{position:absolute;right:clamp(10px,3vw,34px);top:50%;
+  transform:translateY(-50%) rotate(-12deg);
+  font-family:var(--f-head);text-transform:uppercase;line-height:1;
+  font-size:clamp(24px,4.6vw,44px);color:var(--paper);
+  border:var(--edge-frame) solid var(--paper);padding:.18em .45em;
+  pointer-events:none}
 .tier--claimed .tier__at{color:var(--paper)}
 .tier--claimed .tier__name{color:var(--tint)}
 .tier--claimed .tier__desc{color:var(--ink-2)}
@@ -1909,29 +1970,34 @@ button,input,select,textarea{font-family:inherit}
 
 .sheet{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr);
   align-items:start}
-@media(min-width:900px){
-  .sheet{grid-template-columns:minmax(0,34fr) minmax(0,66fr);
-    gap:clamp(20px,2.8vw,44px);align-items:stretch}
-  /* the name sits at the foot of the plate. Centred in seven hundred
-     pixels of ink it read as a block that had not been composed. */
-  .sheet > .who{align-content:end}
-  /* and it stops bleeding left: past this width there is a nav rail on
-     that side, and a panel sliding under navigation is not a bleed. */
-  .who{margin-left:0;padding-left:clamp(18px,3vw,32px)}
-}
-
-.who{display:grid;align-content:start;gap:3px;
+.who{display:grid;align-content:space-between;gap:var(--s4);
   background:var(--ink);color:var(--paper);
   padding:clamp(18px,3vw,32px);
   margin-left:calc(var(--gutter) * -1);
-  padding-left:max(var(--gutter),clamp(18px,3vw,32px))}
-.who__name{margin:0;font-family:var(--f-display);text-transform:uppercase;
-  line-height:.92;font-size:clamp(28px,5.4vw,56px);color:var(--paper);
-  overflow-wrap:anywhere;padding-bottom:.06em}
+  padding-left:max(var(--gutter),clamp(18px,3vw,32px));
+  min-height:clamp(200px,30vw,320px)}
+/* the district seal: the member's club identity, on their sheet */
+.who__seal{justify-self:end;width:clamp(76px,11vw,132px)}
+.who__seal .brandseal{width:100%;height:auto;display:block}
+.who__id{display:grid;gap:3px}
+/* the name is set in the header face — the display face's thin strokes
+   were unreadable at this size on ink */
+.who__name{margin:0;font-family:var(--f-head);text-transform:uppercase;
+  line-height:.95;font-size:clamp(30px,5.4vw,60px);color:var(--paper);
+  overflow-wrap:anywhere;padding-bottom:.04em}
 .who__hand{margin:0;font-size:var(--t-caption);color:var(--tint);
   line-height:1.3;overflow-wrap:anywhere;letter-spacing:.1em}
 
-.standing-band{display:grid;gap:2px;
+@media(min-width:900px){
+  .sheet{grid-template-columns:minmax(0,34fr) minmax(0,66fr);
+    gap:clamp(20px,2.8vw,44px);align-items:stretch}
+  /* past this width the nav rail owns the left edge: the plate keeps a
+     real gutter from it instead of sliding underneath */
+  .who{margin-left:0;padding-left:clamp(18px,3vw,32px)}
+}
+
+.standing-band{border-top:var(--edge) solid var(--ink);
+  padding-top:clamp(12px,1.8vw,20px);display:grid;gap:2px;
   grid-template-columns:auto minmax(0,1fr);
   grid-template-areas:"fig of" "rest rest";
   align-items:end;
@@ -2007,13 +2073,12 @@ button,input,select,textarea{font-family:inherit}
     padding-block:clamp(24px,4vw,44px)}
   .bnow__go{align-self:center;margin-top:0}
 }
-.bnow--live{background:var(--ink);color:var(--paper);border-color:var(--ink);
-  box-shadow:var(--s2) var(--s2) 0 var(--tone-field)}
+.bnow--live{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .bnow__lab{margin:0;font-size:var(--t-caption);color:var(--ink-2)}
 .bnow--live .bnow__lab{color:var(--tint)}
 .bnow__no{margin:0;padding-bottom:.08em;
-  font-family:var(--f-display);text-transform:uppercase;line-height:.9;
-  font-size:clamp(38px,9vw,76px)}
+  font-family:var(--f-head);text-transform:uppercase;line-height:.9;
+  font-size:clamp(44px,10vw,96px)}
 .bnow__at{margin:0;font-size:var(--t-body);line-height:1.3}
 .bnow--live .bnow__at{color:var(--tint)}
 .bnow__state{margin:var(--s2) 0 0;font-size:var(--t-caption);
@@ -2075,17 +2140,19 @@ button,input,select,textarea{font-family:inherit}
   display:flex;flex-direction:column;align-items:flex-start;gap:2px}
 .proj__lab{margin:0;font-size:var(--t-caption);color:var(--tint);
   letter-spacing:.14em}
-.proj__no{margin:0;padding-bottom:.04em;font-family:var(--f-display);
+.proj__no{margin:0;padding-bottom:.04em;font-family:var(--f-head);
   text-transform:uppercase;line-height:.9;
-  font-size:clamp(46px,9vw,104px)}
+  font-size:clamp(52px,10vw,128px)}
 .proj__when{margin:0;font-size:var(--t-body);color:var(--tint)}
 
 .proj__count{display:flex;align-items:baseline;gap:var(--s3);
   margin:var(--s4) 0 0}
 .proj__count b{font-weight:400;font-family:var(--f-head);line-height:.9;
-  font-size:clamp(40px,7.5vw,88px)}
+  font-size:clamp(56px,10vw,120px)}
 .proj__count span{font-size:var(--t-caption);color:var(--tint)}
 .proj__shut{margin:var(--s3) 0 0;font-size:var(--t-caption);color:var(--tint)}
+.proj__kci{display:block;margin-top:var(--s5);width:clamp(56px,7vw,96px)}
+.proj__kci .brandseal{width:100%;height:auto;display:block}
 
 .proj__ctl{margin-top:var(--s4);padding:11px var(--s5);cursor:pointer;
   border:var(--edge-panel) solid var(--paper);
@@ -2101,7 +2168,7 @@ button,input,select,textarea{font-family:inherit}
    camera needs, so the composition stops at the plate's edge. */
 .proj__plate{background:var(--paper);display:grid;place-items:center;
   padding:clamp(16px,3vw,32px);min-width:0}
-.proj__plate .qrpanel__code{width:100%;max-width:min(78vw,560px);aspect-ratio:1}
+.proj__plate .qrpanel__code{width:100%;max-width:min(84vw,640px);aspect-ratio:1}
 .proj__plate--empty{background:var(--tint);
   background-image:radial-gradient(var(--ink) .9px,transparent 1px);
   background-size:7px 7px;min-height:clamp(180px,40vw,320px)}
@@ -2110,8 +2177,11 @@ button,input,select,textarea{font-family:inherit}
 
 @media(min-width:900px){
   /* the field takes the left third and the code the rest: the plate is
-     the subject, and the ink beside it is what makes it read as bright */
-  .proj{grid-template-columns:minmax(0,34fr) minmax(0,66fr);align-items:stretch}
+     the subject, and the ink beside it is what makes it read as bright.
+     The whole strip bleeds off the right edge — the projected page owns
+     its row. */
+  .proj{grid-template-columns:minmax(0,34fr) minmax(0,66fr);align-items:stretch;
+    margin-right:calc(var(--gutter) * -1);border-right:0}
   .proj__side{justify-content:center}
 }
 
@@ -2213,7 +2283,6 @@ button,input,select,textarea{font-family:inherit}
 
 <div class="boot" id="boot" aria-hidden="true">
   <svg class="boot__seal" id="bootSeal" viewBox="0 0 100 100"></svg>
-  <div class="boot__mark" id="bootMark"></div>
   <div class="boot__title" id="bootTitle">
     <span class="boot__half boot__half--a">Keystamp</span>
     <span class="boot__half boot__half--b">Keystamp</span>
@@ -15559,6 +15628,95 @@ const logoMark = (cls = 'mark__seal') => ASSETS.logo
   ? `<img class="${cls}" src="${ASSETS.logo}" alt="" aria-hidden="true">`
   : LOGO.replace('class="mark__seal"', `class="${cls}"`);
 
+/* ── THE TWO CLUB SEALS — traced from the official artwork ─────────
+   Key Club International seal and the CNH (Cali-Nev-Ha) district
+   seal, reconstructed as vectors from the supplied reference images
+   the same way the swirl and the ten stamps were. Colors are the
+   real brand colors; these are identity, not decoration, so they are
+   never recolored into the ink system. */
+const KCI_SEAL = `
+<svg class="brandseal" viewBox="0 0 200 200" role="img" aria-label="Key Club International">
+  <defs>
+    <path id="kciLeaf" d="M0,-97.5 C 6,-95.5 9.5,-89.5 8,-81.5 C 3,-83.5 -1,-88.5 -1.5,-95.5 Z"/>
+    <path id="kciArcT" d="M 100,100 m -60,0 a 60,60 0 1 1 120,0" fill="none"/>
+    <path id="kciArcB" d="M 100,100 m -66,0 a 66,66 0 1 0 132,0" fill="none"/>
+  </defs>
+  <circle cx="100" cy="100" r="97" fill="#b58f1e"/>
+  <circle cx="100" cy="100" r="96" fill="#c9a227"/>
+  <g fill="#a37f15" transform="translate(100,100)">
+    <g id="kciRope">
+      <use href="#kciLeaf"/><use href="#kciLeaf" transform="rotate(10)"/>
+      <use href="#kciLeaf" transform="rotate(20)"/><use href="#kciLeaf" transform="rotate(30)"/>
+      <use href="#kciLeaf" transform="rotate(40)"/><use href="#kciLeaf" transform="rotate(50)"/>
+      <use href="#kciLeaf" transform="rotate(60)"/><use href="#kciLeaf" transform="rotate(70)"/>
+      <use href="#kciLeaf" transform="rotate(80)"/>
+    </g>
+    <use href="#kciRope" transform="rotate(90)"/>
+    <use href="#kciRope" transform="rotate(180)"/>
+    <use href="#kciRope" transform="rotate(270)"/>
+  </g>
+  <circle cx="100" cy="100" r="80" fill="#fff" stroke="#0b3d78" stroke-width="2.4"/>
+  <circle cx="100" cy="100" r="42" fill="#fff" stroke="#0b3d78" stroke-width="2.2"/>
+  <text font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="21"
+        fill="#0b3d78" letter-spacing="3.5"><textPath href="#kciArcT" startOffset="50%"
+        text-anchor="middle">KEY CLUB</textPath></text>
+  <text font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="16.5"
+        fill="#0b3d78" letter-spacing="1.6"><textPath href="#kciArcB" startOffset="50%"
+        text-anchor="middle">INTERNATIONAL</textPath></text>
+  <circle cx="39.5" cy="100" r="2.6" fill="#0b3d78"/>
+  <circle cx="160.5" cy="100" r="2.6" fill="#0b3d78"/>
+  <path fill="#0b3d78" d="M 75,66 L 92,66 L 92,95 L 117,66 L 134,66 L 107,97
+    L 134,138 L 116,138 L 96,107 L 92,112 L 92,138 L 75,138 Z"/>
+  <g fill="none" stroke="#c9a227">
+    <ellipse cx="101" cy="75.5" rx="9.5" ry="7" stroke-width="4.6"/>
+    <line x1="101" y1="82.5" x2="101" y2="131" stroke-width="4.6"/>
+  </g>
+  <path fill="#c9a227" d="M 101,118 h -8 v 4.6 h 8 Z M 101,126 h -11 v 4.8 h 11 Z"/>
+</svg>`;
+
+const CNH_SEAL = `
+<svg class="brandseal" viewBox="0 0 200 200" role="img" aria-label="Cali-Nev-Ha District">
+  <defs>
+    <path id="cnhArc" d="M 40.2,137.9 A 73,73 0 1 1 159.8,137.9" fill="none"/>
+    <g id="cnhBee">
+      <ellipse cx="0" cy="1.2" rx="2.6" ry="3.6" fill="#111"/>
+      <rect x="-2.6" y="0" width="5.2" height="1.3" fill="#ffd84a"/>
+      <rect x="-2.3" y="2.6" width="4.6" height="1.2" fill="#ffd84a"/>
+      <circle cx="0" cy="-3.2" r="1.9" fill="#111"/>
+      <ellipse cx="-2.9" cy="-1.6" rx="2.6" ry="1.4" fill="#fff" opacity=".92" transform="rotate(-32 -2.9 -1.6)"/>
+      <ellipse cx="2.9" cy="-1.6" rx="2.6" ry="1.4" fill="#fff" opacity=".92" transform="rotate(32 2.9 -1.6)"/>
+    </g>
+  </defs>
+  <circle cx="100" cy="96" r="93" fill="#ffd84a" stroke="#111" stroke-width="3.4"/>
+  <g fill="#111"><circle cx="100.0" cy="12.0" r="1.5"/><circle cx="108.8" cy="12.5" r="1.5"/><circle cx="117.5" cy="13.8" r="1.5"/><circle cx="126.0" cy="16.1" r="1.5"/><circle cx="134.2" cy="19.3" r="1.5"/><circle cx="142.0" cy="23.3" r="1.5"/><circle cx="149.4" cy="28.0" r="1.5"/><circle cx="156.2" cy="33.6" r="1.5"/><circle cx="162.4" cy="39.8" r="1.5"/><circle cx="168.0" cy="46.6" r="1.5"/><circle cx="172.7" cy="54.0" r="1.5"/><circle cx="176.7" cy="61.8" r="1.5"/><circle cx="179.9" cy="70.0" r="1.5"/><circle cx="182.2" cy="78.5" r="1.5"/><circle cx="183.5" cy="87.2" r="1.5"/><circle cx="184.0" cy="96.0" r="1.5"/><circle cx="183.5" cy="104.8" r="1.5"/><circle cx="182.2" cy="113.5" r="1.5"/><circle cx="179.9" cy="122.0" r="1.5"/><circle cx="176.7" cy="130.2" r="1.5"/><circle cx="23.3" cy="130.2" r="1.5"/><circle cx="20.1" cy="122.0" r="1.5"/><circle cx="17.8" cy="113.5" r="1.5"/><circle cx="16.5" cy="104.8" r="1.5"/><circle cx="16.0" cy="96.0" r="1.5"/><circle cx="16.5" cy="87.2" r="1.5"/><circle cx="17.8" cy="78.5" r="1.5"/><circle cx="20.1" cy="70.0" r="1.5"/><circle cx="23.3" cy="61.8" r="1.5"/><circle cx="27.3" cy="54.0" r="1.5"/><circle cx="32.0" cy="46.6" r="1.5"/><circle cx="37.6" cy="39.8" r="1.5"/><circle cx="43.8" cy="33.6" r="1.5"/><circle cx="50.6" cy="28.0" r="1.5"/><circle cx="58.0" cy="23.3" r="1.5"/><circle cx="65.8" cy="19.3" r="1.5"/><circle cx="74.0" cy="16.1" r="1.5"/><circle cx="82.5" cy="13.8" r="1.5"/><circle cx="91.2" cy="12.5" r="1.5"/></g>
+  <circle cx="100" cy="96" r="62" fill="none" stroke="#fff" stroke-width="3.4"/>
+  <circle cx="100" cy="96" r="60" fill="#111"/>
+  <g fill="#ffd84a">
+    <path d="M 64,58 L 89,58 L 89,86 L 108,114 L 108,125 L 97,125
+             C 87,118 77,107 70,94 C 65,84 63,72 64,58 Z"/>
+    <path d="M 94,58 L 123,58 L 123,86 L 117,113 L 112,113 L 94,82 Z"/>
+    <circle cx="58" cy="112" r="2.1"/><circle cx="63" cy="117" r="1.6"/>
+    <circle cx="68" cy="121" r="1.9"/><circle cx="74" cy="125" r="1.5"/>
+    <circle cx="80" cy="128" r="2.3"/>
+  </g>
+  <text font-family="'Arial Black','Arial Bold',Arial,sans-serif" font-weight="900" font-size="8.8"
+        fill="#111" letter-spacing=".85"><textPath href="#cnhArc" startOffset="50%"
+        text-anchor="middle">KEY CLUB INTERNATIONAL &#8226; CALI-NEV-HA DISTRICT</textPath></text>
+  <use href="#cnhBee" transform="translate(31,131) rotate(-38)"/>
+  <use href="#cnhBee" transform="translate(169,131) rotate(38)"/>
+  <use href="#cnhBee" transform="translate(100,182)"/>
+  <path d="M 12,140 L 30,136 L 30,158 L 12,162 Z" fill="#e7e4de" stroke="#111" stroke-width="2.4"/>
+  <path d="M 188,140 L 170,136 L 170,158 L 188,162 Z" fill="#e7e4de" stroke="#111" stroke-width="2.4"/>
+  <path d="M 26,135 C 60,142 140,142 174,135 L 174,157 C 140,164 60,164 26,157 Z"
+        fill="#fff" stroke="#111" stroke-width="2.6"/>
+  <text font-family="'Arial Black','Arial Bold',Arial,sans-serif" font-weight="900" font-size="9.6"
+        fill="#111" text-anchor="middle" x="100" y="153">&#8220; CARING - OUR WAY OF LIFE &#8221;</text>
+</svg>`;
+
+const brandSeal = (which, cls = '') => (which === 'cnh' ? CNH_SEAL : KCI_SEAL)
+  .replace('class="brandseal"', `class="brandseal ${cls}"`);
+
+
 /* THE KEYWAY PLATE. One path, evenodd: the plate, then the bore, the
    slot and the ward knocked out of it. Drawn as a filled silhouette
    rather than strokes so it holds together at a favicon's size and
@@ -15844,6 +16002,8 @@ const Store = {
      part is to scan, submit, and re-read what the server decided. */
   async claimReward(id){
     if (!this.user) throw new Error('Not signed in.');
+    const r = this.rewards.find(x => x.id === id);
+    if (r && this.totalStamps() < r.required) throw new Error('Not earned yet.');
     await Backend.claimReward(this.user.id, id);
     await this.hydrate();
     return this.rewards.find(x => x.id === id) || null;
@@ -16189,10 +16349,11 @@ const C = {
     const line = !p.next ? 'Every reward unlocked'
       : p.remaining === 0 ? `${next.name} is ready to claim`
       : `${p.remaining} more until ${next.name.toLowerCase()}`;
+    const cardNo = Math.floor(p.floor / p.span) + 1;
     return `<div class="count">
       <p class="count__num"><b>${pad(p.filled)}</b><span>/ ${p.span}</span></p>
       <div class="count__foot">
-        <span class="count__label">stamps on this card</span>
+        <span class="count__label">stamps on card ${pad(cardNo)}</span>
         <span class="count__line">${esc(line)}</span>
       </div>
     </div>`;
@@ -16212,6 +16373,7 @@ const C = {
         <span class="tier__name">${esc(r.name)}</span>
         <span class="tier__desc">${esc(r.desc || '')}</span>
       </span>
+      ${r.claimed ? `<span class="tier__punch" aria-hidden="true">Claimed</span>` : ''}
       ${ready
         ? `<button class="tier__claim" type="button" data-claim="${r.id}">Claim</button>`
         : `<span class="tier__say">${say}</span>`}
@@ -16296,15 +16458,15 @@ const C = {
      with. This one is drawn: the seal that has NOT been pressed, at
      real size, with the record it would carry stated as technical
      metadata beside it. Nothing is centred and nothing is boxed. */
-  empty(icon, title, body, code = 'NIL'){
+  empty(icon, title, body){
     return `<section class="rig empty-reg" data-enter>
       <div class="empty">
+        <span class="tone tone--coarse tone--fade-b empty__tone" aria-hidden="true"></span>
         <div class="empty__seal" aria-hidden="true">
           <svg viewBox="0 0 100 100">${seal(2)}</svg>
           <span class="empty__void"></span>
         </div>
         <div class="empty__body">
-          <span class="anno">REC.${esc(code)} // NOT PRESSED</span>
           <h3 class="empty__title">${esc(title)}</h3>
           ${body ? `<p class="empty__note">${esc(body)}</p>` : ''}
         </div>
@@ -16426,29 +16588,26 @@ const Views = {
            quiet beat before the card. -->
       <header class="rechead rechead--tight" data-enter>
         <h1 class="title rechead__title">Your card</h1>
-        <p class="rechead__note">Ten stamps to a card. A stamp lands when the
-          server accepts a scan, and the card carries the tier you are on.</p>
       </header>
 
-      <!-- The card leads and the ink panel runs off the right edge of
-           the sheet beside it. The two used to be equal-weight
-           rectangles side by side; a panel that bleeds is the thing
-           that stops a row of boxes reading as a row of boxes. -->
+      <!-- The card is the object; the side column carries the action
+           and the calendar so neither is a stretched void. -->
       <div class="deck" data-enter>
         ${C.sealGrid()}
-        ${action}
+        <div class="deck__side">
+          ${action}
+          ${ahead.length ? `<section class="ahead" data-enter>
+            <h2 class="ahead__mark">Ahead</h2>
+            <ul class="ahead__list">
+              ${ahead.map(m => `<li class="ahead__row">
+                <span class="ahead__no">${pad(m.no)}</span>
+                <span class="ahead__day">${fmtDate(m.date)}</span>
+                <span class="ahead__at">${esc(m.time)} / ${esc(m.place)}</span>
+              </li>`).join('')}
+            </ul>
+          </section>` : ''}
+        </div>
       </div>
-
-      ${ahead.length ? `<section class="ahead" data-enter>
-        <h2 class="ahead__mark">Ahead</h2>
-        <ul class="ahead__list">
-          ${ahead.map(m => `<li class="ahead__row">
-            <span class="ahead__no">${pad(m.no)}</span>
-            <span class="ahead__day">${fmtDate(m.date)}</span>
-            <span class="ahead__at">${esc(m.time)} / ${esc(m.place)}</span>
-          </li>`).join('')}
-        </ul>
-      </section>` : ''}
     </div>`;
   },
 
@@ -16467,8 +16626,6 @@ const Views = {
     return `<div class="view view--record">
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">Record</h1>
-        <p class="rechead__note">Every general meeting, in order. A line is written
-          the moment the server accepts a scan; nothing here is entered by hand.</p>
       </header>
 
       ${held.length ? `<div class="recbody">
@@ -16485,8 +16642,7 @@ const Views = {
         </section>
       </div>`
       : C.empty(ICON.blank, 'No general meetings yet',
-                'Your record fills itself: every meeting you scan into is '
-                + 'written here automatically. Nothing to do until the first one.')}
+                'Your first stamp will land here.')}
 
       ${upcoming.length ? `<section class="ledger ledger--ahead" data-enter>
         <h2 class="ledger__mark">Scheduled</h2>
@@ -16508,30 +16664,26 @@ const Views = {
     return `<div class="view view--rewards">
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">Rewards</h1>
-        <p class="rechead__note">Stamps accumulate across the whole year; nothing
-          resets when a card fills. Every rung below is measured from the same count.</p>
       </header>
 
-      <!-- ONE SCALE, NOT THREE BARS. Each tier used to draw its own
-           progress array starting from zero, so the same six stamps
-           were reported four times per row (an array, "6 / 10 stamps",
-           "4 to go", and "Unlocks at 10 stamps") and three times down
-           the page. There is one count; this is one line showing where
-           it stands against all three rungs at once. -->
       <section class="ladder" data-enter>
         <p class="ladder__fig">${pad(total)}</p>
         <p class="ladder__of">${total === 1 ? 'stamp' : 'stamps'} so far${
           next ? ` / ${next.required - total} to the next rung` : ' / every rung passed'}</p>
-        <div class="ladder__track" role="img"
-             aria-label="${total} stamps against rungs at ${tiers.map(t => t.required).join(', ')}">
-          <span class="ladder__fill" style="--w:${Math.min(total / scale * 100, 100).toFixed(1)}%"></span>
-          ${tiers.map(t => `<span class="ladder__rung${total >= t.required ? ' ladder__rung--past' : ''}"
-            style="--x:${(t.required / scale * 100).toFixed(1)}%"><b>${t.required}</b></span>`).join('')}
-        </div>
       </section>
 
-      <section class="tiers" data-enter>
-        ${tiers.map(t => C.tier(t, total)).join('')}
+      <!-- THE CLIMB. One vertical track with the three plates hung on
+           it; the ink in the rail is the same count the figure above
+           states. A plate's size and weight is its state: sealed sits
+           back, ready takes the row and bleeds, claimed is punched. -->
+      <section class="climb" data-enter>
+        <div class="climb__rail" role="img"
+             aria-label="${total} stamps against rungs at ${tiers.map(t => t.required).join(', ')}">
+          <span class="climb__fill" style="--h:${Math.min(total / scale * 100, 100).toFixed(1)}%"></span>
+        </div>
+        <div class="climb__plates">
+          ${tiers.map(t => C.tier(t, total)).join('')}
+        </div>
       </section>
     </div>`;
   },
@@ -16549,9 +16701,6 @@ const Views = {
     return `<div class="view view--scan">
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">Scan</h1>
-        <p class="rechead__note">Point the camera at the seal on the projector.
-          A stamp is written by the server, not by this screen; nothing is
-          recorded until it answers.</p>
       </header>
 
       <p class="standing" data-enter>
@@ -16581,7 +16730,7 @@ const Views = {
       </div>
 
       <div class="manual" data-enter>
-        <label class="manual__lab" for="manualInput">Camera not working? Type the code under the seal</label>
+        <label class="manual__lab" for="manualInput">Type the code under the seal</label>
         <div class="manual__f">
           <input class="manual__in" id="manualInput" placeholder="Seal code"
                  aria-label="Seal code" autocomplete="off" spellcheck="false" enterkeyhint="go">
@@ -16659,9 +16808,12 @@ const Views = {
            which the nav already does. -->
       <div class="sheet" data-enter>
         <section class="who">
-          <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
-            handle !== name ? ` / ${esc(handle)}` : ''}</p>
-          <p class="who__name">${esc(name)}</p>
+          <span class="who__seal" aria-hidden="true">${brandSeal('cnh')}</span>
+          <div class="who__id">
+            <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
+              handle !== name ? ` / ${esc(handle)}` : ''}</p>
+            <p class="who__name">${esc(name)}</p>
+          </div>
         </section>
         ${C.sealGrid()}
       </div>
@@ -16707,7 +16859,7 @@ const Views = {
         </div>
 
         <header class="spread__head">
-          <p class="spread__sub">Key Club attendance</p>
+          <p class="spread__sub">${brandSeal('kci','spread__kci')}<span>Key Club attendance</span></p>
           <h1 class="spread__wm">Keystamp</h1>
         </header>
 
@@ -16962,7 +17114,7 @@ const BoardUI = {
 
       <h2 class="h2 bsec">Already held</h2>
       ${past.length
-        ? `<ul class="blist">${past.map(m => this.meetingRow(m)).join('')}</ul>`
+        ? `<ul class="blist blist--held">${past.map(m => this.meetingRow(m)).join('')}</ul>`
         : this.empty('No meetings yet.')}
     </div>`;
   },
@@ -17172,6 +17324,7 @@ const BoardUI = {
             <p class="proj__shut">Nobody can check in until this is open.</p>
             <button class="proj__ctl proj__ctl--go" type="button" data-bstart="${esc(sel.id)}">Open check-in</button>
           `}
+          <span class="proj__kci" aria-hidden="true">${brandSeal('kci')}</span>
         </div>
 
         ${isOpen ? `
@@ -17548,9 +17701,92 @@ const FX = {
             delay, ease:EASE.ENERGY });
   },
 
+  /* the page is cut away: a heavy diagonal, a crossing thin cut, one
+     frame of paper flash. Still ~200ms — quick but unmistakable. */
   pageCutTransition(){
     if (Motion.off) return;
-    Slash.create({ type:'A', angle:-17, afterimage:false });
+    Slash.create({ type:'C', angle:-19, afterimage:false });
+    Slash.create({ type:'D', angle:-64, offset:64, delay:44, afterimage:false });
+    Impact.flash(.2, { delay:34, dur:46 });
+  },
+
+  /* the welcome is sliced. The word lands, a blade goes through it,
+     the two halves shear apart along the cut while thinner cuts cross
+     the screen behind it. Under a second, then the page. */
+  welcomeCut(word = 'Welcome'){
+    if (Motion.off) return;
+    const fx = $('#fx'); if (!fx) return;
+
+    Impact.scrim(.62, { dur:620 });
+
+    const el = document.createElement('div');
+    el.className = 'wcut';
+    el.innerHTML =
+      `<div class="wcut__h wcut__h--a"><span>${esc(word)}</span></div>` +
+      `<div class="wcut__h wcut__h--b"><span>${esc(word)}</span></div>`;
+    fx.appendChild(el);
+    const a = el.querySelector('.wcut__h--a'), b = el.querySelector('.wcut__h--b');
+
+    createTimeline({ onComplete:() => el.remove() })
+      .add(el, { opacity:[0, 1], scale:[1.3, 1], skewX:[-8, 0], duration:120, ease:EASE.CUT }, 0)
+      .add(a,  { translateX:[0, -30], translateY:[0, -16], rotate:[0, -1.6],
+                 duration:220, ease:EASE.OUT }, 340)
+      .add(b,  { translateX:[0, 34],  translateY:[0, 18],  rotate:[0, 1.8],
+                 duration:220, ease:EASE.OUT }, 340)
+      .add(el, { opacity:[1, 0], duration:150, ease:'inQuad' }, 580);
+
+    Slash.create({ type:'B', angle:-12, delay:236 });
+    Slash.create({ type:'D', angle:-58, offset:-90, delay:330 });
+    Slash.create({ type:'D', angle: 24, offset:100, delay:392 });
+    setTimeout(() => Impact.shards(fx, 12, -12), 330);
+    setTimeout(() => Impact.shake($('#shell'), 7, 110), 340);
+  },
+
+  /* sign-out: the dismantle. A grid of cuts goes across the page, the
+     page breaks into tiles, the tiles fall away. onCovered fires at
+     full cover, so the caller swaps the page under the debris. */
+  waffleOut(onCovered){
+    const fin = typeof onCovered === 'function' ? onCovered : () => {};
+    if (Motion.off) return void fin();
+    const fx = $('#fx'); if (!fx) return void fin();
+
+    for (let i = 0; i < 3; i++)
+      Slash.create({ type:'D', angle:-7, offset:(i - 1) * (innerHeight * .3),
+                     delay:i * 34, afterimage:false });
+    for (let i = 0; i < 4; i++)
+      Slash.create({ type:'D', angle:83, along:(i - 1.5) * (innerWidth * .24),
+                     delay:58 + i * 30, afterimage:false });
+
+    const grid = document.createElement('div');
+    grid.className = 'waffle';
+    const cols = innerWidth > 700 ? 6 : 4, rows = innerWidth > 700 ? 4 : 6;
+    grid.style.setProperty('--wc', cols);
+    grid.style.setProperty('--wr', rows);
+    const cells = [];
+    for (let i = 0; i < cols * rows; i++){
+      const c = document.createElement('span');
+      c.className = 'waffle__c' + (roll(i) < .16 ? ' waffle__c--ink' : '');
+      grid.appendChild(c); cells.push(c);
+    }
+    fx.appendChild(grid);
+    aset(grid, { opacity:0 });
+
+    const t0 = 210;
+    setTimeout(() => { aset(grid, { opacity:1 }); fin(); }, t0);
+    cells.forEach((c, i) => {
+      const r = roll(i);
+      const cx = i % cols - (cols - 1) / 2, cy = ((i / cols) | 0) - (rows - 1) / 2;
+      animate(c, {
+        translateX: cx * 34 + (r - .5) * 90,
+        translateY: cy * 26 + 140 + r * 170,
+        rotate: (r - .5) * 34,
+        opacity: [1, 0],
+        duration: 300 + r * 140,
+        delay: t0 + 40 + r * 110 + (cy + 2) * 24,
+        ease: 'inQuad',
+      });
+    });
+    setTimeout(() => grid.remove(), 1150);
   },
 
   pageEntrance(scope){
@@ -17750,7 +17986,7 @@ const FX = {
    ─────────────────────────────────────────────────────────────────── */
 Object.assign(FX, {
   loadingSequence(onReveal){
-    const boot = $('#boot'), sealEl = $('#bootSeal'), mark = $('#bootMark');
+    const boot = $('#boot'), sealEl = $('#bootSeal');
     const title = $('#bootTitle');
     const halves = $$('.boot__half');
 
@@ -17764,13 +18000,10 @@ Object.assign(FX, {
     const reveal = () => { if (revealed) return; revealed = true; onReveal(); };
 
     sealEl.innerHTML = seal(4);
-    mark.innerHTML = logoMark('boot__logo');
 
     if (Motion.off){ reveal(); return void done(); }
 
-    const markStrokes = mark.querySelectorAll('path');
     const sealStrokes = sealEl.querySelectorAll('circle,polygon,path,line');
-    aset(markStrokes, { opacity:1 });
     aset(title, { opacity:0 });
 
     const tl = createTimeline({ onComplete:done });
@@ -17780,25 +18013,20 @@ Object.assign(FX, {
       /* 1 · a seal surfaces */
       .add(sealEl, { opacity:[0, .78], scale:[.86, 1], duration:200, ease:EASE.CALM }, 50)
       .add(createDrawable(sealStrokes), { draw:['0 0', '0 1'],
-             duration:560, delay:stagger(4), ease:EASE.OUT }, 70)
+             duration:520, delay:stagger(4), ease:EASE.OUT }, 70)
       .add(sealEl, { opacity:[.78, .16], scale:[1, 1.07], duration:320, ease:EASE.OUT }, 320)
-      /* 6 · the mark resolves */
-      .add(mark, { opacity:[0, 1], scale:[.84, 1], duration:260, ease:EASE.IMPACT }, 580)
-      .add(createDrawable(markStrokes), { draw:['0 0', '0 1'],
-             duration:400, delay:stagger(48), ease:EASE.OUT }, 600)
-      .add(mark, { opacity:[1, 0], translateY:[0, -26], duration:200, ease:EASE.CUT }, 830)
-      /* 7 · the title lands */
-      .add(title, { opacity:[0, 1], scale:[1.14, 1], duration:170, ease:EASE.CUT }, 860)
+      /* 6 · the title lands */
+      .add(title, { opacity:[0, 1], scale:[1.14, 1], duration:170, ease:EASE.CUT }, 640)
       /* 9 · collapse */
-      .add(sealEl, { opacity:0, duration:180, ease:EASE.CALM }, 1250)
-      .add(boot, { opacity:[1, 0], duration:280, ease:EASE.CALM, onBegin:reveal }, 1420)
+      .add(sealEl, { opacity:0, duration:180, ease:EASE.CALM }, 1030)
+      .add(boot, { opacity:[1, 0], duration:280, ease:EASE.CALM, onBegin:reveal }, 1200)
       /* 8 · the halves shear apart along the last cut */
       .add(halves[0], { translateX:-9, translateY:-27, rotate:-1.4,
-             opacity:[1, 0], duration:300, ease:EASE.OUT }, 1215)
+             opacity:[1, 0], duration:300, ease:EASE.OUT }, 995)
       .add(halves[1], { translateX:9, translateY:27, rotate:1.4,
-             opacity:[1, 0], duration:300, ease:EASE.OUT }, 1215);
+             opacity:[1, 0], duration:300, ease:EASE.OUT }, 995);
 
-    /* the cuts, now on the same clock as everything else */
+    /* the cuts, on the same clock as everything else */
     const cut = o => Slash.create({ ...o, host:boot });
     beat(200, () => cut({ type:'B', angle:-27 }));                                    /* 2 */
     beat(240, () => Impact.flash(.34, { host:boot, dur:52 }));                        /* 3 */
@@ -17806,14 +18034,14 @@ Object.assign(FX, {
     beat(352, () => cut({ type:'D', angle:-64, offset:70 }));
     beat(430, () => Lines.burst({ host:boot, count:30, reach:480, dur:340, hot:true }));  /* 5 */
     beat(442, () => Impact.ring(boot, { size:120, scale:4.4, dur:700 }));
-    beat(1160, () => {                                                               /* 8 */
+    beat(940, () => {                                                                /* 8 */
       cut({ type:'B', angle:-18 });
       Impact.flash(.3, { host:boot, delay:26, dur:48 });
       Impact.shards(boot, 14, -18);
     });
 
     tl.then(done, done);
-    setTimeout(() => { reveal(); done(); }, 2600);
+    setTimeout(() => { reveal(); done(); }, 2400);
   },
 });
 
@@ -18444,7 +18672,7 @@ document.addEventListener('submit', async e => {
   try {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
-    FX.impactFrame({ word:up ? 'Joined' : 'Welcome', angle:-18 });
+    FX.welcomeCut(up ? 'Joined' : 'Welcome');
     go('home');
   } catch (err){
     authErr(err && err.message ? err.message : 'Something went wrong. Try again.');
@@ -18544,7 +18772,10 @@ document.addEventListener('click', e => {
   const out = e.target.closest('[data-signout]');
   if (out){
     Store.signOut()
-      .then(() => { toast({ key:'auth', title:'Signed out' }); go('auth'); })
+      .then(() => FX.waffleOut(() => {
+        toast({ key:'auth', title:'Signed out' });
+        go('auth');
+      }))
       .catch(() => toast({ key:'auth', bad:true, title:'Could not sign out',
                            detail:'Check your connection and try again.' }));
     return;

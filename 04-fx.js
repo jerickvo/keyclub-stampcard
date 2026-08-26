@@ -355,9 +355,92 @@ const FX = {
             delay, ease:EASE.ENERGY });
   },
 
+  /* the page is cut away: a heavy diagonal, a crossing thin cut, one
+     frame of paper flash. Still ~200ms — quick but unmistakable. */
   pageCutTransition(){
     if (Motion.off) return;
-    Slash.create({ type:'A', angle:-17, afterimage:false });
+    Slash.create({ type:'C', angle:-19, afterimage:false });
+    Slash.create({ type:'D', angle:-64, offset:64, delay:44, afterimage:false });
+    Impact.flash(.2, { delay:34, dur:46 });
+  },
+
+  /* the welcome is sliced. The word lands, a blade goes through it,
+     the two halves shear apart along the cut while thinner cuts cross
+     the screen behind it. Under a second, then the page. */
+  welcomeCut(word = 'Welcome'){
+    if (Motion.off) return;
+    const fx = $('#fx'); if (!fx) return;
+
+    Impact.scrim(.62, { dur:620 });
+
+    const el = document.createElement('div');
+    el.className = 'wcut';
+    el.innerHTML =
+      `<div class="wcut__h wcut__h--a"><span>${esc(word)}</span></div>` +
+      `<div class="wcut__h wcut__h--b"><span>${esc(word)}</span></div>`;
+    fx.appendChild(el);
+    const a = el.querySelector('.wcut__h--a'), b = el.querySelector('.wcut__h--b');
+
+    createTimeline({ onComplete:() => el.remove() })
+      .add(el, { opacity:[0, 1], scale:[1.3, 1], skewX:[-8, 0], duration:120, ease:EASE.CUT }, 0)
+      .add(a,  { translateX:[0, -30], translateY:[0, -16], rotate:[0, -1.6],
+                 duration:220, ease:EASE.OUT }, 340)
+      .add(b,  { translateX:[0, 34],  translateY:[0, 18],  rotate:[0, 1.8],
+                 duration:220, ease:EASE.OUT }, 340)
+      .add(el, { opacity:[1, 0], duration:150, ease:'inQuad' }, 580);
+
+    Slash.create({ type:'B', angle:-12, delay:236 });
+    Slash.create({ type:'D', angle:-58, offset:-90, delay:330 });
+    Slash.create({ type:'D', angle: 24, offset:100, delay:392 });
+    setTimeout(() => Impact.shards(fx, 12, -12), 330);
+    setTimeout(() => Impact.shake($('#shell'), 7, 110), 340);
+  },
+
+  /* sign-out: the dismantle. A grid of cuts goes across the page, the
+     page breaks into tiles, the tiles fall away. onCovered fires at
+     full cover, so the caller swaps the page under the debris. */
+  waffleOut(onCovered){
+    const fin = typeof onCovered === 'function' ? onCovered : () => {};
+    if (Motion.off) return void fin();
+    const fx = $('#fx'); if (!fx) return void fin();
+
+    for (let i = 0; i < 3; i++)
+      Slash.create({ type:'D', angle:-7, offset:(i - 1) * (innerHeight * .3),
+                     delay:i * 34, afterimage:false });
+    for (let i = 0; i < 4; i++)
+      Slash.create({ type:'D', angle:83, along:(i - 1.5) * (innerWidth * .24),
+                     delay:58 + i * 30, afterimage:false });
+
+    const grid = document.createElement('div');
+    grid.className = 'waffle';
+    const cols = innerWidth > 700 ? 6 : 4, rows = innerWidth > 700 ? 4 : 6;
+    grid.style.setProperty('--wc', cols);
+    grid.style.setProperty('--wr', rows);
+    const cells = [];
+    for (let i = 0; i < cols * rows; i++){
+      const c = document.createElement('span');
+      c.className = 'waffle__c' + (roll(i) < .16 ? ' waffle__c--ink' : '');
+      grid.appendChild(c); cells.push(c);
+    }
+    fx.appendChild(grid);
+    aset(grid, { opacity:0 });
+
+    const t0 = 210;
+    setTimeout(() => { aset(grid, { opacity:1 }); fin(); }, t0);
+    cells.forEach((c, i) => {
+      const r = roll(i);
+      const cx = i % cols - (cols - 1) / 2, cy = ((i / cols) | 0) - (rows - 1) / 2;
+      animate(c, {
+        translateX: cx * 34 + (r - .5) * 90,
+        translateY: cy * 26 + 140 + r * 170,
+        rotate: (r - .5) * 34,
+        opacity: [1, 0],
+        duration: 300 + r * 140,
+        delay: t0 + 40 + r * 110 + (cy + 2) * 24,
+        ease: 'inQuad',
+      });
+    });
+    setTimeout(() => grid.remove(), 1150);
   },
 
   pageEntrance(scope){
@@ -557,7 +640,7 @@ const FX = {
    ─────────────────────────────────────────────────────────────────── */
 Object.assign(FX, {
   loadingSequence(onReveal){
-    const boot = $('#boot'), sealEl = $('#bootSeal'), mark = $('#bootMark');
+    const boot = $('#boot'), sealEl = $('#bootSeal');
     const title = $('#bootTitle');
     const halves = $$('.boot__half');
 
@@ -571,13 +654,10 @@ Object.assign(FX, {
     const reveal = () => { if (revealed) return; revealed = true; onReveal(); };
 
     sealEl.innerHTML = seal(4);
-    mark.innerHTML = logoMark('boot__logo');
 
     if (Motion.off){ reveal(); return void done(); }
 
-    const markStrokes = mark.querySelectorAll('path');
     const sealStrokes = sealEl.querySelectorAll('circle,polygon,path,line');
-    aset(markStrokes, { opacity:1 });
     aset(title, { opacity:0 });
 
     const tl = createTimeline({ onComplete:done });
@@ -587,25 +667,20 @@ Object.assign(FX, {
       /* 1 · a seal surfaces */
       .add(sealEl, { opacity:[0, .78], scale:[.86, 1], duration:200, ease:EASE.CALM }, 50)
       .add(createDrawable(sealStrokes), { draw:['0 0', '0 1'],
-             duration:560, delay:stagger(4), ease:EASE.OUT }, 70)
+             duration:520, delay:stagger(4), ease:EASE.OUT }, 70)
       .add(sealEl, { opacity:[.78, .16], scale:[1, 1.07], duration:320, ease:EASE.OUT }, 320)
-      /* 6 · the mark resolves */
-      .add(mark, { opacity:[0, 1], scale:[.84, 1], duration:260, ease:EASE.IMPACT }, 580)
-      .add(createDrawable(markStrokes), { draw:['0 0', '0 1'],
-             duration:400, delay:stagger(48), ease:EASE.OUT }, 600)
-      .add(mark, { opacity:[1, 0], translateY:[0, -26], duration:200, ease:EASE.CUT }, 830)
-      /* 7 · the title lands */
-      .add(title, { opacity:[0, 1], scale:[1.14, 1], duration:170, ease:EASE.CUT }, 860)
+      /* 6 · the title lands */
+      .add(title, { opacity:[0, 1], scale:[1.14, 1], duration:170, ease:EASE.CUT }, 640)
       /* 9 · collapse */
-      .add(sealEl, { opacity:0, duration:180, ease:EASE.CALM }, 1250)
-      .add(boot, { opacity:[1, 0], duration:280, ease:EASE.CALM, onBegin:reveal }, 1420)
+      .add(sealEl, { opacity:0, duration:180, ease:EASE.CALM }, 1030)
+      .add(boot, { opacity:[1, 0], duration:280, ease:EASE.CALM, onBegin:reveal }, 1200)
       /* 8 · the halves shear apart along the last cut */
       .add(halves[0], { translateX:-9, translateY:-27, rotate:-1.4,
-             opacity:[1, 0], duration:300, ease:EASE.OUT }, 1215)
+             opacity:[1, 0], duration:300, ease:EASE.OUT }, 995)
       .add(halves[1], { translateX:9, translateY:27, rotate:1.4,
-             opacity:[1, 0], duration:300, ease:EASE.OUT }, 1215);
+             opacity:[1, 0], duration:300, ease:EASE.OUT }, 995);
 
-    /* the cuts, now on the same clock as everything else */
+    /* the cuts, on the same clock as everything else */
     const cut = o => Slash.create({ ...o, host:boot });
     beat(200, () => cut({ type:'B', angle:-27 }));                                    /* 2 */
     beat(240, () => Impact.flash(.34, { host:boot, dur:52 }));                        /* 3 */
@@ -613,13 +688,13 @@ Object.assign(FX, {
     beat(352, () => cut({ type:'D', angle:-64, offset:70 }));
     beat(430, () => Lines.burst({ host:boot, count:30, reach:480, dur:340, hot:true }));  /* 5 */
     beat(442, () => Impact.ring(boot, { size:120, scale:4.4, dur:700 }));
-    beat(1160, () => {                                                               /* 8 */
+    beat(940, () => {                                                                /* 8 */
       cut({ type:'B', angle:-18 });
       Impact.flash(.3, { host:boot, delay:26, dur:48 });
       Impact.shards(boot, 14, -18);
     });
 
     tl.then(done, done);
-    setTimeout(() => { reveal(); done(); }, 2600);
+    setTimeout(() => { reveal(); done(); }, 2400);
   },
 });

@@ -56,15 +56,12 @@
   }
 
 /* ══ THE PAGE ══════════════════════════════════════════════════════
-   Paper is not flat. Real pulp has tooth, and a printed page has the
-   faint regular grid of the halftone screen under the art. Two very
-   low-contrast layers do that here: a fine dot screen and a warm
-   vignette toward the gutter. Both are cheap and neither moves. */
+   Clean paper. Screentone is composition, not wallpaper: it appears
+   only where a .tone field or a tone panel places it deliberately,
+   so the dots always sit next to clean areas instead of under
+   everything. */
 body{
-
   background-color:var(--paper);
-  background-image:radial-gradient(var(--tone-dot) .5px, transparent .6px);
-  background-size:var(--tone-page-size) var(--tone-page-size);
   color:var(--ink);
 }
 
@@ -149,7 +146,10 @@ body{
 /* milestone bars: fill is a spotted black on a line track */
 .bmile__bar{border:var(--edge-hair) solid var(--ink);background:var(--paper);height:10px}
 .bmile__fill{background:var(--ink)}
-.bmile__no{color:var(--ink)}
+.bmile__no{color:var(--ink);font-family:var(--f-head);
+  font-size:clamp(26px,4vw,44px);line-height:1}
+.brow--member .brow__mid b{font-family:var(--f-head);font-weight:400;
+  font-size:var(--t-sub);letter-spacing:.01em}
 
 /* rows read as a register: hairline rules, no boxes */
 .brow{border-bottom:var(--edge-hair) solid var(--tone)}
@@ -166,7 +166,11 @@ body{
 .brow__del:hover,.brow__del:focus-visible{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
 /* the board form is a panel of the same book */
-.bform{border-bottom:var(--edge) solid var(--ink);padding-bottom:var(--s5)}
+.bform{border:var(--edge-panel) solid var(--ink);background:var(--paper);
+  padding:var(--s5);box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
+/* the archive: held meetings hang off a heavy rule */
+.blist--held{border-left:var(--edge) solid var(--ink);
+  padding-left:clamp(12px,2vw,22px)}
 .bsec{border-bottom:var(--edge-thin) solid var(--ink);color:var(--ink)}
 
 .panel{box-shadow:none}
@@ -279,11 +283,8 @@ main#view:focus,main#view:focus-visible{outline:none}
 .view--home{display:flex;flex-direction:column;gap:var(--s4)}
 
 .card{position:relative;border:var(--edge-card) solid var(--ink);
-  background:var(--paper);width:100%}
-.card::after{content:"";position:absolute;inset:0;z-index:-1;
-  transform:translate(clamp(10px,2.4vw,20px),clamp(10px,2.4vw,20px));
-  background-image:radial-gradient(var(--ink) 1.25px,transparent 1.35px);
-  background-size:6px 6px}
+  background:var(--paper);width:100%;
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
 
 /* The title row of a printed card: the count at full display scale, a
    rule under it, and the two readings sharing the line below. */
@@ -305,9 +306,7 @@ main#view:focus,main#view:focus-visible{outline:none}
   list-style:none;margin:0;padding:0}
 
 .seal{position:relative;aspect-ratio:1;display:grid;place-items:center;
-  background:var(--paper);min-width:0;
-  background-image:radial-gradient(var(--ink) .9px,transparent 1px);
-  background-size:7px 7px}
+  background:var(--paper);min-width:0}
 .seals .seal svg{width:84%;height:84%;display:block}
 .seal__mark path{fill:var(--tone);stroke:none}
 .seal__no{position:absolute;right:5%;bottom:3%;
@@ -332,13 +331,13 @@ main#view:focus,main#view:focus-visible{outline:none}
    emit it today. */
 .seal[data-seal="locked"] .seal__mark{opacity:.4}
 
-.act{display:flex;max-width:760px}
+.act{display:flex}
 /* font-family is not optional here. A <button> does not inherit it, so
    without this line the button and everything inside it renders in the
    browser's default Arial — which is exactly what was happening. */
 .act__btn{position:relative;overflow:hidden;isolation:isolate;
   display:grid;align-content:end;gap:4px;
-  width:100%;min-height:clamp(138px,32vw,190px);
+  width:100%;min-height:clamp(96px,18vw,140px);
   padding:var(--s5);border:var(--edge-panel) solid var(--ink);
   background:var(--paper);color:var(--ink);text-align:left;cursor:pointer;
   font-family:var(--f-body)}
@@ -350,31 +349,34 @@ main#view:focus,main#view:focus-visible{outline:none}
 
 .view--home{display:flex;flex-direction:column;gap:var(--s4)}
 .deck{display:grid;gap:var(--s4)}
+.deck__side{display:grid;gap:var(--s4);align-content:start;min-width:0}
 
-/* the ink panel runs off the sheet on both layouts; on a phone it does
-   it under the card, on a wide sheet beside it */
-.deck > .act{margin-right:calc(var(--gutter) * -1)}
-.deck > .act .act__btn{border-right:0}
+/* the live ink panel still runs off the sheet */
+.deck .act--live{margin-right:calc(var(--gutter) * -1)}
+.deck .act--live .act__btn{border-right:0}
 
 @media(min-width:1024px){
   .deck{grid-template-columns:minmax(0,62fr) minmax(0,38fr);
-    gap:clamp(20px,2.6vw,40px);align-items:stretch}
-  .deck > .card,.deck > .act{max-width:none}
-  .deck > .act .act__btn{min-height:0}
+    gap:clamp(20px,2.6vw,40px);align-items:start}
+  .deck > .card{max-width:none}
+  /* the card presses up over the title rule: the object sits ON the page */
+  .deck{margin-top:calc(var(--s3) * -1)}
 }
 
-.ahead{display:flex;flex-direction:column}
-.ahead__mark{margin:0 0 var(--s2);padding-bottom:var(--s2);
-  border-bottom:var(--edge-panel) solid var(--ink);
+.ahead{display:flex;flex-direction:column;
+  border:var(--edge-panel) solid var(--ink)}
+.ahead__mark{margin:0;padding:var(--s2) var(--s4);
+  background:var(--ink);color:var(--paper);
   font-family:var(--f-head);text-transform:uppercase;
-  font-size:clamp(19px,3.6vw,26px);line-height:1}
-.ahead__list{list-style:none;margin:0;padding:0;
+  font-size:clamp(17px,3vw,22px);line-height:1.2}
+.ahead__list{list-style:none;margin:0;padding:0 var(--s4);
   display:flex;flex-direction:column}
 .ahead__row{display:grid;
   grid-template-columns:auto minmax(0,1fr) auto;
   align-items:baseline;gap:var(--s3);
   padding:clamp(9px,1.4vw,13px) 0;
   border-bottom:var(--edge-rule) solid var(--tint)}
+.ahead__row:last-child{border-bottom:0}
 .ahead__no{font-family:var(--f-head);line-height:1;
   font-size:clamp(21px,4.4vw,30px);color:var(--ink-2);
   min-width:2.4ch;letter-spacing:-.02em}
@@ -420,20 +422,25 @@ button,input,select,textarea{font-family:inherit}
   min-height:100dvh}
 
 .spread__field{position:absolute;
-  left:calc(var(--gutter) * -1);right:calc(var(--gutter) * -1);
-  top:calc(var(--gut-tier) * -1);height:var(--band);
+  left:0;right:0;
+  top:0;height:var(--band);
   background:var(--ink);z-index:0}
-/* Cropped into the field's lower-left corner, not centred in it. Centred,
-   it filled the band and printed straight through the masthead. */
-.spread__seal{position:absolute;
-  left:-34%;top:auto;bottom:-32%;width:min(86vw,430px);aspect-ratio:1;height:auto;
+/* Cropped into the field's lower-left corner, not centred in it.
+   Sized from the band, not the viewport: the swirl's visible height is
+   at most 58% of the field, so it cannot climb into the masthead no
+   matter how narrow the page gets. */
+.spread__seal{position:absolute;--swirl:min(86vw,430px,calc(var(--band) * .95));
+  left:calc(var(--swirl) * -.3);top:auto;bottom:calc(var(--swirl) * -.42);
+  width:var(--swirl);aspect-ratio:1;height:auto;
   fill:var(--paper);opacity:1}
 
 .spread__head{grid-row:1;position:relative;z-index:2;
   padding:clamp(26px,7vw,44px) var(--gutter) 0;
   color:var(--paper);align-self:start}
-.spread__sub{margin:0 0 var(--s2);font-size:var(--t-caption);
-  letter-spacing:.16em;color:var(--tint)}
+.spread__sub{margin:0 0 var(--s3);font-size:var(--t-caption);
+  letter-spacing:.16em;color:var(--tint);
+  display:flex;align-items:center;gap:clamp(8px,1.4vw,14px)}
+.spread__kci{width:clamp(36px,5vw,56px);height:auto;flex:none;display:block}
 .spread__wm{font-family:var(--f-display);text-transform:uppercase;
   font-size:clamp(52px,15vw,124px);line-height:.9;letter-spacing:.01em;
   margin:0;padding-bottom:.06em}
@@ -445,7 +452,8 @@ button,input,select,textarea{font-family:inherit}
   padding:clamp(20px,5vw,32px);
   display:flex;flex-direction:column;gap:var(--s4);
   max-width:460px;width:auto;box-sizing:border-box;
-  box-shadow:var(--s3) var(--s3) 0 var(--tone)}
+  box-shadow:0 0 0 var(--edge-panel) var(--paper),
+             var(--pnl-off) var(--pnl-off) 0 var(--edge-panel) var(--ink)}
 .authp__title{font-family:var(--f-head);text-transform:none;
   font-size:var(--t-head);line-height:1;margin:0}
 .authp__f{display:flex;flex-direction:column;gap:5px;min-width:0}
@@ -488,8 +496,9 @@ button,input,select,textarea{font-family:inherit}
     padding-block:clamp(40px,7vh,96px)}
   .spread__head{grid-row:1}
   .spread__field{right:auto;bottom:0;height:auto;
-    width:calc(54% + var(--gutter))}
-  .spread__seal{left:-30%;top:auto;bottom:-34%;width:min(64vw,720px)}
+    width:54%}
+  .spread__seal{--swirl:min(64vw,720px);
+    left:calc(var(--swirl) * -.3);bottom:calc(var(--swirl) * -.34)}
 
   .spread__head{grid-column:1;padding:0 var(--gutter);align-self:start}
   /* sized to its own column rather than to the viewport, so eight caps
@@ -667,7 +676,7 @@ button,input,select,textarea{font-family:inherit}
   isolation:isolate;overflow:hidden;
   width:100%;aspect-ratio:1;max-height:62vh;
   border:var(--edge-frame) solid var(--ink);background:var(--tint);
-  box-shadow:clamp(8px,1.6vw,14px) clamp(8px,1.6vw,14px) 0 var(--tone)}
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
 /* a code is square, so on a phone the frame is square: it fills the
    sheet instead of leaving a letterbox with half a screen under it. */
 @media(min-width:600px){ .viewer{aspect-ratio:4/3} }
@@ -702,9 +711,11 @@ button,input,select,textarea{font-family:inherit}
 .viewer__status{align-self:end;justify-self:center;z-index:3;
   padding:0 var(--s3) var(--s3);max-width:100%}
 .viewer__msg{display:inline-block;
-  padding:6px var(--s3);background:var(--paper);color:var(--ink);
-  font-size:var(--t-caption);line-height:1.25;text-align:center}
-.viewer__msg--hot{background:var(--ink);color:var(--paper)}
+  padding:7px var(--s4);background:var(--paper);color:var(--ink);
+  border:var(--edge-panel) solid var(--ink);
+  font-family:var(--f-head);font-size:clamp(14px,2.4vw,19px);
+  line-height:1.25;text-align:center;text-transform:uppercase}
+.viewer__msg--hot{background:var(--ink);color:var(--paper);border-color:var(--paper)}
 .viewer__msg--soft{color:var(--ink-2)}
 
 /* a good read floods the frame for one beat */
@@ -726,8 +737,10 @@ button,input,select,textarea{font-family:inherit}
 .stall__note{margin:0;max-width:46ch;font-size:var(--t-caption);
   line-height:1.45;color:var(--ink-2)}
 
-.manual{display:flex;flex-direction:column;gap:var(--s2);
-  border-top:var(--edge-panel) solid var(--ink);padding-top:var(--s3)}
+.manual{display:flex;flex-direction:column;gap:var(--s3);
+  border:var(--edge-panel) solid var(--ink);background:var(--paper);
+  padding:var(--s4)}
+.manual > .bubble:empty{display:none}
 .manual__lab{font-size:var(--t-caption);color:var(--ink-2);line-height:1.35}
 .manual__f{display:flex;gap:var(--s2);flex-wrap:wrap;align-items:stretch}
 .manual__in{flex:999 1 min(100%,14ch);min-width:0;
@@ -752,10 +765,10 @@ button,input,select,textarea{font-family:inherit}
     gap:var(--s5) var(--s5);align-content:start}
   .view--scan > .rechead{grid-area:head}
   .view--scan > .standing{grid-area:standing}
-  .view--scan > .viewer{grid-area:viewer;max-height:none}
+  .view--scan > .viewer{grid-area:viewer;max-height:none;
+    margin-left:calc(var(--gutter) * -1);border-left:0}
 
-  .view--scan > .manual{grid-area:manual;align-self:stretch;
-    justify-content:flex-end;border-top:0;padding-top:0}
+  .view--scan > .manual{grid-area:manual;align-self:end}
 }
 
 .view--rewards{display:flex;flex-direction:column;gap:var(--s5)}
@@ -768,37 +781,29 @@ button,input,select,textarea{font-family:inherit}
 .ladder__of{margin:0;font-size:var(--t-caption);color:var(--ink-2);
   line-height:1.2}
 
-.ladder__track{position:relative;width:100%;
-  margin-top:clamp(30px,5vw,46px);
-  height:clamp(38px,6vw,76px);
-  background:var(--tint);
-  background-image:radial-gradient(var(--ink) 1.25px,transparent 1.35px);
-  background-size:6px 6px;
-  border:var(--edge-panel) solid var(--ink)}
-.ladder__fill{position:absolute;inset:0 auto 0 0;width:var(--w,0%);
+/* the climb: a vertical rail whose ink is the count, with the three
+   plates hung off it at their rungs */
+.climb{display:grid;--rgap:clamp(16px,2.6vw,30px);
+  grid-template-columns:clamp(22px,3.4vw,40px) minmax(0,1fr);
+  column-gap:var(--rgap);margin-top:var(--s3)}
+.climb__rail{position:relative;border:var(--edge-panel) solid var(--ink);
+  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
+.climb__fill{position:absolute;left:0;right:0;top:0;height:var(--h,0%);
   background:var(--ink)}
+.climb__plates{display:flex;flex-direction:column;
+  gap:clamp(20px,3.4vw,40px);padding-block:clamp(4px,1vw,12px);min-width:0}
 
-.ladder__rung{position:absolute;top:0;bottom:0;left:var(--x,0%);
-  width:var(--edge-panel);background:var(--ink)}
-.ladder__rung b{position:absolute;left:50%;bottom:calc(100% + 6px);
-  transform:translateX(-50%);
-  font-family:var(--f-head);font-weight:inherit;line-height:1;
-  font-size:var(--t-sub);color:var(--ink-2)}
-/* a rung already behind you is drawn on the filled part of the track,
-   so it inverts to hold against the ink */
-.ladder__rung--past{background:var(--paper)}
-.ladder__rung--past b{color:var(--ink)}
-
-.tiers{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr)}
-@media(min-width:760px){
-  .tiers{grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:clamp(14px,2vw,26px)}
-}
-
-.tier{display:flex;flex-direction:column;align-items:flex-start;
+.tier{position:relative;display:flex;flex-direction:column;align-items:flex-start;
   gap:var(--s2);min-width:0;
   padding:clamp(16px,2.4vw,26px);
   border:var(--edge-panel) solid var(--ink);background:var(--paper)}
+/* the hook: every plate hangs off the rail. ::after, because sealed
+   plates spend ::before on their tone veil. */
+.tier::after{content:"";position:absolute;right:100%;top:clamp(22px,3.4vw,40px);
+  width:var(--rgap,20px);height:var(--edge-panel);background:var(--ink)}
+/* uneven hanging: the middle plate steps out */
+.climb__plates .tier:nth-child(2){margin-left:clamp(22px,5vw,72px)}
+.climb__plates .tier:nth-child(2)::after{width:calc(var(--rgap,20px) + clamp(22px,5vw,72px))}
 .tier__at{font-family:var(--f-head);line-height:.82;
   font-size:clamp(46px,8.5vw,86px);color:var(--ink)}
 .tier__body{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -810,7 +815,7 @@ button,input,select,textarea{font-family:inherit}
 .tier__say{margin-top:auto;padding-top:var(--s3);
   font-size:var(--t-caption);color:var(--ink-2)}
 
-.tier--sealed{position:relative;isolation:isolate}
+.tier--sealed{position:relative;isolation:isolate;max-width:660px}
 .tier--sealed::before{content:"";position:absolute;inset:0;z-index:-1;
   background-image:radial-gradient(var(--ink) .9px,transparent 1px);
   background-size:7px 7px;
@@ -822,7 +827,9 @@ button,input,select,textarea{font-family:inherit}
    on the page carrying a verb. */
 .tier--ready{background:var(--ink);color:var(--paper);
   border-color:var(--ink);
-  box-shadow:var(--s2) var(--s2) 0 var(--tone)}
+  margin-right:calc(var(--gutter) * -1);border-right:0;
+  padding-block:clamp(22px,3.4vw,38px)}
+.tier--ready .tier__at{font-size:clamp(58px,10vw,110px)}
 .tier--ready .tier__at{color:var(--paper)}
 .tier--ready .tier__desc{color:var(--tint)}
 .tier__claim{margin-top:auto;padding:10px var(--s4);cursor:pointer;
@@ -836,7 +843,15 @@ button,input,select,textarea{font-family:inherit}
 
 /* TAKEN — ink, but spent: the figure holds and everything else recedes,
    so a claimed plate reads as history rather than as a second offer. */
-.tier--claimed{background:var(--ink);color:var(--tint);border-color:var(--ink)}
+.tier--claimed{background:var(--ink);color:var(--tint);border-color:var(--ink);
+  max-width:700px}
+/* the cancellation: a punched CLAIMED across the plate */
+.tier__punch{position:absolute;right:clamp(10px,3vw,34px);top:50%;
+  transform:translateY(-50%) rotate(-12deg);
+  font-family:var(--f-head);text-transform:uppercase;line-height:1;
+  font-size:clamp(24px,4.6vw,44px);color:var(--paper);
+  border:var(--edge-frame) solid var(--paper);padding:.18em .45em;
+  pointer-events:none}
 .tier--claimed .tier__at{color:var(--paper)}
 .tier--claimed .tier__name{color:var(--tint)}
 .tier--claimed .tier__desc{color:var(--ink-2)}
@@ -850,29 +865,34 @@ button,input,select,textarea{font-family:inherit}
 
 .sheet{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr);
   align-items:start}
-@media(min-width:900px){
-  .sheet{grid-template-columns:minmax(0,34fr) minmax(0,66fr);
-    gap:clamp(20px,2.8vw,44px);align-items:stretch}
-  /* the name sits at the foot of the plate. Centred in seven hundred
-     pixels of ink it read as a block that had not been composed. */
-  .sheet > .who{align-content:end}
-  /* and it stops bleeding left: past this width there is a nav rail on
-     that side, and a panel sliding under navigation is not a bleed. */
-  .who{margin-left:0;padding-left:clamp(18px,3vw,32px)}
-}
-
-.who{display:grid;align-content:start;gap:3px;
+.who{display:grid;align-content:space-between;gap:var(--s4);
   background:var(--ink);color:var(--paper);
   padding:clamp(18px,3vw,32px);
   margin-left:calc(var(--gutter) * -1);
-  padding-left:max(var(--gutter),clamp(18px,3vw,32px))}
-.who__name{margin:0;font-family:var(--f-display);text-transform:uppercase;
-  line-height:.92;font-size:clamp(28px,5.4vw,56px);color:var(--paper);
-  overflow-wrap:anywhere;padding-bottom:.06em}
+  padding-left:max(var(--gutter),clamp(18px,3vw,32px));
+  min-height:clamp(200px,30vw,320px)}
+/* the district seal: the member's club identity, on their sheet */
+.who__seal{justify-self:end;width:clamp(76px,11vw,132px)}
+.who__seal .brandseal{width:100%;height:auto;display:block}
+.who__id{display:grid;gap:3px}
+/* the name is set in the header face — the display face's thin strokes
+   were unreadable at this size on ink */
+.who__name{margin:0;font-family:var(--f-head);text-transform:uppercase;
+  line-height:.95;font-size:clamp(30px,5.4vw,60px);color:var(--paper);
+  overflow-wrap:anywhere;padding-bottom:.04em}
 .who__hand{margin:0;font-size:var(--t-caption);color:var(--tint);
   line-height:1.3;overflow-wrap:anywhere;letter-spacing:.1em}
 
-.standing-band{display:grid;gap:2px;
+@media(min-width:900px){
+  .sheet{grid-template-columns:minmax(0,34fr) minmax(0,66fr);
+    gap:clamp(20px,2.8vw,44px);align-items:stretch}
+  /* past this width the nav rail owns the left edge: the plate keeps a
+     real gutter from it instead of sliding underneath */
+  .who{margin-left:0;padding-left:clamp(18px,3vw,32px)}
+}
+
+.standing-band{border-top:var(--edge) solid var(--ink);
+  padding-top:clamp(12px,1.8vw,20px);display:grid;gap:2px;
   grid-template-columns:auto minmax(0,1fr);
   grid-template-areas:"fig of" "rest rest";
   align-items:end;
@@ -948,13 +968,12 @@ button,input,select,textarea{font-family:inherit}
     padding-block:clamp(24px,4vw,44px)}
   .bnow__go{align-self:center;margin-top:0}
 }
-.bnow--live{background:var(--ink);color:var(--paper);border-color:var(--ink);
-  box-shadow:var(--s2) var(--s2) 0 var(--tone-field)}
+.bnow--live{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .bnow__lab{margin:0;font-size:var(--t-caption);color:var(--ink-2)}
 .bnow--live .bnow__lab{color:var(--tint)}
 .bnow__no{margin:0;padding-bottom:.08em;
-  font-family:var(--f-display);text-transform:uppercase;line-height:.9;
-  font-size:clamp(38px,9vw,76px)}
+  font-family:var(--f-head);text-transform:uppercase;line-height:.9;
+  font-size:clamp(44px,10vw,96px)}
 .bnow__at{margin:0;font-size:var(--t-body);line-height:1.3}
 .bnow--live .bnow__at{color:var(--tint)}
 .bnow__state{margin:var(--s2) 0 0;font-size:var(--t-caption);
@@ -1016,17 +1035,19 @@ button,input,select,textarea{font-family:inherit}
   display:flex;flex-direction:column;align-items:flex-start;gap:2px}
 .proj__lab{margin:0;font-size:var(--t-caption);color:var(--tint);
   letter-spacing:.14em}
-.proj__no{margin:0;padding-bottom:.04em;font-family:var(--f-display);
+.proj__no{margin:0;padding-bottom:.04em;font-family:var(--f-head);
   text-transform:uppercase;line-height:.9;
-  font-size:clamp(46px,9vw,104px)}
+  font-size:clamp(52px,10vw,128px)}
 .proj__when{margin:0;font-size:var(--t-body);color:var(--tint)}
 
 .proj__count{display:flex;align-items:baseline;gap:var(--s3);
   margin:var(--s4) 0 0}
 .proj__count b{font-weight:400;font-family:var(--f-head);line-height:.9;
-  font-size:clamp(40px,7.5vw,88px)}
+  font-size:clamp(56px,10vw,120px)}
 .proj__count span{font-size:var(--t-caption);color:var(--tint)}
 .proj__shut{margin:var(--s3) 0 0;font-size:var(--t-caption);color:var(--tint)}
+.proj__kci{display:block;margin-top:var(--s5);width:clamp(56px,7vw,96px)}
+.proj__kci .brandseal{width:100%;height:auto;display:block}
 
 .proj__ctl{margin-top:var(--s4);padding:11px var(--s5);cursor:pointer;
   border:var(--edge-panel) solid var(--paper);
@@ -1042,7 +1063,7 @@ button,input,select,textarea{font-family:inherit}
    camera needs, so the composition stops at the plate's edge. */
 .proj__plate{background:var(--paper);display:grid;place-items:center;
   padding:clamp(16px,3vw,32px);min-width:0}
-.proj__plate .qrpanel__code{width:100%;max-width:min(78vw,560px);aspect-ratio:1}
+.proj__plate .qrpanel__code{width:100%;max-width:min(84vw,640px);aspect-ratio:1}
 .proj__plate--empty{background:var(--tint);
   background-image:radial-gradient(var(--ink) .9px,transparent 1px);
   background-size:7px 7px;min-height:clamp(180px,40vw,320px)}
@@ -1051,7 +1072,10 @@ button,input,select,textarea{font-family:inherit}
 
 @media(min-width:900px){
   /* the field takes the left third and the code the rest: the plate is
-     the subject, and the ink beside it is what makes it read as bright */
-  .proj{grid-template-columns:minmax(0,34fr) minmax(0,66fr);align-items:stretch}
+     the subject, and the ink beside it is what makes it read as bright.
+     The whole strip bleeds off the right edge — the projected page owns
+     its row. */
+  .proj{grid-template-columns:minmax(0,34fr) minmax(0,66fr);align-items:stretch;
+    margin-right:calc(var(--gutter) * -1);border-right:0}
   .proj__side{justify-content:center}
 }

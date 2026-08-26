@@ -59,9 +59,7 @@ body{
 
 .ground{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
   background:var(--paper)}
-.ground__tone{position:absolute;inset:0;opacity:.05;
-  background-image:radial-gradient(var(--ink) 1px,transparent 1px);
-  background-size:6px 6px}
+.ground__tone{display:none}
 .ground__vig,.ground__grain{display:none}
 .arena{display:none}
 .backdrop{position:absolute;inset:0;background-repeat:repeat;
@@ -111,9 +109,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .panel{position:relative;z-index:1;background:var(--paper);
   border:var(--rule) solid var(--ink);border-radius:0;height:100%}
 .panel > *:not([data-layer]){position:relative;z-index:1}
-.panel::after{content:"";position:absolute;inset:0;pointer-events:none;
-  z-index:0;background-image:radial-gradient(var(--ink) 1px,transparent 1px);
-  background-size:5px 5px;opacity:.06}
+
 
 /* ── CASE, AND WHY THERE IS ALMOST NO text-transform HERE ──────────
    CC Wild Words is a unicase comic-lettering face: its lowercase and
@@ -286,6 +282,22 @@ select.input{padding-right:var(--s4)}
   font-family:var(--f-display);font-size:clamp(48px,13vw,150px);
   text-transform:uppercase;color:var(--ink)}
 .wellflare{display:none}
+
+/* the welcome, in two halves along the blade's line */
+.wcut{position:absolute;inset:0;z-index:4}
+.wcut__h{position:absolute;inset:0;display:grid;place-items:center}
+.wcut__h span{font-family:var(--f-display);
+  font-size:clamp(52px,14vw,160px);line-height:1;padding-bottom:.2em;
+  text-transform:uppercase;color:var(--paper);white-space:nowrap}
+.wcut__h--a{clip-path:polygon(0 0,100% 0,100% 42%,0 58%)}
+.wcut__h--b{clip-path:polygon(0 58%,100% 42%,100% 100%,0 100%)}
+
+/* the dismantled page: a grid of loose tiles */
+.waffle{position:absolute;inset:0;z-index:5;display:grid;
+  grid-template-columns:repeat(var(--wc,6),1fr);
+  grid-template-rows:repeat(var(--wr,4),1fr)}
+.waffle__c{background:var(--paper);border:1px solid var(--ink);box-sizing:border-box}
+.waffle__c--ink{background:var(--ink)}
 .fxdefs{position:absolute;width:0;height:0}
 
 /* ══════════════════ TABS — the held-device navigation ══════════════
@@ -321,9 +333,6 @@ select.input{padding-right:var(--s4)}
 .boot__seal{position:absolute;width:min(44vmin,250px);height:min(44vmin,250px);opacity:0}
 .boot__seal circle,.boot__seal polygon,.boot__seal path,.boot__seal line{
   fill:none;stroke:var(--ink);stroke-width:1;vector-effect:non-scaling-stroke}
-.boot__mark{position:relative;opacity:0}
-.boot__mark svg,.boot__mark img{width:94px;height:94px;object-fit:contain}
-.boot__mark path{fill:var(--ink);stroke:none}
 .boot__title{position:absolute;inset:0;display:grid;place-items:center;
   opacity:0;pointer-events:none}
 .boot__half{grid-area:1/1;font-family:var(--f-display);
@@ -362,7 +371,6 @@ select.input{padding-right:var(--s4)}
   text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
 #barBrand svg{width:26px;height:26px}
 #barBrand svg *{fill:var(--ink)!important;stroke:none!important}
-.boot__mark svg *{fill:var(--ink)!important;stroke:none!important}
 
 .lines line,.lines path,.slash path,.slash rect{stroke:var(--ink);fill:var(--ink)}          /* it sits under the number at this width */
 /* Callouts clear the tab bar AND the home indicator, so a message never
@@ -500,7 +508,6 @@ main#view{padding-top:var(--space-tier);
 .verdict__field,.qrpanel__code svg{width:100%;height:100%}
 .btn svg,.motion-btn svg{width:16px;height:16px}
 .rail__nav button svg,.tabs button svg{width:18px;height:18px}
-.boot__mark svg{width:88px;height:88px}
 .verdict__seal{width:min(30vmin,170px);height:min(30vmin,170px)}
 .boot__seal{width:min(40vmin,230px);height:min(40vmin,230px)}
 

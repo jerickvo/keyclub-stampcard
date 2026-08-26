@@ -27,10 +27,11 @@ const C = {
     const line = !p.next ? 'Every reward unlocked'
       : p.remaining === 0 ? `${next.name} is ready to claim`
       : `${p.remaining} more until ${next.name.toLowerCase()}`;
+    const cardNo = Math.floor(p.floor / p.span) + 1;
     return `<div class="count">
       <p class="count__num"><b>${pad(p.filled)}</b><span>/ ${p.span}</span></p>
       <div class="count__foot">
-        <span class="count__label">stamps on this card</span>
+        <span class="count__label">stamps on card ${pad(cardNo)}</span>
         <span class="count__line">${esc(line)}</span>
       </div>
     </div>`;
@@ -50,6 +51,7 @@ const C = {
         <span class="tier__name">${esc(r.name)}</span>
         <span class="tier__desc">${esc(r.desc || '')}</span>
       </span>
+      ${r.claimed ? `<span class="tier__punch" aria-hidden="true">Claimed</span>` : ''}
       ${ready
         ? `<button class="tier__claim" type="button" data-claim="${r.id}">Claim</button>`
         : `<span class="tier__say">${say}</span>`}
@@ -134,15 +136,15 @@ const C = {
      with. This one is drawn: the seal that has NOT been pressed, at
      real size, with the record it would carry stated as technical
      metadata beside it. Nothing is centred and nothing is boxed. */
-  empty(icon, title, body, code = 'NIL'){
+  empty(icon, title, body){
     return `<section class="rig empty-reg" data-enter>
       <div class="empty">
+        <span class="tone tone--coarse tone--fade-b empty__tone" aria-hidden="true"></span>
         <div class="empty__seal" aria-hidden="true">
           <svg viewBox="0 0 100 100">${seal(2)}</svg>
           <span class="empty__void"></span>
         </div>
         <div class="empty__body">
-          <span class="anno">REC.${esc(code)} // NOT PRESSED</span>
           <h3 class="empty__title">${esc(title)}</h3>
           ${body ? `<p class="empty__note">${esc(body)}</p>` : ''}
         </div>
@@ -264,29 +266,26 @@ const Views = {
            quiet beat before the card. -->
       <header class="rechead rechead--tight" data-enter>
         <h1 class="title rechead__title">Your card</h1>
-        <p class="rechead__note">Ten stamps to a card. A stamp lands when the
-          server accepts a scan, and the card carries the tier you are on.</p>
       </header>
 
-      <!-- The card leads and the ink panel runs off the right edge of
-           the sheet beside it. The two used to be equal-weight
-           rectangles side by side; a panel that bleeds is the thing
-           that stops a row of boxes reading as a row of boxes. -->
+      <!-- The card is the object; the side column carries the action
+           and the calendar so neither is a stretched void. -->
       <div class="deck" data-enter>
         ${C.sealGrid()}
-        ${action}
+        <div class="deck__side">
+          ${action}
+          ${ahead.length ? `<section class="ahead" data-enter>
+            <h2 class="ahead__mark">Ahead</h2>
+            <ul class="ahead__list">
+              ${ahead.map(m => `<li class="ahead__row">
+                <span class="ahead__no">${pad(m.no)}</span>
+                <span class="ahead__day">${fmtDate(m.date)}</span>
+                <span class="ahead__at">${esc(m.time)} / ${esc(m.place)}</span>
+              </li>`).join('')}
+            </ul>
+          </section>` : ''}
+        </div>
       </div>
-
-      ${ahead.length ? `<section class="ahead" data-enter>
-        <h2 class="ahead__mark">Ahead</h2>
-        <ul class="ahead__list">
-          ${ahead.map(m => `<li class="ahead__row">
-            <span class="ahead__no">${pad(m.no)}</span>
-            <span class="ahead__day">${fmtDate(m.date)}</span>
-            <span class="ahead__at">${esc(m.time)} / ${esc(m.place)}</span>
-          </li>`).join('')}
-        </ul>
-      </section>` : ''}
     </div>`;
   },
 
@@ -305,8 +304,6 @@ const Views = {
     return `<div class="view view--record">
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">Record</h1>
-        <p class="rechead__note">Every general meeting, in order. A line is written
-          the moment the server accepts a scan; nothing here is entered by hand.</p>
       </header>
 
       ${held.length ? `<div class="recbody">
@@ -323,8 +320,7 @@ const Views = {
         </section>
       </div>`
       : C.empty(ICON.blank, 'No general meetings yet',
-                'Your record fills itself: every meeting you scan into is '
-                + 'written here automatically. Nothing to do until the first one.')}
+                'Your first stamp will land here.')}
 
       ${upcoming.length ? `<section class="ledger ledger--ahead" data-enter>
         <h2 class="ledger__mark">Scheduled</h2>
@@ -346,30 +342,26 @@ const Views = {
     return `<div class="view view--rewards">
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">Rewards</h1>
-        <p class="rechead__note">Stamps accumulate across the whole year; nothing
-          resets when a card fills. Every rung below is measured from the same count.</p>
       </header>
 
-      <!-- ONE SCALE, NOT THREE BARS. Each tier used to draw its own
-           progress array starting from zero, so the same six stamps
-           were reported four times per row (an array, "6 / 10 stamps",
-           "4 to go", and "Unlocks at 10 stamps") and three times down
-           the page. There is one count; this is one line showing where
-           it stands against all three rungs at once. -->
       <section class="ladder" data-enter>
         <p class="ladder__fig">${pad(total)}</p>
         <p class="ladder__of">${total === 1 ? 'stamp' : 'stamps'} so far${
           next ? ` / ${next.required - total} to the next rung` : ' / every rung passed'}</p>
-        <div class="ladder__track" role="img"
-             aria-label="${total} stamps against rungs at ${tiers.map(t => t.required).join(', ')}">
-          <span class="ladder__fill" style="--w:${Math.min(total / scale * 100, 100).toFixed(1)}%"></span>
-          ${tiers.map(t => `<span class="ladder__rung${total >= t.required ? ' ladder__rung--past' : ''}"
-            style="--x:${(t.required / scale * 100).toFixed(1)}%"><b>${t.required}</b></span>`).join('')}
-        </div>
       </section>
 
-      <section class="tiers" data-enter>
-        ${tiers.map(t => C.tier(t, total)).join('')}
+      <!-- THE CLIMB. One vertical track with the three plates hung on
+           it; the ink in the rail is the same count the figure above
+           states. A plate's size and weight is its state: sealed sits
+           back, ready takes the row and bleeds, claimed is punched. -->
+      <section class="climb" data-enter>
+        <div class="climb__rail" role="img"
+             aria-label="${total} stamps against rungs at ${tiers.map(t => t.required).join(', ')}">
+          <span class="climb__fill" style="--h:${Math.min(total / scale * 100, 100).toFixed(1)}%"></span>
+        </div>
+        <div class="climb__plates">
+          ${tiers.map(t => C.tier(t, total)).join('')}
+        </div>
       </section>
     </div>`;
   },
@@ -387,9 +379,6 @@ const Views = {
     return `<div class="view view--scan">
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">Scan</h1>
-        <p class="rechead__note">Point the camera at the seal on the projector.
-          A stamp is written by the server, not by this screen; nothing is
-          recorded until it answers.</p>
       </header>
 
       <p class="standing" data-enter>
@@ -419,7 +408,7 @@ const Views = {
       </div>
 
       <div class="manual" data-enter>
-        <label class="manual__lab" for="manualInput">Camera not working? Type the code under the seal</label>
+        <label class="manual__lab" for="manualInput">Type the code under the seal</label>
         <div class="manual__f">
           <input class="manual__in" id="manualInput" placeholder="Seal code"
                  aria-label="Seal code" autocomplete="off" spellcheck="false" enterkeyhint="go">
@@ -497,9 +486,12 @@ const Views = {
            which the nav already does. -->
       <div class="sheet" data-enter>
         <section class="who">
-          <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
-            handle !== name ? ` / ${esc(handle)}` : ''}</p>
-          <p class="who__name">${esc(name)}</p>
+          <span class="who__seal" aria-hidden="true">${brandSeal('cnh')}</span>
+          <div class="who__id">
+            <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
+              handle !== name ? ` / ${esc(handle)}` : ''}</p>
+            <p class="who__name">${esc(name)}</p>
+          </div>
         </section>
         ${C.sealGrid()}
       </div>
@@ -545,7 +537,7 @@ const Views = {
         </div>
 
         <header class="spread__head">
-          <p class="spread__sub">Key Club attendance</p>
+          <p class="spread__sub">${brandSeal('kci','spread__kci')}<span>Key Club attendance</span></p>
           <h1 class="spread__wm">Keystamp</h1>
         </header>
 

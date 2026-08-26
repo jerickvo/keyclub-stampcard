@@ -3,10 +3,50 @@
 :root{
   --tone-dot-a:radial-gradient(circle at 50% 50%, var(--ink) 0 1.05px, transparent 1.15px);
   --tone-cell-a:5px 5px;
+  --gut:clamp(10px,1.6vw,18px);         /* the panel gutter            */
+  --pnl-off:clamp(5px,.9vw,9px);        /* printed plate offset        */
   }
+
+/* ══ MANGA PANEL SYSTEM ═════════════════════════════════════════════
+   One vocabulary, many compositions. Everything is :where() so a
+   page's own rules always win without fighting specificity.
+
+   .pnl        framed panel on paper
+   .pnl--ink   solid ink panel (spotted black)
+   .pnl--tone  screentone fill — dots as a deliberate field
+   .pnl--hair  hairline frame (a quiet panel)
+   .pnl--plate hard ink offset: the panel sits ON the page
+   .pnl--flush frameless region that still behaves like a panel
+   .grid-gtr   a gutter stack; data-split cuts it 64 / 73 / 55
+   .lap-t      pulls a panel up over the one before it
+   .tone       a placed screentone field (position it per page)
+   ═════════════════════════════════════════════════════════════════ */
+:where(.pnl){position:relative;border:var(--edge,3px) solid var(--ink);
+  background:var(--paper);min-width:0}
+:where(.pnl--ink){background:var(--ink);color:var(--paper)}
+:where(.pnl--tone){background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
+:where(.pnl--hair){border-width:var(--rule-hair,1px)}
+:where(.pnl--plate){box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
+:where(.pnl--flush){border:0}
+
+:where(.grid-gtr){display:grid;gap:var(--gut);min-width:0}
+@media(min-width:900px){
+  :where(.grid-gtr[data-split="64"]){grid-template-columns:6fr 4fr}
+  :where(.grid-gtr[data-split="73"]){grid-template-columns:7fr 3fr}
+  :where(.grid-gtr[data-split="55"]){grid-template-columns:1fr 1fr}
+}
+:where(.lap-t){margin-top:calc(var(--lap,28px) * -1);z-index:2}
 
 .tone{position:absolute;pointer-events:none;z-index:0;
   background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
+.tone--fine{background-image:radial-gradient(circle at 50% 50%, var(--ink) 0 .8px, transparent .9px);
+  background-size:4px 4px}
+.tone--coarse{background-image:radial-gradient(circle at 50% 50%, var(--ink) 0 1.7px, transparent 1.85px);
+  background-size:8px 8px}
+.tone--fade-b{-webkit-mask-image:linear-gradient(#000 40%,transparent);
+  mask-image:linear-gradient(#000 40%,transparent)}
+.tone--fade-r{-webkit-mask-image:linear-gradient(90deg,#000 40%,transparent);
+  mask-image:linear-gradient(90deg,#000 40%,transparent)}
 
 [data-rank="lead"]{--ink-w:4.4}
 [data-rank="mid"]{--ink-w:2.8}
@@ -45,7 +85,7 @@
 [data-screen="auth"] .rail__nav,
 [data-screen="auth"] #railInd,
 [data-screen="auth"] .tabs{display:none}
-[data-screen="auth"] main#view{padding-bottom:var(--space-block)}
+[data-screen="auth"] main#view{padding:0 0 var(--space-block)}
 
 .bpanel{position:relative;padding:0}
 .bpanel--wait{opacity:.7}
@@ -226,14 +266,15 @@
    boxes on the page; they are divisions of the sheet like everything
    else now */
 
-.empty-reg{position:relative;padding:clamp(28px,5vw,64px) 0 clamp(24px,4vw,52px)}
-.empty-reg::before{content:"";position:absolute;left:0;right:0;top:0;
-  height:var(--edge-thin);background:var(--tone)}
-.empty{display:grid;gap:clamp(16px,3vw,34px);align-items:center;
+.empty-reg{position:relative;padding:clamp(22px,4vw,48px) 0 clamp(24px,4vw,52px)}
+.empty{position:relative;display:grid;gap:clamp(18px,3.4vw,40px);align-items:center;
   grid-template-columns:auto minmax(0,1fr);
-  border:0;background:none;padding:0;min-height:0}
-.empty__seal{position:relative;flex:none;
-  width:clamp(74px,12vw,132px);aspect-ratio:1}
+  border:var(--edge-frame) solid var(--ink);background:var(--paper);
+  padding:clamp(22px,4vw,46px);max-width:760px;min-height:0;overflow:hidden;
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
+.empty__tone{right:0;top:0;width:34%;height:46%}
+.empty__seal{position:relative;flex:none;z-index:1;
+  width:clamp(92px,15vw,168px);aspect-ratio:1}
 .empty__seal svg{width:100%;height:100%;display:block;opacity:.5}
 
 .empty__seal svg circle,.empty__seal svg polygon,
@@ -242,7 +283,7 @@
 /* the void: the seal is present, the mark inside it is not */
 .empty__void{position:absolute;left:50%;top:50%;width:56%;height:var(--edge-thin);
   background:var(--tone);transform:translate(-50%,-50%) rotate(-32deg)}
-.empty__body{min-width:0}
+.empty__body{min-width:0;position:relative;z-index:1}
 .empty__title{font-family:var(--f-head);text-transform:uppercase;
   font-size:clamp(17px,2.4vw,30px);line-height:1.02;letter-spacing:-.01em;
   margin-top:clamp(7px,1vw,11px);color:var(--ink)}
@@ -450,7 +491,5 @@ select.input:focus-visible{outline:none}
   .verdict .verdict__seal{margin-right:min(4vw,40px)}
 }
 
-.ahead{position:relative;padding-top:clamp(14px,2vw,22px);
-  margin-top:clamp(26px,4vw,56px)}
-.ahead .h2{color:var(--ink)}
+
 

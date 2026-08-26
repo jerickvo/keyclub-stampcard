@@ -314,7 +314,7 @@ document.addEventListener('submit', async e => {
   try {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
-    FX.impactFrame({ word:up ? 'Joined' : 'Welcome', angle:-18 });
+    FX.welcomeCut(up ? 'Joined' : 'Welcome');
     go('home');
   } catch (err){
     authErr(err && err.message ? err.message : 'Something went wrong. Try again.');
@@ -414,7 +414,10 @@ document.addEventListener('click', e => {
   const out = e.target.closest('[data-signout]');
   if (out){
     Store.signOut()
-      .then(() => { toast({ key:'auth', title:'Signed out' }); go('auth'); })
+      .then(() => FX.waffleOut(() => {
+        toast({ key:'auth', title:'Signed out' });
+        go('auth');
+      }))
       .catch(() => toast({ key:'auth', bad:true, title:'Could not sign out',
                            detail:'Check your connection and try again.' }));
     return;
