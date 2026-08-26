@@ -19,6 +19,20 @@ const Motion = {
   E: cubicBezier(.22,.61,.36,1),
   get off(){ return this.forced || !window.animate || systemReducedMotion(); },
 
+  /* return an element to CSS control AND reset anime's per-element
+     transform cache to identity, so a later animation on the same
+     element cannot resurrect a stale skew/translate component. This is
+     the root fix for the page rendering skewed/blurry after
+     navigation: exit skewed #view, a delayed cut push re-animated it,
+     and anime composed the cached skew back in. */
+  settle(el){
+    if (!el || !el.style) return;
+    try { aset(el, { translateX:0, translateY:0, skewX:0, skewY:0, rotate:0, scale:1, opacity:1 }); }
+    catch (_) {}
+    el.style.transform = '';
+    el.style.opacity = '';
+  },
+
   exit(scope){
     if (this.off) return Promise.resolve();
     /* anime.js v4's animate() return value is itself thenable — it
@@ -30,8 +44,10 @@ const Motion = {
        this animation was still running, and the animation then kept
        writing opacity/transform over the reset for its full duration
        — landing the freshly-rendered next page at opacity:0. */
-    return animate(scope, { opacity:[1,0], translateX:[0,-14], skewX:[0,-2.5],
-                   duration:130, ease:'inQuad' });
+    /* out along the blade's line; Motion.settle() in go() resets both
+       the inline style and anime's transform cache afterwards */
+    return animate(scope, { opacity:[1,0], translateX:[0,-24], translateY:[0,8],
+                   skewX:[0,-3], duration:150, ease:'inQuad' });
   },
 
   ripple(btn){

@@ -486,7 +486,7 @@ const Views = {
            which the nav already does. -->
       <div class="sheet" data-enter>
         <section class="who">
-          <span class="who__seal" aria-hidden="true">${brandSeal('cnh')}</span>
+          <span class="who__seal" aria-hidden="true">${brandSeal('kci')}</span>
           <div class="who__id">
             <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
               handle !== name ? ` / ${esc(handle)}` : ''}</p>

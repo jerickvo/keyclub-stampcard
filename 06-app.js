@@ -142,7 +142,8 @@ async function go(id){
 
   current = id;
   syncHash(id);
-  view.style.opacity = ''; view.style.transform = '';
+  Motion.settle(view);            /* identity in anime's cache too, or a
+                                     later cut-push resurrects the exit skew */
   Reveal.clear();
   document.documentElement.dataset.screen = id;   /* CSS lays out each spread by name */
   /* One surface for the whole app: warm paper. Black is manga ink --

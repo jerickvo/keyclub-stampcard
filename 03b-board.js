@@ -97,6 +97,11 @@ const BoardUI = {
     const isLive = Boolean(active);
 
     return `<div class="bover">
+      <!-- the board's identity: the district seal as a plate of its own -->
+      <aside class="bident" data-enter>
+        <span class="bident__seal" aria-hidden="true">${brandSeal('cnh')}</span>
+        <p class="bident__line">Cali-Nev-Ha District</p>
+      </aside>
       <!-- THE MEETING. One ink mass carrying the only thing on this
            page a board member acts on, and the count of who has come
            in so far. Everything under it is the year's standing. -->
@@ -158,33 +163,38 @@ const BoardUI = {
     ];
     const participating = o.participating_members;
 
-    return `<div class="panel bpanel">
-      <h2 class="h2 bsec" style="margin-top:0">Milestones</h2>
-      <ul class="blist bmiles">
-        ${reached.map(r => {
-          const count = ms[r.key];
-          const known = typeof count === 'number' && typeof participating === 'number';
-          // the bar is share of members who have ever checked in, not of
-          // every account — an account that has never come is not
-          // "behind" on a milestone, it has not started
-          const pct = known && participating > 0
-            ? Math.round((count / participating) * 100) : 0;
-          return `<li class="bmile">
-            <span class="bmile__no">${r.n}</span>
-            <span class="bmile__mid">
-              <b>${esc(r.name)}</b>
-              <span class="muted">${known
-                ? `${count} member${count === 1 ? '' : 's'} reached ${r.n} stamps`
+    const total = (this.members && this.members.total);
+    return `<div class="bpanel memgrid">
+      <!-- the club, in one figure; the three milestones hang beside it -->
+      <section class="msummary" data-enter>
+        <div class="msummary__lead">
+          <p class="msummary__fig">${typeof total === 'number' ? pad(total) : '--'}</p>
+          <p class="msummary__of">members on the roster</p>
+        </div>
+        <ul class="mplates">
+          ${reached.map(r => {
+            const count = ms[r.key];
+            const known = typeof count === 'number' && typeof participating === 'number';
+            const pct = known && participating > 0
+              ? Math.round((count / participating) * 100) : 0;
+            return `<li class="mplate ${known && count > 0 ? 'mplate--lit' : ''}">
+              <span class="mplate__no">${r.n}</span>
+              <span class="mplate__name">${esc(r.name)}</span>
+              <span class="mplate__say">${known
+                ? `${count} member${count === 1 ? '' : 's'} there`
                 : 'Not available'}</span>
               <span class="bmile__bar" role="img"
                 aria-label="${known ? `${pct} percent of checked-in members` : 'unavailable'}">
                 <span class="bmile__fill" style="width:${pct}%"></span></span>
-            </span>
-          </li>`;
-        }).join('')}
-      </ul>
-      <h2 class="h2 bsec">Roster</h2>
-      ${this.rosterBody()}
+            </li>`;
+          }).join('')}
+        </ul>
+      </section>
+
+      <section class="rosterpanel" data-enter>
+        <h2 class="meetband">Roster</h2>
+        ${this.rosterBody()}
+      </section>
     </div>`;
   },
 
@@ -194,19 +204,24 @@ const BoardUI = {
     const upcoming = list.filter(m => m.state === 'UPCOMING');
     const past = list.filter(m => m.state !== 'UPCOMING');
 
-    return `<div class="panel bpanel">
-      ${this.deleteNote ? `<p class="authp__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
-      ${this.createForm()}
+    return `<div class="bpanel meetgrid">
+      ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
 
-      <h2 class="h2 bsec">Coming up</h2>
-      ${upcoming.length
-        ? `<ul class="blist">${upcoming.map(m => this.meetingRow(m)).join('')}</ul>`
-        : this.empty('No upcoming meetings.')}
+      <section class="meetgrid__form" data-enter>${this.createForm()}</section>
 
-      <h2 class="h2 bsec">Already held</h2>
-      ${past.length
-        ? `<ul class="blist blist--held">${past.map(m => this.meetingRow(m)).join('')}</ul>`
-        : this.empty('No meetings yet.')}
+      <section class="meetgrid__up" data-enter>
+        <h2 class="meetband">Coming up</h2>
+        ${upcoming.length
+          ? `<ul class="blist">${upcoming.map(m => this.meetingRow(m)).join('')}</ul>`
+          : this.empty('No upcoming meetings.')}
+      </section>
+
+      <section class="meetgrid__held" data-enter>
+        <h2 class="meetband meetband--held">Already held</h2>
+        ${past.length
+          ? `<ul class="blist blist--held">${past.map(m => this.meetingRow(m)).join('')}</ul>`
+          : this.empty('No meetings yet.')}
+      </section>
     </div>`;
   },
 

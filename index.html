@@ -375,6 +375,7 @@ select.input{padding-right:var(--s4)}
 
 /* the welcome, in two halves along the blade's line */
 .wcut{position:absolute;inset:0;z-index:4}
+.wcut__dim{position:absolute;inset:0;background:var(--ink);opacity:0}
 .wcut__h{position:absolute;inset:0;display:grid;place-items:center}
 .wcut__h span{font-family:var(--f-display);
   font-size:clamp(52px,14vw,160px);line-height:1;padding-bottom:.2em;
@@ -382,12 +383,13 @@ select.input{padding-right:var(--s4)}
 .wcut__h--a{clip-path:polygon(0 0,100% 0,100% 42%,0 58%)}
 .wcut__h--b{clip-path:polygon(0 58%,100% 42%,100% 100%,0 100%)}
 
-/* the dismantled page: a grid of loose tiles */
-.waffle{position:absolute;inset:0;z-index:5;display:grid;
-  grid-template-columns:repeat(var(--wc,6),1fr);
-  grid-template-rows:repeat(var(--wr,4),1fr)}
-.waffle__c{background:var(--paper);border:1px solid var(--ink);box-sizing:border-box}
-.waffle__c--ink{background:var(--ink)}
+/* the dismantled page: tiles that each clip a clone of the shell, so
+   the falling pieces are fragments of the actual rendered page */
+.waffle{position:absolute;inset:0;z-index:5}
+.waffle__c{position:absolute;overflow:hidden;background:var(--paper);
+  box-shadow:0 0 0 1px var(--ink)}
+.waffle__page{position:absolute;pointer-events:none}
+.waffle__page > *{width:100%;height:100%}
 .fxdefs{position:absolute;width:0;height:0}
 
 /* ══════════════════ TABS — the held-device navigation ══════════════
@@ -1276,6 +1278,66 @@ body{
 /* the archive: held meetings hang off a heavy rule */
 .blist--held{border-left:var(--edge) solid var(--ink);
   padding-left:clamp(12px,2vw,22px)}
+
+/* ── MEETINGS: a composed spread, not a stack ──────────────────────
+   The calendar is the subject: Coming up leads at 58%, the archive
+   hangs under it, and the scheduling form is its own plate beside
+   them. On a phone the form (the action) comes first. */
+.meetgrid{display:grid;gap:var(--s5);grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"err" "form" "up" "held";align-items:start}
+.meetgrid__err{grid-area:err}
+.meetgrid__form{grid-area:form}
+.meetgrid__up{grid-area:up;min-width:0}
+.meetgrid__held{grid-area:held;min-width:0}
+@media(min-width:1024px){
+  .meetgrid{grid-template-columns:minmax(0,58fr) minmax(0,42fr);
+    column-gap:clamp(20px,3vw,44px);
+    grid-template-areas:"err err" "up form" "held form"}
+  .meetgrid__form .bform{position:sticky;top:var(--s4)}
+}
+/* section bands: ink for the live half of the calendar, hairline for
+   the archive — the two halves stop being twins */
+.meetband{margin:0 0 var(--s3);padding:var(--s2) var(--s4);
+  background:var(--ink);color:var(--paper);
+  font-family:var(--f-head);font-weight:400;text-transform:uppercase;
+  font-size:clamp(17px,2.4vw,24px);line-height:1.2;letter-spacing:.02em}
+.meetband--held{background:none;color:var(--ink);padding-inline:0;
+  border-bottom:var(--edge) solid var(--ink)}
+.meetgrid .bsec{margin-top:0;border-bottom:0}
+.meetgrid .bsec::before{content:none}
+
+/* ── MEMBERS: the club leads, the register follows ─────────────────
+   One large figure for the roster, three milestone plates beside it,
+   then the register as its own banded panel. */
+.memgrid{display:grid;gap:var(--s6)}
+.msummary{display:grid;gap:var(--s5);align-items:end;
+  border-bottom:var(--edge) solid var(--ink);
+  padding-bottom:clamp(16px,2.4vw,28px)}
+@media(min-width:900px){
+  .msummary{grid-template-columns:auto minmax(0,1fr);
+    column-gap:clamp(28px,4vw,64px)}
+}
+.msummary__lead{min-width:0}
+.msummary__fig{margin:0;font-family:var(--f-display);line-height:.78;
+  padding-bottom:.1em;font-size:clamp(70px,12vw,150px)}
+.msummary__of{margin:0;font-size:var(--t-caption);color:var(--ink-2)}
+.mplates{list-style:none;margin:0;padding:0;display:grid;gap:var(--gut);
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr))}
+.mplate{display:grid;gap:4px;align-content:start;
+  border:var(--edge-panel) solid var(--ink);background:var(--paper);
+  padding:clamp(12px,1.8vw,20px)}
+.mplate--lit{background:var(--ink);color:var(--paper)}
+.mplate--lit .bmile__bar{border-color:var(--paper)}
+.mplate--lit .bmile__fill{background:var(--paper)}
+.mplate__no{font-family:var(--f-head);font-size:clamp(30px,4.4vw,52px);
+  line-height:.9}
+.mplate__name{font-family:var(--f-head);font-size:clamp(14px,1.5vw,18px);
+  line-height:1.1}
+.mplate__say{font-size:var(--t-caption);color:inherit;opacity:.72;
+  margin-bottom:var(--s2)}
+.rosterpanel{border:var(--edge-panel) solid var(--ink);background:var(--paper)}
+.rosterpanel .meetband{margin:0}
+.rosterpanel > div{padding:var(--s4) var(--s4) var(--s4)}
 .bsec{border-bottom:var(--edge-thin) solid var(--ink);color:var(--ink)}
 
 .panel{box-shadow:none}
@@ -1406,12 +1468,22 @@ main#view:focus,main#view:focus-visible{outline:none}
 .count__label{color:var(--ink-2)}
 
 .seals{display:grid;grid-template-columns:repeat(5,1fr);
-  gap:var(--edge-rule);background:var(--tone);container-type:inline-size;
+  gap:clamp(6px,1.1vw,11px);container-type:inline-size;
   border-top:var(--edge-panel) solid var(--ink);
-  list-style:none;margin:0;padding:0}
+  list-style:none;margin:0;padding:clamp(10px,1.6vw,16px)}
 
+/* each cell is its own printed stamp: framed, seated on a hard offset,
+   pressed a hair off true. The tilt rides the tile as well as the mark,
+   at a third strength, so the card reads hand-pressed, not broken. */
 .seal{position:relative;aspect-ratio:1;display:grid;place-items:center;
-  background:var(--paper);min-width:0}
+  background:var(--paper);min-width:0;
+  border:var(--edge-panel) solid var(--ink);
+  box-shadow:2.5px 2.5px 0 var(--ink);
+  transform:rotate(calc(var(--press-tilt,0deg) / 3))}
+/* an empty slot: a toned blank waiting for ink */
+.seal[data-seal="empty"]{border-color:var(--tone);box-shadow:none;
+  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
+  background-blend-mode:normal;opacity:.9}
 .seals .seal svg{width:84%;height:84%;display:block}
 .seal__mark path{fill:var(--tone);stroke:none}
 .seal__no{position:absolute;right:5%;bottom:3%;
@@ -1428,7 +1500,8 @@ main#view:focus,main#view:focus-visible{outline:none}
 /* the next one to earn: paper cleared of tone inside a heavy keyline —
    the one empty box on the card that is asking for something */
 .seal--next{background-image:none;
-  box-shadow:inset 0 0 0 var(--edge-frame) var(--ink)}
+  border-width:var(--edge-frame);
+  box-shadow:3px 3px 0 var(--ink)}
 .seal--next .seal__mark path{fill:var(--ink)}
 .seal--next .seal__no{color:var(--ink-2)}
 
@@ -1452,9 +1525,19 @@ main#view:focus,main#view:focus-visible{outline:none}
 .act__sub{font-size:var(--t-body);opacity:.7}
 .act__btn:hover{background:var(--ink);color:var(--paper)}
 
-.view--home{display:flex;flex-direction:column;gap:var(--s4)}
+.view--home{position:relative;display:flex;flex-direction:column;gap:var(--s4)}
+.view--home::before{content:"";position:absolute;z-index:-1;
+  top:clamp(120px,18vw,220px);right:calc(var(--gutter) * -1);
+  width:min(40%,460px);height:clamp(220px,36vw,420px);
+  background-image:radial-gradient(circle at 50% 50%, var(--ink) 0 1.7px, transparent 1.85px);
+  background-size:8px 8px;
+  clip-path:polygon(0 12%,100% 0,100% 88%,14% 100%)}
 .deck{display:grid;gap:var(--s4)}
 .deck__side{display:grid;gap:var(--s4);align-content:start;min-width:0}
+/* the live panel is cut at an angle: an action panel, not a card */
+.deck .act--live .act__btn{
+  clip-path:polygon(0 clamp(10px,2vw,22px),100% 0,100% 100%,0 100%);
+  padding-top:calc(var(--s5) + clamp(10px,2vw,22px))}
 
 /* the live ink panel still runs off the sheet */
 .deck .act--live{margin-right:calc(var(--gutter) * -1)}
@@ -1469,7 +1552,7 @@ main#view:focus,main#view:focus-visible{outline:none}
 }
 
 .ahead{display:flex;flex-direction:column;
-  border:var(--edge-panel) solid var(--ink)}
+  border:var(--edge-panel) solid var(--ink);background:var(--paper)}
 .ahead__mark{margin:0;padding:var(--s2) var(--s4);
   background:var(--ink);color:var(--paper);
   font-family:var(--f-head);text-transform:uppercase;
@@ -1610,11 +1693,17 @@ button,input,select,textarea{font-family:inherit}
     grid-template-rows:auto;
     column-gap:0;align-content:center;
     padding-block:clamp(40px,7vh,96px)}
-  .spread__head{grid-row:1}
+  /* the brand owns the TOP of the field; centring it put the wordmark
+     exactly where the swirl peaks on short viewports */
+  .spread__head{grid-row:1;align-self:start;
+    margin-top:calc(clamp(40px,7vh,96px) * -1);
+    padding-top:clamp(28px,6vh,64px)}
   .spread__field{right:auto;bottom:0;height:auto;
     width:54%}
-  .spread__seal{--swirl:min(64vw,720px);
-    left:calc(var(--swirl) * -.3);bottom:calc(var(--swirl) * -.34)}
+  /* capped by the viewport height as well as width: the swirl's visible
+     crown stays in the field's lower half at every window size */
+  .spread__seal{--swirl:min(64vw,720px,74dvh);
+    left:calc(var(--swirl) * -.3);bottom:calc(var(--swirl) * -.36)}
 
   .spread__head{grid-column:1;padding:0 var(--gutter);align-self:start}
   /* sized to its own column rather than to the viewport, so eight caps
@@ -1935,8 +2024,8 @@ button,input,select,textarea{font-family:inherit}
 .tier--sealed::before{content:"";position:absolute;inset:0;z-index:-1;
   background-image:radial-gradient(var(--ink) .9px,transparent 1px);
   background-size:7px 7px;
-  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 26%,transparent 54%);
-  mask-image:linear-gradient(to bottom,#000 0%,#000 26%,transparent 54%)}
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 18%,transparent 40%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 18%,transparent 40%)}
 .tier--sealed .tier__at{color:var(--ink-2)}
 
 /* READY — the one plate you can act on: full ink, and the only thing
@@ -1977,19 +2066,30 @@ button,input,select,textarea{font-family:inherit}
   .tier{gap:var(--s4)}
 }
 
-.view--member{display:flex;flex-direction:column;gap:var(--s5)}
+.view--member{position:relative;display:flex;flex-direction:column;gap:var(--s5)}
+.view--member::before{content:"";position:absolute;z-index:-1;
+  top:calc(var(--s6) * -1);right:calc(var(--gutter) * -1);
+  width:min(46%,520px);height:clamp(180px,30vw,340px);
+  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
+  clip-path:polygon(22% 0,100% 0,100% 100%)}
 
 .sheet{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr);
   align-items:start}
-.who{display:grid;align-content:space-between;gap:var(--s4);
+.who{position:relative;display:grid;align-content:end;gap:var(--s4);
+  isolation:isolate;overflow:hidden;
   background:var(--ink);color:var(--paper);
   padding:clamp(18px,3vw,32px);
   margin-left:calc(var(--gutter) * -1);
   padding-left:max(var(--gutter),clamp(18px,3vw,32px));
-  min-height:clamp(200px,30vw,320px)}
-/* the district seal: the member's club identity, on their sheet */
-.who__seal{justify-self:end;width:clamp(76px,11vw,132px)}
+  min-height:clamp(240px,36vw,400px)}
+/* the club seal is the plate's graphic: large, knocked out, pressed
+   into the upper-right corner and cropped by the plate's edge */
+.who__seal{position:absolute;z-index:0;
+  top:calc(clamp(150px,22vw,260px) * -.16);
+  right:calc(clamp(150px,22vw,260px) * -.14);
+  width:clamp(150px,22vw,260px)}
 .who__seal .brandseal{width:100%;height:auto;display:block}
+.who__id{position:relative;z-index:1}
 .who__id{display:grid;gap:3px}
 /* the name is set in the header face — the display face's thin strokes
    were unreadable at this size on ink */
@@ -2062,7 +2162,27 @@ button,input,select,textarea{font-family:inherit}
   outline-offset:3px}
 @media(min-width:1024px){ .acct{display:none} }
 
-.bover{display:flex;flex-direction:column;gap:var(--s4)}
+.bover{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"now" "ident" "band"}
+.bover > .bnow{grid-area:now}
+.bover > .bident{grid-area:ident}
+.bover > .standing-band{grid-area:band}
+@media(min-width:1000px){
+  .bover{grid-template-columns:minmax(0,62fr) minmax(0,38fr);
+    grid-template-areas:"now ident" "band band";align-items:stretch;
+    column-gap:clamp(16px,2.2vw,32px)}
+}
+/* the identity plate: the district seal printed on its own paper plate,
+   so it reads as a second panel against the ink of the meeting */
+.bident{position:relative;display:grid;place-items:center;gap:var(--s3);
+  background:var(--paper);color:var(--ink);
+  border:var(--edge-frame) solid var(--ink);
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink);
+  padding:clamp(20px,3vw,36px);align-content:center}
+.bident__seal{width:clamp(120px,16vw,200px);display:block}
+.bident__seal .brandseal{width:100%;height:auto;display:block}
+.bident__line{margin:0;font-family:var(--f-head);
+  font-size:clamp(15px,1.6vw,20px);letter-spacing:.04em}
 
 .bnow{margin-right:calc(var(--gutter) * -1);border-right:0;
   display:grid;gap:2px var(--s5);
@@ -2083,6 +2203,11 @@ button,input,select,textarea{font-family:inherit}
     min-height:clamp(240px,32vh,400px);
     padding-block:clamp(24px,4vw,44px)}
   .bnow__go{align-self:center;margin-top:0}
+  /* with nothing scheduled the verb belongs with the words, not parked
+     against the panel's far edge */
+  .bnow--none{grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"lab" "no" "at" "go";min-height:0}
+  .bnow--none .bnow__go{align-self:start;margin-top:var(--s4)}
 }
 .bnow--live{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .bnow__lab{margin:0;font-size:var(--t-caption);color:var(--ink-2)}
@@ -2179,7 +2304,7 @@ button,input,select,textarea{font-family:inherit}
    camera needs, so the composition stops at the plate's edge. */
 .proj__plate{background:var(--paper);display:grid;place-items:center;
   padding:clamp(16px,3vw,32px);min-width:0}
-.proj__plate .qrpanel__code{width:100%;max-width:min(84vw,640px);aspect-ratio:1}
+.proj__plate .qrpanel__code{width:100%;max-width:min(84vw,58vh,700px);aspect-ratio:1}
 .proj__plate--empty{background:var(--tint);
   background-image:radial-gradient(var(--ink) .9px,transparent 1px);
   background-size:7px 7px;min-height:clamp(180px,40vw,320px)}
@@ -2189,10 +2314,11 @@ button,input,select,textarea{font-family:inherit}
 @media(min-width:900px){
   /* the field takes the left third and the code the rest: the plate is
      the subject, and the ink beside it is what makes it read as bright.
-     The whole strip bleeds off the right edge — the projected page owns
-     its row. */
+     The strip bleeds off BOTH edges and owns most of the viewport
+     height — this page is read from across a room. */
   .proj{grid-template-columns:minmax(0,34fr) minmax(0,66fr);align-items:stretch;
-    margin-right:calc(var(--gutter) * -1);border-right:0}
+    margin-inline:calc(var(--gutter) * -1);border-inline:0;
+    min-height:min(74vh,820px)}
   .proj__side{justify-content:center}
 }
 
@@ -16029,6 +16155,20 @@ const Motion = {
   E: cubicBezier(.22,.61,.36,1),
   get off(){ return this.forced || !window.animate || systemReducedMotion(); },
 
+  /* return an element to CSS control AND reset anime's per-element
+     transform cache to identity, so a later animation on the same
+     element cannot resurrect a stale skew/translate component. This is
+     the root fix for the page rendering skewed/blurry after
+     navigation: exit skewed #view, a delayed cut push re-animated it,
+     and anime composed the cached skew back in. */
+  settle(el){
+    if (!el || !el.style) return;
+    try { aset(el, { translateX:0, translateY:0, skewX:0, skewY:0, rotate:0, scale:1, opacity:1 }); }
+    catch (_) {}
+    el.style.transform = '';
+    el.style.opacity = '';
+  },
+
   exit(scope){
     if (this.off) return Promise.resolve();
     /* anime.js v4's animate() return value is itself thenable — it
@@ -16040,8 +16180,10 @@ const Motion = {
        this animation was still running, and the animation then kept
        writing opacity/transform over the reset for its full duration
        — landing the freshly-rendered next page at opacity:0. */
-    return animate(scope, { opacity:[1,0], translateX:[0,-14], skewX:[0,-2.5],
-                   duration:130, ease:'inQuad' });
+    /* out along the blade's line; Motion.settle() in go() resets both
+       the inline style and anime's transform cache afterwards */
+    return animate(scope, { opacity:[1,0], translateX:[0,-24], translateY:[0,8],
+                   skewX:[0,-3], duration:150, ease:'inQuad' });
   },
 
   ripple(btn){
@@ -16752,7 +16894,7 @@ const Views = {
            which the nav already does. -->
       <div class="sheet" data-enter>
         <section class="who">
-          <span class="who__seal" aria-hidden="true">${brandSeal('cnh')}</span>
+          <span class="who__seal" aria-hidden="true">${brandSeal('kci')}</span>
           <div class="who__id">
             <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
               handle !== name ? ` / ${esc(handle)}` : ''}</p>
@@ -16950,6 +17092,11 @@ const BoardUI = {
     const isLive = Boolean(active);
 
     return `<div class="bover">
+      <!-- the board's identity: the district seal as a plate of its own -->
+      <aside class="bident" data-enter>
+        <span class="bident__seal" aria-hidden="true">${brandSeal('cnh')}</span>
+        <p class="bident__line">Cali-Nev-Ha District</p>
+      </aside>
       <!-- THE MEETING. One ink mass carrying the only thing on this
            page a board member acts on, and the count of who has come
            in so far. Everything under it is the year's standing. -->
@@ -17011,33 +17158,38 @@ const BoardUI = {
     ];
     const participating = o.participating_members;
 
-    return `<div class="panel bpanel">
-      <h2 class="h2 bsec" style="margin-top:0">Milestones</h2>
-      <ul class="blist bmiles">
-        ${reached.map(r => {
-          const count = ms[r.key];
-          const known = typeof count === 'number' && typeof participating === 'number';
-          // the bar is share of members who have ever checked in, not of
-          // every account — an account that has never come is not
-          // "behind" on a milestone, it has not started
-          const pct = known && participating > 0
-            ? Math.round((count / participating) * 100) : 0;
-          return `<li class="bmile">
-            <span class="bmile__no">${r.n}</span>
-            <span class="bmile__mid">
-              <b>${esc(r.name)}</b>
-              <span class="muted">${known
-                ? `${count} member${count === 1 ? '' : 's'} reached ${r.n} stamps`
+    const total = (this.members && this.members.total);
+    return `<div class="bpanel memgrid">
+      <!-- the club, in one figure; the three milestones hang beside it -->
+      <section class="msummary" data-enter>
+        <div class="msummary__lead">
+          <p class="msummary__fig">${typeof total === 'number' ? pad(total) : '--'}</p>
+          <p class="msummary__of">members on the roster</p>
+        </div>
+        <ul class="mplates">
+          ${reached.map(r => {
+            const count = ms[r.key];
+            const known = typeof count === 'number' && typeof participating === 'number';
+            const pct = known && participating > 0
+              ? Math.round((count / participating) * 100) : 0;
+            return `<li class="mplate ${known && count > 0 ? 'mplate--lit' : ''}">
+              <span class="mplate__no">${r.n}</span>
+              <span class="mplate__name">${esc(r.name)}</span>
+              <span class="mplate__say">${known
+                ? `${count} member${count === 1 ? '' : 's'} there`
                 : 'Not available'}</span>
               <span class="bmile__bar" role="img"
                 aria-label="${known ? `${pct} percent of checked-in members` : 'unavailable'}">
                 <span class="bmile__fill" style="width:${pct}%"></span></span>
-            </span>
-          </li>`;
-        }).join('')}
-      </ul>
-      <h2 class="h2 bsec">Roster</h2>
-      ${this.rosterBody()}
+            </li>`;
+          }).join('')}
+        </ul>
+      </section>
+
+      <section class="rosterpanel" data-enter>
+        <h2 class="meetband">Roster</h2>
+        ${this.rosterBody()}
+      </section>
     </div>`;
   },
 
@@ -17047,19 +17199,24 @@ const BoardUI = {
     const upcoming = list.filter(m => m.state === 'UPCOMING');
     const past = list.filter(m => m.state !== 'UPCOMING');
 
-    return `<div class="panel bpanel">
-      ${this.deleteNote ? `<p class="authp__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
-      ${this.createForm()}
+    return `<div class="bpanel meetgrid">
+      ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
 
-      <h2 class="h2 bsec">Coming up</h2>
-      ${upcoming.length
-        ? `<ul class="blist">${upcoming.map(m => this.meetingRow(m)).join('')}</ul>`
-        : this.empty('No upcoming meetings.')}
+      <section class="meetgrid__form" data-enter>${this.createForm()}</section>
 
-      <h2 class="h2 bsec">Already held</h2>
-      ${past.length
-        ? `<ul class="blist blist--held">${past.map(m => this.meetingRow(m)).join('')}</ul>`
-        : this.empty('No meetings yet.')}
+      <section class="meetgrid__up" data-enter>
+        <h2 class="meetband">Coming up</h2>
+        ${upcoming.length
+          ? `<ul class="blist">${upcoming.map(m => this.meetingRow(m)).join('')}</ul>`
+          : this.empty('No upcoming meetings.')}
+      </section>
+
+      <section class="meetgrid__held" data-enter>
+        <h2 class="meetband meetband--held">Already held</h2>
+        ${past.length
+          ? `<ul class="blist blist--held">${past.map(m => this.meetingRow(m)).join('')}</ul>`
+          : this.empty('No meetings yet.')}
+      </section>
     </div>`;
   },
 
@@ -17453,7 +17610,7 @@ const Impact = {
     if (!el || Motion.off) return;
     const rad = (angle + 90) * Math.PI / 180;
     animate(el, { translateX:[0, Math.cos(rad) * px, 0], translateY:[0, Math.sin(rad) * px, 0],
-      duration:140, ease:EASE.CUT, complete(){ el.style.transform = ''; } });
+      duration:140, ease:EASE.CUT, onComplete(){ Motion.settle(el); } });
   },
 
   /* the frame itself takes the hit */
@@ -17461,7 +17618,7 @@ const Impact = {
     if (!el || Motion.off) return;
     animate(el, { translateX:[0, -px, px * .7, -px * .35, 0],
       translateY:[0, px * .5, -px * .4, px * .2, 0],
-      duration:dur, ease:'linear', complete(){ el.style.transform = ''; } });
+      duration:dur, ease:'linear', onComplete(){ Motion.settle(el); } });
   },
 
   shards(host, count, angle){
@@ -17642,7 +17799,7 @@ const FX = {
     animate(createDrawable(strokes), { draw:['0 0', '0 1'],
             duration:dur, delay:stagger(9, { start:delay }), ease:EASE.OUT });
     animate(svg, { rotate:[spin, 0], scale:[.82, 1], duration:dur + 140,
-            delay, ease:EASE.ENERGY });
+            delay, ease:EASE.ENERGY, onComplete(){ releaseTransform(svg); } });
   },
 
   /* the page is cut away: a heavy diagonal, a crossing thin cut, one
@@ -17654,83 +17811,134 @@ const FX = {
     Impact.flash(.2, { delay:34, dur:46 });
   },
 
-  /* the welcome is sliced. The word lands, a blade goes through it,
-     the two halves shear apart along the cut while thinner cuts cross
-     the screen behind it. Under a second, then the page. */
+  /* the welcome is sliced. The word lands and HOLDS, the blade goes
+     through it, the halves shear apart while thinner cuts cross behind,
+     then everything falls away. ~1.5s, and every beat is visible.
+     It owns its own backdrop, so the page-cut scrim cannot stomp it. */
   welcomeCut(word = 'Welcome'){
     if (Motion.off) return;
     const fx = $('#fx'); if (!fx) return;
 
-    Impact.scrim(.62, { dur:620 });
-
     const el = document.createElement('div');
     el.className = 'wcut';
     el.innerHTML =
+      `<span class="wcut__dim"></span>` +
       `<div class="wcut__h wcut__h--a"><span>${esc(word)}</span></div>` +
       `<div class="wcut__h wcut__h--b"><span>${esc(word)}</span></div>`;
     fx.appendChild(el);
+    const dim = el.querySelector('.wcut__dim');
     const a = el.querySelector('.wcut__h--a'), b = el.querySelector('.wcut__h--b');
 
-    createTimeline({ onComplete:() => el.remove() })
-      .add(el, { opacity:[0, 1], scale:[1.3, 1], skewX:[-8, 0], duration:120, ease:EASE.CUT }, 0)
-      .add(a,  { translateX:[0, -30], translateY:[0, -16], rotate:[0, -1.6],
-                 duration:220, ease:EASE.OUT }, 340)
-      .add(b,  { translateX:[0, 34],  translateY:[0, 18],  rotate:[0, 1.8],
-                 duration:220, ease:EASE.OUT }, 340)
-      .add(el, { opacity:[1, 0], duration:150, ease:'inQuad' }, 580);
+    /* 0 the word lands · 150-590 it holds · 590 the blade · 740 the
+       halves shear · 800+ background cuts · 1230 gone */
+    animate(dim, { opacity:[0, .62], duration:240, ease:'outQuad' });
+    animate(dim, { opacity:[.62, 0], duration:280, delay:1200, ease:'inQuad' });
 
-    Slash.create({ type:'B', angle:-12, delay:236 });
-    Slash.create({ type:'D', angle:-58, offset:-90, delay:330 });
-    Slash.create({ type:'D', angle: 24, offset:100, delay:392 });
-    setTimeout(() => Impact.shards(fx, 12, -12), 330);
-    setTimeout(() => Impact.shake($('#shell'), 7, 110), 340);
+    aset([a, b], { opacity:0 });
+    animate([a, b], { opacity:[0, 1], scale:[1.32, 1], skewX:[-8, 0],
+                      duration:150, ease:EASE.CUT });
+    animate([a, b], { scale:[1, 1.014], duration:400, delay:210, ease:'inOutSine' });
+
+    Slash.create({ type:'B', angle:-12, delay:590 });
+    animate(a, { translateX:-34, translateY:-18, rotate:-1.8,
+                 duration:320, delay:740, ease:EASE.OUT });
+    animate(b, { translateX:38, translateY:20, rotate:2.0,
+                 duration:320, delay:740, ease:EASE.OUT });
+    Slash.create({ type:'D', angle:-58, offset:-90, delay:820 });
+    Slash.create({ type:'D', angle: 24, offset:100, delay:900 });
+    setTimeout(() => Impact.shards(fx, 12, -12), 750);
+    setTimeout(() => Impact.shake($('#shell'), 7, 110), 760);
+
+    animate([a, b], { opacity:[1, 0], duration:220, delay:1230, ease:'inQuad' });
+    setTimeout(() => el.remove(), 1540);
   },
 
-  /* sign-out: the dismantle. A grid of cuts goes across the page, the
-     page breaks into tiles, the tiles fall away. onCovered fires at
-     full cover, so the caller swaps the page under the debris. */
+  /* sign-out: the dismantle. A grid of cuts crosses the page, the page
+     itself breaks into tiles — each tile clips a live clone of the
+     rendered page, so the fragments ARE the page — and the pieces fall
+     away, rotating, over the sign-in screen underneath. onCovered
+     fires at full cover, so the caller swaps the real page while the
+     copy hangs in pieces. */
   waffleOut(onCovered){
     const fin = typeof onCovered === 'function' ? onCovered : () => {};
     if (Motion.off) return void fin();
-    const fx = $('#fx'); if (!fx) return void fin();
+    const fx = $('#fx'), shell = $('#shell');
+    if (!fx || !shell) return void fin();
 
-    for (let i = 0; i < 3; i++)
-      Slash.create({ type:'D', angle:-7, offset:(i - 1) * (innerHeight * .3),
-                     delay:i * 34, afterimage:false });
-    for (let i = 0; i < 4; i++)
-      Slash.create({ type:'D', angle:83, along:(i - 1.5) * (innerWidth * .24),
-                     delay:58 + i * 30, afterimage:false });
+    const W = innerWidth, H = innerHeight, sy = scrollY;
+    const cols = W > 700 ? 5 : 3, rows = W > 700 ? 4 : 5;
 
+    /* Each tile carries a clone of the shell. The sign-in page renders
+       underneath while the pieces hang, and its [data-screen="auth"]
+       rules would restyle the clones too (the rail collapses and every
+       fragment shifts) — so the layout the clones depend on is frozen
+       inline at clone time. */
+    const snap = () => {
+      const cl = shell.cloneNode(true);
+      const freeze = (sel, props) => {
+        const src = sel ? shell.querySelector(sel) : shell;
+        const dst = sel ? cl.querySelector(sel) : cl;
+        if (!src || !dst) return;
+        const cs = getComputedStyle(src);
+        props.forEach(p => { dst.style[p] = cs[p]; });
+      };
+      freeze(null, ['gridTemplateColumns']);
+      freeze('.rail', ['display']);
+      freeze('.rail__nav', ['display']);
+      freeze('.topbar', ['display']);
+      freeze('main', ['padding']);
+      return cl;
+    };
+
+    /* the slash grid: the cut lines land first, drawn edge to edge */
+    for (let i = 1; i < rows; i++)
+      Slash.create({ type:'D', angle:-4, offset:(i / rows - .5) * H,
+                     delay:i * 26, afterimage:false });
+    for (let i = 1; i < cols; i++)
+      Slash.create({ type:'D', angle:87, along:(i / cols - .5) * W,
+                     delay:40 + i * 26, afterimage:false });
+
+    /* the page, in tiles: each cell clips its own clone of the shell */
     const grid = document.createElement('div');
     grid.className = 'waffle';
-    const cols = innerWidth > 700 ? 6 : 4, rows = innerWidth > 700 ? 4 : 6;
-    grid.style.setProperty('--wc', cols);
-    grid.style.setProperty('--wr', rows);
     const cells = [];
-    for (let i = 0; i < cols * rows; i++){
-      const c = document.createElement('span');
-      c.className = 'waffle__c' + (roll(i) < .16 ? ' waffle__c--ink' : '');
-      grid.appendChild(c); cells.push(c);
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++){
+      const x = Math.round(c * W / cols), y = Math.round(r * H / rows);
+      const w = Math.round((c + 1) * W / cols) - x, h = Math.round((r + 1) * H / rows) - y;
+      const cell = document.createElement('div');
+      cell.className = 'waffle__c';
+      cell.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px`;
+      const page = document.createElement('div');
+      page.className = 'waffle__page';
+      page.style.cssText = `width:${W}px;height:${H}px;left:${-x}px;top:${-y - sy}px`;
+      page.appendChild(snap());
+      cell.appendChild(page);
+      grid.appendChild(cell);
+      cells.push(cell);
     }
     fx.appendChild(grid);
-    aset(grid, { opacity:0 });
 
-    const t0 = 210;
-    setTimeout(() => { aset(grid, { opacity:1 }); fin(); }, t0);
-    cells.forEach((c, i) => {
-      const r = roll(i);
-      const cx = i % cols - (cols - 1) / 2, cy = ((i / cols) | 0) - (rows - 1) / 2;
-      animate(c, {
-        translateX: cx * 34 + (r - .5) * 90,
-        translateY: cy * 26 + 140 + r * 170,
-        rotate: (r - .5) * 34,
-        opacity: [1, 0],
-        duration: 300 + r * 140,
-        delay: t0 + 40 + r * 110 + (cy + 2) * 24,
+    const t0 = 150;                     /* cuts have crossed; tiles hold */
+    setTimeout(fin, t0 + 60);           /* swap the real page under the copy */
+
+    cells.forEach((cell, i) => {
+      const r = roll(i), row = (i / cols) | 0, col = i % cols;
+      /* the seams open: a hair of separation makes the grid read as cut */
+      animate(cell, { translateX:(col - (cols - 1) / 2) * 3,
+                      translateY:(row - (rows - 1) / 2) * 2.4,
+                      duration:130, delay:t0, ease:EASE.OUT });
+      /* then the pieces drop, rotating, lower rows first */
+      animate(cell, {
+        translateY: H * (.7 + r * .8),
+        translateX: (col - (cols - 1) / 2) * (26 + r * 40),
+        rotate: (r - .5) * 26,
+        opacity: [1, 1, 0],
+        duration: 620 + r * 240,
+        delay: t0 + 170 + (rows - 1 - row) * 40 + r * 90,
         ease: 'inQuad',
       });
     });
-    setTimeout(() => grid.remove(), 1150);
+    setTimeout(() => grid.remove(), 1900);
   },
 
   pageEntrance(scope){
@@ -17779,7 +17987,10 @@ const FX = {
     aset(cells, { opacity:0, scale:.86 });
     animate(cells, { opacity:[0, 1], scale:[.86, 1],
             delay:stagger(44, { grid:[cols, rows], from:'first', start:120 }),
-            ease:spring({ mass:1, stiffness:94, damping:13, velocity:0 }) });
+            ease:spring({ mass:1, stiffness:94, damping:13, velocity:0 }),
+            onComplete(){ cells.forEach(c => { c.style.opacity = '';
+              /* keep --press-tilt custom prop; drop the spring's inline transform */
+              c.style.transform = ''; }); } });
   },
 
   /* ── scanner: the frame snaps shut on the code ── */
@@ -18444,7 +18655,8 @@ async function go(id){
 
   current = id;
   syncHash(id);
-  view.style.opacity = ''; view.style.transform = '';
+  Motion.settle(view);            /* identity in anime's cache too, or a
+                                     later cut-push resurrects the exit skew */
   Reveal.clear();
   document.documentElement.dataset.screen = id;   /* CSS lays out each spread by name */
   /* One surface for the whole app: warm paper. Black is manga ink --
