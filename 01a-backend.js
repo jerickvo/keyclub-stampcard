@@ -2,8 +2,8 @@
 /* ══════════════════════════════════════════════════════════════════
    keystamp — BACKEND BOUNDARY
 
-   Everything that used to be an array literal now sits behind this
-   object. The rule the rest of the app follows:
+   Every piece of club data sits behind this object. The rule the rest
+   of the app follows:
 
        views  →  Store  →  Backend  →  Supabase
 
@@ -319,16 +319,12 @@ const SupabaseAdapter = {
                                     at:r.checked_in_at, method:r.verification_method }));
   },
 
-  /* recordAttendance() used to live here: a direct insert into the
-     attendance table from the browser. Nothing called it — verifyCode()
-     below has been the only stamp path since Phase 3 — and RLS refused
-     it for members anyway, because there is no member insert policy.
-
-     It is deleted rather than left dead because of what it was: a
-     working, exported "grant myself a stamp" method sitting on
-     window.Backend, one policy edit away from being the hole. There is
-     now exactly one way a stamp can come into existence, and it is on
-     the server. */
+  /* There is deliberately NO direct insert into the attendance table
+     from the browser: verifyCode() below is the only stamp path, and
+     RLS has no member insert policy. Do not add one — a working,
+     exported "grant myself a stamp" method on window.Backend would be
+     one policy edit away from being the hole. Exactly one way a stamp
+     comes into existence, and it is on the server. */
 
   async listRewardClaims(userId){
     const { data, error } = await this.client

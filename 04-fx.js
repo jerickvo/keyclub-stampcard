@@ -281,6 +281,27 @@ const Blade = {
     /* tip position under inQuad: f = (t/T)^2 → anchor (f=.5) at .71 T */
     return delay + sweep * .71;
   },
+
+  /* a volley: the main stroke plus a fan of thinner parallel streaks —
+     the long directional marks that ride a big manga cut. Streaks are
+     offset along the line's normal, staggered a beat behind the main
+     stroke, shorter, and never identical. Returns the MAIN contact. */
+  volley({ line, host = null, paper = false, delay = 0, seed = 0,
+           main = {}, streaks = 3, spread = 90 } = {}){
+    const c = this.strike({ line, host, paper, delay, ...main });
+    const D = Math.hypot(innerWidth, innerHeight) * 1.6;
+    for (let i = 0; i < streaks; i++){
+      const r = roll(seed * 7 + i * 3 + 1);
+      const off = (i % 2 ? 1 : -1) * spread * (.35 + r * .85);
+      const L = CutGeo.line(line.x + line.nx * off, line.y + line.ny * off,
+                            line.deg + (r - .5) * 4);
+      this.strike({ line:L, host, paper,
+        delay:delay + 24 + i * 26 + r * 40,
+        th:3 + r * 6, sweep:80 + r * 50, hold:100 + r * 80,
+        len:D * (.4 + r * .55) });
+    }
+    return c;
+  },
 };
 
 const Impact = {
@@ -570,24 +591,28 @@ const FX = {
       /* overlap the seams a hair until each blade lands */
       seam(L1, 0, -0.4); seam(L2, 1, -0.4);
 
-      const c1 = Blade.strike({ line:L1, th:16, delay:20, sweep:70, hold:130 });
-      setTimeout(() => { seam(L1, 0, 2.5); Impact.shake(ov, 3, 70); }, c1);
-      const c2 = Blade.strike({ line:L2, th:11, delay:95, sweep:60, hold:110 });
-      setTimeout(() => { seam(L2, 1, 2); Impact.pop(ov); }, c2);
+      /* the main stroke travels visibly, with its streak fan; the page
+         divides at contact and then HOLDS divided long enough to read
+         "the page has been cut" before its pieces are taken away */
+      const c1 = Blade.volley({ line:L1, seed:seq, delay:40, spread:70,
+        main:{ th:22, sweep:135, hold:260 }, streaks:2 });
+      setTimeout(() => { seam(L1, 0, 4); Impact.shake(ov, 5, 90); }, c1);
+      const c2 = Blade.strike({ line:L2, th:13, delay:c1 + 90, sweep:95, hold:180 });
+      setTimeout(() => { seam(L2, 1, 3); Impact.pop(ov); }, c2);
 
       /* removal ALONG the cut geometry: each fragment leaves on the
          first cut's normal, nudged by the second, slightly staggered */
       const D = Math.hypot(W, H) * 1.15;
-      const t2 = c2 + 66;
+      const t2 = c2 + 170;
       frags.forEach((f, i) => {
         const tx = f.ox + f.sides[0] * L1.nx * D + f.sides[1] * L2.nx * D * .16;
         const ty = f.oy + f.sides[0] * L1.ny * D + f.sides[1] * L2.ny * D * .16;
         animate(f.el, { translateX:[f.ox, tx], translateY:[f.oy, ty],
-          rotate:f.sides[0] * (1.2 + roll(i + seq) * 1.6),
-          duration:240 + roll(i * 3 + seq) * 60,
-          delay:t2 + i * 18, ease:'inQuad' });
+          rotate:f.sides[0] * (1.4 + roll(i + seq) * 1.8),
+          duration:380 + roll(i * 3 + seq) * 90,
+          delay:t2 + i * 30, ease:'inQuad' });
       });
-      setTimeout(() => { ov.remove(); res(); }, t2 + 410);
+      setTimeout(() => { ov.remove(); res(); }, t2 + 610);
     });
   },
 
@@ -696,13 +721,13 @@ const FX = {
     lines.push(CutGeo.line(W * .5,  H * .48, -19 + (roll(seq) - .5) * 6));
     if (!mob)
       lines.push(CutGeo.line(W * .58, H * .44, -64 + (roll(seq + 1) - .5) * 10));
-    const nv = mob ? 2 : 3, nh = 2;
+    const nv = mob ? 1 : 2, nh = 1;
     for (let i = 1; i <= nv; i++)
-      lines.push(CutGeo.line(W * (i / (nv + 1)) + (roll(seq + 2 + i) - .5) * W * .12,
+      lines.push(CutGeo.line(W * (i / (nv + 1)) + (roll(seq + 2 + i) - .5) * W * .14,
                              H * .5, 90 + (roll(seq + 7 + i) - .5) * 15));
     for (let i = 1; i <= nh; i++)
       lines.push(CutGeo.line(W * .5,
-                             H * (i / (nh + 1)) + (roll(seq + 12 + i) - .5) * H * .16,
+                             H * (i / (nh + 1)) + (roll(seq + 12 + i) - .5) * H * .18,
                              (roll(seq + 17 + i) - .5) * 13));
     const frags = CutGeo.shatter(W, H, lines);
 
@@ -749,29 +774,41 @@ const FX = {
        anti-aliasing cannot draw a line before that seam's blade has
        actually landed */
     lines.forEach((L, k) => seam(L, k, -0.4));
+    /* ── THE hero slash. One massive stroke — thick tapered body,
+       razor core, a fan of long parallel streaks — travels visibly
+       across the wall. At ITS contact the wall splits WIDE along it:
+       the master cut everything else follows. ── */
     let lastContact = 0;
     lines.forEach((L, k) => {
-      const hero = k < (mob ? 1 : 2);
-      const delay = hero ? 40 + k * 95 : (mob ? 135 : 230) + (k - (mob ? 1 : 2)) * 34;
-      const c = Blade.strike({ line:L, th:hero ? (k ? 15 : 21) : 5 + roll(seq + k) * 4,
-                               delay, sweep:hero ? 80 : 55, hold:hero ? 260 : 120 });
+      let c;
+      if (k === 0){
+        c = Blade.volley({ line:L, seed:seq, delay:60, spread:110,
+          main:{ th:52, sweep:210, hold:460 }, streaks:mob ? 2 : 4 });
+        setTimeout(() => {
+          grid.classList.add('is-cracked');
+          seam(L, 0, 8);
+          Impact.pop();
+          Impact.shake(grid, 12, 160);
+        }, c);
+      } else {
+        const hero2 = k === 1 && !mob;
+        const delay = hero2 ? 380 : (mob ? 380 : 480) + (k - (mob ? 1 : 2)) * 55;
+        c = Blade.strike({ line:L, th:hero2 ? 15 : 5 + roll(seq + k) * 4,
+                           delay, sweep:hero2 ? 100 : 65, hold:hero2 ? 200 : 130 });
+        setTimeout(() => { seam(L, k, hero2 ? 3 : 1.6);
+          if (hero2) Impact.shake(grid, 4, 90); }, c);
+      }
       lastContact = Math.max(lastContact, c);
-      setTimeout(() => {
-        if (k === 0) grid.classList.add('is-cracked');
-        seam(L, k, hero ? 1.7 : 1.1);
-        if (k === 0) Impact.shake(grid, 8, 120);
-        if (k === 1) Impact.pop();
-      }, c);
     });
 
     /* ── HOLD: the wall stands visibly divided ── */
-    const tHold = Math.ceil(lastContact) + 20;
-    setTimeout(() => Impact.shake(grid, 2, 80), tHold + 40);
+    const tHold = Math.ceil(lastContact) + 60;
+    setTimeout(() => Impact.shake(grid, 2, 80), tHold + 60);
 
     /* ── release + fall: a real (small) physics model on rAF.
        Pieces nearest the first cut go first; mass = fragment size:
        light pieces accelerate and spin more, heavy slabs lag. */
-    const t2 = tHold + 140;
+    const t2 = tHold + 180;
     const avg = Math.sqrt(W * H / frags.length);
     let dmax = 1;
     for (const f of frags){

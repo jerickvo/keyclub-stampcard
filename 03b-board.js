@@ -127,9 +127,7 @@ const BoardUI = {
            </div>`}
 
       <!-- THE YEAR. Same band the member pages use for a standing: one
-           figure that leads, the rest supporting it. It used to be four
-           plates of equal weight, one of them an average-per-meeting
-           derived from the other two. -->
+           figure that leads, the rest supporting it. -->
       <section class="standing-band">
         <p class="standing-band__fig">${pad(o.meetings_held ?? 0)}</p>
         <p class="standing-band__of">general meetings held</p>
@@ -422,8 +420,7 @@ const BoardUI = {
       <!-- THE PROJECTOR. This screen is read from across a room, so it
            is composed for that distance: an ink field carrying the
            meeting and the live count, and the code as the one bright
-           plate on it. It used to be a QR on white with two small
-           labels, 87% empty paper. -->
+           plate on it. -->
       <section class="proj ${isOpen ? 'proj--live' : ''}">
         <div class="proj__side">
           <p class="proj__lab">${isOpen ? 'Scan this' : 'Not open yet'}</p>

@@ -94,12 +94,9 @@ const Motion = {
    observer expected — would stay invisible forever. Six seconds and
    it shows itself regardless.
    ══════════════════════════════════════════════════════════════════ */
-/* The entrance used to offset a panel 12px right with a 1.4deg skew and
-   slide it home, and the X component had to be zeroed below the tab-bar
-   breakpoint because it parked every unrevealed panel past the right
-   edge of a 390px screen. Nothing travels now — a panel cuts into place
-   and its type is driven down after it — so the offset that needed
-   guarding no longer exists to guard. */
+/* Nothing travels on entrance (travel would park unrevealed panels past
+   the edge of a 390px screen) — a panel cuts into place and its type is
+   driven down after it. */
 
 /* anime.js leaves its final values inline. A residual
    `transform:translate(0px,0px)` outranks every stylesheet :hover
@@ -162,15 +159,11 @@ const fmtDay = iso => new Date(iso + (iso.length === 10 ? 'T12:00:00' : ''))
 const fmtTime = iso => new Date(iso)
   .toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
 
-/* NOTIFICATIONS — a keyed, capped register, not an append-only list.
+/* NOTIFICATIONS — a keyed, capped register, not an append-only list:
+   an uncapped queue stacks repeated toasts over the tab bar on a phone.
+   The listeners are delegated on document and bound once.
 
-   This used to create an element per call and remove it 4.2s later, with
-   no cap, no identity and no replacement. Toggling reduced motion eight
-   times therefore mounted eight live toasts; at 390x844 that is 736px of
-   an 844px screen, painted over the tab bar. The listeners were never the
-   problem (they are delegated on document and bound once) — the queue was.
-
-   Three rules now:
+   Three rules:
      key      a caller that speaks about one thing passes a key, and its
               new message REPLACES its old one in place instead of queuing
      LIMIT    at most 3 live at once; the oldest is evicted first

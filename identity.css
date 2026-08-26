@@ -168,7 +168,7 @@ body{
 /* the board form is a panel of the same book, its heading a band cut
    into the panel's top edge */
 .bform{border:var(--edge-panel) solid var(--ink);background:var(--paper);
-  padding:var(--s5);box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
+  padding:var(--s5);box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
 .bform .bsec{margin:calc(var(--s5) * -1) calc(var(--s5) * -1) var(--s4);
   padding:var(--s2) var(--s4);border-bottom:0;
   background:var(--ink);color:var(--paper);
@@ -209,10 +209,11 @@ body{
 .meetgrid .bsec::before{content:none}
 
 /* Coming up is a real framed panel — band flush at the top, the list
-   inside it — so the calendar reads as the page's dominant panel and
-   the archive as the register hanging beneath it */
+   inside it. Panels that carry an ink band throw a TONE shadow, not an
+   ink one: an ink shadow behind an ink band is invisible, and the
+   paper → tone → ink ladder is what gives the page its depth. */
 .meetgrid__up{border:var(--edge-panel) solid var(--ink);background:var(--paper);
-  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
 .meetgrid__up .meetband{margin:0}
 .meetgrid__up .blist{padding:0 var(--s4);margin:0}
 .meetgrid__up .bempty{border:0;box-shadow:none}
@@ -266,7 +267,9 @@ body{
   border:var(--edge-panel) solid var(--ink);background:var(--paper);
   padding:clamp(12px,1.8vw,20px);
   box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
-.mplate--lit{background:var(--ink);color:var(--paper)}
+/* an ink plate cannot cast an ink shadow — it would read as one blob */
+.mplate--lit{background:var(--ink);color:var(--paper);
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
 .mplate--lit .bmile__bar{border-color:var(--paper)}
 .mplate--lit .bmile__fill{background:var(--paper)}
 .mplate__no{font-family:var(--f-head);font-size:clamp(30px,4.4vw,52px);
@@ -391,6 +394,7 @@ main#view:focus,main#view:focus-visible{outline:none}
 
 .card{position:relative;border:var(--edge-card) solid var(--ink);
   background:var(--paper);width:100%;
+  container-type:inline-size;
   box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
 .card__punch{position:absolute;z-index:2;right:clamp(14px,3vw,40px);
   top:44%;transform:rotate(-11deg);
@@ -414,22 +418,44 @@ main#view:focus,main#view:focus-visible{outline:none}
   font-size:var(--t-body)}
 .count__label{color:var(--ink-2)}
 
-.seals{display:grid;grid-template-columns:repeat(5,1fr);
-  gap:clamp(6px,1.1vw,11px);container-type:inline-size;
-  border-top:var(--edge-panel) solid var(--ink);
-  list-style:none;margin:0;padding:clamp(10px,1.6vw,16px)}
+/* ── THE WELL SPREAD ─────────────────────────────────────────────────
+   Not a grid of ten equal boxes: a collector's page. The layout is a
+   square-unit mosaic (8 units across, sized from the container) packed
+   densely — ordinary stamps take a 2×2 plot, and the well being worked
+   toward takes a 3×3 plot, so the field reads asymmetric and the next
+   stamp anchors the whole composition. The divider above it is a
+   tapered blade stroke, not a rule. */
+.seals{--sg:clamp(6px,1.1cqw,11px);--spad:clamp(10px,1.8cqw,18px);--su:8;
+  display:grid;position:relative;
+  grid-template-columns:repeat(var(--su),minmax(0,1fr));
+  grid-auto-rows:calc((100cqw - (2 * var(--spad)) - ((var(--su) - 1) * var(--sg))) / var(--su));
+  grid-auto-flow:dense;
+  gap:var(--sg);
+  list-style:none;margin:0;padding:calc(var(--spad) + 7px) var(--spad) var(--spad)}
+/* a wide card gets a finer 10-unit field, so the sheet stays a
+   landscape composition instead of growing past the fold */
+@container (min-width:520px){ .seals{--su:10} }
+.seals::before{content:'';position:absolute;top:0;left:0;right:0;height:6px;
+  background:var(--ink);
+  clip-path:polygon(0 34%,12% 8%,55% 0,88% 20%,100% 52%,99% 66%,54% 100%,10% 74%,0 62%)}
+/* corner ticks: the printed registration marks of a collectible sheet */
+.seals::after{content:'';position:absolute;right:5px;bottom:5px;
+  width:16px;height:16px;pointer-events:none;
+  border-right:var(--edge-panel) solid var(--ink);
+  border-bottom:var(--edge-panel) solid var(--ink)}
 
 /* each cell is its own printed stamp: framed, seated on a hard offset,
-   pressed a hair off true. The tilt rides the tile as well as the mark,
-   at a third strength, and alternate tiles sit a couple of pixels off
-   the row line, so the card reads hand-pressed, not machine-set. */
-.seal{position:relative;aspect-ratio:1;display:grid;place-items:center;
+   pressed visibly off true. Alternate tiles sit a few pixels off the
+   row line and lean their own way, so the sheet reads hand-pressed. */
+.seal{position:relative;display:grid;place-items:center;
+  grid-column:span 2;grid-row:span 2;
   background:var(--paper);min-width:0;
   border:var(--edge-panel) solid var(--ink);
   box-shadow:2.5px 2.5px 0 var(--ink);
-  transform:rotate(calc(var(--press-tilt,0deg) / 3)) translateY(var(--seat,0px))}
-.seal:nth-child(2n){--seat:2px}
-.seal:nth-child(3n){--seat:-2px}
+  transform:rotate(calc(var(--press-tilt,0deg) * .8)) translateY(var(--seat,0px))}
+.seal:nth-child(2n){--seat:3px}
+.seal:nth-child(3n){--seat:-3px}
+.seal:nth-child(5n){--seat:2px}
 /* EMPTY — a printed well waiting for its stamp: a thin printed frame
    with a second rule inside it (the double keyline of a form that
    expects ink) and the symbol as the faintest possible watermark. No
@@ -456,13 +482,17 @@ main#view:focus,main#view:focus-visible{outline:none}
 .seal--set .seal__mark{transform:rotate(var(--press-tilt,0deg));
   transform-origin:50% 50%}
 
-/* NEXT — the slot being worked toward: heavy keyline, a shade larger,
-   and a hand-drawn ring around it, the way a person circles the thing
-   they mean */
+/* NEXT — the slot being worked toward: it takes a 3×3 plot of the
+   mosaic (the largest thing on the sheet), carries the heaviest
+   keyline, and is ringed by hand — the anchor of the composition. The
+   freshest pressed stamp takes a 3×3 plot too, so the sheet reads as a
+   conversation between the last press and the next well. */
+.seal--next,
+.seal--hero{grid-column:span 3;grid-row:span 3}
 .seal--next{background-image:none;
   border-width:var(--edge-frame);
   box-shadow:3.5px 3.5px 0 var(--ink);
-  transform:rotate(calc(var(--press-tilt,0deg) / 3)) translateY(var(--seat,0px)) scale(1.05);
+  transform:rotate(calc(var(--press-tilt,0deg) / 3)) translateY(var(--seat,0px));
   z-index:1}
 .seal--next .seal__mark path{fill:var(--ink)}
 .seal--next .seal__no{color:var(--ink-2)}
@@ -492,9 +522,16 @@ main#view:focus,main#view:focus-visible{outline:none}
 .act__btn:hover{background:var(--ink);color:var(--paper)}
 
 /* the page's tone lives in the ground layer and in marks anchored to
-   panels — the free-floating corner slab that used to sit here outshouted
-   the content it decorated */
+   panels; each page adds ONE slash-language accent of its own */
 .view--home{position:relative;display:flex;flex-direction:column;gap:var(--s4)}
+/* a short ink stroke bleeding in from the right gutter at deck level —
+   the page-level echo of the cut language, small and deliberate */
+.view--home::after{content:'';position:absolute;z-index:-1;
+  top:clamp(150px,22vw,260px);right:calc(var(--gutter) * -1);
+  width:clamp(150px,20vw,260px);height:9px;
+  transform:rotate(-14deg);transform-origin:100% 50%;
+  background:var(--ink);
+  clip-path:polygon(0 46%,14% 12%,58% 0,100% 30%,100% 70%,54% 100%,12% 74%)}
 .deck{display:grid;gap:var(--s4)}
 .deck__side{display:grid;gap:var(--s4);align-content:start;min-width:0}
 /* the live panel is cut at an angle: an action panel, not a card */
@@ -571,7 +608,7 @@ button,input,select,textarea{font-family:inherit}
    margin against a known edge rather than a guess. Setting it from the
    viewport instead made the head's own flow height additive, and the
    form landed a hundred pixels below the field. */
-.spread{--band:44dvh;--lap:clamp(34px,9vw,64px);
+.spread{--band:clamp(230px,42dvh,400px);--lap:clamp(34px,9vw,64px);
   position:relative;width:100%;box-sizing:border-box;
   display:grid;grid-template-columns:minmax(0,1fr);
   grid-template-rows:calc(var(--band) - var(--gut-tier)) auto;
@@ -600,11 +637,17 @@ button,input,select,textarea{font-family:inherit}
 /* the International seal, knocked out of the ink field directly — a
    printed mark in the field's top-right, balancing the wordmark. On
    phones the band is shallow, so it stays modest; on the split spread
-   it grows with the fold. (span-qualified: the .crop child reset later
-   in this file would otherwise win the position tie) */
+   it grows with the fold, and its right offset clears the form panel's
+   overlap (--lap) so nothing can ever cover it. (span-qualified: the
+   .crop child reset later in this file would otherwise win the
+   position tie) */
 .spread__field > span.spread__kci{position:absolute;z-index:1;
   top:clamp(16px,4dvh,42px);right:clamp(14px,2.6vw,34px);
   width:clamp(64px,8.5vw,132px)}
+@media(min-width:820px){
+  .spread__field > span.spread__kci{
+    right:calc(var(--lap,40px) + clamp(16px,2vw,34px))}
+}
 .spread__kci .brandseal{width:100%;height:auto;display:block;
   --si:var(--paper);--sp:var(--ink)}
 
@@ -614,14 +657,13 @@ button,input,select,textarea{font-family:inherit}
    all sit on ink panels, so they knock out to paper. This is a value
    swap only — the geometry is the traced reference's. */
 .brandseal{--si:var(--ink);--sp:var(--paper)}
-.who__seal .brandseal,
 .proj__kci .brandseal{--si:var(--paper);--sp:var(--ink)}
 .spread__wm{font-family:var(--f-display);text-transform:uppercase;
   font-size:clamp(52px,15vw,124px);line-height:.9;letter-spacing:.01em;
   margin:0;padding-bottom:.06em}
 
 .authp{grid-row:2;position:relative;z-index:2;
-  margin:calc(var(--lap) * -1) var(--gutter) var(--s7);
+  margin:calc(var(--lap) * -1) var(--gutter) clamp(14px,3dvh,32px);
   background:var(--paper);
   border:var(--edge-frame) solid var(--ink);
   padding:clamp(20px,5vw,32px);
@@ -702,8 +744,13 @@ button,input,select,textarea{font-family:inherit}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
   overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 
-.rechead{border-bottom:var(--edge-frame) solid var(--ink);
-  padding-bottom:var(--s3)}
+/* the title rule is a blade stroke, not a border: every page opens
+   under the same cut language the motion system speaks */
+.rechead{position:relative;border-bottom:0;
+  padding-bottom:calc(var(--s3) + 7px)}
+.rechead::after{content:'';position:absolute;left:0;right:0;bottom:0;
+  height:7px;background:var(--ink);
+  clip-path:polygon(0 38%,10% 12%,52% 0,86% 18%,100% 46%,99% 60%,55% 100%,12% 78%,0 64%)}
 
 .rechead__title{margin:0;padding-bottom:.2em}
 /* Home's heading sits above the card rather than above a page of text,
@@ -909,8 +956,7 @@ button,input,select,textarea{font-family:inherit}
 /* ── THE DEAD ENDS ────────────────────────────────────────────────
    No camera, no permission, no https. The panel stops being a
    viewfinder and becomes a note: title, sentence, and the field below
-   already focused. It used to lead with a bracketed fault code
-   invented for this screen. */
+   already focused. */
 .viewer--stalled{aspect-ratio:auto;min-height:clamp(160px,30vw,240px);
   place-items:stretch;background:var(--paper)}
 .stall{display:flex;flex-direction:column;justify-content:center;
@@ -1057,33 +1103,30 @@ button,input,select,textarea{font-family:inherit}
   align-items:start}
 .who{position:relative;display:grid;gap:var(--s4);
   grid-template-rows:minmax(clamp(170px,22vw,260px),1fr) auto;
+  container-type:inline-size;
   isolation:isolate;overflow:hidden;
   background:var(--ink);color:var(--paper);
   padding:clamp(18px,3vw,32px);
   margin-left:calc(var(--gutter) * -1);
   padding-left:max(var(--gutter),clamp(18px,3vw,32px))}
-/* ONE composition, not two floating logos. International is the
-   primary identity seal: large, knocked out of the ink, cropped by the
-   plate's top-right corner so the black field visibly holds it. The
-   district mark is anchored ON the seam — the rule above the name —
-   half over, half under, at its right end: the way a small chop sits
-   on a printed signature line. The id block reserves the seam's right
-   end, so no username length can ever reach the mark. */
-.who__seal{position:absolute;z-index:0;
-  top:calc(clamp(200px,28vw,350px) * -.22);
-  right:calc(clamp(200px,28vw,350px) * -.15);
-  width:clamp(200px,28vw,350px)}
-.who__seal .brandseal{width:100%;height:auto;display:block}
+/* ONE composition: an organizational letterhead. International leads
+   at the top of the plate, the district mark sits beside it at a clear
+   second scale, both knocked out of the ink and baseline-aligned as a
+   single lockup — nothing cropped, nothing floating, nothing covered.
+   The name block below the rule stays the primary personal line. */
+.who__marks{grid-row:1;align-self:start;display:flex;flex-wrap:wrap;
+  align-items:flex-end;gap:clamp(12px,6cqw,30px)}
+.who__marks .brandseal{display:block;height:auto;
+  --si:var(--paper);--sp:var(--ink)}
+/* the lockup is sized from the PLATE, not the viewport: on the narrow
+   desktop column both marks must still clear the right edge */
+.who__marks .brandseal:first-child{width:clamp(96px,34cqw,168px)}
+.who__marks .brandseal:last-child{width:clamp(56px,20cqw,102px);
+  margin-bottom:clamp(2px,1cqw,6px)}
 .who__id{grid-row:2;position:relative;z-index:1;align-self:end;
   display:grid;gap:3px;
   border-top:var(--edge-rule) solid var(--tint);
-  padding-top:clamp(10px,1.6vw,16px);
-  padding-right:clamp(84px,11vw,120px)}
-.who__seal2{position:absolute;top:0;right:clamp(2px,.8vw,12px);
-  transform:translateY(-50%);
-  width:clamp(64px,8vw,96px)}
-.who__seal2 .brandseal{width:100%;height:auto;display:block;
-  --si:var(--paper);--sp:var(--ink)}
+  padding-top:clamp(10px,1.6vw,16px)}
 /* the name is set in the header face — the display face's thin strokes
    were unreadable at this size on ink */
 .who__name{margin:0;font-family:var(--f-head);text-transform:uppercase;
@@ -1166,20 +1209,20 @@ button,input,select,textarea{font-family:inherit}
     column-gap:clamp(16px,2.2vw,32px)}
 }
 /* the identity plate speaks the same language as the member plate: an
-   ink field, the district seal knocked out and cropped by the plate's
-   corner, the caption set into the clear ground — printed, not boxed */
-.bident{position:relative;display:block;overflow:hidden;
+   ink field with the district seal knocked out — FULLY visible, set
+   deliberately against the caption — and a tone shadow, because an ink
+   shadow beside the ink meeting band reads as nothing at all */
+.bident{position:relative;display:flex;align-items:center;
+  justify-content:space-between;gap:clamp(12px,1.6vw,22px);
   background:var(--ink);color:var(--paper);
   border:var(--edge-frame) solid var(--ink);
-  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink);
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone);
   padding:clamp(16px,2.4vw,28px);min-height:clamp(140px,18vw,230px)}
-.bident__seal{position:absolute;display:block;
-  right:calc(clamp(160px,20vw,270px) * -.18);
-  bottom:calc(clamp(160px,20vw,270px) * -.24);
-  width:clamp(160px,20vw,270px)}
+.bident__seal{display:block;flex:none;
+  width:clamp(116px,14vw,182px)}
 .bident__seal .brandseal{width:100%;height:auto;display:block;
   --si:var(--paper);--sp:var(--ink)}
-.bident__line{margin:0;position:relative;z-index:1;
+.bident__line{margin:0;
   font-family:var(--f-head);color:var(--paper);
   font-size:clamp(16px,1.8vw,22px);letter-spacing:.04em;
   max-width:10ch;line-height:1.12}

@@ -85,7 +85,9 @@
 [data-screen="auth"] .rail__nav,
 [data-screen="auth"] #railInd,
 [data-screen="auth"] .tabs{display:none}
-[data-screen="auth"] main#view{padding:0 0 var(--space-block)}
+/* the spread is its own 100dvh composition: any padding under it is a
+   strip of dead paper the page scrolls into for nothing */
+[data-screen="auth"] main#view{padding:0}
 
 .bpanel{position:relative;padding:0}
 .bpanel--wait{opacity:.7}

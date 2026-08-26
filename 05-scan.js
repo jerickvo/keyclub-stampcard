@@ -183,11 +183,8 @@ const Scanner = {
     if (!viewer) return;
     this.hideLoader();
     viewer.classList.remove('viewer--feed');
-    /* A fault code, then the sentence. The three dead ends used to be
-       told apart by a padlock, a camera and a keypad glyph — three
-       pictures doing a job this page does with words in brackets
-       everywhere else. The code names the fault; the sentence says what
-       to do about it. */
+    /* A fault code, then the sentence: the code names the fault, the
+       sentence says what to do about it. */
     const copy = {
       denied:{ title:'Camera permission is off',
         body:'Allow camera access for this page in your browser settings, then reload. Or type the code below.' },
@@ -222,8 +219,8 @@ const Scanner = {
 
 /* ── one path for every code, camera or keyboard ─────────────────────
    Both the camera and the manual field land here, and here sends the
-   raw payload to the server. The client no longer decides anything:
-   it cannot compute a valid token, so it cannot grant a stamp. */
+   raw payload to the server. The client decides nothing: it cannot
+   compute a valid token, so it cannot grant a stamp. */
 let pendingCell = -1;
 
 /* Server verdicts → sentences a student can act on. Nothing here

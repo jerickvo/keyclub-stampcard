@@ -7,9 +7,8 @@
 <title>Keystamp</title>
 <meta name="description" content="Key Club attendance">
 
-<!-- There is deliberately no tab icon: the retired Keystamp mark is
-     gone and nothing replaces it. rel="icon" pointing at nothing stops
-     the browser requesting /favicon.ico on its own. -->
+<!-- There is deliberately no tab icon. rel="icon" pointing at nothing
+     stops the browser requesting /favicon.ico on its own. -->
 <link rel="icon" href="data:,">
 <link rel="manifest" href="site.webmanifest">
 
@@ -29,6 +28,7 @@
 <body>
 
 <div class="ground" aria-hidden="true">
+  <div class="ground__slash"></div>
   <div class="arena" id="arena"></div>
   <div class="ground__tone"></div>
   <div class="ground__vig"></div>
@@ -74,15 +74,9 @@
 
 <svg class="fxdefs" aria-hidden="true">
   <defs>
-    <!-- THE CUTS ARE INK.
-
-         These were built for a dark ground: charcoal-lavender body
-         (#1d1a25 → #4a4553), a white razor at the centre, a burgundy
-         tail. Laid over paper they render as soft grey-violet smears
-         with no edge — a blur, which is the one thing a manga cut is
-         not. A cut on paper is solid black with a hard tip; the taper
-         is in the SHAPE, not in the opacity ramp, so every stop below
-         is doubled to a hard step. -->
+    <!-- THE CUTS ARE INK. A cut on paper is solid black with a hard
+         tip; the taper is in the SHAPE, not in an opacity ramp, so
+         every gradient stop below is a hard step, never a fade. -->
     <linearGradient id="cutHeavy" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0"    stop-color="#0A0A0A" stop-opacity="0"/>
       <stop offset=".04"  stop-color="#0A0A0A" stop-opacity="0"/>
@@ -166,7 +160,7 @@
 <!-- qrcode-generator (MIT, ~12KB): jsQR only *reads* codes, it cannot
      draw them, and the board screen has to produce a real scannable
      image. Note the filename: 1.4.4 ships qrcode.js, not qrcode.min.js
-     — the .min.js path 404s, which is why the board screen was blank. -->
+     — the .min.js path 404s. -->
 <script src="vendor/qrcode.js"></script>
 
 <!-- anime.js v4.5.0 (MIT), vendored as the UMD build and loaded as an
