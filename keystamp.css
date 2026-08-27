@@ -489,33 +489,36 @@ select.input{padding-right:var(--s4)}
   text-transform:uppercase;color:var(--paper);white-space:nowrap;
   letter-spacing:.01em}
 
-/* the broken wall: each piece is a BLOCK. The clip polygon lives on
-   every layer (never on the piece, which carries the 3D transform):
-   the page snapshot is the front face, a tone step and an ink back
-   plate sit at real Z depths behind it, and a screen-space slab keeps
-   a resting thickness. Under the parent perspective, the moment a
-   block tilts its stacked layers separate and the wall reads THICK.
-   Pieces stay fully opaque for the whole fall — they leave the
-   screen, they do not dissolve. */
-.waffle{position:absolute;inset:0;z-index:5;perspective:1100px}
-.waffle__ink{position:absolute;inset:0}
-.waffle__piece{position:absolute;inset:0;will-change:transform;
-  transform-style:preserve-3d}
-.waffle__depth{position:absolute;inset:0;transform:translateZ(-18px)}
-.waffle__mid{position:absolute;inset:0;transform:translateZ(-9px)}
-.waffle__slab{position:absolute;inset:0;
-  transform:translate3d(5px,7px,-3px)}
-/* the front face: the rendered snapshot of the live page */
+/* the cut-apart page: each piece is a manga PANEL — the page snapshot
+   on its face over an ink panel edge — and the void behind the break
+   is PAPER ruled with speed lines along the cut's own angle: white
+   light through the split, never a black hole. Panels stay fully
+   opaque as they drive off-screen. */
+.waffle{position:absolute;inset:0;z-index:5}
+.waffle__void{position:absolute;inset:0;opacity:1}
+.waffle__void::before{content:'';position:absolute;inset:-20%;
+  opacity:.6;
+  background:repeating-linear-gradient(var(--cutdeg,74deg),
+    transparent 0 13px,var(--tone) 13px 14.8px,transparent 14.8px 33px,
+    var(--tone) 33px 33.8px,transparent 33.8px 56px);
+  -webkit-mask-image:linear-gradient(calc(var(--cutdeg,74deg) + 90deg),
+    #000 25%,transparent 96%);
+  mask-image:linear-gradient(calc(var(--cutdeg,74deg) + 90deg),
+    #000 25%,transparent 96%)}
+.waffle__piece{position:absolute;inset:0;will-change:transform}
+.waffle__slab{position:absolute;inset:0;transform:translate(4px,6px)}
+/* the panel face: the rendered snapshot of the live page */
 .waffle__face{position:absolute;inset:0;pointer-events:none;
   background-color:var(--paper);background-repeat:no-repeat;
-  background-position:0 0;transform:translateZ(0)}
-/* the ink and tone of the block bodies only exist once the wall has
-   visibly cracked; before that the snapshot IS the frame, so nothing
-   can ever flash black under it */
-.waffle.is-cracked .waffle__ink,
-.waffle.is-cracked .waffle__depth,
+  background-position:0 0}
+/* the void and the panel edges only exist once the page has visibly
+   cracked; before that the snapshot IS the frame, so nothing can
+   flash beneath it */
+.waffle__void{background:transparent}
+.waffle.is-cracked .waffle__void{background:var(--paper)}
+.waffle__void::before{display:none}
+.waffle.is-cracked .waffle__void::before{display:block}
 .waffle.is-cracked .waffle__slab{background:var(--ink)}
-.waffle.is-cracked .waffle__mid{background:var(--tone)}
 .fxdefs{position:absolute;width:0;height:0}
 
 /* ══════════════════ TABS — the held-device navigation ══════════════
