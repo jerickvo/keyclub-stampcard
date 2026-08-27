@@ -456,15 +456,19 @@ main#view:focus,main#view:focus-visible{outline:none}
   font:500 clamp(8px,1.7cqw,10px)/1 var(--f-mono);
   text-transform:uppercase;letter-spacing:.2em;color:var(--tone)}
 
-/* the collection route: dotted, behind the slots */
+/* the collection route: dotted, and ALWAYS behind the slots — the
+   stack is explicit (route 0, slots 1) and every slot face is opaque
+   paper, so the line runs stamp to stamp and disappears behind each
+   silhouette instead of crossing its artwork */
 .card__route{position:absolute;inset:0;width:100%;height:100%;
-  pointer-events:none}
+  pointer-events:none;z-index:0}
 .card__route polyline{fill:none;stroke:var(--tone);stroke-width:2;
   stroke-dasharray:.5 8;stroke-linecap:round;
   vector-effect:non-scaling-stroke}
 .card__route--l{display:none}
 
-.seals{position:absolute;inset:0;list-style:none;margin:0;padding:0}
+.seals{position:absolute;inset:0;list-style:none;margin:0;padding:0;
+  z-index:1}
 
 /* one slot: not a box — the stamp's own rough silhouette, absolutely
    seated on the card, leaning its own way. The box is only geometry;
@@ -522,9 +526,11 @@ main#view:focus,main#view:focus-visible{outline:none}
 .seal__mark path{stroke:none}
 
 /* EMPTY — the printed seat: the stamp's own silhouette, outlined on
-   the card with the ghost of its artwork. Quiet, but drawn. */
-.seal[data-seal="empty"] .sf-face{stroke:var(--ink);stroke-width:1.1;
-  opacity:.5}
+   the card with the ghost of its artwork. Quiet, but drawn — and the
+   face is OPAQUE paper, so the route line ends at the silhouette's
+   edge instead of running through the empty seat. */
+.seal[data-seal="empty"] .sf-face{fill:var(--paper);
+  stroke:var(--ink);stroke-width:1.1;stroke-opacity:.5}
 .seal[data-seal="empty"] .seal__mark{opacity:.12}
 .seal[data-seal="empty"] .seal__mark path{fill:var(--ink)}
 .seal[data-seal="empty"] .seal__no{color:var(--tone)}
@@ -547,8 +553,8 @@ main#view:focus,main#view:focus-visible{outline:none}
 /* NEXT — the seat being worked toward: the silhouette at full ink
    weight, ringed by hand — the annotation that says where the story
    continues */
-.seal--next{z-index:1}
-.seal--next .sf-face{stroke:var(--ink);stroke-width:2.6;opacity:1}
+.seal--next{z-index:2}
+.seal--next .sf-face{fill:var(--paper);stroke:var(--ink);stroke-width:2.6}
 .seal--next .seal__mark{opacity:.22}
 .seal--next .seal__mark path{fill:var(--ink)}
 .seal--next .seal__no{color:var(--ink-2)}
@@ -565,12 +571,15 @@ main#view:focus,main#view:focus-visible{outline:none}
 /* MILESTONE — the tenth seat is a rosette because it IS the reward.
    The artwork owns the UPPER zone of the box and the name owns a
    reserved band below the silhouette, so they can never collide. */
-.seal--mile[data-seal="empty"] .sf-face{stroke-width:1.6;opacity:.55}
+.seal--mile[data-seal="empty"] .sf-face{stroke-width:1.6;stroke-opacity:.55}
 .seal--mile > svg{height:80%;align-self:start}
+/* a pasted label: its paper chip keeps the name readable even where
+   a short field lands it over the card's trim line */
 .seal__tag{position:absolute;left:50%;bottom:3%;
   transform:translateX(-50%);max-width:100%;
   font:500 clamp(8px,1.6cqw,11px)/1 var(--f-mono);
   text-transform:uppercase;letter-spacing:.1em;color:var(--ink-2);
+  background:var(--paper);padding:.2em .45em;box-sizing:border-box;
   white-space:nowrap}
 /* on the pressed rosette the name rides its own ink banner in the
    reserved band, readable wherever it lands */
@@ -689,7 +698,7 @@ button,input,select,textarea{font-family:inherit}
 .spread{--band:clamp(230px,42dvh,400px);--lap:clamp(34px,9vw,64px);
   position:relative;width:100%;box-sizing:border-box;
   display:grid;grid-template-columns:minmax(0,1fr);
-  grid-template-rows:calc(var(--band) - var(--gut-tier)) auto;
+  grid-template-rows:calc(var(--band) - var(--gut-tier)) auto 1fr;
   align-content:start;isolation:isolate;overflow:hidden;
   min-height:100dvh}
 
@@ -707,10 +716,14 @@ button,input,select,textarea{font-family:inherit}
   transform:rotate(-12deg);background:var(--tint);opacity:.8;
   clip-path:polygon(0 55%,9% 34%,28% 16%,52% 6%,74% 16%,100% 44%,
                     92% 62%,66% 86%,38% 94%,12% 76%)}
-.spread__side{position:absolute;z-index:1;
-  right:clamp(8px,1.2vw,18px);bottom:clamp(16px,4vh,44px);
-  writing-mode:vertical-rl;
-  font:500 clamp(9px,1vw,11px)/1 var(--f-mono);
+/* the organization's imprint: an in-flow footer line, centred in the
+   panel it belongs to (the paper sheet under the form on phones, the
+   form's own column on the split spread) — never floated against an
+   edge, never able to overlap the panel above it */
+.spread__side{position:relative;z-index:1;
+  justify-self:center;align-self:end;text-align:center;
+  margin:var(--s4) var(--gutter) clamp(14px,2.5dvh,26px);
+  font:500 clamp(9px,1vw,11px)/1.6 var(--f-mono);
   text-transform:uppercase;letter-spacing:.32em;color:var(--tone)}
 @media(min-width:820px){
   .spread::before{content:'';position:absolute;z-index:0;
@@ -837,6 +850,10 @@ button,input,select,textarea{font-family:inherit}
   .spread__wm{font-size:clamp(44px,7.4vw,104px)}
   .authp{grid-row:1;grid-column:2;margin:0 var(--gutter) 0 0;
     justify-self:stretch;width:auto;max-width:none}
+  /* the imprint line follows its panel: centred under the form in the
+     paper column, not run down the screen's trim edge */
+  .spread__side{grid-row:2;grid-column:2;align-self:start;
+    margin:var(--s4) var(--gutter) 0 0}
 }
 /* The single-weight display face cannot carry a bold span, and the
    browser synthesising one looks like a rendering fault. */
