@@ -489,21 +489,46 @@ select.input{padding-right:var(--s4)}
   text-transform:uppercase;color:var(--paper);white-space:nowrap;
   letter-spacing:.01em}
 
-/* the cut-apart page: two manga PANELS — the page snapshot on each
-   face over an ink panel edge — parting along the one cut, with the
-   sign-in page standing directly behind them. Panels stay fully
-   opaque as they leave. */
-.waffle{position:absolute;inset:0;z-index:5}
-.waffle__piece{position:absolute;inset:0;will-change:transform}
-.waffle__slab{position:absolute;inset:0;transform:translate(4px,6px)}
-/* the panel face: the rendered snapshot of the live page */
-.waffle__face{position:absolute;inset:0;pointer-events:none;
-  background-color:var(--paper);background-repeat:no-repeat;
-  background-position:0 0}
-/* the panel edges only exist once the page has visibly cracked;
-   before that the snapshot IS the frame, so nothing can flash
-   beneath it */
-.waffle.is-cracked .waffle__slab{background:var(--ink)}
+/* ══ THE SIGN-OUT SCENE ══════════════════════════════════════════════
+   A manga cutaway that COVERS the application: a dedicated
+   full-viewport panel with its own composition — frame, screentone,
+   ink wedge, impact lines, big diagonal type. The app underneath is
+   hidden and never animated; the slash cuts THIS panel, its halves
+   wipe away, and the scene's clean white backing hands over to the
+   sign-in page. */
+.soscene{position:fixed;inset:0;z-index:180;background:var(--paper)}
+.soscene__whole,
+.soscene__half{position:absolute;inset:0;will-change:transform}
+.soscene__panel{position:absolute;inset:0;background:var(--paper);
+  overflow:hidden;display:grid;place-items:center}
+/* the drawn panel border, inset from the trim like a printed page */
+.soscene__frame{position:absolute;inset:clamp(10px,2vw,26px);
+  border:3px solid var(--ink)}
+/* screentone descending from the upper right */
+.soscene__tone{position:absolute;top:0;right:0;width:52%;height:64%;
+  background-image:radial-gradient(circle,var(--ink) 0 1.2px,transparent 1.35px);
+  background-size:7px 7px;opacity:.45;
+  clip-path:polygon(22% 0,100% 0,100% 100%)}
+/* an ink mass driving in from the lower-left corner */
+.soscene__wedge{position:absolute;left:-4%;bottom:-6%;width:64%;height:56%;
+  background:var(--ink);
+  clip-path:polygon(0 18%,54% 62%,100% 100%,0 100%)}
+/* impact lines bursting from that corner */
+.soscene__lines{position:absolute;left:-10%;bottom:-10%;
+  width:95%;height:95%;opacity:.8;
+  background:repeating-conic-gradient(from 255deg at 0% 100%,
+    var(--ink) 0 .6deg,transparent .6deg 6.4deg);
+  -webkit-mask-image:radial-gradient(circle at 0% 100%,
+    transparent 30%,#000 44%,transparent 80%);
+  mask-image:radial-gradient(circle at 0% 100%,
+    transparent 30%,#000 44%,transparent 80%)}
+/* the word is part of the panel: display face on the diagonal. The
+   rotation rides the `rotate` property so the slam's inline transform
+   (scale) composes with it instead of erasing it. */
+.soscene__word{position:relative;margin:0 4vw 9vh;rotate:-9deg;
+  font-family:var(--f-display);text-transform:uppercase;
+  font-size:clamp(58px,15vw,200px);line-height:.86;color:var(--ink);
+  text-align:center;letter-spacing:-.01em}
 .fxdefs{position:absolute;width:0;height:0}
 
 /* ══════════════════ TABS — the held-device navigation ══════════════

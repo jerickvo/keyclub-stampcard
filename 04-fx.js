@@ -255,7 +255,7 @@ const Snapshot = {
 
     /* the overlay stack is not part of the page being frozen */
     clone.querySelectorAll(
-      'script,noscript,link[rel="stylesheet"],.fx,.boot,.verdict,.toasts,.blade2,.pcut,.waffle'
+      'script,noscript,link[rel="stylesheet"],.fx,.boot,.verdict,.toasts,.blade2,.pcut,.soscene'
     ).forEach(el => el.remove());
 
     const head = clone.querySelector('head');
@@ -805,114 +805,118 @@ const FX = {
                  rotate:1.4, duration:350, delay:1040, ease:'inQuad' });
     setTimeout(() => el.remove(), 1450);
   },
-
-  /* sign-out: one manga cut. The live page is the panel. The pressed
-     control answers the hand, one torn diagonal stroke crosses the
-     untouched page, and at its exact contact the page — a rendered
-     snapshot of itself — divides into TWO panels along that line.
-     They part, they leave along the cut, and the sign-in page is
-     standing behind them: the next panel. ~0.7s. Nothing is cut
-     before the blade lands, and a repeat press during the sequence is
-     ignored. swap() runs once the frozen panel has been committed;
-     fail() reports a sign-out that could not happen. */
+  /* SIGN-OUT SCENE — a manga cutaway, not a page transition. The
+     application is simply COVERED: a dedicated full-viewport panel
+     with its own composition (frame, screentone, impact lines, big
+     type) snaps over it, and everything that happens next happens to
+     THAT panel. Its story: the panel appears — one torn slash crosses
+     it — the panel splits along that exact line and wipes away —
+     clean white — the sign-in page is there. The app underneath never
+     moves; the real sign-out runs invisibly behind the scene. ~0.85s.
+     A repeat press during the scene is ignored. */
   waffleOut({ swap, fail, btn = null } = {}){
     const doSwap = typeof swap === 'function' ? swap : () => {};
     const oops   = typeof fail === 'function' ? fail : () => {};
-    const fx = $('#fx');
-    if (Motion.off || !fx)
+    if (Motion.off)
       return void Promise.resolve().then(doSwap).catch(oops);
-    if (FX._out) return;                     /* one sign-out at a time */
+    if (FX._out) return;                     /* one scene at a time */
     FX._out = true;
     const unlock = () => { FX._out = false; };
 
     const W = innerWidth, H = innerHeight;
     const seq = ++cutSeq;
     const D = Math.hypot(W, H);
-    /* ONE cut, sized and placed from the live viewport */
-    const hero = CutGeo.line(W * .5, H * (.44 + (roll(seq) - .5) * .12),
-                             -14 + (roll(seq + 1) - .5) * 10);
-    const snapP = Snapshot.take();
+    /* the scene's own cut line, from the live viewport */
+    const line = CutGeo.line(W * .5, H * (.46 + (roll(seq) - .5) * .1),
+                             -13 - roll(seq + 1) * 8);
+    const halves = CutGeo.shatter(W, H, [line]);
 
-    /* the button answers the hand; nothing else moves yet */
-    const pressed = btn || $('[data-signout]');
-    if (pressed){
-      aset(pressed, { scale:.94 });
-      setTimeout(() => { animate(pressed, { scale:1, duration:110,
-        ease:'outQuad', onComplete(){ pressed.style.transform = ''; } }); }, 90);
+    if (btn){
+      aset(btn, { scale:.94 });
+      setTimeout(() => { animate(btn, { scale:1, duration:110,
+        ease:'outQuad', onComplete(){ btn.style.transform = ''; } }); }, 90);
     }
 
-    /* THE cut: one torn stroke, one thin tone trail behind it */
-    const th = W <= 700 ? 54 : 100;
-    const c0 = Blade.strike({ line:hero, th, rough:2.4,
-      delay:100, sweep:140, hold:280 });
-    Blade.strike({ line:CutGeo.line(hero.x + hero.nx * 22,
-                   hero.y + hero.ny * 22, hero.deg),
-                   th:th * .4, ghost:true, rough:1.8,
-                   delay:140, sweep:160, hold:220, len:D * 1.35 });
+    /* the scene: one composition, built once, cloned into two hidden
+       halves that stay display:none until the blade's contact */
+    const art = `<div class="soscene__panel">
+        <span class="soscene__tone" aria-hidden="true"></span>
+        <span class="soscene__wedge" aria-hidden="true"></span>
+        <span class="soscene__lines" aria-hidden="true"></span>
+        <span class="soscene__frame" aria-hidden="true"></span>
+        <p class="soscene__word">Signing<br>out</p>
+      </div>`;
+    const scene = document.createElement('div');
+    scene.className = 'soscene';
+    scene.innerHTML =
+      `<div class="soscene__whole">${art}</div>` +
+      `<div class="soscene__half soscene__half--a" style="display:none">${art}</div>` +
+      `<div class="soscene__half soscene__half--b" style="display:none">${art}</div>`;
+    document.body.appendChild(scene);
+    const whole = scene.querySelector('.soscene__whole');
+    const hs = [scene.querySelector('.soscene__half--a'),
+                scene.querySelector('.soscene__half--b')];
+    halves.forEach((f, i) => { hs[i].style.clipPath = CutGeo.clip(f); });
 
-    Promise.all([snapP, wait(c0)]).then(([snap]) => {
-      const frags = CutGeo.shatter(W, H, [hero]);      /* two panels */
-      const grid = document.createElement('div');
-      grid.className = 'waffle';
-      for (const f of frags){
-        const clip = `clip-path:${CutGeo.clip(f)};`;
-        const piece = document.createElement('div');
-        piece.className = 'waffle__piece';
-        piece.style.cssText =
-          `transform-origin:${f.cx.toFixed(1)}px ${f.cy.toFixed(1)}px`;
-        const edge = document.createElement('div');
-        edge.className = 'waffle__slab';
-        edge.style.cssText = clip;
-        const face = document.createElement('div');
-        face.className = 'waffle__face';
-        face.style.cssText = clip +
-          `background-image:url("${snap.url}");background-size:${snap.W}px ${snap.H}px`;
-        piece.append(edge, face);
-        grid.appendChild(piece);
-        f.s = f.sides[0];
-      }
-      fx.appendChild(grid);
-      /* the frozen panel replaces its identical live pixels in this
-         frame; the real sign-out happens beneath it, unseen */
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        Promise.resolve().then(doSwap).catch(oops);
-      }));
+    /* the app is covered; the real sign-out happens under the scene */
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      Promise.resolve().then(doSwap).catch(oops);
+    }));
 
-      /* contact: the panel divides along the blade's exact line */
-      grid.classList.add('is-cracked');
-      [...grid.children].forEach((el, i) => {
-        const f = frags[i];
-        f.el = el;
-        f.ox = f.s * hero.nx * 7; f.oy = f.s * hero.ny * 7;
-        el.style.transform =
-          `translate(${f.ox.toFixed(1)}px,${f.oy.toFixed(1)}px)`;
+    /* the word slams into the panel — finished well before contact,
+       so whole and halves are pixel-identical at the swap */
+    const word = whole.querySelector('.soscene__word');
+    aset(word, { scale:1.5, opacity:0 });
+    setTimeout(() => {
+      aset(word, { opacity:1 });
+      animate(word, { scale:[1.5, 1], duration:110, ease:STEP(3) });
+    }, 60);
+
+    /* the slash crosses the SCENE (it is hosted by it) */
+    const c0 = Blade.strike({ line, th:W <= 700 ? 50 : 92, rough:2.4,
+      host:scene, delay:190, sweep:140, hold:260 });
+    Blade.strike({ line:CutGeo.line(line.x + line.nx * 20,
+      line.y + line.ny * 20, line.deg), th:(W <= 700 ? 50 : 92) * .4,
+      ghost:true, rough:1.8, host:scene, delay:225, sweep:160, hold:200,
+      len:D * 1.3 });
+
+    setTimeout(() => {
+      /* contact: one tick — whole out, halves in, identical pixels —
+         then the panel visibly splits along the blade's line */
+      whole.style.display = 'none';
+      hs.forEach((el, i) => {
+        el.style.display = '';
+        const s = halves[i].sides[0];
+        aset(el, { translateX:s * line.nx * 14, translateY:s * line.ny * 14 });
       });
-
-      /* the cut registers, then the halves leave along it */
-      const t2 = 150;
-      frags.forEach(f => {
-        animate(f.el, {
-          translateX:[f.ox, f.ox + f.s * hero.nx * D * 1.15],
-          translateY:[f.oy, f.oy + f.s * hero.ny * D * 1.15],
-          rotate:f.s * 1.6,
-          duration:320, delay:t2 + (f.s > 0 ? 40 : 0), ease:'inCubic' });
+      /* register, then the halves wipe away along the cut and the
+         scene's clean white backing is all that remains */
+      hs.forEach((el, i) => {
+        const s = halves[i].sides[0];
+        animate(el, {
+          translateX:[s * line.nx * 14,  s * line.nx * D * 1.1],
+          translateY:[s * line.ny * 14,  s * line.ny * D * 1.1],
+          rotate:s * 1.4,
+          duration:300, delay:160 + (s > 0 ? 35 : 0), ease:'inCubic' });
       });
+    }, c0);
 
-      /* the sign-in page is already standing behind them; it settles
-         in as the next panel */
-      setTimeout(() => {
-        const panel = $('.authp');
-        if (panel) animate(panel, { translateY:[6, 0], duration:150,
-          ease:'outQuad', onComplete(){ panel.style.transform = ''; } });
-      }, t2 + 260);
+    /* white — then the sign-in page, arriving as the next panel */
+    const tWhite = Math.ceil(c0) + 500;
+    animate(scene, { opacity:[1, 0], duration:170, delay:tWhite,
+      ease:'linear' });
+    setTimeout(() => {
+      const panel = $('.authp');
+      if (panel) animate(panel, { translateY:[6, 0], duration:150,
+        ease:'outQuad', onComplete(){ panel.style.transform = ''; } });
+    }, tWhite + 60);
 
-      const gone = () => { try { grid.remove(); } catch (_) {}
-        snap.release(); unlock(); };
-      setTimeout(gone, t2 + 480);
-      /* hard safety: the overlay can never outlive the sequence */
-      setTimeout(() => { try { grid.remove(); } catch (_) {} unlock(); }, 1800);
-    });
+    const gone = () => { try { scene.remove(); } catch (_) {} unlock(); };
+    setTimeout(gone, tWhite + 240);
+    /* hard safety: the scene can never outlive its story */
+    setTimeout(gone, 2200);
   },
+
 
 
 
