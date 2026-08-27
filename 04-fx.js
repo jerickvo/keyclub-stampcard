@@ -805,18 +805,16 @@ const FX = {
                  rotate:1.4, duration:350, delay:1040, ease:'inQuad' });
     setTimeout(() => el.remove(), 1450);
   },
-  /* sign-out: a manga panel gets cut apart. Its own interaction, not
-     the page transition: the button presses, the interface holds
-     still for a beat, ONE torn diagonal slash crosses the live page,
-     and at its exact contact the page — a rendered snapshot of
-     itself — splits into panels along that line. A counter-cut
-     follows, the divided page registers, then the panels drive apart
-     along the cut while WHITE takes over: a paper void ruled with
-     speed lines stands where the page was, fades, and the sign-in
-     page is simply there — a fresh panel. ~0.8s end to end. swap()
-     runs once the wall has been committed; fail() reports a sign-out
-     that could not happen. Nothing is sliced before the blade lands,
-     and a second press during the sequence is ignored. */
+
+  /* sign-out: one manga cut. The live page is the panel. The pressed
+     control answers the hand, one torn diagonal stroke crosses the
+     untouched page, and at its exact contact the page — a rendered
+     snapshot of itself — divides into TWO panels along that line.
+     They part, they leave along the cut, and the sign-in page is
+     standing behind them: the next panel. ~0.7s. Nothing is cut
+     before the blade lands, and a repeat press during the sequence is
+     ignored. swap() runs once the frozen panel has been committed;
+     fail() reports a sign-out that could not happen. */
   waffleOut({ swap, fail, btn = null } = {}){
     const doSwap = typeof swap === 'function' ? swap : () => {};
     const oops   = typeof fail === 'function' ? fail : () => {};
@@ -828,46 +826,34 @@ const FX = {
     const unlock = () => { FX._out = false; };
 
     const W = innerWidth, H = innerHeight;
-    const mob = W <= 700;
     const seq = ++cutSeq;
     const D = Math.hypot(W, H);
-
-    /* two diagonal cuts: the hero and one counter — panels, not rubble */
-    const hero    = CutGeo.line(W * .5, H * .46, -16 + (roll(seq) - .5) * 8);
-    const counter = CutGeo.line(W * (.55 + (roll(seq + 1) - .5) * .12),
-                                H * (.44 + (roll(seq + 2) - .5) * .1),
-                                -58 + (roll(seq + 3) - .5) * 12);
-
+    /* ONE cut, sized and placed from the live viewport */
+    const hero = CutGeo.line(W * .5, H * (.44 + (roll(seq) - .5) * .12),
+                             -14 + (roll(seq + 1) - .5) * 10);
     const snapP = Snapshot.take();
 
-    /* the press: the control answers the hand, and the page holds
-       still for a beat before anything else moves */
+    /* the button answers the hand; nothing else moves yet */
     const pressed = btn || $('[data-signout]');
     if (pressed){
       aset(pressed, { scale:.94 });
-      setTimeout(() => { animate(pressed, { scale:1, duration:120,
+      setTimeout(() => { animate(pressed, { scale:1, duration:110,
         ease:'outQuad', onComplete(){ pressed.style.transform = ''; } }); }, 90);
     }
-    Impact.scrim(.12, { delay:40 });
 
-    /* THE slash: torn, tapered, sudden — across the live page */
-    const heroTh = mob ? 52 : 96;
-    const c0 = Blade.strike({ line:hero, th:heroTh, rough:2.4,
-      delay:100, sweep:140, hold:300 });
-    Blade.strike({ line:CutGeo.line(hero.x + hero.nx * 24, hero.y + hero.ny * 24,
-                   hero.deg), th:heroTh * .5, ghost:true, rough:1.8,
-                   delay:135, sweep:160, hold:240, len:D * 1.4 });
+    /* THE cut: one torn stroke, one thin tone trail behind it */
+    const th = W <= 700 ? 54 : 100;
+    const c0 = Blade.strike({ line:hero, th, rough:2.4,
+      delay:100, sweep:140, hold:280 });
+    Blade.strike({ line:CutGeo.line(hero.x + hero.nx * 22,
+                   hero.y + hero.ny * 22, hero.deg),
+                   th:th * .4, ghost:true, rough:1.8,
+                   delay:140, sweep:160, hold:220, len:D * 1.35 });
 
     Promise.all([snapP, wait(c0)]).then(([snap]) => {
-      const frags = CutGeo.shatter(W, H, [hero, counter]);
+      const frags = CutGeo.shatter(W, H, [hero]);      /* two panels */
       const grid = document.createElement('div');
       grid.className = 'waffle';
-      grid.style.setProperty('--cutdeg', (hero.deg + 90).toFixed(1) + 'deg');
-      /* the void behind the panels is PAPER ruled with speed lines —
-         white light through the break, never a black hole */
-      const voidEl = document.createElement('div');
-      voidEl.className = 'waffle__void';
-      grid.appendChild(voidEl);
       for (const f of frags){
         const clip = `clip-path:${CutGeo.clip(f)};`;
         const piece = document.createElement('div');
@@ -883,63 +869,48 @@ const FX = {
           `background-image:url("${snap.url}");background-size:${snap.W}px ${snap.H}px`;
         piece.append(edge, face);
         grid.appendChild(piece);
-        f.el = piece; f.ox = 0; f.oy = 0;
+        f.s = f.sides[0];
       }
       fx.appendChild(grid);
-      /* the wall replaces its identical live pixels in this frame; the
-         real app signs out beneath it, unseen */
+      /* the frozen panel replaces its identical live pixels in this
+         frame; the real sign-out happens beneath it, unseen */
       requestAnimationFrame(() => requestAnimationFrame(() => {
         Promise.resolve().then(doSwap).catch(oops);
       }));
 
-      const seam = (L, k, px) => { for (const f of frags){
-        f.ox += f.sides[k] * L.nx * px; f.oy += f.sides[k] * L.ny * px;
-        f.el.style.transform = `translate(${f.ox.toFixed(2)}px,${f.oy.toFixed(2)}px)`;
-      } };
-      /* the counter seam stays overlapped a hair until ITS blade
-         lands; the hero seam cracks NOW — this is its contact */
-      seam(counter, 1, -0.4);
+      /* contact: the panel divides along the blade's exact line */
       grid.classList.add('is-cracked');
-      seam(hero, 0, 12);
-      Impact.pop();
-      Impact.shake(grid, 10, 140);
-
-      const c1 = Blade.strike({ line:counter, th:22, rough:1.7,
-        delay:40, sweep:80, hold:180 });
-      setTimeout(() => { seam(counter, 1, 6); Impact.shake(grid, 4, 90); }, c1);
-
-      /* HOLD: the cut registers — the page stands visibly divided */
-      const t2 = Math.ceil(c1) + 130;
-
-      /* DEPART: each panel drives off along the hero cut normal,
-         nudged by the counter, accelerating — direction, not scatter */
-      frags.forEach((f, i) => {
-        const r = roll(i * 3 + seq);
-        const tx = f.ox + f.sides[0] * hero.nx * D * 1.15
-                        + f.sides[1] * counter.nx * D * .18;
-        const ty = f.oy + f.sides[0] * hero.ny * D * 1.15
-                        + f.sides[1] * counter.ny * D * .18;
-        animate(f.el, { translateX:[f.ox, tx], translateY:[f.oy, ty],
-          rotate:f.sides[0] * (1.6 + r * 1.6),
-          duration:300 + r * 60, delay:t2 + i * 22, ease:'inCubic' });
+      [...grid.children].forEach((el, i) => {
+        const f = frags[i];
+        f.el = el;
+        f.ox = f.s * hero.nx * 7; f.oy = f.s * hero.ny * 7;
+        el.style.transform =
+          `translate(${f.ox.toFixed(1)}px,${f.oy.toFixed(1)}px)`;
       });
 
-      /* WHITE takes over, then clears: the speed-lined void fades and
-         the sign-in page is simply there — a fresh panel settling */
-      const tClear = t2 + 340;
-      animate(voidEl, { opacity:[1, 0], duration:200, delay:tClear,
-        ease:'linear' });
+      /* the cut registers, then the halves leave along it */
+      const t2 = 150;
+      frags.forEach(f => {
+        animate(f.el, {
+          translateX:[f.ox, f.ox + f.s * hero.nx * D * 1.15],
+          translateY:[f.oy, f.oy + f.s * hero.ny * D * 1.15],
+          rotate:f.s * 1.6,
+          duration:320, delay:t2 + (f.s > 0 ? 40 : 0), ease:'inCubic' });
+      });
+
+      /* the sign-in page is already standing behind them; it settles
+         in as the next panel */
       setTimeout(() => {
         const panel = $('.authp');
-        if (panel) animate(panel, { translateY:[7, 0], duration:160,
+        if (panel) animate(panel, { translateY:[6, 0], duration:150,
           ease:'outQuad', onComplete(){ panel.style.transform = ''; } });
-      }, tClear + 60);
+      }, t2 + 260);
 
       const gone = () => { try { grid.remove(); } catch (_) {}
         snap.release(); unlock(); };
-      setTimeout(gone, tClear + 300);
+      setTimeout(gone, t2 + 480);
       /* hard safety: the overlay can never outlive the sequence */
-      setTimeout(() => { try { grid.remove(); } catch (_) {} unlock(); }, 2200);
+      setTimeout(() => { try { grid.remove(); } catch (_) {} unlock(); }, 1800);
     });
   },
 
