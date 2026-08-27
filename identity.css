@@ -527,8 +527,8 @@ main#view:focus,main#view:focus-visible{outline:none}
 /* EMPTY — the printed seat: the stamp's own silhouette, outlined on
    the card with the ghost of its artwork. Quiet, but drawn. */
 .seal[data-seal="empty"] .sf-face{stroke:var(--ink);stroke-width:1.1;
-  opacity:.42}
-.seal[data-seal="empty"] .seal__mark{opacity:.08}
+  opacity:.5}
+.seal[data-seal="empty"] .seal__mark{opacity:.12}
 .seal[data-seal="empty"] .seal__mark path{fill:var(--ink)}
 .seal[data-seal="empty"] .seal__no{color:var(--tone)}
 
@@ -552,7 +552,7 @@ main#view:focus,main#view:focus-visible{outline:none}
    continues */
 .seal--next{z-index:1}
 .seal--next .sf-face{stroke:var(--ink);stroke-width:2.6;opacity:1}
-.seal--next .seal__mark{opacity:.16}
+.seal--next .seal__mark{opacity:.22}
 .seal--next .seal__mark path{fill:var(--ink)}
 .seal--next .seal__no{color:var(--ink-2)}
 .seal--next::after{content:'';position:absolute;inset:-8%;
@@ -560,21 +560,24 @@ main#view:focus,main#view:focus-visible{outline:none}
   border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;
   transform:rotate(-5deg);pointer-events:none}
 
-/* the printed index of each specimen, set on the card beside it */
-.seal__no{position:absolute;right:0;bottom:1%;
+/* the printed index of each specimen, set on the CARD at the stamp's
+   corner — never on the artwork */
+.seal__no{position:absolute;right:-3%;bottom:-5%;
   font:500 clamp(8px,1.8cqw,11px)/1 var(--f-mono);color:var(--tone)}
 
-/* MILESTONE — the tenth seat is a rosette because it IS the reward,
-   its name printed in the seat */
-.seal--mile[data-seal="empty"] .sf-face{stroke-width:1.6;opacity:.5}
-.seal__tag{position:absolute;left:50%;bottom:13%;
-  transform:translateX(-50%);max-width:88%;overflow:hidden;
+/* MILESTONE — the tenth seat is a rosette because it IS the reward.
+   The artwork owns the UPPER zone of the box and the name owns a
+   reserved band below the silhouette, so they can never collide. */
+.seal--mile[data-seal="empty"] .sf-face{stroke-width:1.6;opacity:.55}
+.seal--mile > svg{height:80%;align-self:start}
+.seal__tag{position:absolute;left:50%;bottom:3%;
+  transform:translateX(-50%);max-width:100%;
   font:500 clamp(8px,1.6cqw,11px)/1 var(--f-mono);
   text-transform:uppercase;letter-spacing:.1em;color:var(--ink-2);
   white-space:nowrap}
-/* on the pressed rosette the name rides its own ink banner, so it
-   stays readable across the jagged silhouette edge */
-.seal--set .seal__tag{color:var(--paper);bottom:14%;
+/* on the pressed rosette the name rides its own ink banner in the
+   reserved band, readable wherever it lands */
+.seal--set .seal__tag{color:var(--paper);
   background:var(--ink);padding:.25em .5em}
 
 /* LOCKED — defined for the contract; the attendance model does not
@@ -1224,22 +1227,23 @@ button,input,select,textarea{font-family:inherit}
    corner, and the member's name as the dominant line over it.
    Everything is sized from the PLATE (container units), so nothing
    can clip on the narrow desktop column. */
-.who__mark{grid-row:1;align-self:start;position:relative;z-index:1;
-  display:flex;align-items:center;gap:clamp(10px,3cqw,18px)}
-.who__mark .brandseal{display:block;height:auto;flex:none;
-  width:clamp(64px,24cqw,108px);
-  --si:var(--paper);--sp:var(--ink)}
-.who__org{display:block;font:500 clamp(9px,2.2cqw,12px)/1.5 var(--f-mono);
-  text-transform:uppercase;letter-spacing:.18em;color:var(--paper);
-  opacity:.85}
+.who__mark{grid-row:1;align-self:start;position:relative;z-index:1}
+.who__org{display:block;font:500 clamp(10px,2.4cqw,13px)/1.6 var(--f-mono);
+  text-transform:uppercase;letter-spacing:.2em;color:var(--paper);
+  opacity:.9}
 .who__org b{display:block;font-weight:500;color:var(--tint)}
-/* the district emblem: large, quiet, cropped by the plate's own edge —
-   tone on ink, never black on black */
-.who__emblem{position:absolute;right:-9%;bottom:-11%;z-index:0;
-  width:clamp(190px,64cqw,320px);pointer-events:none}
+/* the district emblem IS the plate's architecture: giant, gray, and
+   cropped by the frame on purpose — a watermark leaving the sheet.
+   It fades toward the lower-left so the name in front always sits on
+   near-ink, never gray-on-gray or black-on-black. */
+.who__emblem{position:absolute;right:-16%;top:46%;z-index:0;
+  transform:translateY(-50%);
+  width:clamp(250px,96cqw,470px);pointer-events:none}
 .who__emblem .brandseal{display:block;height:auto;width:100%;
-  opacity:.42;
-  --si:var(--tone);--sp:transparent}
+  opacity:.6;
+  --si:var(--tone);--sp:transparent;
+  -webkit-mask-image:linear-gradient(205deg,#000 52%,transparent 90%);
+  mask-image:linear-gradient(205deg,#000 52%,transparent 90%)}
 .who__id{grid-row:2;position:relative;z-index:1;align-self:end;
   display:grid;gap:3px;
   border-top:var(--edge-rule) solid var(--tint);

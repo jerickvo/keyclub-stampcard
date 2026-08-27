@@ -489,27 +489,33 @@ select.input{padding-right:var(--s4)}
   text-transform:uppercase;color:var(--paper);white-space:nowrap;
   letter-spacing:.01em}
 
-/* the broken wall: each piece is a clipped window onto the page
-   snapshot over an ink slab. The pieces stay fully opaque for the
-   whole fall — they leave the screen, they do not dissolve — and the
-   ink layer behind them is what shows through the cracks while the
-   wall stands. */
-/* perspective only — no preserve-3d: each piece renders flattened (so
-   its slab and face can never z-fight) while rotateX still reads as a
-   3D tilt through the parent's perspective */
+/* the broken wall: each piece is a BLOCK. The clip polygon lives on
+   every layer (never on the piece, which carries the 3D transform):
+   the page snapshot is the front face, a tone step and an ink back
+   plate sit at real Z depths behind it, and a screen-space slab keeps
+   a resting thickness. Under the parent perspective, the moment a
+   block tilts its stacked layers separate and the wall reads THICK.
+   Pieces stay fully opaque for the whole fall — they leave the
+   screen, they do not dissolve. */
 .waffle{position:absolute;inset:0;z-index:5;perspective:1100px}
 .waffle__ink{position:absolute;inset:0}
-.waffle__piece{position:absolute;inset:0;will-change:transform}
-.waffle__slab{position:absolute;inset:0;z-index:0;transform:translate(6px,8px)}
-/* the fragment face is the rendered snapshot of the live page */
-.waffle__face{position:absolute;inset:0;z-index:1;pointer-events:none;
+.waffle__piece{position:absolute;inset:0;will-change:transform;
+  transform-style:preserve-3d}
+.waffle__depth{position:absolute;inset:0;transform:translateZ(-18px)}
+.waffle__mid{position:absolute;inset:0;transform:translateZ(-9px)}
+.waffle__slab{position:absolute;inset:0;
+  transform:translate3d(5px,7px,-3px)}
+/* the front face: the rendered snapshot of the live page */
+.waffle__face{position:absolute;inset:0;pointer-events:none;
   background-color:var(--paper);background-repeat:no-repeat;
-  background-position:0 0}
-/* the ink — behind the wall and on the slab edges — only exists once
-   the wall has visibly cracked; before that the snapshot IS the frame,
-   so nothing can ever flash black under it */
+  background-position:0 0;transform:translateZ(0)}
+/* the ink and tone of the block bodies only exist once the wall has
+   visibly cracked; before that the snapshot IS the frame, so nothing
+   can ever flash black under it */
 .waffle.is-cracked .waffle__ink,
+.waffle.is-cracked .waffle__depth,
 .waffle.is-cracked .waffle__slab{background:var(--ink)}
+.waffle.is-cracked .waffle__mid{background:var(--tone)}
 .fxdefs{position:absolute;width:0;height:0}
 
 /* ══════════════════ TABS — the held-device navigation ══════════════

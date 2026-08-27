@@ -304,27 +304,39 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
    so the consequence of the cut can be scheduled at contact. */
 let bladeSeq = 0;
 const Blade = {
-  svg(seed){
+  /* rough > 1 turns the stroke violent: more stations, deeper
+     independent jitter on each edge (the two sides stop mirroring),
+     and notches torn out of the body — a cut, not a vector */
+  svg(seed, rough = 1){
     const j = k => (Math.sin(seed * 12.9898 + k * 78.233) * .5 + .5);
-    /* half-thickness profile along 0..1000: 0 at the tips, full in the
-       impact third, jittered so no two strokes are alike */
-    const prof = [[0, 0], [90, 5 + j(1) * 4], [260, 14 + j(2) * 7],
-                  [430, 22 + j(3) * 8], [600, 20 + j(4) * 8],
-                  [800, 10 + j(5) * 5], [1000, 0]];
-    const bow = (j(6) - .5) * 10;             /* slight curve of the stroke */
+    const X = rough > 1
+      ? [0, 55, 140, 250, 380, 500, 620, 730, 820, 900, 958, 1000]
+      : [0, 90, 260, 430, 600, 800, 1000];
+    /* half-thickness envelope: nothing at the tips, widest past the
+       middle — the leading tip stays needle-thin far longer */
+    const env = x => x <= 0 || x >= 1000 ? 0
+      : Math.pow(Math.sin(Math.PI * Math.pow(x / 1000, .72)), 1.25) * 28;
+    const amp = rough > 1 ? .55 : .3;
+    const bow = (j(6) - .5) * (rough > 1 ? 16 : 10);
     const yAt = x => 30 + bow * Math.sin(Math.PI * x / 1000);
-    const top = prof.map(([x, h]) => `${x},${(yAt(x) - h).toFixed(1)}`).join(' ');
-    const bot = prof.slice().reverse().map(([x, h]) => `${x},${(yAt(x) + h).toFixed(1)}`).join(' ');
+    const h = (x, k) => {
+      let v = env(x) * (1 + (j(k) - .5) * 2 * amp);
+      /* torn notches in a violent stroke */
+      if (rough > 1 && (k === 4 || k === 8)) v *= .45 + j(k + 30) * .25;
+      return Math.max(0, v);
+    };
+    const top = X.map((x, i) => `${x},${(yAt(x) - h(x, i + 1)).toFixed(1)}`).join(' ');
+    const bot = X.slice().reverse().map((x, i) => `${x},${(yAt(x) + h(x, i + 40)).toFixed(1)}`).join(' ');
     const core = [[140, 1], [420, 2.6 + j(7) * 1.4], [700, 2 + j(8)], [900, .8]];
-    const ctop = core.map(([x, h]) => `${x},${(yAt(x) - 1.6 - h).toFixed(1)}`).join(' ');
-    const cbot = core.slice().reverse().map(([x, h]) => `${x},${(yAt(x) - 1.6 + h).toFixed(1)}`).join(' ');
+    const ctop = core.map(([x, ch]) => `${x},${(yAt(x) - 1.6 - ch).toFixed(1)}`).join(' ');
+    const cbot = core.slice().reverse().map(([x, ch]) => `${x},${(yAt(x) - 1.6 + ch).toFixed(1)}`).join(' ');
     return `<svg viewBox="0 0 1000 60" preserveAspectRatio="none" aria-hidden="true">
       <polygon class="b-body" points="${top} ${bot}"/>
       <polygon class="b-core" points="${ctop} ${cbot}"/></svg>`;
   },
 
   strike({ line, th = 18, paper = false, ghost = false, host = null,
-           delay = 0, sweep = 75, hold = 130, len = null } = {}){
+           delay = 0, sweep = 75, hold = 130, len = null, rough = 1 } = {}){
     if (Motion.off) return delay;
     const parent = host || $('#fx');
     if (!parent) return delay;
@@ -337,7 +349,7 @@ const Blade = {
                             + (ghost ? ' blade2--ghost' : '');
     el.style.cssText = `left:${line.x}px;top:${line.y}px;width:${L}px;height:${th * 2}px;` +
       `margin:${-th}px 0 0 ${-L / 2}px`;
-    el.innerHTML = `<span class="blade2__s">${this.svg(seq)}</span>`;
+    el.innerHTML = `<span class="blade2__s">${this.svg(seq, rough)}</span>`;
     parent.appendChild(el);
     const s = el.firstChild;
     aset(el, { rotate:line.deg });
@@ -834,24 +846,23 @@ const FX = {
     /* the freeze renders while the wind-up plays over the live page */
     const snapP = Snapshot.take();
 
-    /* ── anticipation: the air moves first. A dip, two thin wind-up
-       streaks flick through on the hero's direction, then a held
-       breath of stillness — nothing moves — before the blade enters.
-       The pause is what makes the impact land. ── */
-    Impact.scrim(.16, { delay:60 });
+    /* ── anticipation: minimal setup, per the reference grammar. A
+       dip and one thin flick, then stillness — under 200ms in total —
+       so the hero lands as a sudden event, not a staged one. ── */
+    Impact.scrim(.16, { delay:40 });
     Blade.strike({ line:CutGeo.line(hero.x + hero.nx * 150, hero.y + hero.ny * 150,
-                   hero.deg - 2), th:4, delay:90, sweep:70, hold:60, len:D * .55 });
-    Blade.strike({ line:CutGeo.line(hero.x - hero.nx * 180, hero.y - hero.ny * 180,
-                   hero.deg + 3), th:3, delay:140, sweep:60, hold:50, len:D * .45 });
+                   hero.deg - 2), th:4, delay:90, sweep:60, hold:50, len:D * .5 });
 
-    /* ── THE hero slash: one massive stroke — thick tapered body,
-       razor core, a long fan of parallel streaks — crossing the whole
-       page, with a tone afterimage dragging one beat behind it. ── */
-    const c0 = Blade.volley({ line:hero, seed:seq, delay:300, spread:150,
-      main:{ th:mob ? 46 : 76, sweep:230, hold:560 }, streaks:mob ? 3 : 5 });
-    Blade.strike({ line:CutGeo.line(hero.x + hero.nx * 26, hero.y + hero.ny * 26,
-                   hero.deg), th:(mob ? 46 : 76) * .55, ghost:true,
-                   delay:360, sweep:250, hold:420, len:D * 1.5 });
+    /* ── THE hero slash: one torn, violent stroke — needle tip, wide
+       ragged body, razor core — crossing the whole page in ~150ms,
+       with a tone afterimage dragging one beat behind. No streak fan:
+       the single cut IS the event. ── */
+    const heroTh = mob ? 60 : 110;
+    const c0 = Blade.strike({ line:hero, th:heroTh, rough:2.4,
+      delay:200, sweep:150, hold:520 });
+    Blade.strike({ line:CutGeo.line(hero.x + hero.nx * 30, hero.y + hero.ny * 30,
+                   hero.deg), th:heroTh * .5, ghost:true, rough:1.8,
+                   delay:245, sweep:170, hold:400, len:D * 1.5 });
 
     Promise.all([snapP, wait(c0)]).then(([snap]) => {
       const frags = CutGeo.shatter(W, H, lines);
@@ -861,18 +872,29 @@ const FX = {
       inkback.className = 'waffle__ink';
       grid.appendChild(inkback);
       for (const f of frags){
+        /* a BLOCK, not a cutout: the clip lives on each layer so the
+           piece itself can carry 3D transforms — page on the front
+           face, a tone step and an ink back plate behind it, so the
+           wall's thickness shows the moment a block tilts */
+        const clip = `clip-path:${CutGeo.clip(f)};`;
         const piece = document.createElement('div');
         piece.className = 'waffle__piece';
         piece.style.cssText =
-          `clip-path:${CutGeo.clip(f)};` +
           `transform-origin:${f.cx.toFixed(1)}px ${f.cy.toFixed(1)}px`;
+        const depth = document.createElement('div');
+        depth.className = 'waffle__depth';
+        depth.style.cssText = clip;
+        const mid = document.createElement('div');
+        mid.className = 'waffle__mid';
+        mid.style.cssText = clip;
         const back = document.createElement('div');
         back.className = 'waffle__slab';
+        back.style.cssText = clip;
         const face = document.createElement('div');
         face.className = 'waffle__face';
-        face.style.cssText =
+        face.style.cssText = clip +
           `background-image:url("${snap.url}");background-size:${snap.W}px ${snap.H}px`;
-        piece.appendChild(back); piece.appendChild(face);
+        piece.append(depth, mid, back, face);
         grid.appendChild(piece);
         f.el = piece; f.ox = 0; f.oy = 0;
       }
@@ -895,16 +917,18 @@ const FX = {
       Impact.pop();
       Impact.shake(grid, 15, 180);
 
-      /* ── the follow-through: counter-cut, then the varied strokes,
-         each opening ITS seam at ITS contact ── */
+      /* ── the follow-through: a counter-cut and two quick support
+         strokes, each opening ITS seam at ITS contact — few and fast,
+         so they never dilute the hero ── */
       let last = 0;
       lines.slice(1).forEach((L, j) => {
         const k = j + 1, counter = j === 0;
         const c = Blade.strike({ line:L,
-          th: counter ? 22 : 8 + roll(seq + k) * 5,
-          delay: counter ? 60 : 160 + (j - 1) * 95,
-          sweep: counter ? 110 : 75,
-          hold: counter ? 240 : 150 });
+          th: counter ? 26 : 9 + roll(seq + k) * 5,
+          rough: counter ? 1.7 : 1.2,
+          delay: counter ? 50 : 120 + (j - 1) * 70,
+          sweep: counter ? 90 : 60,
+          hold: counter ? 230 : 140 });
         setTimeout(() => { seam(L, k, counter ? 5 : 2.2);
           if (counter) Impact.shake(grid, 5, 100); }, c);
         last = Math.max(last, c);
@@ -940,8 +964,9 @@ const FX = {
         f.vy   = 60 + r3 * 190;
         f.g    = (7400 + r1 * 2200) / mass;
         f.vr   = (r2 - .5) * 260 / mass;
-        f.vt   = (r3 - .5) * 110 / mass;     /* rotateX tilt speed */
-        f.x = f.ox; f.y = f.oy; f.rot = 0; f.tilt = 0; f.done = false;
+        f.vt   = (r3 - .5) * 170 / mass;     /* rotateX tumble */
+        f.vy2  = (r1 - .5) * 130 / mass;     /* rotateY tumble */
+        f.x = f.ox; f.y = f.oy; f.rot = 0; f.tilt = 0; f.yaw = 0; f.done = false;
       });
       setTimeout(() => { try { inkback.remove(); } catch (_) {} }, t2 + 120);
 
@@ -955,10 +980,11 @@ const FX = {
           if (f.done || tms < f.rel) continue;
           f.vy  += f.g * dt;
           f.x   += f.vx * dt; f.y += f.vy * dt;
-          f.rot += f.vr * dt; f.tilt += f.vt * dt;
+          f.rot += f.vr * dt; f.tilt += f.vt * dt; f.yaw += f.vy2 * dt;
           f.el.style.transform =
             `translate(${f.x.toFixed(1)}px,${f.y.toFixed(1)}px) ` +
-            `rotate(${f.rot.toFixed(2)}deg) rotateX(${f.tilt.toFixed(2)}deg)`;
+            `rotate(${f.rot.toFixed(2)}deg) rotateX(${f.tilt.toFixed(2)}deg) ` +
+            `rotateY(${f.yaw.toFixed(2)}deg)`;
           if (f.cy + f.y - f.rad > H + 60){ f.done = true; live--; }
         }
         if (live > 0 && now - t0 < 3200) requestAnimationFrame(step);
