@@ -489,35 +489,20 @@ select.input{padding-right:var(--s4)}
   text-transform:uppercase;color:var(--paper);white-space:nowrap;
   letter-spacing:.01em}
 
-/* the cut-apart page: each piece is a manga PANEL — the page snapshot
-   on its face over an ink panel edge — and the void behind the break
-   is PAPER ruled with speed lines along the cut's own angle: white
-   light through the split, never a black hole. Panels stay fully
-   opaque as they drive off-screen. */
+/* the cut-apart page: two manga PANELS — the page snapshot on each
+   face over an ink panel edge — parting along the one cut, with the
+   sign-in page standing directly behind them. Panels stay fully
+   opaque as they leave. */
 .waffle{position:absolute;inset:0;z-index:5}
-.waffle__void{position:absolute;inset:0;opacity:1}
-.waffle__void::before{content:'';position:absolute;inset:-20%;
-  opacity:.6;
-  background:repeating-linear-gradient(var(--cutdeg,74deg),
-    transparent 0 13px,var(--tone) 13px 14.8px,transparent 14.8px 33px,
-    var(--tone) 33px 33.8px,transparent 33.8px 56px);
-  -webkit-mask-image:linear-gradient(calc(var(--cutdeg,74deg) + 90deg),
-    #000 25%,transparent 96%);
-  mask-image:linear-gradient(calc(var(--cutdeg,74deg) + 90deg),
-    #000 25%,transparent 96%)}
 .waffle__piece{position:absolute;inset:0;will-change:transform}
 .waffle__slab{position:absolute;inset:0;transform:translate(4px,6px)}
 /* the panel face: the rendered snapshot of the live page */
 .waffle__face{position:absolute;inset:0;pointer-events:none;
   background-color:var(--paper);background-repeat:no-repeat;
   background-position:0 0}
-/* the void and the panel edges only exist once the page has visibly
-   cracked; before that the snapshot IS the frame, so nothing can
-   flash beneath it */
-.waffle__void{background:transparent}
-.waffle.is-cracked .waffle__void{background:var(--paper)}
-.waffle__void::before{display:none}
-.waffle.is-cracked .waffle__void::before{display:block}
+/* the panel edges only exist once the page has visibly cracked;
+   before that the snapshot IS the frame, so nothing can flash
+   beneath it */
 .waffle.is-cracked .waffle__slab{background:var(--ink)}
 .fxdefs{position:absolute;width:0;height:0}
 
