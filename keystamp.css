@@ -454,20 +454,6 @@ select.input{padding-right:var(--s4)}
 .blade2 .b-core{fill:var(--paper)}
 .blade2--paper .b-body{fill:var(--paper)}
 .blade2--paper .b-core{fill:var(--ink)}
-/* the afterimage: the same stroke one beat behind, in tone — the
-   trail a violent cut leaves, never a glow */
-.blade2--ghost{z-index:9}
-.blade2--ghost .b-body{fill:var(--tone)}
-.blade2--ghost .b-core{fill:transparent}
-
-/* ── the page cut: the OUTGOING page itself, frozen into fragments
-   along two real cut lines. The fragments are clipped clones of the
-   live page, so there is never a cover and never a black frame — the
-   page stays the subject until its own pieces slide away. ── */
-.pcut{position:absolute;inset:0;z-index:6;perspective:1100px}
-.pcut__piece{position:absolute;inset:0;will-change:transform;
-  background-color:var(--paper);background-repeat:no-repeat;
-  background-position:0 0}
 
 /* the welcome: one INTACT panel layer (the only one that plays), and
    two clipped halves that stay display:none until the blade's contact
@@ -486,45 +472,23 @@ select.input{padding-right:var(--s4)}
   letter-spacing:.01em}
 
 /* ══ THE SIGN-OUT SCENE ══════════════════════════════════════════════
-   A manga cutaway that COVERS the application: a dedicated
-   full-viewport panel with its own composition — frame, screentone,
-   ink wedge, impact lines, big diagonal type. The app underneath is
-   hidden and never animated; the slash cuts THIS panel, its halves
-   wipe away, and the scene's clean white backing hands over to the
-   sign-in page. */
-.soscene{position:fixed;inset:0;z-index:180;background:var(--paper)}
-.soscene__whole,
-.soscene__half{position:absolute;inset:0;will-change:transform}
-.soscene__panel{position:absolute;inset:0;background:var(--paper);
-  overflow:hidden;display:grid;place-items:center}
-/* the drawn panel border, inset from the trim like a printed page */
-.soscene__frame{position:absolute;inset:clamp(10px,2vw,26px);
-  border:3px solid var(--ink)}
-/* screentone descending from the upper right */
-.soscene__tone{position:absolute;top:0;right:0;width:52%;height:64%;
-  background-image:radial-gradient(circle,var(--ink) 0 1.2px,transparent 1.35px);
-  background-size:7px 7px;opacity:.45;
-  clip-path:polygon(22% 0,100% 0,100% 100%)}
-/* an ink mass driving in from the lower-left corner */
-.soscene__wedge{position:absolute;left:-4%;bottom:-6%;width:64%;height:56%;
-  background:var(--ink);
-  clip-path:polygon(0 18%,54% 62%,100% 100%,0 100%)}
-/* impact lines bursting from that corner */
-.soscene__lines{position:absolute;left:-10%;bottom:-10%;
-  width:95%;height:95%;opacity:.8;
-  background:repeating-conic-gradient(from 255deg at 0% 100%,
-    var(--ink) 0 .6deg,transparent .6deg 6.4deg);
-  -webkit-mask-image:radial-gradient(circle at 0% 100%,
-    transparent 30%,#000 44%,transparent 80%);
-  mask-image:radial-gradient(circle at 0% 100%,
-    transparent 30%,#000 44%,transparent 80%)}
-/* the word is part of the panel: display face on the diagonal. The
-   rotation rides the `rotate` property so the slam's inline transform
-   (scale) composes with it instead of erasing it. */
-.soscene__word{position:relative;margin:0 4vw 9vh;rotate:-9deg;
-  font-family:var(--f-display);text-transform:uppercase;
-  font-size:clamp(58px,15vw,200px);line-height:.86;color:var(--ink);
-  text-align:center;letter-spacing:-.01em}
+   A manga page built as a WAFFLE GRID, covering the application. The
+   scene is the grid: paper panels with strong ink frames, a few
+   spotted-black panels, a few screentone panels, on clean paper
+   gutters. The app underneath is hidden and never animated; the
+   panels stamp in as one wave, stand, and the same wave dismantles
+   them, handing over to the sign-in page. The grid's tracks and
+   panel count are set from the live viewport by the scene builder. */
+.soscene{position:fixed;inset:0;z-index:180;background:var(--paper);
+  display:grid;gap:clamp(7px,1.2vw,15px);
+  padding:clamp(12px,2.4vw,30px);box-sizing:border-box}
+.soscene__cell{background:var(--paper);
+  border:var(--edge-frame,3px) solid var(--ink);
+  min-width:0;min-height:0;will-change:transform,opacity}
+.soscene__cell--ink{background:var(--ink)}
+.soscene__cell--tone{background-image:radial-gradient(circle at 50% 50%,
+    var(--ink) 0 1.6px,transparent 1.75px);
+  background-size:8px 8px}
 .fxdefs{position:absolute;width:0;height:0}
 
 /* ══════════════════ TABS — the held-device navigation ══════════════
@@ -580,9 +544,15 @@ select.input{padding-right:var(--s4)}
 .boot__word{font-family:var(--f-head);color:var(--paper);
   font-size:clamp(56px,10.5vw,150px);line-height:.94;margin-top:14px;
   text-transform:uppercase;white-space:nowrap}
+/* the phone poster: the seal sits nearly complete in the upper half
+   (a slight off-centre lean, not a crop) and the type owns the lower
+   third — anchored from opposite edges so the two can never collide,
+   whatever the browser chrome does to the viewport height */
 @media(max-width:700px){
-  .boot__seal{top:30%;width:min(96vmin,420px);transform:translate(-38%,-50%) rotate(-8deg)}
-  .boot__type{left:var(--gutter);right:var(--gutter);top:62%}
+  .boot__seal{top:clamp(16px,7dvh,56px);left:50%;
+    width:min(64vmin,300px);transform:translateX(-56%) rotate(-8deg)}
+  .boot__type{left:var(--gutter);right:var(--gutter);top:auto;
+    bottom:clamp(48px,16dvh,140px);transform:none}
 }
 
 .shell{grid-template-columns:1fr}

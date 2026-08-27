@@ -594,8 +594,6 @@ const Views = {
           <h1 class="spread__wm">Keystamp</h1>
         </header>
 
-        <span class="spread__side" aria-hidden="true">Key Club International · Cali-Nev-Ha District</span>
-
         <form class="authp" id="authForm" novalidate>
           <p class="authp__title">${up ? 'Create account' : 'Sign in'}</p>
 
@@ -633,6 +631,10 @@ const Views = {
 
           ${AuthUI.setupNotice()}
         </form>
+
+        <!-- the organization's imprint line: set in flow under the
+             panel it belongs to, centred in that panel's measure -->
+        <span class="spread__side" aria-hidden="true">Key Club International · Cali-Nev-Ha District</span>
       </div>
     </div>`;
   },

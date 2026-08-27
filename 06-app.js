@@ -137,7 +137,7 @@ async function go(id, opts = {}){
   if (current === 'scan' && id !== 'scan') Scanner.stop();
 
   const view = $('#view');
-  const render = () => {
+  const render = (nav = false) => {
     current = id;
     syncHash(id);
     Motion.settle(view);          /* identity in anime's cache too, or a
@@ -150,17 +150,18 @@ async function go(id, opts = {}){
     view.innerHTML = Views[id]();
     paintNav();
     try { scrollTo(0, 0); } catch (_) {}
-    afterRender(id);
+    afterRender(id, nav);
     view.focus({ preventScroll:true });
   };
 
-  /* The outgoing page stands untouched until the ink sheets cover it;
-     the swap happens under full cover, so there is never a blank or a
-     half-faded midpoint. opts.instant renders directly — used when a
-     covering sequence (welcome, the sign-out wall) is already up. */
+  /* Normal navigation is one quiet page turn (FX.pageFlow): the view
+     leaves, breathes, and the next page eases in — the swap happens
+     while the view is fully faded, so nothing half-changed is ever
+     visible. opts.instant renders directly — used when a covering
+     sequence (welcome, the sign-out scene) is already up. */
   if (view.firstChild && booted && !opts.instant && !Motion.off){
     navigating = true;
-    await FX.pageCut(() => { render(); FX.slamType(view, 40); });
+    await FX.pageFlow(() => render(true));
     navigating = false;
     if (pendingNav !== null){
       const next = pendingNav; pendingNav = null;
@@ -173,14 +174,19 @@ async function go(id, opts = {}){
 
 const seenUnlocked = new Set();
 
-/* purely visual — safe to replay, no side effects */
-function playViewIntro(id){
+/* purely visual — safe to replay, no side effects.
+   `nav` marks a plain page turn: the page arrives as ONE composition,
+   so the decorative intros (count-up, seal stagger, ring spins) stay
+   quiet and only STATE events — a stamp landing, a reward becoming
+   claimable — still play. */
+function playViewIntro(id, nav = false){
   if (id === 'home'){
-    const p = Rules.progress();
-    Motion.countUp($('#heroNum'), p.total);
-
-    setTimeout(() => FX.sealReveal($('.hero__ring'), { dur:620, spin:-20 }), 220);
-    FX.sealGrid($('#seals'));
+    if (!nav){
+      const p = Rules.progress();
+      Motion.countUp($('#heroNum'), p.total);
+      setTimeout(() => FX.sealReveal($('.hero__ring'), { dur:620, spin:-20 }), 220);
+      FX.sealGrid($('#seals'));
+    }
 
     if (pendingCell >= 0){
       const cell = $$('#seals .seal')[pendingCell];
@@ -200,14 +206,14 @@ function playViewIntro(id){
     });
   }
 
-  if (id === 'profile'){
+  if (id === 'profile' && !nav){
     const seals = $$('.who__seal');
     seals.forEach(s => FX.sealReveal(s, { dur:700, spin:-24, delay:180 }));
   }
 }
 
-function afterRender(id){
-  if (booted) playViewIntro(id);
+function afterRender(id, nav = false){
+  if (booted) playViewIntro(id, nav);
 
   if (id === 'auth') AuthUI.busy = false;
   if (id === 'scan'){ paintDemoHint(); Scanner.start(); }
