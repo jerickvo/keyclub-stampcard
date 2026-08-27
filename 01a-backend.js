@@ -143,8 +143,8 @@ const Config = {
    Whether a given member has CLAIMED one is user data and comes from
    the backend. */
 const REWARD_TIERS = [
-  { id:'r1', name:'Club Merch',    required:10, desc:'Get some official club merch.' },
-  { id:'r2', name:'Free Blindbox', required:20, desc:'Get a blindbox on us.' },
+  { id:'r1', name:'Club Merch',    required:10, desc:'' },
+  { id:'r2', name:'Free Blindbox', required:20, desc:'' },
   { id:'r3', name:'???',           required:30, desc:'A surprise. You will find out.' },
 ];
 

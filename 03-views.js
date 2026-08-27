@@ -26,8 +26,8 @@ function stampShape(kind, seed, grow = 0){
   const push = (x, y) => pts.push(x.toFixed(1) + ' ' + y.toFixed(1));
   if (kind === 'seal' || kind === 'burst'){
     const n  = kind === 'seal' ? 18 : 24;
-    const r0 = (kind === 'seal' ? 27 : 29) + grow;
-    const r1 = (kind === 'seal' ? 27 : 22.5) + grow;
+    const r0 = (kind === 'seal' ? 28.5 : 29) + grow;
+    const r1 = (kind === 'seal' ? 28.5 : 22.5) + grow;
     for (let i = 0; i < n; i++){
       const a = i / n * 2 * Math.PI - Math.PI / 2;
       const r = (i % 2 ? r1 : r0) + J(i) * 2.8;
@@ -38,7 +38,7 @@ function stampShape(kind, seed, grow = 0){
        midpoints, so every edge is a little off-true */
     const g = grow;
     const C4 = kind === 'label'
-      ? [[15 - g, 5 - g], [49 + g, 5 - g], [49 + g, 59 + g], [15 - g, 59 + g]]
+      ? [[12 - g, 5 - g], [52 + g, 5 - g], [52 + g, 59 + g], [12 - g, 59 + g]]
       : kind === 'diamond'
       ? [[32, 3 - g], [61 + g, 32], [32, 61 + g], [3 - g, 32]]
       : [[13 - g, 4 - g], [51 + g, 4 - g], [60 + g, 22], [60 + g, 42],
@@ -55,7 +55,7 @@ function stampShape(kind, seed, grow = 0){
 const STAMP_KIND = i =>
   i === 9 ? 'burst' : ['seal', 'label', 'diamond', 'seal', 'plate',
                        'label', 'seal', 'diamond', 'plate'][i % 9];
-const STAMP_FIT = { seal:.6, burst:.46, label:.5, diamond:.5, plate:.58 };
+const STAMP_FIT = { seal:.66, burst:.56, label:.6, diamond:.56, plate:.66 };
 
 const C = {
   /* the giant cropped word behind a view */
@@ -117,9 +117,9 @@ const C = {
       const kind = STAMP_KIND(i);
       const seed = p.floor + i + 1;
       const fit  = STAMP_FIT[kind];
-      /* the rosette's artwork rides high so the reward name has the
-         lower valley to itself */
-      const dy   = kind === 'burst' ? -4 : 0;
+      /* the rosette's artwork rides high inside the face; the name
+         owns a reserved band under the silhouette (never over it) */
+      const dy   = kind === 'burst' ? -3 : 0;
       return `<li class="seal seal--k-${kind} ${state ? 'seal--' + state : ''}${hero}${mile}" data-seal="${state || 'empty'}" style="${tilt}"${
         docket ? ` tabindex="0" aria-label="Stamp ${pad(p.floor + i + 1)}: general meeting ${
           mtg.no}, ${fmtDate(mtg.date)}, checked in at ${fmtTime(rec.at)}"` : ''}>
@@ -528,14 +528,12 @@ const Views = {
            the whole product is about, on the page that is about them. -->
       <div class="sheet" data-enter>
         <section class="who">
-          <!-- an organizational identity plate, composed, not
-               stickered: the letterhead LOCKUP at the top (the
-               International seal with the organization named beside
-               it), the district emblem as one large quiet watermark
-               anchoring the lower corner, and the member's name as
-               the dominant line across it. -->
+          <!-- the district's plate: ONE giant gray CNH emblem is the
+               panel's architecture, deliberately cropped by the frame
+               like a watermark leaving the sheet. The organization is
+               named in small type at the head; the member's name is
+               the dominant line in front. No second logo competes. -->
           <div class="who__mark" aria-hidden="true">
-            ${brandSeal('kci')}
             <span class="who__org">Key Club International<b>Cali-Nev-Ha District</b></span>
           </div>
           <span class="who__emblem" aria-hidden="true">${brandSeal('cnh')}</span>
