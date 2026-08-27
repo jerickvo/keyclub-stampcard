@@ -11,7 +11,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#080807">
+<meta name="theme-color" content="#F7F7F5">
 <title>Keystamp</title>
 <meta name="description" content="Key Club attendance">
 
@@ -381,10 +381,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .link{background:none;border:0;cursor:pointer;
   color:var(--ink);font:500 var(--t-body)/1.2 var(--f-body);letter-spacing:0;
   text-decoration:underline;text-underline-offset:3px}
-
-.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;
-  border:var(--rule-hair) solid var(--ink);font:500 9.5px/1 var(--f-mono);
-  letter-spacing:.16em;}
 
 .toasts{position:fixed;right:var(--s5);bottom:var(--s5);z-index:45;
   display:flex;flex-direction:column;gap:var(--s3);max-width:330px;
@@ -847,46 +843,13 @@ main#view{padding-top:var(--space-tier);
   --pnl-off:clamp(5px,.9vw,9px);        /* printed plate offset        */
   }
 
-/* ══ MANGA PANEL SYSTEM ═════════════════════════════════════════════
-   One vocabulary, many compositions. Everything is :where() so a
-   page's own rules always win without fighting specificity.
-
-   .pnl        framed panel on paper
-   .pnl--ink   solid ink panel (spotted black)
-   .pnl--tone  screentone fill — dots as a deliberate field
-   .pnl--hair  hairline frame (a quiet panel)
-   .pnl--plate hard ink offset: the panel sits ON the page
-   .pnl--flush frameless region that still behaves like a panel
-   .grid-gtr   a gutter stack; data-split cuts it 64 / 73 / 55
-   .lap-t      pulls a panel up over the one before it
-   .tone       a placed screentone field (position it per page)
-   ═════════════════════════════════════════════════════════════════ */
-:where(.pnl){position:relative;border:var(--edge,3px) solid var(--ink);
-  background:var(--paper);min-width:0}
-:where(.pnl--ink){background:var(--ink);color:var(--paper)}
-:where(.pnl--tone){background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
-:where(.pnl--hair){border-width:var(--rule-hair,1px)}
-:where(.pnl--plate){box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
-:where(.pnl--flush){border:0}
-
-:where(.grid-gtr){display:grid;gap:var(--gut);min-width:0}
-@media(min-width:900px){
-  :where(.grid-gtr[data-split="64"]){grid-template-columns:6fr 4fr}
-  :where(.grid-gtr[data-split="73"]){grid-template-columns:7fr 3fr}
-  :where(.grid-gtr[data-split="55"]){grid-template-columns:1fr 1fr}
-}
-:where(.lap-t){margin-top:calc(var(--lap,28px) * -1);z-index:2}
-
+/* .tone — a placed screentone field; each page positions its own */
 .tone{position:absolute;pointer-events:none;z-index:0;
   background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
-.tone--fine{background-image:radial-gradient(circle at 50% 50%, var(--ink) 0 .8px, transparent .9px);
-  background-size:4px 4px}
 .tone--coarse{background-image:radial-gradient(circle at 50% 50%, var(--ink) 0 1.7px, transparent 1.85px);
   background-size:8px 8px}
 .tone--fade-b{-webkit-mask-image:linear-gradient(#000 40%,transparent);
   mask-image:linear-gradient(#000 40%,transparent)}
-.tone--fade-r{-webkit-mask-image:linear-gradient(90deg,#000 40%,transparent);
-  mask-image:linear-gradient(90deg,#000 40%,transparent)}
 
 [data-rank="lead"]{--ink-w:4.4}
 [data-rank="mid"]{--ink-w:2.8}
@@ -1023,21 +986,10 @@ main#view{padding-top:var(--space-tier);
 /* a failed connection is a heavier statement than a missing one */
 .setupbox--warn{border-width:var(--rule);background-image:none}
 
-.bmiles{margin-top:var(--s2)}
-.bmile{display:grid;grid-template-columns:auto 1fr;align-items:start;
-  gap:var(--s4);padding:var(--s4) 0;border-bottom:var(--rule-hair) solid var(--tone)}
-.bmile:last-child{border-bottom:0}
-.bmile__no{font-family:var(--f-head);font-size:clamp(24px,3vw,34px);
-  line-height:1;min-width:2.2ch;text-align:right}
-.bmile__mid{min-width:0}
-.bmile__mid b{display:block;font-size:14px}
-.bmile__mid .muted{display:block;font-size:12px;margin-top:2px}
 .bmile__bar{display:block;height:8px;margin-top:var(--s3);
   border:var(--rule-hair) solid var(--ink);background:var(--paper)}
 .bmile__fill{display:block;height:100%;background:var(--ink)}
 
-.bmile{gap:var(--s3)}
-@media (min-width:768px){.bmile{gap:var(--s4)}}
 
 /* ── QR: one static code per meeting, sized to be scanned ─────────
    The code is now the page. It is bigger than the old rotating one
@@ -1097,10 +1049,8 @@ main#view{padding-top:var(--space-tier);
   .rail__link{grid-template-columns:1fr!important;
     align-items:start!important;gap:2px!important;
     padding:clamp(10px,1.1vw,16px) var(--s3) clamp(10px,1.1vw,16px) 0!important}
-  .rail__link span:not(.rail__no){font-size:clamp(9.5px,.72vw,11px);
-    letter-spacing:.3em;align-self:start}
-
-  .rail__link span:not(.rail__no){margin-top:3px}
+  .rail__link span{font-size:clamp(9.5px,.72vw,11px);
+    letter-spacing:.3em;align-self:start;margin-top:3px}
 }
 
 /* the credential band and the milestone ledger were the last two
@@ -1280,7 +1230,6 @@ select.input:focus-visible{outline:none}
 .btn--go:active{background:var(--ink);border-color:var(--ink)}
 
 .btn:focus-visible,
-.chip:focus-visible,
 .link:focus-visible,
 .brow__del:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px}
 .btn--go:focus-visible{outline-color:var(--ink);outline-offset:3px}
@@ -1485,8 +1434,6 @@ body{
 /* milestone bars: fill is a spotted black on a line track */
 .bmile__bar{border:var(--edge-hair) solid var(--ink);background:var(--paper);height:10px}
 .bmile__fill{background:var(--ink)}
-.bmile__no{color:var(--ink);font-family:var(--f-head);
-  font-size:clamp(26px,4vw,44px);line-height:1}
 .brow--member .brow__mid b{font-family:var(--f-head);font-weight:400;
   font-size:var(--t-sub);letter-spacing:.01em}
 
@@ -1639,13 +1586,13 @@ body{
 .brow{padding-block:var(--s3)}
 .brow__del{min-height:38px;padding:8px 10px}
 
-.btn,.chip,.link{min-height:44px}
+.btn,.link{min-height:44px}
 
 @media (min-width:768px){
   :where(.panel){--ink-w:3}
   }
 
-.btn,.chip,.motion-btn,.input,.brow__del{
+.btn,.motion-btn,.input,.brow__del{
   min-height:38px;
 }
 .motion-btn{padding:0 var(--s4)}
@@ -1656,7 +1603,7 @@ body{
 .rail__brand .mark,.rail__brand .mark__word{min-width:0;overflow-wrap:anywhere}
 .brow__mid .muted,.bstat span{font-size:clamp(12px,.45vw + 10.6px,13.5px)}
 
-.chip,.bstate,.brow__del,.brow__no,.brow__sub{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
+.bstate,.brow__del,.brow__no,.brow__sub{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
 
 /* ══════════════════════════════════════════════════════════════════
    MUTED TEXT IS INK, NOT TONE
@@ -1678,14 +1625,14 @@ body{
    ══════════════════════════════════════════════════════════════════ */
 .muted,.empty,
 .verdict__meet,.setupbox__hint,.bstat span,
-.brow__no,.brow__sub,.bstate--ended,.bstate--past,.bmile__mid .muted,
+.brow__no,.brow__sub,.bstate--ended,.bstate--past,
 .brow__mid .muted{color:var(--ink-2)}
 
-.rig > *,.brow__mid,.bmile__mid{min-width:0}
+.rig > *,.brow__mid{min-width:0}
 .brow__mid b{overflow-wrap:anywhere}
 
 @media (pointer:coarse){
-  .btn,.chip,.motion-btn,.input,.link,.brow__del,
+  .btn,.motion-btn,.input,.link,.brow__del,
   .tab,select{min-height:44px}
   .input{padding-inline:var(--s4)}
   .btn{padding-inline:var(--s5)}
@@ -1701,11 +1648,10 @@ body{
   .bstat{padding:var(--s4) var(--s4) var(--s5)}
 }
 
-.btn:hover,.chip:hover,.motion-btn:hover{
+.btn:hover,.motion-btn:hover{
   background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.btn:active,.chip:active,.motion-btn:active{transform:translate(2px,2px)}
+.btn:active,.motion-btn:active{transform:translate(2px,2px)}
 .motion-btn:hover svg{stroke:var(--paper)}
-.chip--on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .link:hover{text-decoration-thickness:2px}
 :focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px}
 /* The router gives main#view tabindex="-1" and focuses it after every
@@ -2207,8 +2153,6 @@ button,input,select,textarea{font-family:inherit}
    so it runs one step tighter. */
 .rechead--tight{padding-bottom:var(--s2)}
 .rechead--tight .rechead__title{font-size:clamp(30px,6.5vw,64px)}
-.rechead__note{margin:0;max-width:44ch;
-  font-size:var(--t-caption);line-height:1.45;color:var(--ink-2)}
 
 .recbody{display:grid;gap:var(--s4)}
 
@@ -2559,18 +2503,16 @@ button,input,select,textarea{font-family:inherit}
   padding:clamp(18px,3vw,32px);
   margin-left:calc(var(--gutter) * -1);
   padding-left:max(var(--gutter),clamp(18px,3vw,32px))}
-/* ONE composition, three layers of weight: the letterhead LOCKUP at
-   the top (the International seal with the organization named beside
-   it — a mark with words is placed; a mark alone floats), the
-   district emblem as one large tone watermark bleeding off the lower
-   corner, and the member's name as the dominant line over it.
-   Everything is sized from the PLATE (container units), so nothing
-   can clip on the narrow desktop column. */
+/* ONE composition, three layers of weight: the district named in
+   small type at the head, the district emblem as one large tone
+   watermark bleeding off the lower corner, and the member's name as
+   the dominant line over it. Everything is sized from the PLATE
+   (container units), so nothing can clip on the narrow desktop
+   column. */
 .who__mark{grid-row:1;align-self:start;position:relative;z-index:1}
 .who__org{display:block;font:500 clamp(10px,2.4cqw,13px)/1.6 var(--f-mono);
   text-transform:uppercase;letter-spacing:.2em;color:var(--paper);
   opacity:.9}
-.who__org b{display:block;font-weight:500;color:var(--tint)}
 /* the district emblem IS the plate's architecture: giant, gray, and
    cropped by the frame on purpose — a watermark leaving the sheet.
    It fades toward the lower-left so the name in front always sits on
@@ -15621,9 +15563,7 @@ var qrcode = function() {
                        returns an unauthenticated session and empty
                        collections, so an unconfigured build shows the
                        signed-out state instead of quietly pretending
-                       somebody is logged in. The old prototype did
-                       the opposite, and that is precisely the failure
-                       mode this phase exists to remove.
+                       somebody is logged in.
    ══════════════════════════════════════════════════════════════════ */
 
 /* ── configuration ────────────────────────────────────────────────
@@ -15943,13 +15883,11 @@ const SupabaseAdapter = {
      The server is the only authority. This call sends the raw scanned
      payload and returns whatever the Edge Function decides.
 
-     There is deliberately NO local fallback. An earlier revision fell
-     back to the client-side prototype verifier when the function was
-     not deployed, which meant a misconfigured production build would
-     quietly accept tokens the browser could mint itself. A configured
-     build now FAILS CLOSED: if verification is unreachable, nobody
-     gets a stamp. Refusing a real member is recoverable; awarding
-     attendance to a forged code is not. */
+     There is deliberately NO local fallback: a client-side check would
+     accept tokens the browser could mint itself. A configured build
+     FAILS CLOSED — if verification is unreachable, nobody gets a
+     stamp. Refusing a real member is recoverable; awarding attendance
+     to a forged code is not. */
   async verifyCode(rawCode){
     let res;
     try {
@@ -17437,11 +17375,11 @@ const Views = {
         <section class="who">
           <!-- the district's plate: ONE giant gray CNH emblem is the
                panel's architecture, deliberately cropped by the frame
-               like a watermark leaving the sheet. The organization is
+               like a watermark leaving the sheet. The district is
                named in small type at the head; the member's name is
                the dominant line in front. No second logo competes. -->
           <div class="who__mark" aria-hidden="true">
-            <span class="who__org">Key Club International<b>Cali-Nev-Ha District</b></span>
+            <span class="who__org">Cali-Nev-Ha District</span>
           </div>
           <span class="who__emblem" aria-hidden="true">${brandSeal('cnh')}</span>
           <div class="who__id">
@@ -18123,20 +18061,6 @@ const Slash = {
     this.create({ type:'C', angle:angle + 76, host, delay:delay + 50, offset:-16 });
   },
 
-  /* CUT · 20ms · CUT · 35ms · CROSS · 50ms · IMPACT */
-  barrage(count = 5, { spread = 150, host = null, delay = 0 } = {}){
-    for (let i = 0; i < count; i++){
-      const r = roll(i);
-      this.create({
-        type: i % 3 === 0 ? 'B' : 'D',
-        angle: -72 + r * 146,
-        offset: (r - .5) * spread * 2,
-        along: (((i * 1.618) % 1) - .5) * 130,
-        host, delay: delay + i * (22 + (i % 3) * 16),
-        afterimage: i % 2 === 0,
-      });
-    }
-  },
 };
 
 /* ══ CUT GEOMETRY ════════════════════════════════════════════════════
@@ -18542,16 +18466,9 @@ const Lines = {
 };
 
 /* ── the structure that forms behind the biggest moments ── */
-/* THE FIELD BEHIND THE IMPACT.
-
-   This drew seal(4) at the height of the screen, and back when the
-   seal was a line drawing its 5.5-unit arms scaled to 46px each and
-   the six of them fused into a soft grey disc covering half the
-   frame. I worked around that by redrawing it at hairline weight.
-
-   The seal is traced artwork now, so it scales the way a logo should:
-   the mark behind the impact is simply the mark, enormous, at low
-   value. The workaround is gone with the geometry that needed it. */
+/* THE FIELD BEHIND THE IMPACT: the traced seal at screen height and
+   low value. Traced artwork scales the way a logo should, so the mark
+   behind the impact is simply the mark, enormous and quiet. */
 const fieldSVG = () =>
   `<svg class="verdict__field" id="verdictField" viewBox="0 0 100 100" aria-hidden="true">${seal(4)}</svg>`;
 
@@ -18999,7 +18916,7 @@ const FX = {
 
   /* ── the signature sequence ────────────────────────────────────
      LOCKED · silence · cut cut cross-cut · VERIFIED · +1 · settle
-     Beats are deliberately uneven. The 120ms hole after the barrage
+     Beats are deliberately uneven. The 120ms hole after the cuts
      is the impact frame: nothing new lands, which is what makes the
      verdict read as a consequence rather than the next animation.
      ────────────────────────────────────────────────────────────── */
@@ -19783,6 +19700,7 @@ document.addEventListener('submit', async e => {
     const err = $('#mErr');
     const show = msg => { if (err){ err.hidden = !msg; err.textContent = msg || ''; } };
     const btn = $('#mGo');
+    if (btn && btn.disabled) return;   /* a create is already in flight */
 
     const no    = Number($('#mNo').value);
     const date  = $('#mDate').value;
@@ -20051,8 +19969,8 @@ function paintMotionBtn(){
   b.setAttribute('aria-pressed', String(Motion.forced));
   b.setAttribute('aria-label', Motion.forced ? 'Reduced motion is on. Turn animations back on.'
                                              : 'Reduced motion is off. Turn animations off.');
-  /* the chip says what state it is IN, not a bare noun: an unlabeled
-     "MOTION" chip read as debug furniture */
+  /* the chip names the state it is IN — "Motion off" / "Motion on" —
+     never a bare noun the reader has to interpret */
   b.innerHTML = (Motion.forced ? ICON.still : ICON.waves) +
                 `<span>Motion ${Motion.forced ? 'off' : 'on'}</span>`;
 }
@@ -20099,13 +20017,9 @@ addEventListener('resize', () => {
 function paintIdentity(){
   const foot = $('#railFoot');
   if (!foot) return;
-  /* shown only to board accounts. Hiding it is convenience; the gate
-     in go() and the role check inside board-data are the enforcement. */
-  const boardBtn = '';
   foot.innerHTML = Store.signedIn
     ? `<p class="rail__who">${esc(Store.user.name)}</p>
        <p class="muted rail__role">${Store.isBoard ? 'Board' : 'Member'}</p>
-       ${boardBtn}
        <button class="link" data-signout style="margin-top:10px">Sign out</button>`
     : `<p class="kicker">Not signed in</p>
        <p class="muted" style="margin-top:6px;font-size:12.5px">Sign in to see your record.</p>`;

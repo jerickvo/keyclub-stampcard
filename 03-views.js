@@ -530,11 +530,11 @@ const Views = {
         <section class="who">
           <!-- the district's plate: ONE giant gray CNH emblem is the
                panel's architecture, deliberately cropped by the frame
-               like a watermark leaving the sheet. The organization is
+               like a watermark leaving the sheet. The district is
                named in small type at the head; the member's name is
                the dominant line in front. No second logo competes. -->
           <div class="who__mark" aria-hidden="true">
-            <span class="who__org">Key Club International<b>Cali-Nev-Ha District</b></span>
+            <span class="who__org">Cali-Nev-Ha District</span>
           </div>
           <span class="who__emblem" aria-hidden="true">${brandSeal('cnh')}</span>
           <div class="who__id">

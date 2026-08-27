@@ -278,6 +278,7 @@ document.addEventListener('submit', async e => {
     const err = $('#mErr');
     const show = msg => { if (err){ err.hidden = !msg; err.textContent = msg || ''; } };
     const btn = $('#mGo');
+    if (btn && btn.disabled) return;   /* a create is already in flight */
 
     const no    = Number($('#mNo').value);
     const date  = $('#mDate').value;
@@ -546,8 +547,8 @@ function paintMotionBtn(){
   b.setAttribute('aria-pressed', String(Motion.forced));
   b.setAttribute('aria-label', Motion.forced ? 'Reduced motion is on. Turn animations back on.'
                                              : 'Reduced motion is off. Turn animations off.');
-  /* the chip says what state it is IN, not a bare noun: an unlabeled
-     "MOTION" chip read as debug furniture */
+  /* the chip names the state it is IN — "Motion off" / "Motion on" —
+     never a bare noun the reader has to interpret */
   b.innerHTML = (Motion.forced ? ICON.still : ICON.waves) +
                 `<span>Motion ${Motion.forced ? 'off' : 'on'}</span>`;
 }
@@ -594,13 +595,9 @@ addEventListener('resize', () => {
 function paintIdentity(){
   const foot = $('#railFoot');
   if (!foot) return;
-  /* shown only to board accounts. Hiding it is convenience; the gate
-     in go() and the role check inside board-data are the enforcement. */
-  const boardBtn = '';
   foot.innerHTML = Store.signedIn
     ? `<p class="rail__who">${esc(Store.user.name)}</p>
        <p class="muted rail__role">${Store.isBoard ? 'Board' : 'Member'}</p>
-       ${boardBtn}
        <button class="link" data-signout style="margin-top:10px">Sign out</button>`
     : `<p class="kicker">Not signed in</p>
        <p class="muted" style="margin-top:6px;font-size:12.5px">Sign in to see your record.</p>`;

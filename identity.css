@@ -146,8 +146,6 @@ body{
 /* milestone bars: fill is a spotted black on a line track */
 .bmile__bar{border:var(--edge-hair) solid var(--ink);background:var(--paper);height:10px}
 .bmile__fill{background:var(--ink)}
-.bmile__no{color:var(--ink);font-family:var(--f-head);
-  font-size:clamp(26px,4vw,44px);line-height:1}
 .brow--member .brow__mid b{font-family:var(--f-head);font-weight:400;
   font-size:var(--t-sub);letter-spacing:.01em}
 
@@ -300,13 +298,13 @@ body{
 .brow{padding-block:var(--s3)}
 .brow__del{min-height:38px;padding:8px 10px}
 
-.btn,.chip,.link{min-height:44px}
+.btn,.link{min-height:44px}
 
 @media (min-width:768px){
   :where(.panel){--ink-w:3}
   }
 
-.btn,.chip,.motion-btn,.input,.brow__del{
+.btn,.motion-btn,.input,.brow__del{
   min-height:38px;
 }
 .motion-btn{padding:0 var(--s4)}
@@ -317,7 +315,7 @@ body{
 .rail__brand .mark,.rail__brand .mark__word{min-width:0;overflow-wrap:anywhere}
 .brow__mid .muted,.bstat span{font-size:clamp(12px,.45vw + 10.6px,13.5px)}
 
-.chip,.bstate,.brow__del,.brow__no,.brow__sub{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
+.bstate,.brow__del,.brow__no,.brow__sub{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
 
 /* ══════════════════════════════════════════════════════════════════
    MUTED TEXT IS INK, NOT TONE
@@ -339,14 +337,14 @@ body{
    ══════════════════════════════════════════════════════════════════ */
 .muted,.empty,
 .verdict__meet,.setupbox__hint,.bstat span,
-.brow__no,.brow__sub,.bstate--ended,.bstate--past,.bmile__mid .muted,
+.brow__no,.brow__sub,.bstate--ended,.bstate--past,
 .brow__mid .muted{color:var(--ink-2)}
 
-.rig > *,.brow__mid,.bmile__mid{min-width:0}
+.rig > *,.brow__mid{min-width:0}
 .brow__mid b{overflow-wrap:anywhere}
 
 @media (pointer:coarse){
-  .btn,.chip,.motion-btn,.input,.link,.brow__del,
+  .btn,.motion-btn,.input,.link,.brow__del,
   .tab,select{min-height:44px}
   .input{padding-inline:var(--s4)}
   .btn{padding-inline:var(--s5)}
@@ -362,11 +360,10 @@ body{
   .bstat{padding:var(--s4) var(--s4) var(--s5)}
 }
 
-.btn:hover,.chip:hover,.motion-btn:hover{
+.btn:hover,.motion-btn:hover{
   background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.btn:active,.chip:active,.motion-btn:active{transform:translate(2px,2px)}
+.btn:active,.motion-btn:active{transform:translate(2px,2px)}
 .motion-btn:hover svg{stroke:var(--paper)}
-.chip--on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .link:hover{text-decoration-thickness:2px}
 :focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px}
 /* The router gives main#view tabindex="-1" and focuses it after every
@@ -868,8 +865,6 @@ button,input,select,textarea{font-family:inherit}
    so it runs one step tighter. */
 .rechead--tight{padding-bottom:var(--s2)}
 .rechead--tight .rechead__title{font-size:clamp(30px,6.5vw,64px)}
-.rechead__note{margin:0;max-width:44ch;
-  font-size:var(--t-caption);line-height:1.45;color:var(--ink-2)}
 
 .recbody{display:grid;gap:var(--s4)}
 
@@ -1220,18 +1215,16 @@ button,input,select,textarea{font-family:inherit}
   padding:clamp(18px,3vw,32px);
   margin-left:calc(var(--gutter) * -1);
   padding-left:max(var(--gutter),clamp(18px,3vw,32px))}
-/* ONE composition, three layers of weight: the letterhead LOCKUP at
-   the top (the International seal with the organization named beside
-   it — a mark with words is placed; a mark alone floats), the
-   district emblem as one large tone watermark bleeding off the lower
-   corner, and the member's name as the dominant line over it.
-   Everything is sized from the PLATE (container units), so nothing
-   can clip on the narrow desktop column. */
+/* ONE composition, three layers of weight: the district named in
+   small type at the head, the district emblem as one large tone
+   watermark bleeding off the lower corner, and the member's name as
+   the dominant line over it. Everything is sized from the PLATE
+   (container units), so nothing can clip on the narrow desktop
+   column. */
 .who__mark{grid-row:1;align-self:start;position:relative;z-index:1}
 .who__org{display:block;font:500 clamp(10px,2.4cqw,13px)/1.6 var(--f-mono);
   text-transform:uppercase;letter-spacing:.2em;color:var(--paper);
   opacity:.9}
-.who__org b{display:block;font-weight:500;color:var(--tint)}
 /* the district emblem IS the plate's architecture: giant, gray, and
    cropped by the frame on purpose — a watermark leaving the sheet.
    It fades toward the lower-left so the name in front always sits on
