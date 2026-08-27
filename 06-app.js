@@ -428,9 +428,10 @@ document.addEventListener('click', e => {
 
   const out = e.target.closest('[data-signout]');
   if (out){
-    /* the wall freezes the CURRENT page first; only then does the real
+    /* the cut freezes the CURRENT page first; only then does the real
        sign-out (and the auth render) happen, invisibly beneath it */
     FX.waffleOut({
+      btn: out,
       swap: () => Store.signOut().then(() => {
         AuthUI.mode = 'in';       /* whoever signs in next starts at Sign in,
                                      not at the last account's Create form */

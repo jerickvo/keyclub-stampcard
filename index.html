@@ -561,33 +561,36 @@ select.input{padding-right:var(--s4)}
   text-transform:uppercase;color:var(--paper);white-space:nowrap;
   letter-spacing:.01em}
 
-/* the broken wall: each piece is a BLOCK. The clip polygon lives on
-   every layer (never on the piece, which carries the 3D transform):
-   the page snapshot is the front face, a tone step and an ink back
-   plate sit at real Z depths behind it, and a screen-space slab keeps
-   a resting thickness. Under the parent perspective, the moment a
-   block tilts its stacked layers separate and the wall reads THICK.
-   Pieces stay fully opaque for the whole fall — they leave the
-   screen, they do not dissolve. */
-.waffle{position:absolute;inset:0;z-index:5;perspective:1100px}
-.waffle__ink{position:absolute;inset:0}
-.waffle__piece{position:absolute;inset:0;will-change:transform;
-  transform-style:preserve-3d}
-.waffle__depth{position:absolute;inset:0;transform:translateZ(-18px)}
-.waffle__mid{position:absolute;inset:0;transform:translateZ(-9px)}
-.waffle__slab{position:absolute;inset:0;
-  transform:translate3d(5px,7px,-3px)}
-/* the front face: the rendered snapshot of the live page */
+/* the cut-apart page: each piece is a manga PANEL — the page snapshot
+   on its face over an ink panel edge — and the void behind the break
+   is PAPER ruled with speed lines along the cut's own angle: white
+   light through the split, never a black hole. Panels stay fully
+   opaque as they drive off-screen. */
+.waffle{position:absolute;inset:0;z-index:5}
+.waffle__void{position:absolute;inset:0;opacity:1}
+.waffle__void::before{content:'';position:absolute;inset:-20%;
+  opacity:.6;
+  background:repeating-linear-gradient(var(--cutdeg,74deg),
+    transparent 0 13px,var(--tone) 13px 14.8px,transparent 14.8px 33px,
+    var(--tone) 33px 33.8px,transparent 33.8px 56px);
+  -webkit-mask-image:linear-gradient(calc(var(--cutdeg,74deg) + 90deg),
+    #000 25%,transparent 96%);
+  mask-image:linear-gradient(calc(var(--cutdeg,74deg) + 90deg),
+    #000 25%,transparent 96%)}
+.waffle__piece{position:absolute;inset:0;will-change:transform}
+.waffle__slab{position:absolute;inset:0;transform:translate(4px,6px)}
+/* the panel face: the rendered snapshot of the live page */
 .waffle__face{position:absolute;inset:0;pointer-events:none;
   background-color:var(--paper);background-repeat:no-repeat;
-  background-position:0 0;transform:translateZ(0)}
-/* the ink and tone of the block bodies only exist once the wall has
-   visibly cracked; before that the snapshot IS the frame, so nothing
-   can ever flash black under it */
-.waffle.is-cracked .waffle__ink,
-.waffle.is-cracked .waffle__depth,
+  background-position:0 0}
+/* the void and the panel edges only exist once the page has visibly
+   cracked; before that the snapshot IS the frame, so nothing can
+   flash beneath it */
+.waffle__void{background:transparent}
+.waffle.is-cracked .waffle__void{background:var(--paper)}
+.waffle__void::before{display:none}
+.waffle.is-cracked .waffle__void::before{display:block}
 .waffle.is-cracked .waffle__slab{background:var(--ink)}
-.waffle.is-cracked .waffle__mid{background:var(--tone)}
 .fxdefs{position:absolute;width:0;height:0}
 
 /* ══════════════════ TABS — the held-device navigation ══════════════
@@ -18800,96 +18803,83 @@ const FX = {
                  rotate:1.4, duration:350, delay:1040, ease:'inQuad' });
     setTimeout(() => el.remove(), 1450);
   },
-
-  /* sign-out: the wall comes down. The page the user is looking at IS
-     the wall — it stays live and untouched until the hero blade's
-     contact, when a rendered snapshot of it (same engine, same
-     viewport, same pixels) replaces it already divided along that
-     exact line. The cut composition is ALL diagonals: one dominant
-     hero path, a counter-cut, and a few varied strokes, intersecting
-     into irregular polygons — different sizes, different side counts,
-     no underlying grid. Each further seam opens at its own blade's
-     contact; the wall holds visibly divided, sags, then collapses
-     under a small physics model (gravity, drift, spin, mass) at full
-     opacity, revealing the sign-in page. swap() runs once the wall has
-     been committed; fail() reports a sign-out that could not happen. */
-  waffleOut({ swap, fail } = {}){
+  /* sign-out: a manga panel gets cut apart. Its own interaction, not
+     the page transition: the button presses, the interface holds
+     still for a beat, ONE torn diagonal slash crosses the live page,
+     and at its exact contact the page — a rendered snapshot of
+     itself — splits into panels along that line. A counter-cut
+     follows, the divided page registers, then the panels drive apart
+     along the cut while WHITE takes over: a paper void ruled with
+     speed lines stands where the page was, fades, and the sign-in
+     page is simply there — a fresh panel. ~0.8s end to end. swap()
+     runs once the wall has been committed; fail() reports a sign-out
+     that could not happen. Nothing is sliced before the blade lands,
+     and a second press during the sequence is ignored. */
+  waffleOut({ swap, fail, btn = null } = {}){
     const doSwap = typeof swap === 'function' ? swap : () => {};
     const oops   = typeof fail === 'function' ? fail : () => {};
     const fx = $('#fx');
     if (Motion.off || !fx)
       return void Promise.resolve().then(doSwap).catch(oops);
+    if (FX._out) return;                     /* one sign-out at a time */
+    FX._out = true;
+    const unlock = () => { FX._out = false; };
 
     const W = innerWidth, H = innerHeight;
     const mob = W <= 700;
     const seq = ++cutSeq;
     const D = Math.hypot(W, H);
 
-    /* ── the cut composition: nothing axis-aligned ── */
-    const hero = CutGeo.line(W * .5, H * .46, -16 + (roll(seq) - .5) * 7);
-    const lines = [hero,
-      CutGeo.line(W * (.56 + (roll(seq + 1) - .5) * .1),
-                  H * (.42 + (roll(seq + 2) - .5) * .1),
-                  -58 + (roll(seq + 3) - .5) * 12)];
-    const extra = mob ? [[.3, .62, 24]]
-                      : [[.28, .6, 21], [.7, .58, -34], [.44, .3, -78]];
-    extra.forEach(([ex, ey, deg], i) => lines.push(
-      CutGeo.line(W * (ex + (roll(seq + 4 + i) - .5) * .12),
-                  H * (ey + (roll(seq + 9 + i) - .5) * .14),
-                  deg + (roll(seq + 14 + i) - .5) * 10)));
+    /* two diagonal cuts: the hero and one counter — panels, not rubble */
+    const hero    = CutGeo.line(W * .5, H * .46, -16 + (roll(seq) - .5) * 8);
+    const counter = CutGeo.line(W * (.55 + (roll(seq + 1) - .5) * .12),
+                                H * (.44 + (roll(seq + 2) - .5) * .1),
+                                -58 + (roll(seq + 3) - .5) * 12);
 
-    /* the freeze renders while the wind-up plays over the live page */
     const snapP = Snapshot.take();
 
-    /* ── anticipation: minimal setup, per the reference grammar. A
-       dip and one thin flick, then stillness — under 200ms in total —
-       so the hero lands as a sudden event, not a staged one. ── */
-    Impact.scrim(.16, { delay:40 });
-    Blade.strike({ line:CutGeo.line(hero.x + hero.nx * 150, hero.y + hero.ny * 150,
-                   hero.deg - 2), th:4, delay:90, sweep:60, hold:50, len:D * .5 });
+    /* the press: the control answers the hand, and the page holds
+       still for a beat before anything else moves */
+    const pressed = btn || $('[data-signout]');
+    if (pressed){
+      aset(pressed, { scale:.94 });
+      setTimeout(() => { animate(pressed, { scale:1, duration:120,
+        ease:'outQuad', onComplete(){ pressed.style.transform = ''; } }); }, 90);
+    }
+    Impact.scrim(.12, { delay:40 });
 
-    /* ── THE hero slash: one torn, violent stroke — needle tip, wide
-       ragged body, razor core — crossing the whole page in ~150ms,
-       with a tone afterimage dragging one beat behind. No streak fan:
-       the single cut IS the event. ── */
-    const heroTh = mob ? 60 : 110;
+    /* THE slash: torn, tapered, sudden — across the live page */
+    const heroTh = mob ? 52 : 96;
     const c0 = Blade.strike({ line:hero, th:heroTh, rough:2.4,
-      delay:200, sweep:150, hold:520 });
-    Blade.strike({ line:CutGeo.line(hero.x + hero.nx * 30, hero.y + hero.ny * 30,
+      delay:100, sweep:140, hold:300 });
+    Blade.strike({ line:CutGeo.line(hero.x + hero.nx * 24, hero.y + hero.ny * 24,
                    hero.deg), th:heroTh * .5, ghost:true, rough:1.8,
-                   delay:245, sweep:170, hold:400, len:D * 1.5 });
+                   delay:135, sweep:160, hold:240, len:D * 1.4 });
 
     Promise.all([snapP, wait(c0)]).then(([snap]) => {
-      const frags = CutGeo.shatter(W, H, lines);
+      const frags = CutGeo.shatter(W, H, [hero, counter]);
       const grid = document.createElement('div');
       grid.className = 'waffle';
-      const inkback = document.createElement('div');
-      inkback.className = 'waffle__ink';
-      grid.appendChild(inkback);
+      grid.style.setProperty('--cutdeg', (hero.deg + 90).toFixed(1) + 'deg');
+      /* the void behind the panels is PAPER ruled with speed lines —
+         white light through the break, never a black hole */
+      const voidEl = document.createElement('div');
+      voidEl.className = 'waffle__void';
+      grid.appendChild(voidEl);
       for (const f of frags){
-        /* a BLOCK, not a cutout: the clip lives on each layer so the
-           piece itself can carry 3D transforms — page on the front
-           face, a tone step and an ink back plate behind it, so the
-           wall's thickness shows the moment a block tilts */
         const clip = `clip-path:${CutGeo.clip(f)};`;
         const piece = document.createElement('div');
         piece.className = 'waffle__piece';
         piece.style.cssText =
           `transform-origin:${f.cx.toFixed(1)}px ${f.cy.toFixed(1)}px`;
-        const depth = document.createElement('div');
-        depth.className = 'waffle__depth';
-        depth.style.cssText = clip;
-        const mid = document.createElement('div');
-        mid.className = 'waffle__mid';
-        mid.style.cssText = clip;
-        const back = document.createElement('div');
-        back.className = 'waffle__slab';
-        back.style.cssText = clip;
+        const edge = document.createElement('div');
+        edge.className = 'waffle__slab';
+        edge.style.cssText = clip;
         const face = document.createElement('div');
         face.className = 'waffle__face';
         face.style.cssText = clip +
           `background-image:url("${snap.url}");background-size:${snap.W}px ${snap.H}px`;
-        piece.append(depth, mid, back, face);
+        piece.append(edge, face);
         grid.appendChild(piece);
         f.el = piece; f.ox = 0; f.oy = 0;
       }
@@ -18904,92 +18894,54 @@ const FX = {
         f.ox += f.sides[k] * L.nx * px; f.oy += f.sides[k] * L.ny * px;
         f.el.style.transform = `translate(${f.ox.toFixed(2)}px,${f.oy.toFixed(2)}px)`;
       } };
-      /* later seams stay overlapped a hair until their blades land;
-         the hero seam cracks WIDE now — this is its contact moment */
-      lines.forEach((L, k) => { if (k > 0) seam(L, k, -0.4); });
+      /* the counter seam stays overlapped a hair until ITS blade
+         lands; the hero seam cracks NOW — this is its contact */
+      seam(counter, 1, -0.4);
       grid.classList.add('is-cracked');
       seam(hero, 0, 12);
       Impact.pop();
-      Impact.shake(grid, 15, 180);
+      Impact.shake(grid, 10, 140);
 
-      /* ── the follow-through: a counter-cut and two quick support
-         strokes, each opening ITS seam at ITS contact — few and fast,
-         so they never dilute the hero ── */
-      let last = 0;
-      lines.slice(1).forEach((L, j) => {
-        const k = j + 1, counter = j === 0;
-        const c = Blade.strike({ line:L,
-          th: counter ? 26 : 9 + roll(seq + k) * 5,
-          rough: counter ? 1.7 : 1.2,
-          delay: counter ? 50 : 120 + (j - 1) * 70,
-          sweep: counter ? 90 : 60,
-          hold: counter ? 230 : 140 });
-        setTimeout(() => { seam(L, k, counter ? 5 : 2.2);
-          if (counter) Impact.shake(grid, 5, 100); }, c);
-        last = Math.max(last, c);
-      });
+      const c1 = Blade.strike({ line:counter, th:22, rough:1.7,
+        delay:40, sweep:80, hold:180 });
+      setTimeout(() => { seam(counter, 1, 6); Impact.shake(grid, 4, 90); }, c1);
 
-      /* ── HOLD: the severed wall stands; then it gives — every piece
-         sags by its own weight before the fall ── */
-      const tHold = Math.ceil(last) + 90;
-      const t2 = tHold + 240;
-      const avg = Math.sqrt(W * H / frags.length);
-      let dmax = 1;
-      for (const f of frags){
-        f.d = Math.abs(CutGeo.side(hero, f.cx, f.cy));
-        dmax = Math.max(dmax, f.d);
-      }
-      setTimeout(() => {
-        Impact.shake(grid, 2, 90);
-        for (const f of frags){
-          const m = Math.max(.6, Math.sqrt(f.area) / avg);
-          f.oy += 1.2 * m;
-          f.el.style.transform = `translate(${f.ox.toFixed(2)}px,${f.oy.toFixed(2)}px)`;
-        }
-      }, tHold);
+      /* HOLD: the cut registers — the page stands visibly divided */
+      const t2 = Math.ceil(c1) + 130;
 
-      /* ── collapse: pieces nearest the hero cut go first; mass =
-         fragment size: light shards accelerate and spin more, heavy
-         slabs lag and turn slowly ── */
+      /* DEPART: each panel drives off along the hero cut normal,
+         nudged by the counter, accelerating — direction, not scatter */
       frags.forEach((f, i) => {
-        const r1 = roll(i * 3 + seq), r2 = roll(i * 5 + seq + 1), r3 = roll(i * 7 + seq + 2);
-        const mass = Math.max(.6, Math.sqrt(f.area) / avg);
-        f.rel  = t2 + (f.d / dmax) * 170 + r1 * 120;
-        f.vx   = ((f.cx - W * .5) / W) * 120 + (r2 - .5) * 80;
-        f.vy   = 60 + r3 * 190;
-        f.g    = (7400 + r1 * 2200) / mass;
-        f.vr   = (r2 - .5) * 260 / mass;
-        f.vt   = (r3 - .5) * 170 / mass;     /* rotateX tumble */
-        f.vy2  = (r1 - .5) * 130 / mass;     /* rotateY tumble */
-        f.x = f.ox; f.y = f.oy; f.rot = 0; f.tilt = 0; f.yaw = 0; f.done = false;
+        const r = roll(i * 3 + seq);
+        const tx = f.ox + f.sides[0] * hero.nx * D * 1.15
+                        + f.sides[1] * counter.nx * D * .18;
+        const ty = f.oy + f.sides[0] * hero.ny * D * 1.15
+                        + f.sides[1] * counter.ny * D * .18;
+        animate(f.el, { translateX:[f.ox, tx], translateY:[f.oy, ty],
+          rotate:f.sides[0] * (1.6 + r * 1.6),
+          duration:300 + r * 60, delay:t2 + i * 22, ease:'inCubic' });
       });
-      setTimeout(() => { try { inkback.remove(); } catch (_) {} }, t2 + 120);
 
-      const t0 = performance.now();
-      let prev = t0, live = frags.length;
-      const gone = () => { grid.remove(); snap.release(); };
-      const step = now => {
-        const dt = Math.min(.034, (now - prev) / 1000); prev = now;
-        const tms = now - t0;
-        for (const f of frags){
-          if (f.done || tms < f.rel) continue;
-          f.vy  += f.g * dt;
-          f.x   += f.vx * dt; f.y += f.vy * dt;
-          f.rot += f.vr * dt; f.tilt += f.vt * dt; f.yaw += f.vy2 * dt;
-          f.el.style.transform =
-            `translate(${f.x.toFixed(1)}px,${f.y.toFixed(1)}px) ` +
-            `rotate(${f.rot.toFixed(2)}deg) rotateX(${f.tilt.toFixed(2)}deg) ` +
-            `rotateY(${f.yaw.toFixed(2)}deg)`;
-          if (f.cy + f.y - f.rad > H + 60){ f.done = true; live--; }
-        }
-        if (live > 0 && now - t0 < 3200) requestAnimationFrame(step);
-        else gone();
-      };
-      requestAnimationFrame(step);
+      /* WHITE takes over, then clears: the speed-lined void fades and
+         the sign-in page is simply there — a fresh panel settling */
+      const tClear = t2 + 340;
+      animate(voidEl, { opacity:[1, 0], duration:200, delay:tClear,
+        ease:'linear' });
+      setTimeout(() => {
+        const panel = $('.authp');
+        if (panel) animate(panel, { translateY:[7, 0], duration:160,
+          ease:'outQuad', onComplete(){ panel.style.transform = ''; } });
+      }, tClear + 60);
+
+      const gone = () => { try { grid.remove(); } catch (_) {}
+        snap.release(); unlock(); };
+      setTimeout(gone, tClear + 300);
       /* hard safety: the overlay can never outlive the sequence */
-      setTimeout(() => { try { gone(); } catch (_) {} }, 3500);
+      setTimeout(() => { try { grid.remove(); } catch (_) {} unlock(); }, 2200);
     });
   },
+
+
 
   pageEntrance(scope){
     const els = [...scope.querySelectorAll('[data-enter]')];
@@ -19996,9 +19948,10 @@ document.addEventListener('click', e => {
 
   const out = e.target.closest('[data-signout]');
   if (out){
-    /* the wall freezes the CURRENT page first; only then does the real
+    /* the cut freezes the CURRENT page first; only then does the real
        sign-out (and the auth render) happen, invisibly beneath it */
     FX.waffleOut({
+      btn: out,
       swap: () => Store.signOut().then(() => {
         AuthUI.mode = 'in';       /* whoever signs in next starts at Sign in,
                                      not at the last account's Create form */
