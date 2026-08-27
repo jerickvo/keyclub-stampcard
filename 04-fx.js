@@ -115,20 +115,6 @@ const Slash = {
     this.create({ type:'C', angle:angle + 76, host, delay:delay + 50, offset:-16 });
   },
 
-  /* CUT · 20ms · CUT · 35ms · CROSS · 50ms · IMPACT */
-  barrage(count = 5, { spread = 150, host = null, delay = 0 } = {}){
-    for (let i = 0; i < count; i++){
-      const r = roll(i);
-      this.create({
-        type: i % 3 === 0 ? 'B' : 'D',
-        angle: -72 + r * 146,
-        offset: (r - .5) * spread * 2,
-        along: (((i * 1.618) % 1) - .5) * 130,
-        host, delay: delay + i * (22 + (i % 3) * 16),
-        afterimage: i % 2 === 0,
-      });
-    }
-  },
 };
 
 /* ══ CUT GEOMETRY ════════════════════════════════════════════════════
@@ -534,16 +520,9 @@ const Lines = {
 };
 
 /* ── the structure that forms behind the biggest moments ── */
-/* THE FIELD BEHIND THE IMPACT.
-
-   This drew seal(4) at the height of the screen, and back when the
-   seal was a line drawing its 5.5-unit arms scaled to 46px each and
-   the six of them fused into a soft grey disc covering half the
-   frame. I worked around that by redrawing it at hairline weight.
-
-   The seal is traced artwork now, so it scales the way a logo should:
-   the mark behind the impact is simply the mark, enormous, at low
-   value. The workaround is gone with the geometry that needed it. */
+/* THE FIELD BEHIND THE IMPACT: the traced seal at screen height and
+   low value. Traced artwork scales the way a logo should, so the mark
+   behind the impact is simply the mark, enormous and quiet. */
 const fieldSVG = () =>
   `<svg class="verdict__field" id="verdictField" viewBox="0 0 100 100" aria-hidden="true">${seal(4)}</svg>`;
 
@@ -991,7 +970,7 @@ const FX = {
 
   /* ── the signature sequence ────────────────────────────────────
      LOCKED · silence · cut cut cross-cut · VERIFIED · +1 · settle
-     Beats are deliberately uneven. The 120ms hole after the barrage
+     Beats are deliberately uneven. The 120ms hole after the cuts
      is the impact frame: nothing new lands, which is what makes the
      verdict read as a consequence rather than the next animation.
      ────────────────────────────────────────────────────────────── */

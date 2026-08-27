@@ -22,9 +22,7 @@
                        returns an unauthenticated session and empty
                        collections, so an unconfigured build shows the
                        signed-out state instead of quietly pretending
-                       somebody is logged in. The old prototype did
-                       the opposite, and that is precisely the failure
-                       mode this phase exists to remove.
+                       somebody is logged in.
    ══════════════════════════════════════════════════════════════════ */
 
 /* ── configuration ────────────────────────────────────────────────
@@ -344,13 +342,11 @@ const SupabaseAdapter = {
      The server is the only authority. This call sends the raw scanned
      payload and returns whatever the Edge Function decides.
 
-     There is deliberately NO local fallback. An earlier revision fell
-     back to the client-side prototype verifier when the function was
-     not deployed, which meant a misconfigured production build would
-     quietly accept tokens the browser could mint itself. A configured
-     build now FAILS CLOSED: if verification is unreachable, nobody
-     gets a stamp. Refusing a real member is recoverable; awarding
-     attendance to a forged code is not. */
+     There is deliberately NO local fallback: a client-side check would
+     accept tokens the browser could mint itself. A configured build
+     FAILS CLOSED — if verification is unreachable, nobody gets a
+     stamp. Refusing a real member is recoverable; awarding attendance
+     to a forged code is not. */
   async verifyCode(rawCode){
     let res;
     try {

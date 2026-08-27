@@ -133,8 +133,7 @@ function mkClient(){
             return { data:payload, error:null };
           },
           then(res){
-            /* Claims used to be accepted and dropped on the floor: the
-               insert resolved ok and nothing was written, so a member
+            /* A claim insert must actually write: otherwise a member
                could claim a reward, see the confirmation, and find it
                still unclaimed on the next read. The real table has a
                unique key on (user_id, reward_id), which is why the

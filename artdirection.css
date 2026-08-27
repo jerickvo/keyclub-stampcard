@@ -7,46 +7,13 @@
   --pnl-off:clamp(5px,.9vw,9px);        /* printed plate offset        */
   }
 
-/* ══ MANGA PANEL SYSTEM ═════════════════════════════════════════════
-   One vocabulary, many compositions. Everything is :where() so a
-   page's own rules always win without fighting specificity.
-
-   .pnl        framed panel on paper
-   .pnl--ink   solid ink panel (spotted black)
-   .pnl--tone  screentone fill — dots as a deliberate field
-   .pnl--hair  hairline frame (a quiet panel)
-   .pnl--plate hard ink offset: the panel sits ON the page
-   .pnl--flush frameless region that still behaves like a panel
-   .grid-gtr   a gutter stack; data-split cuts it 64 / 73 / 55
-   .lap-t      pulls a panel up over the one before it
-   .tone       a placed screentone field (position it per page)
-   ═════════════════════════════════════════════════════════════════ */
-:where(.pnl){position:relative;border:var(--edge,3px) solid var(--ink);
-  background:var(--paper);min-width:0}
-:where(.pnl--ink){background:var(--ink);color:var(--paper)}
-:where(.pnl--tone){background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
-:where(.pnl--hair){border-width:var(--rule-hair,1px)}
-:where(.pnl--plate){box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
-:where(.pnl--flush){border:0}
-
-:where(.grid-gtr){display:grid;gap:var(--gut);min-width:0}
-@media(min-width:900px){
-  :where(.grid-gtr[data-split="64"]){grid-template-columns:6fr 4fr}
-  :where(.grid-gtr[data-split="73"]){grid-template-columns:7fr 3fr}
-  :where(.grid-gtr[data-split="55"]){grid-template-columns:1fr 1fr}
-}
-:where(.lap-t){margin-top:calc(var(--lap,28px) * -1);z-index:2}
-
+/* .tone — a placed screentone field; each page positions its own */
 .tone{position:absolute;pointer-events:none;z-index:0;
   background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
-.tone--fine{background-image:radial-gradient(circle at 50% 50%, var(--ink) 0 .8px, transparent .9px);
-  background-size:4px 4px}
 .tone--coarse{background-image:radial-gradient(circle at 50% 50%, var(--ink) 0 1.7px, transparent 1.85px);
   background-size:8px 8px}
 .tone--fade-b{-webkit-mask-image:linear-gradient(#000 40%,transparent);
   mask-image:linear-gradient(#000 40%,transparent)}
-.tone--fade-r{-webkit-mask-image:linear-gradient(90deg,#000 40%,transparent);
-  mask-image:linear-gradient(90deg,#000 40%,transparent)}
 
 [data-rank="lead"]{--ink-w:4.4}
 [data-rank="mid"]{--ink-w:2.8}
@@ -183,21 +150,10 @@
 /* a failed connection is a heavier statement than a missing one */
 .setupbox--warn{border-width:var(--rule);background-image:none}
 
-.bmiles{margin-top:var(--s2)}
-.bmile{display:grid;grid-template-columns:auto 1fr;align-items:start;
-  gap:var(--s4);padding:var(--s4) 0;border-bottom:var(--rule-hair) solid var(--tone)}
-.bmile:last-child{border-bottom:0}
-.bmile__no{font-family:var(--f-head);font-size:clamp(24px,3vw,34px);
-  line-height:1;min-width:2.2ch;text-align:right}
-.bmile__mid{min-width:0}
-.bmile__mid b{display:block;font-size:14px}
-.bmile__mid .muted{display:block;font-size:12px;margin-top:2px}
 .bmile__bar{display:block;height:8px;margin-top:var(--s3);
   border:var(--rule-hair) solid var(--ink);background:var(--paper)}
 .bmile__fill{display:block;height:100%;background:var(--ink)}
 
-.bmile{gap:var(--s3)}
-@media (min-width:768px){.bmile{gap:var(--s4)}}
 
 /* ── QR: one static code per meeting, sized to be scanned ─────────
    The code is now the page. It is bigger than the old rotating one
@@ -257,10 +213,8 @@
   .rail__link{grid-template-columns:1fr!important;
     align-items:start!important;gap:2px!important;
     padding:clamp(10px,1.1vw,16px) var(--s3) clamp(10px,1.1vw,16px) 0!important}
-  .rail__link span:not(.rail__no){font-size:clamp(9.5px,.72vw,11px);
-    letter-spacing:.3em;align-self:start}
-
-  .rail__link span:not(.rail__no){margin-top:3px}
+  .rail__link span{font-size:clamp(9.5px,.72vw,11px);
+    letter-spacing:.3em;align-self:start;margin-top:3px}
 }
 
 /* the credential band and the milestone ledger were the last two
@@ -440,7 +394,6 @@ select.input:focus-visible{outline:none}
 .btn--go:active{background:var(--ink);border-color:var(--ink)}
 
 .btn:focus-visible,
-.chip:focus-visible,
 .link:focus-visible,
 .brow__del:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px}
 .btn--go:focus-visible{outline-color:var(--ink);outline-offset:3px}
