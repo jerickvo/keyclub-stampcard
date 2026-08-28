@@ -1147,52 +1147,12 @@ select.input:focus-visible{outline:none}
   .sealmeta{font-size:11px;padding:10px 12px}
 }
 
-/* ── FAULT CODE ───────────────────────────────────────────────────
-   A bracketed monospace token, drawn in CSS so the brackets are the
-   whatever the mono face happens to have. Cinnabar, because a dead
-   scanner is the one place on this screen the target never lights. */
-
-/* ── SCANNER STATES ───────────────────────────────────────────────
-   These classes were toggled in JS and styled nowhere, so a successful
-   scan and a rejected one looked identical -- the scanner read as
-   unfinished rather than as monochrome. Distinction is carried by
-   weight, fill and inversion rather than by hue, because this theme has
-   no hue to spend: every accent token resolves to ink. That also
-   satisfies "not by colour alone" for free. */
-
-@keyframes busyHold{
-  from{border-color:var(--ink)}
-  to  {border-color:var(--tone)}
-}
-@keyframes busyBar{
-  from{transform:scaleX(.12);transform-origin:left}
-  to  {transform:scaleX(1);transform-origin:left}
-}
-
-@keyframes refuse{
-  0%,100%{box-shadow:inset 0 0 0 0 var(--paper)}
-  50%    {box-shadow:inset 0 0 0 100vmax var(--paper)}
-}
-@keyframes refuseKick{
-  0%  {transform:translateX(0)}
-  50% {transform:translateX(-7px)}
-  100%{transform:translateX(7px)}
-}
-
-@keyframes retSweep{
-  from{top:6%;opacity:.4}
-  to  {top:94%;opacity:.9}
-}
-
 /* ── BUTTON HIERARCHY AND STATES ──────────────────────────────────
-   .btn--go is the primary action everywhere in the app, but outside the
-   auth screen it had no treatment at all -- "Open check-in" and "Delete"
-   rendered identically to "Cancel". Filling it with ink is the same move
-   the ink button already makes, so this adds hierarchy without a new
-   visual language.
-
-   :active and :focus-visible were missing entirely. The hover lift had
-   nothing to press back down into, and keyboard users got no ring. */
+   .btn--go is the primary action everywhere in the app: filled with
+   ink, the same move the ink button makes, so hierarchy costs no new
+   visual language. Every button carries :active and :focus-visible —
+   the hover lift needs something to press back down into, and a
+   keyboard user needs a ring. */
 .btn--go{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .btn--go:hover{background:var(--ink-2);border-color:var(--ink-2)}
 
