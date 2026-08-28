@@ -149,12 +149,18 @@ def assert_no_secrets(html):
     """
     leaks = []
     for name in ("SUPABASE_SERVICE_ROLE_KEY", "ATTENDANCE_TOKEN_SECRET", "BOARD_PASSWORD",
-                 "GOOGLE_SERVICE_ACCOUNT_KEY", "GOOGLE_PRIVATE_KEY", "CRON_SECRET"):
+                 "GOOGLE_SERVICE_ACCOUNT_KEY", "GOOGLE_SERVICE_ACCOUNT_B64",
+                 "GOOGLE_PRIVATE_KEY", "CRON_SECRET"):
         if re.search(r"%s\s*[:=]\s*[\'\"`][^\'\"`\s]{8,}" % re.escape(name), html):
             leaks.append(name)
     # a PEM private key has no business anywhere near the browser bundle
     if "BEGIN PRIVATE KEY" in html or "BEGIN RSA PRIVATE KEY" in html:
         leaks.append("a PEM private key")
+    # The discriminator every Google service-account JSON carries. This is
+    # the same signature gitleaks matches on, and it catches the credential
+    # whatever the file was called and whichever field order it arrived in.
+    if re.search(r'"type"\s*:\s*"service_account"', html) or "auth_provider_x509_cert_url" in html:
+        leaks.append("a Google service-account key")
     # a Supabase service-role key is a JWT whose payload names the role
     for jwt in re.findall(r"eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]+", html):
         try:
@@ -212,11 +218,16 @@ def main():
     )
     html = html.replace("<!DOCTYPE html>", "<!DOCTYPE html>\n" + banner, 1)
 
+    # Scan BEFORE writing. Aborting after the write would still leave a
+    # bundle containing the secret sitting on disk, one `git add -A` away
+    # from being committed — which is the exact outcome the guard exists
+    # to prevent.
+    assert_no_secrets(html)
+
     OUT.write_text(html, encoding="utf-8")
     kb = len(html.encode()) / 1024
     print(f"build: index.html  {kb:.0f} KB")
     report_config(html)
-    assert_no_secrets(html)
     print(f"build: inlined {len(inlined)} files")
     for f in inlined:
         print(f"         {f}")

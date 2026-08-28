@@ -141,3 +141,36 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# ── Google service-account credentials — never commit ────────────────
+# A service-account JSON is a permanent, non-expiring credential. It is
+# downloaded once, cannot be re-downloaded, and grants whatever the
+# account can reach until somebody revokes it. It belongs in a Vercel
+# environment variable, never in the repository.
+#
+# There is no single filename to catch: the Cloud Console names the
+# download <project-id>-<12 hex>.json, Firebase names it
+# <project>-firebase-adminsdk-<id>.json, and people rename both to
+# things like credentials.json. So this matches the shapes people
+# actually end up with — and deliberately never matches *.json, which
+# would swallow package.json, vercel.json and site.webmanifest.
+#
+# Filename matching is the second line of defence, not the first:
+# build.py refuses to finish if a private key or a service_account
+# blob reaches the bundle. Spelled out in several casings because
+# .gitignore is case-sensitive on Linux and not on macOS.
+*-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f].json
+*firebase-adminsdk*.json
+service-account*.json
+service_account*.json
+serviceAccount*.json
+ServiceAccount*.json
+serviceaccount*.json
+google-credentials*.json
+google-service-account*.json
+gcp-key*.json
+client_secret*.json
+credentials.json
+secrets/
+# base64 blob produced when pasting the credential into Vercel
+*.b64
