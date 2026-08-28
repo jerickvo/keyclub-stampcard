@@ -47,10 +47,11 @@ create trigger profiles_touch before update on public.profiles
 
 -- ── meetings ───────────────────────────────────────────────────────
 -- Created by the board. The client no longer generates a schedule.
--- Two club rules are enforced here rather than in JavaScript, because
--- JavaScript is editable by the person it is meant to constrain:
---   · every meeting is on a Wednesday
---   · every meeting is in the MPR (exactly that string)
+-- The meeting's own date is the source of truth: a general meeting may
+-- fall on any day of the week. The one club rule enforced here rather
+-- than in JavaScript — because JavaScript is editable by the person it
+-- is meant to constrain — is that every meeting is in the MPR
+-- (exactly that string).
 create table if not exists public.meetings (
   id             uuid primary key default gen_random_uuid(),
   meeting_number integer not null unique,
@@ -62,12 +63,17 @@ create table if not exists public.meetings (
   check_in_open  boolean not null default false,
   created_at     timestamptz not null default now(),
   created_by     uuid references public.profiles(id),
-  constraint meeting_is_wednesday
-    check (extract(isodow from meeting_date) = 3),
   -- a meeting that ends before it starts is a typo, not a meeting
   constraint meeting_time_order
     check (end_time is null or start_time < end_time)
 );
+
+-- Meetings were once restricted to Wednesdays. They are not: a general
+-- meeting may fall on any weekday, and the stored date is the only
+-- authority. `create table if not exists` cannot remove a constraint
+-- from a table that already exists, so drop it explicitly — re-running
+-- this file against a live project is what migrates it.
+alter table public.meetings drop constraint if exists meeting_is_wednesday;
 
 -- Only one meeting may take check-ins at a time.
 create unique index if not exists one_open_meeting

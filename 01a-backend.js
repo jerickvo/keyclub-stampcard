@@ -25,6 +25,27 @@
                        somebody is logged in.
    ══════════════════════════════════════════════════════════════════ */
 
+/* ── the club's calendar day ───────────────────────────────────────
+   Whether a meeting is ahead, happening or past is a statement about
+   the club's day, not the device's and not UTC's. Deriving it from
+   `toISOString()` reports tomorrow's date all evening for anyone west
+   of Greenwich, which slides a meeting a day out of place. This is the
+   same rule the Edge Functions apply, so client and server always
+   agree on which day it is. Format is YYYY-MM-DD, directly comparable
+   to a Postgres `date` column.
+   ────────────────────────────────────────────────────────────────── */
+const CLUB_TZ = 'America/Los_Angeles';
+const clubDay = (d = new Date()) => {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: CLUB_TZ, year:'numeric', month:'2-digit', day:'2-digit',
+    }).format(d);
+  } catch (_) {
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  }
+};
+
 /* ── configuration ────────────────────────────────────────────────
    Credentials are read from the page, never hardcoded here. Set them
    on window before the scripts load, or via <meta>:
@@ -293,9 +314,12 @@ const SupabaseAdapter = {
     return { ok:true };
   },
 
-  /* one shape for the whole app, so views never see column names */
+  /* One shape for the whole app, so views never see column names.
+     The stored date decides everything — the weekday is never asked.
+     A meeting still on today's date has not been missed, so it counts
+     as ahead until check-in opens or the day turns over. */
   toMeeting(row){
-    const today = new Date().toISOString().slice(0, 10);
+    const today = clubDay();
     return {
       id: row.id,
       no: row.meeting_number,
@@ -304,7 +328,8 @@ const SupabaseAdapter = {
       endTime: row.end_time,
       place: row.location || 'MPR',
       open: Boolean(row.check_in_open),
-      upcoming: row.meeting_date > today && !row.check_in_open,
+      today: row.meeting_date === today,
+      upcoming: row.meeting_date >= today && !row.check_in_open,
     };
   },
 

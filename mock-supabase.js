@@ -210,7 +210,8 @@ function mkClient(){
           const stampsOf = id => A.filter(a => a.user_id === id).length;
           const lastOf = id => A.filter(a => a.user_id === id)
                 .map(a => a.checked_in_at).sort().pop() || null;
-          const today = new Date().toISOString().slice(0,10);
+          const today = new Intl.DateTimeFormat('en-CA', { timeZone:'America/Los_Angeles',
+            year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date());
 
           if (body.action === 'overview'){
             const open = M.find(m => m.check_in_open) || null;

@@ -261,8 +261,9 @@ document.addEventListener('change', e => {
 
 /* ── CREATE MEETING ────────────────────────────────────────────────
    Client validation exists to give a useful message, not to enforce
-   the rule: the Wednesday CHECK, the start<end CHECK and the unique
-   meeting_number all live in the database and remain the authority. */
+   the rule: the start<end CHECK and the unique meeting_number live in
+   the database and remain the authority. A meeting may be scheduled
+   on any day of the week. */
 function to12h(hhmm){
   const [h, m] = String(hhmm).split(':').map(Number);
   const ap = h >= 12 ? 'PM' : 'AM';
@@ -295,10 +296,6 @@ document.addEventListener('submit', async e => {
 
     if (!no || no < 1)  return show('Meeting number is required.');
     if (!date)          return show('Meeting date is required.');
-    /* T12:00:00 keeps the parse in local noon so a timezone shift
-       cannot slide the date onto Tuesday or Thursday */
-    if (new Date(date + 'T12:00:00').getDay() !== 3)
-      return show('Meeting date must be Wednesday.');
     if (!start || !end) return show('Start and end time are required.');
     if (start >= end)   return show('End time must be after the start time.');
 

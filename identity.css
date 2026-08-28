@@ -1026,7 +1026,14 @@ button,input,select,textarea{font-family:inherit}
 .standing__at{font-family:var(--f-head);
   font-size:var(--t-sub);line-height:1.05;color:var(--paper)}
 
-.viewer{position:relative;display:grid;place-items:center;
+/* Two rows: the feed fills the whole frame, the reticle centres in the
+   space ABOVE the status chip, and the chip owns the bottom row. The
+   reticle is therefore centred by the layout rather than nudged off
+   centre by a fixed margin that has to guess the chip's height. */
+.viewer{position:relative;display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:minmax(0,1fr) auto;
+  place-items:center;
   isolation:isolate;overflow:hidden;
   width:100%;aspect-ratio:1;max-height:62vh;
   border:var(--edge-frame) solid var(--ink);background:var(--tint);
@@ -1034,8 +1041,10 @@ button,input,select,textarea{font-family:inherit}
 /* a code is square, so on a phone the frame is square: it fills the
    sheet instead of leaving a letterbox with half a screen under it. */
 @media(min-width:600px){ .viewer{aspect-ratio:4/3} }
-.viewer > *{grid-area:1/1}
-.viewer video{width:100%;height:100%;object-fit:cover;display:block;
+/* everything that is not the chip covers the whole frame */
+.viewer > *{grid-column:1;grid-row:1/-1}
+.viewer video{width:100%;height:100%;display:block;
+  object-fit:cover;object-position:center;
   filter:grayscale(1) contrast(1.06)}
 
 /* screentone over the feed, not a veil: it holds the overlay legible
@@ -1045,8 +1054,8 @@ button,input,select,textarea{font-family:inherit}
   background-size:5px 5px}
 .viewer__grain{display:none}
 
-.reticle{position:relative;width:min(58%,290px);aspect-ratio:1;
-  margin-bottom:clamp(36px,8vw,58px);
+.reticle{position:relative;grid-row:1;place-self:center;
+  width:min(58%,290px);aspect-ratio:1;
   pointer-events:none;z-index:2}
 .reticle__c{position:absolute;width:15%;height:15%;
   border:var(--edge-frame) solid var(--paper);
@@ -1062,7 +1071,7 @@ button,input,select,textarea{font-family:inherit}
 .reticle--busy .reticle__c{opacity:.55}
 .reticle--bad .reticle__c{width:12%;height:12%}
 
-.viewer__status{align-self:end;justify-self:center;z-index:3;
+.viewer__status{grid-row:2;place-self:center;z-index:3;
   padding:0 var(--s3) var(--s3);max-width:100%}
 .viewer__msg{display:inline-block;
   padding:7px var(--s4);background:var(--paper);color:var(--ink);
@@ -1081,7 +1090,8 @@ button,input,select,textarea{font-family:inherit}
    viewfinder and becomes a note: title, sentence, and the field below
    already focused. */
 .viewer--stalled{aspect-ratio:auto;min-height:clamp(160px,30vw,240px);
-  place-items:stretch;background:var(--paper)}
+  grid-template-rows:minmax(0,1fr);place-items:stretch;
+  background:var(--paper)}
 .stall{display:flex;flex-direction:column;justify-content:center;
   gap:var(--s2);padding:var(--s5);text-align:left}
 .stall__title{margin:0;font-family:var(--f-head);
