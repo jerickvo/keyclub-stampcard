@@ -10,7 +10,7 @@ Wednesday, in the MPR. 10 stamps → Club Merch, 20 → Free Blindbox,
 
 ## ⚠️ This SQL must be applied to the real Supabase project before production use.
 
-`supabase/schema.sql` has **not** been executed against a live database
+`schema.sql` has **not** been executed against a live database
 in this build — the development environment had no network route to
 Supabase (`supabase.co` returned 403 through the egress proxy; no
 Supabase CLI, `psql` or Deno runtime was available). It is written to
@@ -21,7 +21,7 @@ things. Apply it and check the result yourself.
 
 ## 1. Apply the schema
 
-Dashboard → **SQL Editor** → paste all of `supabase/schema.sql` → Run.
+Dashboard → **SQL Editor** → paste all of `schema.sql` → Run.
 It is idempotent (`if not exists`, `drop policy if exists`), so
 re-running is safe.
 
@@ -72,7 +72,7 @@ SUPABASE_URL=https://xxx.supabase.co \
 SUPABASE_SERVICE_ROLE_KEY=eyJ... \
 BOARD_USERNAME=keyclubboard \
 BOARD_PASSWORD='a long passphrase' \
-node supabase/bootstrap-board.mjs
+node bootstrap-board.mjs
 ```
 
 Idempotent: re-running reuses the existing account and resets its
@@ -93,7 +93,7 @@ python3 build.py
 
 The anon key is public by design and safe in the page **only because
 RLS is on every table**. The service role key must never appear in
-`dev.html`, `index.html`, anything under `js/`, or git history.
+`dev.html`, `index.html`, any source file, or git history.
 
 ---
 
@@ -153,12 +153,13 @@ MPR; a button that granted one would make the scanner pointless.
 
 ## Testing status — read before trusting
 
-**Verified against the mock harness (`tests/mock-supabase.js`):** client
+**Verified against the mock harness (`mock-supabase.js`):** client
 wiring, error mapping, fail-closed behaviour, auth flows, board
 authorization, duplicate and concurrency handling *as the client sees
-them*. 42/42 board tests, 27/27 QR tests, 35/35 auth tests, 0/14
-viewports with layout regressions, board panes clean across 11
-viewports.
+them*, plus routing, empty/error states and the responsive matrix.
+These run as ad-hoc Playwright scripts driving the built `index.html`
+with `mock-supabase.js` injected; the harness ships in the repo, the
+scripts do not.
 
 **NOT verified — needs your live project:**
 
@@ -177,8 +178,9 @@ security works.
 ## Development
 
 ```bash
-python3 build.py    # regenerate index.html from dev.html + css/ + js/
+python3 build.py    # regenerate index.html from dev.html + the sources
 ```
 
 `index.html` is generated — edit the sources, never the bundle.
-`tests/` is never shipped and never referenced by `dev.html`.
+`mock-supabase.js` is a test-only harness: never shipped, never
+referenced by `dev.html`. Layout and file map: see `README-app.md`.
