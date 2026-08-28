@@ -175,31 +175,33 @@
 <script src="js/anime-bridge.js"></script>
 
 <!-- ══════════════════════════════════════════════════════════════
-     SUPABASE CONFIGURATION — THIS FILE IS THE SOURCE OF TRUTH.
+     SUPABASE CONFIGURATION — NOT HERE ANY MORE.
 
-     Put your project's URL and PUBLIC anon key here, then run
-     `python3 build.py` to regenerate index.html. Editing index.html
-     directly will be overwritten by the next build.
+     The project URL and PUBLIC anon key for both environments live in
+     js/01a-backend.js, in SUPABASE_ENVIRONMENTS at the top of the file.
+     That is the one place that decides. The page picks production or
+     staging from window.location.hostname when it loads, so one built
+     index.html is correct on the production domain, on a Vercel
+     preview, and on localhost without being rebuilt.
 
-       <meta name="keystamp:supabase-url"
-             content="https://abcdefgh.supabase.co">
-       <meta name="keystamp:supabase-anon-key"
-             content="eyJhbGciOi...">
+     Production is an allowlist of hostnames; everything else is
+     staging. To add a production domain, edit that list — not this
+     file.
 
-     Both values are CLIENT-SAFE and are meant to be public: the anon
-     key only works through row level security, which is on for every
+     The two tags below are an ESCAPE HATCH and ship empty. Filling
+     both pins every hostname to that one project and bypasses the
+     switch, which is almost never what you want; it exists so a host
+     page or a test harness can force a specific backend. build.py will
+     fill them from KEYSTAMP_SUPABASE_URL / _ANON_KEY if those are set
+     in the environment, and never blanks a value already written here.
+
+     Both values are CLIENT-SAFE and meant to be public: an anon key
+     only works through row level security, which is on for every
      table. Never put SUPABASE_SERVICE_ROLE_KEY, ATTENDANCE_TOKEN_SECRET
      or BOARD_PASSWORD here — those are server-side only.
-
-     build.py will also read KEYSTAMP_SUPABASE_URL / _ANON_KEY from the
-     environment if set, so a deploy pipeline can inject them without
-     editing this file. It never blanks values that are already here.
-
-     Left empty in the repo on purpose. An unconfigured build shows a
-     setup notice instead of pretending to work.
      ══════════════════════════════════════════════════════════════ -->
-<meta name="keystamp:supabase-url" content="https://cibumatoeynnlwhyizzw.supabase.co">
-<meta name="keystamp:supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpYnVtYXRvZXlubmx3aHlpenp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5MDQzNDgsImV4cCI6MjEwMjQ4MDM0OH0.3WSJGpoE5UnIP-UcILZnSZSEq-rd7ZJrwQdH1Eu-6fE">
+<meta name="keystamp:supabase-url" content="">
+<meta name="keystamp:supabase-anon-key" content="">
 
 <!-- The Supabase client itself. Without this the app cannot talk to
      Supabase at all, no matter what the meta tags say. -->

@@ -57,10 +57,10 @@ const AuthUI = {
     return `<div class="setupbox">
       <p class="kicker">Setup needed</p>
       <p><b>${esc(why)}</b></p>
-      <p class="setupbox__hint">Add the Supabase project URL and public anon key
-        to the two <code>keystamp:supabase-*</code> meta tags in
-        <code>dev.html</code>, then run <code>python3 build.py</code>.
-        Full steps are in the README under "Connect Keystamp to Supabase".</p>
+      <p class="setupbox__hint">Set the project URL and public anon key in
+        <code>SUPABASE_ENVIRONMENTS</code> at the top of
+        <code>js/01a-backend.js</code>, then run <code>python3 build.py</code>.
+        Full steps are in the README under "Point the app at the projects".</p>
     </div>`;
   },
 };

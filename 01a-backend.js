@@ -25,16 +25,58 @@
                        somebody is logged in.
    ══════════════════════════════════════════════════════════════════ */
 
+/* ── which Supabase project? ───────────────────────────────────────
+   THIS IS THE ONE PLACE THAT DECIDES. Nothing else in the app holds a
+   project URL or an anon key.
+
+   Keystamp deploys as a single committed index.html that Vercel serves
+   as a static file — build.py does not run on deploy — so the choice
+   cannot be made at build time. It is made in the browser, at load,
+   from window.location.hostname.
+
+   The rule is deliberately asymmetric. Production is an explicit
+   allowlist of hostnames. EVERYTHING else resolves to staging: preview
+   deployments, localhost, a file:// page, a domain nobody has heard
+   of. An unrecognised host must never reach real member data, so the
+   unrecognised case gets the harmless project.
+
+   Forgetting to list a production domain costs one deploy pointed at
+   staging, and the members notice immediately. The opposite mistake —
+   a preview quietly writing to the real database — is not recoverable,
+   which is why there is no suffix match, no wildcard, and no "if it
+   looks like production" branch anywhere below.
+
+   Both keys here are PUBLIC anon keys, gated by row level security on
+   every table. This switch is NOT a security boundary; it prevents an
+   accidental connection and nothing more. RLS and the Edge Functions
+   are what actually refuse a write. Never put SUPABASE_SERVICE_ROLE_KEY,
+   ATTENDANCE_TOKEN_SECRET or BOARD_PASSWORD in this file.
+   ────────────────────────────────────────────────────────────────── */
+const SUPABASE_ENVIRONMENTS = {
+  production: {
+    /* Every hostname served by the production Vercel project, lower
+       case, matched whole. A custom domain only becomes production
+       once it is added to this list. */
+    hosts: ['keystamp.vercel.app'],
+    url: 'https://cibumatoeynnlwhyizzw.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpYnVtYXRvZXlubmx3aHlpenp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5MDQzNDgsImV4cCI6MjEwMjQ4MDM0OH0.3WSJGpoE5UnIP-UcILZnSZSEq-rd7ZJrwQdH1Eu-6fE',
+  },
+  /* keystamp-staging. The default, and the only other option. */
+  staging: {
+    url: 'https://fjqvuvoafgskdlkbzrky.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6ImZqcXZ1dm9hZmdza2Rsa2J6cmt5IiwiaWF0IjoxNzg3ODA5NTcsImV4cCI6MjEwMzQ1Njk1N30.RzOohU_R95ocULrvKyFJhNdUqmktD8uNLIo1vrsIFck',
+  },
+};
+
 /* ── configuration ────────────────────────────────────────────────
-   Credentials are read from the page, never hardcoded here. Set them
-   on window before the scripts load, or via <meta>:
+   Config resolves the pair above, and still accepts an explicit
+   override from the host page — on window before the scripts load, or
+   via <meta> — which is how the signed-out "no backend" state and the
+   test harness are reached. The override is not part of the normal
+   deploy path; both meta tags ship empty.
 
      <meta name="keystamp:supabase-url"      content="https://xxx.supabase.co">
      <meta name="keystamp:supabase-anon-key" content="ey...">
-
-   The anon key is a public, row-level-security-gated key. It is safe
-   in the page ONLY because every table is protected by RLS policies
-   (see supabase/schema.sql). It is not an authorisation mechanism.
    ────────────────────────────────────────────────────────────────── */
 const Config = {
   meta(name){
@@ -42,17 +84,43 @@ const Config = {
     const v = el && el.getAttribute('content');
     return v && !/^\{\{|^\s*$/.test(v) ? v.trim() : null;
   },
+
+  ENVIRONMENTS: SUPABASE_ENVIRONMENTS,
+
+  /* Whole-string comparison, not endsWith. A suffix test would hand
+     keystamp.vercel.app.example.com the production database. The only
+     normalisation is case and the trailing dot of a fully-qualified
+     name, both of which are the same host by definition. */
+  environmentFor(hostname){
+    const h = String(hostname == null ? '' : hostname)
+      .trim().toLowerCase().replace(/\.$/, '');
+    return h && SUPABASE_ENVIRONMENTS.production.hosts.includes(h)
+      ? 'production' : 'staging';
+  },
+
+  /* 'production' | 'staging'. Anything that goes wrong reading the
+     location — a sandboxed frame, no window at all — lands on staging,
+     because the failure case has to be the safe one too. */
+  get environment(){
+    let host = '';
+    try { host = window.location.hostname; } catch (_) { host = ''; }
+    return this.environmentFor(host);
+  },
+  get project(){ return SUPABASE_ENVIRONMENTS[this.environment]; },
+
   /* A window value wins whenever it is a string — including an empty
      one — so a host page can explicitly declare "no backend" and not be
-     silently overridden by whatever the meta tags happen to hold. Only
-     an undefined window value falls through to the built-in meta. */
+     silently overridden. Then a filled meta tag. Then, normally, the
+     project the hostname selected. */
   get supabaseUrl(){
     return typeof window.KEYSTAMP_SUPABASE_URL === 'string'
-      ? window.KEYSTAMP_SUPABASE_URL : this.meta('supabase-url');
+      ? window.KEYSTAMP_SUPABASE_URL
+      : (this.meta('supabase-url') || this.project.url);
   },
   get supabaseAnonKey(){
     return typeof window.KEYSTAMP_SUPABASE_ANON_KEY === 'string'
-      ? window.KEYSTAMP_SUPABASE_ANON_KEY : this.meta('supabase-anon-key');
+      ? window.KEYSTAMP_SUPABASE_ANON_KEY
+      : (this.meta('supabase-anon-key') || this.project.anonKey);
   },
 
   /* Placeholders copied straight out of the README are the most likely
@@ -494,6 +562,11 @@ const Backend = {
       await this.adapter.init();
       return this.adapter;
     }
+
+    /* One line, every load. A preview URL and the production URL look
+       alike in a phone's address bar, so the console should never leave
+       it ambiguous which database is being written to. */
+    console.info(`[keystamp] ${Config.environment} backend \u2014 ${Config.supabaseUrl}`);
 
     try {
       /* Assign only AFTER init succeeds. Assigning first made

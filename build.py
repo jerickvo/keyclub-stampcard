@@ -65,13 +65,17 @@ def read(rel):
 
 
 def apply_config(html):
-    """Let a deploy pipeline inject Supabase config without editing
-    dev.html, while never blanking values that are already there.
+    """Fill the Supabase OVERRIDE meta tags from the environment.
 
-    Only ever fills a meta tag that is currently EMPTY. If dev.html has
-    a value, that value wins — so a CI run with no environment set can
-    never silently ship an unconfigured build, which is exactly how the
-    'NO BACKEND CONFIGURED' state would sneak into production.
+    Normal builds do not use this. Which project the page talks to is
+    decided at load time from the hostname, by SUPABASE_ENVIRONMENTS in
+    01a-backend.js, and the meta tags ship empty so that switch runs.
+
+    Setting KEYSTAMP_SUPABASE_URL / _ANON_KEY pins the built bundle to
+    one project for every hostname — an escape hatch for a host page or
+    a test harness, not a deploy step. Only ever fills a tag that is
+    currently EMPTY, so a value written into dev.html by hand still
+    wins.
     """
     pairs = [("keystamp:supabase-url", "KEYSTAMP_SUPABASE_URL"),
              ("keystamp:supabase-anon-key", "KEYSTAMP_SUPABASE_ANON_KEY")]
@@ -87,30 +91,70 @@ def apply_config(html):
 
 
 def report_config(html):
-    """State the configuration outcome every build, so an unconfigured
-    deploy is noticed at build time instead of by a confused student."""
+    """State the configuration outcome every build, so a bundle that
+    would point at the wrong database is noticed here rather than by a
+    confused student — or, far worse, by nobody."""
     got = {}
     for meta in ("keystamp:supabase-url", "keystamp:supabase-anon-key"):
         m = re.search(r'<meta name="%s" content="([^"]*)"' % re.escape(meta), html)
         got[meta] = (m.group(1).strip() if m else "")
     url, key = got["keystamp:supabase-url"], got["keystamp:supabase-anon-key"]
+
     if url and key:
         # never print the key itself, even though it is public
-        print(f"build: supabase configured -> {url} (anon key {len(key)} chars)")
-    else:
-        print("build: WARNING — Supabase is NOT configured.")
-        print("       Fill the keystamp:supabase-* meta tags in dev.html")
-        print("       (or set KEYSTAMP_SUPABASE_URL / _ANON_KEY) and rebuild.")
-        print("       The built site will show a setup notice instead of a login.")
-    # A secret VALUE in the client bundle is a build failure. The names
-    # themselves appear in comments explaining what must stay server
-    # side, so matching on the bare word would abort every build — the
-    # test has to be "is something assigned to it", plus a direct look
-    # for a service_role JWT however it got there.
+        print(f"build: supabase OVERRIDE -> {url} (anon key {len(key)} chars)")
+        print("       Every hostname will use this one project. The built-in")
+        print("       production/staging switch is bypassed in this bundle.")
+        return
+    if url or key:
+        # half an override is not an override, it is an unconfigured build
+        sys.exit("build: ABORTED — only one of the keystamp:supabase-* override "
+                 "meta tags is filled. Fill both, or leave both empty.")
+
+    # No override, which is the normal case: the bundle has to carry the
+    # hostname switch itself. If it cannot be read back out of the built
+    # file, the build does not get to claim it shipped one.
+    block = re.search(r"const SUPABASE_ENVIRONMENTS = \{(.*?)\n\};", html, re.S)
+    block = block.group(1) if block else ""
+    hosts = re.search(r"hosts:\s*\[([^\]]*)\]", block)
+    prod = re.search(r"production:\s*\{.*?url:\s*'([^']+)'", block, re.S)
+    stag = re.search(r"staging:\s*\{.*?url:\s*'([^']+)'", block, re.S)
+    if not (block and hosts and prod and stag):
+        sys.exit("build: ABORTED — SUPABASE_ENVIRONMENTS is not readable in the "
+                 "bundle, so the production/staging switch cannot be confirmed. "
+                 "Check 01a-backend.js.")
+    hostlist = [h.strip().strip("'\"") for h in hosts.group(1).split(",") if h.strip()]
+    if not hostlist:
+        sys.exit("build: ABORTED — the production host list is empty, so nothing "
+                 "would ever reach the production project.")
+    if prod.group(1) == stag.group(1):
+        sys.exit("build: ABORTED — production and staging name the same Supabase "
+                 "project. Previews would write to real member data.")
+    print(f"build: supabase production -> {prod.group(1)}")
+    print(f"       on {', '.join(hostlist)}")
+    print(f"build: supabase staging    -> {stag.group(1)}")
+    print("       on every other hostname (previews, localhost, unknown)")
+
+
+def assert_no_secrets(html):
+    """A secret VALUE in the client bundle is a build failure, and this
+    runs on every build regardless of how the page was configured — an
+    override path that skipped it would be the one path where a leak
+    ships unnoticed.
+
+    The NAMES appear in comments explaining what must stay server side,
+    so matching on the bare word would abort every build. The test has
+    to be "is something assigned to it", plus a direct look for a
+    service_role JWT however it got there.
+    """
     leaks = []
-    for name in ("SUPABASE_SERVICE_ROLE_KEY", "ATTENDANCE_TOKEN_SECRET", "BOARD_PASSWORD"):
+    for name in ("SUPABASE_SERVICE_ROLE_KEY", "ATTENDANCE_TOKEN_SECRET", "BOARD_PASSWORD",
+                 "GOOGLE_SERVICE_ACCOUNT_KEY", "GOOGLE_PRIVATE_KEY", "CRON_SECRET"):
         if re.search(r"%s\s*[:=]\s*[\'\"`][^\'\"`\s]{8,}" % re.escape(name), html):
             leaks.append(name)
+    # a PEM private key has no business anywhere near the browser bundle
+    if "BEGIN PRIVATE KEY" in html or "BEGIN RSA PRIVATE KEY" in html:
+        leaks.append("a PEM private key")
     # a Supabase service-role key is a JWT whose payload names the role
     for jwt in re.findall(r"eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]+", html):
         try:
@@ -172,6 +216,7 @@ def main():
     kb = len(html.encode()) / 1024
     print(f"build: index.html  {kb:.0f} KB")
     report_config(html)
+    assert_no_secrets(html)
     print(f"build: inlined {len(inlined)} files")
     for f in inlined:
         print(f"         {f}")

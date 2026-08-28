@@ -78,22 +78,50 @@ node bootstrap-board.mjs
 Idempotent: re-running reuses the existing account and resets its
 password, so it doubles as the recovery path.
 
-## 5. Point the app at the project
+## 5. Point the app at the projects
 
-In `dev.html`, fill the two meta tags, then rebuild:
+There are two Supabase projects — production and `keystamp-staging` —
+and the page picks between them **at load time, from
+`window.location.hostname`**. Vercel serves the committed `index.html`
+as a static file and never runs `build.py`, so the choice cannot be a
+build-time one: the same bundle has to be correct on the production
+domain, on a preview URL, and on localhost.
 
-```html
-<meta name="keystamp:supabase-url"      content="https://xxx.supabase.co">
-<meta name="keystamp:supabase-anon-key" content="eyJ...">
+Both URLs and both public anon keys live in one place:
+`SUPABASE_ENVIRONMENTS` at the top of `01a-backend.js`.
+
+```js
+const SUPABASE_ENVIRONMENTS = {
+  production: { hosts: ['keystamp.vercel.app'], url: '...', anonKey: '...' },
+  staging:    {                                 url: '...', anonKey: '...' },
+};
 ```
+
+Production is an **allowlist of exact hostnames**. Everything else —
+Vercel previews, `localhost`, a `file://` page, a domain nobody
+recognises — resolves to staging. That asymmetry is deliberate: a
+forgotten production domain costs one deploy pointed at staging and is
+noticed immediately, while a preview quietly writing to real member
+data is not recoverable. Adding a custom production domain means adding
+it to `hosts` and rebuilding.
 
 ```bash
 python3 build.py
 ```
 
-The anon key is public by design and safe in the page **only because
-RLS is on every table**. The service role key must never appear in
-`dev.html`, `index.html`, any source file, or git history.
+Every build prints which project each environment resolves to, and
+refuses to finish if the switch is missing from the bundle or if both
+environments name the same project.
+
+The hostname switch is **not** a security boundary. It prevents an
+accidental connection, nothing more. An anon key is public by design
+and safe in the page **only because RLS is on every table**. The
+service role key must never appear in `dev.html`, `index.html`, any
+source file, or git history.
+
+The `keystamp:supabase-*` meta tags in `dev.html` ship empty. Filling
+both pins the bundle to one project for every hostname and bypasses the
+switch; it exists for a test harness, not for a deploy.
 
 ---
 
