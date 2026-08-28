@@ -157,9 +157,12 @@ select test.ck('board CAN open and close check-in',
 select test.ck('member cannot create a meeting',
   test.try('authenticated','11111111-1111-1111-1111-111111111111',
     $$insert into public.meetings(meeting_number, meeting_date, start_time) values (99,'2026-01-21','3:15 PM')$$), '42501');
-select test.ck('a non-Wednesday meeting is refused',
+select test.ck('a meeting on any weekday is accepted (Thursday)',
   test.try('service_role', null,
-    $$insert into public.meetings(meeting_number, meeting_date, start_time) values (50,'2026-01-08','3:15 PM')$$), '23514');
+    $$insert into public.meetings(meeting_number, meeting_date, start_time) values (50,'2026-01-08','3:15 PM')$$), 'OK');
+select test.ck('a meeting on any weekday is accepted (Sunday)',
+  test.try('service_role', null,
+    $$insert into public.meetings(meeting_number, meeting_date, start_time) values (52,'2026-01-11','3:15 PM')$$), 'OK');
 select test.ck('a meeting outside the MPR is refused',
   test.try('service_role', null,
     $$insert into public.meetings(meeting_number, meeting_date, start_time, location) values (51,'2026-01-21','3:15 PM','Gym')$$), '23514');

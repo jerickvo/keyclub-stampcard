@@ -258,7 +258,7 @@ const C = {
       <span class="lrow__no">${pad(m.no)}</span>
       <span class="lrow__stamp">${mark}</span>
       <span class="lrow__body">
-        <span class="lrow__date">${state === 'open' ? 'Today' : fmtDay(m.date)}</span>
+        <span class="lrow__date">${m.today ? 'Today' : fmtDay(m.date)}</span>
         <span class="lrow__when">${detail}</span>
       </span>
       ${state === 'open' ? '<span class="lrow__go">Scan</span>' : ''}
@@ -352,11 +352,15 @@ const Views = {
   /* the attendance record: every general meeting, in order, with what happened */
   record(){
     if (Store.failed) return this.loadFailure('Record');
-    /* newest first, so the meeting you can still walk into leads the
-       page instead of sitting fourteen rows down. */
-    const byNo = (a,b) => b.no - a.no;
-    const held = [...Store.heldMeetings()].sort(byNo);
-    const upcoming = Store.meetings.filter(m => m.upcoming).sort(byNo);
+    /* Ordered by DATE, never by meeting number: the number is a label
+       the board chooses, the date is when the meeting actually is.
+       Held runs newest first, so the meeting you can still walk into
+       leads the page instead of sitting fourteen rows down; scheduled
+       runs soonest first, so the next one to attend is at the top. */
+    const newest = (a, b) => String(a.date) < String(b.date) ? 1 : -1;
+    const soonest = (a, b) => String(a.date) < String(b.date) ? -1 : 1;
+    const held = [...Store.heldMeetings()].sort(newest);
+    const upcoming = Store.meetings.filter(m => m.upcoming).sort(soonest);
     const kept = held.filter(m => Store.attended(m.id)).length;
     const gone = held.length - kept;
     const frac = held.length ? kept / held.length : 0;

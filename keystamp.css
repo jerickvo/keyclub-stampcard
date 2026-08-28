@@ -245,19 +245,26 @@ body{
 .rail__foot{padding-top:var(--s4);border-top:var(--rule-hair) solid var(--ink)}
 
 .topbar{display:none;align-items:center;justify-content:space-between;
-  padding:var(--s3) var(--pad);border-bottom:var(--rule) solid var(--ink);
+  border-bottom:var(--rule) solid var(--ink);
   background:var(--paper);position:sticky;top:0;z-index:60;
-  padding-left:calc(var(--pad) + env(safe-area-inset-left, 0px));
-  padding-right:calc(var(--pad) + env(safe-area-inset-right, 0px))}
+  --safe-x:max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  padding:var(--s3) calc(var(--pad) + var(--safe-x))}
 .motion-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;
   background:var(--paper);border:var(--rule-hair) solid var(--ink);
   color:var(--ink);cursor:pointer;font:500 13px/1 var(--f-body);
   letter-spacing:0}
 .motion-btn svg{width:14px;height:14px}
 
+/* The notch inset is applied EQUALLY to both sides. Adding the left
+   inset to the left and the right inset to the right keeps content out
+   of the notch but shifts the whole column sideways in landscape,
+   because only one side is ever inset — the page then reads visibly
+   off-centre. Padding both sides by the larger of the two clears the
+   notch and keeps the column centred. */
 main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
-  padding:var(--gut-tier) calc(var(--gutter) + env(safe-area-inset-right, 0px))
-          var(--s8) calc(var(--gutter) + env(safe-area-inset-left, 0px))}
+  --safe-x:max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  padding:var(--gut-tier) calc(var(--gutter) + var(--safe-x))
+          var(--s8) calc(var(--gutter) + var(--safe-x))}
 
 .view{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
   gap:var(--gut-tier) var(--gut);align-content:start;position:relative}

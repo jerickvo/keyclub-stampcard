@@ -202,8 +202,12 @@ const BoardUI = {
   /* ── MEETINGS ─────────────────────────────────────────────────── */
   meetingsPane(){
     const list = (this.meetings && this.meetings.meetings) || [];
-    const upcoming = list.filter(m => m.state === 'UPCOMING');
-    const past = list.filter(m => m.state !== 'UPCOMING');
+    /* by date, never by meeting number: coming up reads soonest first,
+       already held reads newest first */
+    const by = dir => (a, b) =>
+      String(a.meeting_date) < String(b.meeting_date) ? -dir : dir;
+    const upcoming = list.filter(m => m.state === 'UPCOMING').sort(by(1));
+    const past = list.filter(m => m.state !== 'UPCOMING').sort(by(-1));
 
     return `<div class="bpanel meetgrid">
       ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
@@ -264,8 +268,8 @@ const BoardUI = {
         <label class="field"><span class="kicker">Meeting number</span>
           <input class="input" id="mNo" type="number" min="1" inputmode="numeric"
                  value="${esc(f.no || '')}" placeholder="12"></label>
-        <label class="field"><span class="kicker">Date / Wednesday</span>
-          <input class="input" id="mDate" type="date" value="${esc(f.date || Schedule.nextWednesday())}"></label>
+        <label class="field"><span class="kicker">Date</span>
+          <input class="input" id="mDate" type="date" value="${esc(f.date || Schedule.today())}"></label>
         <label class="field"><span class="kicker">Start</span>
           <input class="input" id="mStart" type="time" value="${esc(f.start || '15:15')}"></label>
         <label class="field"><span class="kicker">End</span>

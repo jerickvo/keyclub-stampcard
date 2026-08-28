@@ -317,19 +317,26 @@ body{
 .rail__foot{padding-top:var(--s4);border-top:var(--rule-hair) solid var(--ink)}
 
 .topbar{display:none;align-items:center;justify-content:space-between;
-  padding:var(--s3) var(--pad);border-bottom:var(--rule) solid var(--ink);
+  border-bottom:var(--rule) solid var(--ink);
   background:var(--paper);position:sticky;top:0;z-index:60;
-  padding-left:calc(var(--pad) + env(safe-area-inset-left, 0px));
-  padding-right:calc(var(--pad) + env(safe-area-inset-right, 0px))}
+  --safe-x:max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  padding:var(--s3) calc(var(--pad) + var(--safe-x))}
 .motion-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;
   background:var(--paper);border:var(--rule-hair) solid var(--ink);
   color:var(--ink);cursor:pointer;font:500 13px/1 var(--f-body);
   letter-spacing:0}
 .motion-btn svg{width:14px;height:14px}
 
+/* The notch inset is applied EQUALLY to both sides. Adding the left
+   inset to the left and the right inset to the right keeps content out
+   of the notch but shifts the whole column sideways in landscape,
+   because only one side is ever inset — the page then reads visibly
+   off-centre. Padding both sides by the larger of the two clears the
+   notch and keeps the column centred. */
 main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
-  padding:var(--gut-tier) calc(var(--gutter) + env(safe-area-inset-right, 0px))
-          var(--s8) calc(var(--gutter) + env(safe-area-inset-left, 0px))}
+  --safe-x:max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  padding:var(--gut-tier) calc(var(--gutter) + var(--safe-x))
+          var(--s8) calc(var(--gutter) + var(--safe-x))}
 
 .view{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
   gap:var(--gut-tier) var(--gut);align-content:start;position:relative}
@@ -2244,7 +2251,14 @@ button,input,select,textarea{font-family:inherit}
 .standing__at{font-family:var(--f-head);
   font-size:var(--t-sub);line-height:1.05;color:var(--paper)}
 
-.viewer{position:relative;display:grid;place-items:center;
+/* Two rows: the feed fills the whole frame, the reticle centres in the
+   space ABOVE the status chip, and the chip owns the bottom row. The
+   reticle is therefore centred by the layout rather than nudged off
+   centre by a fixed margin that has to guess the chip's height. */
+.viewer{position:relative;display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:minmax(0,1fr) auto;
+  place-items:center;
   isolation:isolate;overflow:hidden;
   width:100%;aspect-ratio:1;max-height:62vh;
   border:var(--edge-frame) solid var(--ink);background:var(--tint);
@@ -2252,8 +2266,10 @@ button,input,select,textarea{font-family:inherit}
 /* a code is square, so on a phone the frame is square: it fills the
    sheet instead of leaving a letterbox with half a screen under it. */
 @media(min-width:600px){ .viewer{aspect-ratio:4/3} }
-.viewer > *{grid-area:1/1}
-.viewer video{width:100%;height:100%;object-fit:cover;display:block;
+/* everything that is not the chip covers the whole frame */
+.viewer > *{grid-column:1;grid-row:1/-1}
+.viewer video{width:100%;height:100%;display:block;
+  object-fit:cover;object-position:center;
   filter:grayscale(1) contrast(1.06)}
 
 /* screentone over the feed, not a veil: it holds the overlay legible
@@ -2263,8 +2279,8 @@ button,input,select,textarea{font-family:inherit}
   background-size:5px 5px}
 .viewer__grain{display:none}
 
-.reticle{position:relative;width:min(58%,290px);aspect-ratio:1;
-  margin-bottom:clamp(36px,8vw,58px);
+.reticle{position:relative;grid-row:1;place-self:center;
+  width:min(58%,290px);aspect-ratio:1;
   pointer-events:none;z-index:2}
 .reticle__c{position:absolute;width:15%;height:15%;
   border:var(--edge-frame) solid var(--paper);
@@ -2280,7 +2296,7 @@ button,input,select,textarea{font-family:inherit}
 .reticle--busy .reticle__c{opacity:.55}
 .reticle--bad .reticle__c{width:12%;height:12%}
 
-.viewer__status{align-self:end;justify-self:center;z-index:3;
+.viewer__status{grid-row:2;place-self:center;z-index:3;
   padding:0 var(--s3) var(--s3);max-width:100%}
 .viewer__msg{display:inline-block;
   padding:7px var(--s4);background:var(--paper);color:var(--ink);
@@ -2299,7 +2315,8 @@ button,input,select,textarea{font-family:inherit}
    viewfinder and becomes a note: title, sentence, and the field below
    already focused. */
 .viewer--stalled{aspect-ratio:auto;min-height:clamp(160px,30vw,240px);
-  place-items:stretch;background:var(--paper)}
+  grid-template-rows:minmax(0,1fr);place-items:stretch;
+  background:var(--paper)}
 .stall{display:flex;flex-direction:column;justify-content:center;
   gap:var(--s2);padding:var(--s5);text-align:left}
 .stall__title{margin:0;font-family:var(--f-head);
@@ -15513,6 +15530,27 @@ var qrcode = function() {
                        somebody is logged in.
    ══════════════════════════════════════════════════════════════════ */
 
+/* ── the club's calendar day ───────────────────────────────────────
+   Whether a meeting is ahead, happening or past is a statement about
+   the club's day, not the device's and not UTC's. Deriving it from
+   `toISOString()` reports tomorrow's date all evening for anyone west
+   of Greenwich, which slides a meeting a day out of place. This is the
+   same rule the Edge Functions apply, so client and server always
+   agree on which day it is. Format is YYYY-MM-DD, directly comparable
+   to a Postgres `date` column.
+   ────────────────────────────────────────────────────────────────── */
+const CLUB_TZ = 'America/Los_Angeles';
+const clubDay = (d = new Date()) => {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: CLUB_TZ, year:'numeric', month:'2-digit', day:'2-digit',
+    }).format(d);
+  } catch (_) {
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  }
+};
+
 /* ── configuration ────────────────────────────────────────────────
    Credentials are read from the page, never hardcoded here. Set them
    on window before the scripts load, or via <meta>:
@@ -15781,9 +15819,12 @@ const SupabaseAdapter = {
     return { ok:true };
   },
 
-  /* one shape for the whole app, so views never see column names */
+  /* One shape for the whole app, so views never see column names.
+     The stored date decides everything — the weekday is never asked.
+     A meeting still on today's date has not been missed, so it counts
+     as ahead until check-in opens or the day turns over. */
   toMeeting(row){
-    const today = new Date().toISOString().slice(0, 10);
+    const today = clubDay();
     return {
       id: row.id,
       no: row.meeting_number,
@@ -15792,7 +15833,8 @@ const SupabaseAdapter = {
       endTime: row.end_time,
       place: row.location || 'MPR',
       open: Boolean(row.check_in_open),
-      upcoming: row.meeting_date > today && !row.check_in_open,
+      today: row.meeting_date === today,
+      upcoming: row.meeting_date >= today && !row.check_in_open,
     };
   },
 
@@ -16290,37 +16332,18 @@ const stampMark = (ordinal) => {
 const wordmark = () => `<span class="mark"><span class="mark__word">Key<b>stamp</b></span></span>`;
 
 /* ══════════════════════════════════════════════════════════════════
-   2a. SCHEDULE — every general meeting falls on a Wednesday, in the MPR.
+   2a. SCHEDULE — defaults for the board's meeting form.
 
-   Dates are not typed in by hand anywhere. They are generated from one
-   anchor Wednesday plus a fixed interval, and `wednesdayOf` snaps any
-   date it is handed back to the Wednesday of that week. That means a
-   future meeting cannot silently land on a Tuesday because someone
-   mistyped a date or the interval changed.
+   A general meeting may fall on ANY day of the week. Its stored date
+   is the only authority; nothing here constrains or derives it.
+   Schedule supplies the form's starting values, and `today` is the
+   club's calendar day — the same rule the Edge Functions use, so the
+   client and the server never disagree about which day it is.
    ══════════════════════════════════════════════════════════════════ */
-/* Schedule is DATE MATHS only — never a source of meetings. The board
-   creates real meeting rows and the client reads them; what lives here
-   is the guarantee that any date the board tools propose lands on a
-   Wednesday, which is a club rule, not sample data. */
 const Schedule = {
   TIME: '3:15 PM',
   PLACE: 'MPR',              /* every meeting is held in the MPR */
-
-  /* snap any date to the Wednesday of its own week */
-  wednesdayOf(d){
-    const out = new Date(d.getTime());
-    out.setDate(out.getDate() + ((3 - out.getDay() + 7) % 7));   /* 3 = Wednesday */
-    return out;
-  },
-  iso(d){
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  },
-  /* the next Wednesday on or after today — used by the board tools */
-  nextWednesday(from = new Date()){
-    const d = new Date(from.getTime());
-    d.setHours(12, 0, 0, 0);
-    return this.iso(this.wednesdayOf(d));
-  },
+  today: () => clubDay(),
 };
 
 /* ══════════════════════════════════════════════════════════════════
@@ -17050,7 +17073,7 @@ const C = {
       <span class="lrow__no">${pad(m.no)}</span>
       <span class="lrow__stamp">${mark}</span>
       <span class="lrow__body">
-        <span class="lrow__date">${state === 'open' ? 'Today' : fmtDay(m.date)}</span>
+        <span class="lrow__date">${m.today ? 'Today' : fmtDay(m.date)}</span>
         <span class="lrow__when">${detail}</span>
       </span>
       ${state === 'open' ? '<span class="lrow__go">Scan</span>' : ''}
@@ -17144,11 +17167,15 @@ const Views = {
   /* the attendance record: every general meeting, in order, with what happened */
   record(){
     if (Store.failed) return this.loadFailure('Record');
-    /* newest first, so the meeting you can still walk into leads the
-       page instead of sitting fourteen rows down. */
-    const byNo = (a,b) => b.no - a.no;
-    const held = [...Store.heldMeetings()].sort(byNo);
-    const upcoming = Store.meetings.filter(m => m.upcoming).sort(byNo);
+    /* Ordered by DATE, never by meeting number: the number is a label
+       the board chooses, the date is when the meeting actually is.
+       Held runs newest first, so the meeting you can still walk into
+       leads the page instead of sitting fourteen rows down; scheduled
+       runs soonest first, so the next one to attend is at the top. */
+    const newest = (a, b) => String(a.date) < String(b.date) ? 1 : -1;
+    const soonest = (a, b) => String(a.date) < String(b.date) ? -1 : 1;
+    const held = [...Store.heldMeetings()].sort(newest);
+    const upcoming = Store.meetings.filter(m => m.upcoming).sort(soonest);
     const kept = held.filter(m => Store.attended(m.id)).length;
     const gone = held.length - kept;
     const frac = held.length ? kept / held.length : 0;
@@ -17638,8 +17665,12 @@ const BoardUI = {
   /* ── MEETINGS ─────────────────────────────────────────────────── */
   meetingsPane(){
     const list = (this.meetings && this.meetings.meetings) || [];
-    const upcoming = list.filter(m => m.state === 'UPCOMING');
-    const past = list.filter(m => m.state !== 'UPCOMING');
+    /* by date, never by meeting number: coming up reads soonest first,
+       already held reads newest first */
+    const by = dir => (a, b) =>
+      String(a.meeting_date) < String(b.meeting_date) ? -dir : dir;
+    const upcoming = list.filter(m => m.state === 'UPCOMING').sort(by(1));
+    const past = list.filter(m => m.state !== 'UPCOMING').sort(by(-1));
 
     return `<div class="bpanel meetgrid">
       ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
@@ -17700,8 +17731,8 @@ const BoardUI = {
         <label class="field"><span class="kicker">Meeting number</span>
           <input class="input" id="mNo" type="number" min="1" inputmode="numeric"
                  value="${esc(f.no || '')}" placeholder="12"></label>
-        <label class="field"><span class="kicker">Date / Wednesday</span>
-          <input class="input" id="mDate" type="date" value="${esc(f.date || Schedule.nextWednesday())}"></label>
+        <label class="field"><span class="kicker">Date</span>
+          <input class="input" id="mDate" type="date" value="${esc(f.date || Schedule.today())}"></label>
         <label class="field"><span class="kicker">Start</span>
           <input class="input" id="mStart" type="time" value="${esc(f.start || '15:15')}"></label>
         <label class="field"><span class="kicker">End</span>
@@ -18636,7 +18667,7 @@ const FX = {
     /* SEALED, not "Verified": the product's own word for what just
        happened. A stamp was pressed and it is permanent. */
     P.state.textContent = 'Sealed';
-    P.meet.textContent = `GM ${pad(meeting.no)} · Wed ${fmtDay(meeting.date)} · MPR`;
+    P.meet.textContent = `GM ${pad(meeting.no)} · ${fmtDate(meeting.date)} · MPR`;
     $('#verdictField')?.remove();
     box.insertAdjacentHTML('afterbegin', fieldSVG());
     const field = $('#verdictField');
@@ -19389,8 +19420,9 @@ document.addEventListener('change', e => {
 
 /* ── CREATE MEETING ────────────────────────────────────────────────
    Client validation exists to give a useful message, not to enforce
-   the rule: the Wednesday CHECK, the start<end CHECK and the unique
-   meeting_number all live in the database and remain the authority. */
+   the rule: the start<end CHECK and the unique meeting_number live in
+   the database and remain the authority. A meeting may be scheduled
+   on any day of the week. */
 function to12h(hhmm){
   const [h, m] = String(hhmm).split(':').map(Number);
   const ap = h >= 12 ? 'PM' : 'AM';
@@ -19423,10 +19455,6 @@ document.addEventListener('submit', async e => {
 
     if (!no || no < 1)  return show('Meeting number is required.');
     if (!date)          return show('Meeting date is required.');
-    /* T12:00:00 keeps the parse in local noon so a timezone shift
-       cannot slide the date onto Tuesday or Thursday */
-    if (new Date(date + 'T12:00:00').getDay() !== 3)
-      return show('Meeting date must be Wednesday.');
     if (!start || !end) return show('Start and end time are required.');
     if (start >= end)   return show('End time must be after the start time.');
 

@@ -274,37 +274,18 @@ const stampMark = (ordinal) => {
 const wordmark = () => `<span class="mark"><span class="mark__word">Key<b>stamp</b></span></span>`;
 
 /* ══════════════════════════════════════════════════════════════════
-   2a. SCHEDULE — every general meeting falls on a Wednesday, in the MPR.
+   2a. SCHEDULE — defaults for the board's meeting form.
 
-   Dates are not typed in by hand anywhere. They are generated from one
-   anchor Wednesday plus a fixed interval, and `wednesdayOf` snaps any
-   date it is handed back to the Wednesday of that week. That means a
-   future meeting cannot silently land on a Tuesday because someone
-   mistyped a date or the interval changed.
+   A general meeting may fall on ANY day of the week. Its stored date
+   is the only authority; nothing here constrains or derives it.
+   Schedule supplies the form's starting values, and `today` is the
+   club's calendar day — the same rule the Edge Functions use, so the
+   client and the server never disagree about which day it is.
    ══════════════════════════════════════════════════════════════════ */
-/* Schedule is DATE MATHS only — never a source of meetings. The board
-   creates real meeting rows and the client reads them; what lives here
-   is the guarantee that any date the board tools propose lands on a
-   Wednesday, which is a club rule, not sample data. */
 const Schedule = {
   TIME: '3:15 PM',
   PLACE: 'MPR',              /* every meeting is held in the MPR */
-
-  /* snap any date to the Wednesday of its own week */
-  wednesdayOf(d){
-    const out = new Date(d.getTime());
-    out.setDate(out.getDate() + ((3 - out.getDay() + 7) % 7));   /* 3 = Wednesday */
-    return out;
-  },
-  iso(d){
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  },
-  /* the next Wednesday on or after today — used by the board tools */
-  nextWednesday(from = new Date()){
-    const d = new Date(from.getTime());
-    d.setHours(12, 0, 0, 0);
-    return this.iso(this.wednesdayOf(d));
-  },
+  today: () => clubDay(),
 };
 
 /* ══════════════════════════════════════════════════════════════════
