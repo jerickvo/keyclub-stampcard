@@ -87,6 +87,17 @@ const WriteFailure = {
       return { kind:'constraint', say:'The database refused those details.' };
     }
     if (code === '23502') return { kind:'missing', say:'Something required was left blank.' };
+    /* PostgREST: the RPC does not exist in the database. This is a
+       deployment gap, not bad input — saying "check the details" sends
+       the board chasing a form that was never the problem. */
+    if (/^PGRST2/.test(code) || /could not find the function|schema cache/i.test(msg))
+      return { kind:'not-installed',
+               say:'The database does not have this operation installed. Re-run schema.sql on the Supabase project.' };
+    /* P0001 is a rule our own database function raised; its message was
+       written to be shown, so show it rather than a generic sentence. */
+    if (code === 'P0001')
+      return { kind:'refused', say: msg.replace(/^TEMP-TEST-TOOLING:\s*/i, '')
+                 .replace(/^\w/, ch => ch.toUpperCase()) + '.' };
     if (/failed to fetch|networkerror|load failed/i.test(msg))
       return { kind:'network', say:'Could not reach the club records. Check the connection and try again.' };
     return { kind:'unknown', say:'Could not save that. Check the details and try again.' };
