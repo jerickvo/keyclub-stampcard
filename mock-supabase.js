@@ -124,6 +124,22 @@ function mkClient(){
                 return { data:null, error:{ message:'row-level security', code:'42501' } };
               if (db.meetings.some(m => m.meeting_number === payload.meeting_number))
                 return { data:null, error:{ message:'duplicate key value', code:'23505' } };
+              /* The table's CHECK constraints, which the real database
+                 enforces and this mock previously did not — a rejected
+                 write looked like a successful one here. */
+              const bad = c => ({ data:null, error:{ code:'23514', constraint:c,
+                message:`new row for relation "meetings" violates check constraint "${c}"` } });
+              const mins = t => {                       /* "3:15 PM" -> 915 */
+                const m2 = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(t || '').trim());
+                if (!m2) return NaN;
+                let h = Number(m2[1]) % 12;
+                if (/PM/i.test(m2[3])) h += 12;
+                return h * 60 + Number(m2[2]);
+              };
+              if ((payload.location || 'MPR') !== 'MPR') return bad('meetings_location_check');
+              if (payload.end_time != null &&
+                  !(mins(payload.start_time) < mins(payload.end_time)))
+                return bad('meeting_time_order');
               const row = Object.assign({ id:'m_'+Math.random().toString(36).slice(2,8),
                                           check_in_open:false, location:'MPR' }, payload);
               db.meetings.push(row); saveDB();
