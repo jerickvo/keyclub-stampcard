@@ -492,13 +492,24 @@ const QRFormat = {
    crypto, safe on the client because none of it grants anything. */
 const Rules = {
   TIERS: REWARD_TIERS.map(r => r.required),
+  CARD: 10,                       /* one card is ten stamps */
 
+  /* Stamps accumulate for the whole year and never reset; a card is
+     just a ten-stamp window onto that running total. A completed card
+     stays on screen until the next stamp opens the following one, so
+     10 reads 10/10 on card one and 11 reads 1/10 on card two.
+
+     The window is derived from the total, not from TIERS: cards carry
+     on past the last reward, and deriving them from the tier list left
+     anyone beyond 30 stamps looking at a permanently full card four. */
   progress(){
     const total = Store.totalStamps();
-    const next  = this.TIERS.find(t => total <= t) ?? null;
-    const floor = next ? (this.TIERS.filter(t => t < next).pop() || 0) : this.TIERS[this.TIERS.length - 1];
-    const span  = next ? next - floor : 10;
-    return { total, next, floor, span, filled: next ? total - floor : span,
-             remaining: next ? next - total : 0 };
+    const index = total > 0 && total % this.CARD === 0
+      ? total / this.CARD - 1
+      : Math.floor(total / this.CARD);
+    const floor = index * this.CARD;
+    const filled = total - floor;
+    return { total, floor, span:this.CARD, filled,
+             card: index + 1, remaining: this.CARD - filled };
   },
 };
