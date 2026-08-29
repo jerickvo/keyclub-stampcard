@@ -488,10 +488,7 @@ select.input{padding-right:var(--s4)}
    panel count are set from the live viewport by the scene builder. */
 .soscene{position:fixed;inset:0;z-index:180;background:var(--paper);
   display:grid;gap:clamp(7px,1.2vw,15px);
-  padding:clamp(12px,2.4vw,30px);box-sizing:border-box;
-  /* the sheet's own shadow: invisible while it covers the screen, it
-     trails behind the page as it is turned off to the left */
-  box-shadow:30px 0 60px rgba(0,0,0,.22)}
+  padding:clamp(12px,2.4vw,30px);box-sizing:border-box}
 .soscene__cell{background:var(--paper);
   border:var(--edge-frame,3px) solid var(--ink);
   min-width:0;min-height:0;will-change:transform,opacity}
