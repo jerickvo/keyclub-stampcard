@@ -168,6 +168,30 @@ function mkClient(){
       return q;
     },
 
+    /* TEMP-TEST-TOOLING — stands in for tmp_test_purge_meeting. Mirrors
+       the real function's guards (board only, past only, not open) so
+       the client wiring can be exercised; it is NOT evidence the
+       deployed function behaves the same way. */
+    async rpc(name, args){
+      if (name !== 'tmp_test_purge_meeting')
+        return { data:null, error:{ message:'unknown function '+name, code:'42883' } };
+      const me = db.session && db.profiles.find(p => p.id === db.session.user.id);
+      if (!me || me.role !== 'board')
+        return { data:null, error:{ message:'TEMP-TEST-TOOLING: board accounts only', code:'P0001' } };
+      const today = new Intl.DateTimeFormat('en-CA', { timeZone:'America/Los_Angeles',
+        year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date());
+      const id = args && args.p_meeting_id;
+      const m = (db.meetings || []).find(x => x.id === id);
+      if (!m || m.check_in_open || !(String(m.meeting_date) < today))
+        return { data:null, error:{ message:'TEMP-TEST-TOOLING: not a past meeting', code:'P0001' } };
+      const before = (db.attendance || []).length;
+      db.attendance = (db.attendance || []).filter(a => a.meeting_id !== id);
+      db.sessions = (db.sessions || []).filter(s => s.meeting_id !== id);
+      db.meetings = db.meetings.filter(x => x.id !== id);
+      saveDB();
+      return { data: before - db.attendance.length, error:null };
+    },
+
     /* Stands in for the two Edge Functions. It mirrors their decision
        ORDER so the client's error mapping and fail-closed behaviour can
        be exercised — it is NOT evidence that the deployed Deno code or

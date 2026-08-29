@@ -511,6 +511,17 @@ const SupabaseAdapter = {
        expiry to itself — the same meeting always yields the same token */
     return { token: data && data.token };
   },
+  /* TEMP-TEST-TOOLING — remove with the rest of the purge tooling.
+     Deletes a past meeting AND its attendance so test data can be
+     cleaned up before launch. Board-only and past-only are enforced by
+     the database function, not here: this call is just the wire. */
+  async purgeMeetingTEMP(meetingId){
+    const { data, error } = await this.client
+      .rpc('tmp_test_purge_meeting', { p_meeting_id:meetingId });
+    if (error) throw error;
+    return { removed: Number(data) || 0 };
+  },
+
   async attendanceCount(meetingId){
     const { count, error } = await this.client
       .from('attendance').select('id', { count:'exact', head:true })
@@ -546,6 +557,8 @@ const PreviewAdapter = {
   async issueToken(){ throw new Error('No backend is configured.'); },
   async attendanceCount(){ return 0; },
   async board(){ throw new Error('No backend is configured.'); },
+  /* TEMP-TEST-TOOLING */
+  async purgeMeetingTEMP(){ throw new Error('No backend is configured.'); },
 };
 
 /* ══════════════════════════════════════════════════════════════════
@@ -566,7 +579,8 @@ const UnavailableAdapter = {
 };
 ['signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','claimReward','startAttendance',
- 'endAttendance','issueToken','attendanceCount','board'].forEach(fn => {
+ 'endAttendance','issueToken','attendanceCount','board',
+ 'purgeMeetingTEMP'].forEach(fn => {   /* TEMP-TEST-TOOLING */
   UnavailableAdapter[fn] = async () => { throw new Error('BACKEND_UNAVAILABLE'); };
 });
 UnavailableAdapter.verifyCode = async () => ({ ok:false, code:'BACKEND_UNAVAILABLE' });
@@ -627,6 +641,7 @@ const Backend = {
 /* forward the interface so callers use Backend.x, not Backend.adapter.x */
 ['currentSession','signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','claimReward','verifyCode',
- 'startAttendance','endAttendance','issueToken','attendanceCount','board'].forEach(fn => {
+ 'startAttendance','endAttendance','issueToken','attendanceCount','board',
+ 'purgeMeetingTEMP'].forEach(fn => {   /* TEMP-TEST-TOOLING */
   Backend[fn] = function(...a){ return this.adapter[fn](...a); };
 });

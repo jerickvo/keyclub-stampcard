@@ -255,6 +255,16 @@ const BoardUI = {
         ? `<button class="brow__del" data-bconfirm="${esc(m.id)}"
              aria-label="Delete GM ${pad(m.meeting_number)}">Delete</button>`
         : '<span class="brow__del brow__del--off" aria-hidden="true"></span>'}
+      ${/* TEMP-TEST-TOOLING — purge a past meeting AND its stamps, for
+           clearing test data before launch. Remove this whole
+           expression with the rest of the tooling. */
+        m.state !== 'UPCOMING' && m.attendance_count > 0
+        ? `<button class="brow__del" data-bpurgetemp="${esc(m.id)}"
+             data-bpurgeno="${pad(m.meeting_number)}"
+             data-bpurgen="${m.attendance_count}"
+             aria-label="Purge test meeting GM ${pad(m.meeting_number)} and its stamps"
+             >Purge (test)</button>`
+        : ''}
     </li>`;
   },
 

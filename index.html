@@ -16033,6 +16033,17 @@ const SupabaseAdapter = {
        expiry to itself — the same meeting always yields the same token */
     return { token: data && data.token };
   },
+  /* TEMP-TEST-TOOLING — remove with the rest of the purge tooling.
+     Deletes a past meeting AND its attendance so test data can be
+     cleaned up before launch. Board-only and past-only are enforced by
+     the database function, not here: this call is just the wire. */
+  async purgeMeetingTEMP(meetingId){
+    const { data, error } = await this.client
+      .rpc('tmp_test_purge_meeting', { p_meeting_id:meetingId });
+    if (error) throw error;
+    return { removed: Number(data) || 0 };
+  },
+
   async attendanceCount(meetingId){
     const { count, error } = await this.client
       .from('attendance').select('id', { count:'exact', head:true })
@@ -16068,6 +16079,8 @@ const PreviewAdapter = {
   async issueToken(){ throw new Error('No backend is configured.'); },
   async attendanceCount(){ return 0; },
   async board(){ throw new Error('No backend is configured.'); },
+  /* TEMP-TEST-TOOLING */
+  async purgeMeetingTEMP(){ throw new Error('No backend is configured.'); },
 };
 
 /* ══════════════════════════════════════════════════════════════════
@@ -16088,7 +16101,8 @@ const UnavailableAdapter = {
 };
 ['signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','claimReward','startAttendance',
- 'endAttendance','issueToken','attendanceCount','board'].forEach(fn => {
+ 'endAttendance','issueToken','attendanceCount','board',
+ 'purgeMeetingTEMP'].forEach(fn => {   /* TEMP-TEST-TOOLING */
   UnavailableAdapter[fn] = async () => { throw new Error('BACKEND_UNAVAILABLE'); };
 });
 UnavailableAdapter.verifyCode = async () => ({ ok:false, code:'BACKEND_UNAVAILABLE' });
@@ -16149,7 +16163,8 @@ const Backend = {
 /* forward the interface so callers use Backend.x, not Backend.adapter.x */
 ['currentSession','signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','claimReward','verifyCode',
- 'startAttendance','endAttendance','issueToken','attendanceCount','board'].forEach(fn => {
+ 'startAttendance','endAttendance','issueToken','attendanceCount','board',
+ 'purgeMeetingTEMP'].forEach(fn => {   /* TEMP-TEST-TOOLING */
   Backend[fn] = function(...a){ return this.adapter[fn](...a); };
 });
 
@@ -17823,6 +17838,16 @@ const BoardUI = {
         ? `<button class="brow__del" data-bconfirm="${esc(m.id)}"
              aria-label="Delete GM ${pad(m.meeting_number)}">Delete</button>`
         : '<span class="brow__del brow__del--off" aria-hidden="true"></span>'}
+      ${/* TEMP-TEST-TOOLING — purge a past meeting AND its stamps, for
+           clearing test data before launch. Remove this whole
+           expression with the rest of the tooling. */
+        m.state !== 'UPCOMING' && m.attendance_count > 0
+        ? `<button class="brow__del" data-bpurgetemp="${esc(m.id)}"
+             data-bpurgeno="${pad(m.meeting_number)}"
+             data-bpurgen="${m.attendance_count}"
+             aria-label="Purge test meeting GM ${pad(m.meeting_number)} and its stamps"
+             >Purge (test)</button>`
+        : ''}
     </li>`;
   },
 
@@ -19652,6 +19677,32 @@ document.addEventListener('click', e => {
                     meetings:null, meetingDetail:null });
       })
       .catch(() => boardGoto({ confirmDelete:null, deleteNote:'SERVER_ERROR' }));
+    return;
+  }
+
+  /* ── TEMP-TEST-TOOLING ──────────────────────────────────────────
+     Purge a past meeting and the stamps attached to it, so test data
+     can be cleared before launch. One browser confirm, no undo. The
+     board-only and past-only rules live in the database function; this
+     handler is only the button. Remove this whole block with the rest
+     of the tooling. */
+  const bpurge = e.target.closest('[data-bpurgetemp]');
+  if (bpurge){
+    if (bpurge.disabled) return;
+    const n = Number(bpurge.dataset.bpurgen) || 0;
+    if (!confirm(`Delete GM ${bpurge.dataset.bpurgeno} and its ${n} stamp${n === 1 ? '' : 's'}?\n\nThis cannot be undone.`)) return;
+    bpurge.disabled = true; bpurge.textContent = 'Purging…';
+    Backend.purgeMeetingTEMP(bpurge.dataset.bpurgetemp)
+      .then(res => {
+        toast({ key:'board', title:`GM ${bpurge.dataset.bpurgeno} purged`,
+                detail:`${res.removed} stamp${res.removed === 1 ? '' : 's'} removed with it.` });
+        boardGoto({ meetings:null, meetingDetail:null });
+      })
+      .catch(ex => {
+        bpurge.disabled = false; bpurge.textContent = 'Purge (test)';
+        toast({ key:'board', bad:true, title:'Could not purge',
+                detail:WriteFailure.explain(ex, 'purge meeting') });
+      });
     return;
   }
 
