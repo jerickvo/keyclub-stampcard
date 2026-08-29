@@ -49,9 +49,5 @@
      eases.steps returns undefined, anime falls back to its default
      out-curve, and a motion written to cut arrives eased instead. */
   window.steps          = A.steps;
-  window.onScroll       = A.onScroll;
-  window.splitText      = A.text.splitText;
   window.aset           = A.utils.set;
-  window.aremove        = A.utils.remove;
-  window.around         = A.utils.round;
 })();

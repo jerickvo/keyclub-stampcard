@@ -181,12 +181,7 @@ const seenUnlocked = new Set();
    claimable — still play. */
 function playViewIntro(id, nav = false){
   if (id === 'home'){
-    if (!nav){
-      const p = Rules.progress();
-      Motion.countUp($('#heroNum'), p.total);
-      setTimeout(() => FX.sealReveal($('.hero__ring'), { dur:620, spin:-20 }), 220);
-      FX.sealGrid($('#seals'));
-    }
+    if (!nav) FX.sealGrid($('#seals'));
 
     if (pendingCell >= 0){
       const cell = $$('#seals .seal')[pendingCell];
@@ -206,10 +201,6 @@ function playViewIntro(id, nav = false){
     });
   }
 
-  if (id === 'profile' && !nav){
-    const seals = $$('.who__seal');
-    seals.forEach(s => FX.sealReveal(s, { dur:700, spin:-24, delay:180 }));
-  }
 }
 
 function afterRender(id, nav = false){

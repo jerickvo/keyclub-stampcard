@@ -96,8 +96,9 @@ const C = {
     const p = Rules.progress();
     const chrono = [...Store.scans]
       .sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
+    /* the reward this card ends on, if the card reaches one at all */
     const goal = Store.rewards.find(r => r.required === p.floor + p.span) || null;
-    const cardNo = Math.floor(p.floor / 10) + 1;
+    const cardNo = p.card;
     const full = p.filled >= p.span;
 
     const cells = Array.from({ length:p.span }, (_, i) => {
@@ -145,8 +146,9 @@ const C = {
         <polyline points="16,14.1 45,14.9 76,14.2 84,32.4 54,31.5 22,32.9 16.5,51.4 46,52.7 77,50.9 42,76.3"/></svg>`;
 
     const say = full
-      ? 'Card complete — claim it in Rewards'
-      : `${p.remaining} more until ${goal ? goal.name.toLowerCase() : 'the next reward'}`;
+      ? (goal ? 'Card complete — claim it in Rewards' : 'Card complete')
+      : goal ? `${p.remaining} more until ${goal.name.toLowerCase()}`
+             : `${p.remaining} more to finish this card`;
 
     return `<section class="card${full ? ' card--full' : ''}" data-enter>
       <div class="card__face">

@@ -54,14 +54,6 @@ const Motion = {
             duration:1050, delay, ease:cubicBezier(.16,.84,.36,1) });
   },
 
-  countUp(el, to, delay = 140){
-    if (!el) return;
-    if (this.off){ el.textContent = pad(to); return; }
-    const o = { v:0 };
-    animate(o, { v:to, modifier:around(0), duration:760, delay,
-            ease:'outExpo', onUpdate:() => { el.textContent = pad(o.v); } });
-  },
-
   indicator(ind, target, axis){
     if (!ind || !target || !ind.parentElement) return;
     const p = ind.parentElement.getBoundingClientRect();

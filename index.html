@@ -15462,11 +15462,7 @@ var qrcode = function() {
      eases.steps returns undefined, anime falls back to its default
      out-curve, and a motion written to cut arrives eased instead. */
   window.steps          = A.steps;
-  window.onScroll       = A.onScroll;
-  window.splitText      = A.text.splitText;
   window.aset           = A.utils.set;
-  window.aremove        = A.utils.remove;
-  window.around         = A.utils.round;
 })();
 
 </script>
@@ -16612,14 +16608,25 @@ const QRFormat = {
    crypto, safe on the client because none of it grants anything. */
 const Rules = {
   TIERS: REWARD_TIERS.map(r => r.required),
+  CARD: 10,                       /* one card is ten stamps */
 
+  /* Stamps accumulate for the whole year and never reset; a card is
+     just a ten-stamp window onto that running total. A completed card
+     stays on screen until the next stamp opens the following one, so
+     10 reads 10/10 on card one and 11 reads 1/10 on card two.
+
+     The window is derived from the total, not from TIERS: cards carry
+     on past the last reward, and deriving them from the tier list left
+     anyone beyond 30 stamps looking at a permanently full card four. */
   progress(){
     const total = Store.totalStamps();
-    const next  = this.TIERS.find(t => total <= t) ?? null;
-    const floor = next ? (this.TIERS.filter(t => t < next).pop() || 0) : this.TIERS[this.TIERS.length - 1];
-    const span  = next ? next - floor : 10;
-    return { total, next, floor, span, filled: next ? total - floor : span,
-             remaining: next ? next - total : 0 };
+    const index = total > 0 && total % this.CARD === 0
+      ? total / this.CARD - 1
+      : Math.floor(total / this.CARD);
+    const floor = index * this.CARD;
+    const filled = total - floor;
+    return { total, floor, span:this.CARD, filled,
+             card: index + 1, remaining: this.CARD - filled };
   },
 };
 
@@ -16680,14 +16687,6 @@ const Motion = {
     if (this.off){ el.style.transform = `scaleX(${to})`; return; }
     animate(el, { scaleX:[0, Math.min(1, to + .03), to],
             duration:1050, delay, ease:cubicBezier(.16,.84,.36,1) });
-  },
-
-  countUp(el, to, delay = 140){
-    if (!el) return;
-    if (this.off){ el.textContent = pad(to); return; }
-    const o = { v:0 };
-    animate(o, { v:to, modifier:around(0), duration:760, delay,
-            ease:'outExpo', onUpdate:() => { el.textContent = pad(o.v); } });
   },
 
   indicator(ind, target, axis){
@@ -16973,8 +16972,9 @@ const C = {
     const p = Rules.progress();
     const chrono = [...Store.scans]
       .sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
+    /* the reward this card ends on, if the card reaches one at all */
     const goal = Store.rewards.find(r => r.required === p.floor + p.span) || null;
-    const cardNo = Math.floor(p.floor / 10) + 1;
+    const cardNo = p.card;
     const full = p.filled >= p.span;
 
     const cells = Array.from({ length:p.span }, (_, i) => {
@@ -17022,8 +17022,9 @@ const C = {
         <polyline points="16,14.1 45,14.9 76,14.2 84,32.4 54,31.5 22,32.9 16.5,51.4 46,52.7 77,50.9 42,76.3"/></svg>`;
 
     const say = full
-      ? 'Card complete — claim it in Rewards'
-      : `${p.remaining} more until ${goal ? goal.name.toLowerCase() : 'the next reward'}`;
+      ? (goal ? 'Card complete — claim it in Rewards' : 'Card complete')
+      : goal ? `${p.remaining} more until ${goal.name.toLowerCase()}`
+             : `${p.remaining} more to finish this card`;
 
     return `<section class="card${full ? ' card--full' : ''}" data-enter>
       <div class="card__face">
@@ -19188,12 +19189,18 @@ async function submitSeal(raw, fromCamera){
   dropToast('scan');
   Scanner.setState('good', 'Verified');
   Scanner.stop();
-  pendingCell = Rules.progress().filled;
 
   /* The server already inserted the row. Re-read from the database so
      the count, the record and the rewards all come from stored data
      rather than from an optimistic client increment. */
   await Store.hydrate();
+
+  /* Which slot to land on is read AFTER the re-read, from the stored
+     total: the newest stamp is the last filled slot on the card the
+     member is now on. Read before hydrating, a tenth stamp pointed one
+     slot past the end of the card it had just completed and the
+     landing never played. */
+  pendingCell = Rules.progress().filled - 1;
   const meeting = Store.meeting(result.meeting_id) ||
                   { id:result.meeting_id, no:result.meeting_number };
   FX.stampAcquire(meeting, () => go('home'));
@@ -19402,12 +19409,7 @@ const seenUnlocked = new Set();
    claimable — still play. */
 function playViewIntro(id, nav = false){
   if (id === 'home'){
-    if (!nav){
-      const p = Rules.progress();
-      Motion.countUp($('#heroNum'), p.total);
-      setTimeout(() => FX.sealReveal($('.hero__ring'), { dur:620, spin:-20 }), 220);
-      FX.sealGrid($('#seals'));
-    }
+    if (!nav) FX.sealGrid($('#seals'));
 
     if (pendingCell >= 0){
       const cell = $$('#seals .seal')[pendingCell];
@@ -19427,10 +19429,6 @@ function playViewIntro(id, nav = false){
     });
   }
 
-  if (id === 'profile' && !nav){
-    const seals = $$('.who__seal');
-    seals.forEach(s => FX.sealReveal(s, { dur:700, spin:-24, delay:180 }));
-  }
 }
 
 function afterRender(id, nav = false){
