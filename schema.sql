@@ -63,9 +63,11 @@ create table if not exists public.meetings (
   check_in_open  boolean not null default false,
   created_at     timestamptz not null default now(),
   created_by     uuid references public.profiles(id),
-  -- a meeting that ends before it starts is a typo, not a meeting
+  -- a meeting that ends before it starts is a typo, not a meeting.
+  -- The columns hold a 12-hour clock as text, so the comparison has to
+  -- be on the times, not on the strings.
   constraint meeting_time_order
-    check (end_time is null or start_time < end_time)
+    check (end_time is null or start_time::time < end_time::time)
 );
 
 -- Meetings were once restricted to Wednesdays. They are not: a general
@@ -73,7 +75,20 @@ create table if not exists public.meetings (
 -- authority. `create table if not exists` cannot remove a constraint
 -- from a table that already exists, so drop it explicitly — re-running
 -- this file against a live project is what migrates it.
+--
+-- THIS STATEMENT IS THE ONE THAT UNBLOCKS NON-WEDNESDAY MEETINGS.
+-- While it has not been applied, the database refuses every meeting
+-- that is not a Wednesday with SQLSTATE 23514, no matter what the app
+-- sends.
 alter table public.meetings drop constraint if exists meeting_is_wednesday;
+
+-- start_time and end_time are text holding a 12-hour clock, so the
+-- original rule compared them as text: "9:15 AM" sorts AFTER "10:15 AM",
+-- and a 9:15–10:15 meeting was refused as though it ended before it
+-- began. Compare the times themselves.
+alter table public.meetings drop constraint if exists meeting_time_order;
+alter table public.meetings add constraint meeting_time_order
+  check (end_time is null or start_time::time < end_time::time);
 
 -- Only one meeting may take check-ins at a time.
 create unique index if not exists one_open_meeting

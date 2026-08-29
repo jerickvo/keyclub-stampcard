@@ -306,9 +306,7 @@ document.addEventListener('submit', async e => {
       toast({ key:'board', title:`GM ${pad(no)} created`, detail:'It is now in the schedule.' });
       boardGoto({ tab:'meetings' });
     } catch (ex){
-      const dupe = /duplicate|23505|already exists|unique/i.test(String(ex.message || ''));
-      show(dupe ? 'A meeting with that number already exists.'
-                : 'Could not create that meeting. Check the details and try again.');
+      show(WriteFailure.explain(ex, 'create meeting'));
       btn.disabled = false; btn.textContent = 'Create meeting';
     }
     return;

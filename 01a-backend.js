@@ -46,6 +46,68 @@ const clubDay = (d = new Date()) => {
   }
 };
 
+/* ── why a write failed ───────────────────────────────────────────
+   Postgres says exactly why it refused a row: a code for the class of
+   failure and, for a broken rule, the constraint's name. Collapsing
+   all of that into one sentence leaves nothing to diagnose from — a
+   permission failure, a duplicate number and a rule the database still
+   carries from an older schema all read identically. This keeps the
+   sentence the board sees short and puts the real cause where whoever
+   has to fix it will find it.
+   ────────────────────────────────────────────────────────────────── */
+const WriteFailure = {
+  /* the constraint name Postgres reports, from the field or the text */
+  constraintOf(ex){
+    const msg = String((ex && ex.message) || '');
+    return (ex && ex.constraint) ||
+           (msg.match(/(?:check |unique )?constraint "([^"]+)"/) || [])[1] || null;
+  },
+
+  classify(ex){
+    const code = String((ex && (ex.code || ex.status)) || '');
+    const msg  = String((ex && ex.message) || '');
+    const c    = this.constraintOf(ex);
+
+    if (/BACKEND_UNAVAILABLE|No backend is configured/i.test(msg))
+      return { kind:'backend', say:'The club records are unreachable right now. Try again in a moment.' };
+    if (code === '42501' || /row-level security|permission denied/i.test(msg))
+      return { kind:'permission', say:'That account is not allowed to schedule meetings.' };
+    if (code === '401' || code === '403' || /jwt|not signed in|invalid token/i.test(msg))
+      return { kind:'auth', say:'Your session has expired. Sign in again.' };
+    if (code === '23505' || /duplicate|already exists|unique/i.test(msg))
+      return { kind:'duplicate', say:'A meeting with that number already exists.' };
+    if (code === '23514' || /check constraint/i.test(msg)){
+      if (c === 'meeting_is_wednesday')
+        return { kind:'legacy-rule',
+                 say:'The database still restricts meetings to Wednesdays. Re-run schema.sql on the Supabase project to lift it.' };
+      if (c === 'meeting_time_order')
+        return { kind:'constraint', say:'The database refused those times. The end time must be later than the start time.' };
+      if (c && /location/.test(c))
+        return { kind:'constraint', say:'Meetings must be held in the MPR.' };
+      return { kind:'constraint', say:'The database refused those details.' };
+    }
+    if (code === '23502') return { kind:'missing', say:'Something required was left blank.' };
+    if (/failed to fetch|networkerror|load failed/i.test(msg))
+      return { kind:'network', say:'Could not reach the club records. Check the connection and try again.' };
+    return { kind:'unknown', say:'Could not save that. Check the details and try again.' };
+  },
+
+  /* Returns the sentence to show, and reports the real cause once on
+     the console — the same channel Guard already uses. Only ever runs
+     on an actual failure, so it cannot become background noise. */
+  explain(ex, what){
+    const v = this.classify(ex);
+    const c = this.constraintOf(ex);
+    console.error(`[keystamp] ${what} failed —`, v.kind,
+      { code:(ex && (ex.code || ex.status)) || null,
+        message:(ex && ex.message) || null,
+        details:(ex && ex.details) || null,
+        hint:(ex && ex.hint) || null,
+        constraint:c });
+    return v.say;
+  },
+};
+
 /* ── configuration ────────────────────────────────────────────────
    Credentials are read from the page, never hardcoded here. Set them
    on window before the scripts load, or via <meta>:
