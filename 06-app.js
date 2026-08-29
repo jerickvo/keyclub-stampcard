@@ -454,15 +454,24 @@ document.addEventListener('click', e => {
 
   const claim = e.target.closest('[data-claim]');
   if (claim){
+    if (claim.disabled) return;   /* a claim is already in flight */
+    claim.disabled = true;
     Store.claimReward(claim.dataset.claim).then(r => {
       FX.impactFrame({ word:'Claimed', angle:-24 });
+      /* stays disabled: the rewards render that follows replaces the
+         button with the Claimed state, and re-enabling it during the
+         beat before navigation would let a second tap play the whole
+         impact again */
       setTimeout(() => {
         toast({ key:'claim', title:`${r.name} claimed`,
                 detail:'Show this screen to a board member to pick it up.' });
         go('rewards');
       }, 220);
-    }).catch(() => toast({ key:'claim', bad:true, title:'Could not claim',
-        detail:'That reward was not saved. Check your connection and try again.' }));
+    }).catch(() => {
+      claim.disabled = false;     /* a failed claim can be retried */
+      toast({ key:'claim', bad:true, title:'Could not claim',
+        detail:'That reward was not saved. Check your connection and try again.' });
+    });
     return;
   }
 
