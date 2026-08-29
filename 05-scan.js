@@ -227,7 +227,7 @@ let pendingCell = -1;
    leaks a stack trace, a column name or a row id. */
 const SCAN_MESSAGES = {
   INVALID_TOKEN:       ['Not a valid code',      'That code is not from Keystamp. Scan the one on the board screen.'],
-  EXPIRED_TOKEN:       ['Code expired',          'The code refreshes every few seconds. Scan the one showing right now.'],
+  EXPIRED_TOKEN:       ['Code expired',          'That code is no longer valid. Scan the code on the board screen, or ask a board member.'],
   MEETING_NOT_FOUND:   ['No matching meeting',   'Keystamp has no meeting for that code. Ask a board member.'],
   MEETING_NOT_ACTIVE:  ['Check-in not open',     'This meeting is not taking check-ins yet.'],
   ATTENDANCE_CLOSED:   ['Check-in has ended',    'Attendance for this meeting is closed. A board member can add you.'],
