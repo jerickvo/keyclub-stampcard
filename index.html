@@ -16010,7 +16010,9 @@ const SupabaseAdapter = {
     const { data, error } = await this.client.functions
       .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId } });
     if (error) throw new Error('Could not get a code.');
-    return data;                       /* { token, expires_at } — same every time */
+    /* only the string is consumed: the QR draws it, and the server keeps
+       expiry to itself — the same meeting always yields the same token */
+    return { token: data && data.token };
   },
   async attendanceCount(meetingId){
     const { count, error } = await this.client
@@ -16628,7 +16630,6 @@ const QRFormat = {
 /* Product rules — reward tiers and progress maths. No secrets, no
    crypto, safe on the client because none of it grants anything. */
 const Rules = {
-  TIERS: REWARD_TIERS.map(r => r.required),
   CARD: 10,                       /* one card is ten stamps */
 
   /* Stamps accumulate for the whole year and never reset; a card is
@@ -16636,7 +16637,8 @@ const Rules = {
      stays on screen until the next stamp opens the following one, so
      10 reads 10/10 on card one and 11 reads 1/10 on card two.
 
-     The window is derived from the total, not from TIERS: cards carry
+     The window is derived from the total, not from the reward tiers:
+     cards carry
      on past the last reward, and deriving them from the tier list left
      anyone beyond 30 stamps looking at a permanently full card four. */
   progress(){
@@ -18962,10 +18964,8 @@ function qrSVG(text){
 }
 
 let boardMeeting = null;
-let boardTimer = null;
 
 function paintBoard(){
-  clearInterval(boardTimer);
   const box = $('#qrBox');
   if (!box) return;
 
@@ -19458,7 +19458,7 @@ function afterRender(id, nav = false){
   if (id === 'auth') AuthUI.busy = false;
   if (id === 'scan'){ paintDemoHint(); Scanner.start(); }
   if (BOARD_ROUTES.includes(id)){ loadBoard(); }
-  else { clearInterval(boardTimer); clearInterval(countTimer); }
+  else { clearInterval(countTimer); }
 }
 
 /* The demo hint is gone. It printed the live attendance code onto the
@@ -19654,7 +19654,7 @@ document.addEventListener('click', e => {
   if (bend){
     bend.disabled = true; bend.textContent = 'Ending…';
     Backend.endAttendance(bend.dataset.bend)
-      .then(() => { clearInterval(boardTimer); clearInterval(countTimer); loadBoard(); })
+      .then(() => { clearInterval(countTimer); loadBoard(); })
       .catch(() => { bend.disabled = false; bend.textContent = 'End attendance';
         toast({ key:'board', bad:true, title:'Could not end',
                 detail:'Attendance is still open. Try again.' }); });
@@ -19794,7 +19794,7 @@ async function loadBoard(){
     paintBoard();
     paintAttendanceCount(boardMeeting);
   } else {
-    clearInterval(boardTimer); clearInterval(countTimer);
+    clearInterval(countTimer);
   }
 }
 
@@ -19815,11 +19815,11 @@ function paintMotionBtn(){
 }
 
 addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); });
-/* both timers, not just one: countTimer polls the attendance count and
-   was left running on pagehide, so a backgrounded tab kept issuing
-   requests against a page on its way out. */
+/* countTimer polls the attendance count and was once left running on
+   pagehide, so a backgrounded tab kept issuing requests against a page
+   on its way out. */
 addEventListener('pagehide', () => {
-  Scanner.stop(); clearInterval(boardTimer); clearInterval(countTimer);
+  Scanner.stop(); clearInterval(countTimer);
 });
 addEventListener('resize', () => {
   cancelAnimationFrame(indRaf);

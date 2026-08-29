@@ -24,10 +24,8 @@ function qrSVG(text){
 }
 
 let boardMeeting = null;
-let boardTimer = null;
 
 function paintBoard(){
-  clearInterval(boardTimer);
   const box = $('#qrBox');
   if (!box) return;
 

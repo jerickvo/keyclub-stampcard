@@ -491,7 +491,6 @@ const QRFormat = {
 /* Product rules — reward tiers and progress maths. No secrets, no
    crypto, safe on the client because none of it grants anything. */
 const Rules = {
-  TIERS: REWARD_TIERS.map(r => r.required),
   CARD: 10,                       /* one card is ten stamps */
 
   /* Stamps accumulate for the whole year and never reset; a card is
@@ -499,7 +498,8 @@ const Rules = {
      stays on screen until the next stamp opens the following one, so
      10 reads 10/10 on card one and 11 reads 1/10 on card two.
 
-     The window is derived from the total, not from TIERS: cards carry
+     The window is derived from the total, not from the reward tiers:
+     cards carry
      on past the last reward, and deriving them from the tier list left
      anyone beyond 30 stamps looking at a permanently full card four. */
   progress(){

@@ -488,7 +488,9 @@ const SupabaseAdapter = {
     const { data, error } = await this.client.functions
       .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId } });
     if (error) throw new Error('Could not get a code.');
-    return data;                       /* { token, expires_at } — same every time */
+    /* only the string is consumed: the QR draws it, and the server keeps
+       expiry to itself — the same meeting always yields the same token */
+    return { token: data && data.token };
   },
   async attendanceCount(meetingId){
     const { count, error } = await this.client

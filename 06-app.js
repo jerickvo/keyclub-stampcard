@@ -209,7 +209,7 @@ function afterRender(id, nav = false){
   if (id === 'auth') AuthUI.busy = false;
   if (id === 'scan'){ paintDemoHint(); Scanner.start(); }
   if (BOARD_ROUTES.includes(id)){ loadBoard(); }
-  else { clearInterval(boardTimer); clearInterval(countTimer); }
+  else { clearInterval(countTimer); }
 }
 
 /* The demo hint is gone. It printed the live attendance code onto the
@@ -405,7 +405,7 @@ document.addEventListener('click', e => {
   if (bend){
     bend.disabled = true; bend.textContent = 'Ending…';
     Backend.endAttendance(bend.dataset.bend)
-      .then(() => { clearInterval(boardTimer); clearInterval(countTimer); loadBoard(); })
+      .then(() => { clearInterval(countTimer); loadBoard(); })
       .catch(() => { bend.disabled = false; bend.textContent = 'End attendance';
         toast({ key:'board', bad:true, title:'Could not end',
                 detail:'Attendance is still open. Try again.' }); });
@@ -545,7 +545,7 @@ async function loadBoard(){
     paintBoard();
     paintAttendanceCount(boardMeeting);
   } else {
-    clearInterval(boardTimer); clearInterval(countTimer);
+    clearInterval(countTimer);
   }
 }
 
@@ -566,11 +566,11 @@ function paintMotionBtn(){
 }
 
 addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); });
-/* both timers, not just one: countTimer polls the attendance count and
-   was left running on pagehide, so a backgrounded tab kept issuing
-   requests against a page on its way out. */
+/* countTimer polls the attendance count and was once left running on
+   pagehide, so a backgrounded tab kept issuing requests against a page
+   on its way out. */
 addEventListener('pagehide', () => {
-  Scanner.stop(); clearInterval(boardTimer); clearInterval(countTimer);
+  Scanner.stop(); clearInterval(countTimer);
 });
 addEventListener('resize', () => {
   cancelAnimationFrame(indRaf);
