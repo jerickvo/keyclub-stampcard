@@ -254,17 +254,20 @@ const BoardUI = {
       ${m.attendance_count === 0
         ? `<button class="brow__del" data-bconfirm="${esc(m.id)}"
              aria-label="Delete GM ${pad(m.meeting_number)}">Delete</button>`
-        : '<span class="brow__del brow__del--off" aria-hidden="true"></span>'}
-      ${/* TEMP-TEST-TOOLING — purge a past meeting AND its stamps, for
-           clearing test data before launch. Remove this whole
-           expression with the rest of the tooling. */
-        m.state !== 'UPCOMING' && m.attendance_count > 0
+        /* TEMP-TEST-TOOLING — a past meeting WITH stamps can be purged,
+           tooling only. It takes the place of the empty spacer rather
+           than adding a sixth cell to the row: appending one squeezed
+           the date and time out of existence at 1024px, which hid the
+           very detail the board needs to confirm what they are
+           deleting. Remove this branch with the rest of the tooling and
+           the spacer below is what is left. */
+        : m.state !== 'UPCOMING'
         ? `<button class="brow__del" data-bpurgetemp="${esc(m.id)}"
              data-bpurgeno="${pad(m.meeting_number)}"
              data-bpurgen="${m.attendance_count}"
-             aria-label="Purge test meeting GM ${pad(m.meeting_number)} and its stamps"
-             >Purge (test)</button>`
-        : ''}
+             aria-label="Purge test meeting GM ${pad(m.meeting_number)} and its ${m.attendance_count} stamps"
+             >Purge</button>`
+        : '<span class="brow__del brow__del--off" aria-hidden="true"></span>'}
     </li>`;
   },
 
