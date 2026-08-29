@@ -342,4 +342,15 @@ function mkClient(){
   };
 }
 
-window.supabase = { createClient: mkClient };
+/* supabase-js is vendored into the page now, so unlike the CDN era it
+   really executes in tests, after this init script, as a top-level
+   `var supabase = ...` that would overwrite a plain property. The mock
+   must keep winning, so the global is an accessor: every read answers
+   with the mock, and the library's own assignment is parked on
+   __realSupabase instead of replacing it. */
+const mockSupabase = { createClient: mkClient };
+Object.defineProperty(window, 'supabase', {
+  configurable: true,
+  get(){ return mockSupabase; },
+  set(v){ window.__realSupabase = v; },
+});
