@@ -202,8 +202,16 @@
 <meta name="keystamp:supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpYnVtYXRvZXlubmx3aHlpenp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5MDQzNDgsImV4cCI6MjEwMjQ4MDM0OH0.3WSJGpoE5UnIP-UcILZnSZSEq-rd7ZJrwQdH1Eu-6fE">
 
 <!-- The Supabase client itself. Without this the app cannot talk to
-     Supabase at all, no matter what the meta tags say. -->
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+     Supabase at all, no matter what the meta tags say.
+
+     Vendored locally, like jsQR, qrcode and anime, rather than pulled
+     from a CDN: a school network that filters CDNs must not be able to
+     take sign-in down, and an unpinned @2 range meant a new supabase-js
+     release could reach production with no deploy on our side.
+     This file is dist/umd/supabase.js from @supabase/supabase-js@2.112.4,
+     byte for byte. To upgrade: replace the file with the same path from
+     the new version's npm package and update this comment. -->
+<script src="vendor/supabase.umd.js"></script>
 <script src="js/01a-backend.js"></script>
 <script src="js/01-core.js"></script>
 <script src="js/02-motion.js"></script>

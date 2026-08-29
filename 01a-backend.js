@@ -305,12 +305,31 @@ const SupabaseAdapter = {
              isBoard:data.role === 'board' };
   },
 
+  /* true when the auth call never got a real answer from the server.
+     supabase-js wraps a failed fetch in AuthRetryableFetchError with
+     status 0 (or relays a 5xx); a genuine credential rejection always
+     arrives as a 4xx from the API. Telling a member on dead wifi that
+     their password is wrong sends them off to reset a password that
+     was never the problem. */
+  authUnreachable(error){
+    if (!error) return false;
+    if (error.name === 'AuthRetryableFetchError') return true;
+    const status = Number(error.status);
+    if (status === 0 || (status >= 500 && status < 600)) return true;
+    return !error.status &&
+      /fetch|network|load failed|connect/i.test(String(error.message || ''));
+  },
+
   async signIn(username, password){
     const { data, error } = await this.client.auth.signInWithPassword({
       email: Config.emailForUsername(username), password });
-    /* One message for "no such username" and "wrong password" on purpose:
-       distinguishing them tells an attacker which usernames exist. */
-    if (error) throw new Error('That username and password do not match.');
+    if (error){
+      if (this.authUnreachable(error))
+        throw new Error('Keystamp cannot reach the server right now. Try again in a moment.');
+      /* One message for "no such username" and "wrong password" on purpose:
+         distinguishing them tells an attacker which usernames exist. */
+      throw new Error('That username and password do not match.');
+    }
     const profile = await this.profileFor(data.user, { waitMs:1500 });
     if (!profile) throw new Error('That account has no profile yet. Ask a board member.');
     return profile;
@@ -488,7 +507,9 @@ const SupabaseAdapter = {
     const { data, error } = await this.client.functions
       .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId } });
     if (error) throw new Error('Could not get a code.');
-    return data;                       /* { token, expires_at } — same every time */
+    /* only the string is consumed: the QR draws it, and the server keeps
+       expiry to itself — the same meeting always yields the same token */
+    return { token: data && data.token };
   },
   async attendanceCount(meetingId){
     const { count, error } = await this.client
