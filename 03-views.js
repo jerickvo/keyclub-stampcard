@@ -129,9 +129,9 @@ const C = {
        order, one polyline per composition (y in straight percent) */
     const route =
       `<svg class="card__route card__route--l" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <polyline points="10.5,13 29,20.5 47.5,12 66,19.5 85,33.5 60,42.5 36.5,39 12,54.5 38.5,69 73,68.5"/></svg>` +
+        <polyline points="9.5,12.3 28.8,24 48,12.3 66.8,21.5 86.5,34.3 59.3,44.5 38,47.3 12.3,57 34.5,72.3 74.5,71.2"/></svg>` +
       `<svg class="card__route card__route--p" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <polyline points="16,14.1 45,14.9 76,14.2 84,32.4 54,31.5 22,32.9 16.5,51.4 46,52.7 77,50.9 42,76.3"/></svg>`;
+        <polyline points="15.5,11.5 49.3,12.3 82.5,11 82.8,32.8 50.3,32.7 16.3,33.3 15.8,54.3 49,54 82.3,54.3 50,77.5"/></svg>`;
 
     const say = full
       ? (goal ? 'Card complete — claim it in Rewards' : 'Card complete')
