@@ -19505,6 +19505,18 @@ function authBusy(on, label){
   btn.textContent = on ? label : (AuthUI.mode === 'up' ? 'Create account' : 'Sign in');
 }
 
+/* The manual code field is not in a form, so Enter (the "Go" key the
+   input's enterkeyhint already advertises on phone keyboards) did
+   nothing. Route it through the Verify button's own click: one code
+   path, and the in-flight guard, disabled state and empty-value nag
+   all apply to the keyboard exactly as they do to a tap. */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target && e.target.id === 'manualInput'){
+    e.preventDefault();
+    $('#manualGo')?.click();
+  }
+});
+
 let bqTimer = null;
 document.addEventListener('input', e => {
   if (e.target.id === 'bq'){
