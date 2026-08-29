@@ -387,6 +387,32 @@ document.addEventListener('click', e => {
     return;
   }
 
+  /* ── TEMP-TEST-TOOLING ──────────────────────────────────────────
+     Purge a past meeting and the stamps attached to it, so test data
+     can be cleared before launch. One browser confirm, no undo. The
+     board-only and past-only rules live in the database function; this
+     handler is only the button. Remove this whole block with the rest
+     of the tooling. */
+  const bpurge = e.target.closest('[data-bpurgetemp]');
+  if (bpurge){
+    if (bpurge.disabled) return;
+    const n = Number(bpurge.dataset.bpurgen) || 0;
+    if (!confirm(`Delete GM ${bpurge.dataset.bpurgeno} and its ${n} stamp${n === 1 ? '' : 's'}?\n\nThis cannot be undone.`)) return;
+    bpurge.disabled = true; bpurge.textContent = 'Purging…';
+    Backend.purgeMeetingTEMP(bpurge.dataset.bpurgetemp)
+      .then(res => {
+        toast({ key:'board', title:`GM ${bpurge.dataset.bpurgeno} purged`,
+                detail:`${res.removed} stamp${res.removed === 1 ? '' : 's'} removed with it.` });
+        boardGoto({ meetings:null, meetingDetail:null });
+      })
+      .catch(ex => {
+        bpurge.disabled = false; bpurge.textContent = 'Purge (test)';
+        toast({ key:'board', bad:true, title:'Could not purge',
+                detail:WriteFailure.explain(ex, 'purge meeting') });
+      });
+    return;
+  }
+
   const bback = e.target.closest('[data-bback]');
   if (bback){ boardGoto({ memberDetail:null, meetingDetail:null }); return; }
   const bpage = e.target.closest('[data-bpage]');

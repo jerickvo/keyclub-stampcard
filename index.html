@@ -1783,10 +1783,16 @@ main#view:focus,main#view:focus-visible{outline:none}
 .seal--next .seal__mark{opacity:.22}
 .seal--next .seal__mark path{fill:var(--ink)}
 .seal--next .seal__no{color:var(--ink-2)}
-.seal--next::after{content:'';position:absolute;inset:-8%;
-  border:2.5px solid var(--ink);
-  border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;
-  transform:rotate(-5deg);pointer-events:none}
+/* the ring follows the seal block rather than being a circle drawn
+   around an octagon: an outer and an inner octagon in one evenodd
+   clip, so what shows is an octagonal rim */
+.seal--next::after{content:'';position:absolute;inset:-6%;
+  background:var(--ink);
+  clip-path:polygon(evenodd,
+    18% 0%, 82% 0%, 100% 18%, 100% 82%, 82% 100%, 18% 100%, 0% 82%, 0% 18%,
+    20.5% 4.5%, 79.5% 4.5%, 95.5% 20.5%, 95.5% 79.5%,
+    79.5% 95.5%, 20.5% 95.5%, 4.5% 79.5%, 4.5% 20.5%);
+  transform:rotate(-3deg);pointer-events:none}
 
 /* the printed index of each specimen, set on the CARD at the stamp's
    corner — never on the artwork */
@@ -16033,6 +16039,17 @@ const SupabaseAdapter = {
        expiry to itself — the same meeting always yields the same token */
     return { token: data && data.token };
   },
+  /* TEMP-TEST-TOOLING — remove with the rest of the purge tooling.
+     Deletes a past meeting AND its attendance so test data can be
+     cleaned up before launch. Board-only and past-only are enforced by
+     the database function, not here: this call is just the wire. */
+  async purgeMeetingTEMP(meetingId){
+    const { data, error } = await this.client
+      .rpc('tmp_test_purge_meeting', { p_meeting_id:meetingId });
+    if (error) throw error;
+    return { removed: Number(data) || 0 };
+  },
+
   async attendanceCount(meetingId){
     const { count, error } = await this.client
       .from('attendance').select('id', { count:'exact', head:true })
@@ -16068,6 +16085,8 @@ const PreviewAdapter = {
   async issueToken(){ throw new Error('No backend is configured.'); },
   async attendanceCount(){ return 0; },
   async board(){ throw new Error('No backend is configured.'); },
+  /* TEMP-TEST-TOOLING */
+  async purgeMeetingTEMP(){ throw new Error('No backend is configured.'); },
 };
 
 /* ══════════════════════════════════════════════════════════════════
@@ -16088,7 +16107,8 @@ const UnavailableAdapter = {
 };
 ['signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','claimReward','startAttendance',
- 'endAttendance','issueToken','attendanceCount','board'].forEach(fn => {
+ 'endAttendance','issueToken','attendanceCount','board',
+ 'purgeMeetingTEMP'].forEach(fn => {   /* TEMP-TEST-TOOLING */
   UnavailableAdapter[fn] = async () => { throw new Error('BACKEND_UNAVAILABLE'); };
 });
 UnavailableAdapter.verifyCode = async () => ({ ok:false, code:'BACKEND_UNAVAILABLE' });
@@ -16149,7 +16169,8 @@ const Backend = {
 /* forward the interface so callers use Backend.x, not Backend.adapter.x */
 ['currentSession','signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','claimReward','verifyCode',
- 'startAttendance','endAttendance','issueToken','attendanceCount','board'].forEach(fn => {
+ 'startAttendance','endAttendance','issueToken','attendanceCount','board',
+ 'purgeMeetingTEMP'].forEach(fn => {   /* TEMP-TEST-TOOLING */
   Backend[fn] = function(...a){ return this.adapter[fn](...a); };
 });
 
@@ -16938,42 +16959,34 @@ const memberName = () => (Store.user && Store.user.name) || 'Member';
    stamps never merge into one black mass. The jitter is seeded per
    slot: every stamp is slightly its own, inside one system. */
 const stampJit = (seed, k) => Math.sin(seed * 127.1 + k * 311.7) * .5 + .5;
-function stampShape(kind, seed, grow = 0){
-  const J = k => (stampJit(seed, k) - .5);
-  const pts = [];
-  const push = (x, y) => pts.push(x.toFixed(1) + ' ' + y.toFixed(1));
-  if (kind === 'seal' || kind === 'burst'){
-    const n  = kind === 'seal' ? 18 : 24;
-    const r0 = (kind === 'seal' ? 28.5 : 29) + grow;
-    const r1 = (kind === 'seal' ? 28.5 : 22.5) + grow;
-    for (let i = 0; i < n; i++){
-      const a = i / n * 2 * Math.PI - Math.PI / 2;
-      const r = (i % 2 ? r1 : r0) + J(i) * 2.8;
-      push(32 + Math.cos(a) * r, 32 + Math.sin(a) * r);
-    }
-  } else {
-    /* label · diamond · plate: a corner list walked with jittered
-       midpoints, so every edge is a little off-true */
-    const g = grow;
-    const C4 = kind === 'label'
-      ? [[12 - g, 5 - g], [52 + g, 5 - g], [52 + g, 59 + g], [12 - g, 59 + g]]
-      : kind === 'diamond'
-      ? [[32, 3 - g], [61 + g, 32], [32, 61 + g], [3 - g, 32]]
-      : [[13 - g, 4 - g], [51 + g, 4 - g], [60 + g, 22], [60 + g, 42],
-         [51 + g, 60 + g], [13 - g, 60 + g], [4 - g, 42], [4 - g, 22]];
-    C4.forEach(([x, y], i) => {
-      const [nx, ny] = C4[(i + 1) % C4.length];
-      push(x + J(i) * 2.4, y + J(i + 9) * 2.4);
-      push((x + nx) / 2 + J(i + 17) * 2, (y + ny) / 2 + J(i + 23) * 2);
-    });
-  }
-  return 'M' + pts.join('L') + 'Z';
+
+/* THE SEAL BLOCK — one primitive for every slot: a squared octagon
+   with uneven bevels, the silhouette of a carved chop seal.
+
+   This replaced five different archetypes (near-circle, rectangle,
+   diamond, octagon, starburst) rotated by slot. Five silhouettes plus
+   heavy edge jitter made a row of stamps read as five unrelated
+   objects rather than one collection, and the wobble turned to mush
+   at phone size. One primitive, bevels that vary per seed, and about
+   half the jitter: every stamp is still its own, inside one system.
+
+   Flat top, bottom and sides are what keep it stable small and keep
+   neighbouring stamps visibly separate when the card fills up. */
+function stampShape(seed, grow = 0){
+  const J = k => (stampJit(seed, k) - .5) * 2.2;
+  const g = grow, L = 4 - g, R = 60 + g, T = 4 - g, B = 60 + g;
+  /* four different corner bevels, floored so a stamp can never lose a
+     corner entirely and collapse toward a rectangle */
+  const b = [10, 13, 10.5, 14].map((v, i) => Math.max(6, v + J(i)));
+  const corners = [[L + b[0], T], [R - b[1], T], [R, T + b[1]], [R, B - b[2]],
+                   [R - b[2], B], [L + b[3], B], [L, B - b[3]], [L, T + b[0]]];
+  return 'M' + corners.map(([x, y], i) =>
+    (x + J(i + 11) * .5).toFixed(1) + ' ' + (y + J(i + 19) * .5).toFixed(1)).join('L') + 'Z';
 }
-/* the archetype rotation: controlled variation along the route */
-const STAMP_KIND = i =>
-  i === 9 ? 'burst' : ['seal', 'label', 'diamond', 'seal', 'plate',
-                       'label', 'seal', 'diamond', 'plate'][i % 9];
-const STAMP_FIT = { seal:.66, burst:.56, label:.6, diamond:.56, plate:.66 };
+/* One shape means one symbol scale. This was a per-archetype table
+   (.56-.66) that existed only because the five silhouettes enclosed
+   different amounts of room. */
+const STAMP_FIT = .62;
 
 const C = {
   /* the giant cropped word behind a view */
@@ -17033,20 +17046,16 @@ const C = {
       const mtg = rec ? Store.meetings.find(m => m.id === rec.meetingId) : null;
       const docket = rec && mtg ? C.sealMeta(rec, mtg) : '';
 
-      const kind = STAMP_KIND(i);
       const seed = p.floor + i + 1;
-      const fit  = STAMP_FIT[kind];
-      /* the rosette's artwork rides high inside the face; the name
-         owns a reserved band under the silhouette (never over it) */
-      const dy   = kind === 'burst' ? -3 : 0;
-      return `<li class="seal seal--k-${kind} ${state ? 'seal--' + state : ''}${hero}${mile}" data-seal="${state || 'empty'}" style="${tilt}"${
+      const fit  = STAMP_FIT;
+      return `<li class="seal ${state ? 'seal--' + state : ''}${hero}${mile}" data-seal="${state || 'empty'}" style="${tilt}"${
         docket ? ` tabindex="0" aria-label="Stamp ${pad(p.floor + i + 1)}: general meeting ${
           mtg.no}, ${fmtDate(mtg.date)}, checked in at ${fmtTime(rec.at)}"` : ''}>
         <svg viewBox="0 0 64 64" aria-hidden="true">
-          <path class="sf-back" d="${stampShape(kind, seed * 3 + 1, 3.4)}"/>
+          <path class="sf-back" d="${stampShape(seed * 3 + 1, 3.4)}"/>
           <g class="sf-press">
-            <path class="sf-face" d="${stampShape(kind, seed, 0)}"/>
-            <g class="seal__mark" transform="translate(${(32 - 32 * fit).toFixed(1)} ${(32 - 32 * fit + dy).toFixed(1)}) scale(${fit})">${stampMark(p.floor + i)}</g>
+            <path class="sf-face" d="${stampShape(seed, 0)}"/>
+            <g class="seal__mark" transform="translate(${(32 - 32 * fit).toFixed(1)} ${(32 - 32 * fit).toFixed(1)}) scale(${fit})">${stampMark(p.floor + i)}</g>
           </g>
         </svg>
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
@@ -17822,6 +17831,19 @@ const BoardUI = {
       ${m.attendance_count === 0
         ? `<button class="brow__del" data-bconfirm="${esc(m.id)}"
              aria-label="Delete GM ${pad(m.meeting_number)}">Delete</button>`
+        /* TEMP-TEST-TOOLING — a past meeting WITH stamps can be purged,
+           tooling only. It takes the place of the empty spacer rather
+           than adding a sixth cell to the row: appending one squeezed
+           the date and time out of existence at 1024px, which hid the
+           very detail the board needs to confirm what they are
+           deleting. Remove this branch with the rest of the tooling and
+           the spacer below is what is left. */
+        : m.state !== 'UPCOMING'
+        ? `<button class="brow__del" data-bpurgetemp="${esc(m.id)}"
+             data-bpurgeno="${pad(m.meeting_number)}"
+             data-bpurgen="${m.attendance_count}"
+             aria-label="Purge test meeting GM ${pad(m.meeting_number)} and its ${m.attendance_count} stamps"
+             >Purge</button>`
         : '<span class="brow__del brow__del--off" aria-hidden="true"></span>'}
     </li>`;
   },
@@ -19652,6 +19674,32 @@ document.addEventListener('click', e => {
                     meetings:null, meetingDetail:null });
       })
       .catch(() => boardGoto({ confirmDelete:null, deleteNote:'SERVER_ERROR' }));
+    return;
+  }
+
+  /* ── TEMP-TEST-TOOLING ──────────────────────────────────────────
+     Purge a past meeting and the stamps attached to it, so test data
+     can be cleared before launch. One browser confirm, no undo. The
+     board-only and past-only rules live in the database function; this
+     handler is only the button. Remove this whole block with the rest
+     of the tooling. */
+  const bpurge = e.target.closest('[data-bpurgetemp]');
+  if (bpurge){
+    if (bpurge.disabled) return;
+    const n = Number(bpurge.dataset.bpurgen) || 0;
+    if (!confirm(`Delete GM ${bpurge.dataset.bpurgeno} and its ${n} stamp${n === 1 ? '' : 's'}?\n\nThis cannot be undone.`)) return;
+    bpurge.disabled = true; bpurge.textContent = 'Purging…';
+    Backend.purgeMeetingTEMP(bpurge.dataset.bpurgetemp)
+      .then(res => {
+        toast({ key:'board', title:`GM ${bpurge.dataset.bpurgeno} purged`,
+                detail:`${res.removed} stamp${res.removed === 1 ? '' : 's'} removed with it.` });
+        boardGoto({ meetings:null, meetingDetail:null });
+      })
+      .catch(ex => {
+        bpurge.disabled = false; bpurge.textContent = 'Purge (test)';
+        toast({ key:'board', bad:true, title:'Could not purge',
+                detail:WriteFailure.explain(ex, 'purge meeting') });
+      });
     return;
   }
 

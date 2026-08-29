@@ -412,3 +412,61 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- ═══════════════════════════════════════════════════════════════════
+-- TEMP-TEST-TOOLING — REMOVE BEFORE THE CLUB RELIES ON THIS DATA
+--
+-- Deletes a past meeting AND the attendance rows attached to it, so a
+-- test meeting can be cleaned up without leaving orphaned stamps in
+-- members' counts. This deliberately does what the normal delete path
+-- refuses to do, which is why it is temporary.
+--
+-- The normal path (meetings_board_delete) can only remove a meeting
+-- nothing has checked in to, attendance has no delete policy at all,
+-- and the foreign key is ON DELETE RESTRICT. All three still stand:
+-- this is SECURITY DEFINER, so it runs as the owner and is the single
+-- audited hole through them. Board-only is enforced HERE, in the
+-- database, by is_board() — not by the button being hidden.
+--
+-- No soft delete, no archive, no undo, no audit trail. It is a
+-- delete. attendance_sessions rows go with the meeting through the
+-- existing ON DELETE CASCADE.
+--
+-- TO REMOVE: drop this whole block and run the two lines at the end.
+-- ═══════════════════════════════════════════════════════════════════
+create or replace function public.tmp_test_purge_meeting(p_meeting_id uuid)
+returns integer
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  removed integer;
+begin
+  if not public.is_board() then
+    raise exception 'TEMP-TEST-TOOLING: board accounts only';
+  end if;
+
+  -- past means the club's day has moved on and check-in is not open,
+  -- so this can never remove a meeting that is running right now
+  if not exists (
+    select 1 from public.meetings m
+    where m.id = p_meeting_id
+      and m.check_in_open = false
+      and m.meeting_date < (now() at time zone 'America/Los_Angeles')::date
+  ) then
+    raise exception 'TEMP-TEST-TOOLING: not a past meeting';
+  end if;
+
+  delete from public.attendance where meeting_id = p_meeting_id;
+  get diagnostics removed = row_count;
+  delete from public.meetings where id = p_meeting_id;
+  return removed;
+end $$;
+
+revoke all on function public.tmp_test_purge_meeting(uuid) from public;
+grant execute on function public.tmp_test_purge_meeting(uuid) to authenticated;
+
+-- TO REMOVE, run:
+--   revoke all on function public.tmp_test_purge_meeting(uuid) from authenticated;
+--   drop function if exists public.tmp_test_purge_meeting(uuid);
