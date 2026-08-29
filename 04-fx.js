@@ -582,15 +582,13 @@ const FX = {
         : (r * 3 + c * 2) % 7 === 1 ? 'ink'
         : (r * 3 + c * 2) % 7 === 4 ? 'tone' : '';
       const el = document.createElement('div');
-      /* the variant class is withheld here and applied by the ink wave
-         below — a cell is born as an empty pencilled frame */
-      el.className = 'soscene__cell';
+      el.className = 'soscene__cell' + (v ? ` soscene__cell--${v}` : '');
       el.style.gridRow = String(r + 1);
       el.style.gridColumn = `${c + 1}${span === 2 ? ' / span 2' : ''}`;
+      el.style.transformOrigin = r % 2 ? '50% 100%' : '50% 0%';
       scene.appendChild(el);
-      cells.push({ el, d:r + c, v,
-                   dx:(c + span / 2 < cols / 2 ? -1 : 1) * 10,
-                   dy:r % 2 ? 8 : -8 });
+      cells.push({ el, d:r + c, ink:v === 'ink',
+                   dir:c + span / 2 < cols / 2 ? -1 : 1, row:r });
     }
     document.body.appendChild(scene);
 
@@ -613,48 +611,44 @@ const FX = {
       return;
     }
 
-    /* ── ACT I · PENCILS — the empty frames cut onto the page in one
-       diagonal wave, each arriving from its own edge. No fills yet:
-       a page is ruled before it is drawn. ── */
+    /* ── assemble: the panels stamp onto the page in one diagonal
+       wave, each popping from its own frame edge ── */
     cells.forEach(cell => {
-      aset(cell.el, { opacity:0, translateX:cell.dx, translateY:cell.dy });
-      animate(cell.el, { opacity:[0, 1],
-        translateX:[cell.dx, 0], translateY:[cell.dy, 0],
-        duration:120, delay:30 + cell.d * 20, ease:'outQuad' });
+      aset(cell.el, { opacity:0, scaleY:.9 });
+      animate(cell.el, { opacity:[0, 1], scaleY:[.9, 1],
+        duration:130, delay:40 + cell.d * 26, ease:'outQuad' });
     });
 
-    /* ── ACT II · INKS — a second, faster wave races the same
-       diagonal and fills every frame in a hard cut: the blacks land,
-       the screentone lands, and the ruled page is suddenly a finished
-       spread. The kick when the wave completes is the press meeting
-       the paper. ── */
+    /* ── the page stands, then the SAME wave dismantles it: paper
+       and tone panels snap shut toward their edge, ink panels slide
+       off toward their side of the page — one motion system, two
+       families, one rhythm ── */
+    const BREAK = 430;
     const maxD = Math.max(...cells.map(c => c.d));
-    const INK = 90 + maxD * 20 + 140;       /* just after the last frame */
     cells.forEach(cell => {
-      if (!cell.v) return;                  /* paper panels stay paper */
-      setTimeout(() => cell.el.classList.add(`soscene__cell--${cell.v}`),
-        INK + cell.d * 14);
+      const delay = BREAK + cell.d * 26;
+      if (cell.ink){
+        animate(cell.el, {
+          translateX:[0, cell.dir * Math.max(220, W * .34)],
+          opacity:[1, 0],
+          duration:200, delay, ease:'inQuad' });
+      } else {
+        animate(cell.el, { scaleY:[1, 0],
+          duration:200, delay, ease:'inQuad' });
+      }
     });
-    setTimeout(() => Impact.shake(scene, 3, 90), INK + maxD * 14);
 
-    /* ── ACT III · THE PAGE TURNS — the finished sheet is swept off
-       right-to-left, the way a manga page actually turns. One motion,
-       one reveal: the sign-in page is already standing beneath it and
-       nothing is left floating over it. ── */
-    const TURN = INK + maxD * 14 + 220;
-    scene.style.transformOrigin = '0% 100%';
-    /* pixels, not '-118%': anime measures a percent transform by
-       cloning the element into the body for a frame, and this element
-       is the full-screen scene. The scene is inset:0, so the viewport
-       width already IS its width. */
-    animate(scene, { translateX:[0, -(W * 1.18)], rotate:[0, -6],
-      duration:300, delay:TURN, ease:'inCubic', onComplete: gone });
+    /* only once the LAST panel has left does the clean paper lift —
+       the sign-in page is already standing under it, and settles in */
+    const tClear = BREAK + maxD * 26 + 200;
+    animate(scene, { opacity:[1, 0], duration:160, delay:tClear, ease:'linear' });
     setTimeout(() => {
       const panel = $('.authp');
       if (panel) animate(panel, { translateY:[6, 0], duration:150,
         ease:'outQuad', onComplete(){ panel.style.transform = ''; } });
-    }, TURN + 180);
+    }, tClear + 30);
 
+    setTimeout(gone, tClear + 220);
     /* hard safety: the scene can never outlive its story */
     setTimeout(gone, 2000);
   },
