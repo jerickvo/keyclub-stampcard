@@ -569,16 +569,13 @@ main#view:focus,main#view:focus-visible{outline:none}
 .seal--next .seal__mark{opacity:.22}
 .seal--next .seal__mark path{fill:var(--ink)}
 .seal--next .seal__no{color:var(--ink-2)}
-/* the ring follows the seal block rather than being a circle drawn
-   around an octagon: an outer and an inner octagon in one evenodd
-   clip, so what shows is an octagonal rim */
+/* the enso stamps are hand-pressed circles, so their annotation is a
+   hand-drawn ring: an uneven ellipse looped around the seat, never a
+   geometric circle */
 .seal--next::after{content:'';position:absolute;inset:-6%;
-  background:var(--ink);
-  clip-path:polygon(evenodd,
-    18% 0%, 82% 0%, 100% 18%, 100% 82%, 82% 100%, 18% 100%, 0% 82%, 0% 18%,
-    20.5% 4.5%, 79.5% 4.5%, 95.5% 20.5%, 95.5% 79.5%,
-    79.5% 95.5%, 20.5% 95.5%, 4.5% 79.5%, 4.5% 20.5%);
-  transform:rotate(-3deg);pointer-events:none}
+  border:2.5px solid var(--ink);
+  border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;
+  transform:rotate(-5deg);pointer-events:none}
 
 /* the printed index of each specimen, set on the CARD at the stamp's
    corner — never on the artwork */

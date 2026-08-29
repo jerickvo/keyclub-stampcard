@@ -12,37 +12,30 @@ const memberName = () => (Store.user && Store.user.name) || 'Member';
    are no rounded cards anywhere in this file.
    ══════════════════════════════════════════════════════════════════ */
 /* ── STAMP SILHOUETTES ────────────────────────────────────────────────
-   A collected stamp is not a square with a circle in it. Each slot is
-   drawn as a rough SILHOUETTE — a hand-pressed seal, a pasted label, a
-   tilted lozenge, a cut plate, and one rosette for the milestone —
-   with a paper backing piece slightly larger than the ink face, so a
-   stamp reads as an object pasted onto the card and two overlapping
-   stamps never merge into one black mass. The jitter is seeded per
-   slot: every stamp is slightly its own, inside one system. */
-const stampJit = (seed, k) => Math.sin(seed * 127.1 + k * 311.7) * .5 + .5;
+   Each slot draws an ink face over a paper backing piece slightly
+   larger than the face, so a stamp reads as an object pressed onto the
+   card rather than a shape in a grid.
 
-/* THE SEAL BLOCK — one primitive for every slot: a squared octagon
-   with uneven bevels, the silhouette of a carved chop seal.
+   THE ENSO — one brush-drawn circle for every slot.
 
-   This replaced five different archetypes (near-circle, rectangle,
-   diamond, octagon, starburst) rotated by slot. Five silhouettes plus
-   heavy edge jitter made a row of stamps read as five unrelated
-   objects rather than one collection, and the wobble turned to mush
-   at phone size. One primitive, bevels that vary per seed, and about
-   half the jitter: every stamp is still its own, inside one system.
-
-   Flat top, bottom and sides are what keep it stable small and keep
-   neighbouring stamps visibly separate when the card fills up. */
+   Real Japanese rally stamps (eki stamps) and hanko impressions are
+   circles, and the app's own identity is already ring-based; the
+   stamps were the one element not speaking that language. Earlier
+   attempts here were jittered polygons — five archetypes, then a
+   bevelled block — and both read as wobble rather than intent. This
+   is a circle whose radius swells and thins on two slow waves, seeded
+   per stamp, so every impression is its own hand-pressed ring inside
+   one system. No teeth, no inner rings: the imperfection IS the
+   detail, which is why it survives being 40px wide on a phone. */
 function stampShape(seed, grow = 0){
-  const J = k => (stampJit(seed, k) - .5) * 2.2;
-  const g = grow, L = 4 - g, R = 60 + g, T = 4 - g, B = 60 + g;
-  /* four different corner bevels, floored so a stamp can never lose a
-     corner entirely and collapse toward a rectangle */
-  const b = [10, 13, 10.5, 14].map((v, i) => Math.max(6, v + J(i)));
-  const corners = [[L + b[0], T], [R - b[1], T], [R, T + b[1]], [R, B - b[2]],
-                   [R - b[2], B], [L + b[3], B], [L, B - b[3]], [L, T + b[0]]];
-  return 'M' + corners.map(([x, y], i) =>
-    (x + J(i + 11) * .5).toFixed(1) + ' ' + (y + J(i + 19) * .5).toFixed(1)).join('L') + 'Z';
+  const pts = [];
+  const a1 = 1.4, a2 = .8, p1 = seed * 1.7, p2 = seed * 2.9;
+  for (let i = 0; i < 36; i++){
+    const a = i / 36 * 2 * Math.PI - Math.PI / 2;
+    const r = 28 + grow + Math.sin(a * 3 + p1) * a1 + Math.sin(a * 5 + p2) * a2;
+    pts.push((32 + Math.cos(a) * r).toFixed(2) + ' ' + (32 + Math.sin(a) * r).toFixed(2));
+  }
+  return 'M' + pts.join('L') + 'Z';
 }
 /* One shape means one symbol scale. This was a per-archetype table
    (.56-.66) that existed only because the five silhouettes enclosed
