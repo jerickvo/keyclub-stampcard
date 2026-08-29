@@ -19696,6 +19696,10 @@ document.addEventListener('click', e => {
 
   const go2 = e.target.closest('#manualGo');
   if (go2){
+    if (go2.disabled) return;   /* a check-in is already in flight — a second
+                                   tap on a slow connection must not become a
+                                   second submission and an "Already checked
+                                   in" error over a stamp that just landed */
     const input = $('#manualInput');
     const val = (input && input.value || '').trim();
     if (!val){
@@ -19703,7 +19707,14 @@ document.addEventListener('click', e => {
               detail:'Type the code a board member gives you.' });
       return;
     }
-    submitSeal(val, false);
+    go2.disabled = true;
+    submitSeal(val, false).finally(() => {
+      /* re-enable so a REFUSED code can be corrected and retried; on
+         success the verdict scene covers the page and the navigation
+         that follows replaces this button anyway */
+      const btn = $('#manualGo');
+      if (btn) btn.disabled = false;
+    });
     return;
   }
 });
