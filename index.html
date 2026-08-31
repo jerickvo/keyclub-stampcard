@@ -18325,23 +18325,6 @@ const Lines = {
   },
 };
 
-const Ambient = {
-  /* silence: pull the environment down so the impact lands in a quiet room */
-  hush(ms = 900){
-    if (Motion.off) return;
-    const layers = [$('.ground'), $('#arena')].filter(Boolean);
-    animate(layers, { opacity:[1, .08], duration:150, ease:'outQuad' });
-    setTimeout(() => animate(layers, { opacity:[.08, 1], duration:600, ease:EASE.CALM }), ms);
-  },
-  /* the environment leans in during an important interaction */
-  surge(ms = 700){
-    if (Motion.off) return;
-    const a = $('#arena svg');
-    if (!a) return;
-    animate(a, { opacity:[.34, .74, .34], scale:[1, 1.04, 1], duration:ms, ease:EASE.ENERGY });
-  },
-};
-
 /* ══════════════════════════════════════════════════════════════════
    10. THE NAMED SEQUENCES
    These are the only things the app calls. Each one is a timeline over
@@ -18386,18 +18369,6 @@ const FX = {
             delay, ease:EASE.OUT, onComplete:() => flare.remove() });
     Impact.sparks(host, { count, spread, delay:delay + 40 });
     Impact.ring(host, { size:46, scale:2.6, delay:delay + 50, dur:620 });
-  },
-
-  /* strokes draw themselves in, then the mark locks into place */
-  sealReveal(svg, { delay = 0, dur = 420, spin = -14 } = {}){
-    if (!svg) return;
-    const strokes = svg.querySelectorAll('path,circle,polygon,line');
-    if (Motion.off || !strokes.length) return;
-    aset(strokes, { opacity:1 });
-    animate(createDrawable(strokes), { draw:['0 0', '0 1'],
-            duration:dur, delay:stagger(9, { start:delay }), ease:EASE.OUT });
-    animate(svg, { rotate:[spin, 0], scale:[.82, 1], duration:dur + 140,
-            delay, ease:EASE.ENERGY, onComplete(){ releaseTransform(svg); } });
   },
 
   /* NORMAL NAVIGATION — a quiet page turn, nothing else. The whole
