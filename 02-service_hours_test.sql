@@ -86,14 +86,15 @@ delete from public.member_sheet_links;
 delete from public.sheet_members;
 delete from auth.users where email like '%@sh.test';
 
-insert into public.sheet_members (source_sheet_id, row_index, sheet_name, events_attended, total_hours) values
-  ('SHEET2026',  4, 'Alvarez, Zachary',  12,  30.5),
-  ('SHEET2026',  5, 'Aluarez, Zackary',   1,   2.0),
-  ('SHEET2026',  6, 'Patel, Maya',       15,  40.0),
-  ('SHEET2026',  7, 'Patel, Maya',        1,   3.0),
-  ('SHEET2026',  8, 'Sean O''Brien',      7,  18.0),
-  ('SHEET2026',  9, 'Nguyen, An-Thu  ',   9, 100.0),
-  ('SHEET2026', 10, 'Okafor, Chidi',      0,   0.0);
+insert into public.sheet_members (source_sheet_id, row_index, sheet_name, name_occurrence, events_attended, total_hours) values
+  ('SHEET2026',  4, 'Alvarez, Zachary',  1, 12,  30.5),
+  ('SHEET2026',  5, 'Aluarez, Zackary',  1,  1,   2.0),
+  -- the same name twice: occurrence is what tells them apart
+  ('SHEET2026',  6, 'Patel, Maya',       1, 15,  40.0),
+  ('SHEET2026',  7, 'Patel, Maya',       2,  1,   3.0),
+  ('SHEET2026',  8, 'Sean O''Brien',     1,  7,  18.0),
+  ('SHEET2026',  9, 'Nguyen, An-Thu  ',  1,  9, 100.0),
+  ('SHEET2026', 10, 'Okafor, Chidi',     1,  0,   0.0);
 
 insert into auth.users(id, email, raw_user_meta_data) values
   ('a1111111-1111-1111-1111-111111111111','zach@sh.test',  '{"username":"zach"}'),
@@ -299,6 +300,124 @@ select test.ck('the freed row can be claimed by someone else',
       select 'a3333333-3333-3333-3333-333333333333', id from public.sheet_members
        where sheet_name='Patel, Maya' and events_attended=15
       on conflict do nothing$$), 'OK');
+
+-- ══ 10. ROW DRIFT — the wrong-person failure ══
+-- A row number is a position, not an identity. Insert one member
+-- mid-sheet and every row below shifts; a sync keyed on row_index then
+-- rewrites a row in place and the account linked to it starts showing
+-- someone else's hours, silently. These checks cover both halves of the
+-- answer: an identity key that survives the shift, and detection for the
+-- rows that genuinely changed.
+select test.ck('the confirmed name is recorded from the sheet, not the client',
+  (select confirmed_sheet_name from public.member_sheet_links l
+     join public.profiles p on p.id = l.user_id where p.username = 'zach'), 'Alvarez, Zachary');
+
+-- a member trying to decide for themselves what their link means
+select test.try('authenticated','a3333333-3333-3333-3333-333333333333',
+  $$insert into public.member_sheet_links(user_id, sheet_member_id, confirmed_sheet_name)
+    select 'a3333333-3333-3333-3333-333333333333', id, 'Nguyen, An-Thu'
+      from public.sheet_members where sheet_name='Patel, Maya' and events_attended=1
+    on conflict do nothing$$);
+select test.ck('a forged confirmed name is overwritten by the server',
+  (select count(*)::text from public.member_sheet_links
+    where confirmed_sheet_name = 'Nguyen, An-Thu'), '0');
+
+-- the destructive rewrite
+update public.sheet_members set sheet_name = 'Adams, Priya', events_attended = 2
+ where source_sheet_id = 'SHEET2026' and row_index = 4;
+select test.ck('a row rewritten to a different person flags its link',
+  (select needs_reconfirm::text from public.member_sheet_links l
+     join public.profiles p on p.id = l.user_id where p.username = 'zach'), 'true');
+select test.ck('...with the reason recorded',
+  (select reconfirm_reason from public.member_sheet_links l
+     join public.profiles p on p.id = l.user_id where p.username = 'zach'), 'name_changed');
+select test.ck('...and the name now sitting there',
+  (select drift_observed_name from public.member_sheet_links l
+     join public.profiles p on p.id = l.user_id where p.username = 'zach'), 'Adams, Priya');
+select test.ck('the confirmed name is NOT overwritten by the drift',
+  (select confirmed_sheet_name from public.member_sheet_links l
+     join public.profiles p on p.id = l.user_id where p.username = 'zach'), 'Alvarez, Zachary');
+
+select test.try('authenticated','a1111111-1111-1111-1111-111111111111',
+  $$update public.member_sheet_links set needs_reconfirm = false
+     where user_id = 'a1111111-1111-1111-1111-111111111111'$$);
+select test.ck('a member cannot clear their own drift flag',
+  (select needs_reconfirm::text from public.member_sheet_links l
+     join public.profiles p on p.id = l.user_id where p.username = 'zach'), 'true');
+
+-- correcting the sheet back resolves the review with nobody touching the database
+update public.sheet_members set sheet_name = 'Alvarez, Zachary', events_attended = 12
+ where source_sheet_id = 'SHEET2026' and row_index = 4;
+select test.ck('correcting the sheet clears the flag by itself',
+  (select needs_reconfirm::text from public.member_sheet_links l
+     join public.profiles p on p.id = l.user_id where p.username = 'zach'), 'false');
+
+-- a genuine spelling correction: same person, new spelling
+update public.sheet_members set sheet_name = 'Alvarez-Ruiz, Zachary'
+ where source_sheet_id = 'SHEET2026' and row_index = 4;
+select test.ck('a spelling change also flags, because it cannot be told apart',
+  (select needs_reconfirm::text from public.member_sheet_links l
+     join public.profiles p on p.id = l.user_id where p.username = 'zach'), 'true');
+select test.ck('the board can confirm it is still them',
+  test.try('authenticated','a4444444-4444-4444-4444-444444444444',
+    $$update public.member_sheet_links set needs_reconfirm = false
+       where user_id = 'a1111111-1111-1111-1111-111111111111'$$), 'OK');
+select test.ck('...and the snapshot adopts the new spelling',
+  (select confirmed_sheet_name from public.member_sheet_links l
+     join public.profiles p on p.id = l.user_id where p.username = 'zach'), 'Alvarez-Ruiz, Zachary');
+select test.ck('...so the same drift is not re-detected forever',
+  (select needs_reconfirm::text from public.member_sheet_links l
+     join public.profiles p on p.id = l.user_id where p.username = 'zach'), 'false');
+
+select test.ck('a link cannot be re-pointed at another row',
+  test.try('authenticated','a4444444-4444-4444-4444-444444444444',
+    $$update public.member_sheet_links
+         set sheet_member_id = (select id from public.sheet_members where sheet_name='Okafor, Chidi')
+       where user_id = 'a1111111-1111-1111-1111-111111111111'$$), 'P0001');
+select test.ck('a link cannot be moved to another account',
+  test.try('authenticated','a4444444-4444-4444-4444-444444444444',
+    $$update public.member_sheet_links set user_id = 'a4444444-4444-4444-4444-444444444444'
+       where user_id = 'a1111111-1111-1111-1111-111111111111'$$), 'P0001');
+
+-- a linked sheet row must not be deletable out from under its member
+select test.ck('a linked sheet row cannot be deleted',
+  test.try('service_role', null,
+    $$delete from public.sheet_members where sheet_name = 'Alvarez-Ruiz, Zachary'$$), '23503');
+
+-- ══ 11. IDENTITY KEY SURVIVES A RE-SORT ══
+-- The whole point of keying on (sheet_id, sort_name, occurrence): a
+-- mid-sheet insertion must flag NOBODY. Detection alone would flag every
+-- member below the insertion point and bury the officer queue.
+select test.ck('duplicate names need distinct occurrences',
+  test.try('service_role', null,
+    $$insert into public.sheet_members(source_sheet_id,row_index,sheet_name,name_occurrence)
+      values ('SHEET2026', 40, 'Patel, Maya', 1)$$), '23505');
+select test.ck('a third same-named row is fine as occurrence 3',
+  test.try('service_role', null,
+    $$insert into public.sheet_members(source_sheet_id,row_index,sheet_name,name_occurrence)
+      values ('SHEET2026', 40, 'Patel, Maya', 3)$$), 'OK');
+
+select count(*) from (select test.try('service_role', null,
+  $$begin$$)) _;
+do $$
+declare flagged_before int; flagged_after int;
+begin
+  select count(*) into flagged_before from public.member_sheet_links where needs_reconfirm;
+  -- everyone shifts down one, exactly as a sync would rewrite positions
+  set constraints all deferred;
+  update public.sheet_members set row_index = row_index + 1 where source_sheet_id = 'SHEET2026';
+  insert into public.sheet_members(source_sheet_id, row_index, sheet_name, name_occurrence, events_attended)
+    values ('SHEET2026', 4, 'Adams, Priya', 1, 2);
+  set constraints all immediate;
+  select count(*) into flagged_after from public.member_sheet_links where needs_reconfirm;
+  insert into test.results(name, pass, got) values (
+    'a mid-sheet insertion flags nobody', flagged_after = flagged_before,
+    flagged_after || ' flagged (wanted ' || flagged_before || ')');
+end $$;
+select test.ck('every link still points at the person who was confirmed',
+  (select count(*)::text from public.member_sheet_links l
+     join public.sheet_members sm on sm.id = l.sheet_member_id
+    where sm.sort_name is distinct from l.confirmed_sort_name), '0');
 
 \pset tuples_only on
 select '';

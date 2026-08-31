@@ -96,13 +96,34 @@ alter table public.profiles add constraint real_name_sane
 -- ── sheet_members ──────────────────────────────────────────────────
 -- One row per member row in the spreadsheet.
 --
--- THE STABLE KEY is (source_sheet_id, row_index), not the name. Names
--- repeat and get corrected; a row's position within a given sheet is
--- the only thing the club's own file offers that survives a re-sync.
--- Pinning it to the spreadsheet id as well means next year's sheet is a
--- clean set of new rows rather than a silent renumbering of this year's
--- — last year's links keep pointing at last year's rows, which is what
--- actually happened.
+-- THE IDENTITY KEY is (source_sheet_id, sort_name, name_occurrence):
+-- "the Nth person called X in this sheet". NOT the row number.
+--
+-- Row numbers were the obvious choice and they are wrong. Insert one
+-- member at row 4 and every row below shifts down; a sync that upserts
+-- on (sheet_id, row_index) then rewrites row 4 in place, and the account
+-- linked to it starts showing a different person's hours. No error, no
+-- flag — the worst failure this feature can have.
+--
+-- name_occurrence is what makes duplicates addressable: the sheet has
+-- two rows reading "Patel, Maya" with 15 and 1 events, so they are
+-- occurrence 1 and 2 of the same key. Under a mid-sheet insertion or a
+-- re-sort, that pairing is unchanged for everyone — which matters,
+-- because a scheme that only DETECTED the shift would flag every member
+-- below row 4 and bury the officer queue over a single edit.
+--
+-- Two people genuinely swapping places among identical names is not
+-- distinguishable by any key, here or anywhere, because the sheet
+-- records nothing that separates them.
+--
+-- row_index survives as an attribute, not an identity: officers need it
+-- to find the row, and a re-sort simply rewrites it. Its unique
+-- constraint is DEFERRABLE so a whole re-sort commits as one
+-- transaction instead of colliding halfway through.
+--
+-- Pinning source_sheet_id means next year's sheet is a clean set of new
+-- rows rather than a silent renumbering of this year's — last year's
+-- links keep pointing at last year's rows, which is what happened.
 create table if not exists public.sheet_members (
   id                   uuid primary key default gen_random_uuid(),
   source_sheet_id      text not null,
@@ -112,6 +133,9 @@ create table if not exists public.sheet_members (
   sheet_name           text not null check (length(btrim(sheet_name)) > 0),
   norm_name            text generated always as (public.normalize_name(sheet_name)) stored,
   sort_name            text generated always as (public.name_sort_key(sheet_name)) stored,
+  -- 1 for the first row bearing this name, 2 for the next, and so on.
+  -- Maintained by the sync in sheet order.
+  name_occurrence      integer not null default 1 check (name_occurrence > 0),
   events_attended      integer not null default 0 check (events_attended >= 0),
   total_hours          numeric(8,2) not null default 0 check (total_hours >= 0),
   -- what the previous sync saw, so the member page can say what changed.
@@ -122,8 +146,16 @@ create table if not exists public.sheet_members (
   last_synced_at       timestamptz,
   created_at           timestamptz not null default now(),
   updated_at           timestamptz not null default now(),
-  constraint sheet_row_identity unique (source_sheet_id, row_index)
+  -- position, not identity: deferrable so a re-sort can renumber every
+  -- row inside one transaction without tripping over itself midway
+  constraint sheet_row_position unique (source_sheet_id, row_index)
+    deferrable initially immediate
 );
+
+-- The real identity. A generated column may be indexed, so this is
+-- enforced by the database rather than by the sync remembering to.
+create unique index if not exists sheet_member_identity
+  on public.sheet_members (source_sheet_id, sort_name, name_occurrence);
 
 create index if not exists sheet_members_sort_name
   on public.sheet_members (sort_name);
@@ -151,13 +183,151 @@ create trigger sheet_members_touch before update on public.sheet_members
 create table if not exists public.member_sheet_links (
   id              uuid primary key default gen_random_uuid(),
   user_id         uuid not null unique references public.profiles(id) on delete cascade,
-  sheet_member_id uuid not null unique references public.sheet_members(id) on delete cascade,
+  -- RESTRICT, not CASCADE. A sheet row vanishing must not quietly take a
+  -- member's confirmed identity with it and drop them back on the
+  -- confirmation card as though they had never confirmed. The sync marks
+  -- rows it can no longer find; it does not delete them.
+  sheet_member_id uuid not null unique references public.sheet_members(id) on delete restrict,
   link_method     text not null default 'self' check (link_method in ('self','officer')),
   -- null when the member claimed it themselves; the officer's id when
   -- a board member resolved it by hand
   linked_by       uuid references public.profiles(id) on delete set null,
-  linked_at       timestamptz not null default now()
+  linked_at       timestamptz not null default now(),
+
+  -- What the member actually agreed to. They confirmed "I am the person
+  -- called X on this sheet" — a name, not a row number — so the name is
+  -- what gets recorded, and it is what drift is measured against.
+  -- Written by a trigger from the sheet row itself, never accepted from
+  -- the client, and frozen afterwards.
+  confirmed_sheet_name text,
+  confirmed_sort_name  text,
+
+  -- Set when the row this link points at stops being the person who was
+  -- confirmed. The member page must fail closed on this: showing someone
+  -- else's hours is the exact outcome being guarded against.
+  needs_reconfirm    boolean not null default false,
+  reconfirm_reason   text check (reconfirm_reason in ('name_changed','row_missing')),
+  drift_detected_at  timestamptz,
+  drift_observed_name text
 );
+
+-- Added to a table that may already hold rows, so: add, backfill, then
+-- constrain. `alter ... add column if not exists` is a no-op the second
+-- time, which keeps the whole file re-runnable.
+alter table public.member_sheet_links add column if not exists confirmed_sheet_name text;
+alter table public.member_sheet_links add column if not exists confirmed_sort_name  text;
+alter table public.member_sheet_links add column if not exists needs_reconfirm boolean not null default false;
+alter table public.member_sheet_links add column if not exists reconfirm_reason text;
+alter table public.member_sheet_links add column if not exists drift_detected_at timestamptz;
+alter table public.member_sheet_links add column if not exists drift_observed_name text;
+update public.member_sheet_links l
+   set confirmed_sheet_name = sm.sheet_name,
+       confirmed_sort_name  = sm.sort_name
+  from public.sheet_members sm
+ where sm.id = l.sheet_member_id and l.confirmed_sheet_name is null;
+
+-- An older run of this file may have created the FK as ON DELETE CASCADE.
+do $$
+begin
+  if exists (select 1 from pg_constraint c join pg_class t on t.oid = c.conrelid
+              where t.relname = 'member_sheet_links'
+                and c.conname = 'member_sheet_links_sheet_member_id_fkey'
+                and c.confdeltype = 'c') then
+    alter table public.member_sheet_links drop constraint member_sheet_links_sheet_member_id_fkey;
+    alter table public.member_sheet_links add constraint member_sheet_links_sheet_member_id_fkey
+      foreign key (sheet_member_id) references public.sheet_members(id) on delete restrict;
+  end if;
+end $$;
+
+-- ── the confirmed name is recorded by the server, not the client ───
+-- A member POSTing confirmed_sheet_name:'Someone Else' would otherwise
+-- decide what their own link means. The trigger overwrites whatever
+-- arrived with the sheet row's actual name, and refuses to let either
+-- snapshot change afterwards except through the board's re-confirm.
+create or replace function public.snapshot_confirmed_name()
+returns trigger language plpgsql security definer
+set search_path = pg_catalog, public as $$
+declare sm record;
+begin
+  select sheet_name, sort_name into sm
+    from public.sheet_members where id = new.sheet_member_id;
+  if not found then
+    raise exception 'sheet row does not exist';
+  end if;
+
+  if tg_op = 'INSERT' then
+    new.confirmed_sheet_name := sm.sheet_name;
+    new.confirmed_sort_name  := sm.sort_name;
+    new.needs_reconfirm      := false;
+    new.reconfirm_reason     := null;
+    new.drift_detected_at    := null;
+    new.drift_observed_name  := null;
+    return new;
+  end if;
+
+  -- UPDATE. A link is never re-pointed at a different row or a different
+  -- account; that is a delete and a fresh claim.
+  if new.user_id is distinct from old.user_id
+     or new.sheet_member_id is distinct from old.sheet_member_id then
+    raise exception 'a link cannot be re-pointed; delete it and claim again';
+  end if;
+
+  -- Clearing the flag IS the board saying "yes, this is still them" —
+  -- usually after a spelling correction — so the snapshot adopts the
+  -- current name. Without this the same drift is re-detected forever.
+  if old.needs_reconfirm and not new.needs_reconfirm then
+    new.confirmed_sheet_name := sm.sheet_name;
+    new.confirmed_sort_name  := sm.sort_name;
+    new.reconfirm_reason     := null;
+    new.drift_detected_at    := null;
+    new.drift_observed_name  := null;
+  else
+    new.confirmed_sheet_name := old.confirmed_sheet_name;
+    new.confirmed_sort_name  := old.confirmed_sort_name;
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists links_snapshot_name on public.member_sheet_links;
+create trigger links_snapshot_name before insert or update on public.member_sheet_links
+  for each row execute function public.snapshot_confirmed_name();
+
+-- ── drift detection ────────────────────────────────────────────────
+-- Fires on the sheet row, so it catches the sync, a board edit and a
+-- service-role script alike — every writer, not just the one we expect.
+--
+-- Self-healing in both directions: a row whose name is corrected back to
+-- what was confirmed clears its own flag, so fixing a typo in the sheet
+-- resolves the review without anyone touching the database.
+create or replace function public.detect_link_identity_drift()
+returns trigger language plpgsql security definer
+set search_path = pg_catalog, public as $$
+begin
+  if new.sort_name is not distinct from old.sort_name then
+    return new;
+  end if;
+  update public.member_sheet_links
+     set needs_reconfirm     = true,
+         reconfirm_reason    = 'name_changed',
+         drift_detected_at   = now(),
+         drift_observed_name = new.sheet_name
+   where sheet_member_id = new.id
+     and confirmed_sort_name is distinct from new.sort_name
+     and not needs_reconfirm;
+  update public.member_sheet_links
+     set needs_reconfirm     = false,
+         reconfirm_reason    = null,
+         drift_detected_at   = null,
+         drift_observed_name = null
+   where sheet_member_id = new.id
+     and confirmed_sort_name is not distinct from new.sort_name
+     and needs_reconfirm;
+  return new;
+end $$;
+
+drop trigger if exists sheet_members_drift on public.sheet_members;
+create trigger sheet_members_drift after update on public.sheet_members
+  for each row execute function public.detect_link_identity_drift();
 
 -- ── identity_review_flags ──────────────────────────────────────────
 -- Written when a member picks "None of these are me". A member must not
@@ -362,7 +532,16 @@ create policy links_board_delete on public.member_sheet_links
 grant delete on public.member_sheet_links to authenticated;
 revoke delete on public.member_sheet_links from anon;
 revoke truncate on public.member_sheet_links from anon, authenticated;
--- No UPDATE policy: a link is created or removed, never re-pointed.
+
+-- The board may clear a drift flag — "yes, this is still them, the sheet
+-- just spells it differently now" — and nothing else. Re-pointing a link
+-- at another row or another account is refused by the trigger, so this
+-- policy cannot be widened by accident into a way to reassign identities.
+-- Members get no UPDATE policy at all: clearing your own drift flag would
+-- be the whole guard undone from a browser console.
+drop policy if exists links_board_reconfirm on public.member_sheet_links;
+create policy links_board_reconfirm on public.member_sheet_links
+  for update to authenticated using (public.is_board()) with check (public.is_board());
 
 -- flags: raise your own, read your own. Only the board resolves one —
 -- there is no member UPDATE policy, so "mark my own review done" is not
