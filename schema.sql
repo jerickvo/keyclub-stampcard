@@ -47,10 +47,11 @@ create trigger profiles_touch before update on public.profiles
 
 -- ── meetings ───────────────────────────────────────────────────────
 -- Created by the board. The client no longer generates a schedule.
--- Two club rules are enforced here rather than in JavaScript, because
--- JavaScript is editable by the person it is meant to constrain:
---   · every meeting is on a Wednesday
---   · every meeting is in the MPR (exactly that string)
+-- The meeting's own date is the source of truth: a general meeting may
+-- fall on any day of the week. The one club rule enforced here rather
+-- than in JavaScript — because JavaScript is editable by the person it
+-- is meant to constrain — is that every meeting is in the MPR
+-- (exactly that string).
 create table if not exists public.meetings (
   id             uuid primary key default gen_random_uuid(),
   meeting_number integer not null unique,
@@ -62,12 +63,32 @@ create table if not exists public.meetings (
   check_in_open  boolean not null default false,
   created_at     timestamptz not null default now(),
   created_by     uuid references public.profiles(id),
-  constraint meeting_is_wednesday
-    check (extract(isodow from meeting_date) = 3),
-  -- a meeting that ends before it starts is a typo, not a meeting
+  -- a meeting that ends before it starts is a typo, not a meeting.
+  -- The columns hold a 12-hour clock as text, so the comparison has to
+  -- be on the times, not on the strings.
   constraint meeting_time_order
-    check (end_time is null or start_time < end_time)
+    check (end_time is null or start_time::time < end_time::time)
 );
+
+-- Meetings were once restricted to Wednesdays. They are not: a general
+-- meeting may fall on any weekday, and the stored date is the only
+-- authority. `create table if not exists` cannot remove a constraint
+-- from a table that already exists, so drop it explicitly — re-running
+-- this file against a live project is what migrates it.
+--
+-- THIS STATEMENT IS THE ONE THAT UNBLOCKS NON-WEDNESDAY MEETINGS.
+-- While it has not been applied, the database refuses every meeting
+-- that is not a Wednesday with SQLSTATE 23514, no matter what the app
+-- sends.
+alter table public.meetings drop constraint if exists meeting_is_wednesday;
+
+-- start_time and end_time are text holding a 12-hour clock, so the
+-- original rule compared them as text: "9:15 AM" sorts AFTER "10:15 AM",
+-- and a 9:15–10:15 meeting was refused as though it ended before it
+-- began. Compare the times themselves.
+alter table public.meetings drop constraint if exists meeting_time_order;
+alter table public.meetings add constraint meeting_time_order
+  check (end_time is null or start_time::time < end_time::time);
 
 -- Only one meeting may take check-ins at a time.
 create unique index if not exists one_open_meeting
@@ -391,3 +412,61 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- ═══════════════════════════════════════════════════════════════════
+-- TEMP-TEST-TOOLING — REMOVE BEFORE THE CLUB RELIES ON THIS DATA
+--
+-- Deletes a past meeting AND the attendance rows attached to it, so a
+-- test meeting can be cleaned up without leaving orphaned stamps in
+-- members' counts. This deliberately does what the normal delete path
+-- refuses to do, which is why it is temporary.
+--
+-- The normal path (meetings_board_delete) can only remove a meeting
+-- nothing has checked in to, attendance has no delete policy at all,
+-- and the foreign key is ON DELETE RESTRICT. All three still stand:
+-- this is SECURITY DEFINER, so it runs as the owner and is the single
+-- audited hole through them. Board-only is enforced HERE, in the
+-- database, by is_board() — not by the button being hidden.
+--
+-- No soft delete, no archive, no undo, no audit trail. It is a
+-- delete. attendance_sessions rows go with the meeting through the
+-- existing ON DELETE CASCADE.
+--
+-- TO REMOVE: drop this whole block and run the two lines at the end.
+-- ═══════════════════════════════════════════════════════════════════
+create or replace function public.tmp_test_purge_meeting(p_meeting_id uuid)
+returns integer
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  removed integer;
+begin
+  if not public.is_board() then
+    raise exception 'TEMP-TEST-TOOLING: board accounts only';
+  end if;
+
+  -- past means the club's day has moved on and check-in is not open,
+  -- so this can never remove a meeting that is running right now
+  if not exists (
+    select 1 from public.meetings m
+    where m.id = p_meeting_id
+      and m.check_in_open = false
+      and m.meeting_date < (now() at time zone 'America/Los_Angeles')::date
+  ) then
+    raise exception 'TEMP-TEST-TOOLING: not a past meeting';
+  end if;
+
+  delete from public.attendance where meeting_id = p_meeting_id;
+  get diagnostics removed = row_count;
+  delete from public.meetings where id = p_meeting_id;
+  return removed;
+end $$;
+
+revoke all on function public.tmp_test_purge_meeting(uuid) from public;
+grant execute on function public.tmp_test_purge_meeting(uuid) to authenticated;
+
+-- TO REMOVE, run:
+--   revoke all on function public.tmp_test_purge_meeting(uuid) from authenticated;
+--   drop function if exists public.tmp_test_purge_meeting(uuid);

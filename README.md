@@ -1,8 +1,8 @@
 # Keystamp — setup
 
-Attendance stamps for Key Club General Meetings. Every meeting is on a
-Wednesday, in the MPR. 10 stamps → Club Merch, 20 → Free Blindbox,
-30 → ???
+Attendance stamps for Key Club General Meetings. Meetings are held in
+the MPR and may fall on any day of the week — the board sets each
+meeting's date. 10 stamps → Club Merch, 20 → Free Blindbox, 30 → ???
 
 (Design and UI notes: see `README-app.md`.)
 

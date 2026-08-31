@@ -287,9 +287,12 @@ Deno.serve(async (req) => {
 
     // ── MEETINGS LIST ──────────────────────────────────────────────
     if (action === 'meetings') {
+      // Ordered by date, not by meeting number: the number is a label
+      // the board chooses, the date is when the meeting actually is,
+      // and meetings may fall on any day in any order.
       const { data: ms, error } = await admin.from('meetings')
         .select('id, meeting_number, meeting_date, start_time, end_time, location, check_in_open')
-        .order('meeting_number', { ascending: false }).limit(200);
+        .order('meeting_date', { ascending: false }).limit(200);
       if (error) throw error;
 
       const counts = new Map<string, number>();

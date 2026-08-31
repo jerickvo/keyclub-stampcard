@@ -24,10 +24,8 @@ function qrSVG(text){
 }
 
 let boardMeeting = null;
-let boardTimer = null;
 
 function paintBoard(){
-  clearInterval(boardTimer);
   const box = $('#qrBox');
   if (!box) return;
 
@@ -227,7 +225,7 @@ let pendingCell = -1;
    leaks a stack trace, a column name or a row id. */
 const SCAN_MESSAGES = {
   INVALID_TOKEN:       ['Not a valid code',      'That code is not from Keystamp. Scan the one on the board screen.'],
-  EXPIRED_TOKEN:       ['Code expired',          'The code refreshes every few seconds. Scan the one showing right now.'],
+  EXPIRED_TOKEN:       ['Code expired',          'That code is no longer valid. Scan the code on the board screen, or ask a board member.'],
   MEETING_NOT_FOUND:   ['No matching meeting',   'Keystamp has no meeting for that code. Ask a board member.'],
   MEETING_NOT_ACTIVE:  ['Check-in not open',     'This meeting is not taking check-ins yet.'],
   ATTENDANCE_CLOSED:   ['Check-in has ended',    'Attendance for this meeting is closed. A board member can add you.'],
@@ -272,12 +270,18 @@ async function submitSeal(raw, fromCamera){
   dropToast('scan');
   Scanner.setState('good', 'Verified');
   Scanner.stop();
-  pendingCell = Rules.progress().filled;
 
   /* The server already inserted the row. Re-read from the database so
      the count, the record and the rewards all come from stored data
      rather than from an optimistic client increment. */
   await Store.hydrate();
+
+  /* Which slot to land on is read AFTER the re-read, from the stored
+     total: the newest stamp is the last filled slot on the card the
+     member is now on. Read before hydrating, a tenth stamp pointed one
+     slot past the end of the card it had just completed and the
+     landing never played. */
+  pendingCell = Rules.progress().filled - 1;
   const meeting = Store.meeting(result.meeting_id) ||
                   { id:result.meeting_id, no:result.meeting_number };
   FX.stampAcquire(meeting, () => go('home'));

@@ -104,19 +104,28 @@ attendance. See `README.md` for the full model.
 
 ---
 
-## Meeting schedule
+## Meeting dates
 
-`Schedule` in `01-core.js` is **date maths only** — never a source of meetings.
-The board creates real meeting rows; the client reads them. What lives here is
-the guarantee that any date the board tools propose lands on a Wednesday:
+**A general meeting may fall on any day of the week.** The board picks the date
+when it schedules the meeting, and the stored `meeting_date` is the only
+authority — no weekday is assumed, derived or enforced anywhere.
+
+`Schedule` in `01-core.js` only supplies the meeting form's starting values:
 
 ```js
 TIME:  '3:15 PM',
 PLACE: 'MPR',
 ```
 
-`wednesdayOf()` snaps any date to the Wednesday of its own week, so a meeting
-cannot land on a Tuesday because someone mistyped a date.
+Whether a meeting is ahead, happening or past is decided by comparing its date
+against the **club's calendar day** — `clubDay()` in `01a-backend.js`, which
+formats `America/Los_Angeles` as `YYYY-MM-DD` using the same rule the Edge
+Functions use, so the client and the server never disagree about the date.
+Deriving "today" from `toISOString()` would report tomorrow all evening for
+anyone west of Greenwich and slide meetings a day out of place.
+
+A meeting still on today's date counts as ahead, not missed, until check-in
+opens or the day turns over.
 
 ---
 

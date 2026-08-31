@@ -202,8 +202,12 @@ const BoardUI = {
   /* ── MEETINGS ─────────────────────────────────────────────────── */
   meetingsPane(){
     const list = (this.meetings && this.meetings.meetings) || [];
-    const upcoming = list.filter(m => m.state === 'UPCOMING');
-    const past = list.filter(m => m.state !== 'UPCOMING');
+    /* by date, never by meeting number: coming up reads soonest first,
+       already held reads newest first */
+    const by = dir => (a, b) =>
+      String(a.meeting_date) < String(b.meeting_date) ? -dir : dir;
+    const upcoming = list.filter(m => m.state === 'UPCOMING').sort(by(1));
+    const past = list.filter(m => m.state !== 'UPCOMING').sort(by(-1));
 
     return `<div class="bpanel meetgrid">
       ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
@@ -250,6 +254,19 @@ const BoardUI = {
       ${m.attendance_count === 0
         ? `<button class="brow__del" data-bconfirm="${esc(m.id)}"
              aria-label="Delete GM ${pad(m.meeting_number)}">Delete</button>`
+        /* TEMP-TEST-TOOLING — a past meeting WITH stamps can be purged,
+           tooling only. It takes the place of the empty spacer rather
+           than adding a sixth cell to the row: appending one squeezed
+           the date and time out of existence at 1024px, which hid the
+           very detail the board needs to confirm what they are
+           deleting. Remove this branch with the rest of the tooling and
+           the spacer below is what is left. */
+        : m.state !== 'UPCOMING'
+        ? `<button class="brow__del" data-bpurgetemp="${esc(m.id)}"
+             data-bpurgeno="${pad(m.meeting_number)}"
+             data-bpurgen="${m.attendance_count}"
+             aria-label="Purge test meeting GM ${pad(m.meeting_number)} and its ${m.attendance_count} stamps"
+             >Purge</button>`
         : '<span class="brow__del brow__del--off" aria-hidden="true"></span>'}
     </li>`;
   },
@@ -264,8 +281,8 @@ const BoardUI = {
         <label class="field"><span class="kicker">Meeting number</span>
           <input class="input" id="mNo" type="number" min="1" inputmode="numeric"
                  value="${esc(f.no || '')}" placeholder="12"></label>
-        <label class="field"><span class="kicker">Date / Wednesday</span>
-          <input class="input" id="mDate" type="date" value="${esc(f.date || Schedule.nextWednesday())}"></label>
+        <label class="field"><span class="kicker">Date</span>
+          <input class="input" id="mDate" type="date" value="${esc(f.date || Schedule.today())}"></label>
         <label class="field"><span class="kicker">Start</span>
           <input class="input" id="mStart" type="time" value="${esc(f.start || '15:15')}"></label>
         <label class="field"><span class="kicker">End</span>

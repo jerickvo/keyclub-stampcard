@@ -68,6 +68,100 @@ const SUPABASE_ENVIRONMENTS = {
   },
 };
 
+/* ── the club's calendar day ───────────────────────────────────────
+   Whether a meeting is ahead, happening or past is a statement about
+   the club's day, not the device's and not UTC's. Deriving it from
+   `toISOString()` reports tomorrow's date all evening for anyone west
+   of Greenwich, which slides a meeting a day out of place. This is the
+   same rule the Edge Functions apply, so client and server always
+   agree on which day it is. Format is YYYY-MM-DD, directly comparable
+   to a Postgres `date` column.
+   ────────────────────────────────────────────────────────────────── */
+const CLUB_TZ = 'America/Los_Angeles';
+const clubDay = (d = new Date()) => {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: CLUB_TZ, year:'numeric', month:'2-digit', day:'2-digit',
+    }).format(d);
+  } catch (_) {
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  }
+};
+
+/* ── why a write failed ───────────────────────────────────────────
+   Postgres says exactly why it refused a row: a code for the class of
+   failure and, for a broken rule, the constraint's name. Collapsing
+   all of that into one sentence leaves nothing to diagnose from — a
+   permission failure, a duplicate number and a rule the database still
+   carries from an older schema all read identically. This keeps the
+   sentence the board sees short and puts the real cause where whoever
+   has to fix it will find it.
+   ────────────────────────────────────────────────────────────────── */
+const WriteFailure = {
+  /* the constraint name Postgres reports, from the field or the text */
+  constraintOf(ex){
+    const msg = String((ex && ex.message) || '');
+    return (ex && ex.constraint) ||
+           (msg.match(/(?:check |unique )?constraint "([^"]+)"/) || [])[1] || null;
+  },
+
+  classify(ex){
+    const code = String((ex && (ex.code || ex.status)) || '');
+    const msg  = String((ex && ex.message) || '');
+    const c    = this.constraintOf(ex);
+
+    if (/BACKEND_UNAVAILABLE|No backend is configured/i.test(msg))
+      return { kind:'backend', say:'The club records are unreachable right now. Try again in a moment.' };
+    if (code === '42501' || /row-level security|permission denied/i.test(msg))
+      return { kind:'permission', say:'That account is not allowed to schedule meetings.' };
+    if (code === '401' || code === '403' || /jwt|not signed in|invalid token/i.test(msg))
+      return { kind:'auth', say:'Your session has expired. Sign in again.' };
+    if (code === '23505' || /duplicate|already exists|unique/i.test(msg))
+      return { kind:'duplicate', say:'A meeting with that number already exists.' };
+    if (code === '23514' || /check constraint/i.test(msg)){
+      if (c === 'meeting_is_wednesday')
+        return { kind:'legacy-rule',
+                 say:'The database still restricts meetings to Wednesdays. Re-run schema.sql on the Supabase project to lift it.' };
+      if (c === 'meeting_time_order')
+        return { kind:'constraint', say:'The database refused those times. The end time must be later than the start time.' };
+      if (c && /location/.test(c))
+        return { kind:'constraint', say:'Meetings must be held in the MPR.' };
+      return { kind:'constraint', say:'The database refused those details.' };
+    }
+    if (code === '23502') return { kind:'missing', say:'Something required was left blank.' };
+    /* PostgREST: the RPC does not exist in the database. This is a
+       deployment gap, not bad input — saying "check the details" sends
+       the board chasing a form that was never the problem. */
+    if (/^PGRST2/.test(code) || /could not find the function|schema cache/i.test(msg))
+      return { kind:'not-installed',
+               say:'The database does not have this operation installed. Re-run schema.sql on the Supabase project.' };
+    /* P0001 is a rule our own database function raised; its message was
+       written to be shown, so show it rather than a generic sentence. */
+    if (code === 'P0001')
+      return { kind:'refused', say: msg.replace(/^TEMP-TEST-TOOLING:\s*/i, '')
+                 .replace(/^\w/, ch => ch.toUpperCase()) + '.' };
+    if (/failed to fetch|networkerror|load failed/i.test(msg))
+      return { kind:'network', say:'Could not reach the club records. Check the connection and try again.' };
+    return { kind:'unknown', say:'Could not save that. Check the details and try again.' };
+  },
+
+  /* Returns the sentence to show, and reports the real cause once on
+     the console — the same channel Guard already uses. Only ever runs
+     on an actual failure, so it cannot become background noise. */
+  explain(ex, what){
+    const v = this.classify(ex);
+    const c = this.constraintOf(ex);
+    console.error(`[keystamp] ${what} failed —`, v.kind,
+      { code:(ex && (ex.code || ex.status)) || null,
+        message:(ex && ex.message) || null,
+        details:(ex && ex.details) || null,
+        hint:(ex && ex.hint) || null,
+        constraint:c });
+    return v.say;
+  },
+};
+
 /* ── configuration ────────────────────────────────────────────────
    Config resolves the pair above, and still accepts an explicit
    override from the host page — on window before the scripts load, or
@@ -290,12 +384,31 @@ const SupabaseAdapter = {
              isBoard:data.role === 'board' };
   },
 
+  /* true when the auth call never got a real answer from the server.
+     supabase-js wraps a failed fetch in AuthRetryableFetchError with
+     status 0 (or relays a 5xx); a genuine credential rejection always
+     arrives as a 4xx from the API. Telling a member on dead wifi that
+     their password is wrong sends them off to reset a password that
+     was never the problem. */
+  authUnreachable(error){
+    if (!error) return false;
+    if (error.name === 'AuthRetryableFetchError') return true;
+    const status = Number(error.status);
+    if (status === 0 || (status >= 500 && status < 600)) return true;
+    return !error.status &&
+      /fetch|network|load failed|connect/i.test(String(error.message || ''));
+  },
+
   async signIn(username, password){
     const { data, error } = await this.client.auth.signInWithPassword({
       email: Config.emailForUsername(username), password });
-    /* One message for "no such username" and "wrong password" on purpose:
-       distinguishing them tells an attacker which usernames exist. */
-    if (error) throw new Error('That username and password do not match.');
+    if (error){
+      if (this.authUnreachable(error))
+        throw new Error('Keystamp cannot reach the server right now. Try again in a moment.');
+      /* One message for "no such username" and "wrong password" on purpose:
+         distinguishing them tells an attacker which usernames exist. */
+      throw new Error('That username and password do not match.');
+    }
     const profile = await this.profileFor(data.user, { waitMs:1500 });
     if (!profile) throw new Error('That account has no profile yet. Ask a board member.');
     return profile;
@@ -361,9 +474,12 @@ const SupabaseAdapter = {
     return { ok:true };
   },
 
-  /* one shape for the whole app, so views never see column names */
+  /* One shape for the whole app, so views never see column names.
+     The stored date decides everything — the weekday is never asked.
+     A meeting still on today's date has not been missed, so it counts
+     as ahead until check-in opens or the day turns over. */
   toMeeting(row){
-    const today = new Date().toISOString().slice(0, 10);
+    const today = clubDay();
     return {
       id: row.id,
       no: row.meeting_number,
@@ -372,7 +488,8 @@ const SupabaseAdapter = {
       endTime: row.end_time,
       place: row.location || 'MPR',
       open: Boolean(row.check_in_open),
-      upcoming: row.meeting_date > today && !row.check_in_open,
+      today: row.meeting_date === today,
+      upcoming: row.meeting_date >= today && !row.check_in_open,
     };
   },
 
@@ -469,8 +586,21 @@ const SupabaseAdapter = {
     const { data, error } = await this.client.functions
       .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId } });
     if (error) throw new Error('Could not get a code.');
-    return data;                       /* { token, expires_at } — same every time */
+    /* only the string is consumed: the QR draws it, and the server keeps
+       expiry to itself — the same meeting always yields the same token */
+    return { token: data && data.token };
   },
+  /* TEMP-TEST-TOOLING — remove with the rest of the purge tooling.
+     Deletes a past meeting AND its attendance so test data can be
+     cleaned up before launch. Board-only and past-only are enforced by
+     the database function, not here: this call is just the wire. */
+  async purgeMeetingTEMP(meetingId){
+    const { data, error } = await this.client
+      .rpc('tmp_test_purge_meeting', { p_meeting_id:meetingId });
+    if (error) throw error;
+    return { removed: Number(data) || 0 };
+  },
+
   async attendanceCount(meetingId){
     const { count, error } = await this.client
       .from('attendance').select('id', { count:'exact', head:true })
@@ -506,6 +636,8 @@ const PreviewAdapter = {
   async issueToken(){ throw new Error('No backend is configured.'); },
   async attendanceCount(){ return 0; },
   async board(){ throw new Error('No backend is configured.'); },
+  /* TEMP-TEST-TOOLING */
+  async purgeMeetingTEMP(){ throw new Error('No backend is configured.'); },
 };
 
 /* ══════════════════════════════════════════════════════════════════
@@ -526,7 +658,8 @@ const UnavailableAdapter = {
 };
 ['signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','claimReward','startAttendance',
- 'endAttendance','issueToken','attendanceCount','board'].forEach(fn => {
+ 'endAttendance','issueToken','attendanceCount','board',
+ 'purgeMeetingTEMP'].forEach(fn => {   /* TEMP-TEST-TOOLING */
   UnavailableAdapter[fn] = async () => { throw new Error('BACKEND_UNAVAILABLE'); };
 });
 UnavailableAdapter.verifyCode = async () => ({ ok:false, code:'BACKEND_UNAVAILABLE' });
@@ -592,6 +725,7 @@ const Backend = {
 /* forward the interface so callers use Backend.x, not Backend.adapter.x */
 ['currentSession','signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','claimReward','verifyCode',
- 'startAttendance','endAttendance','issueToken','attendanceCount','board'].forEach(fn => {
+ 'startAttendance','endAttendance','issueToken','attendanceCount','board',
+ 'purgeMeetingTEMP'].forEach(fn => {   /* TEMP-TEST-TOOLING */
   Backend[fn] = function(...a){ return this.adapter[fn](...a); };
 });

@@ -124,6 +124,22 @@ function mkClient(){
                 return { data:null, error:{ message:'row-level security', code:'42501' } };
               if (db.meetings.some(m => m.meeting_number === payload.meeting_number))
                 return { data:null, error:{ message:'duplicate key value', code:'23505' } };
+              /* The table's CHECK constraints, which the real database
+                 enforces and this mock previously did not — a rejected
+                 write looked like a successful one here. */
+              const bad = c => ({ data:null, error:{ code:'23514', constraint:c,
+                message:`new row for relation "meetings" violates check constraint "${c}"` } });
+              const mins = t => {                       /* "3:15 PM" -> 915 */
+                const m2 = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(t || '').trim());
+                if (!m2) return NaN;
+                let h = Number(m2[1]) % 12;
+                if (/PM/i.test(m2[3])) h += 12;
+                return h * 60 + Number(m2[2]);
+              };
+              if ((payload.location || 'MPR') !== 'MPR') return bad('meetings_location_check');
+              if (payload.end_time != null &&
+                  !(mins(payload.start_time) < mins(payload.end_time)))
+                return bad('meeting_time_order');
               const row = Object.assign({ id:'m_'+Math.random().toString(36).slice(2,8),
                                           check_in_open:false, location:'MPR' }, payload);
               db.meetings.push(row); saveDB();
@@ -150,6 +166,30 @@ function mkClient(){
         };
       };
       return q;
+    },
+
+    /* TEMP-TEST-TOOLING — stands in for tmp_test_purge_meeting. Mirrors
+       the real function's guards (board only, past only, not open) so
+       the client wiring can be exercised; it is NOT evidence the
+       deployed function behaves the same way. */
+    async rpc(name, args){
+      if (name !== 'tmp_test_purge_meeting')
+        return { data:null, error:{ message:'unknown function '+name, code:'42883' } };
+      const me = db.session && db.profiles.find(p => p.id === db.session.user.id);
+      if (!me || me.role !== 'board')
+        return { data:null, error:{ message:'TEMP-TEST-TOOLING: board accounts only', code:'P0001' } };
+      const today = new Intl.DateTimeFormat('en-CA', { timeZone:'America/Los_Angeles',
+        year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date());
+      const id = args && args.p_meeting_id;
+      const m = (db.meetings || []).find(x => x.id === id);
+      if (!m || m.check_in_open || !(String(m.meeting_date) < today))
+        return { data:null, error:{ message:'TEMP-TEST-TOOLING: not a past meeting', code:'P0001' } };
+      const before = (db.attendance || []).length;
+      db.attendance = (db.attendance || []).filter(a => a.meeting_id !== id);
+      db.sessions = (db.sessions || []).filter(s => s.meeting_id !== id);
+      db.meetings = db.meetings.filter(x => x.id !== id);
+      saveDB();
+      return { data: before - db.attendance.length, error:null };
     },
 
     /* Stands in for the two Edge Functions. It mirrors their decision
@@ -210,7 +250,8 @@ function mkClient(){
           const stampsOf = id => A.filter(a => a.user_id === id).length;
           const lastOf = id => A.filter(a => a.user_id === id)
                 .map(a => a.checked_in_at).sort().pop() || null;
-          const today = new Date().toISOString().slice(0,10);
+          const today = new Intl.DateTimeFormat('en-CA', { timeZone:'America/Los_Angeles',
+            year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date());
 
           if (body.action === 'overview'){
             const open = M.find(m => m.check_in_open) || null;
@@ -325,4 +366,15 @@ function mkClient(){
   };
 }
 
-window.supabase = { createClient: mkClient };
+/* supabase-js is vendored into the page now, so unlike the CDN era it
+   really executes in tests, after this init script, as a top-level
+   `var supabase = ...` that would overwrite a plain property. The mock
+   must keep winning, so the global is an accessor: every read answers
+   with the mock, and the library's own assignment is parked on
+   __realSupabase instead of replacing it. */
+const mockSupabase = { createClient: mkClient };
+Object.defineProperty(window, 'supabase', {
+  configurable: true,
+  get(){ return mockSupabase; },
+  set(v){ window.__realSupabase = v; },
+});

@@ -480,16 +480,22 @@ main#view:focus,main#view:focus-visible{outline:none}
 
 /* the PORTRAIT composition (narrow card): three staggered ranks and
    the milestone landing large below them */
-.seal:nth-child(1){--x:3%;   --y:4%;   --s:26%;--lean:-2deg}
-.seal:nth-child(2){--x:33%;  --y:5.5%; --s:24%;--lean:1.5deg}
-.seal:nth-child(3){--x:63.5%;--y:4.5%; --s:25%;--lean:-1deg}
-.seal:nth-child(4){--x:72%;  --y:23%;  --s:24%;--lean:2deg}
-.seal:nth-child(5){--x:40.5%;--y:21%;  --s:27%;--lean:-2.2deg}
-.seal:nth-child(6){--x:10%;  --y:23.5%;--s:24%;--lean:1deg}
-.seal:nth-child(7){--x:4.5%; --y:42%;  --s:24%;--lean:-1.5deg}
-.seal:nth-child(8){--x:33.5%;--y:43%;  --s:25%;--lean:2deg}
-.seal:nth-child(9){--x:65%;  --y:41.5%;--s:24%;--lean:-1.8deg}
-.seal:nth-child(10){--x:25%; --y:63%;  --s:34%;--lean:-2.5deg}
+/* Slots do not touch. The old composition pasted stamps over each
+   other for density; measured at 320-390px that left up to 60x17px of
+   real intersection between neighbours, and ten crowded objects read
+   as clutter, not a collection. Every box now clears its neighbours at
+   every tested width, so whatever silhouette the stamp wears can never
+   collide with the next one. */
+.seal:nth-child(1){--x:4%;   --y:2.5%; --s:23%;  --lean:-2deg}
+.seal:nth-child(2){--x:38%;  --y:3.5%; --s:22.5%;--lean:1.5deg}
+.seal:nth-child(3){--x:71%;  --y:2%;   --s:23%;  --lean:-1deg}
+.seal:nth-child(4){--x:71.5%;--y:24%;  --s:22.5%;--lean:2deg}
+.seal:nth-child(5){--x:38.5%;--y:23.5%;--s:23.5%;--lean:-2.2deg}
+.seal:nth-child(6){--x:5%;   --y:24.5%;--s:22.5%;--lean:1deg}
+.seal:nth-child(7){--x:4.5%; --y:45.5%;--s:22.5%;--lean:-1.5deg}
+.seal:nth-child(8){--x:37.5%;--y:45%;  --s:23%;  --lean:2deg}
+.seal:nth-child(9){--x:71%;  --y:45.5%;--s:22.5%;--lean:-1.8deg}
+.seal:nth-child(10){--x:36%; --y:66.5%;--s:28%;  --lean:-2.5deg}
 
 /* the LANDSCAPE composition (wide card): the identity panel takes the
    left column, the route runs across the top ranks, down, and back to
@@ -509,16 +515,21 @@ main#view:focus,main#view:focus-visible{outline:none}
   .card__route--p{display:none}
   /* a SNAKE: four across, turn, three back, turn, and the route ends
      on the big rosette in the far corner */
-  .seal:nth-child(1){--x:2%;   --y:6%;  --s:17%;--lean:-2.5deg}
-  .seal:nth-child(2){--x:21%;  --y:14%; --s:16%;--lean:1.5deg}
-  .seal:nth-child(3){--x:39%;  --y:5%;  --s:17%;--lean:-1deg}
-  .seal:nth-child(4){--x:58%;  --y:13%; --s:16%;--lean:2deg}
-  .seal:nth-child(5){--x:76%;  --y:26%; --s:18%;--lean:-2deg}
-  .seal:nth-child(6){--x:52%;  --y:36%; --s:16%;--lean:1deg}
-  .seal:nth-child(7){--x:28%;  --y:32%; --s:17%;--lean:-1.5deg}
-  .seal:nth-child(8){--x:4%;   --y:48%; --s:16%;--lean:2.2deg}
-  .seal:nth-child(9){--x:30%;  --y:62%; --s:17%;--lean:-2deg}
-  .seal:nth-child(10){--x:60%; --y:58%; --s:26%;--lean:-3deg}
+  /* This field's aspect changes with the page (wide and short at
+     768px, near-square beside a tall masthead), and a box's height in
+     percent grows as the field flattens. These clearances were sized
+     for the flattest tested case, so the slots stay apart across the
+     whole landscape range, not just at one width. */
+  .seal:nth-child(1){--x:2%;   --y:4%;   --s:15%;  --lean:-2.5deg}
+  .seal:nth-child(2){--x:21.5%;--y:16%;  --s:14.5%;--lean:1.5deg}
+  .seal:nth-child(3){--x:40.5%;--y:4%;   --s:15%;  --lean:-1deg}
+  .seal:nth-child(4){--x:59.5%;--y:13.5%;--s:14.5%;--lean:2deg}
+  .seal:nth-child(5){--x:79%;  --y:26%;  --s:15%;  --lean:-2deg}
+  .seal:nth-child(6){--x:52%;  --y:36.5%;--s:14.5%;--lean:1deg}
+  .seal:nth-child(7){--x:30.5%;--y:39%;  --s:15%;  --lean:-1.5deg}
+  .seal:nth-child(8){--x:5%;   --y:49%;  --s:14.5%;--lean:2.2deg}
+  .seal:nth-child(9){--x:27%;  --y:64%;  --s:15%;  --lean:-2deg}
+  .seal:nth-child(10){--x:63%; --y:58.5%;--s:23%;  --lean:-3deg}
 }
 
 .seal > svg{width:100%;height:100%;display:block;overflow:visible}
@@ -558,7 +569,10 @@ main#view:focus,main#view:focus-visible{outline:none}
 .seal--next .seal__mark{opacity:.22}
 .seal--next .seal__mark path{fill:var(--ink)}
 .seal--next .seal__no{color:var(--ink-2)}
-.seal--next::after{content:'';position:absolute;inset:-8%;
+/* the enso stamps are hand-pressed circles, so their annotation is a
+   hand-drawn ring: an uneven ellipse looped around the seat, never a
+   geometric circle */
+.seal--next::after{content:'';position:absolute;inset:-6%;
   border:2.5px solid var(--ink);
   border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;
   transform:rotate(-5deg);pointer-events:none}
@@ -1026,7 +1040,14 @@ button,input,select,textarea{font-family:inherit}
 .standing__at{font-family:var(--f-head);
   font-size:var(--t-sub);line-height:1.05;color:var(--paper)}
 
-.viewer{position:relative;display:grid;place-items:center;
+/* Two rows: the feed fills the whole frame, the reticle centres in the
+   space ABOVE the status chip, and the chip owns the bottom row. The
+   reticle is therefore centred by the layout rather than nudged off
+   centre by a fixed margin that has to guess the chip's height. */
+.viewer{position:relative;display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:minmax(0,1fr) auto;
+  place-items:center;
   isolation:isolate;overflow:hidden;
   width:100%;aspect-ratio:1;max-height:62vh;
   border:var(--edge-frame) solid var(--ink);background:var(--tint);
@@ -1034,8 +1055,10 @@ button,input,select,textarea{font-family:inherit}
 /* a code is square, so on a phone the frame is square: it fills the
    sheet instead of leaving a letterbox with half a screen under it. */
 @media(min-width:600px){ .viewer{aspect-ratio:4/3} }
-.viewer > *{grid-area:1/1}
-.viewer video{width:100%;height:100%;object-fit:cover;display:block;
+/* everything that is not the chip covers the whole frame */
+.viewer > *{grid-column:1;grid-row:1/-1}
+.viewer video{width:100%;height:100%;display:block;
+  object-fit:cover;object-position:center;
   filter:grayscale(1) contrast(1.06)}
 
 /* screentone over the feed, not a veil: it holds the overlay legible
@@ -1045,8 +1068,8 @@ button,input,select,textarea{font-family:inherit}
   background-size:5px 5px}
 .viewer__grain{display:none}
 
-.reticle{position:relative;width:min(58%,290px);aspect-ratio:1;
-  margin-bottom:clamp(36px,8vw,58px);
+.reticle{position:relative;grid-row:1;place-self:center;
+  width:min(58%,290px);aspect-ratio:1;
   pointer-events:none;z-index:2}
 .reticle__c{position:absolute;width:15%;height:15%;
   border:var(--edge-frame) solid var(--paper);
@@ -1062,7 +1085,7 @@ button,input,select,textarea{font-family:inherit}
 .reticle--busy .reticle__c{opacity:.55}
 .reticle--bad .reticle__c{width:12%;height:12%}
 
-.viewer__status{align-self:end;justify-self:center;z-index:3;
+.viewer__status{grid-row:2;place-self:center;z-index:3;
   padding:0 var(--s3) var(--s3);max-width:100%}
 .viewer__msg{display:inline-block;
   padding:7px var(--s4);background:var(--paper);color:var(--ink);
@@ -1081,7 +1104,8 @@ button,input,select,textarea{font-family:inherit}
    viewfinder and becomes a note: title, sentence, and the field below
    already focused. */
 .viewer--stalled{aspect-ratio:auto;min-height:clamp(160px,30vw,240px);
-  place-items:stretch;background:var(--paper)}
+  grid-template-rows:minmax(0,1fr);place-items:stretch;
+  background:var(--paper)}
 .stall{display:flex;flex-direction:column;justify-content:center;
   gap:var(--s2);padding:var(--s5);text-align:left}
 .stall__title{margin:0;font-family:var(--f-head);

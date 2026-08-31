@@ -741,7 +741,7 @@ const FX = {
     /* SEALED, not "Verified": the product's own word for what just
        happened. A stamp was pressed and it is permanent. */
     P.state.textContent = 'Sealed';
-    P.meet.textContent = `GM ${pad(meeting.no)} · Wed ${fmtDay(meeting.date)} · MPR`;
+    P.meet.textContent = `GM ${pad(meeting.no)} · ${fmtDate(meeting.date)} · MPR`;
     $('#verdictField')?.remove();
     box.insertAdjacentHTML('afterbegin', fieldSVG());
     const field = $('#verdictField');

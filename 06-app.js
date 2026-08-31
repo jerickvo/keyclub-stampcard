@@ -181,12 +181,7 @@ const seenUnlocked = new Set();
    claimable — still play. */
 function playViewIntro(id, nav = false){
   if (id === 'home'){
-    if (!nav){
-      const p = Rules.progress();
-      Motion.countUp($('#heroNum'), p.total);
-      setTimeout(() => FX.sealReveal($('.hero__ring'), { dur:620, spin:-20 }), 220);
-      FX.sealGrid($('#seals'));
-    }
+    if (!nav) FX.sealGrid($('#seals'));
 
     if (pendingCell >= 0){
       const cell = $$('#seals .seal')[pendingCell];
@@ -206,10 +201,6 @@ function playViewIntro(id, nav = false){
     });
   }
 
-  if (id === 'profile' && !nav){
-    const seals = $$('.who__seal');
-    seals.forEach(s => FX.sealReveal(s, { dur:700, spin:-24, delay:180 }));
-  }
 }
 
 function afterRender(id, nav = false){
@@ -218,7 +209,7 @@ function afterRender(id, nav = false){
   if (id === 'auth') AuthUI.busy = false;
   if (id === 'scan'){ paintDemoHint(); Scanner.start(); }
   if (BOARD_ROUTES.includes(id)){ loadBoard(); }
-  else { clearInterval(boardTimer); clearInterval(countTimer); }
+  else { clearInterval(countTimer); }
 }
 
 /* The demo hint is gone. It printed the live attendance code onto the
@@ -246,6 +237,18 @@ function authBusy(on, label){
   btn.textContent = on ? label : (AuthUI.mode === 'up' ? 'Create account' : 'Sign in');
 }
 
+/* The manual code field is not in a form, so Enter (the "Go" key the
+   input's enterkeyhint already advertises on phone keyboards) did
+   nothing. Route it through the Verify button's own click: one code
+   path, and the in-flight guard, disabled state and empty-value nag
+   all apply to the keyboard exactly as they do to a tap. */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target && e.target.id === 'manualInput'){
+    e.preventDefault();
+    $('#manualGo')?.click();
+  }
+});
+
 let bqTimer = null;
 document.addEventListener('input', e => {
   if (e.target.id === 'bq'){
@@ -261,8 +264,9 @@ document.addEventListener('change', e => {
 
 /* ── CREATE MEETING ────────────────────────────────────────────────
    Client validation exists to give a useful message, not to enforce
-   the rule: the Wednesday CHECK, the start<end CHECK and the unique
-   meeting_number all live in the database and remain the authority. */
+   the rule: the start<end CHECK and the unique meeting_number live in
+   the database and remain the authority. A meeting may be scheduled
+   on any day of the week. */
 function to12h(hhmm){
   const [h, m] = String(hhmm).split(':').map(Number);
   const ap = h >= 12 ? 'PM' : 'AM';
@@ -295,10 +299,6 @@ document.addEventListener('submit', async e => {
 
     if (!no || no < 1)  return show('Meeting number is required.');
     if (!date)          return show('Meeting date is required.');
-    /* T12:00:00 keeps the parse in local noon so a timezone shift
-       cannot slide the date onto Tuesday or Thursday */
-    if (new Date(date + 'T12:00:00').getDay() !== 3)
-      return show('Meeting date must be Wednesday.');
     if (!start || !end) return show('Start and end time are required.');
     if (start >= end)   return show('End time must be after the start time.');
 
@@ -309,9 +309,7 @@ document.addEventListener('submit', async e => {
       toast({ key:'board', title:`GM ${pad(no)} created`, detail:'It is now in the schedule.' });
       boardGoto({ tab:'meetings' });
     } catch (ex){
-      const dupe = /duplicate|23505|already exists|unique/i.test(String(ex.message || ''));
-      show(dupe ? 'A meeting with that number already exists.'
-                : 'Could not create that meeting. Check the details and try again.');
+      show(WriteFailure.explain(ex, 'create meeting'));
       btn.disabled = false; btn.textContent = 'Create meeting';
     }
     return;
@@ -389,6 +387,32 @@ document.addEventListener('click', e => {
     return;
   }
 
+  /* ── TEMP-TEST-TOOLING ──────────────────────────────────────────
+     Purge a past meeting and the stamps attached to it, so test data
+     can be cleared before launch. One browser confirm, no undo. The
+     board-only and past-only rules live in the database function; this
+     handler is only the button. Remove this whole block with the rest
+     of the tooling. */
+  const bpurge = e.target.closest('[data-bpurgetemp]');
+  if (bpurge){
+    if (bpurge.disabled) return;
+    const n = Number(bpurge.dataset.bpurgen) || 0;
+    if (!confirm(`Delete GM ${bpurge.dataset.bpurgeno} and its ${n} stamp${n === 1 ? '' : 's'}?\n\nThis cannot be undone.`)) return;
+    bpurge.disabled = true; bpurge.textContent = 'Purging…';
+    Backend.purgeMeetingTEMP(bpurge.dataset.bpurgetemp)
+      .then(res => {
+        toast({ key:'board', title:`GM ${bpurge.dataset.bpurgeno} purged`,
+                detail:`${res.removed} stamp${res.removed === 1 ? '' : 's'} removed with it.` });
+        boardGoto({ meetings:null, meetingDetail:null });
+      })
+      .catch(ex => {
+        bpurge.disabled = false; bpurge.textContent = 'Purge (test)';
+        toast({ key:'board', bad:true, title:'Could not purge',
+                detail:WriteFailure.explain(ex, 'purge meeting') });
+      });
+    return;
+  }
+
   const bback = e.target.closest('[data-bback]');
   if (bback){ boardGoto({ memberDetail:null, meetingDetail:null }); return; }
   const bpage = e.target.closest('[data-bpage]');
@@ -419,7 +443,7 @@ document.addEventListener('click', e => {
   if (bend){
     bend.disabled = true; bend.textContent = 'Ending…';
     Backend.endAttendance(bend.dataset.bend)
-      .then(() => { clearInterval(boardTimer); clearInterval(countTimer); loadBoard(); })
+      .then(() => { clearInterval(countTimer); loadBoard(); })
       .catch(() => { bend.disabled = false; bend.textContent = 'End attendance';
         toast({ key:'board', bad:true, title:'Could not end',
                 detail:'Attendance is still open. Try again.' }); });
@@ -468,20 +492,33 @@ document.addEventListener('click', e => {
 
   const claim = e.target.closest('[data-claim]');
   if (claim){
+    if (claim.disabled) return;   /* a claim is already in flight */
+    claim.disabled = true;
     Store.claimReward(claim.dataset.claim).then(r => {
       FX.impactFrame({ word:'Claimed', angle:-24 });
+      /* stays disabled: the rewards render that follows replaces the
+         button with the Claimed state, and re-enabling it during the
+         beat before navigation would let a second tap play the whole
+         impact again */
       setTimeout(() => {
         toast({ key:'claim', title:`${r.name} claimed`,
                 detail:'Show this screen to a board member to pick it up.' });
         go('rewards');
       }, 220);
-    }).catch(() => toast({ key:'claim', bad:true, title:'Could not claim',
-        detail:'That reward was not saved. Check your connection and try again.' }));
+    }).catch(() => {
+      claim.disabled = false;     /* a failed claim can be retried */
+      toast({ key:'claim', bad:true, title:'Could not claim',
+        detail:'That reward was not saved. Check your connection and try again.' });
+    });
     return;
   }
 
   const go2 = e.target.closest('#manualGo');
   if (go2){
+    if (go2.disabled) return;   /* a check-in is already in flight — a second
+                                   tap on a slow connection must not become a
+                                   second submission and an "Already checked
+                                   in" error over a stamp that just landed */
     const input = $('#manualInput');
     const val = (input && input.value || '').trim();
     if (!val){
@@ -489,7 +526,14 @@ document.addEventListener('click', e => {
               detail:'Type the code a board member gives you.' });
       return;
     }
-    submitSeal(val, false);
+    go2.disabled = true;
+    submitSeal(val, false).finally(() => {
+      /* re-enable so a REFUSED code can be corrected and retried; on
+         success the verdict scene covers the page and the navigation
+         that follows replaces this button anyway */
+      const btn = $('#manualGo');
+      if (btn) btn.disabled = false;
+    });
     return;
   }
 });
@@ -539,7 +583,7 @@ async function loadBoard(){
     paintBoard();
     paintAttendanceCount(boardMeeting);
   } else {
-    clearInterval(boardTimer); clearInterval(countTimer);
+    clearInterval(countTimer);
   }
 }
 
@@ -560,11 +604,11 @@ function paintMotionBtn(){
 }
 
 addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); });
-/* both timers, not just one: countTimer polls the attendance count and
-   was left running on pagehide, so a backgrounded tab kept issuing
-   requests against a page on its way out. */
+/* countTimer polls the attendance count and was once left running on
+   pagehide, so a backgrounded tab kept issuing requests against a page
+   on its way out. */
 addEventListener('pagehide', () => {
-  Scanner.stop(); clearInterval(boardTimer); clearInterval(countTimer);
+  Scanner.stop(); clearInterval(countTimer);
 });
 addEventListener('resize', () => {
   cancelAnimationFrame(indRaf);

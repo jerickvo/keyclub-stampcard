@@ -274,37 +274,18 @@ const stampMark = (ordinal) => {
 const wordmark = () => `<span class="mark"><span class="mark__word">Key<b>stamp</b></span></span>`;
 
 /* ══════════════════════════════════════════════════════════════════
-   2a. SCHEDULE — every general meeting falls on a Wednesday, in the MPR.
+   2a. SCHEDULE — defaults for the board's meeting form.
 
-   Dates are not typed in by hand anywhere. They are generated from one
-   anchor Wednesday plus a fixed interval, and `wednesdayOf` snaps any
-   date it is handed back to the Wednesday of that week. That means a
-   future meeting cannot silently land on a Tuesday because someone
-   mistyped a date or the interval changed.
+   A general meeting may fall on ANY day of the week. Its stored date
+   is the only authority; nothing here constrains or derives it.
+   Schedule supplies the form's starting values, and `today` is the
+   club's calendar day — the same rule the Edge Functions use, so the
+   client and the server never disagree about which day it is.
    ══════════════════════════════════════════════════════════════════ */
-/* Schedule is DATE MATHS only — never a source of meetings. The board
-   creates real meeting rows and the client reads them; what lives here
-   is the guarantee that any date the board tools propose lands on a
-   Wednesday, which is a club rule, not sample data. */
 const Schedule = {
   TIME: '3:15 PM',
   PLACE: 'MPR',              /* every meeting is held in the MPR */
-
-  /* snap any date to the Wednesday of its own week */
-  wednesdayOf(d){
-    const out = new Date(d.getTime());
-    out.setDate(out.getDate() + ((3 - out.getDay() + 7) % 7));   /* 3 = Wednesday */
-    return out;
-  },
-  iso(d){
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  },
-  /* the next Wednesday on or after today — used by the board tools */
-  nextWednesday(from = new Date()){
-    const d = new Date(from.getTime());
-    d.setHours(12, 0, 0, 0);
-    return this.iso(this.wednesdayOf(d));
-  },
+  today: () => clubDay(),
 };
 
 /* ══════════════════════════════════════════════════════════════════
@@ -510,14 +491,25 @@ const QRFormat = {
 /* Product rules — reward tiers and progress maths. No secrets, no
    crypto, safe on the client because none of it grants anything. */
 const Rules = {
-  TIERS: REWARD_TIERS.map(r => r.required),
+  CARD: 10,                       /* one card is ten stamps */
 
+  /* Stamps accumulate for the whole year and never reset; a card is
+     just a ten-stamp window onto that running total. A completed card
+     stays on screen until the next stamp opens the following one, so
+     10 reads 10/10 on card one and 11 reads 1/10 on card two.
+
+     The window is derived from the total, not from the reward tiers:
+     cards carry
+     on past the last reward, and deriving them from the tier list left
+     anyone beyond 30 stamps looking at a permanently full card four. */
   progress(){
     const total = Store.totalStamps();
-    const next  = this.TIERS.find(t => total <= t) ?? null;
-    const floor = next ? (this.TIERS.filter(t => t < next).pop() || 0) : this.TIERS[this.TIERS.length - 1];
-    const span  = next ? next - floor : 10;
-    return { total, next, floor, span, filled: next ? total - floor : span,
-             remaining: next ? next - total : 0 };
+    const index = total > 0 && total % this.CARD === 0
+      ? total / this.CARD - 1
+      : Math.floor(total / this.CARD);
+    const floor = index * this.CARD;
+    const filled = total - floor;
+    return { total, floor, span:this.CARD, filled,
+             card: index + 1, remaining: this.CARD - filled };
   },
 };
