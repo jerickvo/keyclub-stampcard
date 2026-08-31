@@ -124,7 +124,7 @@ const C = {
       `<svg class="card__route card__route--l" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <polyline points="9.5,12.3 28.8,24 48,12.3 66.8,21.5 86.5,34.3 59.3,44.5 38,47.3 12.3,57 34.5,72.3 74.5,71.2"/></svg>` +
       `<svg class="card__route card__route--p" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <polyline points="15.5,11.5 49.3,12.3 82.5,11 82.8,32.8 50.3,32.7 16.3,33.3 15.8,54.3 49,54 82.3,54.3 50,77.5"/></svg>`;
+        <polyline points="16.0,8.6 46.0,13.3 74.0,21.1 81.0,40.6 58.0,50.0 31.0,54.7 11.0,72.7 34.0,81.3 58.0,71.9 83.0,83.6"/></svg>`;
 
     const say = full
       ? (goal ? 'Card complete — claim it in Rewards' : 'Card complete')
@@ -143,7 +143,7 @@ const C = {
         <div class="card__field">
           ${route}
           <ol class="seals" id="seals" aria-label="${p.filled} of ${p.span} stamps in this tier">${cells}</ol>
-          <span class="card__edge" aria-hidden="true">Keystamp · Key Club attendance · Cali-Nev-Ha</span>
+          <span class="card__edge" aria-hidden="true">Keystamp · Key Club attendance<span class="card__edge-tail"> · Cali-Nev-Ha</span></span>
         </div>
       </div>
       ${full ? '<span class="card__punch" aria-hidden="true">Card full</span>' : ''}

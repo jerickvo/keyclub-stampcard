@@ -284,7 +284,7 @@ async function submitSeal(raw, fromCamera){
   pendingCell = Rules.progress().filled - 1;
   const meeting = Store.meeting(result.meeting_id) ||
                   { id:result.meeting_id, no:result.meeting_number };
-  FX.stampAcquire(meeting, () => go('home'));
+  FX.stampAcquire(meeting, () => go('home', { instant:true }));
 }
 
 /* A refusal is a SYSTEM EVENT, so it is reported the way this system

@@ -181,7 +181,9 @@ const seenUnlocked = new Set();
    claimable — still play. */
 function playViewIntro(id, nav = false){
   if (id === 'home'){
-    if (!nav) FX.sealGrid($('#seals'));
+    /* when a fresh stamp is about to land, the grid intro would fade the
+       new seal in a first time before the press — one appearance only */
+    if (!nav && pendingCell < 0) FX.sealGrid($('#seals'));
 
     if (pendingCell >= 0){
       const cell = $$('#seals .seal')[pendingCell];
@@ -529,7 +531,7 @@ document.addEventListener('click', e => {
     go2.disabled = true;
     submitSeal(val, false).finally(() => {
       /* re-enable so a REFUSED code can be corrected and retried; on
-         success the verdict scene covers the page and the navigation
+         success the ink plate covers the page and the navigation
          that follows replaces this button anyway */
       const btn = $('#manualGo');
       if (btn) btn.disabled = false;

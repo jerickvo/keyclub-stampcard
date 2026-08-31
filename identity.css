@@ -99,21 +99,6 @@ body{
 .tab[aria-current]{color:var(--ink)}
 .rail__ind,.tabs__ind{background:var(--ink)}
 
-.verdict__seal circle,.verdict__seal polygon,
-.verdict__seal line{stroke:var(--ink)}
-.verdict__seal path{fill:var(--ink)}
-
-.verdict__state{color:var(--ink);font-family:var(--f-head);font-weight:400;
-  font-size:clamp(46px,13vw,132px);line-height:.82;letter-spacing:-.03em;
-  text-transform:uppercase;transform:rotate(-3.2deg);margin-top:clamp(6px,1.4vw,14px)}
-.verdict__title{font-family:var(--f-body);font-weight:500;
-  font-size:clamp(13px,1.5vw,17px);letter-spacing:.2em;text-transform:uppercase;
-  color:var(--ink);margin-top:clamp(10px,1.6vw,18px)}
-/* the confirmation lands slightly off-axis, the way a hand-pressed
-   chop never lands square */
-.verdict__title{transform:none}
-.verdict__delta{color:var(--ink)}
-
 .bstate--open{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
 /* ══ SPEED LINES ═══════════════════════════════════════════════════
@@ -336,7 +321,7 @@ body{
    lighter overrides, which are more specific and still win.
    ══════════════════════════════════════════════════════════════════ */
 .muted,.empty,
-.verdict__meet,.setupbox__hint,.bstat span,
+.setupbox__hint,.bstat span,
 .brow__no,.brow__sub,.bstate--ended,.bstate--past,
 .brow__mid .muted{color:var(--ink-2)}
 
@@ -453,8 +438,12 @@ main#view:focus,main#view:focus-visible{outline:none}
   border-right:var(--edge-panel) solid var(--ink);
   border-bottom:var(--edge-panel) solid var(--ink)}
 .card__edge{position:absolute;left:clamp(10px,3cqw,22px);bottom:7px;
+  right:clamp(10px,3cqw,22px);white-space:nowrap;overflow:hidden;
   font:500 clamp(8px,1.7cqw,10px)/1 var(--f-mono);
   text-transform:uppercase;letter-spacing:.2em;color:var(--tone)}
+/* the print line is one line always: on the narrowest cards the
+   district tail comes off rather than wrapping or cropping mid-word */
+@media (max-width:359px){.card__edge-tail{display:none}}
 
 /* the collection route: dotted, and ALWAYS behind the slots — the
    stack is explicit (route 0, slots 1) and every slot face is opaque
@@ -478,24 +467,24 @@ main#view:focus,main#view:focus-visible{outline:none}
   min-width:0;
   transform:rotate(var(--lean,0deg))}
 
-/* the PORTRAIT composition (narrow card): three staggered ranks and
-   the milestone landing large below them */
-/* Slots do not touch. The old composition pasted stamps over each
-   other for density; measured at 320-390px that left up to 60x17px of
-   real intersection between neighbours, and ten crowded objects read
-   as clutter, not a collection. Every box now clears its neighbours at
-   every tested width, so whatever silhouette the stamp wears can never
-   collide with the next one. */
-.seal:nth-child(1){--x:4%;   --y:2.5%; --s:23%;  --lean:-2deg}
-.seal:nth-child(2){--x:38%;  --y:3.5%; --s:22.5%;--lean:1.5deg}
-.seal:nth-child(3){--x:71%;  --y:2%;   --s:23%;  --lean:-1deg}
-.seal:nth-child(4){--x:71.5%;--y:24%;  --s:22.5%;--lean:2deg}
-.seal:nth-child(5){--x:38.5%;--y:23.5%;--s:23.5%;--lean:-2.2deg}
-.seal:nth-child(6){--x:5%;   --y:24.5%;--s:22.5%;--lean:1deg}
-.seal:nth-child(7){--x:4.5%; --y:45.5%;--s:22.5%;--lean:-1.5deg}
-.seal:nth-child(8){--x:37.5%;--y:45%;  --s:23%;  --lean:2deg}
-.seal:nth-child(9){--x:71%;  --y:45.5%;--s:22.5%;--lean:-1.8deg}
-.seal:nth-child(10){--x:36%; --y:66.5%;--s:28%;  --lean:-2.5deg}
+/* the PORTRAIT composition (narrow card): THE RIVER — one continuous
+   S-curve, no ranks. The trail enters top-left, winds right, folds
+   back left, and hooks down to the reward pooled in the bottom-right
+   corner, so the route reads as a single journey rather than rows.
+   Slots do not touch: every pair clears its neighbour by at least
+   1.5% of the card width at every tested width (the coordinates were
+   generated with a pairwise-clearance check, since the enso backing
+   bleeds slightly past its box). */
+.seal:nth-child(1){--x:5.5%; --y:0.4%; --s:21%; --lean:-2deg}
+.seal:nth-child(2){--x:35.5%; --y:5.1%; --s:21%; --lean:1.5deg}
+.seal:nth-child(3){--x:63.5%; --y:12.9%; --s:21%; --lean:-1deg}
+.seal:nth-child(4){--x:70.3%; --y:32.2%; --s:21.5%; --lean:2deg}
+.seal:nth-child(5){--x:47.3%; --y:41.6%; --s:21.5%; --lean:-2.2deg}
+.seal:nth-child(6){--x:20.3%; --y:46.3%; --s:21.5%; --lean:1deg}
+.seal:nth-child(7){--x:0.5%; --y:64.5%; --s:21%; --lean:-1.5deg}
+.seal:nth-child(8){--x:23.5%; --y:73.0%; --s:21%; --lean:2deg}
+.seal:nth-child(9){--x:47.5%; --y:63.7%; --s:21%; --lean:-1.8deg}
+.seal:nth-child(10){--x:71.0%; --y:74.2%; --s:24%; --lean:-2.5deg}
 
 /* the LANDSCAPE composition (wide card): the identity panel takes the
    left column, the route runs across the top ranks, down, and back to
@@ -549,7 +538,7 @@ main#view:focus,main#view:focus-visible{outline:none}
 /* EARNED — an ink impression on its own paper backing piece, pressed
    a degree off true. The shadow is TONE and follows the silhouette,
    and the paper deckle keeps two overlapping stamps two objects. */
-.seal--set{filter:drop-shadow(2.5px 3px 0 var(--tone))}
+.seal--set > svg{filter:drop-shadow(2.5px 3px 0 var(--tone))}
 .seal--set .sf-back{fill:var(--paper);stroke:var(--tone);
   stroke-width:.8}
 .seal--set .sf-face{fill:var(--ink)}
@@ -558,7 +547,8 @@ main#view:focus,main#view:focus-visible{outline:none}
 .seal--set .seal__mark path{fill:var(--paper)}
 .seal--set .seal__no{color:var(--ink-2)}
 /* the freshest press sits proudest */
-.seal--hero{filter:drop-shadow(3.5px 4.5px 0 var(--tone));z-index:1}
+.seal--hero > svg{filter:drop-shadow(3.5px 4.5px 0 var(--tone))}
+.seal--hero{z-index:1}
 .seal--hero .sf-back{stroke-width:1.2}
 
 /* NEXT — the seat being worked toward: the silhouette at full ink
@@ -590,7 +580,7 @@ main#view:focus,main#view:focus-visible{outline:none}
 /* a pasted label: its paper chip keeps the name readable even where
    a short field lands it over the card's trim line */
 .seal__tag{position:absolute;left:50%;bottom:3%;
-  transform:translateX(-50%);max-width:100%;
+  transform:translateX(-50%);max-width:132%;
   font:500 clamp(8px,1.6cqw,11px)/1 var(--f-mono);
   text-transform:uppercase;letter-spacing:.1em;color:var(--ink-2);
   background:var(--paper);padding:.2em .45em;box-sizing:border-box;
@@ -786,7 +776,6 @@ button,input,select,textarea{font-family:inherit}
    all sit on ink panels, so they knock out to paper. This is a value
    swap only — the geometry is the traced reference's. */
 .brandseal{--si:var(--ink);--sp:var(--paper)}
-.proj__kci .brandseal{--si:var(--paper);--sp:var(--ink)}
 /* the district countersigns the meeting the board is scheduling */
 .bform__head{display:flex;align-items:center;
   justify-content:space-between;gap:12px}
@@ -1483,33 +1472,45 @@ button,input,select,textarea{font-family:inherit}
 .gmtab--on{background:var(--ink);color:var(--paper)}
 .gmtab:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:2px}
 
-.proj{display:grid;gap:0;margin-top:0;
+/* THE COUNTER: the whole stage is one ink field; the code is its one
+   bright window. The meeting holds the top-left corner, the state
+   word the top-right, the count and the control hold the floor. */
+.proj{display:grid;margin-top:0;
   grid-template-columns:minmax(0,1fr);
+  gap:clamp(14px,2vw,24px);
+  padding:clamp(16px,2.6vw,36px);
+  background:var(--ink);color:var(--paper);
   border:var(--edge-panel) solid var(--ink)}
 
-.proj__side{background:var(--ink);color:var(--paper);
-  padding:clamp(18px,3.4vw,34px);
-  display:flex;flex-direction:column;align-items:flex-start;gap:2px}
-.proj__lab{margin:0;font-size:var(--t-caption);color:var(--tint);
-  letter-spacing:.14em}
-.proj__no{margin:0;padding-bottom:.04em;font-family:var(--f-head);
+.proj__meet{display:flex;flex-direction:column;gap:2px;min-width:0}
+.proj__no{margin:0;font-family:var(--f-head);
   text-transform:uppercase;line-height:.9;
-  font-size:clamp(52px,10vw,128px)}
-.proj__when{margin:0;font-size:var(--t-body);color:var(--tint)}
+  font-size:clamp(34px,4.2vw,72px)}
+/* the meeting facts read from across the room, not from the desk */
+.proj__when{margin:0;color:var(--paper);
+  font-size:clamp(14px,1.6vw,23px);line-height:1.3}
+/* the state word answers before anyone asks; closed keeps the lights
+   down by printing in tone */
+.proj__word{margin:0;font-family:var(--f-head);
+  text-transform:uppercase;line-height:.86;
+  font-size:clamp(52px,7vw,132px);
+  transform:rotate(-1.6deg)}
+.proj:not(.proj--live) .proj__word{color:var(--tone)}
 
-.proj__count{display:flex;align-items:baseline;gap:var(--s3);
-  margin:var(--s4) 0 0}
+.proj__count{display:flex;align-items:baseline;gap:var(--s3);margin:0}
 .proj__count b{font-weight:400;font-family:var(--f-head);line-height:.9;
-  font-size:clamp(56px,10vw,120px)}
-.proj__count span{font-size:var(--t-caption);color:var(--tint)}
-.proj__shut{margin:var(--s3) 0 0;font-size:var(--t-caption);color:var(--tint)}
-.proj__kci{display:block;margin-top:var(--s5);width:clamp(56px,7vw,96px)}
-.proj__kci .brandseal{width:100%;height:auto;display:block}
+  font-size:clamp(48px,5.4vw,96px)}
+.proj__count span{font-size:clamp(11px,1.2vw,15px);color:var(--tint)}
+.proj__shut{margin:0;align-self:center;
+  font-size:clamp(12px,1.3vw,16px);color:var(--tint);max-width:30ch}
 
-.proj__ctl{margin-top:var(--s4);padding:11px var(--s5);cursor:pointer;
+/* the one control is a slab, tall enough that a rushed hand cannot
+   miss it */
+.proj__ctl{margin:0;padding:clamp(15px,1.8vw,22px) var(--s5);cursor:pointer;
   border:var(--edge-panel) solid var(--paper);
   background:transparent;color:var(--paper);
-  font-family:var(--f-head);font-size:var(--t-sub);line-height:1.2}
+  font-family:var(--f-head);line-height:1.2;
+  font-size:clamp(18px,2vw,28px)}
 .proj__ctl:hover{background:var(--paper);color:var(--ink)}
 .proj__ctl--go{background:var(--paper);color:var(--ink)}
 .proj__ctl--go:hover{background:transparent;color:var(--paper)}
@@ -1518,13 +1519,15 @@ button,input,select,textarea{font-family:inherit}
 
 /* THE PLATE. Paper, and nothing printed on it — a quiet zone is what a
    camera needs, so the composition stops at the plate's edge. */
-.proj__plate{background:var(--paper);display:grid;place-items:center;
+.proj__plate{background:var(--paper);color:var(--ink);
+  display:grid;place-items:center;justify-self:center;
+  width:min(100%,max-content);
   grid-template-rows:minmax(0,1fr) auto;
   padding:clamp(16px,3vw,32px);min-width:0}
 /* the code is a printed plate: an ink frame with its own quiet paper
    margin (a QR needs the quiet zone anyway) and a caption band under
    it — a poster, not a floating bitmap */
-.proj__plate .qrpanel__code{width:100%;max-width:min(84vw,58vh,700px);aspect-ratio:1;
+.proj__plate .qrpanel__code{width:min(78vw,58vh,700px);max-width:none;aspect-ratio:1;
   box-sizing:border-box;border:var(--edge-frame) solid var(--ink);
   background:#fff;padding:clamp(10px,1.4vw,18px)}
 .proj__cap{margin:clamp(10px,1.6vw,16px) 0 0;justify-self:stretch;
@@ -1534,17 +1537,25 @@ button,input,select,textarea{font-family:inherit}
   text-transform:uppercase;color:var(--ink);text-align:center}
 .proj__plate--empty{background:var(--tint);
   background-image:radial-gradient(var(--ink) .9px,transparent 1px);
-  background-size:7px 7px;min-height:clamp(180px,40vw,320px)}
+  background-size:7px 7px;justify-self:stretch;
+  min-height:clamp(180px,34vh,420px)}
 .proj__seal{width:min(46%,220px);aspect-ratio:1;height:auto;
   fill:var(--ink);opacity:.22}
 
 @media(min-width:900px){
-  /* the field takes the left third and the code the rest: the plate is
-     the subject, and the ink beside it is what makes it read as bright.
-     The strip bleeds off BOTH edges and owns most of the viewport
-     height — this page is read from across a room. */
-  .proj{grid-template-columns:minmax(0,34fr) minmax(0,66fr);align-items:stretch;
+  /* the counter bleeds off BOTH edges and owns most of the viewport
+     height — this page is read from across a room. Corners: meeting
+     top-left, state word top-right, count bottom-left, control
+     bottom-right; the code plate is the centre of the field. */
+  .proj{grid-template-columns:minmax(0,1fr) auto;
+    grid-template-rows:auto auto auto;
+    align-items:start;
     margin-inline:calc(var(--gutter) * -1);border-inline:0;
-    min-height:min(74vh,820px)}
-  .proj__side{justify-content:center}
+    min-height:min(74vh,860px)}
+  .proj__meet{grid-area:1/1}
+  .proj__word{grid-area:1/2;justify-self:end;align-self:start}
+  .proj__plate{grid-area:2/1/3/3;align-self:center}
+  .proj__count,.proj__shut{grid-area:3/1;align-self:end}
+  .proj__ctl{grid-area:3/2;align-self:end;justify-self:end;
+    min-width:min(38vw,440px)}
 }
