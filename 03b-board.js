@@ -439,20 +439,15 @@ const BoardUI = {
            is composed for that distance: an ink field carrying the
            meeting and the live count, and the code as the one bright
            plate on it. -->
+      <!-- THE COUNTER: one ink field with the code as its bright
+           window. The meeting holds the top-left corner, the state
+           word the top-right, the count and the control the floor. -->
       <section class="proj ${isOpen ? 'proj--live' : ''}">
-        <div class="proj__side">
-          <p class="proj__lab">${isOpen ? 'Scan this' : 'Not open yet'}</p>
+        <div class="proj__meet">
           <p class="proj__no">GM ${pad(sel.meeting_number)}</p>
           <p class="proj__when">${esc(fmtDay(sel.meeting_date))} / ${esc(sel.start_time)} / MPR</p>
-          ${isOpen ? `
-            <p class="proj__count"><b id="attCount">-</b><span>checked in</span></p>
-            <button class="proj__ctl" type="button" data-bend="${esc(sel.id)}">Close check-in</button>
-          ` : `
-            <p class="proj__shut">Nobody can check in until this is open.</p>
-            <button class="proj__ctl proj__ctl--go" type="button" data-bstart="${esc(sel.id)}">Open check-in</button>
-          `}
-          <span class="proj__kci" aria-hidden="true">${brandSeal('kci')}</span>
         </div>
+        <p class="proj__word">${isOpen ? 'Open' : 'Closed'}</p>
 
         ${isOpen ? `
           <!-- nothing is drawn over the code itself: a screentone or an
@@ -465,6 +460,14 @@ const BoardUI = {
           <div class="proj__plate proj__plate--empty" aria-hidden="true">
             <svg class="proj__seal" viewBox="0 0 100 100">${sealArt()}</svg>
           </div>
+        `}
+
+        ${isOpen ? `
+          <p class="proj__count"><b id="attCount">-</b><span>checked in</span></p>
+          <button class="proj__ctl" type="button" data-bend="${esc(sel.id)}">Close check-in</button>
+        ` : `
+          <p class="proj__shut">Nobody can check in until this is open.</p>
+          <button class="proj__ctl proj__ctl--go" type="button" data-bstart="${esc(sel.id)}">Open check-in</button>
         `}
       </section>
     </div>`;
