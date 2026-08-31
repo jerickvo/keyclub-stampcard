@@ -335,13 +335,6 @@ const Lines = {
   },
 };
 
-/* ── the structure that forms behind the biggest moments ── */
-/* THE FIELD BEHIND THE IMPACT: the traced seal at screen height and
-   low value. Traced artwork scales the way a logo should, so the mark
-   behind the impact is simply the mark, enormous and quiet. */
-const fieldSVG = () =>
-  `<svg class="verdict__field" id="verdictField" viewBox="0 0 100 100" aria-hidden="true">${seal(4)}</svg>`;
-
 const Ambient = {
   /* silence: pull the environment down so the impact lands in a quiet room */
   hush(ms = 900){
@@ -725,104 +718,70 @@ const FX = {
       animate(c, { translateX:0, translateY:0, duration:220, ease:EASE.CALM }));
   },
 
-  /* ── the signature sequence ────────────────────────────────────
-     LOCKED · silence · cut cut cross-cut · VERIFIED · +1 · settle
-     Beats are deliberately uneven. The 120ms hole after the cuts
-     is the impact frame: nothing new lands, which is what makes the
-     verdict read as a consequence rather than the next animation.
-     ────────────────────────────────────────────────────────────── */
+  /* ── THE SUCCESS PLATE ──────────────────────────────────────────
+     One full-screen ink plate, one composition, two cuts. Built for a
+     390px phone first: everything is centred and clamped in vmin, so
+     nothing can overflow or collide at any width. No slashes, no
+     rings, no field spiral — the press of the seal IS the effect.
+
+       cut in → the seal presses once → hold, readable →
+       home renders UNDER the plate → the plate lifts → the new
+       stamp presses into its slot (stampLand below).
+
+     `done` runs while the plate still covers the screen, so the page
+     beneath is standing before anything is revealed — the member
+     never sees the scan screen re-render or a transition seam. */
   stampAcquire(meeting, done){
-    const box = $('#verdict');
-    const P = { seal:$('#vSeal'), state:$('#vState'), title:$('#vTitle'),
-                delta:$('#vDelta'), meet:$('#vMeet'), flare:$('#vFlare'),
-                ring:$('#vRing'), ring2:$('#vRing2') };
-
-    P.seal.innerHTML = seal(3);
-    /* SEALED, not "Verified": the product's own word for what just
-       happened. A stamp was pressed and it is permanent. */
-    P.state.textContent = 'Sealed';
-    P.meet.textContent = `GM ${pad(meeting.no)} · ${fmtDate(meeting.date)} · MPR`;
-    $('#verdictField')?.remove();
-    box.insertAdjacentHTML('afterbegin', fieldSVG());
-    const field = $('#verdictField');
-    box.classList.add('is-on');
-
-    const finish = () => {
-      const close = () => { box.classList.remove('is-on'); box.style.opacity = ''; field?.remove(); done(); };
-      if (Motion.off) return close();
-      animate(box, { opacity:[1, 0], duration:200, ease:'inQuad', onComplete:close });
-    };
+    const scene = document.createElement('div');
+    scene.className = 'acq';
+    scene.innerHTML = `
+      <div class="acq__stack">
+        <p class="acq__kick">Stamp acquired</p>
+        <div class="acq__seal" aria-hidden="true">
+          <svg viewBox="0 0 64 64"><path d="${stampShape(7, 0)}"/></svg>
+          <b class="acq__plus">+1</b>
+        </div>
+        <p class="acq__meet">GM ${pad(meeting.no)} · ${fmtDate(meeting.date)} · MPR</p>
+      </div>`;
+    document.body.appendChild(scene);
+    const clear = () => { try { scene.remove(); } catch (_) {} };
 
     if (Motion.off){
-      [P.state, P.title, P.delta, P.meet].forEach(el => el.style.opacity = 1);
-      field?.remove();
-      return void setTimeout(finish, 900);
+      /* the plate still owns the moment: appear, hold, swap, clear */
+      setTimeout(() => { done(); clear(); }, 750);
+      return;
     }
 
-    Ambient.hush(1300);
+    const sealEl = scene.querySelector('.acq__seal');
+    /* the press: arrives large and slightly turned, hits once, done */
+    aset(sealEl, { scale:1.16, rotate:-4 });
+    animate(sealEl, { scale:[1.16, 1], rotate:[-4, -1.5],
+      duration:110, delay:80, ease:STEP(2) });
+    setTimeout(() => Impact.shake(scene, 3, 80), 170);
 
-    const sealStrokes  = P.seal.querySelectorAll('path,circle,polygon,line');
-    const fieldStrokes = field.querySelectorAll('path,circle,polygon,line');
-    aset(sealStrokes, { opacity:1 });
-    aset([P.state, P.title, P.delta, P.meet], { opacity:0 });
-    aset(box, { opacity:0 });
-
-    createTimeline({ onComplete:() => setTimeout(finish, 200) })
-      .add(box, { opacity:[0, 1], duration:1, ease:STEP(1) }, 0)
-
-      .add(field, { opacity:[0, .5], scale:[.42, 1], rotate:[-22, 0],
-             duration:300, ease:EASE.ENERGY }, 40)
-      .add(createDrawable(fieldStrokes), { draw:['0 0', '0 1'],
-             duration:260, delay:stagger(3), ease:'linear' }, 60)
-      .add(createDrawable(sealStrokes), { draw:['0 0', '0 1'],
-             duration:200, delay:stagger(7), ease:'linear' }, 90)
-      .add(P.seal, { rotate:[-10, 0], scale:[.86, 1], duration:240, ease:EASE.ENERGY }, 90)
-
-      /* opacity ONLY. Animating scale here writes an inline transform,
-         and that silently overrode the -3.2deg the stamp is struck at
-         — the mark landed square, which is the one thing a hand-
-         pressed seal never does. */
-      .add(P.state, { opacity:[0, 1], duration:1, ease:STEP(1) }, 300)
-      .add(P.flare, { scale:[.4, 1.6], opacity:[.8, 0], duration:150, ease:STEP(3) }, 300)
-      .add(P.ring, { scale:[.4, 3.2], opacity:[.7, 0], duration:210, ease:STEP(4) }, 302)
-      .add(P.ring2, { scale:[.4, 2.2], opacity:[.5, 0], duration:250, ease:STEP(4) }, 316)
-      .add(field, { scale:[1, 1.08], opacity:[.5, .16], duration:120, ease:STEP(2) }, 306)
-
-      /* the register settling — each mark a cut, not a fade */
-      .add(P.title, { opacity:[0, 1], duration:1, ease:STEP(1) }, 430)
-      .add(P.delta, { opacity:[0, 1], duration:1, ease:STEP(1) }, 480)
-      .add(P.meet,  { opacity:[0, 1], duration:1, ease:STEP(1) }, 530)
-      .add(P.seal,  { opacity:[1, .16], duration:160, ease:STEP(3) }, 560)
-      .add(field,   { opacity:[.16, 0], duration:160, ease:STEP(3) }, 560);
-
-    setTimeout(() => Impact.flash(.3, { dur:44 }), 298);
-    setTimeout(() => Slash.create({ type:'B', angle:-24 }), 300);
-    setTimeout(() => Slash.cross({ angle:-58 }), 336);
-    setTimeout(() => Lines.burst({ count:26, reach:400, hot:true, dur:260 }), 304);
-    setTimeout(() => Impact.shake($('.verdict__inner'), 7, 90), 300);
+    setTimeout(done, 540);                     /* home renders under the plate */
+    setTimeout(() => animate(scene, { opacity:[1, 0], duration:140,
+      ease:'inQuad', onComplete:clear }), 760);
+    setTimeout(clear, 2000);                   /* hard safety */
   },
 
+  /* the new stamp presses into its slot: hidden until the hit, then
+     one cut down onto its final position. No slash, no shards, no
+     drift — the slot was correct before anything moved. */
   stampLand(cell){
     if (!cell || Motion.off) return;
-    const svg = cell.querySelector('svg');
-    Slash.cross({ angle:-34, host:cell });
-    Ambient.surge(760);
-
-    /* two moves, not one. A single overshoot curve makes the stamp
-       decelerate on the way in, which is backwards — a stamp is fastest
-       at the moment it hits. So: a hard fast flight to slightly past
-       the mark, then a spring settle. The spring works out its own
-       duration from the mass and stiffness, so the recoil is physical
-       rather than a number picked to look about right. */
-    animate(cell, { scale:[0, 1.24], rotate:[-42, 6],
-            duration:250, delay:240, ease:'outQuart' });
-    animate(cell, { scale:1, rotate:0,
-            delay:490, ease:spring({ mass:1, stiffness:90, damping:12, velocity:0 }) });
-    this.energyBurst(cell, { count:9, spread:50, delay:250 });
-    Impact.shards(cell, 10, -34);
-    setTimeout(() => this.sealReveal(svg, { dur:380, spin:-24 }), 300);
-    setTimeout(() => Impact.shake($('#shell'), 4, 90), 300);
+    /* the animation writes an inline transform, which would drop the
+       slot's CSS rotate(--lean) mid-press and snap it back at settle;
+       carrying the lean through keeps the settled frame identical to
+       the last animated one */
+    const lean = getComputedStyle(cell).getPropertyValue('--lean').trim() || '0deg';
+    aset(cell, { opacity:0 });
+    animate(cell, { opacity:[0, 1], duration:1, delay:420, ease:STEP(1) });
+    animate(cell, { scale:[1.45, 1], rotate:lean, duration:130, delay:420, ease:STEP(3) });
+    setTimeout(() => { Impact.shake($('.card__face') || $('#shell'), 3, 80); }, 540);
+    setTimeout(() => { Motion.settle(cell); }, 720);
   },
+
 
   rewardUnlock(row){
     if (Motion.off || !row) return;

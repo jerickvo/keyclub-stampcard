@@ -481,34 +481,6 @@ select.input{padding-right:var(--s4)}
   
   opacity:.75;margin-bottom:var(--s2)}
 
-.verdict{position:fixed;inset:0;z-index:120;display:none;place-items:center;
-  overflow:hidden;background:var(--paper)}
-.verdict.is-on{display:grid}
-.verdict__flare{position:absolute;inset:0;
-  background-image:repeating-conic-gradient(from 0deg at 50% 50%,
-    var(--ink) 0deg 1.4deg,transparent 1.4deg 5deg);opacity:0}
-.verdict__ring{position:absolute;border:var(--rule) solid var(--ink);
-  border-radius:50%;opacity:0}
-.verdict__field{position:absolute;inset:0;margin:auto;width:min(128vmin,820px);opacity:.1}
-
-.verdict__inner{position:relative;text-align:center;
-  padding:calc(var(--s6) + env(safe-area-inset-top, 0px))
-          calc(var(--s6) + env(safe-area-inset-right, 0px))
-          calc(var(--s6) + env(safe-area-inset-bottom, 0px))
-          calc(var(--s6) + env(safe-area-inset-left, 0px));
-  width:100%;max-width:min(46ch,100%);margin-inline:auto}
-.verdict__seal{width:min(34vmin,190px);height:min(34vmin,190px);margin:0 auto}
-.verdict__seal circle,.verdict__seal polygon,.verdict__seal line{
-  fill:none;stroke:var(--ink);stroke-width:1.5;vector-effect:non-scaling-stroke}
-.verdict__seal path{fill:var(--ink);stroke:none}
-.verdict__state{font:500 11px/1 var(--f-mono);letter-spacing:.24em;
-  margin-top:var(--s4)}
-.verdict__title{font-family:var(--f-head);font-size:clamp(30px,7vw,58px);
-  text-transform:uppercase;line-height:1;margin-top:var(--s3)}
-.verdict__delta{font-family:var(--f-display);font-size:26px;margin-top:var(--s2)}
-.verdict__meet{font:500 10px/1 var(--f-mono);letter-spacing:.16em;
-  color:var(--tone);margin-top:var(--s3)}
-
 .fx{position:fixed;inset:0;z-index:125;pointer-events:none;overflow:hidden;
   contain:layout paint}
 .scrim{position:absolute;inset:0;background:var(--ink);opacity:0}
@@ -800,14 +772,28 @@ main#view{padding-top:var(--space-tier);
    does what it says. */
 :where(svg:not(.fxdefs):not([width])){width:22px;height:22px;flex:none}
 
-.verdict__seal,
 .arena svg,.slash,.lines,
-.verdict__field,.qrpanel__code svg{width:100%;height:100%}
+.qrpanel__code svg{width:100%;height:100%}
 .btn svg,.motion-btn svg{width:16px;height:16px}
 .rail__nav button svg,.tabs button svg{width:18px;height:18px}
-.verdict__seal{width:min(30vmin,170px);height:min(30vmin,170px)}
 
 .kicker{display:inline-block}
+
+/* ══ THE SUCCESS PLATE — scan success, one ink composition ══════════ */
+.acq{position:fixed;inset:0;z-index:160;display:grid;place-items:center;
+  background:var(--ink);color:var(--paper);text-align:center;
+  padding:24px;box-sizing:border-box}
+.acq__stack{display:grid;justify-items:center;gap:clamp(16px,3.4vh,30px);max-width:100%}
+.acq__kick{font:600 var(--t-caption)/1 var(--f-mono);
+  letter-spacing:.34em;text-transform:uppercase;opacity:.85}
+.acq__seal{position:relative;width:min(54vmin,280px);aspect-ratio:1;
+  display:grid;place-items:center}
+.acq__seal svg{position:absolute;inset:0;width:100%;height:100%}
+.acq__seal path{fill:none;stroke:var(--paper);stroke-width:2.4}
+.acq__plus{font-family:var(--f-title);font-weight:400;
+  font-size:clamp(64px,26vmin,150px);line-height:1}
+.acq__meet{font:500 var(--t-caption)/1.5 var(--f-mono);
+  letter-spacing:.16em;text-transform:uppercase;opacity:.75;max-width:88vw}
 
 </style>
 <style>
@@ -1184,39 +1170,6 @@ select.input:focus-visible{outline:none}
 
 .close{margin-top:clamp(44px,9vh,116px)}
 
-.verdict .verdict__inner{text-align:left;max-width:min(42ch,100%);
-  margin-inline:0 auto;
-  padding-left:max(var(--s6), 6vw)}
-.verdict .verdict__state{white-space:nowrap;
-  font-size:clamp(68px,23vw,380px);
-
-  margin-left:min(-2vw,-14px);margin-right:-46vw;
-  transform:rotate(-2.4deg);transform-origin:left center}
-.verdict .verdict__seal{margin:0 0 0 auto;margin-right:min(6vw,90px);
-  width:min(26vmin,150px);height:min(26vmin,150px)}
-.verdict .verdict__title,
-.verdict .verdict__delta,
-.verdict .verdict__meet{text-align:left}
-.verdict .verdict__delta{font-size:clamp(22px,3.4vw,44px)}
-/* the rule the caption is registered to — the one structural line in
-   the frame, and it starts where the word starts */
-.verdict .verdict__title{position:relative;padding-top:clamp(10px,1.4vw,16px);
-  margin-top:clamp(12px,1.8vw,22px)}
-.verdict .verdict__title::before{content:"";position:absolute;left:0;top:0;
-  width:min(52%,320px);height:var(--edge-heavy);background:var(--ink)}
-
-.verdict .verdict__field path{fill:var(--ink);stroke:none}
-.verdict .verdict__field circle,
-.verdict .verdict__field line,
-.verdict .verdict__field polygon{
-  fill:none;stroke:var(--ink);stroke-width:1.25;
-  vector-effect:non-scaling-stroke}
-
-@media(max-width:479px){
-  .verdict .verdict__inner{padding-left:var(--s5);max-width:100%}
-  .verdict .verdict__state{margin-right:-52vw}
-  .verdict .verdict__seal{margin-right:min(4vw,40px)}
-}
 
 
 
@@ -1323,21 +1276,6 @@ body{
 .rail__link[aria-current],
 .tab[aria-current]{color:var(--ink)}
 .rail__ind,.tabs__ind{background:var(--ink)}
-
-.verdict__seal circle,.verdict__seal polygon,
-.verdict__seal line{stroke:var(--ink)}
-.verdict__seal path{fill:var(--ink)}
-
-.verdict__state{color:var(--ink);font-family:var(--f-head);font-weight:400;
-  font-size:clamp(46px,13vw,132px);line-height:.82;letter-spacing:-.03em;
-  text-transform:uppercase;transform:rotate(-3.2deg);margin-top:clamp(6px,1.4vw,14px)}
-.verdict__title{font-family:var(--f-body);font-weight:500;
-  font-size:clamp(13px,1.5vw,17px);letter-spacing:.2em;text-transform:uppercase;
-  color:var(--ink);margin-top:clamp(10px,1.6vw,18px)}
-/* the confirmation lands slightly off-axis, the way a hand-pressed
-   chop never lands square */
-.verdict__title{transform:none}
-.verdict__delta{color:var(--ink)}
 
 .bstate--open{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
@@ -1561,7 +1499,7 @@ body{
    lighter overrides, which are more specific and still win.
    ══════════════════════════════════════════════════════════════════ */
 .muted,.empty,
-.verdict__meet,.setupbox__hint,.bstat span,
+.setupbox__hint,.bstat span,
 .brow__no,.brow__sub,.bstate--ended,.bstate--past,
 .brow__mid .muted{color:var(--ink-2)}
 
@@ -2813,19 +2751,6 @@ button,input,select,textarea{font-family:inherit}
 <nav class="tabs" id="tabs" aria-label="Main">
   <span class="tabs__ind" id="tabsInd" aria-hidden="true"></span>
 </nav>
-
-<div class="verdict" id="verdict" role="status" aria-live="assertive" aria-label="Scan result">
-  <div class="verdict__flare" id="vFlare"></div>
-  <div class="verdict__ring" id="vRing"></div>
-  <div class="verdict__ring" id="vRing2"></div>
-  <div class="verdict__inner">
-    <svg class="verdict__seal" id="vSeal" viewBox="0 0 100 100" aria-hidden="true"></svg>
-    <p class="verdict__state" id="vState">Sealed</p>
-    <p class="verdict__title" id="vTitle">Stamp acquired</p>
-    <p class="verdict__delta" id="vDelta">+1</p>
-    <p class="verdict__meet" id="vMeet"></p>
-  </div>
-</div>
 
 <svg class="fxdefs" aria-hidden="true">
   <defs>
@@ -18400,13 +18325,6 @@ const Lines = {
   },
 };
 
-/* ── the structure that forms behind the biggest moments ── */
-/* THE FIELD BEHIND THE IMPACT: the traced seal at screen height and
-   low value. Traced artwork scales the way a logo should, so the mark
-   behind the impact is simply the mark, enormous and quiet. */
-const fieldSVG = () =>
-  `<svg class="verdict__field" id="verdictField" viewBox="0 0 100 100" aria-hidden="true">${seal(4)}</svg>`;
-
 const Ambient = {
   /* silence: pull the environment down so the impact lands in a quiet room */
   hush(ms = 900){
@@ -18790,104 +18708,70 @@ const FX = {
       animate(c, { translateX:0, translateY:0, duration:220, ease:EASE.CALM }));
   },
 
-  /* ── the signature sequence ────────────────────────────────────
-     LOCKED · silence · cut cut cross-cut · VERIFIED · +1 · settle
-     Beats are deliberately uneven. The 120ms hole after the cuts
-     is the impact frame: nothing new lands, which is what makes the
-     verdict read as a consequence rather than the next animation.
-     ────────────────────────────────────────────────────────────── */
+  /* ── THE SUCCESS PLATE ──────────────────────────────────────────
+     One full-screen ink plate, one composition, two cuts. Built for a
+     390px phone first: everything is centred and clamped in vmin, so
+     nothing can overflow or collide at any width. No slashes, no
+     rings, no field spiral — the press of the seal IS the effect.
+
+       cut in → the seal presses once → hold, readable →
+       home renders UNDER the plate → the plate lifts → the new
+       stamp presses into its slot (stampLand below).
+
+     `done` runs while the plate still covers the screen, so the page
+     beneath is standing before anything is revealed — the member
+     never sees the scan screen re-render or a transition seam. */
   stampAcquire(meeting, done){
-    const box = $('#verdict');
-    const P = { seal:$('#vSeal'), state:$('#vState'), title:$('#vTitle'),
-                delta:$('#vDelta'), meet:$('#vMeet'), flare:$('#vFlare'),
-                ring:$('#vRing'), ring2:$('#vRing2') };
-
-    P.seal.innerHTML = seal(3);
-    /* SEALED, not "Verified": the product's own word for what just
-       happened. A stamp was pressed and it is permanent. */
-    P.state.textContent = 'Sealed';
-    P.meet.textContent = `GM ${pad(meeting.no)} · ${fmtDate(meeting.date)} · MPR`;
-    $('#verdictField')?.remove();
-    box.insertAdjacentHTML('afterbegin', fieldSVG());
-    const field = $('#verdictField');
-    box.classList.add('is-on');
-
-    const finish = () => {
-      const close = () => { box.classList.remove('is-on'); box.style.opacity = ''; field?.remove(); done(); };
-      if (Motion.off) return close();
-      animate(box, { opacity:[1, 0], duration:200, ease:'inQuad', onComplete:close });
-    };
+    const scene = document.createElement('div');
+    scene.className = 'acq';
+    scene.innerHTML = `
+      <div class="acq__stack">
+        <p class="acq__kick">Stamp acquired</p>
+        <div class="acq__seal" aria-hidden="true">
+          <svg viewBox="0 0 64 64"><path d="${stampShape(7, 0)}"/></svg>
+          <b class="acq__plus">+1</b>
+        </div>
+        <p class="acq__meet">GM ${pad(meeting.no)} · ${fmtDate(meeting.date)} · MPR</p>
+      </div>`;
+    document.body.appendChild(scene);
+    const clear = () => { try { scene.remove(); } catch (_) {} };
 
     if (Motion.off){
-      [P.state, P.title, P.delta, P.meet].forEach(el => el.style.opacity = 1);
-      field?.remove();
-      return void setTimeout(finish, 900);
+      /* the plate still owns the moment: appear, hold, swap, clear */
+      setTimeout(() => { done(); clear(); }, 750);
+      return;
     }
 
-    Ambient.hush(1300);
+    const sealEl = scene.querySelector('.acq__seal');
+    /* the press: arrives large and slightly turned, hits once, done */
+    aset(sealEl, { scale:1.16, rotate:-4 });
+    animate(sealEl, { scale:[1.16, 1], rotate:[-4, -1.5],
+      duration:110, delay:80, ease:STEP(2) });
+    setTimeout(() => Impact.shake(scene, 3, 80), 170);
 
-    const sealStrokes  = P.seal.querySelectorAll('path,circle,polygon,line');
-    const fieldStrokes = field.querySelectorAll('path,circle,polygon,line');
-    aset(sealStrokes, { opacity:1 });
-    aset([P.state, P.title, P.delta, P.meet], { opacity:0 });
-    aset(box, { opacity:0 });
-
-    createTimeline({ onComplete:() => setTimeout(finish, 200) })
-      .add(box, { opacity:[0, 1], duration:1, ease:STEP(1) }, 0)
-
-      .add(field, { opacity:[0, .5], scale:[.42, 1], rotate:[-22, 0],
-             duration:300, ease:EASE.ENERGY }, 40)
-      .add(createDrawable(fieldStrokes), { draw:['0 0', '0 1'],
-             duration:260, delay:stagger(3), ease:'linear' }, 60)
-      .add(createDrawable(sealStrokes), { draw:['0 0', '0 1'],
-             duration:200, delay:stagger(7), ease:'linear' }, 90)
-      .add(P.seal, { rotate:[-10, 0], scale:[.86, 1], duration:240, ease:EASE.ENERGY }, 90)
-
-      /* opacity ONLY. Animating scale here writes an inline transform,
-         and that silently overrode the -3.2deg the stamp is struck at
-         — the mark landed square, which is the one thing a hand-
-         pressed seal never does. */
-      .add(P.state, { opacity:[0, 1], duration:1, ease:STEP(1) }, 300)
-      .add(P.flare, { scale:[.4, 1.6], opacity:[.8, 0], duration:150, ease:STEP(3) }, 300)
-      .add(P.ring, { scale:[.4, 3.2], opacity:[.7, 0], duration:210, ease:STEP(4) }, 302)
-      .add(P.ring2, { scale:[.4, 2.2], opacity:[.5, 0], duration:250, ease:STEP(4) }, 316)
-      .add(field, { scale:[1, 1.08], opacity:[.5, .16], duration:120, ease:STEP(2) }, 306)
-
-      /* the register settling — each mark a cut, not a fade */
-      .add(P.title, { opacity:[0, 1], duration:1, ease:STEP(1) }, 430)
-      .add(P.delta, { opacity:[0, 1], duration:1, ease:STEP(1) }, 480)
-      .add(P.meet,  { opacity:[0, 1], duration:1, ease:STEP(1) }, 530)
-      .add(P.seal,  { opacity:[1, .16], duration:160, ease:STEP(3) }, 560)
-      .add(field,   { opacity:[.16, 0], duration:160, ease:STEP(3) }, 560);
-
-    setTimeout(() => Impact.flash(.3, { dur:44 }), 298);
-    setTimeout(() => Slash.create({ type:'B', angle:-24 }), 300);
-    setTimeout(() => Slash.cross({ angle:-58 }), 336);
-    setTimeout(() => Lines.burst({ count:26, reach:400, hot:true, dur:260 }), 304);
-    setTimeout(() => Impact.shake($('.verdict__inner'), 7, 90), 300);
+    setTimeout(done, 540);                     /* home renders under the plate */
+    setTimeout(() => animate(scene, { opacity:[1, 0], duration:140,
+      ease:'inQuad', onComplete:clear }), 760);
+    setTimeout(clear, 2000);                   /* hard safety */
   },
 
+  /* the new stamp presses into its slot: hidden until the hit, then
+     one cut down onto its final position. No slash, no shards, no
+     drift — the slot was correct before anything moved. */
   stampLand(cell){
     if (!cell || Motion.off) return;
-    const svg = cell.querySelector('svg');
-    Slash.cross({ angle:-34, host:cell });
-    Ambient.surge(760);
-
-    /* two moves, not one. A single overshoot curve makes the stamp
-       decelerate on the way in, which is backwards — a stamp is fastest
-       at the moment it hits. So: a hard fast flight to slightly past
-       the mark, then a spring settle. The spring works out its own
-       duration from the mass and stiffness, so the recoil is physical
-       rather than a number picked to look about right. */
-    animate(cell, { scale:[0, 1.24], rotate:[-42, 6],
-            duration:250, delay:240, ease:'outQuart' });
-    animate(cell, { scale:1, rotate:0,
-            delay:490, ease:spring({ mass:1, stiffness:90, damping:12, velocity:0 }) });
-    this.energyBurst(cell, { count:9, spread:50, delay:250 });
-    Impact.shards(cell, 10, -34);
-    setTimeout(() => this.sealReveal(svg, { dur:380, spin:-24 }), 300);
-    setTimeout(() => Impact.shake($('#shell'), 4, 90), 300);
+    /* the animation writes an inline transform, which would drop the
+       slot's CSS rotate(--lean) mid-press and snap it back at settle;
+       carrying the lean through keeps the settled frame identical to
+       the last animated one */
+    const lean = getComputedStyle(cell).getPropertyValue('--lean').trim() || '0deg';
+    aset(cell, { opacity:0 });
+    animate(cell, { opacity:[0, 1], duration:1, delay:420, ease:STEP(1) });
+    animate(cell, { scale:[1.45, 1], rotate:lean, duration:130, delay:420, ease:STEP(3) });
+    setTimeout(() => { Impact.shake($('.card__face') || $('#shell'), 3, 80); }, 540);
+    setTimeout(() => { Motion.settle(cell); }, 720);
   },
+
 
   rewardUnlock(row){
     if (Motion.off || !row) return;
@@ -19277,7 +19161,7 @@ async function submitSeal(raw, fromCamera){
   pendingCell = Rules.progress().filled - 1;
   const meeting = Store.meeting(result.meeting_id) ||
                   { id:result.meeting_id, no:result.meeting_number };
-  FX.stampAcquire(meeting, () => go('home'));
+  FX.stampAcquire(meeting, () => go('home', { instant:true }));
 }
 
 /* A refusal is a SYSTEM EVENT, so it is reported the way this system
@@ -19483,7 +19367,9 @@ const seenUnlocked = new Set();
    claimable — still play. */
 function playViewIntro(id, nav = false){
   if (id === 'home'){
-    if (!nav) FX.sealGrid($('#seals'));
+    /* when a fresh stamp is about to land, the grid intro would fade the
+       new seal in a first time before the press — one appearance only */
+    if (!nav && pendingCell < 0) FX.sealGrid($('#seals'));
 
     if (pendingCell >= 0){
       const cell = $$('#seals .seal')[pendingCell];
@@ -19831,7 +19717,7 @@ document.addEventListener('click', e => {
     go2.disabled = true;
     submitSeal(val, false).finally(() => {
       /* re-enable so a REFUSED code can be corrected and retried; on
-         success the verdict scene covers the page and the navigation
+         success the ink plate covers the page and the navigation
          that follows replaces this button anyway */
       const btn = $('#manualGo');
       if (btn) btn.disabled = false;

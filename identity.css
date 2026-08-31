@@ -99,21 +99,6 @@ body{
 .tab[aria-current]{color:var(--ink)}
 .rail__ind,.tabs__ind{background:var(--ink)}
 
-.verdict__seal circle,.verdict__seal polygon,
-.verdict__seal line{stroke:var(--ink)}
-.verdict__seal path{fill:var(--ink)}
-
-.verdict__state{color:var(--ink);font-family:var(--f-head);font-weight:400;
-  font-size:clamp(46px,13vw,132px);line-height:.82;letter-spacing:-.03em;
-  text-transform:uppercase;transform:rotate(-3.2deg);margin-top:clamp(6px,1.4vw,14px)}
-.verdict__title{font-family:var(--f-body);font-weight:500;
-  font-size:clamp(13px,1.5vw,17px);letter-spacing:.2em;text-transform:uppercase;
-  color:var(--ink);margin-top:clamp(10px,1.6vw,18px)}
-/* the confirmation lands slightly off-axis, the way a hand-pressed
-   chop never lands square */
-.verdict__title{transform:none}
-.verdict__delta{color:var(--ink)}
-
 .bstate--open{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
 /* ══ SPEED LINES ═══════════════════════════════════════════════════
@@ -336,7 +321,7 @@ body{
    lighter overrides, which are more specific and still win.
    ══════════════════════════════════════════════════════════════════ */
 .muted,.empty,
-.verdict__meet,.setupbox__hint,.bstat span,
+.setupbox__hint,.bstat span,
 .brow__no,.brow__sub,.bstate--ended,.bstate--past,
 .brow__mid .muted{color:var(--ink-2)}
 
