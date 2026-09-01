@@ -48,11 +48,11 @@ const roll = i => (i * 2.399) % 1;            /* deterministic scatter */
 
 const Slash = {
   TYPE: {
-    A: { th:7,  op:.6,  grad:'cutThin',  travel:60, fade:110, shards:0,  scrim:0,   push:0 },
-    B: { th:30, op:1,   grad:'cutHeavy', travel:82, fade:160, shards:11, scrim:.38, push:4 },
-    C: { th:22, op:.95, grad:'cutHeavy', travel:74, fade:150, shards:8,  scrim:.3,  push:3 },
-    D: { th:13, op:.75, grad:'cutThin',  travel:54, fade:105, shards:4,  scrim:.14, push:1.4 },
-    E: { th:18, op:.4,  grad:'cutGhost', travel:110,fade:200, shards:0,  scrim:0,   push:0 },
+    A: { th:7,  op:.6,  grad:'cutThin',  travel:60, fade:110, scrim:0,   push:0 },
+    B: { th:30, op:1,   grad:'cutHeavy', travel:82, fade:160, scrim:.38, push:4 },
+    C: { th:22, op:.95, grad:'cutHeavy', travel:74, fade:150, scrim:.3,  push:3 },
+    D: { th:13, op:.75, grad:'cutThin',  travel:54, fade:105, scrim:.14, push:1.4 },
+    E: { th:18, op:.4,  grad:'cutGhost', travel:110,fade:200, scrim:0,   push:0 },
   },
 
   create({ type = 'B', angle = -22, offset = 0, along = 0, length = null, host = null,
@@ -103,7 +103,6 @@ const Slash = {
     const lands = delay + 26 + P.travel;
     if (P.scrim) Impact.scrim(P.scrim, { delay, host });
     if (P.push)   setTimeout(() => Impact.push(host || $('#view'), P.push, angle), lands);
-    if (P.shards) setTimeout(() => Impact.shards(host || $('#fx'), P.shards, angle), lands);
     if (afterimage && type !== 'E')
       setTimeout(() => this.create({ type:'E', angle:angle + (seq % 2 ? 1.8 : -1.8),
                                      offset:offset + 4, host, afterimage:false, hot:false }), lands + 22);
@@ -243,52 +242,6 @@ const Impact = {
       duration:dur, ease:'linear', onComplete(){ Motion.settle(el); } });
   },
 
-  shards(host, count, angle){
-    if (!host || Motion.off) return;
-    const rad = angle * Math.PI / 180;
-    for (let i = 0; i < count; i++){
-      const el = document.createElement('span');
-      const r = roll(i);
-      el.className = 'shard' + (r > .8 ? ' shard--hot' : r > .3 ? ' shard--dark' : '');
-      host.appendChild(el);
-      const side = i % 2 ? 1 : -1;
-      const perp = rad + Math.PI / 2 + (r - .5) * 1.2;
-      const dist = 30 + r * 86;
-      animate(el, { translateX:[Math.cos(rad) * (r - .5) * 220, Math.cos(perp) * dist * side],
-        translateY:[Math.sin(rad) * (r - .5) * 220, Math.sin(perp) * dist * side],
-        rotate:[angle, angle + side * (50 + r * 130)],
-        scaleX:[1.3, .25],
-        opacity:[{ value:.95, duration:34 }, { value:0, duration:300 }],
-        duration:340, delay:i * 9, ease:EASE.OUT, onComplete:() => el.remove() });
-    }
-  },
-
-  sparks(host, { count = 9, spread = 56, delay = 0 } = {}){
-    if (Motion.off || !host) return;
-    for (let i = 0; i < count; i++){
-      const el = document.createElement('span');
-      const r = roll(i);
-      el.className = 'spark' + (r > .82 ? ' spark--hot' : '');
-      host.appendChild(el);
-      const a = r * Math.PI * 2, d = spread * (.45 + r * .85);
-      animate(el, { translateX:[0, Math.cos(a) * d], translateY:[0, Math.sin(a) * d],
-        scale:[{ value:1.5, duration:60 }, { value:0, duration:280 }],
-        opacity:[{ value:1, duration:40 }, { value:0, duration:300 }],
-        duration:350, delay:delay + i * 8, ease:EASE.OUT, onComplete:() => el.remove() });
-    }
-  },
-
-  ring(host, { size = 150, scale = 3.2, delay = 0, dur = 700 } = {}){
-    if (Motion.off) return;
-    const parent = host || $('#fx');
-    if (!parent) return;
-    const el = document.createElement('span');
-    el.className = 'shockring';
-    el.style.cssText = `width:${size}px;height:${size}px;margin:${-size/2}px 0 0 ${-size/2}px`;
-    parent.appendChild(el);
-    animate(el, { scale:[.25, scale], opacity:[.6, 0], duration:dur, delay,
-            ease:EASE.OUT, onComplete:() => el.remove() });
-  },
 };
 
 /* ── speed lines: thin strokes racing out of a focal point ── */
@@ -367,18 +320,6 @@ const FX = {
     Slash.create({ type:'B', angle, host, delay:52 });
     Lines.burst({ count:26, reach:300, delay:70, host, hot });
     setTimeout(() => Impact.shake($('#shell'), 6, 120), 78);
-  },
-
-  /* dark energy leaving a surface — smoke first, one bright tick last */
-  energyBurst(host, { count = 8, spread = 44, delay = 0 } = {}){
-    if (Motion.off || !host) return;
-    const flare = document.createElement('span');
-    flare.className = 'wellflare';
-    host.appendChild(flare);
-    animate(flare, { scale:[.35, 2.1], opacity:[0, .7, 0], duration:620,
-            delay, ease:EASE.OUT, onComplete:() => flare.remove() });
-    Impact.sparks(host, { count, spread, delay:delay + 40 });
-    Impact.ring(host, { size:46, scale:2.6, delay:delay + 50, dur:620 });
   },
 
   /* NORMAL NAVIGATION — a quiet page turn, nothing else. The whole
@@ -762,7 +703,6 @@ const FX = {
     if (claim){
       animate(claim, { scale:[.86, 1.06, 1], duration:420, delay:120,
                        ease:EASE.IMPACT });
-      this.energyBurst(claim, { count:8, spread:44, delay:150 });
     }
   }
 };

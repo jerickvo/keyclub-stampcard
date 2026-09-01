@@ -416,8 +416,6 @@ select.input{padding-right:var(--s4)}
 .frameword{position:absolute;inset:0;display:grid;place-items:center;opacity:0;
   font-family:var(--f-display);font-size:clamp(48px,13vw,150px);
   text-transform:uppercase;color:var(--ink)}
-.wellflare{display:none}
-
 /* ── the blade: a tapered, slightly irregular SVG sliver — pointed
    ends, widest at the impact region, with a razor core of the opposite
    value. The wrapper sits ON the cut line and rotates about its
