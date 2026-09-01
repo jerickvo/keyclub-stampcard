@@ -341,6 +341,49 @@ select.input:focus-visible{outline:none}
   .sealmeta{font-size:11px;padding:10px 12px}
 }
 
+/* the reveal itself: pointer over the stamp, or the focus a tap and
+   the keyboard both produce. Without this rule the docket is markup
+   that never appears. */
+.seal:hover .sealmeta,
+.seal:focus .sealmeta{display:block}
+/* every .seal is its own stacking context (it is transformed), so the
+   docket's z-index cannot cross siblings on its own: the slot being
+   read raises itself above its later-painted neighbours */
+.seal:hover,
+.seal:focus{z-index:30}
+/* ...and the seals LAYER (z-index:1 against the route) rises past the
+   CARD FULL punch (z-index:3) while a slot is being read, or a full
+   card's banner would sit on the docket of a top-row slot */
+.seals:focus-within,
+.seals:has(.seal:hover){z-index:4}
+
+/* a docket opens AWAY from the card's nearest edge. The right-side
+   seats of each composition open leftward, or the panel runs off the
+   viewport on a phone; the corner marker follows the slot it points
+   at. Slot lists match the seat tables in identity.css. */
+.seal:nth-child(3) .sealmeta,
+.seal:nth-child(4) .sealmeta,
+.seal:nth-child(5) .sealmeta,
+.seal:nth-child(9) .sealmeta,
+.seal:nth-child(10) .sealmeta{left:auto;right:calc(100% - 2px)}
+.seal:nth-child(3) .sealmeta::before,
+.seal:nth-child(4) .sealmeta::before,
+.seal:nth-child(5) .sealmeta::before,
+.seal:nth-child(9) .sealmeta::before,
+.seal:nth-child(10) .sealmeta::before{left:auto;right:-1px;
+  border-left:0;border-right:var(--rule) solid var(--ink)}
+
+@container (min-width:520px){
+  /* the landscape snake seats different slots on the right */
+  .seal:nth-child(3) .sealmeta,
+  .seal:nth-child(4) .sealmeta,
+  .seal:nth-child(9) .sealmeta{left:calc(100% - 2px);right:auto}
+  .seal:nth-child(3) .sealmeta::before,
+  .seal:nth-child(4) .sealmeta::before,
+  .seal:nth-child(9) .sealmeta::before{right:auto;left:-1px;
+    border-right:0;border-left:var(--rule) solid var(--ink)}
+}
+
 /* ── BUTTON HIERARCHY AND STATES ──────────────────────────────────
    .btn--go is the primary action everywhere in the app: filled with
    ink, the same move the ink button makes, so hierarchy costs no new
