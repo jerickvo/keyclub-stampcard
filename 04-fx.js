@@ -35,86 +35,7 @@ const EASE = {
   OUT:    'outQuart',
 };
 
-/* irregular razor tears — uneven thickness, no two alike */
-const TEARS = [
-  'M0 20C150 12 330 7 520 15 720 23 880 15 1000 20 880 25 720 32 520 25 330 33 150 28 0 20Z',
-  'M0 20C190 17 330 9 570 12 780 14 910 18 1000 20 910 23 780 29 570 28 330 31 190 24 0 20Z',
-  'M0 20C120 10 300 25 480 10 690 3 870 17 1000 20 870 26 690 13 480 28 300 37 120 30 0 20Z',
-  'M0 20C160 15 280 5 460 14 660 24 850 11 1000 20 850 28 660 20 460 27 280 34 160 25 0 20Z',
-];
-
-let cutSeq = 0;
 const roll = i => (i * 2.399) % 1;            /* deterministic scatter */
-
-const Slash = {
-  TYPE: {
-    A: { th:7,  op:.6,  grad:'cutThin',  travel:60, fade:110, scrim:0,   push:0 },
-    B: { th:30, op:1,   grad:'cutHeavy', travel:82, fade:160, scrim:.38, push:4 },
-    C: { th:22, op:.95, grad:'cutHeavy', travel:74, fade:150, scrim:.3,  push:3 },
-    D: { th:13, op:.75, grad:'cutThin',  travel:54, fade:105, scrim:.14, push:1.4 },
-    E: { th:18, op:.4,  grad:'cutGhost', travel:110,fade:200, scrim:0,   push:0 },
-  },
-
-  create({ type = 'B', angle = -22, offset = 0, along = 0, length = null, host = null,
-           delay = 0, afterimage = true, hot = true } = {}){
-    if (Motion.off) return;
-    const parent = host || $('#fx');
-    if (!parent) return;
-    if (!host && $$('#fx .slash').length > 8) return;     /* hard cap */
-
-    const P = this.TYPE[type] || this.TYPE.B;
-    const seq = ++cutSeq;
-    const len = length || (host ? Math.max(host.offsetWidth, host.offsetHeight) * 2.2 : null);
-    const w = len ? len + 'px' : '180vmax';
-    const h = P.th;
-
-    const el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    el.setAttribute('class', 'slash');
-    el.setAttribute('viewBox', '0 0 1000 40');
-    el.setAttribute('preserveAspectRatio', 'none');
-    el.style.cssText = `width:${w};height:${h}px;margin-left:calc(${w} / -2);margin-top:${-h/2}px`;
-
-    const tear = TEARS[seq % TEARS.length];
-    el.innerHTML =
-      `<path d="${tear}" fill="url(#${P.grad})"/>` +
-      /* the lit side, offset a hair so the blade has an edge and a body */
-      `<path d="${tear}" fill="url(#cutGhost)" opacity=".55" transform="translate(0,-3)"/>` +
-      /* Fragments riding the cut. These were black-on-black inside the
-         blade and invisible; on an ink cut over paper the fragments
-         that read are the ones the blade MISSES — bare paper punched
-         out of the stroke, which is how a break is drawn. */
-      (type !== 'E' && type !== 'A'
-        ? `<rect x="${180 + (seq % 4) * 90}" y="15" width="${18 + (seq % 3) * 9}" height="11" fill="var(--paper, #F7F7F5)"/>
-           <rect x="${430 + (seq % 5) * 70}" y="14" width="${11 + (seq % 2) * 8}" height="13" fill="var(--paper, #F7F7F5)"/>` : '') +
-      (hot && type !== 'E'
-        ? `<rect x="${640 + (seq % 5) * 20}" y="15" width="${30 + (seq % 3) * 14}" height="11"
-                 fill="var(--paper, #F7F7F5)"/>` : '');
-
-    parent.appendChild(el);
-
-    /* load · travel past full length · snap back · gone */
-    aset(el, { rotate:angle, translateY:offset, translateX:along, scaleX:.012, scaleY:1, opacity:P.op });
-    createTimeline({ onComplete:() => el.remove() })
-      .add(el, { scaleX:[.012, .05], duration:26, delay, ease:'linear' })
-      .add(el, { scaleX:[.05, 1.14], duration:P.travel, ease:EASE.CUT })
-      .add(el, { scaleX:[1.14, 1], duration:38, ease:EASE.OUT })
-      .add(el, { scaleY:[1, .08], opacity:[P.op, 0], duration:P.fade, ease:EASE.OUT });
-
-    const lands = delay + 26 + P.travel;
-    if (P.scrim) Impact.scrim(P.scrim, { delay, host });
-    if (P.push)   setTimeout(() => Impact.push(host || $('#view'), P.push, angle), lands);
-    if (afterimage && type !== 'E')
-      setTimeout(() => this.create({ type:'E', angle:angle + (seq % 2 ? 1.8 : -1.8),
-                                     offset:offset + 4, host, afterimage:false, hot:false }), lands + 22);
-  },
-
-  /* two cuts crossing inside 50ms */
-  cross({ angle = -26, host = null, delay = 0 } = {}){
-    this.create({ type:'C', angle, host, delay });
-    this.create({ type:'C', angle:angle + 76, host, delay:delay + 50, offset:-16 });
-  },
-
-};
 
 /* ══ CUT GEOMETRY ════════════════════════════════════════════════════
    The two ceremony cuts (welcome, boot) are real LINES in viewport
@@ -227,12 +148,6 @@ const Impact = {
   },
 
   /* a few px perpendicular to the blade, then settle */
-  push(el, px, angle){
-    if (!el || Motion.off) return;
-    const rad = (angle + 90) * Math.PI / 180;
-    animate(el, { translateX:[0, Math.cos(rad) * px, 0], translateY:[0, Math.sin(rad) * px, 0],
-      duration:140, ease:EASE.CUT, onComplete(){ Motion.settle(el); } });
-  },
 
   /* the frame itself takes the hit */
   shake(el, px = 5, dur = 110){
@@ -317,7 +232,6 @@ const FX = {
 
     }
 
-    Slash.create({ type:'B', angle, host, delay:52 });
     Lines.burst({ count:26, reach:300, delay:70, host, hot });
     setTimeout(() => Impact.shake($('#shell'), 6, 120), 78);
   },
@@ -356,81 +270,47 @@ const FX = {
     });
   },
 
-  /* the welcome. The word exists as ONE piece — one element, one
-     paint — until the blade's tip reaches it. The split halves are in
-     the DOM but display:none; at the blade's contact moment the whole
-     is swapped for the halves in a single tick (pixel-identical at
-     that instant), and only THEN do they shear apart. The viewer sees:
-     word lands intact → settles → blade crosses it → it divides along
-     the cut → background cuts → the halves fall away. ~1.45s. */
+  /* THE WELCOME — the ink recedes. Signing in is the opposite of the
+     sign-out blackout: a sheet of ink already owns the screen with
+     the word knocked out of it, the word presses in once, and then
+     the WHOLE sheet withdraws along one diagonal — a single motion,
+     no blades, no pieces. The home page renders beneath it (the
+     caller waits two frames), so the reveal edge uncovers a page
+     that is already standing. ~1.2s. */
   welcomeCut(word = 'Welcome'){
     if (Motion.off) return;
-    const fx = $('#fx'); if (!fx) return;
-
-    const panel = `<div class="wcut__panel"><span class="wcut__word">${esc(word)}</span></div>`;
     const el = document.createElement('div');
-    el.className = 'wcut';
-    el.innerHTML =
-      `<div class="wcut__whole">${panel}</div>` +
-      `<div class="wcut__h wcut__h--a" style="display:none">${panel}</div>` +
-      `<div class="wcut__h wcut__h--b" style="display:none">${panel}</div>`;
-    fx.appendChild(el);
-    const whole = el.querySelector('.wcut__whole');
-    const a = el.querySelector('.wcut__h--a'), b = el.querySelector('.wcut__h--b');
-    const wordEl = whole.querySelector('.wcut__word');   /* the ONLY animated copy */
+    el.className = 'inkwipe';
+    el.innerHTML = `<span class="inkwipe__pin"><p class="inkwipe__word">${esc(word)}</p></span>`;
+    document.body.appendChild(el);
+    const wordEl = el.querySelector('.inkwipe__word');
 
-    const W = innerWidth, H = innerHeight;
-    /* the cut line the half clip-paths draw: 62% → 38% of the height */
-    const seamDeg = -Math.atan2(H * .24, W) * 180 / Math.PI;
-    const seamL = CutGeo.line(W * .5, H * .5, seamDeg);
-    const pxv = seamL.nx, pyv = seamL.ny;
-    const D = Math.hypot(W, H);
-
-    /* 1 · the card slams on and the word lands INTACT. Opacity is
-       binary — the word is either not there or fully there — so no
-       frame of it ever reads gray. */
-    animate(whole, { scale:[1.04, 1], duration:70, ease:STEP(2) });
-    aset(wordEl, { scale:1.4, opacity:0 });
+    /* the word presses into the ink once — binary opacity, no gray */
+    aset(wordEl, { scale:1.35, opacity:0 });
     setTimeout(() => {
       aset(wordEl, { opacity:1 });
-      animate(wordEl, { scale:[1.4, 1], duration:120, ease:STEP(3) });
-    }, 70);
-    setTimeout(() => Impact.shake(el, 6, 100), 180);
-    /* 2 · settle: the word breathes, whole and readable */
-    animate(wordEl, { scale:[1, 1.01], duration:330, delay:320, ease:'inOutSine' });
+      animate(wordEl, { scale:[1.35, 1], duration:120, ease:STEP(3) });
+    }, 90);
+    setTimeout(() => Impact.shake(el, 4, 90), 220);
 
-    /* 3 · the blade crosses the word; the cut happens AT contact */
-    const contact = Blade.strike({ line:seamL, paper:true, th:14, host:el,
-                                   delay:650, sweep:70, hold:180 });
+    /* hold, readable — then the sheet of ink withdraws. The torn
+       trailing edge is cut into the element by its clip-path, so the
+       reveal reads as ink leaving the page, not a sliding rectangle.
+       The tween is created AT departure time, not queued with a
+       delay: the shake above ends in a settle, and anime replaces a
+       pending transform tween with that settle's write — a queued
+       wipe would be silently cancelled and the veil would vanish in
+       one frame at its onComplete. */
+    const W = innerWidth, H = innerHeight;
     setTimeout(() => {
-      /* one tick: whole out, halves in — identical pixels — then shear */
-      whole.style.display = 'none';
-      a.style.display = ''; b.style.display = '';
-      animate(a, { translateX:[0, -pxv * 4.5], translateY:[0, -pyv * 4.5],
-                   duration:60, ease:STEP(2) });
-      animate(b, { translateX:[0,  pxv * 4.5], translateY:[0,  pyv * 4.5],
-                   duration:60, ease:STEP(2) });
-      Impact.pop(el);
-      Impact.shake(el, 6, 90);
-    }, contact);
-
-    /* 4 · the scene itself is being cut: varied background strokes */
-    Blade.strike({ line:CutGeo.line(W * .3, H * .3, seamDeg - 42), paper:true,
-                   th:7, host:el, delay:790, sweep:60, hold:90, len:D * .9 });
-    Blade.strike({ line:CutGeo.line(W * .72, H * .68, seamDeg + 34), paper:true,
-                   th:9, host:el, delay:860, sweep:65, hold:100, len:D * 1.3 });
-    Blade.strike({ line:CutGeo.line(W * .82, H * .35, 78), paper:true,
-                   th:5, host:el, delay:930, sweep:55, hold:80, len:D * .6 });
-
-    /* 5 · the halves fall away along the cut and reveal the page */
-    animate(a, { translateX:[-pxv * 4.5, -pxv * D * .85],
-                 translateY:[-pyv * 4.5, -pyv * D * .85],
-                 rotate:-1.4, duration:350, delay:1040, ease:'inQuad' });
-    animate(b, { translateX:[ pxv * 4.5,  pxv * D * .85],
-                 translateY:[ pyv * 4.5,  pyv * D * .85],
-                 rotate:1.4, duration:350, delay:1040, ease:'inQuad' });
-    setTimeout(() => el.remove(), 1450);
+      animate(el, { translateX:[0, -(W * 1.38)], translateY:[0, H * .2],
+        duration:480, ease:'outCubic',
+        onComplete(){ try { el.remove(); } catch (_) {} } });
+    }, 780);
+    /* hard safety: the veil can never outlive its story */
+    setTimeout(() => { try { el.remove(); } catch (_) {} }, 2400);
   },
+
   /* SIGN-OUT SCENE — a manga page built as a WAFFLE GRID, not a page
      transition. The application is simply COVERED by a dedicated
      full-viewport scene that owns the story:
@@ -618,13 +498,11 @@ const FX = {
     const dirs = [[1,1],[-1,1],[1,-1],[-1,-1]];
     $$('#reticle .reticle__c').forEach((c, i) => animate(c, { translateX:dirs[i][0] * 11, translateY:dirs[i][1] * 11,
       duration:180, ease:EASE.CUT }));
-    Slash.create({ type:'D', angle:-30, host:$('#viewer'), delay:90 });
     Impact.flash(.24, { host:$('#viewer'), delay:110, dur:50 });
   },
 
   scanReject(){
     if (Motion.off) return;
-    Slash.create({ type:'A', angle:24, host:$('#viewer'), afterimage:false, hot:false });
     Impact.shake($('#viewer'), 4, 100);
     $$('#reticle .reticle__c').forEach(c =>
       animate(c, { translateX:0, translateY:0, duration:220, ease:EASE.CALM }));
@@ -698,12 +576,33 @@ const FX = {
   rewardUnlock(row){
     if (Motion.off || !row) return;
     const claim = row.querySelector('.tier__claim');
-    Slash.create({ type:'A', angle:-9, host:row });
+    Impact.flash(.18, { host:row, dur:60 });
     Impact.shake(row, 3, 90);
     if (claim){
       animate(claim, { scale:[.86, 1.06, 1], duration:420, delay:120,
                        ease:EASE.IMPACT });
     }
+  },
+
+  /* BOARD STATE SEAL — opening or closing check-in is a chop hitting
+     a document: the projector's cover word presses in once and the
+     facts strip takes the jolt. The word's resting tilt comes from
+     the stylesheet; the press carries it through so settle hands back
+     to CSS on the same frame (the stampLand lesson). The QR plate is
+     never touched — nothing may sit over a code a camera needs. */
+  boardSeal(){
+    const word = $('.proj__word');
+    if (!word || Motion.off) return;
+    let deg = 0;
+    try {
+      const m = new DOMMatrixReadOnly(getComputedStyle(word).transform);
+      deg = Math.atan2(m.b, m.a) * 180 / Math.PI;
+    } catch (_) {}
+    aset(word, { scale:1.45, rotate:deg, opacity:0 });
+    animate(word, { opacity:[0, 1], duration:1, delay:60, ease:STEP(1) });
+    animate(word, { scale:[1.45, 1], rotate:deg, duration:120, delay:60, ease:STEP(3) });
+    setTimeout(() => Impact.shake($('.proj__facts') || word, 3, 80), 190);
+    setTimeout(() => Motion.settle(word), 420);
   }
 };
 

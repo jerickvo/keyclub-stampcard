@@ -435,7 +435,7 @@ document.addEventListener('click', e => {
   if (bstart){
     bstart.disabled = true; bstart.textContent = 'Starting…';
     Backend.startAttendance(bstart.dataset.bstart)
-      .then(() => { boardMeeting = bstart.dataset.bstart; loadBoard(); })
+      .then(() => { boardMeeting = bstart.dataset.bstart; boardStamp = true; loadBoard(); })
       .catch(() => { bstart.disabled = false; bstart.textContent = 'Start attendance';
         toast({ key:'board', bad:true, title:'Could not start',
                 detail:'Attendance did not open. Check the connection and try again.' }); });
@@ -445,7 +445,7 @@ document.addEventListener('click', e => {
   if (bend){
     bend.disabled = true; bend.textContent = 'Ending…';
     Backend.endAttendance(bend.dataset.bend)
-      .then(() => { clearInterval(countTimer); loadBoard(); })
+      .then(() => { clearInterval(countTimer); boardStamp = true; loadBoard(); })
       .catch(() => { bend.disabled = false; bend.textContent = 'End attendance';
         toast({ key:'board', bad:true, title:'Could not end',
                 detail:'Attendance is still open. Try again.' }); });
@@ -544,6 +544,8 @@ document.addEventListener('click', e => {
    Fetches only what the visible pane needs, then re-renders that pane
    in place rather than re-running the whole route — so switching tabs
    does not replay the page-cut transition on every click. */
+let boardStamp = false;   /* one seal-press queued by open/close */
+
 async function loadBoard(){
   if (!Store.isBoard) return;
   const pane = () => $('#boardPane');
@@ -586,6 +588,12 @@ async function loadBoard(){
     paintAttendanceCount(boardMeeting);
   } else {
     clearInterval(countTimer);
+  }
+  /* an open/close queued exactly one seal-press on the cover word;
+     it fires only on a successful session re-render and never twice */
+  if (boardStamp){
+    boardStamp = false;
+    if (BoardUI.tab === 'session' && !BoardUI.error) FX.boardSeal();
   }
 }
 
