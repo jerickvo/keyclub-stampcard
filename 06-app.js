@@ -332,9 +332,9 @@ document.addEventListener('submit', async e => {
   try {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
-    /* the ink panel mounts first; the home render waits two frames so
-       the page beneath can never visibly change before the panel is
-       actually on screen */
+    /* the cover page mounts first; the home render waits two frames
+       so the page beneath can never visibly change before the cover
+       is actually on screen */
     FX.welcomeCut(up ? 'Joined' : 'Welcome');
     if (Motion.off){ go('home', { instant:true }); }
     else requestAnimationFrame(() => requestAnimationFrame(() => go('home', { instant:true })));
