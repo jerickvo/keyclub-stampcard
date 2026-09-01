@@ -51,8 +51,14 @@
 
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow-x:clip}
+/* the CANVAS is ink, not paper: the browser paints this file
+   mid-parse, and the first painted frame must already read as the
+   boot poster's ground. The paper the app lives on is the .ground
+   layer (fixed, full-viewport, z0), which every screen keeps — body's
+   own background only ever shows before .ground parses and past the
+   overscroll edge, and both should be ink. */
 body{
-  background:var(--paper);color:var(--ink);
+  background:var(--ink);color:var(--ink);
   font-family:var(--f-body);font-size:var(--t-body);line-height:1.5;
   -webkit-font-smoothing:antialiased;
 }
@@ -505,6 +511,14 @@ select.input{padding-right:var(--s4)}
    fly apart the app underneath is what shows through */
 .boot.is-done{display:none}
 .boot__whole{position:absolute;inset:0}
+/* the WHOLE layer's type starts unprinted: the static first paint is
+   ink + seal only, and the entrance choreography is the type's ONLY
+   appearance — markup that painted raw and was then hidden by script
+   is exactly the flash this exists to prevent. The halves keep their
+   type visible: they are the poster's FINAL state, swapped in at the
+   blade's contact. */
+.boot__whole .boot__kicker,
+.boot__whole .boot__word{opacity:0}
 .boot__half{position:absolute;inset:0;will-change:transform}
 .boot__half--a{clip-path:polygon(0 0,100% 0,100% 40%,0 60%)}
 .boot__half--b{clip-path:polygon(0 60%,100% 40%,100% 100%,0 100%)}

@@ -722,7 +722,6 @@ Object.assign(FX, {
     const boot = $('#boot');
     const whole = $('.boot__whole');
     const halves = $$('.boot__half');
-    const seals = $$('.boot__seal');
 
     /* both of these are idempotent on purpose. The curtain is a solid
        layer over the whole app, so "lift it exactly once, from exactly
@@ -731,8 +730,6 @@ Object.assign(FX, {
     let lifted = false, revealed = false;
     const done = () => { if (lifted) return; lifted = true; boot.classList.add('is-done'); };
     const reveal = () => { if (revealed) return; revealed = true; onReveal(); };
-
-    seals.forEach(s => { s.innerHTML = brandSeal('kci'); });
 
     if (Motion.off){ reveal(); return void done(); }
 
