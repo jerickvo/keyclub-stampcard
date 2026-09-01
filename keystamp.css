@@ -51,8 +51,14 @@
 
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow-x:clip}
+/* the CANVAS is ink, not paper: the browser paints this file
+   mid-parse, and the first painted frame must already read as the
+   boot poster's ground. The paper the app lives on is the .ground
+   layer (fixed, full-viewport, z0), which every screen keeps — body's
+   own background only ever shows before .ground parses and past the
+   overscroll edge, and both should be ink. */
 body{
-  background:var(--paper);color:var(--ink);
+  background:var(--ink);color:var(--ink);
   font-family:var(--f-body);font-size:var(--t-body);line-height:1.5;
   -webkit-font-smoothing:antialiased;
 }
@@ -432,18 +438,24 @@ select.input{padding-right:var(--s4)}
 .blade2--paper .b-body{fill:var(--paper)}
 .blade2--paper .b-core{fill:var(--ink)}
 
-/* the welcome: one INTACT panel layer (the only one that plays), and
-   two clipped halves that stay display:none until the blade's contact
-   swaps them in pixel-for-pixel. The word is never split before the
-   cut because the split copies are simply not rendered. */
-.wcut{position:absolute;inset:0;z-index:4}
-.wcut__whole{position:absolute;inset:0}
-.wcut__h{position:absolute;inset:0}
-.wcut__h--a{clip-path:polygon(0 0,100% 0,100% 38%,0 62%)}
-.wcut__h--b{clip-path:polygon(0 62%,100% 38%,100% 100%,0 100%)}
-.wcut__panel{position:absolute;inset:0;background:var(--ink);
-  display:grid;place-items:center}
-.wcut__word{font-family:var(--f-head);
+/* THE WELCOME VEIL — one sheet of ink with the word knocked out of
+   it. Its trailing (right) edge is a torn diagonal cut into the
+   element itself, so when the sheet withdraws the reveal reads as ink
+   leaving the page. Oversized so the tear clears every viewport. */
+.inkwipe{position:fixed;top:-6%;bottom:-6%;left:-8%;width:119%;
+  z-index:150;background:var(--ink);
+  /* the torn trailing edge sits JUST past the viewport's right edge
+     at rest (119% wide, hung 8% left, tear from 84% of the sheet), so
+     the reveal starts moving with the sheet's first pixel of travel
+     instead of spending the tween's opening off-screen */
+  clip-path:polygon(0 0,84% 0,92% 18%,86% 37%,94% 55%,87% 74%,93% 100%,0 100%);
+  will-change:transform}
+/* the pin owns the centring (sheet-local coords for the VIEWPORT
+   centre: the sheet hangs 8vw left and 6vh up), so the word's press
+   animation can write transforms without ever moving the anchor */
+.inkwipe__pin{position:absolute;left:58vw;top:56vh;
+  transform:translate(-50%,-50%)}
+.inkwipe__word{font-family:var(--f-head);
   font-size:clamp(64px,15vw,190px);line-height:1;padding-bottom:.12em;
   text-transform:uppercase;color:var(--paper);white-space:nowrap;
   letter-spacing:.01em}
@@ -505,6 +517,14 @@ select.input{padding-right:var(--s4)}
    fly apart the app underneath is what shows through */
 .boot.is-done{display:none}
 .boot__whole{position:absolute;inset:0}
+/* the WHOLE layer's type starts unprinted: the static first paint is
+   ink + seal only, and the entrance choreography is the type's ONLY
+   appearance — markup that painted raw and was then hidden by script
+   is exactly the flash this exists to prevent. The halves keep their
+   type visible: they are the poster's FINAL state, swapped in at the
+   blade's contact. */
+.boot__whole .boot__kicker,
+.boot__whole .boot__word{opacity:0}
 .boot__half{position:absolute;inset:0;will-change:transform}
 .boot__half--a{clip-path:polygon(0 0,100% 0,100% 40%,0 60%)}
 .boot__half--b{clip-path:polygon(0 60%,100% 40%,100% 100%,0 100%)}
@@ -560,7 +580,7 @@ select.input{padding-right:var(--s4)}
   text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
 #barBrand svg{width:26px;height:26px}
 
-.lines line,.lines path,.slash path,.slash rect{stroke:var(--ink);fill:var(--ink)}          /* it sits under the number at this width */
+.lines line,.lines path{stroke:var(--ink);fill:var(--ink)}
 /* Callouts clear the tab bar AND the home indicator, so a message never
    lands on the navigation or in the gesture strip. */
 .toasts{left:var(--gutter);right:var(--gutter);max-width:none;
@@ -698,7 +718,7 @@ main#view{padding-top:var(--space-tier);
    does what it says. */
 :where(svg:not(.fxdefs):not([width])){width:22px;height:22px;flex:none}
 
-.arena svg,.slash,.lines,
+.arena svg,.lines,
 .qrpanel__code svg{width:100%;height:100%}
 .btn svg,.motion-btn svg{width:16px;height:16px}
 .rail__nav button svg,.tabs button svg{width:18px;height:18px}
