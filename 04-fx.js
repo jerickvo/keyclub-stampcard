@@ -38,9 +38,9 @@ const EASE = {
 const roll = i => (i * 2.399) % 1;            /* deterministic scatter */
 
 /* ══ CUT GEOMETRY ════════════════════════════════════════════════════
-   The two ceremony cuts (welcome, boot) are real LINES in viewport
-   space: the blade is drawn along the line and the seam opens where
-   it crosses — cause, then consequence, on the same geometry. */
+   The boot ceremony cut is a real LINE in viewport space: the blade
+   is drawn along the line and the seam opens where it crosses —
+   cause, then consequence, on the same geometry. */
 const CutGeo = {
   /* a cut line through (x,y) at deg: unit direction d, unit normal n */
   line(x, y, deg){
@@ -270,45 +270,73 @@ const FX = {
     });
   },
 
-  /* THE WELCOME — the ink recedes. Signing in is the opposite of the
-     sign-out blackout: a sheet of ink already owns the screen with
-     the word knocked out of it, the word presses in once, and then
-     the WHOLE sheet withdraws along one diagonal — a single motion,
-     no blades, no pieces. The home page renders beneath it (the
-     caller waits two frames), so the reveal edge uncovers a page
-     that is already standing. ~1.2s. */
+  /* THE WELCOME — the cover page. Signing in opens the volume: a
+     paper page already owned by the giant tone-ghost of the KCI seal,
+     a full-width ink tier drops on, the KEYSTAMP wordmark slides into
+     it like a train of ink, captions and the footer bar close the
+     composition, the whole cover thumps once — and then the page
+     pulls apart along its own panel structure in three directions,
+     onto a home page that is already standing (the caller waits two
+     frames before rendering it beneath). ~1.2s.
+     Reduced motion: the same cover, fully composed and dead still,
+     held for a beat and then swapped away — the moment still reads
+     "Keystamp is opening" with zero movement. */
   welcomeCut(word = 'Welcome'){
-    if (Motion.off) return;
+    const tail = word === 'Joined' ? 'Member joined' : 'Welcome back';
     const el = document.createElement('div');
-    el.className = 'inkwipe';
-    el.innerHTML = `<span class="inkwipe__pin"><p class="inkwipe__word">${esc(word)}</p></span>`;
+    el.className = 'wcover';
+    el.innerHTML =
+      `<div class="wcover__page">
+         <svg class="brandseal wcover__seal" viewBox="0 0 840 875" aria-hidden="true">
+           <use href="#bootseal"/></svg>
+       </div>
+       <p class="wcover__kick">Key Club attendance</p>
+       <div class="wcover__tier"><p class="wcover__word">Keystamp</p></div>
+       <p class="wcover__tail">${tail}</p>
+       <div class="wcover__foot"><p>Keystamp · Key Club attendance</p></div>`;
     document.body.appendChild(el);
-    const wordEl = el.querySelector('.inkwipe__word');
-
-    /* the word presses into the ink once — binary opacity, no gray */
-    aset(wordEl, { scale:1.35, opacity:0 });
+    if (Motion.off){
+      setTimeout(() => { try { el.remove(); } catch (_) {} }, 700);
+      return;
+    }
+    const page  = el.querySelector('.wcover__page');
+    const tier  = el.querySelector('.wcover__tier');
+    const wordEl= el.querySelector('.wcover__word');
+    const kick  = el.querySelector('.wcover__kick');
+    const tailP = el.querySelector('.wcover__tail');
+    const foot  = el.querySelector('.wcover__foot');
+    aset(tier,  { translateY:'-320%' });
+    aset(foot,  { translateY:'120%' });
+    aset(wordEl,{ translateX:'105%' });
+    aset(kick,  { opacity:0 });
+    aset(tailP, { opacity:0 });
+    /* the tier drops onto the page */
+    setTimeout(() => animate(tier, { translateY:['-320%','0%'],
+      duration:140, ease:STEP(2) }), 110);
+    /* the wordmark slides into it like a train of ink */
+    setTimeout(() => animate(wordEl, { translateX:['105%','0%'],
+      duration:180, ease:STEP(3) }), 290);
+    setTimeout(() => aset(kick, { opacity:1 }), 310);
     setTimeout(() => {
-      aset(wordEl, { opacity:1 });
-      animate(wordEl, { scale:[1.35, 1], duration:120, ease:STEP(3) });
-    }, 90);
-    setTimeout(() => Impact.shake(el, 4, 90), 220);
-
-    /* hold, readable — then the sheet of ink withdraws. The torn
-       trailing edge is cut into the element by its clip-path, so the
-       reveal reads as ink leaving the page, not a sliding rectangle.
-       The tween is created AT departure time, not queued with a
-       delay: the shake above ends in a settle, and anime replaces a
-       pending transform tween with that settle's write — a queued
-       wipe would be silently cancelled and the veil would vanish in
-       one frame at its onComplete. */
-    const W = innerWidth, H = innerHeight;
+      aset(tailP, { opacity:1 });
+      animate(foot, { translateY:['120%','0%'], duration:90, ease:STEP(2) });
+    }, 520);
+    /* the whole cover thumps once */
+    setTimeout(() => aset(el, { scale:1.022 }), 660);
+    setTimeout(() => aset(el, { scale:1 }), 726);
+    /* the page pulls apart along its own structure. Each exit tween is
+       created here, at departure time — anime replaces a pending
+       delayed tween the moment anything else writes that property. */
     setTimeout(() => {
-      animate(el, { translateX:[0, -(W * 1.38)], translateY:[0, H * .2],
-        duration:480, ease:'outCubic',
+      aset(kick,  { opacity:0 });
+      aset(tailP, { opacity:0 });
+      animate(tier, { translateY:['0%','-320%'], duration:260, ease:'outCubic' });
+      animate(foot, { translateY:['0%','120%'],  duration:260, ease:'outCubic' });
+      animate(page, { translateX:['0%','-104%'], duration:300, ease:'outCubic',
         onComplete(){ try { el.remove(); } catch (_) {} } });
-    }, 780);
-    /* hard safety: the veil can never outlive its story */
-    setTimeout(() => { try { el.remove(); } catch (_) {} }, 2400);
+    }, 920);
+    /* hard safety: the cover can never outlive its story */
+    setTimeout(() => { try { el.remove(); } catch (_) {} }, 2600);
   },
 
   /* SIGN-OUT SCENE — a manga page built as a WAFFLE GRID, not a page

@@ -438,27 +438,49 @@ select.input{padding-right:var(--s4)}
 .blade2--paper .b-body{fill:var(--paper)}
 .blade2--paper .b-core{fill:var(--ink)}
 
-/* THE WELCOME VEIL — one sheet of ink with the word knocked out of
-   it. Its trailing (right) edge is a torn diagonal cut into the
-   element itself, so when the sheet withdraws the reveal reads as ink
-   leaving the page. Oversized so the tear clears every viewport. */
-.inkwipe{position:fixed;top:-6%;bottom:-6%;left:-8%;width:119%;
-  z-index:150;background:var(--ink);
-  /* the torn trailing edge sits JUST past the viewport's right edge
-     at rest (119% wide, hung 8% left, tear from 84% of the sheet), so
-     the reveal starts moving with the sheet's first pixel of travel
-     instead of spending the tween's opening off-screen */
-  clip-path:polygon(0 0,84% 0,92% 18%,86% 37%,94% 55%,87% 74%,93% 100%,0 100%);
+/* ══ THE WELCOME — the COVER PAGE ════════════════════════════════════
+   Signing in opens the volume. A manga cover assembles: the giant
+   tone-ghost of the KCI seal already owns the paper, a full-width ink
+   tier drops in, the KEYSTAMP wordmark slides into it like a train of
+   ink, the footer bar closes the page, the whole cover thumps once —
+   and then the page pulls apart along its own panel structure in
+   three directions, onto the standing home page. */
+.wcover{position:fixed;inset:0;z-index:150;overflow:hidden;
   will-change:transform}
-/* the pin owns the centring (sheet-local coords for the VIEWPORT
-   centre: the sheet hangs 8vw left and 6vh up), so the word's press
-   animation can write transforms without ever moving the anchor */
-.inkwipe__pin{position:absolute;left:58vw;top:56vh;
-  transform:translate(-50%,-50%)}
-.inkwipe__word{font-family:var(--f-head);
-  font-size:clamp(64px,15vw,190px);line-height:1;padding-bottom:.12em;
-  text-transform:uppercase;color:var(--paper);white-space:nowrap;
-  letter-spacing:.01em}
+.wcover__page{position:absolute;inset:0;background:var(--paper);
+  overflow:hidden;will-change:transform}
+/* two-class selector: identity.css loads last and its .brandseal
+   slots would otherwise repaint this ghost full-ink */
+.wcover__page .wcover__seal{position:absolute;width:148vw;max-width:900px;
+  top:-7%;right:clamp(-460px,-52vw,-140px);height:auto;
+  transform:rotate(-9deg);
+  --si:#DCDBD6;--sp:transparent}
+.wcover__tier{position:absolute;left:0;right:0;top:24%;
+  height:clamp(96px,28vw,150px);background:var(--ink);overflow:hidden;
+  display:flex;align-items:center;will-change:transform}
+.wcover__word{font-family:var(--f-head);color:var(--paper);
+  font-size:clamp(62px,21vw,112px);line-height:1;white-space:nowrap;
+  text-transform:uppercase;padding:0 6vw .04em;will-change:transform}
+.wcover__kick{position:absolute;left:6vw;top:calc(24% - 32px);
+  font:500 11px/1 var(--f-mono);letter-spacing:.22em;
+  text-transform:uppercase;color:var(--ink-2)}
+.wcover__tail{position:absolute;left:6vw;
+  top:calc(24% + clamp(96px,28vw,150px) + 16px);
+  font:500 11.5px/1 var(--f-mono);letter-spacing:.3em;
+  text-transform:uppercase;color:var(--ink)}
+.wcover__foot{position:absolute;left:0;right:0;bottom:0;height:34px;
+  background:var(--ink);display:flex;align-items:center;
+  justify-content:center;will-change:transform}
+.wcover__foot p{font:500 10px/1 var(--f-mono);letter-spacing:.3em;
+  text-transform:uppercase;color:var(--paper)}
+/* the cover at desk and projector scale: the tier stays a full-bleed
+   band, the wordmark keeps commanding it */
+@media(min-width:1024px){
+  .wcover__tier{height:clamp(150px,16vw,240px)}
+  .wcover__word{font-size:clamp(112px,12vw,190px)}
+  .wcover__tail{top:calc(24% + clamp(150px,16vw,240px) + 18px)}
+  .wcover__foot{height:40px}
+}
 
 /* ══ THE SIGN-OUT SCENE ══════════════════════════════════════════════
    A manga page built as a WAFFLE GRID, covering the application. The
