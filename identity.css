@@ -1058,7 +1058,11 @@ button,input,select,textarea{font-family:inherit}
 .acct__out:hover{background:var(--ink);color:var(--paper)}
 .acct__out:focus-visible{outline:var(--edge-panel) solid var(--ink);
   outline-offset:3px}
-@media(min-width:1024px){ .acct{display:none} }
+@media(min-width:900px){
+  .view--account{max-width:560px}
+}
+@media(min-width:1024px){ .view--member .acct{display:none}
+  .view--account .acct{display:grid} }
 
 .bover{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr);
   grid-template-areas:"now" "ident" "band"}

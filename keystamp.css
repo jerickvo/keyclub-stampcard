@@ -85,7 +85,8 @@ body{
 [data-screen="board"] .ground__slash,
 [data-screen="bmeet"] .ground__slash,
 [data-screen="bcheckin"] .ground__slash,
-[data-screen="bmembers"] .ground__slash{top:42%;transform:rotate(14deg)}
+[data-screen="bmembers"] .ground__slash,
+[data-screen="baccount"] .ground__slash{top:42%;transform:rotate(14deg)}
 [data-screen="bmeet"] .ground::before{width:52vw;height:44vh}
 [data-screen="auth"] .ground__bleed,
 [data-screen="auth"] .ground__corner,

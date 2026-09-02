@@ -155,7 +155,8 @@ body{
 [data-screen="board"] .ground__slash,
 [data-screen="bmeet"] .ground__slash,
 [data-screen="bcheckin"] .ground__slash,
-[data-screen="bmembers"] .ground__slash{top:42%;transform:rotate(14deg)}
+[data-screen="bmembers"] .ground__slash,
+[data-screen="baccount"] .ground__slash{top:42%;transform:rotate(14deg)}
 [data-screen="bmeet"] .ground::before{width:52vw;height:44vh}
 [data-screen="auth"] .ground__bleed,
 [data-screen="auth"] .ground__corner,
@@ -1980,7 +1981,11 @@ button,input,select,textarea{font-family:inherit}
 .acct__out:hover{background:var(--ink);color:var(--paper)}
 .acct__out:focus-visible{outline:var(--edge-panel) solid var(--ink);
   outline-offset:3px}
-@media(min-width:1024px){ .acct{display:none} }
+@media(min-width:900px){
+  .view--account{max-width:560px}
+}
+@media(min-width:1024px){ .view--member .acct{display:none}
+  .view--account .acct{display:grid} }
 
 .bover{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr);
   grid-template-areas:"now" "ident" "band"}
@@ -15261,6 +15266,7 @@ const ICON = {
   scan:   SVG('<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><path d="M4 12h16"/>'),
   reward: SVG('<path d="M12 3 20 12l-8 9-8-9z"/><path d="M12 7.5 16 12l-4 4.5L8 12z"/>'),
   member: SVG('<path d="M8 4h8v7H8z"/><path d="M4.5 20.5v-3h15v3"/>'),
+  account:SVG('<circle cx="8" cy="12" r="3.5"/><path d="M11.5 12h9M17.5 12v3.5M20.5 12v2.5"/>'),
 
   waves:  SVG('<path d="M2.5 16h4v-8h5v8h5v-8h5"/>'),
   still:  SVG('<path d="M4 12h16"/><path d="M4 8v8M20 8v8"/>'),
@@ -15780,6 +15786,15 @@ const C = {
   },
 };
 
+C.account = () => `<section class="acct" data-enter>
+  <h2 class="acct__mark">Account</h2>
+  <div class="acct__row">
+    <span class="acct__lab">Reduced motion</span>
+    <button class="motion-btn" type="button" data-motion></button>
+  </div>
+  <button class="acct__out" data-signout type="button">Sign out</button>
+</section>`;
+
 const MANUAL_ENTRY = false;
 
 const Views = {
@@ -16022,14 +16037,30 @@ const Views = {
         </dl>
       </section>
 
-      <section class="acct" data-enter>
-        <h2 class="acct__mark">Account</h2>
-        <div class="acct__row">
-          <span class="acct__lab">Reduced motion</span>
-          <button class="motion-btn" type="button" data-motion></button>
+      ${C.account()}
+    </div>`;
+  },
+
+  baccount(){
+    const name   = memberName();
+    const handle = (Store.user && Store.user.username) || name;
+    return `<div class="view view--member view--account">
+      <header class="rechead rechead--tight" data-enter>
+        <h1 class="title rechead__title">Account</h1>
+      </header>
+
+      <section class="who" data-enter>
+        <div class="who__mark" aria-hidden="true">
+          <span class="who__org">Cali-Nev-Ha District</span>
         </div>
-        <button class="acct__out" data-signout type="button">Sign out</button>
+        <span class="who__emblem" aria-hidden="true">${brandSeal('cnh')}</span>
+        <div class="who__id">
+          <p class="who__hand">Signed in / Board${handle !== name ? ` / ${esc(handle)}` : ''}</p>
+          <p class="who__name">${esc(name)}</p>
+        </div>
       </section>
+
+      ${C.account()}
     </div>`;
   },
 
@@ -17329,10 +17360,11 @@ const MEMBER_NAV = [
 ];
 
 const BOARD_NAV = [
-  { id:'board',    label:'Club Tools', icon:'home'   },
+  { id:'board',    label:'Club Tools', short:'Club', icon:'home'   },
   { id:'bmeet',    label:'Meetings',   icon:'record' },
   { id:'bcheckin', label:'Check-In',   icon:'scan'   },
   { id:'bmembers', label:'Members',    icon:'member' },
+  { id:'baccount', label:'Account',    icon:'account' },
 ];
 
 const navFor = () => (Store.isBoard ? BOARD_NAV : MEMBER_NAV);
@@ -17370,6 +17402,7 @@ const AuthUI = {
 };
 
 const BOARD_ROUTES = BOARD_NAV.map(n => n.id);
+const PANE_ROUTES = ['board', 'bmeet', 'bcheckin', 'bmembers'];
 
 function gate(id){
   if (!Store.ready) return id;
@@ -17416,7 +17449,7 @@ function paintNav(){
   navFor().forEach(n => {
     const cur = current === n.id ? ' aria-current="page"' : '';
     tabs.insertAdjacentHTML('beforeend',
-      `<button class="tab" data-go="${n.id}"${cur}><span>${n.label}</span></button>`);
+      `<button class="tab" data-go="${n.id}"${cur}><span>${n.short || n.label}</span></button>`);
     rail.insertAdjacentHTML('beforeend',
       `<button class="rail__link" data-go="${n.id}"${cur}>${ICON[n.icon]}<span>${n.label}</span></button>`);
   });
@@ -17486,7 +17519,7 @@ function afterRender(id, nav = false){
   if (id === 'auth') AuthUI.busy = false;
   paintMotion();
   if (id === 'scan') Scanner.start();
-  if (BOARD_ROUTES.includes(id)){ loadBoard(); }
+  if (PANE_ROUTES.includes(id)){ loadBoard(); }
   else { clearInterval(countTimer); }
 }
 

@@ -9,10 +9,11 @@ const MEMBER_NAV = [
 ];
 
 const BOARD_NAV = [
-  { id:'board',    label:'Club Tools', icon:'home'   },
+  { id:'board',    label:'Club Tools', short:'Club', icon:'home'   },
   { id:'bmeet',    label:'Meetings',   icon:'record' },
   { id:'bcheckin', label:'Check-In',   icon:'scan'   },
   { id:'bmembers', label:'Members',    icon:'member' },
+  { id:'baccount', label:'Account',    icon:'account' },
 ];
 
 const navFor = () => (Store.isBoard ? BOARD_NAV : MEMBER_NAV);
@@ -50,6 +51,7 @@ const AuthUI = {
 };
 
 const BOARD_ROUTES = BOARD_NAV.map(n => n.id);
+const PANE_ROUTES = ['board', 'bmeet', 'bcheckin', 'bmembers'];
 
 function gate(id){
   if (!Store.ready) return id;
@@ -96,7 +98,7 @@ function paintNav(){
   navFor().forEach(n => {
     const cur = current === n.id ? ' aria-current="page"' : '';
     tabs.insertAdjacentHTML('beforeend',
-      `<button class="tab" data-go="${n.id}"${cur}><span>${n.label}</span></button>`);
+      `<button class="tab" data-go="${n.id}"${cur}><span>${n.short || n.label}</span></button>`);
     rail.insertAdjacentHTML('beforeend',
       `<button class="rail__link" data-go="${n.id}"${cur}>${ICON[n.icon]}<span>${n.label}</span></button>`);
   });
@@ -166,7 +168,7 @@ function afterRender(id, nav = false){
   if (id === 'auth') AuthUI.busy = false;
   paintMotion();
   if (id === 'scan') Scanner.start();
-  if (BOARD_ROUTES.includes(id)){ loadBoard(); }
+  if (PANE_ROUTES.includes(id)){ loadBoard(); }
   else { clearInterval(countTimer); }
 }
 

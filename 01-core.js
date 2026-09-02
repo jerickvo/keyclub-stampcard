@@ -22,6 +22,7 @@ const ICON = {
   scan:   SVG('<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><path d="M4 12h16"/>'),
   reward: SVG('<path d="M12 3 20 12l-8 9-8-9z"/><path d="M12 7.5 16 12l-4 4.5L8 12z"/>'),
   member: SVG('<path d="M8 4h8v7H8z"/><path d="M4.5 20.5v-3h15v3"/>'),
+  account:SVG('<circle cx="8" cy="12" r="3.5"/><path d="M11.5 12h9M17.5 12v3.5M20.5 12v2.5"/>'),
 
   waves:  SVG('<path d="M2.5 16h4v-8h5v8h5v-8h5"/>'),
   still:  SVG('<path d="M4 12h16"/><path d="M4 8v8M20 8v8"/>'),
