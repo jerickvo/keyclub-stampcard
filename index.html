@@ -1788,9 +1788,13 @@ button,input,select,textarea{font-family:inherit}
   .view--scan > .standing{grid-area:standing}
 
   .view--scan > .viewer{grid-area:viewer;
-    max-height:calc(100dvh - clamp(280px,34vh,360px));min-height:250px}
+    max-height:calc(100dvh - clamp(330px,34vh,360px));min-height:250px}
 
   .view--scan > .manual{grid-area:manual;align-self:end}
+  .view--scan-solo{grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"head" "standing" "viewer"}
+  .view--scan-solo > .viewer{width:100%;justify-self:center;
+    max-width:min(100%,max(720px,48vw))}
 }
 
 .view--rewards{display:flex;flex-direction:column;gap:var(--s5)}
@@ -15775,6 +15779,8 @@ const C = {
   },
 };
 
+const MANUAL_ENTRY = false;
+
 const Views = {
   loadFailure(title){
     return `<div class="view">
@@ -15926,7 +15932,7 @@ const Views = {
         ? { lab:'Already stamped', at:`GM ${pad(open.no)}` }
         : { lab:'Checking in to', at:`GM ${pad(open.no)} / ${fmtDay(open.date)} / ${esc(open.place)}` };
 
-    return `<div class="view view--scan">
+    return `<div class="view view--scan${MANUAL_ENTRY ? '' : ' view--scan-solo'}">
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">Scan</h1>
       </header>
@@ -15949,14 +15955,14 @@ const Views = {
         <div class="viewer__status"><span class="viewer__msg" id="scanMsg">Starting camera</span></div>
       </div>
 
-      <div class="manual" data-enter>
+      ${MANUAL_ENTRY ? `<div class="manual" data-enter>
         <label class="manual__lab" for="manualInput">Or enter the check-in code</label>
         <div class="manual__f">
           <input class="manual__in" id="manualInput" placeholder="Check-in code"
                  autocomplete="off" spellcheck="false" enterkeyhint="go">
           <button class="manual__go" id="manualGo" type="button">Verify</button>
         </div>
-      </div>
+      </div>` : ''}
     </div>`;
   },
 
@@ -17216,13 +17222,16 @@ const Scanner = {
     this.hideLoader();
     viewer.classList.remove('viewer--feed');
 
+    const more = MANUAL_ENTRY ? ' Or enter the check-in code below.' : '';
     const copy = {
       denied:{ title:'Camera permission is off',
-        body:'Allow camera access for this page in your browser settings, then reload. Or enter the code below.' },
+        body:'Allow camera access for this page in your browser settings, then reload.' + more },
       unavailable:{ title:'No camera found',
-        body:'Nothing on this device is reporting a camera. Enter the check-in code below instead.' },
+        body:'Nothing on this device is reporting a camera.' + (MANUAL_ENTRY
+          ? ' Enter the check-in code below instead.'
+          : ' Sign in on a phone with a camera to scan the code.') },
       unsupported:{ title:'Scanning needs a secure page',
-        body:'Camera access only works over https. Enter the check-in code below instead.' },
+        body:'Camera access only works over https.' + more },
     }[kind];
 
     viewer.innerHTML = `<div class="stall">

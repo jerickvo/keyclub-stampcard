@@ -867,9 +867,13 @@ button,input,select,textarea{font-family:inherit}
   .view--scan > .standing{grid-area:standing}
 
   .view--scan > .viewer{grid-area:viewer;
-    max-height:calc(100dvh - clamp(280px,34vh,360px));min-height:250px}
+    max-height:calc(100dvh - clamp(330px,34vh,360px));min-height:250px}
 
   .view--scan > .manual{grid-area:manual;align-self:end}
+  .view--scan-solo{grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"head" "standing" "viewer"}
+  .view--scan-solo > .viewer{width:100%;justify-self:center;
+    max-width:min(100%,max(720px,48vw))}
 }
 
 .view--rewards{display:flex;flex-direction:column;gap:var(--s5)}

@@ -151,13 +151,16 @@ const Scanner = {
     this.hideLoader();
     viewer.classList.remove('viewer--feed');
 
+    const more = MANUAL_ENTRY ? ' Or enter the check-in code below.' : '';
     const copy = {
       denied:{ title:'Camera permission is off',
-        body:'Allow camera access for this page in your browser settings, then reload. Or enter the code below.' },
+        body:'Allow camera access for this page in your browser settings, then reload.' + more },
       unavailable:{ title:'No camera found',
-        body:'Nothing on this device is reporting a camera. Enter the check-in code below instead.' },
+        body:'Nothing on this device is reporting a camera.' + (MANUAL_ENTRY
+          ? ' Enter the check-in code below instead.'
+          : ' Sign in on a phone with a camera to scan the code.') },
       unsupported:{ title:'Scanning needs a secure page',
-        body:'Camera access only works over https. Enter the check-in code below instead.' },
+        body:'Camera access only works over https.' + more },
     }[kind];
 
     viewer.innerHTML = `<div class="stall">

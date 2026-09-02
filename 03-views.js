@@ -178,6 +178,8 @@ const C = {
   },
 };
 
+const MANUAL_ENTRY = false;
+
 const Views = {
   loadFailure(title){
     return `<div class="view">
@@ -329,7 +331,7 @@ const Views = {
         ? { lab:'Already stamped', at:`GM ${pad(open.no)}` }
         : { lab:'Checking in to', at:`GM ${pad(open.no)} / ${fmtDay(open.date)} / ${esc(open.place)}` };
 
-    return `<div class="view view--scan">
+    return `<div class="view view--scan${MANUAL_ENTRY ? '' : ' view--scan-solo'}">
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">Scan</h1>
       </header>
@@ -352,14 +354,14 @@ const Views = {
         <div class="viewer__status"><span class="viewer__msg" id="scanMsg">Starting camera</span></div>
       </div>
 
-      <div class="manual" data-enter>
+      ${MANUAL_ENTRY ? `<div class="manual" data-enter>
         <label class="manual__lab" for="manualInput">Or enter the check-in code</label>
         <div class="manual__f">
           <input class="manual__in" id="manualInput" placeholder="Check-in code"
                  autocomplete="off" spellcheck="false" enterkeyhint="go">
           <button class="manual__go" id="manualGo" type="button">Verify</button>
         </div>
-      </div>
+      </div>` : ''}
     </div>`;
   },
 
