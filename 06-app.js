@@ -1,28 +1,18 @@
 "use strict";
-/* keystamp — router, interactions, boot
-   Loaded in order by index.html. Order matters. */
-
-/* ══════════════════════════════════════════════════════════════════
-   12. NAVIGATION
-   Five destinations. Record and Profile are back from v1, but only
-   with figures the app actually holds — no invented officer titles, no
-   membership status, no controls that do nothing. The one real setting,
-   reduced motion, stays in the header where it is always reachable.
-   ══════════════════════════════════════════════════════════════════ */
 
 const MEMBER_NAV = [
-  { id:'home',    label:'Home',    icon:'home',   ch:'01', title:'The Card'   },
-  { id:'record',  label:'Record',  icon:'record', ch:'02', title:'The Record' },
-  { id:'scan',    label:'Scan',    icon:'scan',   ch:'03', title:'The Scan'   },
-  { id:'rewards', label:'Rewards', icon:'reward', ch:'04', title:'The Reward' },
-  { id:'profile', label:'Member',  icon:'member', ch:'05', title:'The Member' },
+  { id:'home',    label:'Home',    icon:'home'   },
+  { id:'record',  label:'Record',  icon:'record' },
+  { id:'scan',    label:'Scan',    icon:'scan'   },
+  { id:'rewards', label:'Rewards', icon:'reward' },
+  { id:'profile', label:'Member',  icon:'member' },
 ];
 
 const BOARD_NAV = [
-  { id:'board',    label:'Club Tools', icon:'home',   ch:'01', title:'Club Tools' },
-  { id:'bmeet',    label:'Meetings',   icon:'record', ch:'02', title:'Meetings'   },
-  { id:'bcheckin', label:'Check-In',   icon:'scan',   ch:'03', title:'Check-In'   },
-  { id:'bmembers', label:'Members',    icon:'member', ch:'04', title:'Members'    },
+  { id:'board',    label:'Club Tools', icon:'home'   },
+  { id:'bmeet',    label:'Meetings',   icon:'record' },
+  { id:'bcheckin', label:'Check-In',   icon:'scan'   },
+  { id:'bmembers', label:'Members',    icon:'member' },
 ];
 
 const navFor = () => (Store.isBoard ? BOARD_NAV : MEMBER_NAV);
@@ -30,18 +20,12 @@ const navFor = () => (Store.isBoard ? BOARD_NAV : MEMBER_NAV);
 const ROUTES = MEMBER_NAV.map(n => n.id)
   .concat(BOARD_NAV.map(n => n.id), 'auth');
 
-/* ── AUTH GATE ─────────────────────────────────────────────────────
-   One place decides whether a route may render. Signed out, every
-   route resolves to 'auth'; signed in, 'auth' resolves away. Board
-   tools additionally require the board role — and note this is a UX
-   guard only: the real authorisation is the RLS policy on the server,
-   which is what actually refuses a member's write. */
 const AuthUI = {
   mode:'in', busy:false,
 
   setupNotice(){
     const st = Backend.status;
-    if (st === 'live') return '';        /* normal operation says nothing */
+    if (st === 'live') return '';
 
     if (st === 'unavailable'){
       return `<div class="setupbox setupbox--warn">
@@ -71,27 +55,24 @@ function gate(id){
   if (!Store.ready) return id;
   if (!Store.signedIn) return 'auth';
   if (!Store.isBoard){
-    /* a member never reaches a board route, whatever the hash says */
     if (BOARD_ROUTES.includes(id)) return 'home';
     if (id === 'auth') return 'home';
     return id;
   }
-  /* a board account lands in Club Tools rather than passing through the
-     member spread on the way */
+
   if (!BOARD_ROUTES.includes(id)) return 'board';
   return id;
 }
 
 let current = 'home';
 let navigating = false;
-/* a nav clicked while a cut is playing is intent, not noise: the LAST
-   destination asked for during the transition is honored when it ends */
+
 let pendingNav = null;
 let booted = false;
 
 function syncHash(id){
   try { if (location.hash !== '#/' + id) history.replaceState(null, '', '#/' + id); }
-  catch (_) { /* sandboxed frames refuse History writes; `current` still rules */ }
+  catch (_) {  }
 }
 function hashRoute(){
   try {
@@ -119,18 +100,9 @@ function paintNav(){
     rail.insertAdjacentHTML('beforeend',
       `<button class="rail__link" data-go="${n.id}"${cur}>${ICON[n.icon]}<span>${n.label}</span></button>`);
   });
-
-  requestAnimationFrame(placeIndicators);
-}
-
-let indRaf = 0;
-function placeIndicators(){
-  Motion.indicator($('#tabsInd'), $('#tabs .tab[aria-current]'), 'x');
-  Motion.indicator($('#railInd'), $('#railNav .rail__link[aria-current]'), 'y');
 }
 
 async function go(id, opts = {}){
-  if (opts === true) opts = { instant:true };   /* legacy boolean form */
   if (!ROUTES.includes(id)) id = 'home';
   id = gate(id);
   if (navigating){ pendingNav = id; return; }
@@ -140,13 +112,10 @@ async function go(id, opts = {}){
   const render = (nav = false) => {
     current = id;
     syncHash(id);
-    Motion.settle(view);          /* identity in anime's cache too, or a
-                                     later cut-push resurrects a stale skew */
+    Motion.settle(view);
     Reveal.clear();
-    document.documentElement.dataset.screen = id; /* CSS lays out each spread by name */
-    /* One surface for the whole app: warm paper. Black is manga ink --
-       spotted blacks, panel frames, active states, the scanner border --
-       and is never used as a page-level theme. */
+    document.documentElement.dataset.screen = id;
+
     view.innerHTML = Views[id]();
     paintNav();
     try { scrollTo(0, 0); } catch (_) {}
@@ -154,11 +123,6 @@ async function go(id, opts = {}){
     view.focus({ preventScroll:true });
   };
 
-  /* Normal navigation is one quiet page turn (FX.pageFlow): the view
-     leaves, breathes, and the next page eases in — the swap happens
-     while the view is fully faded, so nothing half-changed is ever
-     visible. opts.instant renders directly — used when a covering
-     sequence (welcome, the sign-out scene) is already up. */
   if (view.firstChild && booted && !opts.instant && !Motion.off){
     navigating = true;
     await FX.pageFlow(() => render(true));
@@ -174,15 +138,8 @@ async function go(id, opts = {}){
 
 const seenUnlocked = new Set();
 
-/* purely visual — safe to replay, no side effects.
-   `nav` marks a plain page turn: the page arrives as ONE composition,
-   so the decorative intros (count-up, seal stagger, ring spins) stay
-   quiet and only STATE events — a stamp landing, a reward becoming
-   claimable — still play. */
 function playViewIntro(id, nav = false){
   if (id === 'home'){
-    /* when a fresh stamp is about to land, the grid intro would fade the
-       new seal in a first time before the press — one appearance only */
     if (!nav && pendingCell < 0) FX.sealGrid($('#seals'));
 
     if (pendingCell >= 0){
@@ -193,7 +150,6 @@ function playViewIntro(id, nav = false){
   }
 
   if (id === 'rewards'){
-    /* the unlock plays once per reward per session, not on every visit */
     $$('[data-reward]').forEach(row => {
       if (!row.classList.contains('tier--ready')) return;
       const rid = row.dataset.reward;
@@ -202,25 +158,16 @@ function playViewIntro(id, nav = false){
       setTimeout(() => FX.rewardUnlock(row), 420);
     });
   }
-
 }
 
 function afterRender(id, nav = false){
   if (booted) playViewIntro(id, nav);
 
   if (id === 'auth') AuthUI.busy = false;
-  if (id === 'scan'){ paintDemoHint(); Scanner.start(); }
+  paintMotion();
+  if (id === 'scan') Scanner.start();
   if (BOARD_ROUTES.includes(id)){ loadBoard(); }
   else { clearInterval(countTimer); }
-}
-
-/* The demo hint is gone. It printed the live attendance code onto the
-   member's own Scan screen, which is exactly the secret the Phase 3
-   design exists to keep on the server. There is no supported way to
-   display a production token as text. */
-function paintDemoHint(){
-  const box = $('#demoHint');
-  if (box){ box.hidden = true; box.innerHTML = ''; }
 }
 
 function authErr(msg){
@@ -239,11 +186,6 @@ function authBusy(on, label){
   btn.textContent = on ? label : (AuthUI.mode === 'up' ? 'Create account' : 'Sign in');
 }
 
-/* The manual code field is not in a form, so Enter (the "Go" key the
-   input's enterkeyhint already advertises on phone keyboards) did
-   nothing. Route it through the Verify button's own click: one code
-   path, and the in-flight guard, disabled state and empty-value nag
-   all apply to the keyboard exactly as they do to a tap. */
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target && e.target.id === 'manualInput'){
     e.preventDefault();
@@ -254,7 +196,6 @@ document.addEventListener('keydown', e => {
 let bqTimer = null;
 document.addEventListener('input', e => {
   if (e.target.id === 'bq'){
-    /* debounced so typing a username is one query, not one per key */
     clearTimeout(bqTimer);
     const v = e.target.value;
     bqTimer = setTimeout(() => boardGoto({ q:v, page:1 }), 300);
@@ -264,11 +205,6 @@ document.addEventListener('change', e => {
   if (e.target.id === 'bsort') boardGoto({ sort:e.target.value, page:1 });
 });
 
-/* ── CREATE MEETING ────────────────────────────────────────────────
-   Client validation exists to give a useful message, not to enforce
-   the rule: the start<end CHECK and the unique meeting_number live in
-   the database and remain the authority. A meeting may be scheduled
-   on any day of the week. */
 function to12h(hhmm){
   const [h, m] = String(hhmm).split(':').map(Number);
   const ap = h >= 12 ? 'PM' : 'AM';
@@ -277,11 +213,6 @@ function to12h(hhmm){
 }
 
 document.addEventListener('submit', async e => {
-  /* Keystamp never wants a native form submission: every form here is
-     handled in JavaScript, and a native submit navigates the page away
-     (and on file:// destroys the app entirely). Prevented up front,
-     before any branch, so a form that is re-rendered mid-interaction
-     cannot slip past the checks below and take the page with it. */
   if (e.target && e.target.tagName === 'FORM') e.preventDefault();
 
   const mf = e.target.closest('#meetingForm');
@@ -290,7 +221,7 @@ document.addEventListener('submit', async e => {
     const err = $('#mErr');
     const show = msg => { if (err){ err.hidden = !msg; err.textContent = msg || ''; } };
     const btn = $('#mGo');
-    if (btn && btn.disabled) return;   /* a create is already in flight */
+    if (btn && btn.disabled) return;
 
     const no    = Number($('#mNo').value);
     const date  = $('#mDate').value;
@@ -332,9 +263,7 @@ document.addEventListener('submit', async e => {
   try {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
-    /* the cover page mounts first; the home render waits two frames
-       so the page beneath can never visibly change before the cover
-       is actually on screen */
+
     FX.welcomeCut(up ? 'Joined' : 'Welcome');
     if (Motion.off){ go('home', { instant:true }); }
     else requestAnimationFrame(() => requestAnimationFrame(() => go('home', { instant:true })));
@@ -346,10 +275,8 @@ document.addEventListener('submit', async e => {
 });
 
 document.addEventListener('click', e => {
-  /* ── board ── */
   const btab = e.target.closest('[data-btab]');
   if (btab){
-
     const toRoute = { club:'board', meetings:'bmeet', session:'bcheckin', progress:'bmembers' };
     Object.assign(BoardUI, { memberDetail:null, meetingDetail:null, page:1 });
     go(toRoute[btab.dataset.btab] || 'board');
@@ -379,7 +306,6 @@ document.addEventListener('click', e => {
     bdelete.disabled = true;
     Backend.deleteMeeting(id)
       .then(res => {
-        /* the meeting the QR screen was pointed at may have just gone */
         if (boardMeeting === id) boardMeeting = null;
         boardGoto({ confirmDelete:null,
                     deleteNote: res && res.ok ? null : (res && res.code) || 'SERVER_ERROR',
@@ -461,13 +387,10 @@ document.addEventListener('click', e => {
 
   const out = e.target.closest('[data-signout]');
   if (out){
-    /* the cut freezes the CURRENT page first; only then does the real
-       sign-out (and the auth render) happen, invisibly beneath it */
     FX.waffleOut({
       btn: out,
       swap: () => Store.signOut().then(() => {
-        AuthUI.mode = 'in';       /* whoever signs in next starts at Sign in,
-                                     not at the last account's Create form */
+        AuthUI.mode = 'in';
         toast({ key:'auth', title:'Signed out' });
         go('auth', { instant:true });
       }),
@@ -477,15 +400,13 @@ document.addEventListener('click', e => {
     return;
   }
 
-  const motion = e.target.closest('#motionBtn');
+  const motion = e.target.closest('[data-motion]');
   if (motion){
-    Motion.forced = !Motion.forced;
-    Motion.apply?.();
-    paintMotionBtn();
+    Motion.setForced(!Motion.forced);
+    paintMotion();
     toast({ key:'motion',
             title:Motion.forced ? 'Reduced motion on' : 'Reduced motion off',
-            detail:Motion.forced ? 'Cuts, energy and background motion are off.'
-                                 : 'Animations are back on.' });
+            detail:Motion.forced ? 'Animations are off.' : 'Animations are back on.' });
     return;
   }
 
@@ -494,21 +415,18 @@ document.addEventListener('click', e => {
 
   const claim = e.target.closest('[data-claim]');
   if (claim){
-    if (claim.disabled) return;   /* a claim is already in flight */
+    if (claim.disabled) return;
     claim.disabled = true;
     Store.claimReward(claim.dataset.claim).then(r => {
       FX.impactFrame({ word:'Claimed', angle:-24 });
-      /* stays disabled: the rewards render that follows replaces the
-         button with the Claimed state, and re-enabling it during the
-         beat before navigation would let a second tap play the whole
-         impact again */
+
       setTimeout(() => {
         toast({ key:'claim', title:`${r.name} claimed`,
                 detail:'Show this screen to a board member to pick it up.' });
         go('rewards');
       }, 220);
     }).catch(() => {
-      claim.disabled = false;     /* a failed claim can be retried */
+      claim.disabled = false;
       toast({ key:'claim', bad:true, title:'Could not claim',
         detail:'That reward was not saved. Check your connection and try again.' });
     });
@@ -517,10 +435,7 @@ document.addEventListener('click', e => {
 
   const go2 = e.target.closest('#manualGo');
   if (go2){
-    if (go2.disabled) return;   /* a check-in is already in flight — a second
-                                   tap on a slow connection must not become a
-                                   second submission and an "Already checked
-                                   in" error over a stamp that just landed */
+    if (go2.disabled) return;
     const input = $('#manualInput');
     const val = (input && input.value || '').trim();
     if (!val){
@@ -530,9 +445,6 @@ document.addEventListener('click', e => {
     }
     go2.disabled = true;
     submitSeal(val, false).finally(() => {
-      /* re-enable so a REFUSED code can be corrected and retried; on
-         success the ink plate covers the page and the navigation
-         that follows replaces this button anyway */
       const btn = $('#manualGo');
       if (btn) btn.disabled = false;
     });
@@ -540,11 +452,7 @@ document.addEventListener('click', e => {
   }
 });
 
-/* ── BOARD DATA ────────────────────────────────────────────────────
-   Fetches only what the visible pane needs, then re-renders that pane
-   in place rather than re-running the whole route — so switching tabs
-   does not replay the page-cut transition on every click. */
-let boardStamp = false;   /* one seal-press queued by open/close */
+let boardStamp = false;
 
 async function loadBoard(){
   if (!Store.isBoard) return;
@@ -561,11 +469,6 @@ async function loadBoard(){
     } else if (BoardUI.tab === 'club'){
       BoardUI.overview = await Backend.board('overview');
     } else if (BoardUI.tab === 'progress'){
-      /* both, in parallel: the milestone counts come from the overview
-         and the roster from the members query, and the pane shows them
-         on one screen. Either failing fails the pane — a half-loaded
-         progress view would show real milestones over an empty roster
-         and read as "nobody is in the club". */
       const [ov, mem] = await Promise.all([
         Backend.board('overview'),
         Backend.board('members', { q:BoardUI.q, sort:BoardUI.sort, page:BoardUI.page }),
@@ -582,15 +485,14 @@ async function loadBoard(){
   if (pane()){
     pane().innerHTML = BoardUI.pane();
   }
-  /* the QR and the live count only exist on the session pane */
+
   if (BoardUI.tab === 'session' && !BoardUI.error && $('#qrBox')){
     paintBoard();
     paintAttendanceCount(boardMeeting);
   } else {
     clearInterval(countTimer);
   }
-  /* an open/close queued exactly one seal-press on the cover word;
-     it fires only on a successful session re-render and never twice */
+
   if (boardStamp){
     boardStamp = false;
     if (BoardUI.tab === 'session' && !BoardUI.error) FX.boardSeal();
@@ -602,65 +504,47 @@ function boardGoto(next){
   loadBoard();
 }
 
-function paintMotionBtn(){
-  const b = $('#motionBtn');
-  b.setAttribute('aria-pressed', String(Motion.forced));
-  b.setAttribute('aria-label', Motion.forced ? 'Reduced motion is on. Turn animations back on.'
-                                             : 'Reduced motion is off. Turn animations off.');
-  /* the chip names the state it is IN — "Motion off" / "Motion on" —
-     never a bare noun the reader has to interpret */
-  b.innerHTML = (Motion.forced ? ICON.still : ICON.waves) +
-                `<span>Motion ${Motion.forced ? 'off' : 'on'}</span>`;
+function paintMotion(){
+  $$('[data-motion]').forEach(b => {
+    b.setAttribute('aria-pressed', String(Motion.forced));
+    b.setAttribute('aria-label', Motion.forced ? 'Reduced motion is on. Turn animations back on.'
+                                               : 'Reduced motion is off. Turn animations off.');
+    b.innerHTML = (Motion.forced ? ICON.still : ICON.waves) +
+                  `<span>${Motion.forced ? 'On' : 'Off'}</span>`;
+  });
 }
 
 addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); });
-/* countTimer polls the attendance count and was once left running on
-   pagehide, so a backgrounded tab kept issuing requests against a page
-   on its way out. */
+
 addEventListener('pagehide', () => {
   Scanner.stop(); clearInterval(countTimer);
 });
-addEventListener('resize', () => {
-  cancelAnimationFrame(indRaf);
-  indRaf = requestAnimationFrame(placeIndicators);
-});
-
-/* ══════════════════════════════════════════════════════════════════
-   14. BOOT
-   ══════════════════════════════════════════════════════════════════ */
-/* anime.js is a plain script loaded above this one, so by the time we get
-   here it is either present or it failed — either way we can start now. */
 
 (async () => {
   await Backend.init();
   await Store.hydrate();
-  /* re-render whenever the snapshot changes (a check-in, a claim, a
-     sign-in) so views never read a stale count */
-  /* a data refresh re-renders in place — it is not a navigation, so it
-     never draws the page-cut */
-  Store.onChange(() => { if (current) go(current, { instant:true }); paintIdentity(); paintBrand(); });
+
+  Store.onChange(() => { if (current) go(current, { instant:true }); paintIdentity(); });
 
   paintBrand();
   $('#barBrand').innerHTML  = wordmark();
   paintIdentity();
-  paintMotionBtn();
-  buildArena();
-  applyBackdrop();
-  go(hashRoute());                       /* renders behind the boot curtain */
+  paintMotion();
+  go(hashRoute());
 })();
 
-/* The signed-in block is painted from the real session. With no
-   session it says so instead of naming a hardcoded member, and Board
-   tools are only offered to accounts the backend marks as board. */
 function paintIdentity(){
   const foot = $('#railFoot');
   if (!foot) return;
   foot.innerHTML = Store.signedIn
     ? `<p class="rail__who">${esc(Store.user.name)}</p>
        <p class="muted rail__role">${Store.isBoard ? 'Board' : 'Member'}</p>
-       <button class="link" data-signout style="margin-top:10px">Sign out</button>`
+       <div class="rail__set"><span>Reduced motion</span>
+         <button class="motion-btn" type="button" data-motion></button></div>
+       <button class="link" data-signout>Sign out</button>`
     : `<p class="kicker">Not signed in</p>
        <p class="muted" style="margin-top:6px;font-size:12.5px">Sign in to see your record.</p>`;
+  paintMotion();
 }
   try {
     FX.loadingSequence(() => {
@@ -672,7 +556,3 @@ function paintIdentity(){
     booted = true;
     $('#boot')?.classList.add('is-done');
   }
-  try {
-    matchMedia('(prefers-reduced-motion: reduce)').addEventListener?.('change', () => Motion.onChange?.());
-  } catch (_) {}
-

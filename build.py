@@ -154,8 +154,8 @@ def main():
     # ── manifest: KEPT ──────────────────────────────────────────────
     # A manifest is progressive enhancement — it 404s harmlessly from a
     # zip mount and it is what gives the installed app its name and
-    # description on a real server. It deliberately declares no icons:
-    # the retired Keystamp mark is gone and nothing replaces it.
+    # description on a real server. Its icons, like the apple-touch-icon
+    # in the head, are plain paper squares: a deliberate blank, no mark.
 
     banner = (
         "<!-- ══════════════════════════════════════════════════════════\n"

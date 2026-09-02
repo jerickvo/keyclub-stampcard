@@ -1,17 +1,14 @@
-
-
 :root{
-
-  --paper:  #F7F7F5;      /* the sheet                                */
-  --tint:   #E2DFD8;      /* tone, light — hairlines and rules        */
-  --tone:   #A9A8A2;      /* tone, full — unearned, inactive          */
-  --ink-2:  #5E5D58;      /* ink, quiet — secondary reading           */
-  --ink:    #0A0A0A;      /* ink — events, actions, primary reading   */
+  --paper:  #F7F7F5;
+  --tint:   #E2DFD8;
+  --tone:   #A9A8A2;
+  --ink-2:  #5E5D58;
+  --ink:    #0A0A0A;
 
   --edge-frame:3px;
   --edge-panel:2px;
   --edge-rule:1px;
-  /* the card is the one object with an edge of its own */
+
   --edge-card:5px;
 
   --edge-hair:var(--edge-rule);
@@ -19,57 +16,18 @@
   --edge:var(--edge-panel); --edge-heavy:var(--edge-panel);
   --rule:var(--edge-panel); --rule-hair:var(--edge-rule);
 
-  
-  /* THREE VOICES, THREE JOBS.
-
-     --f-display  Jujutsu Kaisen. Page titles, hero figures, impact
-                  moments, and nothing else — eleven rules in the whole
-                  app. It is a THIN, WIDE face: it supplies scale and
-                  strangeness, never weight, and a design that leans on
-                  it for mass gets a page of hairlines. Always
-                  uppercased, because its lowercase e/o/u carry a
-                  diaeresis and set "Record" as "Rëcörd".
-
-     --f-head     BadaBoom BB. The header voice, and the only one of the
-                  three that is genuinely heavy — this is where black
-                  mass comes from at text sizes. Section titles, verbs,
-                  plate headings, figures that are not the hero. Unicase
-                  by way of alternate capitals, so mixed-case input
-                  yields varied caps rather than a mechanical row.
-
-     --f-body     CC Wild Words. Everything a member reads. Genuinely
-                  unicase: lowercase input DRAWS CAPITALS, so every
-                  paragraph in this app sets in caps whether the CSS
-                  says so or not. That is why copy has to stay short and
-                  why body text carries letter-spacing it would not need
-                  lowercase. */
   --f-display:'Jujutsu Kaisen',ui-sans-serif,system-ui,sans-serif;
   --f-head:'BadaBoom BB',var(--f-display);
   --f-body:'CC Wild Words',ui-rounded,'Comic Sans MS',ui-sans-serif,sans-serif;
   --f-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
 
   --tone-page: rgba(23,19,15,.085);
-  --tone-page-size: 10px;
-  --tone-field: rgba(23,19,15,.30);
-  --tone-dot:  var(--tone-page);
-
   }
 
-/* ══ THE PAGE ══════════════════════════════════════════════════════
-   Clean paper. Screentone is composition, not wallpaper: it appears
-   only where a .tone field or a tone panel places it deliberately,
-   so the dots always sit next to clean areas instead of under
-   everything. */
 body{
   background-color:var(--paper);
   color:var(--ink);
 }
-
-/* ══ INK PANELS ════════════════════════════════════════════════════
-   sparingly: four screens in the whole app. Inside one, the ramp
-   inverts — paper becomes ink and ink becomes paper — so every child
-   component inherits the flip without needing its own dark variant.
-   That is what keeps this from being a second design system. */
 
 .panel{
   background:var(--paper);
@@ -78,8 +36,6 @@ body{
   border-color:var(--ink);
   position:relative;
 }
-
-/* a panel that carries the accent: one per screen, maximum */
 
 .title{
   letter-spacing:-.02em;
@@ -97,23 +53,14 @@ body{
 
 .rail__link[aria-current],
 .tab[aria-current]{color:var(--ink)}
-.rail__ind,.tabs__ind{background:var(--ink)}
 
 .bstate--open{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
-/* ══ SPEED LINES ═══════════════════════════════════════════════════
-   Used once per impact screen, behind the title, at low contrast.
-   A rake of converging lines is the cheapest manga signal there is,
-   and it costs one pseudo-element. */
-
-/* ══ REDUCED MOTION / FOCUS FLOOR ══════════════════════════════════ */
 :focus-visible{outline-color:var(--ink)}
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;animation-iteration-count:1!important}
 }
 
-/* figures are the subject of Club Tools, so they get display scale and
-   a tone ground rather than four equal boxes in a row */
 .bstats{gap:var(--edge-thin)}
 .bstat{
   border:var(--edge-hair) solid var(--ink);background:var(--paper);
@@ -128,19 +75,16 @@ body{
 .bstat b{font-size:clamp(26px,3.4vw,40px);line-height:.9}
 .bstat span{color:var(--ink-2)}
 
-/* milestone bars: fill is a spotted black on a line track */
 .bmile__bar{border:var(--edge-hair) solid var(--ink);background:var(--paper);height:10px}
 .bmile__fill{background:var(--ink)}
 .brow--member .brow__mid b{font-family:var(--f-head);font-weight:400;
   font-size:var(--t-sub);letter-spacing:.01em}
 
-/* rows read as a register: hairline rules, no boxes */
 .brow{border-bottom:var(--edge-hair) solid var(--tone)}
 .brow:hover,.brow:focus-visible{background:var(--tint)}
 .brow__no{color:var(--ink-2)}
 .brow__n{font-family:var(--f-head)}
 
-/* delete confirmation: inked, so it is unmistakably a different mode */
 .brow--confirm{background:var(--ink);color:var(--paper)}
 .brow--confirm b,.brow--confirm .muted{color:var(--paper)}
 .brow--confirm .btn{background:transparent;color:var(--paper);border-color:var(--paper)}
@@ -148,8 +92,6 @@ body{
 .brow__del{border-color:var(--tone);color:var(--ink-2)}
 .brow__del:hover,.brow__del:focus-visible{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
-/* the board form is a panel of the same book, its heading a band cut
-   into the panel's top edge */
 .bform{border:var(--edge-panel) solid var(--ink);background:var(--paper);
   padding:var(--s5);box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
 .bform .bsec{margin:calc(var(--s5) * -1) calc(var(--s5) * -1) var(--s4);
@@ -157,18 +99,13 @@ body{
   background:var(--ink);color:var(--paper);
   font-family:var(--f-head);font-weight:400;text-transform:uppercase;
   font-size:clamp(17px,2.4vw,24px);line-height:1.2}
-/* native pickers speak the app's voice: mono digits, ink accents, and
-   a light scheme so the browser chrome cannot go dark on its own */
+
 .bform .input,.bfilters .input{font-family:var(--f-mono);
   color-scheme:light;accent-color:var(--ink)}
-/* the archive: held meetings hang off a heavy rule */
+
 .blist--held{border-left:var(--edge) solid var(--ink);
   padding-left:clamp(12px,2vw,22px)}
 
-/* ── MEETINGS: a composed spread, not a stack ──────────────────────
-   The calendar is the subject: Coming up leads at 58%, the archive
-   hangs under it, and the scheduling form is its own plate beside
-   them. On a phone the form (the action) comes first. */
 .meetgrid{display:grid;gap:var(--s5);grid-template-columns:minmax(0,1fr);
   grid-template-areas:"err" "form" "up" "held";align-items:start}
 .meetgrid__err{grid-area:err}
@@ -181,8 +118,7 @@ body{
     grid-template-areas:"err err" "up form" "held form"}
   .meetgrid__form .bform{position:sticky;top:var(--s4)}
 }
-/* section bands: ink for the live half of the calendar, hairline for
-   the archive — the two halves stop being twins */
+
 .meetband{margin:0 0 var(--s3);padding:var(--s2) var(--s4);
   background:var(--ink);color:var(--paper);
   font-family:var(--f-head);font-weight:400;text-transform:uppercase;
@@ -191,33 +127,24 @@ body{
   border-bottom:var(--edge) solid var(--ink)}
 .meetgrid .bsec::before{content:none}
 
-/* Coming up is a real framed panel — band flush at the top, the list
-   inside it. Panels that carry an ink band throw a TONE shadow, not an
-   ink one: an ink shadow behind an ink band is invisible, and the
-   paper → tone → ink ladder is what gives the page its depth. */
 .meetgrid__up{border:var(--edge-panel) solid var(--ink);background:var(--paper);
   box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
 .meetgrid__up .meetband{margin:0}
 .meetgrid__up .blist{padding:0 var(--s4);margin:0}
 .meetgrid__up .bempty{border:0;box-shadow:none}
 
-/* the labelled counters on register rows */
 .brow__n{display:grid;justify-items:end;gap:1px;text-align:right}
 .brow__n b{font-weight:400;font-family:var(--f-head);
   font-size:clamp(17px,2vw,22px);line-height:1}
 .brow__nlab{font:500 9.5px/1 var(--f-mono);letter-spacing:.08em;
   color:var(--ink-2);text-transform:uppercase}
 
-/* meeting state is a printed chop, not a web pill: HELD is pressed in
-   ink a couple of degrees off true, UPCOMING is an open frame */
 .bstate{font-family:var(--f-head);font-weight:400;letter-spacing:.05em;
   border:var(--edge-hair) solid var(--ink);border-radius:0}
 .bstate--past{background:var(--ink);color:var(--paper);border-color:var(--ink);
   transform:rotate(-3deg)}
 .bstate--upcoming{border-width:var(--edge-panel);transform:rotate(1.6deg)}
 
-/* an empty state is a placard: framed, toned in one corner, spoken in
-   the header voice — the page stays composed with nothing in it */
 .bempty{position:relative;overflow:hidden;margin:0;
   border:var(--edge-panel) solid var(--ink);background:var(--paper);
   padding:clamp(20px,3.4vw,34px)}
@@ -229,16 +156,14 @@ body{
   background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
   clip-path:polygon(30% 0,100% 0,100% 100%,0 100%)}
 
-/* ── MEMBERS: the club leads, the register follows ─────────────────
-   One large figure for the roster, three milestone plates beside it,
-   then the register as its own banded panel. */
 .memgrid{display:grid;gap:var(--s6)}
 .msummary{display:grid;gap:var(--s5);align-items:end;
   border-bottom:var(--edge) solid var(--ink);
   padding-bottom:clamp(16px,2.4vw,28px)}
 @media(min-width:900px){
   .msummary{grid-template-columns:auto minmax(0,1fr);
-    column-gap:clamp(28px,4vw,64px)}
+    column-gap:clamp(28px,4vw,64px);align-items:start}
+  .msummary .mplates{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 .msummary__lead{min-width:0}
 .msummary__fig{margin:0;font-family:var(--f-display);line-height:.78;
@@ -250,7 +175,7 @@ body{
   border:var(--edge-panel) solid var(--ink);background:var(--paper);
   padding:clamp(12px,1.8vw,20px);
   box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
-/* an ink plate cannot cast an ink shadow — it would read as one blob */
+
 .mplate--lit{background:var(--ink);color:var(--paper);
   box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
 .mplate--lit .bmile__bar{border-color:var(--paper)}
@@ -267,18 +192,10 @@ body{
 .bsec{border-bottom:var(--edge-thin) solid var(--ink);color:var(--ink)}
 
 .panel{box-shadow:none}
-/* :where(), so this is a DEFAULT and not a decision.
-   `.panel:not([data-rank])` looked like a default but carried (0,2,0)
-   from the last stylesheet in the chain, which is more than every rank
-   rule in artdirection.css — `[data-screen="home"] .hero{--ink-w:4.4}`
-   is (0,2,0) too and loses on order. So the hero, the viewfinder, the
-   auth panel and the QR panel all still measured the base weight. At
-   zero specificity anything that has an opinion wins, which is what a
-   default is for. */
+
 :where(.panel){--ink-w:2}
 
 .bstat b{font-size:clamp(22px,6vw,30px)}
-.bmile{grid-template-columns:auto 1fr;gap:var(--s3)}
 
 .brow{padding-block:var(--s3)}
 .brow__del{min-height:38px;padding:8px 10px}
@@ -295,31 +212,13 @@ body{
 .motion-btn{padding:0 var(--s4)}
 
 .kicker{font-size:clamp(11px,.55vw + 9.2px,13px)}
-/* the brand block must be able to shrink inside the rail track */
+
 .rail,.rail__brand,.rail__nav,.rail__foot{min-width:0}
 .rail__brand .mark,.rail__brand .mark__word{min-width:0;overflow-wrap:anywhere}
 .brow__mid .muted,.bstat span{font-size:clamp(12px,.45vw + 10.6px,13.5px)}
 
 .bstate,.brow__del,.brow__no,.brow__sub{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
 
-/* ══════════════════════════════════════════════════════════════════
-   MUTED TEXT IS INK, NOT TONE
-
-   --tone is the screentone BODY: a fill, used for dot fields, ghost
-   keylines and unearned seals. It is #B0A99C — 1.65:1 against the
-   paper, below the 3:1 floor for large text and about a third of the
-   4.5:1 body copy needs. It had drifted into being the colour of most
-   secondary WORDS in the application: log metadata, the "/ 10" target
-   beside the count, reward requirements, the member's own milestone
-   names, empty-state copy, board timestamps. On a phone held at arm's
-   length in daylight those lines were not dim, they were gone.
-
-   They move to --ink-2 (#6B6459, 4.9:1) — the ramp step that exists
-   for exactly this job. Fills, borders and unearned seals keep --tone,
-   so the page's value structure is unchanged: this is a contrast fix,
-   not a palette change. Panels that are printed in ink keep their own
-   lighter overrides, which are more specific and still win.
-   ══════════════════════════════════════════════════════════════════ */
 .muted,.empty,
 .setupbox__hint,.bstat span,
 .brow__no,.brow__sub,.bstate--ended,.bstate--past,
@@ -334,8 +233,6 @@ body{
   .input{padding-inline:var(--s4)}
   .btn{padding-inline:var(--s5)}
 }
-/* Browsers without container query support keep the two-frame row,
-   which is legible everywhere — it is denser, not broken. */
 
 .brow__n{font-size:clamp(17px,4vw,19px)}
 .bstat{padding:var(--s4)}
@@ -351,20 +248,8 @@ body{
 .motion-btn:hover svg{stroke:var(--paper)}
 .link:hover{text-decoration-thickness:2px}
 :focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px}
-/* The router gives main#view tabindex="-1" and focuses it after every
-   navigation so a screen reader announces the new screen. It is a
-   landmark, not a control, and the global ring above was therefore
-   drawing a 2px ink rule right across the page — 3px under the end of
-   the content, full bleed, on every screen after every tap. Focus still
-   moves; only the ring is suppressed, and every real control keeps
-   its own. */
-main#view:focus,main#view:focus-visible{outline:none}
 
-/* ── 6. Reward requirement legibility ─────────────────────────────
-   "Unlocks at 20 stamps" is the single most useful line on a locked
-   card — it is the answer to "how far am I?" — and it was sitting at
-   secondary weight on top of screentone, which eats contrast. It gets
-   full ink and mono tracking so it reads as a spec, not a whisper. */
+main#view:focus,main#view:focus-visible{outline:none}
 
 [data-screen="auth"] .topbar{display:none}
 @media(min-width:1024px){
@@ -373,34 +258,22 @@ main#view:focus,main#view:focus-visible{outline:none}
 }
 
 .view--home{display:flex;flex-direction:column;gap:var(--s4)}
-/* on Home the card is the hero object: give its field real presence
-   so the page composition anchors on it */
+
 .view--home .card__field{min-height:clamp(300px,38vw,500px)}
 
-/* ── THE CARD ────────────────────────────────────────────────────────
-   One printed collectible object with two zones: an ink identity
-   panel (the masthead — card number, the count, what the card leads
-   to) and the paper FIELD, where the ten slots are hand-placed at
-   fixed compositional positions: varied sizes, slight leans, a dotted
-   collection route joining them in order, and the tenth slot largest
-   because it IS the reward. The field is aspect-locked so the
-   composition holds at any width; a narrow card switches to a
-   portrait composition of the same system. */
 .card{position:relative;border:var(--edge-card) solid var(--ink);
   background:var(--paper);width:100%;
   container-type:inline-size;
-  /* the throw is TONE: an ink shadow would swallow the masthead's ink
-     edge and the card would lose its left side into its own shadow */
+
   box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
-.card__punch{position:absolute;z-index:3;left:50%;top:46%;
-  transform:translate(-50%,-50%) rotate(-11deg);
+.card__punch{position:absolute;z-index:3;right:4%;top:4.5%;
+  transform:rotate(-9deg);transform-origin:100% 0;
   font-family:var(--f-head);text-transform:uppercase;line-height:1;
-  font-size:clamp(30px,9cqw,64px);color:var(--ink);
+  font-size:clamp(20px,6.2cqw,42px);color:var(--ink);
   border:var(--edge-frame) solid var(--ink);background:var(--paper);
-  padding:.16em .45em;box-shadow:var(--s2) var(--s2) 0 var(--ink);
+  padding:.16em .45em;box-shadow:var(--s2) var(--s2) 0 var(--tone);
   pointer-events:none;white-space:nowrap}
 
-/* the masthead: knocked out of ink, count at display scale */
 .card__id{background:var(--ink);color:var(--paper);
   padding:clamp(14px,3.4cqw,26px) clamp(16px,4cqw,28px);
   display:flex;flex-direction:column;gap:clamp(4px,1cqw,10px)}
@@ -411,23 +284,20 @@ main#view:focus,main#view:focus-visible{outline:none}
 .card__num b{font-weight:inherit;font-size:clamp(58px,15cqw,124px)}
 .card__num span{font-size:clamp(19px,4cqw,34px);opacity:.55;
   letter-spacing:-.02em}
-/* a short blade stroke, not a hairline rule */
+
 .card__idrule{display:block;width:clamp(52px,42%,120px);height:5px;
   background:var(--paper);opacity:.9;
   clip-path:polygon(0 40%,14% 6%,58% 0,90% 26%,100% 60%,55% 100%,8% 72%)}
 .card__goal{margin:0;font-size:var(--t-body);opacity:.85;
   max-width:22ch}
-/* the organization's mark closes the masthead: this is a Key Club
-   object, and the card face is where that is said */
+
 .card__kci{display:block;margin-top:auto;padding-top:clamp(8px,2cqw,16px)}
 .card__kci .brandseal{display:block;height:auto;
   width:clamp(54px,11cqw,84px);opacity:.92;
   --si:var(--paper);--sp:var(--ink)}
 
-/* the field: aspect-locked so the hand-placed layout is a fixed
-   composition, not a reflowing grid */
 .card__field{position:relative;aspect-ratio:100/128}
-/* printed registration ticks on the field's free corners */
+
 .card__field::before,
 .card__field::after{content:'';position:absolute;width:15px;height:15px;
   pointer-events:none;z-index:0}
@@ -441,14 +311,9 @@ main#view:focus,main#view:focus-visible{outline:none}
   right:clamp(10px,3cqw,22px);white-space:nowrap;overflow:hidden;
   font:500 clamp(8px,1.7cqw,10px)/1 var(--f-mono);
   text-transform:uppercase;letter-spacing:.2em;color:var(--tone)}
-/* the print line is one line always: on the narrowest cards the
-   district tail comes off rather than wrapping or cropping mid-word */
+
 @media (max-width:359px){.card__edge-tail{display:none}}
 
-/* the collection route: dotted, and ALWAYS behind the slots — the
-   stack is explicit (route 0, slots 1) and every slot face is opaque
-   paper, so the line runs stamp to stamp and disappears behind each
-   silhouette instead of crossing its artwork */
 .card__route{position:absolute;inset:0;width:100%;height:100%;
   pointer-events:none;z-index:0}
 .card__route polyline{fill:none;stroke:var(--tone);stroke-width:2;
@@ -459,22 +324,11 @@ main#view:focus,main#view:focus-visible{outline:none}
 .seals{position:absolute;inset:0;list-style:none;margin:0;padding:0;
   z-index:1}
 
-/* one slot: not a box — the stamp's own rough silhouette, absolutely
-   seated on the card, leaning its own way. The box is only geometry;
-   everything visible is drawn by the silhouette paths. */
 .seal{position:absolute;display:grid;place-items:center;
   width:var(--s);aspect-ratio:1;left:var(--x);top:var(--y);
   min-width:0;
   transform:rotate(var(--lean,0deg))}
 
-/* the PORTRAIT composition (narrow card): THE RIVER — one continuous
-   S-curve, no ranks. The trail enters top-left, winds right, folds
-   back left, and hooks down to the reward pooled in the bottom-right
-   corner, so the route reads as a single journey rather than rows.
-   Slots do not touch: every pair clears its neighbour by at least
-   1.5% of the card width at every tested width (the coordinates were
-   generated with a pairwise-clearance check, since the enso backing
-   bleeds slightly past its box). */
 .seal:nth-child(1){--x:5.5%; --y:0.4%; --s:21%; --lean:-2deg}
 .seal:nth-child(2){--x:35.5%; --y:5.1%; --s:21%; --lean:1.5deg}
 .seal:nth-child(3){--x:63.5%; --y:12.9%; --s:21%; --lean:-1deg}
@@ -486,29 +340,16 @@ main#view:focus,main#view:focus-visible{outline:none}
 .seal:nth-child(9){--x:47.5%; --y:63.7%; --s:21%; --lean:-1.8deg}
 .seal:nth-child(10){--x:71.0%; --y:74.2%; --s:24%; --lean:-2.5deg}
 
-/* the LANDSCAPE composition (wide card): the identity panel takes the
-   left column, the route runs across the top ranks, down, and back to
-   the big milestone beside the masthead. The query reads the card's
-   own width, so the switched layout lives on .card__face — a container
-   cannot restyle itself. */
-@container (min-width:520px){
+@container (min-width:480px){
   .card__face{display:grid;height:100%;
     grid-template-columns:minmax(150px,30%) minmax(0,1fr);
     align-items:stretch}
-  /* the field fills its track and takes the masthead's height — an
-     aspect here would transfer a width and push the card open. The
-     slot coordinates are percentages, so the composition rides the
-     box. */
+
   .card__field{aspect-ratio:auto;height:100%;min-height:190px}
+  .card__punch{right:2.5%;top:3.5%;font-size:clamp(14px,3cqw,24px)}
   .card__route--l{display:block}
   .card__route--p{display:none}
-  /* a SNAKE: four across, turn, three back, turn, and the route ends
-     on the big rosette in the far corner */
-  /* This field's aspect changes with the page (wide and short at
-     768px, near-square beside a tall masthead), and a box's height in
-     percent grows as the field flattens. These clearances were sized
-     for the flattest tested case, so the slots stay apart across the
-     whole landscape range, not just at one width. */
+
   .seal:nth-child(1){--x:2%;   --y:4%;   --s:15%;  --lean:-2.5deg}
   .seal:nth-child(2){--x:21.5%;--y:16%;  --s:14.5%;--lean:1.5deg}
   .seal:nth-child(3){--x:40.5%;--y:4%;   --s:15%;  --lean:-1deg}
@@ -525,19 +366,12 @@ main#view:focus,main#view:focus-visible{outline:none}
 .sf-back,.sf-face{fill:none}
 .seal__mark path{stroke:none}
 
-/* EMPTY — the printed seat: the stamp's own silhouette, outlined on
-   the card with the ghost of its artwork. Quiet, but drawn — and the
-   face is OPAQUE paper, so the route line ends at the silhouette's
-   edge instead of running through the empty seat. */
 .seal[data-seal="empty"] .sf-face{fill:var(--paper);
   stroke:var(--ink);stroke-width:1.1;stroke-opacity:.5}
 .seal[data-seal="empty"] .seal__mark{opacity:.12}
 .seal[data-seal="empty"] .seal__mark path{fill:var(--ink)}
 .seal[data-seal="empty"] .seal__no{color:var(--tone)}
 
-/* EARNED — an ink impression on its own paper backing piece, pressed
-   a degree off true. The shadow is TONE and follows the silhouette,
-   and the paper deckle keeps two overlapping stamps two objects. */
 .seal--set > svg{filter:drop-shadow(2.5px 3px 0 var(--tone))}
 .seal--set .sf-back{fill:var(--paper);stroke:var(--tone);
   stroke-width:.8}
@@ -546,58 +380,42 @@ main#view:focus,main#view:focus-visible{outline:none}
   transform:rotate(var(--press-tilt,0deg))}
 .seal--set .seal__mark path{fill:var(--paper)}
 .seal--set .seal__no{color:var(--ink-2)}
-/* the freshest press sits proudest */
+
 .seal--hero > svg{filter:drop-shadow(3.5px 4.5px 0 var(--tone))}
 .seal--hero{z-index:1}
 .seal--hero .sf-back{stroke-width:1.2}
 
-/* NEXT — the seat being worked toward: the silhouette at full ink
-   weight, ringed by hand — the annotation that says where the story
-   continues */
 .seal--next{z-index:2}
 .seal--next .sf-face{fill:var(--paper);stroke:var(--ink);stroke-width:2.6}
 .seal--next .seal__mark{opacity:.22}
 .seal--next .seal__mark path{fill:var(--ink)}
 .seal--next .seal__no{color:var(--ink-2)}
-/* the enso stamps are hand-pressed circles, so their annotation is a
-   hand-drawn ring: an uneven ellipse looped around the seat, never a
-   geometric circle */
+
 .seal--next::after{content:'';position:absolute;inset:-6%;
   border:2.5px solid var(--ink);
   border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;
   transform:rotate(-5deg);pointer-events:none}
 
-/* the printed index of each specimen, set on the CARD at the stamp's
-   corner — never on the artwork */
 .seal__no{position:absolute;right:-3%;bottom:-5%;
   font:500 clamp(8px,1.8cqw,11px)/1 var(--f-mono);color:var(--tone)}
 
-/* MILESTONE — the tenth seat is a rosette because it IS the reward.
-   The artwork owns the UPPER zone of the box and the name owns a
-   reserved band below the silhouette, so they can never collide. */
 .seal--mile[data-seal="empty"] .sf-face{stroke-width:1.6;stroke-opacity:.55}
 .seal--mile > svg{height:80%;align-self:start}
-/* a pasted label: its paper chip keeps the name readable even where
-   a short field lands it over the card's trim line */
+
 .seal__tag{position:absolute;left:50%;bottom:3%;
   transform:translateX(-50%);max-width:132%;
   font:500 clamp(8px,1.6cqw,11px)/1 var(--f-mono);
   text-transform:uppercase;letter-spacing:.1em;color:var(--ink-2);
   background:var(--paper);padding:.2em .45em;box-sizing:border-box;
   white-space:nowrap}
-/* on the pressed rosette the name rides its own ink banner in the
-   reserved band, readable wherever it lands */
+
 .seal--set .seal__tag{color:var(--paper);
   background:var(--ink);padding:.25em .5em}
 
-/* LOCKED — defined for the contract; the attendance model does not
-   emit it today. */
 .seal[data-seal="locked"] .seal__mark{opacity:.4}
 
 .act{display:flex}
-/* font-family is not optional here. A <button> does not inherit it, so
-   without this line the button and everything inside it renders in the
-   browser's default Arial — which is exactly what was happening. */
+
 .act__btn{position:relative;overflow:hidden;isolation:isolate;
   display:grid;align-content:end;gap:4px;
   width:100%;min-height:clamp(96px,18vw,140px);
@@ -610,40 +428,37 @@ main#view:focus,main#view:focus-visible{outline:none}
 .act__sub{font-size:var(--t-body);opacity:.7}
 .act__btn:hover{background:var(--ink);color:var(--paper)}
 
-/* the page's tone lives in the ground layer and in marks anchored to
-   panels; each page adds ONE slash-language accent of its own */
 .view--home{position:relative;display:flex;flex-direction:column;gap:var(--s4)}
-/* a short ink stroke bleeding in from the right gutter at deck level —
-   the page-level echo of the cut language, small and deliberate */
+
 .view--home::after{content:'';position:absolute;z-index:-1;
   top:clamp(150px,22vw,260px);right:calc(var(--gutter) * -1);
   width:clamp(150px,20vw,260px);height:9px;
   transform:rotate(-14deg);transform-origin:100% 50%;
   background:var(--ink);
   clip-path:polygon(0 46%,14% 12%,58% 0,100% 30%,100% 70%,54% 100%,12% 74%)}
-.deck{display:grid;gap:var(--s4)}
-.deck__side{display:grid;gap:var(--s4);align-content:start;min-width:0}
-/* the live panel is cut at an angle: an action panel, not a card */
+.deck{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"card" "act" "ahead"}
+.deck--live{grid-template-areas:"act" "card" "ahead"}
+.deck > .card{grid-area:card}
+.deck__act{grid-area:act;min-width:0}
+.deck__ahead{grid-area:ahead}
+
 .deck .act--live .act__btn{
   clip-path:polygon(0 clamp(10px,2vw,22px),100% 0,100% 100%,0 100%);
   padding-top:calc(var(--s5) + clamp(10px,2vw,22px))}
 
-/* the live ink panel still runs off the sheet */
 .deck .act--live{margin-right:calc(var(--gutter) * -1)}
 .deck .act--live .act__btn{border-right:0}
 
 @media(min-width:1024px){
-  /* the card OWNS the page: nearly three quarters of the deck, with
-     the action and calendar in a slim margin column */
-  .deck{grid-template-columns:minmax(0,72fr) minmax(0,28fr);
-    gap:clamp(20px,2.6vw,40px);align-items:start}
+  .deck,.deck--live{grid-template-columns:minmax(0,72fr) minmax(0,28fr);
+    grid-template-areas:"card act" "card ahead";
+    gap:clamp(20px,2.6vw,40px);align-items:start;align-content:start}
   .deck > .card{max-width:none}
-  /* the card presses up over the title rule: the object sits ON the page */
+
   .deck{margin-top:calc(var(--s3) * -1)}
 }
 
-/* tone is anchored, not ambient: a small halftone wedge tucked behind
-   this panel's corner reads as print bleed from the panel itself */
 .ahead{position:relative;display:flex;flex-direction:column;
   border:var(--edge-panel) solid var(--ink);background:var(--paper)}
 .ahead::before{content:"";position:absolute;z-index:-1;
@@ -666,10 +481,9 @@ main#view:focus,main#view:focus-visible{outline:none}
   font-size:clamp(21px,4.4vw,30px);color:var(--ink-2);
   min-width:2.4ch;letter-spacing:-.02em}
 .ahead__day{font-size:var(--t-body);color:var(--ink-2)}
-.ahead__at{font-size:var(--t-caption);color:var(--tone);
+.ahead__at{font-size:var(--t-caption);color:var(--ink-2);
   justify-self:end;text-align:right}
 
- /* the account handle is supporting information, not a heading */
 .rail__who{font-family:var(--f-body);
   font-size:clamp(15px,1.3vw,19px);line-height:1.15;overflow-wrap:anywhere}
 .rail__role{margin-top:2px;font-size:13px}
@@ -681,24 +495,12 @@ main#view:focus,main#view:focus-visible{outline:none}
 .ledger__mark,.ahead__mark{font-size:var(--t-head);line-height:1.02;
   text-transform:none}
 
-/* Body copy is CAPITALS whichever case it is typed in, so it gets the
-   tracking caps need and a line-height set for cap-height, not x-height. */
 body{letter-spacing:.012em}
 
-/* ══ FORM CONTROLS INHERIT THE VOICE ════════════════════════════════
-   Buttons, inputs and selects do not inherit font-family from their
-   parent — the UA stylesheet gives them Arial 13.33px. Every control in
-   the app that forgot to set one was silently outside the type system.
-   One rule, at the root of the cascade, instead of remembering it on
-   every component forever. */
 button,input,select,textarea{font-family:inherit}
 
 .view--auth{display:block;width:100%;max-width:none;padding:0;margin:0}
 
-/* Row one IS the field's height, so the form's overlap is a negative
-   margin against a known edge rather than a guess. Setting it from the
-   viewport instead made the head's own flow height additive, and the
-   form landed a hundred pixels below the field. */
 .spread{--band:clamp(230px,42dvh,400px);--lap:clamp(34px,9vw,64px);
   position:relative;width:100%;box-sizing:border-box;
   display:grid;grid-template-columns:minmax(0,1fr);
@@ -710,20 +512,14 @@ button,input,select,textarea{font-family:inherit}
   left:0;right:0;
   top:0;height:var(--band);
   background:var(--ink);z-index:0}
-/* the paper half is a composed sheet, not leftover space: a tint
-   slash low on the page, the organization set small along the trim
-   edge, and (on the wide split) a halftone field descending behind
-   the form panel */
+
 .spread::after{content:'';position:absolute;z-index:0;
   right:-4%;bottom:6%;width:clamp(240px,38vw,560px);
   height:clamp(40px,7vh,74px);
   transform:rotate(-12deg);background:var(--tint);opacity:.8;
   clip-path:polygon(0 55%,9% 34%,28% 16%,52% 6%,74% 16%,100% 44%,
                     92% 62%,66% 86%,38% 94%,12% 76%)}
-/* the organization's imprint: an in-flow footer line, centred in the
-   panel it belongs to (the paper sheet under the form on phones, the
-   form's own column on the split spread) — never floated against an
-   edge, never able to overlap the panel above it */
+
 .spread__side{position:relative;z-index:1;
   justify-self:center;align-self:end;text-align:center;
   margin:var(--s4) var(--gutter) clamp(14px,2.5dvh,26px);
@@ -738,10 +534,7 @@ button,input,select,textarea{font-family:inherit}
     -webkit-mask-image:linear-gradient(205deg,#000 35%,transparent 80%);
     mask-image:linear-gradient(205deg,#000 35%,transparent 80%)}
 }
-/* Cropped into the field's lower-left corner, not centred in it.
-   Sized from the band, not the viewport: the swirl's visible height is
-   at most 58% of the field, so it cannot climb into the masthead no
-   matter how narrow the page gets. */
+
 .spread__seal{position:absolute;--swirl:min(86vw,430px,calc(var(--band) * .95));
   left:calc(var(--swirl) * -.3);top:auto;bottom:calc(var(--swirl) * -.42);
   width:var(--swirl);aspect-ratio:1;height:auto;
@@ -753,13 +546,7 @@ button,input,select,textarea{font-family:inherit}
 .spread__sub{margin:0 0 var(--s3);font-size:var(--t-caption);
   letter-spacing:.16em;color:var(--tint);
   display:flex;align-items:center;gap:clamp(8px,1.4vw,14px)}
-/* the International seal, knocked out of the ink field directly — a
-   printed mark in the field's top-right, balancing the wordmark. On
-   phones the band is shallow, so it stays modest; on the split spread
-   it grows with the fold, and its right offset clears the form panel's
-   overlap (--lap) so nothing can ever cover it. (span-qualified: the
-   .crop child reset later in this file would otherwise win the
-   position tie) */
+
 .spread__field > span.spread__kci{position:absolute;z-index:1;
   top:clamp(16px,4dvh,42px);right:clamp(14px,2.6vw,34px);
   width:clamp(64px,8.5vw,132px)}
@@ -770,13 +557,8 @@ button,input,select,textarea{font-family:inherit}
 .spread__kci .brandseal{width:100%;height:auto;display:block;
   --si:var(--paper);--sp:var(--ink)}
 
-/* ── THE CLUB SEALS, MONOCHROME ─────────────────────────────────────
-   The traced artwork paints with two slots: --si (its ink) and --sp
-   (its paper). Default is black on paper; the three current placements
-   all sit on ink panels, so they knock out to paper. This is a value
-   swap only — the geometry is the traced reference's. */
 .brandseal{--si:var(--ink);--sp:var(--paper)}
-/* the district countersigns the meeting the board is scheduling */
+
 .bform__head{display:flex;align-items:center;
   justify-content:space-between;gap:12px}
 .bform__seal{flex:none;width:clamp(30px,3vw,46px)}
@@ -807,8 +589,7 @@ button,input,select,textarea{font-family:inherit}
 .authp__in::placeholder{color:var(--tone)}
 .authp__in:focus-visible{outline:var(--edge-panel) solid var(--ink);
   outline-offset:2px}
-/* the one place Bold Italic earns its keep: an error is the only line
-   in the app that has to interrupt a reader mid-task */
+
 .authp__err{margin:0;color:var(--ink);font-style:italic;font-weight:700;
   border-left:var(--edge-frame) solid var(--ink);padding-left:10px}
 .authp__act{display:flex;flex-direction:column;gap:var(--s3);margin-top:var(--s2)}
@@ -824,56 +605,42 @@ button,input,select,textarea{font-family:inherit}
   color:var(--ink);font-family:var(--f-body);font-size:var(--t-body);
   text-decoration:underline;text-underline-offset:3px;text-align:left}
 
+@media(min-width:600px) and (max-width:819px){
+  .authp{margin-inline:auto}
+}
 @media(min-width:820px){
-  /* The overlap is derived, not tuned. The field's right edge sits at
-     54% of the spread; column one stops one --lap short of it, so the
-     form starts INSIDE the field by exactly that much at every width.
-     A hand-picked negative margin only overlaps at the width it was
-     picked at. */
   .spread{--lap:clamp(40px,5vw,84px);
     grid-template-columns:calc(54% - var(--lap)) minmax(0,1fr);
     grid-template-rows:auto;
     column-gap:0;align-content:center;
     padding-block:clamp(40px,7vh,96px)}
-  /* the brand block is pinned to the top of the field: the swirl owns
-     the lower half, and on short viewports the two must never meet */
+
   .spread__head{grid-row:1;align-self:start;
     margin-top:calc(clamp(40px,7vh,96px) * -1);
     padding-top:clamp(28px,6vh,64px)}
   .spread__field{right:auto;bottom:0;height:auto;
     width:54%}
-  /* capped by the viewport height as well as width: the swirl's visible
-     crown stays in the field's lower half at every window size */
+
   .spread__seal{--swirl:min(64vw,720px,74dvh);
     left:calc(var(--swirl) * -.3);bottom:calc(var(--swirl) * -.36)}
 
   .spread__head{grid-column:1;padding:0 var(--gutter);align-self:start}
-  /* sized to its own column rather than to the viewport, so eight caps
-     of a wide display face fit the measure they are set in */
+
   .spread__wm{font-size:clamp(44px,7.4vw,104px)}
   .authp{grid-row:1;grid-column:2;margin:0 var(--gutter) 0 0;
     justify-self:stretch;width:auto;max-width:none}
-  /* the imprint line follows its panel: centred under the form in the
-     paper column, not run down the screen's trim edge */
+
   .spread__side{grid-row:2;grid-column:2;align-self:start;
     margin:var(--s4) var(--gutter) 0 0}
 }
-/* The single-weight display face cannot carry a bold span, and the
-   browser synthesising one looks like a rendering fault. */
+
 .mark__word b{font-weight:inherit}
 
-/* ══════════════════════════════════════════════════════════════════
-   THE REGISTER — record
-   ══════════════════════════════════════════════════════════════════ */
 .view--record{display:flex;flex-direction:column;gap:var(--s5)}
 
-/* text only a screen reader needs. The verdict word is not printed on
-   every line — the mark carries it — so the word is said here instead. */
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
   overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 
-/* the title rule is a blade stroke, not a border: every page opens
-   under the same cut language the motion system speaks */
 .rechead{position:relative;border-bottom:0;
   padding-bottom:calc(var(--s3) + 7px)}
 .rechead::after{content:'';position:absolute;left:0;right:0;bottom:0;
@@ -881,8 +648,7 @@ button,input,select,textarea{font-family:inherit}
   clip-path:polygon(0 38%,10% 12%,52% 0,86% 18%,100% 46%,99% 60%,55% 100%,12% 78%,0 64%)}
 
 .rechead__title{margin:0;padding-bottom:.2em}
-/* Home's heading sits above the card rather than above a page of text,
-   so it runs one step tighter. */
+
 .rechead--tight{padding-bottom:var(--s2)}
 .rechead--tight .rechead__title{font-size:clamp(30px,6.5vw,64px)}
 
@@ -896,9 +662,7 @@ button,input,select,textarea{font-family:inherit}
   line-height:.78;font-size:clamp(64px,15vw,120px);color:var(--ink)}
 .tally__of{grid-area:of;margin:0 0 .55em var(--s3);
   font-size:var(--t-caption);color:var(--ink-2);line-height:1.2}
-/* the bar bleeds only while it owns a full-width row of its own; once
-   the band goes horizontal it is a middle column with the missed count
-   after it, and a negative margin there just collides */
+
 .tally__bar{grid-area:bar;position:relative;margin:var(--s3) 0 0;
   width:auto;margin-right:calc(var(--gutter) * -1);
   height:clamp(11px,1.6vw,18px);
@@ -923,8 +687,6 @@ button,input,select,textarea{font-family:inherit}
   border-top:var(--edge-panel) solid var(--ink)}
 .ledger--ahead{margin-top:var(--s4);border-top:0}
 
-/* the section mark: a label sitting on its own rule, the way a printed
-   ledger divides a page */
 .ledger__mark{margin:0 0 var(--s2);padding-bottom:var(--s2);
   border-bottom:var(--edge-panel) solid var(--ink);
   font-family:var(--f-head);text-transform:uppercase;
@@ -946,8 +708,6 @@ button,input,select,textarea{font-family:inherit}
 .lrow__mark{width:100%;height:100%;display:block}
 .lrow__mark path{fill:var(--ink)}
 
-/* an unstamped meeting is an empty box on a stamp card, so that is what
-   it looks like — the outline the mark would have filled. */
 .lrow__slot{width:58%;aspect-ratio:1;border-radius:50%;
   border:var(--edge-panel) solid var(--tint)}
 
@@ -955,29 +715,20 @@ button,input,select,textarea{font-family:inherit}
 .lrow__date{font-size:var(--t-body);line-height:1.15}
 .lrow__when{font-size:var(--t-caption);color:var(--ink-2);line-height:1.3}
 
-/* ATTENDED — the number goes to full ink and the stamp prints. No word:
-   the mark is the record. */
 .lrow--set .lrow__no{color:var(--ink)}
 
-/* MISSED — the whole line recedes. Nothing is struck through: an
-   absence is quiet, not cancelled. */
 .lrow--miss .lrow__no{color:var(--ink-2)}
 .lrow--miss .lrow__date{color:var(--ink-2)}
-.lrow--miss .lrow__when{color:var(--tone)}
+.lrow--miss .lrow__when{color:var(--ink-2)}
 
-/* SCHEDULED — not yet anything. */
 .lrow--upcoming .lrow__no{color:var(--ink-2)}
 .lrow--upcoming .lrow__date{color:var(--ink-2)}
-.lrow--upcoming .lrow__when{color:var(--tone)}
+.lrow--upcoming .lrow__when{color:var(--ink-2)}
 
-/* width:auto matters: .lrow sets width:100% to reset the button, and a
-   block with an explicit width does not widen for a negative margin —
-   the bleed silently did nothing until this line. */
 .lrow--open{background:var(--ink);color:var(--paper);cursor:pointer;
   padding:var(--s4);margin:var(--s3) 0;border-bottom:0;
   width:auto;margin-right:calc(var(--gutter) * -1);
-  /* the band bleeds off the sheet, but its last word must not: the verb
-     keeps a gutter of its own inside the bleed */
+
   padding-right:calc(var(--s4) + var(--gutter));
   box-shadow:var(--s2) var(--s2) 0 var(--tone)}
 .lrow--open .lrow__no{color:var(--paper)}
@@ -996,8 +747,6 @@ button,input,select,textarea{font-family:inherit}
   .lrow{gap:var(--s4)}
 }
 
-/* Once there is width to spend, the line stops stacking and runs across
-   it: number, mark, date, then the reading set flush right. */
 @media(min-width:900px){
   .lrow{grid-template-columns:auto clamp(34px,3vw,44px) minmax(7rem,auto)
       minmax(0,1fr) auto;
@@ -1029,10 +778,6 @@ button,input,select,textarea{font-family:inherit}
 .standing__at{font-family:var(--f-head);
   font-size:var(--t-sub);line-height:1.05;color:var(--paper)}
 
-/* Two rows: the feed fills the whole frame, the reticle centres in the
-   space ABOVE the status chip, and the chip owns the bottom row. The
-   reticle is therefore centred by the layout rather than nudged off
-   centre by a fixed margin that has to guess the chip's height. */
 .viewer{position:relative;display:grid;
   grid-template-columns:minmax(0,1fr);
   grid-template-rows:minmax(0,1fr) auto;
@@ -1041,17 +786,14 @@ button,input,select,textarea{font-family:inherit}
   width:100%;aspect-ratio:1;max-height:62vh;
   border:var(--edge-frame) solid var(--ink);background:var(--tint);
   box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
-/* a code is square, so on a phone the frame is square: it fills the
-   sheet instead of leaving a letterbox with half a screen under it. */
+
 @media(min-width:600px){ .viewer{aspect-ratio:4/3} }
-/* everything that is not the chip covers the whole frame */
+
 .viewer > *{grid-column:1;grid-row:1/-1}
 .viewer video{width:100%;height:100%;display:block;
   object-fit:cover;object-position:center;
   filter:grayscale(1) contrast(1.06)}
 
-/* screentone over the feed, not a veil: it holds the overlay legible
-   against a camera image nobody controls. */
 .viewer__scrim{width:100%;height:100%;pointer-events:none;
   background-image:radial-gradient(rgba(10,10,10,.34) 1.1px,transparent 1.2px);
   background-size:5px 5px}
@@ -1068,8 +810,6 @@ button,input,select,textarea{font-family:inherit}
 .reticle__c--bl{bottom:0;left:0;border-right:0;border-top:0}
 .reticle__c--br{bottom:0;right:0;border-left:0;border-top:0}
 
-/* the marks close on a hit and open again on a refusal. Weight and
-   position carry the state; there is no colour in this system to spend. */
 .reticle--good .reticle__c{width:19%;height:19%}
 .reticle--busy .reticle__c{opacity:.55}
 .reticle--bad .reticle__c{width:12%;height:12%}
@@ -1084,14 +824,9 @@ button,input,select,textarea{font-family:inherit}
 .viewer__msg--hot{background:var(--ink);color:var(--paper);border-color:var(--paper)}
 .viewer__msg--soft{color:var(--ink-2)}
 
-/* a good read floods the frame for one beat */
 .viewer--hit{border-color:var(--ink)}
 .viewer--hit .viewer__scrim{opacity:.35}
 
-/* ── THE DEAD ENDS ────────────────────────────────────────────────
-   No camera, no permission, no https. The panel stops being a
-   viewfinder and becomes a note: title, sentence, and the field below
-   already focused. */
 .viewer--stalled{aspect-ratio:auto;min-height:clamp(160px,30vw,240px);
   grid-template-rows:minmax(0,1fr);place-items:stretch;
   background:var(--paper)}
@@ -1106,7 +841,6 @@ button,input,select,textarea{font-family:inherit}
 .manual{display:flex;flex-direction:column;gap:var(--s3);
   border:var(--edge-panel) solid var(--ink);background:var(--paper);
   padding:var(--s4)}
-.manual > .bubble:empty{display:none}
 .manual__lab{font-size:var(--t-caption);color:var(--ink-2);line-height:1.35}
 .manual__f{display:flex;gap:var(--s2);flex-wrap:wrap;align-items:stretch}
 .manual__in{flex:999 1 min(100%,14ch);min-width:0;
@@ -1131,27 +865,26 @@ button,input,select,textarea{font-family:inherit}
     gap:var(--s5) var(--s5);align-content:start}
   .view--scan > .rechead{grid-area:head}
   .view--scan > .standing{grid-area:standing}
-  /* the viewer's height is budgeted against the viewport, not just its
-     column: on a short window (1306x685 laptops) the camera panel used
-     to run past the fold and take the code-entry panel with it */
+
   .view--scan > .viewer{grid-area:viewer;
-    max-height:calc(100dvh - clamp(280px,34vh,360px));min-height:250px}
+    max-height:calc(100dvh - clamp(330px,34vh,360px));min-height:250px}
 
   .view--scan > .manual{grid-area:manual;align-self:end}
+  .view--scan-solo{grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"head" "standing" "viewer"}
+  .view--scan-solo > .viewer{width:100%;justify-self:center;
+    max-width:min(100%,max(720px,48vw))}
 }
 
 .view--rewards{display:flex;flex-direction:column;gap:var(--s5)}
 
 .ladder{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
-/* the display face draws well below its line box; without the pad the
-   figure's tail lands in the caption under it */
+
 .ladder__fig{margin:0;padding-bottom:.1em;font-family:var(--f-display);
   line-height:.78;font-size:clamp(64px,15vw,120px);color:var(--ink)}
 .ladder__of{margin:0;font-size:var(--t-caption);color:var(--ink-2);
   line-height:1.2}
 
-/* the climb: a vertical rail whose ink is the count, with the three
-   plates hung off it at their rungs */
 .climb{display:grid;--rgap:clamp(16px,2.6vw,30px);
   grid-template-columns:clamp(22px,3.4vw,40px) minmax(0,1fr);
   column-gap:var(--rgap);margin-top:var(--s3)}
@@ -1166,27 +899,19 @@ button,input,select,textarea{font-family:inherit}
   gap:var(--s2);min-width:0;
   padding:clamp(16px,2.4vw,26px);
   border:var(--edge-panel) solid var(--ink);background:var(--paper)}
-/* the hook: every plate hangs off the rail. ::after, because sealed
-   plates spend ::before on their tone veil. */
+
 .tier::after{content:"";position:absolute;right:100%;top:clamp(22px,3.4vw,40px);
   width:var(--rgap,20px);height:var(--edge-panel);background:var(--ink)}
-/* uneven hanging: the middle plate steps out */
-.climb__plates .tier:nth-child(2){margin-left:clamp(22px,5vw,72px)}
-.climb__plates .tier:nth-child(2)::after{width:calc(var(--rgap,20px) + clamp(22px,5vw,72px))}
 .tier__at{font-family:var(--f-head);line-height:.82;
   font-size:clamp(46px,8.5vw,86px);color:var(--ink)}
 .tier__body{display:flex;flex-direction:column;gap:3px;min-width:0}
 .tier__name{font-family:var(--f-head);font-size:var(--t-sub);
   line-height:1.05;overflow-wrap:anywhere}
 .tier__desc{font-size:var(--t-caption);color:var(--ink-2);line-height:1.35}
-/* the distance sits at the foot of the plate whatever the copy above
-   it runs to, so three plates in a row end on one line */
+
 .tier__say{margin-top:auto;padding-top:var(--s3);
   font-size:var(--t-caption);color:var(--ink-2)}
 
-/* a sealed plate is still printed in ink — the halftone is a thin
-   shading band along its top edge, not a fill, and the figure stays
-   full-strength so the ladder reads at a glance */
 .tier--sealed{position:relative;isolation:isolate;max-width:660px}
 .tier--sealed::before{content:"";position:absolute;inset:0;z-index:-1;
   background-image:radial-gradient(var(--ink) .9px,transparent 1px);
@@ -1195,8 +920,6 @@ button,input,select,textarea{font-family:inherit}
   mask-image:linear-gradient(to bottom,#000 0%,#000 8%,transparent 22%)}
 .tier--sealed .tier__at{color:var(--ink)}
 
-/* READY — the one plate you can act on: full ink, and the only thing
-   on the page carrying a verb. */
 .tier--ready{background:var(--ink);color:var(--paper);
   border-color:var(--ink);
   margin-right:calc(var(--gutter) * -1);border-right:0;
@@ -1213,11 +936,9 @@ button,input,select,textarea{font-family:inherit}
 .tier__claim:focus-visible{outline:var(--edge-panel) solid var(--paper);
   outline-offset:3px}
 
-/* TAKEN — ink, but spent: the figure holds and everything else recedes,
-   so a claimed plate reads as history rather than as a second offer. */
 .tier--claimed{background:var(--ink);color:var(--tint);border-color:var(--ink);
   max-width:700px}
-/* the cancellation: a punched CLAIMED across the plate */
+
 .tier__punch{position:absolute;right:clamp(10px,3vw,34px);top:50%;
   transform:translateY(-50%) rotate(-12deg);
   font-family:var(--f-head);text-transform:uppercase;line-height:1;
@@ -1245,20 +966,12 @@ button,input,select,textarea{font-family:inherit}
   padding:clamp(18px,3vw,32px);
   margin-left:calc(var(--gutter) * -1);
   padding-left:max(var(--gutter),clamp(18px,3vw,32px))}
-/* ONE composition, three layers of weight: the district named in
-   small type at the head, the district emblem as one large tone
-   watermark bleeding off the lower corner, and the member's name as
-   the dominant line over it. Everything is sized from the PLATE
-   (container units), so nothing can clip on the narrow desktop
-   column. */
+
 .who__mark{grid-row:1;align-self:start;position:relative;z-index:1}
 .who__org{display:block;font:500 clamp(10px,2.4cqw,13px)/1.6 var(--f-mono);
   text-transform:uppercase;letter-spacing:.2em;color:var(--paper);
   opacity:.9}
-/* the district emblem IS the plate's architecture: giant, gray, and
-   cropped by the frame on purpose — a watermark leaving the sheet.
-   It fades toward the lower-left so the name in front always sits on
-   near-ink, never gray-on-gray or black-on-black. */
+
 .who__emblem{position:absolute;right:-16%;top:46%;z-index:0;
   transform:translateY(-50%);
   width:clamp(250px,96cqw,470px);pointer-events:none}
@@ -1271,23 +984,19 @@ button,input,select,textarea{font-family:inherit}
   display:grid;gap:3px;
   border-top:var(--edge-rule) solid var(--tint);
   padding-top:clamp(10px,1.6vw,16px)}
-/* the name is set in the header face — the display face's thin strokes
-   were unreadable at this size on ink */
+
 .who__name{margin:0;font-family:var(--f-head);text-transform:uppercase;
-  line-height:.95;font-size:clamp(26px,3.6vw,46px);color:var(--paper);
+  line-height:.95;font-size:clamp(24px,9cqw,44px);color:var(--paper);
   overflow-wrap:anywhere;padding-bottom:.04em}
 .who__hand{margin:0;font-size:var(--t-caption);color:var(--tint);
   line-height:1.3;overflow-wrap:anywhere;letter-spacing:.1em}
 
 @media(min-width:900px){
   .sheet{grid-template-columns:minmax(0,34fr) minmax(0,66fr);
-    gap:clamp(20px,2.8vw,44px);align-items:start}
-  /* the member card face carries more field than the home card, so
-     the two columns land at kindred heights without stretching the
-     composition apart */
+    gap:clamp(20px,2.8vw,44px);align-items:stretch}
+
   .view--member .card__field{min-height:clamp(280px,32vw,430px)}
-  /* past this width the nav rail owns the left edge: the plate keeps a
-     real gutter from it instead of sliding underneath */
+
   .who{margin-left:0;padding-left:clamp(18px,3vw,32px)}
 }
 
@@ -1310,10 +1019,7 @@ button,input,select,textarea{font-family:inherit}
   gap:var(--s3);padding:clamp(9px,1.4vw,13px) 0;
   border-bottom:var(--edge-rule) solid var(--tint)}
 .standing-band__rest dt{font-size:var(--t-caption);color:var(--ink-2)}
-/* uppercase is not a style choice here. The display face draws a
-   diaeresis on lowercase o, so "06 of 14" set in it renders "06 öf 14";
-   every other use of the face in the app is uppercase for the same
-   reason. */
+
 .standing-band__rest dd{margin:0;justify-self:end;
   font-family:var(--f-head);text-transform:uppercase;line-height:1;
   font-size:clamp(19px,3.6vw,26px);color:var(--ink)}
@@ -1334,8 +1040,16 @@ button,input,select,textarea{font-family:inherit}
   .standing-band__rest dd{justify-self:start}
 }
 
-.acct{display:flex;border-top:var(--edge-panel) solid var(--ink);
-  padding-top:var(--s4)}
+.acct{display:grid;gap:var(--s3);justify-items:start;
+  border-top:var(--edge-panel) solid var(--ink);padding-top:var(--s4)}
+.acct__mark{margin:0;font-family:var(--f-head);text-transform:uppercase;
+  font-size:var(--t-sub);line-height:1}
+.acct__row{justify-self:stretch;display:flex;align-items:center;
+  justify-content:space-between;gap:var(--s3);padding:var(--s2) 0;
+  border-bottom:var(--edge-rule) solid var(--tint)}
+.acct__lab{font-size:var(--t-body)}
+.rail__set{display:flex;align-items:center;justify-content:space-between;
+  gap:var(--s2);margin:var(--s3) 0;font-size:12.5px;color:var(--ink-2)}
 .acct__out{padding:11px var(--s5);cursor:pointer;
   border:var(--edge-panel) solid var(--ink);
   background:var(--paper);color:var(--ink);
@@ -1356,10 +1070,7 @@ button,input,select,textarea{font-family:inherit}
     grid-template-areas:"now ident" "band band";align-items:stretch;
     column-gap:clamp(16px,2.2vw,32px)}
 }
-/* the identity plate speaks the same language as the member plate: an
-   ink field with the district seal knocked out — FULLY visible, set
-   deliberately against the caption — and a tone shadow, because an ink
-   shadow beside the ink meeting band reads as nothing at all */
+
 .bident{position:relative;display:flex;align-items:center;
   justify-content:space-between;gap:clamp(12px,1.6vw,22px);
   background:var(--ink);color:var(--paper);
@@ -1387,22 +1098,19 @@ button,input,select,textarea{font-family:inherit}
 .bnow__go{grid-area:go}
 
 @media(min-width:720px){
-
   .bnow{grid-template-columns:minmax(0,1fr) auto;
     grid-template-areas:"lab go" "no go" "at go" "state go";
     align-items:start;align-content:center;
     min-height:clamp(240px,32vh,400px);
     padding-block:clamp(24px,4vw,44px)}
   .bnow__go{align-self:center;margin-top:0}
-  /* with nothing scheduled the verb belongs with the words, not parked
-     against the panel's far edge */
+
   .bnow--none{grid-template-columns:minmax(0,1fr);
     grid-template-areas:"lab" "no" "at" "go";min-height:0}
   .bnow--none .bnow__go{align-self:start;margin-top:var(--s4)}
 }
 .bnow--live{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-/* the header face collapses at caption sizes ("HAPPENI NG NOW"), so
-   the live label speaks mono with wide tracking instead */
+
 .bnow__lab{margin:0;font:500 var(--t-caption)/1.3 var(--f-mono);
   letter-spacing:.24em;text-transform:uppercase;color:var(--ink-2)}
 .bnow--live .bnow__lab{color:var(--tint)}
@@ -1427,41 +1135,19 @@ button,input,select,textarea{font-family:inherit}
 .bnow__go:focus-visible{outline:var(--edge-panel) solid currentColor;
   outline-offset:3px}
 
-/* the board overview borrows Member's standing band, so it needs the
-   band's own top rule rather than a section heading above it */
 .bover .standing-band{border-top-width:var(--edge-panel)}
-
-/* ── BLEED ────────────────────────────────────────────────────────
-   A panel that runs off the sheet. main#view carries the page gutter as
-   padding, so a bleed is that padding cancelled on one side — the
-   element reaches the true viewport edge and stops. html/body already
-   carry overflow-x:clip, so this can never widen the document; the
-   17-viewport audit stays honest. */
 
 .ink{background:var(--ink);color:var(--paper);
   border:var(--edge-panel) solid var(--ink)}
 .ink .muted,.ink .tier__desc,.ink .lrow__when{color:var(--tint)}
 
-/* :where() so this carries zero specificity: a crop frame is very often
-   also an absolutely-positioned field, and a primitive appended at the
-   end of the stylesheet must never win against the rule that places it. */
 .crop{overflow:hidden;isolation:isolate}
 :where(.crop){position:relative}
 .crop > .crop__art{position:absolute;pointer-events:none;z-index:0}
-/* ink is only the default: artwork knocked out of an ink field needs
-   paper, and a primitive must not win against the rule that says so */
+
 :where(.crop) > :where(.crop__art){fill:var(--ink)}
 .crop > :not(.crop__art){position:relative;z-index:1}
 
-/* ══════════════════════════════════════════════════════════════════
-   THE PROJECTOR — board check-in
-
-   Put on a wall and read from across a room: everything here is sized
-   for that distance, and the code is the one bright plate on an ink
-   field, which is also the highest-contrast way to present something a
-   phone camera has to find.
-   ══════════════════════════════════════════════════════════════════ */
-/* the meeting picker: tabs cut into the projector panel's top edge */
 .gmtabs{display:flex;flex-wrap:wrap;gap:0;margin-top:var(--s4);
   position:relative;z-index:1}
 .gmtab{border:var(--edge-panel) solid var(--ink);border-bottom:0;
@@ -1472,9 +1158,6 @@ button,input,select,textarea{font-family:inherit}
 .gmtab--on{background:var(--ink);color:var(--paper)}
 .gmtab:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:2px}
 
-/* THE COUNTER: the whole stage is one ink field; the code is its one
-   bright window. The meeting holds the top-left corner, the state
-   word the top-right, the count and the control hold the floor. */
 .proj{display:grid;margin-top:0;
   grid-template-columns:minmax(0,1fr);
   gap:clamp(14px,2vw,24px);
@@ -1486,11 +1169,10 @@ button,input,select,textarea{font-family:inherit}
 .proj__no{margin:0;font-family:var(--f-head);
   text-transform:uppercase;line-height:.9;
   font-size:clamp(34px,4.2vw,72px)}
-/* the meeting facts read from across the room, not from the desk */
+
 .proj__when{margin:0;color:var(--paper);
   font-size:clamp(14px,1.6vw,23px);line-height:1.3}
-/* the state word answers before anyone asks; closed keeps the lights
-   down by printing in tone */
+
 .proj__word{margin:0;font-family:var(--f-head);
   text-transform:uppercase;line-height:.86;
   font-size:clamp(52px,7vw,132px);
@@ -1504,8 +1186,6 @@ button,input,select,textarea{font-family:inherit}
 .proj__shut{margin:0;align-self:center;
   font-size:clamp(12px,1.3vw,16px);color:var(--tint);max-width:30ch}
 
-/* the one control is a slab, tall enough that a rushed hand cannot
-   miss it */
 .proj__ctl{margin:0;padding:clamp(15px,1.8vw,22px) var(--s5);cursor:pointer;
   border:var(--edge-panel) solid var(--paper);
   background:transparent;color:var(--paper);
@@ -1517,16 +1197,12 @@ button,input,select,textarea{font-family:inherit}
 .proj__ctl:focus-visible{outline:var(--edge-panel) solid var(--paper);
   outline-offset:3px}
 
-/* THE PLATE. Paper, and nothing printed on it — a quiet zone is what a
-   camera needs, so the composition stops at the plate's edge. */
 .proj__plate{background:var(--paper);color:var(--ink);
   display:grid;place-items:center;justify-self:center;
   width:min(100%,max-content);
   grid-template-rows:minmax(0,1fr) auto;
   padding:clamp(16px,3vw,32px);min-width:0}
-/* the code is a printed plate: an ink frame with its own quiet paper
-   margin (a QR needs the quiet zone anyway) and a caption band under
-   it — a poster, not a floating bitmap */
+
 .proj__plate .qrpanel__code{width:min(78vw,58vh,700px);max-width:none;aspect-ratio:1;
   box-sizing:border-box;border:var(--edge-frame) solid var(--ink);
   background:#fff;padding:clamp(10px,1.4vw,18px)}
@@ -1543,10 +1219,6 @@ button,input,select,textarea{font-family:inherit}
   fill:var(--ink);opacity:.22}
 
 @media(min-width:900px){
-  /* the counter bleeds off BOTH edges and owns most of the viewport
-     height — this page is read from across a room. Corners: meeting
-     top-left, state word top-right, count bottom-left, control
-     bottom-right; the code plate is the centre of the field. */
   .proj{grid-template-columns:minmax(0,1fr) auto;
     grid-template-rows:auto auto auto;
     align-items:start;

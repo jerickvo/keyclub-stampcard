@@ -1,30 +1,19 @@
 "use strict";
-/* keystamp — Motion base layer, utilities, ambient background
-   Loaded in order by index.html. Order matters. */
 
-/* ══════════════════════════════════════════════════════════════════
-   4. MOTION — the base layer every triggered animation goes through.
-   Division of labour: anime.js owns everything discrete and triggered.
-   CSS keyframes own only the endless ambient loops (the turning
-   structure, the scan line, the waiting slot), because an anime
-   instance looping forever burns a phone battery for no gain.
-   ══════════════════════════════════════════════════════════════════ */
 const systemReducedMotion = () => {
   try { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
   catch (_) { return false; }
 };
 
+const MOTION_KEY = 'keystamp:motion';
 const Motion = {
-  forced: false,
-  E: cubicBezier(.22,.61,.36,1),
+  forced: (() => { try { return localStorage.getItem(MOTION_KEY) === 'off'; } catch (_) { return false; } })(),
+  setForced(v){
+    this.forced = Boolean(v);
+    try { localStorage.setItem(MOTION_KEY, v ? 'off' : 'on'); } catch (_) {}
+  },
   get off(){ return this.forced || !window.animate || systemReducedMotion(); },
 
-  /* return an element to CSS control AND reset anime's per-element
-     transform cache to identity, so a later animation on the same
-     element cannot resurrect a stale skew/translate component. This is
-     the root fix for the page rendering skewed/blurry after
-     navigation: exit skewed #view, a delayed cut push re-animated it,
-     and anime composed the cached skew back in. */
   settle(el){
     if (!el || !el.style) return;
     try { aset(el, { translateX:0, translateY:0, skewX:0, skewY:0, rotate:0, scale:1, opacity:1 }); }
@@ -32,69 +21,8 @@ const Motion = {
     el.style.transform = '';
     el.style.opacity = '';
   },
-
-
-  ripple(btn){
-    if (this.off) return;
-    const s = document.createElement('span');
-    s.className = 'btn__strike';
-    btn.appendChild(s);
-    animate(s, { opacity:[1, 1, 0], duration:110,
-            ease: (typeof steps === 'function' ? steps(2) : undefined),
-            onComplete:() => s.remove() });
-  },
-
-  /* energy accumulating: overshoots, then settles. scaleX not width —
-     animating width relayouts the page every frame. */
-  meter(el, pct, delay = 220){
-    if (!el) return;
-    const to = pct / 100;
-    if (this.off){ el.style.transform = `scaleX(${to})`; return; }
-    animate(el, { scaleX:[0, Math.min(1, to + .03), to],
-            duration:1050, delay, ease:cubicBezier(.16,.84,.36,1) });
-  },
-
-  indicator(ind, target, axis){
-    if (!ind || !target || !ind.parentElement) return;
-    const p = ind.parentElement.getBoundingClientRect();
-    const t = target.getBoundingClientRect();
-    if (!t.width) return;                       /* the other nav is display:none */
-    const to = axis === 'x'
-      ? { translateX: t.left - p.left + t.width * .26, width: t.width * .48, opacity:1 }
-      : { translateY: t.top - p.top + (t.height - 18) / 2, opacity:1 };
-    if (this.off){
-      ind.style.opacity = 1;
-      ind.style.transform = axis === 'x'
-        ? `translateX(${to.translateX}px)` : `translateY(${to.translateY}px)`;
-      if (axis === 'x') ind.style.width = to.width + 'px';
-      return;
-    }
-    animate(ind, { ...to, duration:300, ease:cubicBezier(.03,.88,.12,1) });
-  },
 };
 
-/* ══════════════════════════════════════════════════════════════════
-   4b. REVEAL — panels below the fold wait until you reach them.
-
-   IntersectionObserver only decides *when*; anime.js still does the
-   move, so a panel revealed by scrolling and a panel revealed by the
-   page entrance are the same animation and land the same way.
-
-   The timeout is not decoration. Anything parked here is sitting at
-   opacity 0, and an element that never intersects — inside something
-   that turns out not to scroll, or on a screen shorter than the
-   observer expected — would stay invisible forever. Six seconds and
-   it shows itself regardless.
-   ══════════════════════════════════════════════════════════════════ */
-/* Nothing travels on entrance (travel would park unrevealed panels past
-   the edge of a 390px screen) — a panel cuts into place and its type is
-   driven down after it. */
-
-/* anime.js leaves its final values inline. A residual
-   `transform:translate(0px,0px)` outranks every stylesheet :hover
-   transform, so hover states were permanently dead on anything that had
-   been revealed. Handing the property back to CSS on completion fixes
-   that and leaves no stale offset behind if a later reflow moves things. */
 const releaseTransform = els => {
   (Array.isArray(els) ? els : [els]).forEach(el => {
     if (el && el.style) el.style.transform = '';
@@ -136,9 +64,6 @@ const Reveal = {
   clear(){ this.io?.disconnect(); this.io = null; },
 };
 
-/* ══════════════════════════════════════════════════════════════════
-   5. UTILITIES
-   ══════════════════════════════════════════════════════════════════ */
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"']/g, c =>
@@ -151,20 +76,9 @@ const fmtDay = iso => new Date(iso + (iso.length === 10 ? 'T12:00:00' : ''))
 const fmtTime = iso => new Date(iso)
   .toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
 
-/* NOTIFICATIONS — a keyed, capped register, not an append-only list:
-   an uncapped queue stacks repeated toasts over the tab bar on a phone.
-   The listeners are delegated on document and bound once.
-
-   Three rules:
-     key      a caller that speaks about one thing passes a key, and its
-              new message REPLACES its old one in place instead of queuing
-     LIMIT    at most 3 live at once; the oldest is evicted first
-     cleanup  every element owns its timer, and the timer is cleared
-              whenever that element is replaced or evicted, so no timer
-              outlives the node it refers to */
 const TOAST_LIMIT = 3;
 const TOAST_LIFE = 2600;
-const liveToasts = new Map();   // key -> {el, timer}
+const liveToasts = new Map();
 
 function dropToast(key, immediate){
   const rec = liveToasts.get(key);
@@ -180,15 +94,12 @@ function dropToast(key, immediate){
 function toast({ title, detail, bad = false, key }){
   const host = $('#toasts');
   if (!host) return;
-  /* Un-keyed callers get a unique key so they still queue normally; keyed
-     callers (a toggle, a scan verdict) collapse onto their own slot. */
+
   const k = key || `once:${Date.now()}:${Math.random()}`;
 
   const prev = liveToasts.get(k);
   let el;
   if (prev){
-    /* same source speaking again — reuse the node so it does not move,
-       and restart its life. No second element is ever mounted. */
     clearTimeout(prev.timer);
     el = prev.el;
   } else {
@@ -205,33 +116,4 @@ function toast({ title, detail, bad = false, key }){
 
   const timer = setTimeout(() => dropToast(k), TOAST_LIFE);
   liveToasts.set(k, { el, timer });
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   6. AMBIENT — the environment the interface sits inside.
-
-   Two layers. The arena is the slow geometric structure: the same seal
-   at maximum detail, enormous, turning at two speeds. The energy
-   canvas is the unstable part — dark smoke that drifts on three
-   incommensurate sine terms so it never repeats, occasionally surging
-   and briefly taking colour. It is not a pulsing glow: nothing here
-   moves on a single period.
-   ══════════════════════════════════════════════════════════════════ */
-/* paints ASSETS.background behind the whole app, if one is supplied */
-function applyBackdrop(){
-  if (!ASSETS.background) return;
-  const el = document.createElement('div');
-  el.className = 'backdrop';
-  el.style.backgroundImage = `url("${ASSETS.background}")`;
-  $('.ground')?.prepend(el);
-}
-
-function buildArena(){
-  const host = $('#arena');
-  if (!host) return;
-  host.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true">
-    <g class="arena__spin sp">${seal(4)}</g>
-    <g class="arena__anti"><polygon points="50,22 78,50 50,78 22,50"/>
-      <circle cx="50" cy="50" r="30" stroke-dasharray="3 9"/></g>
-  </svg>`;
 }

@@ -1,32 +1,7 @@
 "use strict";
-/* The signed-in member's name, or a neutral stand-in when there is no
-   session — with real auth the signed-out state is a normal state, so
-   no view may assume Store.user exists. */
+
 const memberName = () => (Store.user && Store.user.name) || 'Member';
-/* keystamp — components and the five screens
-   Loaded in order by index.html. Order matters. */
 
-/* ══════════════════════════════════════════════════════════════════
-   7. COMPONENTS
-   Every surface is a panel with a registration ghost behind it. There
-   are no rounded cards anywhere in this file.
-   ══════════════════════════════════════════════════════════════════ */
-/* ── STAMP SILHOUETTES ────────────────────────────────────────────────
-   Each slot draws an ink face over a paper backing piece slightly
-   larger than the face, so a stamp reads as an object pressed onto the
-   card rather than a shape in a grid.
-
-   THE ENSO — one brush-drawn circle for every slot.
-
-   Real Japanese rally stamps (eki stamps) and hanko impressions are
-   circles, and the app's own identity is already ring-based; the
-   stamps were the one element not speaking that language. Earlier
-   attempts here were jittered polygons — five archetypes, then a
-   bevelled block — and both read as wobble rather than intent. This
-   is a circle whose radius swells and thins on two slow waves, seeded
-   per stamp, so every impression is its own hand-pressed ring inside
-   one system. No teeth, no inner rings: the imperfection IS the
-   detail, which is why it survives being 40px wide on a phone. */
 function stampShape(seed, grow = 0){
   const pts = [];
   const a1 = 1.4, a2 = .8, p1 = seed * 1.7, p2 = seed * 2.9;
@@ -37,14 +12,10 @@ function stampShape(seed, grow = 0){
   }
   return 'M' + pts.join('L') + 'Z';
 }
-/* One shape means one symbol scale. This was a per-archetype table
-   (.56-.66) that existed only because the five silhouettes enclosed
-   different amounts of room. */
+
 const STAMP_FIT = .62;
 
 const C = {
-  /* the giant cropped word behind a view */
-
   tier(r, total){
     const open  = total >= r.required;
     const ready = open && !r.claimed;
@@ -66,22 +37,11 @@ const C = {
     </div>`;
   },
 
-  /* ── THE CARD FACE. One printed collectible object: an ink identity
-     panel (card number, the count, what the card leads to) and a paper
-     field where the ten slots are HAND-PLACED — different sizes,
-     slight leans, a dotted collection route running slot to slot, and
-     the tenth slot largest because it IS the reward. The slot
-     coordinates live in the stylesheet with a separate portrait
-     composition for narrow cards.
-
-     Sorted chronologically here rather than trusted from the backend,
-     which returns newest first: slot N of the card is the Nth stamp
-     ever earned, so the field reads along the route as history. */
   sealGrid(){
     const p = Rules.progress();
     const chrono = [...Store.scans]
       .sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
-    /* the reward this card ends on, if the card reaches one at all */
+
     const goal = Store.rewards.find(r => r.required === p.floor + p.span) || null;
     const cardNo = p.card;
     const full = p.filled >= p.span;
@@ -90,9 +50,7 @@ const C = {
       const state = i < p.filled ? 'set' : i === p.filled ? 'next' : '';
       const hero = state === 'set' && i === p.filled - 1 ? ' seal--hero' : '';
       const mile = i === p.span - 1 ? ' seal--mile' : '';
-      /* a stamp is pressed by hand and lands a degree or two off; the
-         mark's own tilt rides a custom prop so the slot frame and the
-         impression can lean by different amounts */
+
       const tilt = state === 'set'
         ? `--press-tilt:${[-2.1, 1.4, -1.2, 2.3, -1.7][i % 5]}deg` : '';
 
@@ -118,8 +76,6 @@ const C = {
       </li>`;
     }).join('');
 
-    /* the collection route: a dotted path joining the slot centres in
-       order, one polyline per composition (y in straight percent) */
     const route =
       `<svg class="card__route card__route--l" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <polyline points="9.5,12.3 28.8,24 48,12.3 66.8,21.5 86.5,34.3 59.3,44.5 38,47.3 12.3,57 34.5,72.3 74.5,71.2"/></svg>` +
@@ -150,8 +106,7 @@ const C = {
     </section>`;
   },
 
-  strike({ verb, sub, go, live = false, calm = false }){
-
+  strike({ verb, sub, go, live = false }){
     return `<div class="act ${live ? 'act--live' : ''}" data-enter>
       <button class="act__btn" data-go="${go}">
         <span class="act__verb">${esc(verb)}</span>
@@ -160,10 +115,6 @@ const C = {
     </div>`;
   },
 
-  /* ── a reward: sealed until the count reaches it ── */
-  /* Structured, monospaced, in the page's own technical voice: a
-     docket, not a tooltip. aria-hidden because the slot already carries
-     the same facts as a label — this is the sighted view of them. */
   sealMeta(rec, m){
     return `<span class="sealmeta" data-layer aria-hidden="true">
       <b class="sealmeta__no">GM ${pad(m.no)}</b>
@@ -173,18 +124,12 @@ const C = {
     </span>`;
   },
 
-  /* ── THE UNSTRUCK SEAL ───────────────────────────────────────────
-     An empty state was a grey box with an icon and a centred
-     paragraph in it, which is the placeholder every framework ships
-     with. This one is drawn: the seal that has NOT been pressed, at
-     real size, with the record it would carry stated as technical
-     metadata beside it. Nothing is centred and nothing is boxed. */
-  empty(icon, title, body){
+  empty(title, body){
     return `<section class="rig empty-reg" data-enter>
       <div class="empty">
         <span class="tone tone--coarse tone--fade-b empty__tone" aria-hidden="true"></span>
         <div class="empty__seal" aria-hidden="true">
-          <svg viewBox="0 0 100 100">${seal(2)}</svg>
+          <svg viewBox="0 0 100 100">${sealArt()}</svg>
           <span class="empty__void"></span>
         </div>
         <div class="empty__body">
@@ -194,28 +139,11 @@ const C = {
       </div>
     </section>`;
   },
-  /* ── ONE ROW OF THE LEDGER ────────────────────────────────────────
-     A printed attendance record: the meeting number in the margin, the
-     stamp it earned struck beside it, the reading, and the date. The
-     row IS the rule — a hairline under each one and nothing else. No
-     card, no box, no fill.
 
-     An attended row carries its actual stamp symbol, which is the one
-     place outside the card where the ten marks appear. That is what
-     makes this a record of stamps rather than a list of dates. */
-  /* ONE LINE OF THE REGISTER.
-
-     The mark carries the verdict, so the verdict is not also spelled out
-     six times down the page: a stamped line shows its stamp, a missed
-     line shows the empty slot the stamp would have filled. The only rows
-     that say anything in words are the ones where a word is news — the
-     open meeting, and a miss. */
   ledgerRow(m){
     const state = Store.state(m);
     const scan  = Store.scanFor(m.id);
 
-    /* the mark is the stamp this meeting earned, by its ordinal in the
-       member's history — the same artwork the card shows. */
     const idx = state === 'set'
       ? [...Store.scans].sort((a,b)=>String(a.at)<String(b.at)?-1:1)
           .findIndex(x => x.meetingId === m.id)
@@ -250,12 +178,9 @@ const C = {
   },
 };
 
+const MANUAL_ENTRY = false;
+
 const Views = {
-  /* Shown instead of any figure derived from attendance when the
-     snapshot could not be loaded. Rendering 0 stamps here would tell a
-     member their record is empty when the truth is that we do not
-     know — the one failure mode most likely to make someone think
-     their attendance was lost. */
   loadFailure(title){
     return `<div class="view">
       <header class="rechead" data-enter>
@@ -279,6 +204,7 @@ const Views = {
     const open = Store.openMeeting();
     const next = Store.nextMeeting();
     const done = open && Store.attended(open.id);
+    const live = Boolean(open && !done);
 
     let action;
     if (open && !done)
@@ -303,21 +229,14 @@ const Views = {
       .slice(0, 3);
 
     return `<div class="view view--home">
-      <!-- Home was the one screen that opened straight into a panel.
-           Every other page leads with its name in the display face over
-           a rule, and without one here the app's first screen had no
-           quiet beat before the card. -->
       <header class="rechead rechead--tight" data-enter>
         <h1 class="title rechead__title">Your card</h1>
       </header>
 
-      <!-- The card is the object; the side column carries the action
-           and the calendar so neither is a stretched void. -->
-      <div class="deck" data-enter>
+      <div class="deck${live ? ' deck--live' : ''}" data-enter>
         ${C.sealGrid()}
-        <div class="deck__side">
-          ${action}
-          ${ahead.length ? `<section class="ahead" data-enter>
+        <div class="deck__act">${action}</div>
+        ${ahead.length ? `<section class="ahead deck__ahead" data-enter>
             <h2 class="ahead__mark">Ahead</h2>
             <ul class="ahead__list">
               ${ahead.map(m => `<li class="ahead__row">
@@ -327,26 +246,21 @@ const Views = {
               </li>`).join('')}
             </ul>
           </section>` : ''}
-        </div>
       </div>
     </div>`;
   },
 
-  /* the attendance record: every general meeting, in order, with what happened */
   record(){
     if (Store.failed) return this.loadFailure('Record');
-    /* Ordered by DATE, never by meeting number: the number is a label
-       the board chooses, the date is when the meeting actually is.
-       Held runs newest first, so the meeting you can still walk into
-       leads the page instead of sitting fourteen rows down; scheduled
-       runs soonest first, so the next one to attend is at the top. */
+
     const newest = (a, b) => String(a.date) < String(b.date) ? 1 : -1;
     const soonest = (a, b) => String(a.date) < String(b.date) ? -1 : 1;
     const held = [...Store.heldMeetings()].sort(newest);
     const upcoming = Store.meetings.filter(m => m.upcoming).sort(soonest);
-    const kept = held.filter(m => Store.attended(m.id)).length;
-    const gone = held.length - kept;
-    const frac = held.length ? kept / held.length : 0;
+    const counted = Store.countedMeetings();
+    const kept = counted.filter(m => Store.attended(m.id)).length;
+    const gone = counted.length - kept;
+    const frac = counted.length ? kept / counted.length : 0;
 
     return `<div class="view view--record">
       <header class="rechead" data-enter>
@@ -356,7 +270,7 @@ const Views = {
       ${held.length ? `<div class="recbody">
         <aside class="tally" data-enter>
           <p class="tally__fig">${pad(kept)}</p>
-          <p class="tally__of">stamped of ${pad(held.length)} held</p>
+          <p class="tally__of">stamped of ${pad(counted.length)} held</p>
           <p class="tally__bar" style="--fill:${(frac*100).toFixed(1)}%" aria-hidden="true"></p>
           <p class="tally__gone">${gone
             ? `${gone} missed` : 'None missed'}</p>
@@ -366,7 +280,7 @@ const Views = {
           ${held.map(m => C.ledgerRow(m)).join('')}
         </section>
       </div>`
-      : C.empty(ICON.blank, 'No general meetings yet',
+      : C.empty('No general meetings yet',
                 'Your first stamp will land here.')}
 
       ${upcoming.length ? `<section class="ledger ledger--ahead" data-enter>
@@ -381,8 +295,7 @@ const Views = {
     const total = Store.totalStamps();
     const tiers = [...Store.rewards].sort((a, b) => a.required - b.required);
     const top   = tiers[tiers.length - 1]?.required || 10;
-    /* the scale runs a little past the last rung so the mark for it is
-       not jammed against the right edge of the track */
+
     const scale = Math.max(top * 1.06, total * 1.06, 1);
     const next  = tiers.find(t => total < t.required) || null;
 
@@ -397,10 +310,6 @@ const Views = {
           next ? ` / ${next.required - total} to the next rung` : ' / every rung passed'}</p>
       </section>
 
-      <!-- THE CLIMB. One vertical track with the three plates hung on
-           it; the ink in the rail is the same count the figure above
-           states. A plate's size and weight is its state: sealed sits
-           back, ready takes the row and bleeds, claimed is punched. -->
       <section class="climb" data-enter>
         <div class="climb__rail" role="img"
              aria-label="${total} stamps against rungs at ${tiers.map(t => t.required).join(', ')}">
@@ -414,7 +323,6 @@ const Views = {
   },
 
   scan(){
-
     const open = Store.openMeeting();
     const done = open && Store.attended(open.id);
     const standing = !open
@@ -423,7 +331,7 @@ const Views = {
         ? { lab:'Already stamped', at:`GM ${pad(open.no)}` }
         : { lab:'Checking in to', at:`GM ${pad(open.no)} / ${fmtDay(open.date)} / ${esc(open.place)}` };
 
-    return `<div class="view view--scan">
+    return `<div class="view view--scan${MANUAL_ENTRY ? '' : ' view--scan-solo'}">
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">Scan</h1>
       </header>
@@ -433,9 +341,6 @@ const Views = {
         <span class="standing__at">${standing.at}</span>
       </p>
 
-      <!-- THE FRAME. Four corner marks and a status line, nothing
-           mounted over the image: any scanner decoration would sit
-           exactly where the code being read has to go. -->
       <div class="viewer" id="viewer" data-enter>
         <video id="cam" playsinline muted autoplay></video>
         <div class="viewer__scrim" aria-hidden="true"></div>
@@ -449,33 +354,16 @@ const Views = {
         <div class="viewer__status"><span class="viewer__msg" id="scanMsg">Starting camera</span></div>
       </div>
 
-      <div class="manual" data-enter>
-        <label class="manual__lab" for="manualInput">Type the code under the seal</label>
+      ${MANUAL_ENTRY ? `<div class="manual" data-enter>
+        <label class="manual__lab" for="manualInput">Or enter the check-in code</label>
         <div class="manual__f">
-          <input class="manual__in" id="manualInput" placeholder="Seal code"
-                 aria-label="Seal code" autocomplete="off" spellcheck="false" enterkeyhint="go">
+          <input class="manual__in" id="manualInput" placeholder="Check-in code"
+                 autocomplete="off" spellcheck="false" enterkeyhint="go">
           <button class="manual__go" id="manualGo" type="button">Verify</button>
         </div>
-        <div class="bubble" id="demoHint"></div>
-      </div>
+      </div>` : ''}
     </div>`;
   },
-
-  /* ────────────────────────────────────────────────────────────────
-     CLUB INFORMATION — not on the tab bar. Reachable at #/board.
-
-     This is the other half of the QR system: the screen a board member
-     puts on the projector in the MPR. It encodes exactly the string
-     `Rules.codeFor()` produces, and it redraws itself every time the
-     five-minute token rolls over, so the projected image is always the
-     one the scanner will accept.
-     ──────────────────────────────────────────────────────────────── */
-  /* ── BOARD ────────────────────────────────────────────────────────
-     One spread with four sections, switched by BoardUI.tab rather than
-     by new routes, so the existing router, gate and page-cut animation
-     all keep working unchanged. Every number below is rendered from
-     data the board-data function returned; nothing is computed or
-     stored locally. */
 
   boardSpread(title){
     return `<div class="view view--board">
@@ -495,31 +383,20 @@ const Views = {
 
   profile(){
     if (Store.failed) return this.loadFailure('Member');
-    const held     = Store.heldMeetings();
+    const held     = Store.countedMeetings();
     const attended = held.filter(m => Store.attended(m.id)).length;
     const total    = Store.totalStamps();
     const name     = memberName();
     const handle   = (Store.user && Store.user.username) || name;
     const role     = Store.isBoard ? 'Board' : 'Member';
 
-    /* THE ACCOUNT PAGE SAYS EACH THING ONCE: who is signed in, what
-       their standing is, and how to sign out — nothing another page
-       already answers. */
     return `<div class="view view--member">
       <header class="rechead rechead--tight" data-enter>
         <h1 class="title rechead__title">Member</h1>
       </header>
 
-      <!-- A CHARACTER SHEET. The identity is an ink plate carrying the
-           name, and the member's own card sits beside it — the object
-           the whole product is about, on the page that is about them. -->
       <div class="sheet" data-enter>
         <section class="who">
-          <!-- the district's plate: ONE giant gray CNH emblem is the
-               panel's architecture, deliberately cropped by the frame
-               like a watermark leaving the sheet. The district is
-               named in small type at the head; the member's name is
-               the dominant line in front. No second logo competes. -->
           <div class="who__mark" aria-hidden="true">
             <span class="who__org">Cali-Nev-Ha District</span>
           </div>
@@ -543,36 +420,27 @@ const Views = {
         </dl>
       </section>
 
-      <!-- THE ACCOUNT BLOCK.
-
-           Sign out lived only in the desktop rail, and the rail is
-           gone below 1024 — so on every phone and every tablet there
-           was no way to sign out at all. Member is the account screen
-           and it is on the tab bar at every width, so the control
-           belongs here rather than behind a drawer or under an icon.
-           It hides itself once the rail is back and carrying it. -->
       <section class="acct" data-enter>
+        <h2 class="acct__mark">Account</h2>
+        <div class="acct__row">
+          <span class="acct__lab">Reduced motion</span>
+          <button class="motion-btn" type="button" data-motion></button>
+        </div>
         <button class="acct__out" data-signout type="button">Sign out</button>
       </section>
     </div>`;
   },
 
   auth(){
-    const mode = AuthUI.mode;                 /* 'in' | 'up' */
+    const mode = AuthUI.mode;
     const up = mode === 'up';
 
     return `<div class="view view--auth">
 
       <div class="spread" data-enter>
 
-        <!-- THE INK FIELD. The swirl is knocked out of it at full
-             strength and cropped by two edges — a printed panel, not a
-             watermark. -->
         <div class="spread__field crop" aria-hidden="true">
           <svg class="spread__seal crop__art" viewBox="0 0 100 100">${sealArt()}</svg>
-          <!-- the International seal is knocked out of the ink field
-               itself — no disc, no surround: it is printed IN the
-               field, balancing the wordmark across the fold -->
           <span class="spread__kci">${brandSeal('kci')}</span>
         </div>
 
@@ -619,8 +487,6 @@ const Views = {
           ${AuthUI.setupNotice()}
         </form>
 
-        <!-- the organization's imprint line: set in flow under the
-             panel it belongs to, centred in that panel's measure -->
         <span class="spread__side" aria-hidden="true">Key Club International · Cali-Nev-Ha District</span>
       </div>
     </div>`;

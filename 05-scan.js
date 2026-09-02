@@ -1,13 +1,5 @@
 "use strict";
-/* keystamp — QR encoding and the camera scanner state machine
-   Loaded in order by index.html. Order matters. */
 
-/* ══════════════════════════════════════════════════════════════════
-   10b. QR ENCODING — draws the string the scanner is looking for.
-   Pure black on white with a quiet zone, because that is what phone
-   cameras decode most reliably. It also happens to be the most manga
-   thing on the site, so it is left undecorated on purpose.
-   ══════════════════════════════════════════════════════════════════ */
 function qrSVG(text){
   if (!window.qrcode) return null;
   let qr;
@@ -29,12 +21,6 @@ function paintBoard(){
   const box = $('#qrBox');
   if (!box) return;
 
-  /* ONE code per meeting, fetched once.
-     The server derives the token from the meeting itself, so asking
-     again returns the same string — there is nothing to rotate and no
-     timer to keep alive. The board still cannot mint a code: if the
-     server is unreachable the screen says so rather than drawing
-     something that only looks valid. */
   Backend.issueToken(boardMeeting).then(({ token }) => {
     if (!document.body.contains(box)) return;
     const svg = qrSVG(token);
@@ -46,23 +32,13 @@ function paintBoard(){
   });
 }
 
-/* Board attendance count, straight from the database. Polled on a slow
-   interval rather than a realtime socket: a general meeting check-in lasts minutes
-   and a count that is a few seconds stale is fine, whereas a socket per
-   board device is a connection to keep alive for no real gain. */
 let countTimer = null;
 function paintAttendanceCount(meetingId){
   clearInterval(countTimer);
   const el = () => document.querySelector('#attCount');
   const pull = async () => {
     if (!el()) return clearInterval(countTimer);
-    /* Resolve the count first, then look the element up again. The node
-       can be gone by the time the request lands — the board navigated
-       away mid-flight — and the old code called el().textContent inside
-       the catch without re-checking, so a failed request after leaving
-       the screen threw a TypeError out of an async function. That became
-       an unhandled rejection, which Guard reports as a red error bar
-       over an app that is working fine. */
+
     let text;
     try { text = String(await Backend.attendanceCount(meetingId)); }
     catch (_) { text = '—'; }
@@ -74,9 +50,6 @@ function paintAttendanceCount(meetingId){
   countTimer = setInterval(pull, 6000);
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   11. SCANNER — an explicit state machine, so every outcome has a look.
-   ══════════════════════════════════════════════════════════════════ */
 const Scanner = {
   stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0,
 
@@ -108,8 +81,7 @@ const Scanner = {
     const video = $('#cam');
     if (!video) return;
     this.locked = false;
-    /* a fresh attempt is not a stalled panel — clear the state the
-       previous one may have left on the frame */
+
     $('#viewer')?.classList.remove('viewer--stalled', 'viewer--feed');
     this.setState('boot', 'Starting camera');
     this.showLoader();
@@ -122,18 +94,17 @@ const Scanner = {
     } catch (err) {
       return this.stall(err && err.name === 'NotAllowedError' ? 'denied' : 'unavailable');
     }
-    if (!document.body.contains(video)) return this.stop();   /* navigated away mid-await */
+    if (!document.body.contains(video)) return this.stop();
 
     this.hideLoader();
     video.srcObject = this.stream;
     try { await video.play(); } catch (_) {}
-    /* Only from here is there a camera image behind the overlay, and
-       only from here are paper brackets the readable choice. */
+
     $('#viewer')?.classList.add('viewer--feed');
 
     this.cv = document.createElement('canvas');
     this.ctx = this.cv.getContext('2d', { willReadFrequently:true });
-    this.setState('live', 'Searching for meeting seal');
+    this.setState('live', 'Looking for the check-in code');
     this.loop(video);
   },
 
@@ -144,8 +115,7 @@ const Scanner = {
     l.className = 'loader'; l.id = 'camLoader';
 
     ret.classList.add('reticle--wait');
-    /* two opposed arcs per ring rather than one, so the mark reads as a
-       thing that is turning instead of as a stray scratch on the frame */
+
     l.innerHTML = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor"
         stroke-width="3" aria-hidden="true">
       <circle cx="50" cy="50" r="42" stroke-dasharray="42 90"/>
@@ -175,34 +145,29 @@ const Scanner = {
     step();
   },
 
-  /* the camera cannot run — say exactly why, and what to do instead */
   stall(kind){
     const viewer = $('#viewer');
     if (!viewer) return;
     this.hideLoader();
     viewer.classList.remove('viewer--feed');
-    /* A fault code, then the sentence: the code names the fault, the
-       sentence says what to do about it. */
+
+    const more = MANUAL_ENTRY ? ' Or enter the check-in code below.' : '';
     const copy = {
       denied:{ title:'Camera permission is off',
-        body:'Allow camera access for this page in your browser settings, then reload. Or type the code below.' },
+        body:'Allow camera access for this page in your browser settings, then reload.' + more },
       unavailable:{ title:'No camera found',
-        body:'Nothing on this device is reporting a camera. Type the code printed under the seal instead.' },
+        body:'Nothing on this device is reporting a camera.' + (MANUAL_ENTRY
+          ? ' Enter the check-in code below instead.'
+          : ' Sign in on a phone with a camera to scan the code.') },
       unsupported:{ title:'Scanning needs a secure page',
-        body:'Camera access only works over https. Type the code printed under the seal instead.' },
+        body:'Camera access only works over https.' + more },
     }[kind];
 
     viewer.innerHTML = `<div class="stall">
       <h2 class="stall__title">${copy.title}</h2>
       <p class="stall__note">${copy.body}</p>
     </div>`;
-    /* A state class, not inline geometry. `style.minHeight = '230px'`
-       is the strongest declaration in the cascade, so the stalled
-       panel kept a fixed 230px box at every viewport — a wide
-       letterbox with a small icon marooned in it on a laptop, and a
-       box taller than it needs to be on a short phone in landscape.
-       The class lets the stylesheet size this state the same way it
-       sizes every other panel. */
+
     viewer.classList.add('viewer--stalled');
     $('#manualInput')?.focus({ preventScroll:true });
   },
@@ -215,14 +180,8 @@ const Scanner = {
   },
 };
 
-/* ── one path for every code, camera or keyboard ─────────────────────
-   Both the camera and the manual field land here, and here sends the
-   raw payload to the server. The client decides nothing: it cannot
-   compute a valid token, so it cannot grant a stamp. */
 let pendingCell = -1;
 
-/* Server verdicts → sentences a student can act on. Nothing here
-   leaks a stack trace, a column name or a row id. */
 const SCAN_MESSAGES = {
   INVALID_TOKEN:       ['Not a valid code',      'That code is not from Keystamp. Scan the one on the board screen.'],
   EXPIRED_TOKEN:       ['Code expired',          'That code is no longer valid. Scan the code on the board screen, or ask a board member.'],
@@ -242,8 +201,6 @@ const SCAN_MESSAGES = {
 const scanMessage = code => SCAN_MESSAGES[code] || SCAN_MESSAGES.SERVER_ERROR;
 
 async function submitSeal(raw, fromCamera){
-  /* a cheap local shape check so an unrelated QR never becomes a
-     network round trip. It proves nothing — the server still decides. */
   if (!QRFormat.looksLikeKeystamp(raw)){
     const [t, d] = scanMessage('INVALID_TOKEN');
     toast({ key:'scan', title:t, detail:d, bad:true });
@@ -258,48 +215,30 @@ async function submitSeal(raw, fromCamera){
   if (!result || !result.ok){
     const code = (result && result.code) || 'SERVER_ERROR';
     const [t, d] = scanMessage(code);
-    /* keyed: rapid rescans of a bad code replace, never pile up */
+
     toast({ key:'scan', title:t, detail:d, bad:true });
     if (fromCamera) rejectVisual(code);
     return;
   }
 
-  /* A rejection toast may still be on screen from a previous attempt; the
-     scan has now succeeded, so drop it rather than let the two contradict
-     each other side by side. */
   dropToast('scan');
   Scanner.setState('good', 'Verified');
   Scanner.stop();
 
-  /* The server already inserted the row. Re-read from the database so
-     the count, the record and the rewards all come from stored data
-     rather than from an optimistic client increment. */
   await Store.hydrate();
 
-  /* Which slot to land on is read AFTER the re-read, from the stored
-     total: the newest stamp is the last filled slot on the card the
-     member is now on. Read before hydrating, a tenth stamp pointed one
-     slot past the end of the card it had just completed and the
-     landing never played. */
   pendingCell = Rules.progress().filled - 1;
   const meeting = Store.meeting(result.meeting_id) ||
                   { id:result.meeting_id, no:result.meeting_number };
   FX.stampAcquire(meeting, () => go('home', { instant:true }));
 }
 
-/* A refusal is a SYSTEM EVENT, so it is reported the way this system
-   reports one: a fault code, not a sentence in small red type. The
-   frame flashes and kicks (see .viewer--bad), the status chip states
-   the code, and the retry is explicit — the frame says it is looking
-   again rather than leaving the member to guess whether it is still
-   on. The human sentence is not lost; it is in the toast beside it. */
 function rejectVisual(code){
-
   Scanner.setState('bad', scanMessage(code)[0]);
   FX.scanReject();
   setTimeout(() => {
     if (!$('#reticle')) return;
     Scanner.locked = false;
-    Scanner.setState('live', 'Searching for meeting seal');
+    Scanner.setState('live', 'Looking for the check-in code');
   }, 1900);
 }
