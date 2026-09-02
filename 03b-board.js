@@ -1,27 +1,4 @@
 "use strict";
-/* ══════════════════════════════════════════════════════════════════
-   BOARD UI — the club information hub
-
-   The board account is not an administrator looking at tables. It is an
-   officer looking at their own club: what Keystamp is, when the next
-   General Meeting is, how many people are coming, how far the club has
-   got toward the milestones, and the one operational thing they still
-   need — opening check-in.
-
-   State and rendering for the board spread. Kept in its own file so
-   the shared view/router files stay small and targeted — the last
-   phase lost a whole block of delegated handlers to a careless splice
-   in 06-app.js, and this is the change that would have been most
-   tempting to make there.
-
-   Nothing here talks to Supabase. Every read goes through
-   Backend.board(), which is the board-only Edge Function, so a member
-   who calls the same code gets a 403 rather than data. Nothing here
-   writes a stamp: there is deliberately no control anywhere in this
-   file that adds, edits or removes attendance. Stamps are evidence of
-   having been in the MPR, and a button that grants one would make the
-   whole scanner theatre.
-   ══════════════════════════════════════════════════════════════════ */
 
 const BoardUI = {
   tab: 'club',
@@ -37,10 +14,9 @@ const BoardUI = {
   q: '',
   sort: 'username',
   page: 1,
-  confirmDelete: null,      /* meeting id awaiting confirmation */
-  deleteNote: null,         /* why the last delete did not happen */
+  confirmDelete: null,
+  deleteNote: null,
 
-  /* one message per failure code — never a database string */
   message(code){
     return ({
       NOT_AUTHENTICATED: 'Sign in again to continue.',
@@ -53,8 +29,6 @@ const BoardUI = {
     })[code] || 'Something went wrong. Try again.';
   },
 
-  /* every pane renders through here, so loading and failure look the
-     same everywhere instead of each section inventing its own */
   pane(){
     if (this.loading) return this.skeleton();
     if (this.error)   return this.failure(this.error);
@@ -80,33 +54,23 @@ const BoardUI = {
     </div>`;
   },
 
-  /* an empty state is still a printed panel: a placard, not a bare
-     sentence on blank paper */
   empty(text){
     return `<div class="bempty" role="note"><p>${esc(text)}</p></div>`;
   },
 
-  /* ── CLUB ─────────────────────────────────────────────────────
-     The landing view. First thing an officer sees is what the club is
-     and when it next meets — not a row of database totals. */
   clubPane(){
     const o = this.overview || {};
     const active = o.active_meeting;
     const next = o.next_meeting;
-    // the meeting worth showing is the one taking check-ins, else the
-    // next one on the calendar
+
     const focus = active || next;
     const isLive = Boolean(active);
 
     return `<div class="bover">
-      <!-- the board's identity: the district seal as a plate of its own -->
       <aside class="bident" data-enter>
         <span class="bident__seal" aria-hidden="true">${brandSeal('cnh')}</span>
         <p class="bident__line">Cali-Nev-Ha District</p>
       </aside>
-      <!-- THE MEETING. One ink mass carrying the only thing on this
-           page a board member acts on, and the count of who has come
-           in so far. Everything under it is the year's standing. -->
       ${focus ? `
         <div class="bnow ${isLive ? 'bnow--live' : ''}">
           <p class="bnow__lab">${isLive ? 'Happening now' : 'Next general meeting'}</p>
@@ -126,8 +90,6 @@ const BoardUI = {
              <button class="bnow__go" type="button" data-btab="meetings">Add one</button>
            </div>`}
 
-      <!-- THE YEAR. Same band the member pages use for a standing: one
-           figure that leads, the rest supporting it. -->
       <section class="standing-band">
         <p class="standing-band__fig">${pad(o.meetings_held ?? 0)}</p>
         <p class="standing-band__of">general meetings held</p>
@@ -149,10 +111,6 @@ const BoardUI = {
     </div>`;
   },
 
-  /* ── PROGRESS ─────────────────────────────────────────────────
-     How far the club has got toward the three milestones, then the
-     roster. Read-only throughout: there is no control here that grants,
-     edits or removes a stamp. */
   progressPane(){
     const o = this.overview || {};
     const ms = o.milestones || {};
@@ -165,7 +123,6 @@ const BoardUI = {
 
     const total = (this.members && this.members.total);
     return `<div class="bpanel memgrid">
-      <!-- the club, in one figure; the three milestones hang beside it -->
       <section class="msummary" data-enter>
         <div class="msummary__lead">
           <p class="msummary__fig">${typeof total === 'number' ? pad(total) : '--'}</p>
@@ -199,11 +156,9 @@ const BoardUI = {
     </div>`;
   },
 
-  /* ── MEETINGS ─────────────────────────────────────────────────── */
   meetingsPane(){
     const list = (this.meetings && this.meetings.meetings) || [];
-    /* by date, never by meeting number: coming up reads soonest first,
-       already held reads newest first */
+
     const by = dir => (a, b) =>
       String(a.meeting_date) < String(b.meeting_date) ? -dir : dir;
     const upcoming = list.filter(m => m.state === 'UPCOMING').sort(by(1));
@@ -230,7 +185,6 @@ const BoardUI = {
     </div>`;
   },
 
-  /* state is carried by weight and rule, not by a coloured pill */
   meetingRow(m){
     if (this.confirmDelete === m.id) return `<li class="brow brow--confirm">
       <span class="brow__mid">
@@ -294,9 +248,6 @@ const BoardUI = {
     </form>`;
   },
 
-  /* ── ROSTER ───────────────────────────────────────────────────
-     Lives inside Progress rather than as its own tab. Same board-only
-     authorisation as before: this widens nothing. */
   rosterBody(){
     const d = this.members || {};
     const rows = d.members || [];
@@ -372,7 +323,6 @@ const BoardUI = {
     </div>`;
   },
 
-  /* ── ONE MEETING ──────────────────────────────────────────────── */
   meetingPane(){
     const d = this.meetingDetail;
     const m = d.meeting;
@@ -401,17 +351,12 @@ const BoardUI = {
     </div>`;
   },
 
-  /* A percentage needs a denominator that means something. The club
-     overview may not be loaded when a meeting is opened directly, and
-     dividing by a number we do not have would invent a statistic — so
-     this returns a dash instead of guessing. */
   shareOfClub(n){
     const base = this.overview && this.overview.participating_members;
     if (typeof base !== 'number' || base <= 0) return '—';
     return Math.round((n / base) * 100) + '%';
   },
 
-  /* ── ATTENDANCE SESSION + QR ──────────────────────────────────── */
   sessionPane(){
     const list = (this.meetings && this.meetings.meetings) || [];
     const open = list.find(m => m.state === 'OPEN');
@@ -427,21 +372,12 @@ const BoardUI = {
     const isOpen = Boolean(sel.check_in_open);
 
     return `<div class="bpanel">
-      <!-- the meeting picker is a row of tabs cut into the projector
-           panel's top edge, not a floating chip row -->
       <div class="gmtabs" role="tablist">
         ${options.map(o => `<button class="gmtab ${o.id === sel.id ? 'gmtab--on' : ''}"
           role="tab" aria-selected="${o.id === sel.id}"
           data-bpick="${o.id}">GM ${pad(o.meeting_number)}</button>`).join('')}
       </div>
 
-      <!-- THE PROJECTOR. This screen is read from across a room, so it
-           is composed for that distance: an ink field carrying the
-           meeting and the live count, and the code as the one bright
-           plate on it. -->
-      <!-- THE COUNTER: one ink field with the code as its bright
-           window. The meeting holds the top-left corner, the state
-           word the top-right, the count and the control the floor. -->
       <section class="proj ${isOpen ? 'proj--live' : ''}">
         <div class="proj__meet">
           <p class="proj__no">GM ${pad(sel.meeting_number)}</p>
@@ -450,8 +386,6 @@ const BoardUI = {
         <p class="proj__word">${isOpen ? 'Open' : 'Closed'}</p>
 
         ${isOpen ? `
-          <!-- nothing is drawn over the code itself: a screentone or an
-               ink border across a QR is a scan failure, not a flourish -->
           <div class="proj__plate">
             <div class="qrpanel__code" id="qrBox"></div>
             <p class="proj__cap">GM ${pad(sel.meeting_number)} / scan to check in</p>

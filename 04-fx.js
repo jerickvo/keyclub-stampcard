@@ -1,26 +1,13 @@
 "use strict";
-/* keystamp — the FX choreography layer and the named sequences
-   Loaded in order by index.html. Order matters. */
 
-/* The entrance's whole timing vocabulary, in one place and in
-   milliseconds, because every value in it is a cut rather than a curve
-   and the only thing left to tune is when each cut happens. */
 const MECH = {
-  CUT:  1,     /* a panel does not fade in; it is there            */
-  LEAD: 40,    /* before the first panel lands                     */
-  GAP:  46,    /* between panels — flat, not eased                 */
-  BEAT: 90,    /* frame lands, then the type follows               */
-  SLAM: 130,   /* the drive itself                                 */
+  CUT:  1,
+  LEAD: 40,
+  GAP:  46,
+  BEAT: 90,
+  SLAM: 130,
 };
 
-/* anime v4 dropped the STRING form of ease. A quoted steps() is not an
-   error — it warns and falls back to linear, which is what a frame
-   trace of the entrance caught it doing: the type glided down
-   -14 to -11.9 to -8.3 to -4.7 to 0 instead of dropping in three cuts.
-   The factory is the only form that binds — and it is a TOP-LEVEL
-   export, not a member of the eases table, which is the second way to
-   write this and get the same silent fallback. Guarded because these
-   tables are evaluated at load and anime may not be there at all. */
 const STEP = n => (typeof steps === 'function' ? steps(n) : undefined);
 
 const SLAM_SEL = '.title,.spread__wm,.count__num b,.tally__fig,'
@@ -28,21 +15,16 @@ const SLAM_SEL = '.title,.spread__wm,.count__num b,.tally__fig,'
                + '.proj__no,.bnow__no';
 
 const EASE = {
-  CUT:    cubicBezier(.03,.9,.1,1),      /* near-instant travel */
+  CUT:    cubicBezier(.03,.9,.1,1),
   ENERGY: cubicBezier(.4,0,.2,1),
   IMPACT: cubicBezier(.34,1.56,.5,1),
   CALM:   cubicBezier(.22,.61,.36,1),
   OUT:    'outQuart',
 };
 
-const roll = i => (i * 2.399) % 1;            /* deterministic scatter */
+const roll = i => (i * 2.399) % 1;
 
-/* ══ CUT GEOMETRY ════════════════════════════════════════════════════
-   The boot ceremony cut is a real LINE in viewport space: the blade
-   is drawn along the line and the seam opens where it crosses —
-   cause, then consequence, on the same geometry. */
 const CutGeo = {
-  /* a cut line through (x,y) at deg: unit direction d, unit normal n */
   line(x, y, deg){
     const r = deg * Math.PI / 180;
     return { x, y, dx:Math.cos(r), dy:Math.sin(r),
@@ -50,20 +32,12 @@ const CutGeo = {
   },
 };
 
-/* ══ THE BLADE ═══════════════════════════════════════════════════════
-   Not a bar and not a capsule: a tapered, slightly irregular sliver —
-   pointed ends, widest at the impact region, with a razor core of the
-   opposite value — drawn ALONG a cut line and swept from one end so it
-   visibly crosses the geometry it is about to divide. strike() returns
-   the ms (from call time) at which the tip crosses the line's anchor,
-   so the consequence of the cut can be scheduled at contact. */
 let bladeSeq = 0;
 const Blade = {
   svg(seed){
     const j = k => (Math.sin(seed * 12.9898 + k * 78.233) * .5 + .5);
     const X = [0, 90, 260, 430, 600, 800, 1000];
-    /* half-thickness envelope: nothing at the tips, widest past the
-       middle — the leading tip stays needle-thin far longer */
+
     const env = x => x <= 0 || x >= 1000 ? 0
       : Math.pow(Math.sin(Math.PI * Math.pow(x / 1000, .72)), 1.25) * 28;
     const bow = (j(6) - .5) * 10;
@@ -86,8 +60,7 @@ const Blade = {
     if (!parent) return delay;
     const seq = ++bladeSeq;
     const L = len || Math.hypot(innerWidth, innerHeight) * 1.6;
-    /* wrapper rotates about its centre so the stroke lies exactly on
-       the cut line; the inner layer sweeps from the entry tip */
+
     const el = document.createElement('i');
     el.className = 'blade2' + (paper ? ' blade2--paper' : '');
     el.style.cssText = `left:${line.x}px;top:${line.y}px;width:${L}px;height:${th * 2}px;` +
@@ -96,21 +69,19 @@ const Blade = {
     parent.appendChild(el);
     const s = el.firstChild;
     aset(el, { rotate:line.deg });
-    /* the stroke does not exist visually until its sweep begins — a
-       parked pre-sweep sliver is a slash with no cause */
+
     aset(s, { scaleX:.05, opacity:0 });
     setTimeout(() => aset(s, { opacity:1 }), delay);
     createTimeline({ onComplete:() => el.remove() })
       .add(s, { scaleX:[.05, 1], duration:sweep, delay, ease:'inQuad' })
       .add(s, { scaleX:1, duration:hold })
       .add(s, { scaleY:[1, .05], opacity:[1, 0], duration:70, ease:'inQuad' });
-    /* tip position under inQuad: f = (t/T)^2 → anchor (f=.5) at .71 T */
+
     return delay + sweep * .71;
   },
 };
 
 const Impact = {
-  /* the anticipation beat: everything dips before the cut lands */
   scrim(peak, { delay = 0, host = null, dur = 180 } = {}){
     if (Motion.off) return;
     const el = host ? this.plate(host, 'scrim') : $('#scrim');
@@ -119,8 +90,6 @@ const Impact = {
             onComplete:() => { if (host) el.remove(); } });
   },
 
-  /* one frame of blown-out contrast. Capped well below white and never
-     repeated at a rate that could read as a strobe. */
   flash(peak = .3, { delay = 0, host = null, dur = 52 } = {}){
     if (Motion.off) return;
     const el = host ? this.plate(host, 'flash') : $('#flash');
@@ -136,9 +105,6 @@ const Impact = {
     return el;
   },
 
-  /* the impact blink: paper at FULL value for a couple of frames, then
-     gone. Binary on purpose — a ramped flash spends most of its frames
-     as gray, which is the one value this system does not have. */
   pop(host, dur = 45){
     if (Motion.off) return;
     const el = host ? this.plate(host, 'flash') : $('#flash');
@@ -147,19 +113,14 @@ const Impact = {
     setTimeout(() => { aset(el, { opacity:0 }); if (host) el.remove(); }, dur);
   },
 
-  /* a few px perpendicular to the blade, then settle */
-
-  /* the frame itself takes the hit */
   shake(el, px = 5, dur = 110){
     if (!el || Motion.off) return;
     animate(el, { translateX:[0, -px, px * .7, -px * .35, 0],
       translateY:[0, px * .5, -px * .4, px * .2, 0],
       duration:dur, ease:'linear', onComplete(){ Motion.settle(el); } });
   },
-
 };
 
-/* ── speed lines: thin strokes racing out of a focal point ── */
 const Lines = {
   burst({ x = null, y = null, count = 30, host = null,
           reach = 340, delay = 0, hot = false, dur = 300 } = {}){
@@ -179,7 +140,7 @@ const Lines = {
     for (let i = 0; i < count; i++){
       const r = roll(i);
       const el = document.createElement('i');
-      /* mostly grey and bone; the lightest value only when the moment earns it */
+
       el.className = hot && r > .88 ? 'r' : r > .55 ? 'd' : '';
       const a = (i / count) * 360 + r * 14;
       const start = 26 + r * 70;
@@ -203,15 +164,7 @@ const Lines = {
   },
 };
 
-/* ══════════════════════════════════════════════════════════════════
-   10. THE NAMED SEQUENCES
-   These are the only things the app calls. Each one is a timeline over
-   the primitives above, with the beats spaced so a sound cue could sit
-   on any of them: load · cut · silence · impact · settle.
-   ══════════════════════════════════════════════════════════════════ */
 const FX = {
-
-  /* one frame of violence: dark · blown contrast · a word · a cut · shake */
   impactFrame({ word = '', angle = -20, host = null, hot = true } = {}){
     if (Motion.off) return;
     const parent = host || $('#fx');
@@ -229,19 +182,12 @@ const FX = {
         .add(el, { opacity:[0, 1], scale:[1.34, 1], skewX:[-9, 0],
                duration:110, ease:EASE.CUT }, 44)
         .add(el, { scale:[1, 1.05], opacity:[1, 0], duration:80, ease:'inQuad' }, 210);
-
     }
 
     Lines.burst({ count:26, reach:300, delay:70, host, hot });
     setTimeout(() => Impact.shake($('#shell'), 6, 120), 78);
   },
 
-  /* NORMAL NAVIGATION — a quiet page turn, nothing else. The whole
-     view leaves as ONE composition (a short upward drift while it
-     fades), the paper ground holds for a breath, and the next page
-     eases up into place. No overlays, no snapshots, no per-element
-     motion: the view container is the only thing that moves, so a
-     navigation can never strand a layer. ~470ms end to end. */
   pageFlow(swap){
     const doSwap = typeof swap === 'function' ? swap : () => {};
     const view = $('#view');
@@ -265,22 +211,11 @@ const FX = {
                         duration:IN, ease:'outCubic',
                         onComplete:finish });
       }, OUT + BREATH);
-      /* hard safety: the view can never be left faded out */
+
       setTimeout(finish, OUT + BREATH + IN + 160);
     });
   },
 
-  /* THE WELCOME — the cover page. Signing in opens the volume: a
-     paper page already owned by the giant tone-ghost of the KCI seal,
-     a full-width ink tier drops on, the KEYSTAMP wordmark slides into
-     it like a train of ink, captions and the footer bar close the
-     composition, the whole cover thumps once — and then the page
-     pulls apart along its own panel structure in three directions,
-     onto a home page that is already standing (the caller waits two
-     frames before rendering it beneath). ~1.2s.
-     Reduced motion: the same cover, fully composed and dead still,
-     held for a beat and then swapped away — the moment still reads
-     "Keystamp is opening" with zero movement. */
   welcomeCut(word = 'Welcome'){
     const tail = word === 'Joined' ? 'Member joined' : 'Welcome back';
     const el = document.createElement('div');
@@ -310,10 +245,10 @@ const FX = {
     aset(wordEl,{ translateX:'105%' });
     aset(kick,  { opacity:0 });
     aset(tailP, { opacity:0 });
-    /* the tier drops onto the page */
+
     setTimeout(() => animate(tier, { translateY:['-320%','0%'],
       duration:140, ease:STEP(2) }), 110);
-    /* the wordmark slides into it like a train of ink */
+
     setTimeout(() => animate(wordEl, { translateX:['105%','0%'],
       duration:180, ease:STEP(3) }), 290);
     setTimeout(() => aset(kick, { opacity:1 }), 310);
@@ -321,12 +256,10 @@ const FX = {
       aset(tailP, { opacity:1 });
       animate(foot, { translateY:['120%','0%'], duration:90, ease:STEP(2) });
     }, 520);
-    /* the whole cover thumps once */
+
     setTimeout(() => aset(el, { scale:1.022 }), 660);
     setTimeout(() => aset(el, { scale:1 }), 726);
-    /* the page pulls apart along its own structure. Each exit tween is
-       created here, at departure time — anime replaces a pending
-       delayed tween the moment anything else writes that property. */
+
     setTimeout(() => {
       aset(kick,  { opacity:0 });
       aset(tailP, { opacity:0 });
@@ -335,28 +268,14 @@ const FX = {
       animate(page, { translateX:['0%','-104%'], duration:300, ease:'outCubic',
         onComplete(){ try { el.remove(); } catch (_) {} } });
     }, 920);
-    /* hard safety: the cover can never outlive its story */
+
     setTimeout(() => { try { el.remove(); } catch (_) {} }, 2600);
   },
 
-  /* SIGN-OUT SCENE — a manga page built as a WAFFLE GRID, not a page
-     transition. The application is simply COVERED by a dedicated
-     full-viewport scene that owns the story:
-
-       the scene stands on clean paper — a grid of manga panels stamps
-       onto it in one diagonal wave (varied panel widths, a few ink
-       panels, a few screentone panels, two wide spans) — the page
-       stands for a beat — the same wave dismantles it: paper panels
-       snap shut toward their frame edge, ink panels slide off toward
-       their side — clean light space — the sign-in page is there.
-
-     No slash, no words: the grid IS the composition. The app under
-     the scene never moves; the real sign-out runs invisibly behind
-     it. ~0.9s. A repeat press during the scene is ignored. */
   waffleOut({ swap, fail, btn = null } = {}){
     const doSwap = typeof swap === 'function' ? swap : () => {};
     const oops   = typeof fail === 'function' ? fail : () => {};
-    if (FX._out) return;                     /* one scene at a time */
+    if (FX._out) return;
     FX._out = true;
     let ended = false;
     const unlock = () => { FX._out = false; };
@@ -367,17 +286,12 @@ const FX = {
         ease:'outQuad', onComplete(){ btn.style.transform = ''; } }); }, 90);
     }
 
-    /* ── the grid, from the live viewport: fewer, larger panels on a
-       phone; a richer page on a desktop ── */
     const W = innerWidth, H = innerHeight;
     const cols = W < 600 ? 3 : W < 1024 ? 4 : 5;
     const rows = H < 460 ? 2 : H < 700 ? 3 : W < 600 ? 4 : 3;
     const frs = n => Array.from({ length:n },
       (_, i) => [1.12, .88, 1.06, .92, 1.02][i % 5].toFixed(2) + 'fr').join(' ');
 
-    /* two wide panels give the grid a manga layout's rhythm; every
-       other slot is a single cell. Variants are a fixed, balanced
-       pattern — ink, screentone, paper — never random noise. */
     const spans = rows > 1
       ? [[0, Math.min(1, cols - 2)], [rows - 1, Math.max(0, cols - 3)]] : [];
     const spanAt = (r, c) => spans.find(s => s[0] === r && s[1] === c);
@@ -405,7 +319,6 @@ const FX = {
     }
     document.body.appendChild(scene);
 
-    /* the app is covered; the real sign-out happens under the scene */
     requestAnimationFrame(() => requestAnimationFrame(() => {
       Promise.resolve().then(doSwap).catch(oops);
     }));
@@ -413,8 +326,6 @@ const FX = {
     const gone = () => { if (ended) return; ended = true;
       try { scene.remove(); } catch (_) {} unlock(); };
 
-    /* reduced motion: the scene still owns the moment, but the page
-       simply appears, holds, and clears — no panel movement at all */
     if (Motion.off){
       scene.style.opacity = '0';
       scene.style.transition = 'opacity 180ms ease';
@@ -424,18 +335,12 @@ const FX = {
       return;
     }
 
-    /* ── assemble: the panels stamp onto the page in one diagonal
-       wave, each popping from its own frame edge ── */
     cells.forEach(cell => {
       aset(cell.el, { opacity:0, scaleY:.9 });
       animate(cell.el, { opacity:[0, 1], scaleY:[.9, 1],
         duration:130, delay:40 + cell.d * 26, ease:'outQuad' });
     });
 
-    /* ── the page stands, then the SAME wave dismantles it: paper
-       and tone panels snap shut toward their edge, ink panels slide
-       off toward their side of the page — one motion system, two
-       families, one rhythm ── */
     const BREAK = 430;
     const maxD = Math.max(...cells.map(c => c.d));
     cells.forEach(cell => {
@@ -451,8 +356,6 @@ const FX = {
       }
     });
 
-    /* only once the LAST panel has left does the clean paper lift —
-       the sign-in page is already standing under it, and settles in */
     const tClear = BREAK + maxD * 26 + 200;
     animate(scene, { opacity:[1, 0], duration:160, delay:tClear, ease:'linear' });
     setTimeout(() => {
@@ -462,12 +365,9 @@ const FX = {
     }, tClear + 30);
 
     setTimeout(gone, tClear + 220);
-    /* hard safety: the scene can never outlive its story */
+
     setTimeout(gone, 2000);
   },
-
-
-
 
   pageEntrance(scope){
     const els = [...scope.querySelectorAll('[data-enter]')];
@@ -484,13 +384,6 @@ const FX = {
     far.forEach(el => Reveal.watch(el));
   },
 
-  /* THE SLAM. The display type inside a panel starts a short way above
-     where it belongs and arrives in three cuts. Three, not one: a
-     single jump is a swap, and three is a thing being driven down.
-
-     Held to the panel's own heavy type — the sizes that carry the
-     page. Body copy and labels are structure and come in with the
-     frame. */
   slamType(panel, at){
     if (!panel || Motion.off) return;
     const marks = [...panel.querySelectorAll(SLAM_SEL)];
@@ -501,10 +394,6 @@ const FX = {
             ease:STEP(3), onComplete:() => releaseTransform(marks) });
   },
 
-  /* The ten slots of the card face, landing along the collection route
-     in order. Each slot springs in carrying its own lean (the
-     stylesheet transform would otherwise be masked by the inline
-     animation values), so nothing straightens and snaps at the end. */
   sealGrid(list){
     if (!list || Motion.off) return;
     const cells = list.querySelectorAll('.seal');
@@ -515,12 +404,10 @@ const FX = {
             delay:stagger(46, { start:120 }),
             ease:spring({ mass:1, stiffness:94, damping:13, velocity:0 }),
             onComplete(){ cells.forEach(c => { c.style.opacity = '';
-              /* keep --press-tilt / --lean custom props; drop the
-                 spring's inline transform */
+
               c.style.transform = ''; }); } });
   },
 
-  /* ── scanner: the frame snaps shut on the code ── */
   scanLock(){
     if (Motion.off) return;
     const dirs = [[1,1],[-1,1],[1,-1],[-1,-1]];
@@ -536,19 +423,6 @@ const FX = {
       animate(c, { translateX:0, translateY:0, duration:220, ease:EASE.CALM }));
   },
 
-  /* ── THE SUCCESS PLATE ──────────────────────────────────────────
-     One full-screen ink plate, one composition, two cuts. Built for a
-     390px phone first: everything is centred and clamped in vmin, so
-     nothing can overflow or collide at any width. No slashes, no
-     rings, no field spiral — the press of the seal IS the effect.
-
-       cut in → the seal presses once → hold, readable →
-       home renders UNDER the plate → the plate lifts → the new
-       stamp presses into its slot (stampLand below).
-
-     `done` runs while the plate still covers the screen, so the page
-     beneath is standing before anything is revealed — the member
-     never sees the scan screen re-render or a transition seam. */
   stampAcquire(meeting, done){
     const scene = document.createElement('div');
     scene.className = 'acq';
@@ -565,33 +439,26 @@ const FX = {
     const clear = () => { try { scene.remove(); } catch (_) {} };
 
     if (Motion.off){
-      /* the plate still owns the moment: appear, hold, swap, clear */
       setTimeout(() => { done(); clear(); }, 750);
       return;
     }
 
     const sealEl = scene.querySelector('.acq__seal');
-    /* the press: arrives large and slightly turned, hits once, done */
+
     aset(sealEl, { scale:1.16, rotate:-4 });
     animate(sealEl, { scale:[1.16, 1], rotate:[-4, -1.5],
       duration:110, delay:80, ease:STEP(2) });
     setTimeout(() => Impact.shake(scene, 3, 80), 170);
 
-    setTimeout(done, 540);                     /* home renders under the plate */
+    setTimeout(done, 540);
     setTimeout(() => animate(scene, { opacity:[1, 0], duration:140,
       ease:'inQuad', onComplete:clear }), 760);
-    setTimeout(clear, 2000);                   /* hard safety */
+    setTimeout(clear, 2000);
   },
 
-  /* the new stamp presses into its slot: hidden until the hit, then
-     one cut down onto its final position. No slash, no shards, no
-     drift — the slot was correct before anything moved. */
   stampLand(cell){
     if (!cell || Motion.off) return;
-    /* the animation writes an inline transform, which would drop the
-       slot's CSS rotate(--lean) mid-press and snap it back at settle;
-       carrying the lean through keeps the settled frame identical to
-       the last animated one */
+
     const lean = getComputedStyle(cell).getPropertyValue('--lean').trim() || '0deg';
     aset(cell, { opacity:0 });
     animate(cell, { opacity:[0, 1], duration:1, delay:420, ease:STEP(1) });
@@ -599,7 +466,6 @@ const FX = {
     setTimeout(() => { Impact.shake($('.card__face') || $('#shell'), 3, 80); }, 540);
     setTimeout(() => { Motion.settle(cell); }, 720);
   },
-
 
   rewardUnlock(row){
     if (Motion.off || !row) return;
@@ -612,12 +478,6 @@ const FX = {
     }
   },
 
-  /* BOARD STATE SEAL — opening or closing check-in is a chop hitting
-     a document: the projector's cover word presses in once and the
-     facts strip takes the jolt. The word's resting tilt comes from
-     the stylesheet; the press carries it through so settle hands back
-     to CSS on the same frame (the stampLand lesson). The QR plate is
-     never touched — nothing may sit over a code a camera needs. */
   boardSeal(){
     const word = $('.proj__word');
     if (!word || Motion.off) return;
@@ -634,52 +494,29 @@ const FX = {
   }
 };
 
-/* ── loading: one ink poster, then the blade takes it apart ─────────
-   A title card, not a spinner — it never loops and never waits on
-   anything; the interface is already rendered behind the curtain.
-
-   The first painted frame is already the poster: solid ink, the KCI
-   seal knocked out in paper and cropped by the left edge. The type
-   slams in, holds, a paper blade goes through the whole card, the two
-   halves shear and fly apart, and the app is standing underneath.
-   Every state is ink or paper at full strength — no gray.
-   ─────────────────────────────────────────────────────────────────── */
 Object.assign(FX, {
   loadingSequence(onReveal){
     const boot = $('#boot');
     const whole = $('.boot__whole');
     const halves = $$('.boot__half');
 
-    /* both of these are idempotent on purpose. The curtain is a solid
-       layer over the whole app, so "lift it exactly once, from exactly
-       one callback" is a bad bet — anything that stops the clock
-       strands the page. Safe to call twice, called from two places. */
     let lifted = false, revealed = false;
     const done = () => { if (lifted) return; lifted = true; boot.classList.add('is-done'); };
     const reveal = () => { if (revealed) return; revealed = true; onReveal(); };
 
     if (Motion.off){ reveal(); return void done(); }
 
-    /* the poster plays as ONE piece; only ITS type animates. The
-       halves are static copies of the final poster state, invisible
-       until the blade's contact swaps them in pixel-for-pixel. */
     const seal = whole.querySelector('.boot__seal');
     const word = whole.querySelector('.boot__word');
     const kicker = whole.querySelector('.boot__kicker');
 
     const W = innerWidth, H = innerHeight;
-    /* the same seam the half clip-paths draw: 60% → 40% of the height */
+
     const seamDeg = -Math.atan2(H * .20, W) * 180 / Math.PI;
     const seamL = CutGeo.line(W * .5, H * .5, seamDeg);
     const pxv = seamL.nx, pyv = seamL.ny;
     const D = Math.hypot(W, H);
 
-    /* 0 the poster stands · 260 the kicker · 330 the title slams
-       INTACT · hold · 860 the blade crosses · contact: the poster
-       divides · the halves fall · app revealed. The seal is never
-       animated: an inline transform would clobber its stylesheet
-       position and the halves would no longer match the whole at the
-       flip. */
     void seal;
     aset(kicker, { opacity:0 });
     aset(word, { scale:1.4, opacity:0 });

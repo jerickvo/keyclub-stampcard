@@ -1,18 +1,4 @@
 "use strict";
-/* keystamp — boot guard. Loads before everything else.
-
-   The black boot curtain is a fixed, full-screen, pure black layer at
-   z-index 200, and the only thing that ever removed it was the complete
-   callback of the boot animation. So any script that failed to load or
-   threw on the way there left the page permanently black with nothing
-   on it to explain why.
-
-   This file removes that failure mode. Two jobs:
-     1. anything throws  -> lift the curtain, print the error on screen
-     2. nothing throws but the boot animation never finishes
-                         -> lift the curtain anyway after 4 seconds
-   Neither is meant to fire. If one does, you get a readable message
-   instead of a black rectangle. */
 
 window.Guard = (function(){
   var lifted = false, watchdog = null, reported = 0;
@@ -27,7 +13,7 @@ window.Guard = (function(){
 
   function report(msg, where){
     lift();
-    if (++reported > 3) return;                 /* one cascade is enough */
+    if (++reported > 3) return;
     var bar = document.getElementById('guardbar');
     if (!bar){
       bar = document.createElement('div');
@@ -43,17 +29,13 @@ window.Guard = (function(){
     catch (_) { return false; }
   }
 
-  /* capture phase, because resource load failures do not bubble */
   window.addEventListener('error', function(e){
     var t = e.target;
-    if (t && t.tagName === 'IMG') return;       /* missing artwork is fine */
+    if (t && t.tagName === 'IMG') return;
 
     if (t && (t.tagName === 'SCRIPT' || t.tagName === 'LINK')){
       var url = t.src || t.href || '';
-      /* A third-party file failing is survivable and not worth a red
-         bar: the fonts fall back, and without anime.js Motion.off turns
-         every animation into an instant state change. One of our own
-         files failing is not survivable, so that one gets shouted. */
+
       if (!ours(url)){
         console.warn('[keystamp] third-party file did not load:', url,
                      '— the app still runs, it just loses that piece.');
