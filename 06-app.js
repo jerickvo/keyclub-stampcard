@@ -111,6 +111,7 @@ async function go(id, opts = {}){
   if (current === 'scan' && id !== 'scan') Scanner.stop();
 
   const view = $('#view');
+  const from = current;
   const render = (nav = false) => {
     current = id;
     syncHash(id);
@@ -121,13 +122,14 @@ async function go(id, opts = {}){
     view.innerHTML = Views[id]();
     paintNav();
     try { scrollTo(0, 0); } catch (_) {}
-    afterRender(id, nav);
+    afterRender(id, nav, Boolean(opts.covered));
     view.focus({ preventScroll:true });
   };
 
-  if (view.firstChild && booted && !opts.instant && !Motion.off){
+  const same = from === id && !opts.force;
+  if (view.firstChild && booted && !opts.instant && !same && !Motion.off){
     navigating = true;
-    await FX.pageFlow(() => render(true));
+    await Transit.run(from, id, () => render(true));
     navigating = false;
     if (pendingNav !== null){
       const next = pendingNav; pendingNav = null;
@@ -162,8 +164,8 @@ function playViewIntro(id, nav = false){
   }
 }
 
-function afterRender(id, nav = false){
-  if (booted) playViewIntro(id, nav);
+function afterRender(id, nav = false, covered = false){
+  if (booted && !covered) playViewIntro(id, nav);
 
   if (id === 'auth') AuthUI.busy = false;
   paintMotion();
@@ -266,9 +268,12 @@ document.addEventListener('submit', async e => {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
 
-    FX.welcomeCut(up ? 'Joined' : 'Welcome');
-    if (Motion.off){ go('home', { instant:true }); }
-    else requestAnimationFrame(() => requestAnimationFrame(() => go('home', { instant:true })));
+    const scene = Scenes.opening({ tail: up ? 'Member joined' : 'Welcome back',
+      reveal(){ FX.pageEntrance($('#view')); playViewIntro(current); } });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      go('home', { instant:true, covered:true });
+      scene.release();
+    }));
   } catch (err){
     authErr(err && err.message ? err.message : 'Something went wrong. Try again.');
     authBusy(false);
@@ -383,13 +388,13 @@ document.addEventListener('click', e => {
   const swap = e.target.closest('#authSwap');
   if (swap){
     AuthUI.mode = AuthUI.mode === 'up' ? 'in' : 'up';
-    go('auth');
+    go('auth', { force:true });
     return;
   }
 
   const out = e.target.closest('[data-signout]');
   if (out){
-    FX.waffleOut({
+    Scenes.exit({
       btn: out,
       swap: () => Store.signOut().then(() => {
         AuthUI.mode = 'in';
@@ -522,17 +527,33 @@ addEventListener('pagehide', () => {
   Scanner.stop(); clearInterval(countTimer);
 });
 
+let opening = null;
+try {
+  opening = Scenes.opening({ root:$('#boot'), reveal(){
+    booted = true;
+    FX.pageEntrance($('#view'));
+    playViewIntro(current);
+  } });
+} catch (_) {
+  booted = true;
+  $('#boot')?.classList.add('is-done');
+}
+
 (async () => {
-  await Backend.init();
-  await Store.hydrate();
+  try {
+    await Backend.init();
+    await Store.hydrate();
 
-  Store.onChange(() => { if (current) go(current, { instant:true }); paintIdentity(); });
+    Store.onChange(() => { if (current) go(current, { instant:true }); paintIdentity(); });
 
-  paintBrand();
-  $('#barBrand').innerHTML  = wordmark();
-  paintIdentity();
-  paintMotion();
-  go(hashRoute());
+    paintBrand();
+    $('#barBrand').innerHTML  = wordmark();
+    paintIdentity();
+    paintMotion();
+    go(hashRoute());
+  } finally {
+    if (opening) opening.release();
+  }
 })();
 
 function paintIdentity(){
@@ -548,13 +569,3 @@ function paintIdentity(){
        <p class="muted" style="margin-top:6px;font-size:12.5px">Sign in to see your record.</p>`;
   paintMotion();
 }
-  try {
-    FX.loadingSequence(() => {
-      booted = true;
-      FX.pageEntrance($('#view'));
-      playViewIntro(current);
-    });
-  } catch (_) {
-    booted = true;
-    $('#boot')?.classList.add('is-done');
-  }

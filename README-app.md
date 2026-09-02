@@ -30,7 +30,8 @@ anime-bridge.js       exposes the anime v4 namespace, degrades if absent
 02-motion.js          Motion base layer, Reveal, formatting helpers
 03-views.js           member screens and the stamp-card component
 03b-board.js          board screens
-04-fx.js              FX layer and the named sequences
+04-fx.js              FX layer: impacts, stamps, seals, reveals
+04b-scenes.js         opening, sign-out exit and page transitions
 05-scan.js            camera scanner, board projector, attendance count
 06-app.js             router, interactions, boot
 
@@ -131,17 +132,32 @@ opens or the day turns over.
 
 ## Motion
 
-All animation runs through anime.js; no CSS keyframe animation is used for app
-motion. Two systems, deliberately distinct:
+One scene module, `04b-scenes.js`, owns the three moments that cover the whole
+screen, and one `Transit` object owns every page change.
 
-- **Normal navigation** (`FX.pageFlow`) — the view leaves with a short fade and
-  drift, the paper holds a beat, the next page eases in. ~480ms, page-level
-  only, no overlays.
-- **Sign-out** (`FX.waffleOut`) — a dedicated full-screen manga scene built as a
-  waffle grid of panels. It covers the app, which never participates. ~950ms.
+- **Opening** (`Scenes.opening`) — a manga page: three outlined panels, ink
+  wiped into each in hard steps, the seal and the wordmark stamped in, then the
+  panels part and the paper sheet drops to reveal the app beneath. The cold
+  load uses the static markup in `dev.html` and CSS keyframes for the intro
+  beats, so the page composes itself from the first paint even before the
+  scripts arrive; JS only holds the composed page until the first render is
+  done and then opens it. Signing in builds the same scene and slides it over
+  the form. ~1.3s from first paint, never less than 1s on a fast load.
+- **Page transitions** (`Transit.run`) — a snapshot of the leaving page slides
+  and fades out while the next page slides in from the direction of travel
+  (forward along the tab strip from the right, back from the left). Each
+  destination has its own character: Home quick with a gutter bar, Record
+  restrained, Scan an immediate focus snap, Rewards a lifted arrival with a
+  paper flash, Member calm, board tools hard stepped cuts. 200–450ms, the
+  swap happens under the snapshot, the same tab tapped twice is instant.
+- **Sign-out** (`Scenes.exit`) — the panels slam shut over the app, the paper
+  fills the gutters, SIGNED OUT is stamped, and the whole page drops away to
+  the sign-in spread. Distinct from both the opening and the transitions.
 
 Without anime.js the app still works: `Motion.off` turns every animation into an
-instant state change, and `prefers-reduced-motion` takes the same path.
+instant state change, and `prefers-reduced-motion` (or the account setting)
+shows the composed scenes as stills with a short fade and swaps pages with no
+movement.
 
 ---
 
