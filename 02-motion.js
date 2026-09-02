@@ -13,6 +13,7 @@ const Motion = {
     try { localStorage.setItem(MOTION_KEY, v ? 'off' : 'on'); } catch (_) {}
   },
   get off(){ return this.forced || !window.animate || systemReducedMotion(); },
+  get reduced(){ return this.forced || systemReducedMotion(); },
 
   settle(el){
     if (!el || !el.style) return;

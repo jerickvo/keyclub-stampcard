@@ -127,7 +127,7 @@ async function go(id, opts = {}){
   };
 
   const same = from === id && !opts.force;
-  if (view.firstChild && booted && !opts.instant && !same && !Motion.off){
+  if (view.firstChild && booted && !opts.instant && !same && window.animate){
     navigating = true;
     await Transit.run(from, id, () => render(true));
     navigating = false;

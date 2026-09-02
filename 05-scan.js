@@ -54,12 +54,12 @@ const Scanner = {
   stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0,
 
   setState(state, msg){
-    const ret = $('#reticle'), el = $('#scanMsg'), viewer = $('#viewer');
-    if (el){
-      el.textContent = msg;
-      el.classList.toggle('viewer__msg--hot', state === 'hit' || state === 'good');
-      el.classList.toggle('viewer__msg--soft',
-        state === 'bad' || state === 'boot' || state === 'busy');
+    const ret = $('#reticle'), el = $('#scanMsg'), line = $('#scanLine'), viewer = $('#viewer');
+    if (el) el.textContent = msg;
+    if (line){
+      const tone = state === 'hit' ? 'good' : state;
+      ['boot', 'live', 'busy', 'good', 'bad', 'off'].forEach(s =>
+        line.classList.toggle('scanline--' + s, s === tone));
     }
     if (ret){
       ret.classList.toggle('reticle--live', state === 'live');
@@ -169,6 +169,7 @@ const Scanner = {
     </div>`;
 
     viewer.classList.add('viewer--stalled');
+    this.setState('off', 'Camera off');
     $('#manualInput')?.focus({ preventScroll:true });
   },
 

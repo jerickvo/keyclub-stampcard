@@ -432,8 +432,14 @@ select.input{padding-right:var(--s4)}
   --si:var(--ink);--sp:var(--paper)}
 .ghost{position:fixed;z-index:50;overflow:hidden;background:var(--paper);
   pointer-events:none;will-change:transform,opacity}
-.gutterbar{position:fixed;z-index:56;width:8px;pointer-events:none;
-  background:var(--ink);opacity:0;will-change:transform}
+.cutbox{position:fixed;z-index:56;overflow:hidden;pointer-events:none;
+  contain:layout paint}
+.slab{position:absolute;background:var(--ink);will-change:transform}
+.slab--tone,.slab__tone{background:var(--paper) radial-gradient(circle at 50% 50%,
+  var(--ink) 0 1.4px,transparent 1.6px) 0 0/7px 7px}
+.slab__tone{position:absolute;top:0;bottom:0}
+.slab__word{position:absolute;margin:0;color:var(--paper);white-space:nowrap;
+  opacity:0;transform-origin:0 50%}
 
 .scene--play .scene__panel--a .scene__ink{animation:sceneInk 110ms steps(3,end) calc(var(--lead,0ms) + 90ms) both}
 .scene--play .scene__panel--b .scene__ink{animation:sceneInk 100ms steps(3,end) calc(var(--lead,0ms) + 210ms) both}
@@ -1682,30 +1688,24 @@ button,input,select,textarea{font-family:inherit}
   .lrow--open{column-gap:var(--s4)}
 }
 
-.view--scan{display:flex;flex-direction:column;gap:var(--s4)}
+.view--scan{display:flex;flex-direction:column;gap:var(--s4);
+  min-height:calc(100dvh - var(--tabs-h) - 172px)}
+.view--scan > .rechead{margin-bottom:var(--s2)}
+.view--scan > .viewer{margin-top:auto}
+.view--scan > .standing{margin-bottom:auto}
 
-.standing{display:flex;align-items:baseline;gap:var(--s3);
-  flex-wrap:wrap;margin:0;
-  background:var(--ink);color:var(--paper);
-  padding:clamp(9px,1.4vw,14px) clamp(12px,2vw,20px);
-  margin-right:calc(var(--gutter) * -1)}
-.standing__lab{font-size:var(--t-caption);color:var(--tint);
-  white-space:nowrap;letter-spacing:.12em}
-.standing__at{font-family:var(--f-head);
-  font-size:var(--t-sub);line-height:1.05;color:var(--paper)}
-
-.viewer{position:relative;display:grid;
-  grid-template-columns:minmax(0,1fr);
-  grid-template-rows:minmax(0,1fr) auto;
-  place-items:center;
-  isolation:isolate;overflow:hidden;
-  width:100%;aspect-ratio:1;max-height:62vh;
+.viewer{position:relative;display:grid;place-items:center;
+  grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);
+  isolation:isolate;overflow:hidden;container-type:size;
+  width:100%;aspect-ratio:1;max-height:calc(100dvh - 318px);min-height:200px;
   border:var(--edge-frame) solid var(--ink);background:var(--tint);
   box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
+.viewer::after{content:'';position:absolute;inset:7px;z-index:2;
+  pointer-events:none;border:var(--edge-hair) solid var(--paper);opacity:.75}
 
 @media(min-width:600px){ .viewer{aspect-ratio:4/3} }
 
-.viewer > *{grid-column:1;grid-row:1/-1}
+.viewer > *{grid-column:1;grid-row:1;min-height:0;min-width:0}
 .viewer video{width:100%;height:100%;display:block;
   object-fit:cover;object-position:center;
   filter:grayscale(1) contrast(1.06)}
@@ -1713,11 +1713,10 @@ button,input,select,textarea{font-family:inherit}
 .viewer__scrim{width:100%;height:100%;pointer-events:none;
   background-image:radial-gradient(rgba(10,10,10,.34) 1.1px,transparent 1.2px);
   background-size:5px 5px}
-.viewer__grain{display:none}
 
-.reticle{position:relative;grid-row:1;place-self:center;
-  width:min(58%,290px);aspect-ratio:1;
-  pointer-events:none;z-index:2}
+.reticle{position:relative;place-self:center;
+  width:min(56cqw,72cqh,290px);aspect-ratio:1;
+  pointer-events:none;z-index:3}
 .reticle__c{position:absolute;width:15%;height:15%;
   border:var(--edge-frame) solid var(--paper);
   filter:drop-shadow(0 0 1px rgba(10,10,10,.55))}
@@ -1730,22 +1729,48 @@ button,input,select,textarea{font-family:inherit}
 .reticle--busy .reticle__c{opacity:.55}
 .reticle--bad .reticle__c{width:12%;height:12%}
 
-.viewer__status{grid-row:2;place-self:center;z-index:3;
-  padding:0 var(--s3) var(--s3);max-width:100%}
-.viewer__msg{display:inline-block;
-  padding:7px var(--s4);background:var(--paper);color:var(--ink);
-  border:var(--edge-panel) solid var(--ink);
-  font-family:var(--f-head);font-size:clamp(14px,2.4vw,19px);
-  line-height:1.25;text-align:center;text-transform:uppercase}
-.viewer__msg--hot{background:var(--ink);color:var(--paper);border-color:var(--paper)}
-.viewer__msg--soft{color:var(--ink-2)}
+.scanline{display:flex;align-items:center;gap:var(--s3);margin:0;min-height:26px;
+  font:500 clamp(11px,2.9vw,13px)/1.35 var(--f-mono);letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink)}
+.scanline__dot{flex:none;width:9px;height:9px;
+  border:2px solid var(--ink);background:transparent}
+.scanline__msg{min-width:0;overflow-wrap:anywhere}
+.scanline--boot{color:var(--ink-2)}
+.scanline--boot .scanline__dot,.scanline--off .scanline__dot{opacity:.4}
+.scanline--live .scanline__dot{background:var(--ink)}
+.scanline--busy .scanline__dot{background:var(--tone);border-color:var(--tone)}
+.scanline--good .scanline__dot{background:var(--ink)}
+.scanline--good .scanline__msg{background:var(--ink);color:var(--paper);padding:3px 8px}
+.scanline--bad .scanline__dot{background:var(--paper)}
+.scanline--bad .scanline__msg{text-decoration:underline;text-underline-offset:3px}
+
+.standing{display:flex;align-items:baseline;justify-content:space-between;
+  gap:var(--s2) var(--s4);flex-wrap:wrap;margin:0;
+  padding-top:var(--s3);border-top:var(--edge-panel) solid var(--ink)}
+.standing__lab{font-size:var(--t-caption);color:var(--ink-2);
+  letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+.standing__at{font-family:var(--f-head);font-size:var(--t-sub);line-height:1.05;
+  color:var(--ink);text-align:right;min-width:0;overflow-wrap:anywhere}
 
 .viewer--hit{border-color:var(--ink)}
 .viewer--hit .viewer__scrim{opacity:.35}
 
 .viewer--stalled{aspect-ratio:auto;min-height:clamp(160px,30vw,240px);
-  grid-template-rows:minmax(0,1fr);place-items:stretch;
-  background:var(--paper)}
+  container-type:normal;place-items:stretch;background:var(--paper)}
+.viewer--stalled::after{display:none}
+
+@media(max-height:520px) and (min-aspect-ratio:4/3){
+  .view--scan{display:grid;min-height:0;
+    grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+    grid-template-rows:auto auto minmax(0,1fr);gap:var(--s3) var(--s5);
+    grid-template-areas:"stage head" "stage line" "stage standing"}
+  .view--scan > .rechead{grid-area:head;margin:0}
+  .view--scan > .viewer{grid-area:stage;margin:0;aspect-ratio:4/3;
+    max-height:calc(100dvh - 178px);min-height:0;align-self:start}
+  .view--scan > .scanline{grid-area:line}
+  .view--scan > .standing{grid-area:standing;margin:0;align-self:start}
+}
+
 .stall{display:flex;flex-direction:column;justify-content:center;
   gap:var(--s2);padding:var(--s5);text-align:left}
 .stall__title{margin:0;font-family:var(--f-head);
@@ -1775,21 +1800,10 @@ button,input,select,textarea{font-family:inherit}
   outline-offset:3px}
 
 @media(min-width:1024px){
-  .view--scan{display:grid;
-    grid-template-columns:minmax(0,1fr) minmax(13rem,17rem);
-    grid-template-areas:"head head" "standing standing" "viewer manual";
-    gap:var(--s5) var(--s5);align-content:start}
-  .view--scan > .rechead{grid-area:head}
-  .view--scan > .standing{grid-area:standing}
-
-  .view--scan > .viewer{grid-area:viewer;
-    max-height:calc(100dvh - clamp(330px,34vh,360px));min-height:250px}
-
-  .view--scan > .manual{grid-area:manual;align-self:end}
-  .view--scan-solo{grid-template-columns:minmax(0,1fr);
-    grid-template-areas:"head" "standing" "viewer"}
-  .view--scan-solo > .viewer{width:100%;justify-self:center;
-    max-width:min(100%,max(720px,48vw))}
+  .view--scan{min-height:calc(100dvh - 140px)}
+  .view--scan > .viewer,.view--scan > .scanline,.view--scan > .standing{
+    width:100%;max-width:min(100%,max(720px,48vw));align-self:center}
+  .view--scan > .viewer{max-height:calc(100dvh - clamp(330px,34vh,360px));min-height:250px}
 }
 
 .view--rewards{display:flex;flex-direction:column;gap:var(--s5)}
@@ -15478,6 +15492,7 @@ const Motion = {
     try { localStorage.setItem(MOTION_KEY, v ? 'off' : 'on'); } catch (_) {}
   },
   get off(){ return this.forced || !window.animate || systemReducedMotion(); },
+  get reduced(){ return this.forced || systemReducedMotion(); },
 
   settle(el){
     if (!el || !el.style) return;
@@ -15928,28 +15943,31 @@ const Views = {
         ? { lab:'Already stamped', at:`GM ${pad(open.no)}` }
         : { lab:'Checking in to', at:`GM ${pad(open.no)} / ${fmtDay(open.date)} / ${esc(open.place)}` };
 
-    return `<div class="view view--scan${MANUAL_ENTRY ? '' : ' view--scan-solo'}">
-      <header class="rechead" data-enter>
+    return `<div class="view view--scan">
+      <header class="rechead rechead--tight" data-enter>
         <h1 class="title rechead__title">Scan</h1>
       </header>
-
-      <p class="standing" data-enter>
-        <span class="standing__lab">${standing.lab}</span>
-        <span class="standing__at">${standing.at}</span>
-      </p>
 
       <div class="viewer" id="viewer" data-enter>
         <video id="cam" playsinline muted autoplay></video>
         <div class="viewer__scrim" aria-hidden="true"></div>
-        <div class="viewer__grain" aria-hidden="true"></div>
         <div class="reticle" id="reticle" aria-hidden="true">
           <span class="reticle__c reticle__c--tl"></span>
           <span class="reticle__c reticle__c--tr"></span>
           <span class="reticle__c reticle__c--bl"></span>
           <span class="reticle__c reticle__c--br"></span>
         </div>
-        <div class="viewer__status"><span class="viewer__msg" id="scanMsg">Starting camera</span></div>
       </div>
+
+      <p class="scanline scanline--boot" id="scanLine" data-enter aria-live="polite">
+        <i class="scanline__dot" aria-hidden="true"></i>
+        <span class="scanline__msg" id="scanMsg">Starting camera</span>
+      </p>
+
+      <p class="standing" data-enter>
+        <span class="standing__lab">${standing.lab}</span>
+        <span class="standing__at">${standing.at}</span>
+      </p>
 
       ${MANUAL_ENTRY ? `<div class="manual" data-enter>
         <label class="manual__lab" for="manualInput">Or enter the check-in code</label>
@@ -16976,13 +16994,13 @@ const Transit = {
            board:0, bmeet:1, bcheckin:2, bmembers:3, baccount:4 },
 
   CHAR: {
-    home:    { dist:22, out:110, in:230, bar:true,  ease:() => EASE.CUT },
-    record:  { dist:10, out:120, in:260, bar:false, ease:() => 'outCubic' },
-    scan:    { dist:8,  out:80,  in:170, bar:false, ease:() => STEP(2), snap:true },
-    rewards: { dist:16, out:110, in:280, bar:true,  ease:() => cubicBezier(.2, .9, .3, 1.04), flash:true },
-    profile: { dist:8,  out:140, in:320, bar:false, ease:() => 'outQuad' },
-    board:   { dist:14, out:90,  in:170, bar:true,  ease:() => STEP(3) },
-    auth:    { dist:0,  out:110, in:200, bar:false, ease:() => 'outQuad' },
+    home:    { in:170, hold:100, out:230, angle:9, par:26, tone:true },
+    record:  { in:200, hold:120, out:280, angle:4, par:16 },
+    scan:    { in:150, hold:80,  out:200, angle:0, par:10 },
+    rewards: { in:180, hold:120, out:260, angle:7, par:22, layered:true, flash:true },
+    profile: { in:220, hold:130, out:300, angle:6, par:14 },
+    board:   { in:160, hold:90,  out:210, angle:0, par:12, crisp:true },
+    auth:    { in:180, hold:90,  out:240, angle:3, par:0,  vertical:true },
   },
 
   profile(to){
@@ -17023,51 +17041,141 @@ const Transit = {
     return box;
   },
 
+  slab(f, dir, c){
+    const box = document.createElement('div');
+    box.className = 'cutbox';
+    box.style.cssText = `left:${f.left}px;top:${f.top}px;width:${f.width}px;height:${f.height}px`;
+    const W = f.width, H = f.height, rad = c.angle * Math.PI / 180;
+    const vertical = Boolean(c.vertical) || dir === 0;
+    const make = cls => {
+      const el = document.createElement('div');
+      el.className = 'slab' + (cls ? ' ' + cls : '');
+      return el;
+    };
+    let off, enter, axis, shape;
+    if (!vertical){
+      off = Math.round(Math.tan(rad) * H);
+      shape = el => {
+        el.style.cssText += `;left:${-off}px;top:0;width:${W + 2 * off}px;height:${H}px`;
+        el.style.clipPath = dir > 0
+          ? `polygon(${off}px 0, 100% 0, calc(100% - ${off}px) 100%, 0 100%)`
+          : `polygon(0 0, calc(100% - ${off}px) 0, 100% 100%, ${off}px 100%)`;
+      };
+      axis = 'translateX';
+      enter = dir > 0 ? W + off : -(W + off);
+    } else {
+      off = Math.round(Math.tan(rad) * W);
+      shape = el => {
+        el.style.cssText += `;left:0;top:${-off}px;width:${W}px;height:${H + 2 * off}px`;
+        el.style.clipPath = `polygon(0 ${off}px, 100% 0, 100% calc(100% - ${off}px), 0 100%)`;
+      };
+      axis = 'translateY';
+      enter = -(H + off);
+    }
+    const under = c.layered ? make('slab--tone') : null;
+    if (under){ shape(under); box.appendChild(under); }
+    const el = make('');
+    shape(el);
+    if (c.tone && !vertical){
+      const t = document.createElement('i');
+      t.className = 'slab__tone';
+      const S = Math.round(W * .12) + off;
+      t.style.cssText = (dir > 0 ? 'left:0;' : 'right:0;') + `width:${S}px`;
+      t.style.clipPath = dir > 0
+        ? `polygon(${off}px 0, 100% 0, calc(100% - ${off}px) 100%, 0 100%)`
+        : `polygon(0 0, calc(100% - ${off}px) 0, 100% 100%, ${off}px 100%)`;
+      el.appendChild(t);
+    }
+    box.appendChild(el);
+    document.body.appendChild(box);
+    return { box, el, under, off, enter, exit:-enter, axis, vertical };
+  },
+
+  word(view, f, cut){
+    const title = view.querySelector('.rechead__title');
+    if (!title) return null;
+    const r = title.getBoundingClientRect();
+    if (r.width < 4 || r.top < f.top - 4 || r.bottom > f.top + f.height + 4) return null;
+    const cs = getComputedStyle(title);
+    const w = document.createElement('p');
+    w.className = 'slab__word';
+    w.textContent = title.textContent;
+    const x = r.left - f.left + (cut.vertical ? 0 : cut.off);
+    const y = r.top - f.top + (cut.vertical ? cut.off : 0);
+    w.style.cssText = `left:${x}px;top:${y}px;width:${Math.ceil(r.width) + 6}px;` +
+      `font:${cs.font};letter-spacing:${cs.letterSpacing};text-transform:${cs.textTransform};` +
+      `line-height:${cs.lineHeight};padding:${cs.padding}`;
+    cut.el.appendChild(w);
+    return w;
+  },
+
   run(from, to, swap){
     const view = $('#view');
     const doSwap = typeof swap === 'function' ? swap : () => {};
-    if (Motion.off || !view){ doSwap(); return Promise.resolve(); }
+    if (!window.animate || !view){ doSwap(); return Promise.resolve(); }
+
+    const f = this.frame(view);
+    const box = this.ghost(view, f);
+
+    if (Motion.reduced){
+      return new Promise(res => {
+        let done = false;
+        const finish = () => { if (done) return; done = true; try { box.remove(); } catch (_) {} Motion.settle(view); res(); };
+        try { doSwap(); } catch (_) {}
+        animate(box, { opacity:[1, 0], duration:140, ease:'linear', onComplete:finish });
+        setTimeout(finish, 420);
+      });
+    }
 
     const c = this.profile(to);
     const dir = this.direction(from, to);
-    const dx = dir * c.dist;
-    const scale = c.snap ? 1.025 : 1;
-    const f = this.frame(view);
-    const box = this.ghost(view, f);
+    const cut = this.slab(f, dir, c);
+    const IN  = c.crisp ? cubicBezier(.85, 0, .1, 1) : cubicBezier(.7, 0, .2, 1);
+    const OUT = c.crisp ? cubicBezier(.85, 0, .1, 1) : cubicBezier(.55, 0, .12, 1);
+    const par = dir * c.par;
+    const LAG = 50;
 
     return new Promise(res => {
       let settled = false;
       const finish = () => {
         if (settled) return; settled = true;
+        try { cut.box.remove(); } catch (_) {}
         try { box.remove(); } catch (_) {}
         Motion.settle(view);
         res();
       };
 
-      try { doSwap(); } catch (_) {}
-      aset(view, { opacity:0, translateX:dx, scale });
+      if (cut.under){
+        aset(cut.under, { [cut.axis]:cut.enter });
+        animate(cut.under, { [cut.axis]:[cut.enter, 0], duration:c.in, ease:IN });
+      }
+      aset(cut.el, { [cut.axis]:cut.enter });
+      animate(cut.el, { [cut.axis]:[cut.enter, 0], duration:c.in, delay:cut.under ? LAG : 0, ease:IN });
+      if (par) animate(box, { translateX:[0, -par], duration:c.in, ease:'outQuad' });
 
-      animate(box, { opacity:[1, 0], translateX:[0, -dx * 1.4], duration:c.out, ease:'inQuad' });
-      if (c.bar && dir) this.bar(f, dir, c.out + c.in * .4);
-      if (c.flash) Impact.flash(.14, { dur:70, delay:c.out * .5 });
-      animate(view, { opacity:[0, 1], translateX:[dx, 0], scale:[scale, 1],
-                      duration:c.in, delay:Math.round(c.out * .35), ease:c.ease(),
-                      onComplete:finish });
+      const covered = c.in + (cut.under ? LAG : 0);
+      setTimeout(() => {
+        try { doSwap(); } catch (_) {}
+        try { box.remove(); } catch (_) {}
+        aset(view, { translateX:par * .6 });
+        const w = this.word(view, f, cut);
+        if (w){
+          aset(w, { opacity:0, scale:1.18 });
+          animate(w, { opacity:[0, 1], duration:1, delay:20 });
+          animate(w, { scale:[1.18, 1], duration:90, delay:20, ease:STEP(2) });
+        }
+      }, covered);
 
-      setTimeout(finish, c.out + c.in + 200);
+      const leave = covered + c.hold;
+      setTimeout(() => {
+        animate(cut.el, { [cut.axis]:[0, cut.exit], duration:c.out, ease:OUT });
+        if (cut.under) animate(cut.under, { [cut.axis]:[0, cut.exit], duration:c.out, delay:LAG, ease:OUT });
+        if (c.flash) Impact.flash(.14, { dur:70, delay:30 });
+        animate(view, { translateX:[par * .6, 0], duration:c.out, ease:'outCubic', onComplete:finish });
+      }, leave);
+
+      setTimeout(finish, leave + c.out + (cut.under ? LAG : 0) + 200);
     });
-  },
-
-  bar(f, dir, dur){
-    const el = document.createElement('i');
-    el.className = 'gutterbar';
-    el.style.cssText = `left:${f.left}px;top:${f.top}px;height:${f.height}px`;
-    const from = dir > 0 ? f.width + 12 : -20;
-    const to   = dir > 0 ? -20 : f.width + 12;
-    aset(el, { translateX:from, opacity:1 });
-    document.body.appendChild(el);
-    animate(el, { translateX:[from, to], duration:dur, ease:'inOutQuad',
-                  onComplete:() => el.remove() });
   },
 };
 
@@ -17130,12 +17238,12 @@ const Scanner = {
   stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0,
 
   setState(state, msg){
-    const ret = $('#reticle'), el = $('#scanMsg'), viewer = $('#viewer');
-    if (el){
-      el.textContent = msg;
-      el.classList.toggle('viewer__msg--hot', state === 'hit' || state === 'good');
-      el.classList.toggle('viewer__msg--soft',
-        state === 'bad' || state === 'boot' || state === 'busy');
+    const ret = $('#reticle'), el = $('#scanMsg'), line = $('#scanLine'), viewer = $('#viewer');
+    if (el) el.textContent = msg;
+    if (line){
+      const tone = state === 'hit' ? 'good' : state;
+      ['boot', 'live', 'busy', 'good', 'bad', 'off'].forEach(s =>
+        line.classList.toggle('scanline--' + s, s === tone));
     }
     if (ret){
       ret.classList.toggle('reticle--live', state === 'live');
@@ -17245,6 +17353,7 @@ const Scanner = {
     </div>`;
 
     viewer.classList.add('viewer--stalled');
+    this.setState('off', 'Camera off');
     $('#manualInput')?.focus({ preventScroll:true });
   },
 
@@ -17451,7 +17560,7 @@ async function go(id, opts = {}){
   };
 
   const same = from === id && !opts.force;
-  if (view.firstChild && booted && !opts.instant && !same && !Motion.off){
+  if (view.firstChild && booted && !opts.instant && !same && window.animate){
     navigating = true;
     await Transit.run(from, id, () => render(true));
     navigating = false;

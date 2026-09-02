@@ -191,13 +191,13 @@ const Transit = {
            board:0, bmeet:1, bcheckin:2, bmembers:3, baccount:4 },
 
   CHAR: {
-    home:    { dist:22, out:110, in:230, bar:true,  ease:() => EASE.CUT },
-    record:  { dist:10, out:120, in:260, bar:false, ease:() => 'outCubic' },
-    scan:    { dist:8,  out:80,  in:170, bar:false, ease:() => STEP(2), snap:true },
-    rewards: { dist:16, out:110, in:280, bar:true,  ease:() => cubicBezier(.2, .9, .3, 1.04), flash:true },
-    profile: { dist:8,  out:140, in:320, bar:false, ease:() => 'outQuad' },
-    board:   { dist:14, out:90,  in:170, bar:true,  ease:() => STEP(3) },
-    auth:    { dist:0,  out:110, in:200, bar:false, ease:() => 'outQuad' },
+    home:    { in:170, hold:100, out:230, angle:9, par:26, tone:true },
+    record:  { in:200, hold:120, out:280, angle:4, par:16 },
+    scan:    { in:150, hold:80,  out:200, angle:0, par:10 },
+    rewards: { in:180, hold:120, out:260, angle:7, par:22, layered:true, flash:true },
+    profile: { in:220, hold:130, out:300, angle:6, par:14 },
+    board:   { in:160, hold:90,  out:210, angle:0, par:12, crisp:true },
+    auth:    { in:180, hold:90,  out:240, angle:3, par:0,  vertical:true },
   },
 
   profile(to){
@@ -238,50 +238,140 @@ const Transit = {
     return box;
   },
 
+  slab(f, dir, c){
+    const box = document.createElement('div');
+    box.className = 'cutbox';
+    box.style.cssText = `left:${f.left}px;top:${f.top}px;width:${f.width}px;height:${f.height}px`;
+    const W = f.width, H = f.height, rad = c.angle * Math.PI / 180;
+    const vertical = Boolean(c.vertical) || dir === 0;
+    const make = cls => {
+      const el = document.createElement('div');
+      el.className = 'slab' + (cls ? ' ' + cls : '');
+      return el;
+    };
+    let off, enter, axis, shape;
+    if (!vertical){
+      off = Math.round(Math.tan(rad) * H);
+      shape = el => {
+        el.style.cssText += `;left:${-off}px;top:0;width:${W + 2 * off}px;height:${H}px`;
+        el.style.clipPath = dir > 0
+          ? `polygon(${off}px 0, 100% 0, calc(100% - ${off}px) 100%, 0 100%)`
+          : `polygon(0 0, calc(100% - ${off}px) 0, 100% 100%, ${off}px 100%)`;
+      };
+      axis = 'translateX';
+      enter = dir > 0 ? W + off : -(W + off);
+    } else {
+      off = Math.round(Math.tan(rad) * W);
+      shape = el => {
+        el.style.cssText += `;left:0;top:${-off}px;width:${W}px;height:${H + 2 * off}px`;
+        el.style.clipPath = `polygon(0 ${off}px, 100% 0, 100% calc(100% - ${off}px), 0 100%)`;
+      };
+      axis = 'translateY';
+      enter = -(H + off);
+    }
+    const under = c.layered ? make('slab--tone') : null;
+    if (under){ shape(under); box.appendChild(under); }
+    const el = make('');
+    shape(el);
+    if (c.tone && !vertical){
+      const t = document.createElement('i');
+      t.className = 'slab__tone';
+      const S = Math.round(W * .12) + off;
+      t.style.cssText = (dir > 0 ? 'left:0;' : 'right:0;') + `width:${S}px`;
+      t.style.clipPath = dir > 0
+        ? `polygon(${off}px 0, 100% 0, calc(100% - ${off}px) 100%, 0 100%)`
+        : `polygon(0 0, calc(100% - ${off}px) 0, 100% 100%, ${off}px 100%)`;
+      el.appendChild(t);
+    }
+    box.appendChild(el);
+    document.body.appendChild(box);
+    return { box, el, under, off, enter, exit:-enter, axis, vertical };
+  },
+
+  word(view, f, cut){
+    const title = view.querySelector('.rechead__title');
+    if (!title) return null;
+    const r = title.getBoundingClientRect();
+    if (r.width < 4 || r.top < f.top - 4 || r.bottom > f.top + f.height + 4) return null;
+    const cs = getComputedStyle(title);
+    const w = document.createElement('p');
+    w.className = 'slab__word';
+    w.textContent = title.textContent;
+    const x = r.left - f.left + (cut.vertical ? 0 : cut.off);
+    const y = r.top - f.top + (cut.vertical ? cut.off : 0);
+    w.style.cssText = `left:${x}px;top:${y}px;width:${Math.ceil(r.width) + 6}px;` +
+      `font:${cs.font};letter-spacing:${cs.letterSpacing};text-transform:${cs.textTransform};` +
+      `line-height:${cs.lineHeight};padding:${cs.padding}`;
+    cut.el.appendChild(w);
+    return w;
+  },
+
   run(from, to, swap){
     const view = $('#view');
     const doSwap = typeof swap === 'function' ? swap : () => {};
-    if (Motion.off || !view){ doSwap(); return Promise.resolve(); }
+    if (!window.animate || !view){ doSwap(); return Promise.resolve(); }
+
+    const f = this.frame(view);
+    const box = this.ghost(view, f);
+
+    if (Motion.reduced){
+      return new Promise(res => {
+        let done = false;
+        const finish = () => { if (done) return; done = true; try { box.remove(); } catch (_) {} Motion.settle(view); res(); };
+        try { doSwap(); } catch (_) {}
+        animate(box, { opacity:[1, 0], duration:140, ease:'linear', onComplete:finish });
+        setTimeout(finish, 420);
+      });
+    }
 
     const c = this.profile(to);
     const dir = this.direction(from, to);
-    const dx = dir * c.dist;
-    const scale = c.snap ? 1.025 : 1;
-    const f = this.frame(view);
-    const box = this.ghost(view, f);
+    const cut = this.slab(f, dir, c);
+    const IN  = c.crisp ? cubicBezier(.85, 0, .1, 1) : cubicBezier(.7, 0, .2, 1);
+    const OUT = c.crisp ? cubicBezier(.85, 0, .1, 1) : cubicBezier(.55, 0, .12, 1);
+    const par = dir * c.par;
+    const LAG = 50;
 
     return new Promise(res => {
       let settled = false;
       const finish = () => {
         if (settled) return; settled = true;
+        try { cut.box.remove(); } catch (_) {}
         try { box.remove(); } catch (_) {}
         Motion.settle(view);
         res();
       };
 
-      try { doSwap(); } catch (_) {}
-      aset(view, { opacity:0, translateX:dx, scale });
+      if (cut.under){
+        aset(cut.under, { [cut.axis]:cut.enter });
+        animate(cut.under, { [cut.axis]:[cut.enter, 0], duration:c.in, ease:IN });
+      }
+      aset(cut.el, { [cut.axis]:cut.enter });
+      animate(cut.el, { [cut.axis]:[cut.enter, 0], duration:c.in, delay:cut.under ? LAG : 0, ease:IN });
+      if (par) animate(box, { translateX:[0, -par], duration:c.in, ease:'outQuad' });
 
-      animate(box, { opacity:[1, 0], translateX:[0, -dx * 1.4], duration:c.out, ease:'inQuad' });
-      if (c.bar && dir) this.bar(f, dir, c.out + c.in * .4);
-      if (c.flash) Impact.flash(.14, { dur:70, delay:c.out * .5 });
-      animate(view, { opacity:[0, 1], translateX:[dx, 0], scale:[scale, 1],
-                      duration:c.in, delay:Math.round(c.out * .35), ease:c.ease(),
-                      onComplete:finish });
+      const covered = c.in + (cut.under ? LAG : 0);
+      setTimeout(() => {
+        try { doSwap(); } catch (_) {}
+        try { box.remove(); } catch (_) {}
+        aset(view, { translateX:par * .6 });
+        const w = this.word(view, f, cut);
+        if (w){
+          aset(w, { opacity:0, scale:1.18 });
+          animate(w, { opacity:[0, 1], duration:1, delay:20 });
+          animate(w, { scale:[1.18, 1], duration:90, delay:20, ease:STEP(2) });
+        }
+      }, covered);
 
-      setTimeout(finish, c.out + c.in + 200);
+      const leave = covered + c.hold;
+      setTimeout(() => {
+        animate(cut.el, { [cut.axis]:[0, cut.exit], duration:c.out, ease:OUT });
+        if (cut.under) animate(cut.under, { [cut.axis]:[0, cut.exit], duration:c.out, delay:LAG, ease:OUT });
+        if (c.flash) Impact.flash(.14, { dur:70, delay:30 });
+        animate(view, { translateX:[par * .6, 0], duration:c.out, ease:'outCubic', onComplete:finish });
+      }, leave);
+
+      setTimeout(finish, leave + c.out + (cut.under ? LAG : 0) + 200);
     });
-  },
-
-  bar(f, dir, dur){
-    const el = document.createElement('i');
-    el.className = 'gutterbar';
-    el.style.cssText = `left:${f.left}px;top:${f.top}px;height:${f.height}px`;
-    const from = dir > 0 ? f.width + 12 : -20;
-    const to   = dir > 0 ? -20 : f.width + 12;
-    aset(el, { translateX:from, opacity:1 });
-    document.body.appendChild(el);
-    animate(el, { translateX:[from, to], duration:dur, ease:'inOutQuad',
-                  onComplete:() => el.remove() });
   },
 };
