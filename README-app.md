@@ -143,13 +143,16 @@ screen, and one `Transit` object owns every page change.
   scripts arrive; JS only holds the composed page until the first render is
   done and then opens it. Signing in builds the same scene and slides it over
   the form. ~1.3s from first paint, never less than 1s on a fast load.
-- **Page transitions** (`Transit.run`) — a snapshot of the leaving page slides
-  and fades out while the next page slides in from the direction of travel
-  (forward along the tab strip from the right, back from the left). Each
-  destination has its own character: Home quick with a gutter bar, Record
-  restrained, Scan an immediate focus snap, Rewards a lifted arrival with a
-  paper flash, Member calm, board tools hard stepped cuts. 200–450ms, the
-  swap happens under the snapshot, the same tab tapped twice is instant.
+- **Page transitions** (`Transit.run`) — the gutter cut. An ink panel with a
+  tilted leading edge sweeps in from the direction of travel (forward along
+  the tab strip from the right, back from the left) and pushes the leaving
+  page out; under full cover the page swaps and the destination's title is
+  stamped onto the panel at the exact position of the real title; the panel
+  sweeps off and the new page settles with its title already in place. Each
+  destination keeps the same cut with its own personality: Home quick with a
+  halftone edge, Record slow and straight, Scan short, Rewards a layered
+  halftone panel under the ink with a paper flash, Member slowest, board
+  tools crisp. 430–650ms. Reduced motion crossfades the snapshot in 140ms.
 - **Sign-out** (`Scenes.exit`) — the panels slam shut over the app, the paper
   fills the gutters, SIGNED OUT is stamped, and the whole page drops away to
   the sign-in spread. Distinct from both the opening and the transitions.

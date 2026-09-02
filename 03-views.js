@@ -340,28 +340,31 @@ const Views = {
         ? { lab:'Already stamped', at:`GM ${pad(open.no)}` }
         : { lab:'Checking in to', at:`GM ${pad(open.no)} / ${fmtDay(open.date)} / ${esc(open.place)}` };
 
-    return `<div class="view view--scan${MANUAL_ENTRY ? '' : ' view--scan-solo'}">
-      <header class="rechead" data-enter>
+    return `<div class="view view--scan">
+      <header class="rechead rechead--tight" data-enter>
         <h1 class="title rechead__title">Scan</h1>
       </header>
-
-      <p class="standing" data-enter>
-        <span class="standing__lab">${standing.lab}</span>
-        <span class="standing__at">${standing.at}</span>
-      </p>
 
       <div class="viewer" id="viewer" data-enter>
         <video id="cam" playsinline muted autoplay></video>
         <div class="viewer__scrim" aria-hidden="true"></div>
-        <div class="viewer__grain" aria-hidden="true"></div>
         <div class="reticle" id="reticle" aria-hidden="true">
           <span class="reticle__c reticle__c--tl"></span>
           <span class="reticle__c reticle__c--tr"></span>
           <span class="reticle__c reticle__c--bl"></span>
           <span class="reticle__c reticle__c--br"></span>
         </div>
-        <div class="viewer__status"><span class="viewer__msg" id="scanMsg">Starting camera</span></div>
       </div>
+
+      <p class="scanline scanline--boot" id="scanLine" data-enter aria-live="polite">
+        <i class="scanline__dot" aria-hidden="true"></i>
+        <span class="scanline__msg" id="scanMsg">Starting camera</span>
+      </p>
+
+      <p class="standing" data-enter>
+        <span class="standing__lab">${standing.lab}</span>
+        <span class="standing__at">${standing.at}</span>
+      </p>
 
       ${MANUAL_ENTRY ? `<div class="manual" data-enter>
         <label class="manual__lab" for="manualInput">Or enter the check-in code</label>

@@ -362,8 +362,14 @@ select.input{padding-right:var(--s4)}
   --si:var(--ink);--sp:var(--paper)}
 .ghost{position:fixed;z-index:50;overflow:hidden;background:var(--paper);
   pointer-events:none;will-change:transform,opacity}
-.gutterbar{position:fixed;z-index:56;width:8px;pointer-events:none;
-  background:var(--ink);opacity:0;will-change:transform}
+.cutbox{position:fixed;z-index:56;overflow:hidden;pointer-events:none;
+  contain:layout paint}
+.slab{position:absolute;background:var(--ink);will-change:transform}
+.slab--tone,.slab__tone{background:var(--paper) radial-gradient(circle at 50% 50%,
+  var(--ink) 0 1.4px,transparent 1.6px) 0 0/7px 7px}
+.slab__tone{position:absolute;top:0;bottom:0}
+.slab__word{position:absolute;margin:0;color:var(--paper);white-space:nowrap;
+  opacity:0;transform-origin:0 50%}
 
 .scene--play .scene__panel--a .scene__ink{animation:sceneInk 110ms steps(3,end) calc(var(--lead,0ms) + 90ms) both}
 .scene--play .scene__panel--b .scene__ink{animation:sceneInk 100ms steps(3,end) calc(var(--lead,0ms) + 210ms) both}
