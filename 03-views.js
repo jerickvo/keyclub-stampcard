@@ -178,6 +178,15 @@ const C = {
   },
 };
 
+C.account = () => `<section class="acct" data-enter>
+  <h2 class="acct__mark">Account</h2>
+  <div class="acct__row">
+    <span class="acct__lab">Reduced motion</span>
+    <button class="motion-btn" type="button" data-motion></button>
+  </div>
+  <button class="acct__out" data-signout type="button">Sign out</button>
+</section>`;
+
 const MANUAL_ENTRY = false;
 
 const Views = {
@@ -420,14 +429,30 @@ const Views = {
         </dl>
       </section>
 
-      <section class="acct" data-enter>
-        <h2 class="acct__mark">Account</h2>
-        <div class="acct__row">
-          <span class="acct__lab">Reduced motion</span>
-          <button class="motion-btn" type="button" data-motion></button>
+      ${C.account()}
+    </div>`;
+  },
+
+  baccount(){
+    const name   = memberName();
+    const handle = (Store.user && Store.user.username) || name;
+    return `<div class="view view--member view--account">
+      <header class="rechead rechead--tight" data-enter>
+        <h1 class="title rechead__title">Account</h1>
+      </header>
+
+      <section class="who" data-enter>
+        <div class="who__mark" aria-hidden="true">
+          <span class="who__org">Cali-Nev-Ha District</span>
         </div>
-        <button class="acct__out" data-signout type="button">Sign out</button>
+        <span class="who__emblem" aria-hidden="true">${brandSeal('cnh')}</span>
+        <div class="who__id">
+          <p class="who__hand">Signed in / Board${handle !== name ? ` / ${esc(handle)}` : ''}</p>
+          <p class="who__name">${esc(name)}</p>
+        </div>
       </section>
+
+      ${C.account()}
     </div>`;
   },
 
