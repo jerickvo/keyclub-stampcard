@@ -298,11 +298,7 @@ select.input{padding-right:var(--s4)}
 
 .fx{position:fixed;inset:0;z-index:125;pointer-events:none;overflow:hidden;
   contain:layout paint}
-.scrim{position:absolute;inset:0;background:var(--ink);opacity:0}
 .flash{position:absolute;inset:0;background:var(--paper);opacity:0}
-.frameword{position:absolute;inset:0;display:grid;place-items:center;opacity:0;
-  font-family:var(--f-display);font-size:clamp(48px,13vw,150px);
-  text-transform:uppercase;color:var(--ink)}
 
 .fxdefs{position:absolute;width:0;height:0}
 
@@ -433,7 +429,6 @@ select.input{padding-right:var(--s4)}
   text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
 #barBrand svg{width:26px;height:26px}
 
-.lines line,.lines path{stroke:var(--ink);fill:var(--ink)}
 
 .toasts{left:var(--gutter);right:var(--gutter);max-width:none;
   bottom:calc(var(--tabs-h) + var(--s3) + env(safe-area-inset-bottom, 0px))}
@@ -500,7 +495,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
   --space-stack-sm:clamp(10px,1vw,14px);
   --space-stack:clamp(14px,1.5vw,22px);
   --space-panel:clamp(16px,2.2vw,28px);
-  --space-panel-lg:clamp(20px,3vw,40px);
   --space-tier:clamp(14px,1.7vw,26px);
   --space-block:clamp(30px,4vw,68px);
 }
@@ -533,7 +527,7 @@ main#view{padding-top:var(--space-tier);
 
 :where(svg:not(.fxdefs):not([width])){width:22px;height:22px;flex:none}
 
-.lines,.qrpanel__code svg{width:100%;height:100%}
+.qrpanel__code svg{width:100%;height:100%}
 .btn svg,.motion-btn svg{width:16px;height:16px}
 .rail__nav button svg,.tabs button svg{width:18px;height:18px}
 

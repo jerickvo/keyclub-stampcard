@@ -31,7 +31,7 @@ const AuthUI = {
     if (st === 'unavailable'){
       return `<div class="setupbox setupbox--warn">
         <p class="kicker">Backend connection failed</p>
-        <p>Keystamp is configured but could not reach Supabase. This is not
+        <p>Keystamp could not reach the club records. This is not
            a problem with your username or password.</p>
         <p class="setupbox__hint">Check the connection and reload. If it keeps
            happening, tell a board member.</p>
@@ -425,13 +425,10 @@ document.addEventListener('click', e => {
     if (claim.disabled) return;
     claim.disabled = true;
     Store.claimReward(claim.dataset.claim).then(r => {
-      FX.impactFrame({ word:'Claimed', angle:-24 });
-
-      setTimeout(() => {
-        toast({ key:'claim', title:`${r.name} claimed`,
-                detail:'Show this screen to a board member to pick it up.' });
-        go('rewards');
-      }, 220);
+      go('rewards', { instant:true });
+      FX.claimStamp($(`[data-reward="${claim.dataset.claim}"]`));
+      setTimeout(() => toast({ key:'claim', title:`${r.name} claimed`,
+        detail:'Show this screen to a board member to pick it up.' }), 260);
     }).catch(() => {
       claim.disabled = false;
       toast({ key:'claim', bad:true, title:'Could not claim',

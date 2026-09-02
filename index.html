@@ -368,11 +368,7 @@ select.input{padding-right:var(--s4)}
 
 .fx{position:fixed;inset:0;z-index:125;pointer-events:none;overflow:hidden;
   contain:layout paint}
-.scrim{position:absolute;inset:0;background:var(--ink);opacity:0}
 .flash{position:absolute;inset:0;background:var(--paper);opacity:0}
-.frameword{position:absolute;inset:0;display:grid;place-items:center;opacity:0;
-  font-family:var(--f-display);font-size:clamp(48px,13vw,150px);
-  text-transform:uppercase;color:var(--ink)}
 
 .fxdefs{position:absolute;width:0;height:0}
 
@@ -503,7 +499,6 @@ select.input{padding-right:var(--s4)}
   text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
 #barBrand svg{width:26px;height:26px}
 
-.lines line,.lines path{stroke:var(--ink);fill:var(--ink)}
 
 .toasts{left:var(--gutter);right:var(--gutter);max-width:none;
   bottom:calc(var(--tabs-h) + var(--s3) + env(safe-area-inset-bottom, 0px))}
@@ -570,7 +565,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
   --space-stack-sm:clamp(10px,1vw,14px);
   --space-stack:clamp(14px,1.5vw,22px);
   --space-panel:clamp(16px,2.2vw,28px);
-  --space-panel-lg:clamp(20px,3vw,40px);
   --space-tier:clamp(14px,1.7vw,26px);
   --space-block:clamp(30px,4vw,68px);
 }
@@ -603,7 +597,7 @@ main#view{padding-top:var(--space-tier);
 
 :where(svg:not(.fxdefs):not([width])){width:22px;height:22px;flex:none}
 
-.lines,.qrpanel__code svg{width:100%;height:100%}
+.qrpanel__code svg{width:100%;height:100%}
 .btn svg,.motion-btn svg{width:16px;height:16px}
 .rail__nav button svg,.tabs button svg{width:18px;height:18px}
 
@@ -1034,7 +1028,7 @@ body{
 .meetgrid__form{grid-area:form}
 .meetgrid__up{grid-area:up;min-width:0}
 .meetgrid__held{grid-area:held;min-width:0}
-@media(min-width:1024px){
+@media(min-width:1280px){
   .meetgrid{grid-template-columns:minmax(0,58fr) minmax(0,42fr);
     column-gap:clamp(20px,3vw,44px);
     grid-template-areas:"err err" "up form" "held form"}
@@ -1373,12 +1367,18 @@ main#view:focus,main#view:focus-visible{outline:none}
 .deck .act--live .act__btn{border-right:0}
 
 @media(min-width:1024px){
-  .deck,.deck--live{grid-template-columns:minmax(0,72fr) minmax(0,28fr);
-    grid-template-areas:"card act" "card ahead";
-    gap:clamp(20px,2.6vw,40px);align-items:start;align-content:start}
+  .deck{grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    grid-template-areas:"card card" "act ahead";
+    gap:clamp(20px,2.6vw,40px);align-items:start;align-content:start;
+    margin-top:calc(var(--s3) * -1)}
+  .deck--live{grid-template-areas:"act act" "card card" "ahead ahead"}
   .deck > .card{max-width:none}
-
-  .deck{margin-top:calc(var(--s3) * -1)}
+}
+@media(min-width:1280px){
+  .deck,.deck--live{grid-template-columns:minmax(0,70fr) minmax(0,30fr);
+    grid-template-areas:"card act" "card ahead"}
+  .deck .ahead__row{grid-template-columns:auto minmax(0,1fr)}
+  .deck .ahead__at{grid-column:2;justify-self:start;text-align:left}
 }
 
 .ahead{position:relative;display:flex;flex-direction:column;
@@ -2210,7 +2210,6 @@ button,input,select,textarea{font-family:inherit}
 </nav>
 
 <div class="fx" id="fx" aria-hidden="true">
-  <span class="scrim" id="scrim"></span>
   <span class="flash" id="flash"></span>
 </div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
@@ -15765,7 +15764,7 @@ const C = {
 
     const el   = state === 'open' ? 'button' : 'div';
     const attr = state === 'open' ? ' type="button" data-go="scan"' : '';
-    const sr   = { set:'Attended', open:'Check in open', miss:'Missed',
+    const sr   = { set:'Attended', open:'Check-in open', miss:'Missed',
                    upcoming:'Scheduled' }[state];
 
     return `<${el} class="lrow lrow--${state}"${attr}>
@@ -16214,9 +16213,9 @@ const BoardUI = {
         </div>`
         : `<div class="bnow bnow--none">
              <p class="bnow__lab">Next general meeting</p>
-             <p class="bnow__no">None</p>
-             <p class="bnow__at">No general meeting is on the calendar yet.</p>
-             <button class="bnow__go" type="button" data-btab="meetings">Add one</button>
+             <p class="bnow__no">None yet</p>
+             <p class="bnow__at">Schedule one to open check-in.</p>
+             <button class="bnow__go" type="button" data-btab="meetings">Schedule one</button>
            </div>`}
 
       <section class="standing-band">
@@ -16558,23 +16557,11 @@ const SLAM_SEL = '.title,.spread__wm,.count__num b,.tally__fig,'
 
 const EASE = {
   CUT:    cubicBezier(.03,.9,.1,1),
-  ENERGY: cubicBezier(.4,0,.2,1),
   IMPACT: cubicBezier(.34,1.56,.5,1),
   CALM:   cubicBezier(.22,.61,.36,1),
-  OUT:    'outQuart',
 };
 
-const roll = i => (i * 2.399) % 1;
-
 const Impact = {
-  scrim(peak, { delay = 0, host = null, dur = 180 } = {}){
-    if (Motion.off) return;
-    const el = host ? this.plate(host, 'scrim') : $('#scrim');
-    if (!el) return;
-    animate(el, { opacity:[0, peak, 0], duration:dur, delay, ease:'outQuad',
-            onComplete:() => { if (host) el.remove(); } });
-  },
-
   flash(peak = .3, { delay = 0, host = null, dur = 52 } = {}){
     if (Motion.off) return;
     const el = host ? this.plate(host, 'flash') : $('#flash');
@@ -16590,14 +16577,6 @@ const Impact = {
     return el;
   },
 
-  pop(host, dur = 45){
-    if (Motion.off) return;
-    const el = host ? this.plate(host, 'flash') : $('#flash');
-    if (!el) return;
-    aset(el, { opacity:.92 });
-    setTimeout(() => { aset(el, { opacity:0 }); if (host) el.remove(); }, dur);
-  },
-
   shake(el, px = 5, dur = 110){
     if (!el || Motion.off) return;
     animate(el, { translateX:[0, -px, px * .7, -px * .35, 0],
@@ -16606,71 +16585,14 @@ const Impact = {
   },
 };
 
-const Lines = {
-  burst({ x = null, y = null, count = 30, host = null,
-          reach = 340, delay = 0, hot = false, dur = 300 } = {}){
-    if (Motion.off) return;
-    const parent = host || $('#fx');
-    if (!parent) return;
-    const box = document.createElement('div');
-    box.className = 'lines';
-    const b = parent.getBoundingClientRect();
-    const fx = x == null ? b.left + b.width / 2 : x;
-    const fy = y == null ? b.top + b.height / 2 : y;
-    box.style.transform = `translate(${fx - b.left}px,${fy - b.top}px)`;
-    parent.appendChild(box);
-
-    const frag = document.createDocumentFragment();
-    const els = [];
-    for (let i = 0; i < count; i++){
-      const r = roll(i);
-      const el = document.createElement('i');
-
-      el.className = hot && r > .88 ? 'r' : r > .55 ? 'd' : '';
-      const a = (i / count) * 360 + r * 14;
-      const start = 26 + r * 70;
-      el.style.width = (40 + r * 190) + 'px';
-      el.style.height = (r > .7 ? 2 : 1) + 'px';
-      el.dataset.a = a; el.dataset.s = start;
-      frag.appendChild(el); els.push(el);
-    }
-    box.appendChild(frag);
-
-    els.forEach((el, i) => {
-      const r = roll(i);
-      aset(el, { rotate:+el.dataset.a, translateX:+el.dataset.s, scaleX:.2 });
-      animate(el, { translateX:+el.dataset.s + reach * (.55 + r * .75),
-        scaleX:[.2, 1, .5],
-        opacity:[{ value:.9, duration:dur * .22 }, { value:0, duration:dur * .78 }],
-        duration:dur, delay:delay + i * 3, ease:EASE.CUT });
-    });
-
-    setTimeout(() => box.remove(), delay + dur + count * 3 + 60);
-  },
-};
-
 const FX = {
-  impactFrame({ word = '', angle = -20, host = null, hot = true } = {}){
-    if (Motion.off) return;
-    const parent = host || $('#fx');
-    if (!parent) return;
-
-    Impact.scrim(.78, { host, dur:230 });
-    Impact.flash(.3, { delay:30, host, dur:50 });
-
-    if (word){
-      const el = document.createElement('div');
-      el.className = 'frameword' + (hot ? '' : ' frameword--k');
-      el.textContent = word;
-      parent.appendChild(el);
-      createTimeline({ onComplete:() => el.remove() })
-        .add(el, { opacity:[0, 1], scale:[1.34, 1], skewX:[-9, 0],
-               duration:110, ease:EASE.CUT }, 44)
-        .add(el, { scale:[1, 1.05], opacity:[1, 0], duration:80, ease:'inQuad' }, 210);
-    }
-
-    Lines.burst({ count:26, reach:300, delay:70, host, hot });
-    setTimeout(() => Impact.shake($('#shell'), 6, 120), 78);
+  claimStamp(row){
+    if (!row || Motion.off) return;
+    aset(row, { scale:1.04 });
+    animate(row, { scale:[1.04, 1], duration:120, ease:STEP(3),
+                   onComplete(){ Motion.settle(row); } });
+    Impact.flash(.22, { host:row, delay:40, dur:60 });
+    setTimeout(() => Impact.shake(row, 3, 90), 100);
   },
 
   pageEntrance(scope){
@@ -16737,7 +16659,7 @@ const FX = {
           <svg viewBox="0 0 64 64"><path d="${stampShape(7, 0)}"/></svg>
           <b class="acq__plus">+1</b>
         </div>
-        <p class="acq__meet">GM ${pad(meeting.no)} · ${fmtDate(meeting.date)} · MPR</p>
+        <p class="acq__meet">GM ${pad(meeting.no)} / ${fmtDate(meeting.date)} / MPR</p>
       </div>`;
     document.body.appendChild(scene);
     const clear = () => { try { scene.remove(); } catch (_) {} };
@@ -16755,8 +16677,8 @@ const FX = {
     setTimeout(() => Impact.shake(scene, 3, 80), 170);
 
     setTimeout(done, 540);
-    setTimeout(() => animate(scene, { opacity:[1, 0], duration:140,
-      ease:'inQuad', onComplete:clear }), 760);
+    setTimeout(() => animate(scene, { translateY:[0, -(innerHeight + 24)], duration:300,
+      ease:cubicBezier(.7, 0, .18, 1), onComplete:clear }), 760);
     setTimeout(clear, 2000);
   },
 
@@ -17340,7 +17262,7 @@ const Scanner = {
       denied:{ title:'Camera permission is off',
         body:'Allow camera access for this page in your browser settings, then reload.' + more },
       unavailable:{ title:'No camera found',
-        body:'Nothing on this device is reporting a camera.' + (MANUAL_ENTRY
+        body:'This device has no camera.' + (MANUAL_ENTRY
           ? ' Enter the check-in code below instead.'
           : ' Sign in on a phone with a camera to scan the code.') },
       unsupported:{ title:'Scanning needs a secure page',
@@ -17464,7 +17386,7 @@ const AuthUI = {
     if (st === 'unavailable'){
       return `<div class="setupbox setupbox--warn">
         <p class="kicker">Backend connection failed</p>
-        <p>Keystamp is configured but could not reach Supabase. This is not
+        <p>Keystamp could not reach the club records. This is not
            a problem with your username or password.</p>
         <p class="setupbox__hint">Check the connection and reload. If it keeps
            happening, tell a board member.</p>
@@ -17858,13 +17780,10 @@ document.addEventListener('click', e => {
     if (claim.disabled) return;
     claim.disabled = true;
     Store.claimReward(claim.dataset.claim).then(r => {
-      FX.impactFrame({ word:'Claimed', angle:-24 });
-
-      setTimeout(() => {
-        toast({ key:'claim', title:`${r.name} claimed`,
-                detail:'Show this screen to a board member to pick it up.' });
-        go('rewards');
-      }, 220);
+      go('rewards', { instant:true });
+      FX.claimStamp($(`[data-reward="${claim.dataset.claim}"]`));
+      setTimeout(() => toast({ key:'claim', title:`${r.name} claimed`,
+        detail:'Show this screen to a board member to pick it up.' }), 260);
     }).catch(() => {
       claim.disabled = false;
       toast({ key:'claim', bad:true, title:'Could not claim',

@@ -162,7 +162,7 @@ const C = {
 
     const el   = state === 'open' ? 'button' : 'div';
     const attr = state === 'open' ? ' type="button" data-go="scan"' : '';
-    const sr   = { set:'Attended', open:'Check in open', miss:'Missed',
+    const sr   = { set:'Attended', open:'Check-in open', miss:'Missed',
                    upcoming:'Scheduled' }[state];
 
     return `<${el} class="lrow lrow--${state}"${attr}>

@@ -112,7 +112,7 @@ body{
 .meetgrid__form{grid-area:form}
 .meetgrid__up{grid-area:up;min-width:0}
 .meetgrid__held{grid-area:held;min-width:0}
-@media(min-width:1024px){
+@media(min-width:1280px){
   .meetgrid{grid-template-columns:minmax(0,58fr) minmax(0,42fr);
     column-gap:clamp(20px,3vw,44px);
     grid-template-areas:"err err" "up form" "held form"}
@@ -451,12 +451,18 @@ main#view:focus,main#view:focus-visible{outline:none}
 .deck .act--live .act__btn{border-right:0}
 
 @media(min-width:1024px){
-  .deck,.deck--live{grid-template-columns:minmax(0,72fr) minmax(0,28fr);
-    grid-template-areas:"card act" "card ahead";
-    gap:clamp(20px,2.6vw,40px);align-items:start;align-content:start}
+  .deck{grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    grid-template-areas:"card card" "act ahead";
+    gap:clamp(20px,2.6vw,40px);align-items:start;align-content:start;
+    margin-top:calc(var(--s3) * -1)}
+  .deck--live{grid-template-areas:"act act" "card card" "ahead ahead"}
   .deck > .card{max-width:none}
-
-  .deck{margin-top:calc(var(--s3) * -1)}
+}
+@media(min-width:1280px){
+  .deck,.deck--live{grid-template-columns:minmax(0,70fr) minmax(0,30fr);
+    grid-template-areas:"card act" "card ahead"}
+  .deck .ahead__row{grid-template-columns:auto minmax(0,1fr)}
+  .deck .ahead__at{grid-column:2;justify-self:start;text-align:left}
 }
 
 .ahead{position:relative;display:flex;flex-direction:column;
