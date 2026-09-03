@@ -71,6 +71,7 @@ let navigating = false;
 
 let pendingNav = null;
 let booted = false;
+let loadSeq = 0;
 
 function syncHash(id){
   try { if (location.hash !== '#/' + id) history.replaceState(null, '', '#/' + id); }
@@ -107,7 +108,7 @@ function paintNav(){
 async function go(id, opts = {}){
   if (!ROUTES.includes(id)) id = 'home';
   id = gate(id);
-  if (navigating){ pendingNav = id; return; }
+  if (navigating){ pendingNav = { id, opts }; return; }
   if (current === 'scan' && id !== 'scan') Scanner.stop();
 
   const view = $('#view');
@@ -133,7 +134,7 @@ async function go(id, opts = {}){
     navigating = false;
     if (pendingNav !== null){
       const next = pendingNav; pendingNav = null;
-      if (next !== current) go(next);
+      if (next.id !== current || next.opts.force) go(next.id, next.opts);
     }
   } else {
     render();
@@ -194,6 +195,11 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target && e.target.id === 'manualInput'){
     e.preventDefault();
     $('#manualGo')?.click();
+    return;
+  }
+  if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.matches('[role="button"]')){
+    e.preventDefault();
+    e.target.click();
   }
 });
 
@@ -460,7 +466,8 @@ let boardStamp = false;
 
 async function loadBoard(){
   if (!Store.isBoard) return;
-  const pane = () => $('#boardPane');
+  const seq = ++loadSeq;
+  const pane = () => (seq === loadSeq ? $('#boardPane') : null);
   BoardUI.error = null;
   BoardUI.loading = true;
   if (pane()) pane().innerHTML = BoardUI.pane();
@@ -485,6 +492,7 @@ async function loadBoard(){
     BoardUI.error = String(err.message || 'SERVER_ERROR');
   }
 
+  if (seq !== loadSeq) return;
   BoardUI.loading = false;
   if (pane()){
     pane().innerHTML = BoardUI.pane();
@@ -541,7 +549,10 @@ try {
     await Backend.init();
     await Store.hydrate();
 
-    Store.onChange(() => { if (current) go(current, { instant:true }); paintIdentity(); });
+    Store.onChange(() => {
+      if (current && current !== 'auth') go(current, { instant:true });
+      paintIdentity();
+    });
 
     paintBrand();
     $('#barBrand').innerHTML  = wordmark();

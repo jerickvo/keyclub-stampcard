@@ -83,7 +83,7 @@ const C = {
         <polyline points="16.0,8.6 46.0,13.3 74.0,21.1 81.0,40.6 58.0,50.0 31.0,54.7 11.0,72.7 34.0,81.3 58.0,71.9 83.0,83.6"/></svg>`;
 
     const say = full
-      ? (goal ? 'Card complete — claim it in Rewards' : 'Card complete')
+      ? (goal ? 'Card complete. Claim it in Rewards' : 'Card complete')
       : goal ? `${p.remaining} more until ${goal.name.toLowerCase()}`
              : `${p.remaining} more to finish this card`;
 

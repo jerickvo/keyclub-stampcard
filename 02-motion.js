@@ -32,6 +32,7 @@ const releaseTransform = els => {
 
 const Reveal = {
   io: null,
+  fuses: new Set(),
 
   enter(el){
     clearTimeout(el._revealFuse);
@@ -57,12 +58,17 @@ const Reveal = {
     }
     this.io.observe(el);
     el._revealFuse = setTimeout(() => {
+      this.fuses.delete(el._revealFuse);
       this.io?.unobserve(el);
       this.enter(el);
     }, 6000);
+    this.fuses.add(el._revealFuse);
   },
 
-  clear(){ this.io?.disconnect(); this.io = null; },
+  clear(){
+    this.io?.disconnect(); this.io = null;
+    this.fuses.forEach(t => clearTimeout(t)); this.fuses.clear();
+  },
 };
 
 const $  = (s, r = document) => r.querySelector(s);
