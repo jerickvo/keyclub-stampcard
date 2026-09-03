@@ -87,6 +87,13 @@ Routing is hash-based (`#/record`). `gate()` in `06-app.js` is the enforcement
 point: signed-out visitors land on the sign-in spread whatever the hash says, a
 member cannot reach a board route, and a board account lands in Club Tools.
 
+Credentials: usernames are case-insensitive (`Config.canonUsername` lowercases
+them only to build the synthetic sign-in address; the typed form is kept as the
+display name), passwords are case-sensitive and are passed to Supabase exactly
+as typed. The sign-in inputs are set in the mono face on purpose: the body face
+is unicase, so anything typed in it looks uppercase. Each password field has a
+show/hide toggle that swaps the input type and never touches the value.
+
 ---
 
 ## Attendance and the QR code

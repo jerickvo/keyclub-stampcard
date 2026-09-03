@@ -203,6 +203,10 @@ document.addEventListener('keydown', e => {
   }
 });
 
+document.addEventListener('mousedown', e => {
+  if (e.target.closest('[data-eye]')) e.preventDefault();
+});
+
 let bqTimer = null;
 document.addEventListener('input', e => {
   if (e.target.id === 'bq'){
@@ -388,6 +392,28 @@ document.addEventListener('click', e => {
       .catch(() => { bend.disabled = false; bend.textContent = 'End attendance';
         toast({ key:'board', bad:true, title:'Could not end',
                 detail:'Attendance is still open. Try again.' }); });
+    return;
+  }
+
+  const eye = e.target.closest('[data-eye]');
+  if (eye){
+    const input = document.getElementById(eye.dataset.eye);
+    if (!input) return;
+    const show = input.type === 'password';
+    const held = document.activeElement === input;
+    const start = input.selectionStart, end = input.selectionEnd, dir = input.selectionDirection;
+    input.type = show ? 'text' : 'password';
+    eye.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    eye.setAttribute('aria-pressed', String(show));
+    eye.innerHTML = show ? ICON.eyeOff : ICON.eye;
+    if (held && start !== null){
+      const restore = () => {
+        if (document.activeElement !== input) input.focus({ preventScroll:true });
+        input.setSelectionRange(start, end, dir || 'none');
+      };
+      restore();
+      setTimeout(restore, 0);
+    }
     return;
   }
 
