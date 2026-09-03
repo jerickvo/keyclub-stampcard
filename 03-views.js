@@ -461,6 +461,19 @@ const Views = {
 
   auth(){
     const mode = AuthUI.mode;
+    const passwordField = ({ id, name, label, autocomplete, placeholder = '' }) => `
+          <div class="authp__f">
+            <label class="authp__lab" for="${id}">${label}</label>
+            <div class="authp__pw">
+              <input class="authp__in" id="${id}" name="${name}" type="password"
+                     autocomplete="${autocomplete}" autocapitalize="none"
+                     autocorrect="off" spellcheck="false"
+                     placeholder="${placeholder}">
+              <button class="authp__eye" type="button" data-eye="${id}"
+                      aria-label="Show password" aria-pressed="false"
+                      aria-controls="${id}">${ICON.eye}</button>
+            </div>
+          </div>`;
     const up = mode === 'up';
 
     return `<div class="view view--auth">
@@ -488,18 +501,12 @@ const Views = {
                    placeholder="${up ? 'letters, numbers, _ and .' : 'your username'}">
           </div>
 
-          <div class="authp__f">
-            <label class="authp__lab" for="authPass">Password</label>
-            <input class="authp__in" id="authPass" name="password" type="password"
-                   autocomplete="${up ? 'new-password' : 'current-password'}"
-                   placeholder="${up ? 'at least 8 characters' : ''}">
-          </div>
+          ${passwordField({ id:'authPass', name:'password', label:'Password',
+                            autocomplete: up ? 'new-password' : 'current-password',
+                            placeholder: up ? 'at least 8 characters' : '' })}
 
-          ${up ? `<div class="authp__f">
-            <label class="authp__lab" for="authPass2">Confirm password</label>
-            <input class="authp__in" id="authPass2" name="confirm" type="password"
-                   autocomplete="new-password">
-          </div>` : ''}
+          ${up ? passwordField({ id:'authPass2', name:'confirm', label:'Confirm password',
+                                 autocomplete:'new-password' }) : ''}
 
           <p class="authp__err" id="authErr" role="alert" aria-live="assertive" hidden></p>
 

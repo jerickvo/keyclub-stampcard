@@ -584,10 +584,20 @@ button,input,select,textarea{font-family:inherit}
   min-height:var(--tap);padding:10px 12px;
   border:var(--edge-panel) solid var(--ink);border-radius:0;
   background:var(--paper);color:var(--ink);
-  font-family:var(--f-body);font-size:max(16px,var(--t-body))}
+  font-family:var(--f-mono);font-size:max(16px,var(--t-body))}
 .authp__in::placeholder{color:var(--tone)}
 .authp__in:focus-visible{outline:var(--edge-panel) solid var(--ink);
   outline-offset:2px}
+.authp__pw{position:relative;min-width:0}
+.authp__pw > .authp__in{padding-right:calc(var(--tap) + 6px)}
+.authp__eye{position:absolute;top:0;right:0;bottom:0;width:var(--tap);
+  min-height:var(--tap);display:flex;align-items:center;justify-content:center;
+  margin:0;padding:0;border:0;border-radius:0;background:none;
+  color:var(--ink-2);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.authp__eye svg{width:22px;height:22px;display:block}
+.authp__eye:hover,.authp__eye[aria-pressed="true"]{color:var(--ink)}
+.authp__eye:focus-visible{outline:var(--edge-panel) solid var(--ink);
+  outline-offset:-5px}
 
 .authp__err{margin:0;color:var(--ink);font-style:italic;font-weight:700;
   border-left:var(--edge-frame) solid var(--ink);padding-left:10px}
