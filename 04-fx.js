@@ -16,23 +16,11 @@ const SLAM_SEL = '.title,.spread__wm,.count__num b,.tally__fig,'
 
 const EASE = {
   CUT:    cubicBezier(.03,.9,.1,1),
-  ENERGY: cubicBezier(.4,0,.2,1),
   IMPACT: cubicBezier(.34,1.56,.5,1),
   CALM:   cubicBezier(.22,.61,.36,1),
-  OUT:    'outQuart',
 };
 
-const roll = i => (i * 2.399) % 1;
-
 const Impact = {
-  scrim(peak, { delay = 0, host = null, dur = 180 } = {}){
-    if (Motion.off) return;
-    const el = host ? this.plate(host, 'scrim') : $('#scrim');
-    if (!el) return;
-    animate(el, { opacity:[0, peak, 0], duration:dur, delay, ease:'outQuad',
-            onComplete:() => { if (host) el.remove(); } });
-  },
-
   flash(peak = .3, { delay = 0, host = null, dur = 52 } = {}){
     if (Motion.off) return;
     const el = host ? this.plate(host, 'flash') : $('#flash');
@@ -48,14 +36,6 @@ const Impact = {
     return el;
   },
 
-  pop(host, dur = 45){
-    if (Motion.off) return;
-    const el = host ? this.plate(host, 'flash') : $('#flash');
-    if (!el) return;
-    aset(el, { opacity:.92 });
-    setTimeout(() => { aset(el, { opacity:0 }); if (host) el.remove(); }, dur);
-  },
-
   shake(el, px = 5, dur = 110){
     if (!el || Motion.off) return;
     animate(el, { translateX:[0, -px, px * .7, -px * .35, 0],
@@ -64,71 +44,14 @@ const Impact = {
   },
 };
 
-const Lines = {
-  burst({ x = null, y = null, count = 30, host = null,
-          reach = 340, delay = 0, hot = false, dur = 300 } = {}){
-    if (Motion.off) return;
-    const parent = host || $('#fx');
-    if (!parent) return;
-    const box = document.createElement('div');
-    box.className = 'lines';
-    const b = parent.getBoundingClientRect();
-    const fx = x == null ? b.left + b.width / 2 : x;
-    const fy = y == null ? b.top + b.height / 2 : y;
-    box.style.transform = `translate(${fx - b.left}px,${fy - b.top}px)`;
-    parent.appendChild(box);
-
-    const frag = document.createDocumentFragment();
-    const els = [];
-    for (let i = 0; i < count; i++){
-      const r = roll(i);
-      const el = document.createElement('i');
-
-      el.className = hot && r > .88 ? 'r' : r > .55 ? 'd' : '';
-      const a = (i / count) * 360 + r * 14;
-      const start = 26 + r * 70;
-      el.style.width = (40 + r * 190) + 'px';
-      el.style.height = (r > .7 ? 2 : 1) + 'px';
-      el.dataset.a = a; el.dataset.s = start;
-      frag.appendChild(el); els.push(el);
-    }
-    box.appendChild(frag);
-
-    els.forEach((el, i) => {
-      const r = roll(i);
-      aset(el, { rotate:+el.dataset.a, translateX:+el.dataset.s, scaleX:.2 });
-      animate(el, { translateX:+el.dataset.s + reach * (.55 + r * .75),
-        scaleX:[.2, 1, .5],
-        opacity:[{ value:.9, duration:dur * .22 }, { value:0, duration:dur * .78 }],
-        duration:dur, delay:delay + i * 3, ease:EASE.CUT });
-    });
-
-    setTimeout(() => box.remove(), delay + dur + count * 3 + 60);
-  },
-};
-
 const FX = {
-  impactFrame({ word = '', angle = -20, host = null, hot = true } = {}){
-    if (Motion.off) return;
-    const parent = host || $('#fx');
-    if (!parent) return;
-
-    Impact.scrim(.78, { host, dur:230 });
-    Impact.flash(.3, { delay:30, host, dur:50 });
-
-    if (word){
-      const el = document.createElement('div');
-      el.className = 'frameword' + (hot ? '' : ' frameword--k');
-      el.textContent = word;
-      parent.appendChild(el);
-      createTimeline({ onComplete:() => el.remove() })
-        .add(el, { opacity:[0, 1], scale:[1.34, 1], skewX:[-9, 0],
-               duration:110, ease:EASE.CUT }, 44)
-        .add(el, { scale:[1, 1.05], opacity:[1, 0], duration:80, ease:'inQuad' }, 210);
-    }
-
-    Lines.burst({ count:26, reach:300, delay:70, host, hot });
-    setTimeout(() => Impact.shake($('#shell'), 6, 120), 78);
+  claimStamp(row){
+    if (!row || Motion.off) return;
+    aset(row, { scale:1.04 });
+    animate(row, { scale:[1.04, 1], duration:120, ease:STEP(3),
+                   onComplete(){ Motion.settle(row); } });
+    Impact.flash(.22, { host:row, delay:40, dur:60 });
+    setTimeout(() => Impact.shake(row, 3, 90), 100);
   },
 
   pageEntrance(scope){
@@ -195,7 +118,7 @@ const FX = {
           <svg viewBox="0 0 64 64"><path d="${stampShape(7, 0)}"/></svg>
           <b class="acq__plus">+1</b>
         </div>
-        <p class="acq__meet">GM ${pad(meeting.no)} · ${fmtDate(meeting.date)} · MPR</p>
+        <p class="acq__meet">GM ${pad(meeting.no)} / ${fmtDate(meeting.date)} / MPR</p>
       </div>`;
     document.body.appendChild(scene);
     const clear = () => { try { scene.remove(); } catch (_) {} };
@@ -213,8 +136,8 @@ const FX = {
     setTimeout(() => Impact.shake(scene, 3, 80), 170);
 
     setTimeout(done, 540);
-    setTimeout(() => animate(scene, { opacity:[1, 0], duration:140,
-      ease:'inQuad', onComplete:clear }), 760);
+    setTimeout(() => animate(scene, { translateY:[0, -(innerHeight + 24)], duration:300,
+      ease:cubicBezier(.7, 0, .18, 1), onComplete:clear }), 760);
     setTimeout(clear, 2000);
   },
 

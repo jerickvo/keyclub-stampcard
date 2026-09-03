@@ -300,7 +300,8 @@ const Transit = {
     const x = r.left - f.left + (cut.vertical ? 0 : cut.off);
     const y = r.top - f.top + (cut.vertical ? cut.off : 0);
     w.style.cssText = `left:${x}px;top:${y}px;width:${Math.ceil(r.width) + 6}px;` +
-      `font:${cs.font};letter-spacing:${cs.letterSpacing};text-transform:${cs.textTransform};` +
+      `font-family:${cs.fontFamily};font-size:${cs.fontSize};font-weight:${cs.fontWeight};` +
+      `font-style:${cs.fontStyle};letter-spacing:${cs.letterSpacing};text-transform:${cs.textTransform};` +
       `line-height:${cs.lineHeight};padding:${cs.padding}`;
     cut.el.appendChild(w);
     return w;

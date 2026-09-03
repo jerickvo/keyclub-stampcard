@@ -135,7 +135,7 @@ const Config = {
     if (!u) return 'Username is required.';
     if (u.length < this.USERNAME_MIN) return `Username must be at least ${this.USERNAME_MIN} characters.`;
     if (u.length > this.USERNAME_MAX) return `Username must be ${this.USERNAME_MAX} characters or fewer.`;
-    if (!this.USERNAME_RE.test(u)) return 'Username can only use letters, numbers, underscore and full stop.';
+    if (!this.USERNAME_RE.test(u)) return 'Username can only use letters, numbers, underscores and periods.';
     if (this.USERNAME_BLOCKED.includes(this.canonUsername(u))) return 'That username is reserved. Pick another.';
     return null;
   },

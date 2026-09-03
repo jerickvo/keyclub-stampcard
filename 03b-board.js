@@ -85,9 +85,9 @@ const BoardUI = {
         </div>`
         : `<div class="bnow bnow--none">
              <p class="bnow__lab">Next general meeting</p>
-             <p class="bnow__no">None</p>
-             <p class="bnow__at">No general meeting is on the calendar yet.</p>
-             <button class="bnow__go" type="button" data-btab="meetings">Add one</button>
+             <p class="bnow__no">None yet</p>
+             <p class="bnow__at">Schedule one to open check-in.</p>
+             <button class="bnow__go" type="button" data-btab="meetings">Schedule one</button>
            </div>`}
 
       <section class="standing-band">

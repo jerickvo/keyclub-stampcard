@@ -111,9 +111,7 @@ own and is never briefly invalid. The token text is never displayed —
 printing it would hand every member in the room something to forward.
 
 The browser cannot forge a token: the secret exists only in the
-functions' environment. There is no client-side verifier. The prototype
-FNV/secret code was **deleted**, not disabled, and the test suite
-asserts those strings are absent from the built bundle.
+functions' environment. There is no client-side verifier.
 
 `verify-attendance` checks, in order: caller's JWT → HMAC signature
 (constant-time compare) → expiry **on the server clock** → session

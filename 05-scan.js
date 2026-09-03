@@ -156,7 +156,7 @@ const Scanner = {
       denied:{ title:'Camera permission is off',
         body:'Allow camera access for this page in your browser settings, then reload.' + more },
       unavailable:{ title:'No camera found',
-        body:'Nothing on this device is reporting a camera.' + (MANUAL_ENTRY
+        body:'This device has no camera.' + (MANUAL_ENTRY
           ? ' Enter the check-in code below instead.'
           : ' Sign in on a phone with a camera to scan the code.') },
       unsupported:{ title:'Scanning needs a secure page',

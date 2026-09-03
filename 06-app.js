@@ -31,7 +31,7 @@ const AuthUI = {
     if (st === 'unavailable'){
       return `<div class="setupbox setupbox--warn">
         <p class="kicker">Backend connection failed</p>
-        <p>Keystamp is configured but could not reach Supabase. This is not
+        <p>Keystamp could not reach the club records. This is not
            a problem with your username or password.</p>
         <p class="setupbox__hint">Check the connection and reload. If it keeps
            happening, tell a board member.</p>
@@ -71,6 +71,7 @@ let navigating = false;
 
 let pendingNav = null;
 let booted = false;
+let loadSeq = 0;
 
 function syncHash(id){
   try { if (location.hash !== '#/' + id) history.replaceState(null, '', '#/' + id); }
@@ -107,7 +108,7 @@ function paintNav(){
 async function go(id, opts = {}){
   if (!ROUTES.includes(id)) id = 'home';
   id = gate(id);
-  if (navigating){ pendingNav = id; return; }
+  if (navigating){ pendingNav = { id, opts }; return; }
   if (current === 'scan' && id !== 'scan') Scanner.stop();
 
   const view = $('#view');
@@ -133,7 +134,7 @@ async function go(id, opts = {}){
     navigating = false;
     if (pendingNav !== null){
       const next = pendingNav; pendingNav = null;
-      if (next !== current) go(next);
+      if (next.id !== current || next.opts.force) go(next.id, next.opts);
     }
   } else {
     render();
@@ -194,6 +195,11 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target && e.target.id === 'manualInput'){
     e.preventDefault();
     $('#manualGo')?.click();
+    return;
+  }
+  if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.matches('[role="button"]')){
+    e.preventDefault();
+    e.target.click();
   }
 });
 
@@ -425,13 +431,10 @@ document.addEventListener('click', e => {
     if (claim.disabled) return;
     claim.disabled = true;
     Store.claimReward(claim.dataset.claim).then(r => {
-      FX.impactFrame({ word:'Claimed', angle:-24 });
-
-      setTimeout(() => {
-        toast({ key:'claim', title:`${r.name} claimed`,
-                detail:'Show this screen to a board member to pick it up.' });
-        go('rewards');
-      }, 220);
+      go('rewards', { instant:true });
+      FX.claimStamp($(`[data-reward="${claim.dataset.claim}"]`));
+      setTimeout(() => toast({ key:'claim', title:`${r.name} claimed`,
+        detail:'Show this screen to a board member to pick it up.' }), 260);
     }).catch(() => {
       claim.disabled = false;
       toast({ key:'claim', bad:true, title:'Could not claim',
@@ -463,7 +466,8 @@ let boardStamp = false;
 
 async function loadBoard(){
   if (!Store.isBoard) return;
-  const pane = () => $('#boardPane');
+  const seq = ++loadSeq;
+  const pane = () => (seq === loadSeq ? $('#boardPane') : null);
   BoardUI.error = null;
   BoardUI.loading = true;
   if (pane()) pane().innerHTML = BoardUI.pane();
@@ -488,6 +492,7 @@ async function loadBoard(){
     BoardUI.error = String(err.message || 'SERVER_ERROR');
   }
 
+  if (seq !== loadSeq) return;
   BoardUI.loading = false;
   if (pane()){
     pane().innerHTML = BoardUI.pane();
@@ -544,7 +549,10 @@ try {
     await Backend.init();
     await Store.hydrate();
 
-    Store.onChange(() => { if (current) go(current, { instant:true }); paintIdentity(); });
+    Store.onChange(() => {
+      if (current && current !== 'auth') go(current, { instant:true });
+      paintIdentity();
+    });
 
     paintBrand();
     $('#barBrand').innerHTML  = wordmark();

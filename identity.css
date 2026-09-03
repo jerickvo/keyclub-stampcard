@@ -62,17 +62,11 @@ body{
 }
 
 .bstats{gap:var(--edge-thin)}
-.bstat{
-  border:var(--edge-hair) solid var(--ink);background:var(--paper);
-  padding:var(--s4) var(--s4) var(--s5);
-}
-.bstat:first-child{
-  background:var(--ink);color:var(--paper);border-color:var(--ink);
-}
 
 .bstat:first-child b{color:var(--ink)}
 .bstat:first-child span{color:var(--ink-2)}
-.bstat b{font-size:clamp(26px,3.4vw,40px);line-height:.9}
+.bstat b{
+  line-height:.9}
 .bstat span{color:var(--ink-2)}
 
 .bmile__bar{border:var(--edge-hair) solid var(--ink);background:var(--paper);height:10px}
@@ -82,6 +76,7 @@ body{
 
 .brow{border-bottom:var(--edge-hair) solid var(--tone)}
 .brow:hover,.brow:focus-visible{background:var(--tint)}
+.brow:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:-2px}
 .brow__no{color:var(--ink-2)}
 .brow__n{font-family:var(--f-head)}
 
@@ -112,7 +107,7 @@ body{
 .meetgrid__form{grid-area:form}
 .meetgrid__up{grid-area:up;min-width:0}
 .meetgrid__held{grid-area:held;min-width:0}
-@media(min-width:1024px){
+@media(min-width:1280px){
   .meetgrid{grid-template-columns:minmax(0,58fr) minmax(0,42fr);
     column-gap:clamp(20px,3vw,44px);
     grid-template-areas:"err err" "up form" "held form"}
@@ -256,8 +251,6 @@ main#view:focus,main#view:focus-visible{outline:none}
   [data-screen="auth"] .rail{display:none}
   [data-screen="auth"] .shell{grid-template-columns:1fr}
 }
-
-.view--home{display:flex;flex-direction:column;gap:var(--s4)}
 
 .view--home .card__field{min-height:clamp(300px,38vw,500px)}
 
@@ -445,18 +438,24 @@ main#view:focus,main#view:focus-visible{outline:none}
 
 .deck .act--live .act__btn{
   clip-path:polygon(0 clamp(10px,2vw,22px),100% 0,100% 100%,0 100%);
-  padding-top:calc(var(--s5) + clamp(10px,2vw,22px))}
+  padding-top:calc(var(--s5) + clamp(10px,2vw,22px));
+  border-right:0}
 
 .deck .act--live{margin-right:calc(var(--gutter) * -1)}
-.deck .act--live .act__btn{border-right:0}
 
 @media(min-width:1024px){
-  .deck,.deck--live{grid-template-columns:minmax(0,72fr) minmax(0,28fr);
-    grid-template-areas:"card act" "card ahead";
-    gap:clamp(20px,2.6vw,40px);align-items:start;align-content:start}
+  .deck{grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    grid-template-areas:"card card" "act ahead";
+    gap:clamp(20px,2.6vw,40px);align-items:start;align-content:start;
+    margin-top:calc(var(--s3) * -1)}
+  .deck--live{grid-template-areas:"act act" "card card" "ahead ahead"}
   .deck > .card{max-width:none}
-
-  .deck{margin-top:calc(var(--s3) * -1)}
+}
+@media(min-width:1280px){
+  .deck,.deck--live{grid-template-columns:minmax(0,70fr) minmax(0,30fr);
+    grid-template-areas:"card act" "card ahead"}
+  .deck .ahead__row{grid-template-columns:auto minmax(0,1fr)}
+  .deck .ahead__at{grid-column:2;justify-self:start;text-align:left}
 }
 
 .ahead{position:relative;display:flex;flex-direction:column;
@@ -615,16 +614,18 @@ button,input,select,textarea{font-family:inherit}
     column-gap:0;align-content:center;
     padding-block:clamp(40px,7vh,96px)}
 
-  .spread__head{grid-row:1;align-self:start;
+  .spread__head{
+    grid-row:1;
     margin-top:calc(clamp(40px,7vh,96px) * -1);
-    padding-top:clamp(28px,6vh,64px)}
+    padding-top:clamp(28px,6vh,64px);
+    grid-column:1;
+    padding:0 var(--gutter);
+    align-self:start}
   .spread__field{right:auto;bottom:0;height:auto;
     width:54%}
 
   .spread__seal{--swirl:min(64vw,720px,74dvh);
     left:calc(var(--swirl) * -.3);bottom:calc(var(--swirl) * -.36)}
-
-  .spread__head{grid-column:1;padding:0 var(--gutter);align-self:start}
 
   .spread__wm{font-size:clamp(44px,7.4vw,104px)}
   .authp{grid-row:1;grid-column:2;margin:0 var(--gutter) 0 0;
@@ -932,8 +933,9 @@ button,input,select,textarea{font-family:inherit}
   border-color:var(--ink);
   margin-right:calc(var(--gutter) * -1);border-right:0;
   padding-block:clamp(22px,3.4vw,38px)}
-.tier--ready .tier__at{font-size:clamp(58px,10vw,110px)}
-.tier--ready .tier__at{color:var(--paper)}
+.tier--ready .tier__at{
+  font-size:clamp(58px,10vw,110px);
+  color:var(--paper)}
 .tier--ready .tier__desc{color:var(--tint)}
 .tier__claim{margin-top:auto;padding:10px var(--s4);cursor:pointer;
   border:var(--edge-panel) solid var(--paper);
