@@ -24,53 +24,6 @@ const Motion = {
   },
 };
 
-const releaseTransform = els => {
-  (Array.isArray(els) ? els : [els]).forEach(el => {
-    if (el && el.style) el.style.transform = '';
-  });
-};
-
-const Reveal = {
-  io: null,
-  fuses: new Set(),
-
-  enter(el){
-    clearTimeout(el._revealFuse);
-    if (el.dataset.revealed) return;
-    el.dataset.revealed = '1';
-    animate(el, { opacity:[0, 1], duration:MECH.CUT, ease:STEP(1) });
-    FX.slamType(el, MECH.BEAT);
-  },
-
-  watch(el){
-    if (Motion.off || !('IntersectionObserver' in window)){
-      el.style.opacity = '';
-      return;
-    }
-    if (!this.io){
-      this.io = new IntersectionObserver(entries => {
-        entries.forEach(en => {
-          if (!en.isIntersecting) return;
-          this.io.unobserve(en.target);
-          this.enter(en.target);
-        });
-      }, { rootMargin:'0px 0px -6% 0px', threshold:.04 });
-    }
-    this.io.observe(el);
-    el._revealFuse = setTimeout(() => {
-      this.fuses.delete(el._revealFuse);
-      this.io?.unobserve(el);
-      this.enter(el);
-    }, 6000);
-    this.fuses.add(el._revealFuse);
-  },
-
-  clear(){
-    this.io?.disconnect(); this.io = null;
-    this.fuses.forEach(t => clearTimeout(t)); this.fuses.clear();
-  },
-};
-
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"']/g, c =>
