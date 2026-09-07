@@ -169,8 +169,8 @@ body{
   -webkit-mask-image:linear-gradient(35deg,#000 40%,transparent 85%);
   mask-image:linear-gradient(35deg,#000 40%,transparent 85%)}
 
-@media(max-width:700px){
-  .ground__corner{bottom:calc(var(--tabs-h,64px) + 14px)}
+@media(max-width:1023px){
+  .ground__corner{display:none}
 }
 
 .shell{
@@ -358,8 +358,12 @@ select.input{padding-right:var(--s4)}
   color:var(--ink);
   line-height:1;
   letter-spacing:0;
+  position:relative;
   white-space:nowrap;
   overflow:hidden}
+.tabs button[aria-current="page"]::after{content:"";position:absolute;
+  left:22%;right:22%;bottom:7px;height:3px;background:var(--ink)}
+.tabs button:active span{transform:translateY(1px)}
 .tabs button svg{width:19px;height:19px;stroke-width:1.9}
 
 .scene{position:fixed;inset:0;z-index:150;overflow:hidden;pointer-events:none;
@@ -392,7 +396,7 @@ select.input{padding-right:var(--s4)}
   font-size:clamp(46px,19vw,110px);line-height:.9;white-space:nowrap;
   padding-bottom:.06em;transform-origin:0 100%}
 .scene__kick{position:absolute;left:9%;right:8%;top:10%;margin:0;opacity:0;
-  font:500 clamp(9px,2.6vw,12px)/1.5 var(--f-mono);letter-spacing:.24em;
+  font:500 clamp(10px,2.6vw,12px)/1.5 var(--f-mono);letter-spacing:.24em;
   text-transform:uppercase;color:var(--paper)}
 .scene__tail{position:absolute;left:9%;right:8%;bottom:9%;margin:0;opacity:0;
   font-family:var(--f-head);text-transform:uppercase;color:var(--paper);
@@ -561,6 +565,18 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 main#view{padding-top:var(--space-tier);
   padding-bottom:calc(var(--space-block) + var(--tabs-h) + var(--rule)
                       + env(safe-area-inset-bottom, 0px))}
+@media(max-width:1023px){
+  .shell > div{display:flex;flex-direction:column}
+  main#view{position:relative;flex:1 0 auto;
+    padding-bottom:calc(var(--tabs-h) + 14px + clamp(44px,5vw,72px) + var(--s4)
+                        + env(safe-area-inset-bottom, 0px))}
+  main#view::after{content:"";position:absolute;pointer-events:none;
+    right:clamp(24px,3vw,44px);
+    bottom:calc(var(--tabs-h) + 14px + env(safe-area-inset-bottom, 0px));
+    width:clamp(44px,5vw,72px);height:clamp(44px,5vw,72px);
+    border-right:4px solid var(--ink);border-bottom:4px solid var(--ink)}
+  [data-screen="auth"] main#view::after{display:none}
+}
 
 .link{display:inline-flex;align-items:center;
   min-height:32px;padding-block:6px}

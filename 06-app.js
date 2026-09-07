@@ -430,7 +430,6 @@ document.addEventListener('click', e => {
       btn: out,
       swap: () => Store.signOut().then(() => {
         AuthUI.mode = 'in';
-        toast({ key:'auth', title:'Signed out' });
         go('auth', { instant:true });
       }),
       fail: () => toast({ key:'auth', bad:true, title:'Could not sign out',
