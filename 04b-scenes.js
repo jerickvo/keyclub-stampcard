@@ -1,15 +1,5 @@
 "use strict";
 
-const SCENE_MARKUP = tail => `
-  <div class="scene__base"></div>
-  <div class="scene__grid">
-    <div class="scene__panel scene__panel--a"><i class="scene__ink"></i><p class="scene__word">Keystamp</p></div>
-    <div class="scene__panel scene__panel--b"><i class="scene__ink"></i>
-      <p class="scene__kick">Key Club attendance</p><p class="scene__tail">${esc(tail || '')}</p></div>
-    <div class="scene__panel scene__panel--c"><i class="scene__ink scene__ink--tone"></i>
-      <span class="scene__seal"><svg class="brandseal" viewBox="0 0 840 875" aria-hidden="true"><use href="#bootseal"/></svg></span></div>
-  </div>`;
-
 const fadeAway = (el, dur, cb) => {
   if (window.animate){ animate(el, { opacity:[1, 0], duration:dur, ease:'linear', onComplete:cb }); return; }
   el.style.transition = `opacity ${dur}ms linear`;
@@ -24,11 +14,10 @@ const Scenes = {
     const q = s => root.querySelector(s);
     const panel = k => { const el = q('.scene__panel--' + k); return { el, ink:el.querySelector('.scene__ink') }; };
     return { root, base:q('.scene__base'), grid:q('.scene__grid'),
-             a:panel('a'), b:panel('b'), c:panel('c'),
-             word:q('.scene__word'), kick:q('.scene__kick'), tail:q('.scene__tail'), seal:q('.scene__seal') };
+             a:panel('a'), b:panel('b'), c:panel('c') };
   },
 
-  exitVector(p, W, H){
+  exitVector(p, W){
     const g = p.grid.getBoundingClientRect();
     const mid = g.left + g.width / 2;
     return panel => {
@@ -39,23 +28,10 @@ const Scenes = {
     };
   },
 
-  opening({ root = null, tail = '', reveal = () => {} } = {}){
-    const boot = Boolean(root);
-    let el = root;
-    if (!el){
-      el = document.createElement('div');
-      el.className = 'scene scene--welcome';
-      el.setAttribute('aria-hidden', 'true');
-      el.style.setProperty('--lead', '170ms');
-      el.innerHTML = SCENE_MARKUP(tail);
-      document.body.appendChild(el);
-    } else {
-      const t = el.querySelector('.scene__tail');
-      if (t) t.textContent = tail;
-    }
+  opening({ root, reveal = () => {} }){
+    const el = root;
+    if (!el){ reveal(); return { release(){} }; }
     const p = this.parts(el);
-    const lead = boot ? 0 : 170;
-    const t0 = boot ? 0 : performance.now();
     let done = false, released = false, revealed = false;
 
     const revealOnce = () => { if (revealed) return; revealed = true; try { reveal(); } catch (_) {} };
@@ -75,29 +51,62 @@ const Scenes = {
       } };
     }
 
-    if (!boot) el.classList.add('scene--play');
-    const hit = lead + 500 - (performance.now() - t0);
-    if (hit > -80) setTimeout(() => Impact.shake(p.grid, 4, 90), Math.max(0, hit));
-
-    const MIN = lead + 1000;
+    const MIN = 1000;
     const open = () => {
       if (done) return;
       el.classList.add('scene--set');
-      const W = innerWidth;
-      const vec = this.exitVector(p, W, innerHeight);
+      const vec = this.exitVector(p, innerWidth);
       const EXIT = cubicBezier(.7, 0, .18, 1);
-      animate(p.a.el, Object.assign({ duration:380, ease:EXIT }, vec(p.a)));
-      animate(p.b.el, Object.assign({ duration:360, delay:40, ease:EXIT }, vec(p.b)));
-      animate(p.c.el, Object.assign({ duration:360, delay:70, ease:EXIT }, vec(p.c)));
-      animate(p.base, { translateY:[0, innerHeight + 24], duration:380, delay:60, ease:EXIT });
-      setTimeout(revealOnce, 100);
-      setTimeout(finish, 480);
+      createTimeline()
+        .add(p.a.el, Object.assign({ duration:380, ease:EXIT }, vec(p.a)), 0)
+        .add(p.b.el, Object.assign({ duration:360, ease:EXIT }, vec(p.b)), 40)
+        .add(p.c.el, Object.assign({ duration:360, ease:EXIT }, vec(p.c)), 70)
+        .add(p.base, { translateY:[0, innerHeight + 24], duration:380, ease:EXIT }, 60)
+        .call(revealOnce, 100)
+        .call(finish, 480);
     };
 
     return { release(){
       if (released) return; released = true;
-      setTimeout(open, Math.max(0, MIN - (performance.now() - t0)));
+      setTimeout(open, Math.max(0, MIN - performance.now()));
     } };
+  },
+
+  veil(word, kick){
+    const el = document.createElement('div');
+    el.className = 'veil';
+    el.setAttribute('aria-hidden', 'true');
+    el.innerHTML = `<p class="veil__kick">${esc(kick || '')}</p><p class="veil__word">${esc(word || '')}</p>`;
+    document.body.appendChild(el);
+    return { el, word:el.querySelector('.veil__word'), kick:el.querySelector('.veil__kick') };
+  },
+
+  enter({ swap, reveal = () => {} }){
+    if (this.busy) return;
+    this.busy = true;
+    const v = this.veil('', '');
+    let done = false;
+    const finish = () => {
+      if (done) return; done = true;
+      clearTimeout(fuse);
+      try { v.el.remove(); } catch (_) {}
+      this.busy = false;
+    };
+    const fuse = setTimeout(() => { try { swap(); } catch (_) {} finish(); }, 3000);
+    const doSwap = () => { try { swap(); } catch (_) {} };
+
+    if (Motion.off){
+      doSwap();
+      setTimeout(() => { reveal(); fadeAway(v.el, 150, finish); }, 120);
+      return;
+    }
+
+    aset(v.el, { translateY:'-100%' });
+    createTimeline({ onComplete:finish })
+      .add(v.el, { translateY:['-100%', '0%'], duration:300, ease:cubicBezier(.6, 0, .2, 1) }, 0)
+      .call(doSwap, 320)
+      .add(v.el, { translateY:['0%', '-100%'], duration:360, ease:cubicBezier(.7, 0, .2, 1) }, 380)
+      .call(reveal, 480);
   },
 
   exit({ swap, fail, btn = null } = {}){
@@ -106,83 +115,51 @@ const Scenes = {
     if (this.busy) return;
     this.busy = true;
 
-    const el = document.createElement('div');
-    el.className = 'scene scene--exit scene--set';
-    el.setAttribute('aria-hidden', 'true');
-    el.innerHTML = SCENE_MARKUP('Until next meeting');
-    document.body.appendChild(el);
-    const p = this.parts(el);
-    p.word.textContent = 'Signed out';
-    p.kick.textContent = 'Keystamp / Key Club attendance';
-    [p.word, p.kick, p.tail, p.seal].forEach(x => { x.style.opacity = '0'; });
-
+    const v = this.veil('Signed out', 'Keystamp / Key Club attendance');
     let done = false;
     const finish = () => {
       if (done) return; done = true;
       clearTimeout(fuse);
-      try { el.remove(); } catch (_) {}
+      try { v.el.remove(); } catch (_) {}
       this.busy = false;
     };
     const fuse = setTimeout(finish, 4000);
     const swapNow = () => Promise.resolve().then(doSwap).catch(err => { oops(err); return 'failed'; });
 
     if (Motion.off){
-      [p.word, p.kick, p.tail, p.seal].forEach(x => { x.style.opacity = '1'; });
       setTimeout(async () => {
         await swapNow();
-        setTimeout(() => fadeAway(el, 150, finish), 520);
+        setTimeout(() => fadeAway(v.el, 150, finish), 520);
       }, 120);
       return;
     }
 
     if (btn){
       aset(btn, { scale:.94 });
-      setTimeout(() => animate(btn, { scale:1, duration:110, ease:'outQuad',
-        onComplete(){ btn.style.transform = ''; } }), 90);
+      animate(btn, { scale:1, duration:110, delay:90, ease:'outQuad', onComplete(){ btn.style.transform = ''; } });
     }
 
-    const W = innerWidth, H = innerHeight;
-    const vec = this.exitVector(p, W, H);
-    const IN = cubicBezier(.5, 0, .12, 1);
-    const from = panel => { const v = vec(panel); const k = Object.keys(v)[0]; return [k, v[k]]; };
-    [[p.a, 0, 250], [p.b, 30, 230], [p.c, 60, 230]].forEach(([panel, delay, dur]) => {
-      const [k, v] = from(panel);
-      aset(panel.el, { [k]:v });
-      animate(panel.el, { [k]:[v, 0], duration:dur, delay, ease:IN });
-    });
-    aset(p.base, { opacity:0 });
-    animate(p.base, { opacity:[0, 1], duration:200, delay:110, ease:'linear' });
-    setTimeout(() => Impact.shake(p.grid, 3, 80), 300);
-
+    aset(v.el, { translateY:'-100%' });
+    aset([v.word, v.kick], { opacity:0 });
     let swapped = null;
-    setTimeout(() => { swapped = swapNow(); }, 340);
-
-    createTimeline({ autoplay:true })
-      .add(p.seal, { opacity:[0, 1], duration:1 }, 360)
-      .add(p.word, { opacity:[0, 1], duration:1 }, 400)
-      .add(p.word, { scale:[1.3, 1], duration:110, ease:STEP(3) }, 400)
-      .add(p.kick, { opacity:[0, 1], duration:1 }, 470)
-      .add(p.tail, { opacity:[0, 1], duration:1 }, 530);
-
-    const drop = async () => {
-      if (done) return;
-      const res = swapped ? await swapped : null;
-      const FALL = cubicBezier(.55, 0, 1, .45);
-      const dist = panel => H - panel.el.getBoundingClientRect().top + 16;
-      [[p.b, 0], [p.c, 50], [p.a, 100]].forEach(([panel, delay]) => {
-        animate(panel.el, { translateY:[0, dist(panel)], duration:420, delay, ease:FALL });
-      });
-      animate(p.base, { translateY:[0, H + 24], duration:420, delay:130, ease:FALL });
-      if (res !== 'failed'){
-        setTimeout(() => {
-          const panel = $('.authp');
-          if (panel) animate(panel, { translateY:[6, 0], duration:160, ease:'outQuad',
-            onComplete(){ panel.style.transform = ''; } });
-        }, 200);
-      }
-      setTimeout(finish, 560);
-    };
-    setTimeout(drop, 940);
+    createTimeline()
+      .add(v.el, { translateY:['-100%', '0%'], duration:320, ease:cubicBezier(.5, 0, .12, 1) }, 0)
+      .add(v.word, { opacity:[0, 1], duration:1 }, 300)
+      .add(v.word, { scale:[1.2, 1], duration:110, ease:STEP(3) }, 300)
+      .add(v.kick, { opacity:[0, 1], duration:1 }, 380)
+      .call(() => { swapped = swapNow(); }, 340)
+      .call(async () => {
+        if (done) return;
+        const res = swapped ? await swapped : null;
+        if (res === 'failed'){
+          animate(v.el, { translateY:['0%', '-100%'], duration:300, ease:cubicBezier(.7, 0, .2, 1), onComplete:finish });
+          return;
+        }
+        animate(v.el, { translateY:['0%', '100%'], duration:380, ease:cubicBezier(.55, 0, 1, .45), onComplete:finish });
+        const panel = $('.authp');
+        if (panel) animate(panel, { translateY:[6, 0], duration:160, delay:220, ease:'outQuad',
+          onComplete(){ panel.style.transform = ''; } });
+      }, 900);
   },
 };
 
@@ -191,13 +168,13 @@ const Transit = {
            board:0, bmeet:1, bcheckin:2, bmembers:3, baccount:4 },
 
   CHAR: {
-    home:    { in:170, hold:100, out:230, angle:9, par:26, tone:true },
-    record:  { in:200, hold:120, out:280, angle:4, par:16 },
-    scan:    { in:150, hold:80,  out:200, angle:0, par:10 },
-    rewards: { in:180, hold:120, out:260, angle:7, par:22, layered:true, flash:true },
-    profile: { in:220, hold:130, out:300, angle:6, par:14 },
-    board:   { in:160, hold:90,  out:210, angle:0, par:12, crisp:true },
-    auth:    { in:180, hold:90,  out:240, angle:3, par:0,  vertical:true },
+    home:    { dur:260, angle:9, tone:true },
+    record:  { dur:280, angle:4 },
+    scan:    { dur:220, angle:0 },
+    rewards: { dur:280, angle:7 },
+    profile: { dur:300, angle:6 },
+    board:   { dur:240, angle:0, crisp:true },
+    auth:    { dur:240, angle:3 },
   },
 
   profile(to){
@@ -207,7 +184,7 @@ const Transit = {
 
   direction(from, to){
     const a = this.ORDER[from], b = this.ORDER[to];
-    if (a === undefined || b === undefined || a === b) return 0;
+    if (a === undefined || b === undefined || a === b) return 1;
     return b > a ? 1 : -1;
   },
 
@@ -220,10 +197,7 @@ const Transit = {
     return { left:r.left, width:r.width, top, height:Math.max(0, floor - top), viewTop:r.top };
   },
 
-  ghost(view, f){
-    const box = document.createElement('div');
-    box.className = 'ghost';
-    box.style.cssText = `left:${f.left}px;top:${f.top}px;width:${f.width}px;height:${f.height}px`;
+  clone(view, f){
     const clone = view.cloneNode(true);
     clone.removeAttribute('id');
     clone.removeAttribute('tabindex');
@@ -233,146 +207,78 @@ const Transit = {
       `box-sizing:${cs.boxSizing};padding:${cs.padding};margin:0;max-width:none`;
     const src = view.querySelectorAll('canvas'), dst = clone.querySelectorAll('canvas');
     src.forEach((cv, i) => { try { dst[i].getContext('2d').drawImage(cv, 0, 0); } catch (_) {} });
-    box.appendChild(clone);
-    document.body.appendChild(box);
-    return box;
+    return clone;
   },
 
-  slab(f, dir, c){
-    const box = document.createElement('div');
-    box.className = 'cutbox';
-    box.style.cssText = `left:${f.left}px;top:${f.top}px;width:${f.width}px;height:${f.height}px`;
-    const W = f.width, H = f.height, rad = c.angle * Math.PI / 180;
-    const vertical = Boolean(c.vertical) || dir === 0;
-    const make = cls => {
-      const el = document.createElement('div');
-      el.className = 'slab' + (cls ? ' ' + cls : '');
-      return el;
-    };
-    let off, enter, axis, shape;
-    if (!vertical){
-      off = Math.round(Math.tan(rad) * H);
-      shape = el => {
-        el.style.cssText += `;left:${-off}px;top:0;width:${W + 2 * off}px;height:${H}px`;
-        el.style.clipPath = dir > 0
-          ? `polygon(${off}px 0, 100% 0, calc(100% - ${off}px) 100%, 0 100%)`
-          : `polygon(0 0, calc(100% - ${off}px) 0, 100% 100%, ${off}px 100%)`;
-      };
-      axis = 'translateX';
-      enter = dir > 0 ? W + off : -(W + off);
-    } else {
-      off = Math.round(Math.tan(rad) * W);
-      shape = el => {
-        el.style.cssText += `;left:0;top:${-off}px;width:${W}px;height:${H + 2 * off}px`;
-        el.style.clipPath = `polygon(0 ${off}px, 100% 0, 100% calc(100% - ${off}px), 0 100%)`;
-      };
-      axis = 'translateY';
-      enter = -(H + off);
-    }
-    const under = c.layered ? make('slab--tone') : null;
-    if (under){ shape(under); box.appendChild(under); }
-    const el = make('');
-    shape(el);
-    if (c.tone && !vertical){
-      const t = document.createElement('i');
-      t.className = 'slab__tone';
-      const S = Math.round(W * .12) + off;
-      t.style.cssText = (dir > 0 ? 'left:0;' : 'right:0;') + `width:${S}px`;
-      t.style.clipPath = dir > 0
-        ? `polygon(${off}px 0, 100% 0, calc(100% - ${off}px) 100%, 0 100%)`
-        : `polygon(0 0, calc(100% - ${off}px) 0, 100% 100%, ${off}px 100%)`;
-      el.appendChild(t);
-    }
-    box.appendChild(el);
-    document.body.appendChild(box);
-    return { box, el, under, off, enter, exit:-enter, axis, vertical };
-  },
-
-  word(view, f, cut){
-    const title = view.querySelector('.rechead__title');
-    if (!title) return null;
-    const r = title.getBoundingClientRect();
-    if (r.width < 4 || r.top < f.top - 4 || r.bottom > f.top + f.height + 4) return null;
-    const cs = getComputedStyle(title);
-    const w = document.createElement('p');
-    w.className = 'slab__word';
-    w.textContent = title.textContent;
-    const x = r.left - f.left + (cut.vertical ? 0 : cut.off);
-    const y = r.top - f.top + (cut.vertical ? cut.off : 0);
-    w.style.cssText = `left:${x}px;top:${y}px;width:${Math.ceil(r.width) + 6}px;` +
-      `font-family:${cs.fontFamily};font-size:${cs.fontSize};font-weight:${cs.fontWeight};` +
-      `font-style:${cs.fontStyle};letter-spacing:${cs.letterSpacing};text-transform:${cs.textTransform};` +
-      `line-height:${cs.lineHeight};padding:${cs.padding}`;
-    cut.el.appendChild(w);
-    return w;
-  },
-
-  run(from, to, swap){
+  run(from, to, swap, reveal){
     const view = $('#view');
     const doSwap = typeof swap === 'function' ? swap : () => {};
-    if (!window.animate || !view){ doSwap(); return Promise.resolve(); }
+    const doReveal = typeof reveal === 'function' ? reveal : () => {};
+    if (!window.animate || !view){ doSwap(); doReveal(); return Promise.resolve(); }
 
     const f = this.frame(view);
-    const box = this.ghost(view, f);
-
-    if (Motion.reduced){
-      return new Promise(res => {
-        let done = false;
-        const finish = () => { if (done) return; done = true; try { box.remove(); } catch (_) {} Motion.settle(view); res(); };
-        try { doSwap(); } catch (_) {}
-        animate(box, { opacity:[1, 0], duration:140, ease:'linear', onComplete:finish });
-        setTimeout(finish, 420);
-      });
-    }
-
-    const c = this.profile(to);
-    const dir = this.direction(from, to);
-    const cut = this.slab(f, dir, c);
-    const IN  = c.crisp ? cubicBezier(.85, 0, .1, 1) : cubicBezier(.7, 0, .2, 1);
-    const OUT = c.crisp ? cubicBezier(.85, 0, .1, 1) : cubicBezier(.55, 0, .12, 1);
-    const par = dir * c.par;
-    const LAG = 50;
+    const box = document.createElement('div');
+    box.className = 'wipe';
+    const page = document.createElement('div');
+    page.className = 'wipe__page';
+    page.appendChild(this.clone(view, f));
+    box.appendChild(page);
+    box.style.cssText = `left:${f.left}px;top:${f.top}px;width:${f.width}px;height:${f.height}px`;
+    document.body.appendChild(box);
 
     return new Promise(res => {
       let settled = false;
       const finish = () => {
         if (settled) return; settled = true;
-        try { cut.box.remove(); } catch (_) {}
         try { box.remove(); } catch (_) {}
         Motion.settle(view);
         res();
       };
 
-      if (cut.under){
-        aset(cut.under, { [cut.axis]:cut.enter });
-        animate(cut.under, { [cut.axis]:[cut.enter, 0], duration:c.in, ease:IN });
+      if (Motion.reduced){
+        doSwap(); doReveal();
+        animate(box, { opacity:[1, 0], duration:140, ease:'linear', onComplete:finish });
+        setTimeout(finish, 420);
+        return;
       }
-      aset(cut.el, { [cut.axis]:cut.enter });
-      animate(cut.el, { [cut.axis]:[cut.enter, 0], duration:c.in, delay:cut.under ? LAG : 0, ease:IN });
-      if (par) animate(box, { translateX:[0, -par], duration:c.in, ease:'outQuad' });
 
-      const covered = c.in + (cut.under ? LAG : 0);
-      setTimeout(() => {
-        try { doSwap(); } catch (_) {}
-        try { box.remove(); } catch (_) {}
-        aset(view, { translateX:par * .6 });
-        const w = this.word(view, f, cut);
-        if (w){
-          aset(w, { opacity:0, scale:1.18 });
-          animate(w, { opacity:[0, 1], duration:1, delay:20 });
-          animate(w, { scale:[1.18, 1], duration:90, delay:20, ease:STEP(2) });
+      const c = this.profile(to);
+      const dir = this.direction(from, to);
+      const W = f.width, H = f.height;
+      const off = Math.round(Math.tan(c.angle * Math.PI / 180) * H);
+      const D = W + off;
+
+      box.style.left = (dir > 0 ? f.left : f.left - off) + 'px';
+      box.style.width = D + 'px';
+      box.style.clipPath = dir > 0
+        ? `polygon(0 0, ${W}px 0, 100% 100%, 0 100%)`
+        : `polygon(${off}px 0, 100% 0, 100% 100%, 0 100%)`;
+      page.style.left = (dir > 0 ? 0 : off) + 'px';
+
+      const strip = (cls, T) => {
+        const el = document.createElement('i');
+        el.className = cls;
+        el.style.width = (T + off) + 'px';
+        if (dir > 0){
+          el.style.right = '0';
+          el.style.clipPath = `polygon(0 0, ${T}px 0, 100% 100%, ${off}px 100%)`;
+        } else {
+          el.style.left = '0';
+          el.style.clipPath = `polygon(${off}px 0, 100% 0, ${T}px 100%, 0 100%)`;
         }
-      }, covered);
+        box.appendChild(el);
+      };
+      if (c.tone) strip('wipe__tone', Math.round(W * .1));
+      strip('wipe__edge', 6);
 
-      const leave = covered + c.hold;
-      setTimeout(() => {
-        animate(cut.el, { [cut.axis]:[0, cut.exit], duration:c.out, ease:OUT });
-        if (cut.under) animate(cut.under, { [cut.axis]:[0, cut.exit], duration:c.out, delay:LAG, ease:OUT });
-        if (c.flash) Impact.flash(.14, { dur:70, delay:30 });
-        animate(view, { translateX:[par * .6, 0], duration:c.out, ease:'outCubic', onComplete:finish });
-      }, leave);
-
-      setTimeout(finish, leave + c.out + (cut.under ? LAG : 0) + 200);
+      const E = c.crisp ? cubicBezier(.85, 0, .1, 1) : cubicBezier(.7, 0, .2, 1);
+      doSwap();
+      aset(view, { translateX:dir * 10 });
+      animate(view, { translateX:0, duration:c.dur, ease:'outCubic' });
+      animate(box,  { translateX:[0, -dir * D], duration:c.dur, ease:E });
+      animate(page, { translateX:[0,  dir * D], duration:c.dur, ease:E, onComplete:finish });
+      setTimeout(doReveal, Math.round(c.dur * .45));
+      setTimeout(finish, c.dur + 300);
     });
   },
 };

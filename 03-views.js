@@ -16,25 +16,26 @@ function stampShape(seed, grow = 0){
 const STAMP_FIT = .62;
 
 const C = {
-  tier(r, total){
+  tier(r, total, target){
     const open  = total >= r.required;
     const ready = open && !r.claimed;
-    const state = r.claimed ? 'claimed' : ready ? 'ready' : 'sealed';
+    const state = r.claimed ? 'claimed' : ready ? 'ready'
+                : target && target.id === r.id ? 'target' : 'far';
+    const left  = r.required - total;
     const say   = r.claimed ? 'Claimed'
                 : ready     ? 'Ready to claim'
-                : `${r.required - total} more ${r.required - total === 1 ? 'stamp' : 'stamps'}`;
+                : `${left} more ${left === 1 ? 'stamp' : 'stamps'}`;
 
-    return `<div class="tier tier--${state}" data-reward="${r.id}">
+    return `<li class="tier tier--${state}" data-reward="${r.id}">
       <span class="tier__at">${pad(r.required)}</span>
-      <span class="tier__body">
-        <span class="tier__name">${esc(r.name)}</span>
-        <span class="tier__desc">${esc(r.desc || '')}</span>
-      </span>
-      ${r.claimed ? `<span class="tier__punch" aria-hidden="true">Claimed</span>` : ''}
+      <span class="tier__name">${esc(r.name)}</span>
+      ${r.desc && state !== 'far' ? `<span class="tier__desc">${esc(r.desc)}</span>` : ''}
       ${ready
         ? `<button class="tier__claim" type="button" data-claim="${r.id}">Claim</button>`
-        : `<span class="tier__say">${say}</span>`}
-    </div>`;
+        : r.claimed
+          ? `<span class="tier__punch" aria-hidden="true">Claimed</span><span class="sr-only">Claimed</span>`
+          : `<span class="tier__say">${say}</span>`}
+    </li>`;
   },
 
   sealGrid(){
@@ -87,7 +88,7 @@ const C = {
       : goal ? `${p.remaining} more until ${goal.name.toLowerCase()}`
              : `${p.remaining} more to finish this card`;
 
-    return `<section class="card${full ? ' card--full' : ''}" data-enter>
+    return `<section class="card${full ? ' card--full' : ''}">
       <div class="card__face">
         <div class="card__id">
           <span class="card__cardno">Card ${pad(cardNo)}</span>
@@ -106,8 +107,41 @@ const C = {
     </section>`;
   },
 
+  collection(){
+    const total = Store.totalStamps();
+    const chrono = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
+    const next = Store.nextMeeting();
+    if (!total) return `<section class="strip">
+      <h2 class="strip__mark">Collected</h2>
+      <p class="strip__none">No stamps yet.${next ? ` The first one lands at GM ${pad(next.no)}.` : ''}</p>
+    </section>`;
+
+    const cells = chrono.map((rec, i) => {
+      const m = Store.meetings.find(x => x.id === rec.meetingId);
+      const seed = i + 1;
+      return `<li class="seal seal--set strip__seal" data-seal="set"
+                  style="--press-tilt:${[-2.1, 1.4, -1.2, 2.3, -1.7][i % 5]}deg"${
+                  m ? ` tabindex="0" aria-label="Stamp ${pad(i + 1)}: general meeting ${m.no}, ${fmtDate(m.date)}"` : ''}>
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <path class="sf-back" d="${stampShape(seed * 3 + 1, 3.4)}"/>
+          <g class="sf-press">
+            <path class="sf-face" d="${stampShape(seed, 0)}"/>
+            <g class="seal__mark" transform="translate(${(32 - 32 * STAMP_FIT).toFixed(1)} ${(32 - 32 * STAMP_FIT).toFixed(1)}) scale(${STAMP_FIT})">${stampMark(i)}</g>
+          </g>
+        </svg>
+        <span class="seal__no">${pad(i + 1)}</span>
+        ${m ? C.sealMeta(rec, m) : ''}
+      </li>`;
+    }).join('');
+
+    return `<section class="strip">
+      <h2 class="strip__mark">Collected</h2>
+      <ol class="strip__row" aria-label="${total} stamps collected">${cells}</ol>
+    </section>`;
+  },
+
   strike({ verb, sub, go, live = false }){
-    return `<div class="act ${live ? 'act--live' : ''}" data-enter>
+    return `<div class="act ${live ? 'act--live' : ''}">
       <button class="act__btn" data-go="${go}">
         <span class="act__verb">${esc(verb)}</span>
         <span class="act__sub">${esc(sub)}</span>
@@ -125,7 +159,7 @@ const C = {
   },
 
   empty(title, body){
-    return `<section class="rig empty-reg" data-enter>
+    return `<section class="rig empty-reg">
       <div class="empty">
         <span class="tone tone--coarse tone--fade-b empty__tone" aria-hidden="true"></span>
         <div class="empty__seal" aria-hidden="true">
@@ -178,7 +212,7 @@ const C = {
   },
 };
 
-C.account = () => `<section class="acct" data-enter>
+C.account = () => `<section class="acct">
   <h2 class="acct__mark">Account</h2>
   <div class="acct__row">
     <span class="acct__lab">Reduced motion</span>
@@ -192,10 +226,10 @@ const MANUAL_ENTRY = false;
 const Views = {
   loadFailure(title){
     return `<div class="view">
-      <header class="rechead" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">${title}</h1>
       </header>
-      <section class="rig" data-enter>
+      <section class="rig">
         <div class="panel bpanel">
           <p class="kicker">Could not load</p>
           <p style="margin-top:8px">Keystamp could not reach the club records, so your
@@ -238,14 +272,11 @@ const Views = {
       .slice(0, 3);
 
     return `<div class="view view--home">
-      <header class="rechead rechead--tight" data-enter>
-        <h1 class="title rechead__title">Your card</h1>
-      </header>
-
-      <div class="deck${live ? ' deck--live' : ''}" data-enter>
+      <h1 class="sr-only">Your card</h1>
+      <div class="deck${live ? ' deck--live' : ''}">
         ${C.sealGrid()}
         <div class="deck__act">${action}</div>
-        ${ahead.length ? `<section class="ahead deck__ahead" data-enter>
+        ${ahead.length ? `<section class="ahead deck__ahead">
             <h2 class="ahead__mark">Ahead</h2>
             <ul class="ahead__list">
               ${ahead.map(m => `<li class="ahead__row">
@@ -272,12 +303,12 @@ const Views = {
     const frac = counted.length ? kept / counted.length : 0;
 
     return `<div class="view view--record">
-      <header class="rechead" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">Record</h1>
       </header>
 
       ${held.length ? `<div class="recbody">
-        <aside class="tally" data-enter>
+        <aside class="tally">
           <p class="tally__fig">${pad(kept)}</p>
           <p class="tally__of">stamped of ${pad(counted.length)} held</p>
           <p class="tally__bar" style="--fill:${(frac*100).toFixed(1)}%" aria-hidden="true"></p>
@@ -285,14 +316,14 @@ const Views = {
             ? `${gone} missed` : 'None missed'}</p>
         </aside>
 
-        <section class="ledger" data-enter>
+        <section class="ledger">
           ${held.map(m => C.ledgerRow(m)).join('')}
         </section>
       </div>`
       : C.empty('No general meetings yet',
                 'Your first stamp will land here.')}
 
-      ${upcoming.length ? `<section class="ledger ledger--ahead" data-enter>
+      ${upcoming.length ? `<section class="ledger ledger--ahead">
         <h2 class="ledger__mark">Scheduled</h2>
         ${upcoming.map(m => C.ledgerRow(m)).join('')}
       </section>` : ''}
@@ -303,49 +334,40 @@ const Views = {
     if (Store.failed) return this.loadFailure('Rewards');
     const total = Store.totalStamps();
     const tiers = [...Store.rewards].sort((a, b) => a.required - b.required);
-    const top   = tiers[tiers.length - 1]?.required || 10;
-
-    const scale = Math.max(top * 1.06, total * 1.06, 1);
     const next  = tiers.find(t => total < t.required) || null;
+    const ready = tiers.some(t => total >= t.required && !t.claimed);
 
     return `<div class="view view--rewards">
-      <header class="rechead" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">Rewards</h1>
       </header>
 
-      <section class="ladder" data-enter>
+      <section class="ladder">
         <p class="ladder__fig">${pad(total)}</p>
         <p class="ladder__of">${total === 1 ? 'stamp' : 'stamps'} so far${
-          next ? ` / ${next.required - total} to the next rung` : ' / every rung passed'}</p>
+          next ? ` / ${next.required - total} to ${next.name.toLowerCase()}` : ' / every tier reached'}</p>
       </section>
 
-      <section class="climb" data-enter>
-        <div class="climb__rail" role="img"
-             aria-label="${total} stamps against rungs at ${tiers.map(t => t.required).join(', ')}">
-          <span class="climb__fill" style="--h:${Math.min(total / scale * 100, 100).toFixed(1)}%"></span>
-        </div>
-        <div class="climb__plates">
-          ${tiers.map(t => C.tier(t, total)).join('')}
-        </div>
-      </section>
+      <ol class="tiers">
+        ${tiers.map(t => C.tier(t, total, ready ? null : next)).join('')}
+      </ol>
     </div>`;
   },
 
   scan(){
     const open = Store.openMeeting();
     const done = open && Store.attended(open.id);
-    const standing = !open
-      ? { lab:'Nothing open', at:'No check-in right now' }
-      : done
-        ? { lab:'Already stamped', at:`GM ${pad(open.no)}` }
-        : { lab:'Checking in to', at:`GM ${pad(open.no)} / ${fmtDay(open.date)} / ${esc(open.place)}` };
+    const sub = !open ? 'No check-in is open right now'
+              : done  ? `Already stamped for GM ${pad(open.no)}`
+                      : `Checking in to GM ${pad(open.no)} / ${fmtDay(open.date)} / ${esc(open.place)}`;
 
     return `<div class="view view--scan">
-      <header class="rechead rechead--tight" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">Scan</h1>
+        <p class="rechead__sub">${sub}</p>
       </header>
 
-      <div class="viewer" id="viewer" data-enter>
+      <div class="viewer" id="viewer">
         <video id="cam" playsinline muted autoplay></video>
         <div class="viewer__scrim" aria-hidden="true"></div>
         <div class="reticle" id="reticle" aria-hidden="true">
@@ -356,17 +378,12 @@ const Views = {
         </div>
       </div>
 
-      <p class="scanline scanline--boot" id="scanLine" data-enter aria-live="polite">
+      <p class="scanline scanline--boot" id="scanLine" aria-live="polite">
         <i class="scanline__dot" aria-hidden="true"></i>
         <span class="scanline__msg" id="scanMsg">Starting camera</span>
       </p>
 
-      <p class="standing" data-enter>
-        <span class="standing__lab">${standing.lab}</span>
-        <span class="standing__at">${standing.at}</span>
-      </p>
-
-      ${MANUAL_ENTRY ? `<div class="manual" data-enter>
+      ${MANUAL_ENTRY ? `<div class="manual">
         <label class="manual__lab" for="manualInput">Or enter the check-in code</label>
         <div class="manual__f">
           <input class="manual__in" id="manualInput" placeholder="Check-in code"
@@ -379,10 +396,10 @@ const Views = {
 
   boardSpread(title){
     return `<div class="view view--board">
-      <header class="rechead" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">${title}</h1>
       </header>
-      <section class="rig" data-enter style="margin-top:var(--gut)">
+      <section class="rig">
         <div id="boardPane">${BoardUI.pane()}</div>
       </section>
     </div>`;
@@ -403,11 +420,11 @@ const Views = {
     const role     = Store.isBoard ? 'Board' : 'Member';
 
     return `<div class="view view--member">
-      <header class="rechead rechead--tight" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">Member</h1>
       </header>
 
-      <div class="sheet" data-enter>
+      <div class="msheet">
         <section class="who">
           <div class="who__mark" aria-hidden="true">
             <span class="who__org">Cali-Nev-Ha District</span>
@@ -419,10 +436,10 @@ const Views = {
             <p class="who__name">${esc(name)}</p>
           </div>
         </section>
-        ${C.sealGrid()}
+        ${C.collection()}
       </div>
 
-      <section class="standing-band" data-enter>
+      <section class="standing-band">
         <p class="standing-band__fig">${pad(total)}</p>
         <p class="standing-band__of">${total === 1 ? 'stamp' : 'stamps'} collected</p>
         <dl class="standing-band__rest">
@@ -440,11 +457,11 @@ const Views = {
     const name   = memberName();
     const handle = (Store.user && Store.user.username) || name;
     return `<div class="view view--member view--account">
-      <header class="rechead rechead--tight" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">Account</h1>
       </header>
 
-      <section class="who" data-enter>
+      <section class="who">
         <div class="who__mark" aria-hidden="true">
           <span class="who__org">Cali-Nev-Ha District</span>
         </div>
@@ -478,7 +495,7 @@ const Views = {
 
     return `<div class="view view--auth">
 
-      <div class="spread" data-enter>
+      <div class="spread">
 
         <div class="spread__field crop" aria-hidden="true">
           <svg class="spread__seal crop__art" viewBox="0 0 100 100">${sealArt()}</svg>

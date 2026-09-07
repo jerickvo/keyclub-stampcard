@@ -136,10 +136,6 @@
 
 .setupbox--warn{border-width:var(--rule);background-image:none}
 
-.bmile__bar{display:block;height:8px;margin-top:var(--s3);
-  border:var(--rule-hair) solid var(--ink);background:var(--paper)}
-.bmile__fill{display:block;height:100%;background:var(--ink)}
-
 .brow__del{border:var(--rule-hair) solid var(--ink);background:none;
   color:var(--ink);font:400 clamp(11px,1vw,12.5px)/1 var(--f-body);letter-spacing:.08em;
   padding:6px 9px;cursor:pointer}
@@ -200,8 +196,7 @@
 .empty{position:relative;display:grid;gap:clamp(18px,3.4vw,40px);align-items:center;
   grid-template-columns:auto minmax(0,1fr);
   border:var(--edge-frame) solid var(--ink);background:var(--paper);
-  padding:clamp(22px,4vw,46px);max-width:760px;min-height:0;overflow:hidden;
-  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
+  padding:clamp(22px,4vw,46px);max-width:760px;min-height:0;overflow:hidden}
 .empty__tone{right:0;top:0;width:34%;height:46%}
 .empty__seal{position:relative;flex:none;z-index:1;
   width:clamp(92px,15vw,168px);aspect-ratio:1}
@@ -219,13 +214,6 @@
   margin-top:clamp(7px,1vw,11px);color:var(--ink)}
 .empty__note{margin-top:clamp(7px,1vw,11px);max-width:52ch;
   font-size:clamp(12.5px,1vw,14.5px);line-height:1.55;color:var(--ink-2)}
-
-.bmile__bar{position:relative;overflow:hidden}
-.bmile__bar::after{content:"";position:absolute;inset:0;
-  pointer-events:none;z-index:2;
-  background-image:repeating-linear-gradient(to right,
-    transparent 0 calc(10% - 1px),
-    var(--ink) calc(10% - 1px) 10%)}
 
 select.input{appearance:none;-webkit-appearance:none;
   padding-right:calc(var(--s4) + 14px);

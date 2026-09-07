@@ -223,15 +223,12 @@ async function submitSeal(raw, fromCamera){
   }
 
   dropToast('scan');
-  Scanner.setState('good', 'Verified');
-  Scanner.stop();
+  Scanner.setState('good', 'Stamped');
 
   await Store.hydrate();
 
   pendingCell = Rules.progress().filled - 1;
-  const meeting = Store.meeting(result.meeting_id) ||
-                  { id:result.meeting_id, no:result.meeting_number };
-  FX.stampAcquire(meeting, () => go('home', { instant:true }));
+  FX.scanStamp(Store.totalStamps() - 1, () => go('home'));
 }
 
 function rejectVisual(code){

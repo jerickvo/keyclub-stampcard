@@ -113,24 +113,23 @@ async function go(id, opts = {}){
 
   const view = $('#view');
   const from = current;
-  const render = (nav = false) => {
+  const render = (nav = false, covered = Boolean(opts.covered)) => {
     current = id;
     syncHash(id);
     Motion.settle(view);
-    Reveal.clear();
     document.documentElement.dataset.screen = id;
 
     view.innerHTML = Views[id]();
     paintNav();
     try { scrollTo(0, 0); } catch (_) {}
-    afterRender(id, nav, Boolean(opts.covered));
+    afterRender(id, nav, covered);
     view.focus({ preventScroll:true });
   };
 
   const same = from === id && !opts.force;
   if (view.firstChild && booted && !opts.instant && !same && window.animate){
     navigating = true;
-    await Transit.run(from, id, () => render(true));
+    await Transit.run(from, id, () => render(true, true), () => playViewIntro(id, true));
     navigating = false;
     if (pendingNav !== null){
       const next = pendingNav; pendingNav = null;
@@ -144,15 +143,18 @@ async function go(id, opts = {}){
 const seenUnlocked = new Set();
 
 function playViewIntro(id, nav = false){
-  if (id === 'home'){
-    if (!nav && pendingCell < 0) FX.sealGrid($('#seals'));
-
-    if (pendingCell >= 0){
-      const cell = $$('#seals .seal')[pendingCell];
-      pendingCell = -1;
-      if (cell && cell.dataset.seal === 'set') FX.stampLand(cell);
+  if (id === 'home' && pendingCell >= 0){
+    const cell = $$('#seals .seal')[pendingCell];
+    pendingCell = -1;
+    if (cell && cell.dataset.seal === 'set'){
+      FX.stampLand(cell);
+      const p = Rules.progress();
+      if (p.filled === p.span) FX.cardFull($('.card'));
     }
+    return;
   }
+
+  FX.enter(id, { nav });
 
   if (id === 'rewards'){
     $$('[data-reward]').forEach(row => {
@@ -278,12 +280,10 @@ document.addEventListener('submit', async e => {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
 
-    const scene = Scenes.opening({ tail: up ? 'Member joined' : 'Welcome back',
-      reveal(){ FX.pageEntrance($('#view')); playViewIntro(current); } });
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      go('home', { instant:true, covered:true });
-      scene.release();
-    }));
+    Scenes.enter({
+      swap(){ go('home', { instant:true, covered:true }); },
+      reveal(){ playViewIntro(current); },
+    });
   } catch (err){
     authErr(err && err.message ? err.message : 'Something went wrong. Try again.');
     authBusy(false);
@@ -430,7 +430,6 @@ document.addEventListener('click', e => {
       btn: out,
       swap: () => Store.signOut().then(() => {
         AuthUI.mode = 'in';
-        toast({ key:'auth', title:'Signed out' });
         go('auth', { instant:true });
       }),
       fail: () => toast({ key:'auth', bad:true, title:'Could not sign out',
@@ -562,7 +561,6 @@ let opening = null;
 try {
   opening = Scenes.opening({ root:$('#boot'), reveal(){
     booted = true;
-    FX.pageEntrance($('#view'));
     playViewIntro(current);
   } });
 } catch (_) {
@@ -576,7 +574,7 @@ try {
     await Store.hydrate();
 
     Store.onChange(() => {
-      if (current && current !== 'auth') go(current, { instant:true });
+      if (current && current !== 'auth' && current !== 'scan') go(current, { instant:true });
       paintIdentity();
     });
 
