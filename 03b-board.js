@@ -67,9 +67,12 @@ const BoardUI = {
     const isLive = Boolean(active);
 
     return `<div class="bover">
+      <aside class="bident" data-enter>
+        <span class="bident__seal" aria-hidden="true">${brandSeal('cnh')}</span>
+        <p class="bident__line">Cali-Nev-Ha District</p>
+      </aside>
       ${focus ? `
         <div class="bnow ${isLive ? 'bnow--live' : ''}">
-          <span class="bnow__seal" aria-hidden="true">${brandSeal('cnh')}</span>
           <p class="bnow__lab">${isLive ? 'Happening now' : 'Next general meeting'}</p>
           <p class="bnow__no">GM ${pad(focus.meeting_number)}</p>
           <p class="bnow__at">${esc(fmtDay(focus.meeting_date))} / ${esc(focus.start_time)}${
@@ -81,7 +84,6 @@ const BoardUI = {
             isLive ? 'Show the code' : 'Open check-in'}</button>
         </div>`
         : `<div class="bnow bnow--none">
-             <span class="bnow__seal" aria-hidden="true">${brandSeal('cnh')}</span>
              <p class="bnow__lab">Next general meeting</p>
              <p class="bnow__no">None yet</p>
              <p class="bnow__at">Schedule one to open check-in.</p>
@@ -112,31 +114,38 @@ const BoardUI = {
   progressPane(){
     const o = this.overview || {};
     const ms = o.milestones || {};
+    const reached = REWARD_TIERS.map(r => ({ n:r.required, key:'m' + r.required, name:r.name }));
     const participating = o.participating_members;
+
     const total = (this.members && this.members.total);
-
-    const rows = REWARD_TIERS.map(r => {
-      const count = ms['m' + r.required];
-      const known = typeof count === 'number' && typeof participating === 'number';
-      const pct = known && participating > 0 ? Math.round((count / participating) * 100) : 0;
-      return `<li class="mline ${known && count > 0 ? 'mline--lit' : ''}">
-        <span class="mline__at">${pad(r.required)}</span>
-        <span class="mline__name">${esc(r.name)}</span>
-        <span class="mline__n">${known ? `<b>${count}</b> ${count === 1 ? 'member' : 'members'}` : 'Not available'}</span>
-        <span class="mline__pct">${known ? pct + '%' : ''}</span>
-      </li>`;
-    }).join('');
-
     return `<div class="bpanel memgrid">
-      <section class="msummary">
+      <section class="msummary" data-enter>
         <div class="msummary__lead">
           <p class="msummary__fig">${typeof total === 'number' ? pad(total) : '--'}</p>
           <p class="msummary__of">members on the roster</p>
         </div>
-        <ol class="mledger" aria-label="Members who have reached each reward">${rows}</ol>
+        <ul class="mplates">
+          ${reached.map(r => {
+            const count = ms[r.key];
+            const known = typeof count === 'number' && typeof participating === 'number';
+            const pct = known && participating > 0
+              ? Math.round((count / participating) * 100) : 0;
+            return `<li class="mplate ${known && count > 0 ? 'mplate--lit' : ''}">
+              <span class="mplate__no">${r.n}</span>
+              <span class="mplate__name">${esc(r.name)}</span>
+              <span class="mplate__say">${known
+                ? (count === 1 ? '1 member has reached it'
+                               : `${count} members have reached it`)
+                : 'Not available'}</span>
+              <span class="bmile__bar" role="img"
+                aria-label="${known ? `${pct} percent of checked-in members` : 'unavailable'}">
+                <span class="bmile__fill" style="width:${pct}%"></span></span>
+            </li>`;
+          }).join('')}
+        </ul>
       </section>
 
-      <section class="rosterpanel">
+      <section class="rosterpanel" data-enter>
         <h2 class="meetband">Roster</h2>
         ${this.rosterBody()}
       </section>
@@ -154,16 +163,16 @@ const BoardUI = {
     return `<div class="bpanel meetgrid">
       ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
 
-      <section class="meetgrid__form">${this.createForm()}</section>
+      <section class="meetgrid__form" data-enter>${this.createForm()}</section>
 
-      <section class="meetgrid__up">
+      <section class="meetgrid__up" data-enter>
         <h2 class="meetband">Coming up</h2>
         ${upcoming.length
           ? `<ul class="blist">${upcoming.map(m => this.meetingRow(m)).join('')}</ul>`
           : this.empty('No upcoming meetings.')}
       </section>
 
-      <section class="meetgrid__held">
+      <section class="meetgrid__held" data-enter>
         <h2 class="meetband meetband--held">Already held</h2>
         ${past.length
           ? `<ul class="blist blist--held">${past.map(m => this.meetingRow(m)).join('')}</ul>`
@@ -190,7 +199,7 @@ const BoardUI = {
         <b>${esc(fmtDay(m.meeting_date))}</b>
         <span class="muted">${esc(m.start_time)}${m.end_time ? '-' + esc(m.end_time) : ''} / ${esc(m.location || 'MPR')}</span>
       </span>
-      ${m.state === 'OPEN' ? '<span class="bstate bstate--open">Open</span>' : ''}
+      <span class="bstate bstate--${m.state.toLowerCase()}">${m.state}</span>
       <span class="brow__n"><b>${m.attendance_count}</b><span class="brow__nlab">checked in</span></span>
       ${m.attendance_count === 0
         ? `<button class="brow__del" data-bconfirm="${esc(m.id)}"
