@@ -26,8 +26,6 @@ const ICON = {
   eye:    SVG('<path d="M2.5 12 7.5 6.5h9l5 5.5-5 5.5h-9z"/><circle cx="12" cy="12" r="2.75"/>'),
   eyeOff: SVG('<path d="M2.5 12 7.5 6.5h9l5 5.5-5 5.5h-9z"/><circle cx="12" cy="12" r="2.75"/><path d="M4 20 20 4"/>'),
 
-  waves:  SVG('<path d="M2.5 16h4v-8h5v8h5v-8h5"/>'),
-  still:  SVG('<path d="M4 12h16"/><path d="M4 8v8M20 8v8"/>'),
 };
 
 const KCI_SEAL = `
@@ -80,7 +78,6 @@ const stampMark = (ordinal) => {
 const wordmark = () => `<span class="mark"><span class="mark__word">Key<b>stamp</b></span></span>`;
 
 const Schedule = {
-  TIME: '3:15 PM',
   PLACE: 'MPR',
   today: () => clubDay(),
 };

@@ -101,6 +101,15 @@ show/hide toggle that swaps the input type and never touches the value.
 The board opens check-in on the Check-In screen, which draws the meeting's QR.
 A member scans it (or types the code under the seal).
 
+The Scan screen shows a zoom slider inside the viewer only when the camera
+track reports a `zoom` capability (`Scanner.mountZoom` in `05-scan.js`). Its
+range and step come from the device, it starts at the track's current zoom,
+and dragging it calls `applyConstraints` on the live track — the camera is
+never restarted and the frame loop keeps decoding. Cameras and browsers that
+expose no zoom capability get no control and no errors; a track that rejects
+the constraint drops the control quietly. The decoder samples the feed at
+480px wide so a small code at the back of the room still resolves.
+
 **The server is the only authority.** The scanned payload goes to the
 `verify-attendance` Edge Function, which decides whether a stamp is awarded;
 the client only submits and re-reads the result. There is deliberately no local
@@ -118,12 +127,21 @@ attendance. See `README.md` for the full model.
 when it schedules the meeting, and the stored `meeting_date` is the only
 authority — no weekday is assumed, derived or enforced anywhere.
 
-`Schedule` in `01-core.js` only supplies the meeting form's starting values:
+`Schedule` in `01-core.js` only supplies the place (`PLACE: 'MPR'`). The
+scheduling form's starting values live in `03b-board.js`:
 
-```js
-TIME:  '3:15 PM',
-PLACE: 'MPR',
-```
+- the meeting number is prefilled with the highest existing number plus one
+  (`nextMeetingNumber`; `1` when there are no meetings, gaps allowed, rows
+  with a missing or invalid number ignored), and the board can still type any
+  other number — a duplicate is refused before it reaches the database, which
+  also enforces it with a unique constraint;
+- start and end default to `12:40 PM` and `1:30 PM` (`MEETING_DEFAULTS`,
+  stored as 24-hour input values and converted to the 12-hour text the
+  `meetings` table holds);
+- edits are kept as a draft until the meeting is created or the form is
+  reset, so re-rendering the page never overwrites what the board typed.
+
+`node --test tools-test-meetings.mjs` covers these rules.
 
 Whether a meeting is ahead, happening or past is decided by comparing its date
 against the **club's calendar day** — `clubDay()` in `01a-backend.js`, which
@@ -163,6 +181,18 @@ screen, and one `Transit` object owns every page change.
 - **Sign-out** (`Scenes.exit`) — the panels slam shut over the app, the paper
   fills the gutters, SIGNED OUT is stamped, and the whole page drops away to
   the sign-in spread. Distinct from both the opening and the transitions.
+- **Stamp landing** (`Landing` in `05-scan.js`, `FX.stampAcquire` and
+  `FX.stampLand` in `04-fx.js`) — one ordered sequence rather than parallel
+  timers. The moment the server confirms a scan the black "+1" interstitial
+  covers the screen; the store re-reads attendance underneath it (retrying a
+  few times if the network is slow) and the cover holds until the data is in
+  and at least 900ms have passed. Home is then rendered under the cover, the
+  cell that belongs to the verified meeting is found by that meeting's id in
+  the chronological record (so a stale count can never pick the wrong cell),
+  hidden, and scrolled into view; the cover lifts, and only when it has left
+  does the stamp slam onto the card. If the re-read never succeeds the cover
+  lifts without a landing and the page shows its normal load-failure state.
+  A second scan that starts mid-sequence supersedes the first cleanly.
 
 Without anime.js the app still works: `Motion.off` turns every animation into an
 instant state change, and `prefers-reduced-motion` (or the account setting)
@@ -205,4 +235,5 @@ The UMD bundle publishes one global, `anime`, holding the v4 namespace.
 python3 tools-build-fonts.py     # assets/fonts/*.ttf  ->  fonts.css
 python3 tools-trace-stamps.py    # stamp artwork -> traced vector paths
 python3 tools-overlap-check.py   # renders index.html, reports collisions
+node --test tools-test-meetings.mjs   # meeting-number and form-default rules
 ```

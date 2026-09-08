@@ -1,5 +1,25 @@
 "use strict";
 
+function nextMeetingNumber(list){
+  let top = 0;
+  (Array.isArray(list) ? list : []).forEach(m => {
+    const n = Number(m && m.meeting_number);
+    if (Number.isInteger(n) && n > top) top = n;
+  });
+  return top + 1;
+}
+
+const MEETING_DEFAULTS = { start:'12:40', end:'13:30' };
+
+function spanTime(start, end){
+  const a = String(start || '').trim(), b = String(end || '').trim();
+  if (!b) return a;
+  const ma = /^(.*?)\s*(AM|PM)$/i.exec(a), mb = /^(.*?)\s*(AM|PM)$/i.exec(b);
+  if (ma && mb && ma[2].toUpperCase() === mb[2].toUpperCase())
+    return `${ma[1]}–${mb[1]} ${mb[2].toUpperCase()}`;
+  return `${a}–${b}`;
+}
+
 const BoardUI = {
   tab: 'club',
   loading: false,
@@ -16,6 +36,22 @@ const BoardUI = {
   page: 1,
   confirmDelete: null,
   deleteNote: null,
+  form: null,
+
+  formDefaults(){
+    return { no:String(nextMeetingNumber(this.meetings && this.meetings.meetings)),
+             date:Schedule.today(), start:MEETING_DEFAULTS.start, end:MEETING_DEFAULTS.end };
+  },
+  formValues(){
+    const v = this.formDefaults();
+    const f = this.form || {};
+    ['no', 'date', 'start', 'end'].forEach(k => { if (f[k] !== undefined) v[k] = f[k]; });
+    return v;
+  },
+  hasMeetingNumber(no){
+    const list = (this.meetings && this.meetings.meetings) || [];
+    return list.some(m => Number(m && m.meeting_number) === no);
+  },
 
   message(code){
     return ({
@@ -160,87 +196,89 @@ const BoardUI = {
     const upcoming = list.filter(m => m.state === 'UPCOMING').sort(by(1));
     const past = list.filter(m => m.state !== 'UPCOMING').sort(by(-1));
 
+    const band = (title, n) => `<h2 class="meetband"><span>${title}</span>
+      <span class="meetband__n">${n === 1 ? '1 meeting' : `${n} meetings`}</span></h2>`;
+
     return `<div class="bpanel meetgrid">
       ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
 
       <section class="meetgrid__form" data-enter>${this.createForm()}</section>
 
-      <section class="meetgrid__up" data-enter>
-        <h2 class="meetband">Coming up</h2>
+      <section class="meetgrid__up meetpanel" data-enter>
+        ${band('Coming up', upcoming.length)}
         ${upcoming.length
-          ? `<ul class="blist">${upcoming.map(m => this.meetingRow(m)).join('')}</ul>`
+          ? `<ul class="blist blist--meet">${upcoming.map(m => this.meetingRow(m)).join('')}</ul>`
           : this.empty('No upcoming meetings.')}
       </section>
 
-      <section class="meetgrid__held" data-enter>
-        <h2 class="meetband meetband--held">Already held</h2>
+      <section class="meetgrid__held meetpanel meetpanel--held" data-enter>
+        ${band('Already held', past.length)}
         ${past.length
-          ? `<ul class="blist blist--held">${past.map(m => this.meetingRow(m)).join('')}</ul>`
+          ? `<ul class="blist blist--meet">${past.map(m => this.meetingRow(m)).join('')}</ul>`
           : this.empty('No meetings yet.')}
       </section>
     </div>`;
   },
 
   meetingRow(m){
-    if (this.confirmDelete === m.id) return `<li class="brow brow--confirm">
-      <span class="brow__mid">
-        <b>Delete GM ${pad(m.meeting_number)}?</b>
-        <span class="muted">This permanently removes this meeting.</span>
-      </span>
-      <span class="bconfirm">
-        <button class="btn" data-bcancel>Cancel</button>
-        <button class="btn btn--go" data-bdelete="${esc(m.id)}">Delete</button>
-      </span>
-    </li>`;
+    const confirm = this.confirmDelete === m.id;
+    const state = String(m.state || '').toLowerCase();
+    const no = pad(m.meeting_number);
 
-    return `<li class="brow">
-      <span class="brow__no" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">GM ${pad(m.meeting_number)}</span>
-      <span class="brow__mid" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">
-        <b>${esc(fmtDay(m.meeting_date))}</b>
-        <span class="muted">${esc(m.start_time)}${m.end_time ? '-' + esc(m.end_time) : ''} / ${esc(m.location || 'MPR')}</span>
-      </span>
-      <span class="bstate bstate--${m.state.toLowerCase()}">${m.state}</span>
-      <span class="brow__n"><b>${m.attendance_count}</b><span class="brow__nlab">checked in</span></span>
-      ${m.attendance_count === 0
-        ? `<button class="brow__del" data-bconfirm="${esc(m.id)}"
-             aria-label="Delete GM ${pad(m.meeting_number)}">Delete</button>`
+    const action = confirm
+      ? `<span class="bconfirm" role="group" aria-label="Confirm deleting GM ${no}">
+           <span class="bconfirm__q">Delete this meeting?</span>
+           <button class="btn bconfirm__keep" type="button" data-bcancel>Keep</button>
+           <button class="btn btn--go bconfirm__go" type="button" data-bdelete="${esc(m.id)}">Delete</button>
+         </span>`
+      : m.attendance_count === 0
+        ? `<button class="brow__del" type="button" data-bconfirm="${esc(m.id)}"
+             aria-label="Delete GM ${no}">Delete</button>`
         /* TEMP-TEST-TOOLING — a past meeting WITH stamps can be purged,
-           tooling only. It takes the place of the empty spacer rather
-           than adding a sixth cell to the row: appending one squeezed
-           the date and time out of existence at 1024px, which hid the
-           very detail the board needs to confirm what they are
-           deleting. Remove this branch with the rest of the tooling and
-           the spacer below is what is left. */
+           tooling only. Remove this branch with the rest of the tooling
+           and the empty action cell below is what is left. */
         : m.state !== 'UPCOMING'
-        ? `<button class="brow__del" data-bpurgetemp="${esc(m.id)}"
-             data-bpurgeno="${pad(m.meeting_number)}"
+        ? `<button class="brow__del" type="button" data-bpurgetemp="${esc(m.id)}"
+             data-bpurgeno="${no}"
              data-bpurgen="${m.attendance_count}"
-             aria-label="Purge test meeting GM ${pad(m.meeting_number)} and its ${m.attendance_count} stamps"
+             aria-label="Purge test meeting GM ${no} and its ${m.attendance_count} stamps"
              >Purge</button>`
-        : '<span class="brow__del brow__del--off" aria-hidden="true"></span>'}
+        : '';
+
+    return `<li class="brow brow--${state}${confirm ? ' brow--confirm' : ''}">
+      <span class="brow__no" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">GM ${no}</span>
+      <span class="brow__day" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">${esc(fmtDay(m.meeting_date))}</span>
+      <span class="brow__when">${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || 'MPR')}</span>
+      <span class="bstate bstate--${state}">${esc(m.state)}</span>
+      <span class="brow__n"><b>${m.attendance_count}</b><span class="brow__nlab">checked in</span></span>
+      <span class="brow__act">${action}</span>
     </li>`;
   },
 
   createForm(){
-    const f = this.form || {};
-    return `<form class="bform" id="meetingForm">
+    const f = this.formValues();
+    const d = this.formDefaults();
+    return `<form class="bform" id="meetingForm" novalidate>
       <h2 class="h2 bsec bform__head" style="margin-top:0">Schedule a General Meeting
         <span class="bform__seal" aria-hidden="true">${brandSeal('cnh')}</span></h2>
 
       <div class="bform__grid">
         <label class="field"><span class="kicker">Meeting number</span>
-          <input class="input" id="mNo" type="number" min="1" inputmode="numeric"
-                 value="${esc(f.no || '')}" placeholder="12"></label>
+          <input class="input" id="mNo" type="number" min="1" step="1" inputmode="numeric"
+                 value="${esc(f.no)}" placeholder="${esc(d.no)}"></label>
         <label class="field"><span class="kicker">Date</span>
-          <input class="input" id="mDate" type="date" value="${esc(f.date || Schedule.today())}"></label>
+          <input class="input" id="mDate" type="date" value="${esc(f.date)}"></label>
         <label class="field"><span class="kicker">Start</span>
-          <input class="input" id="mStart" type="time" value="${esc(f.start || '15:15')}"></label>
+          <input class="input" id="mStart" type="time" value="${esc(f.start)}"></label>
         <label class="field"><span class="kicker">End</span>
-          <input class="input" id="mEnd" type="time" value="${esc(f.end || '16:15')}"></label>
+          <input class="input" id="mEnd" type="time" value="${esc(f.end)}"></label>
       </div>
 
       <p class="authp__err" id="mErr" role="alert" aria-live="assertive" hidden></p>
-      <button class="btn btn--go" type="submit" id="mGo">Schedule meeting</button>
+      <div class="bform__row">
+        <button class="btn btn--go" type="submit" id="mGo">Schedule meeting</button>
+        <button class="link bform__reset" type="button" data-mreset>Reset</button>
+      </div>
     </form>`;
   },
 

@@ -51,7 +51,7 @@ function paintAttendanceCount(meetingId){
 }
 
 const Scanner = {
-  stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0,
+  stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0, zoom:null,
 
   setState(state, msg){
     const ret = $('#reticle'), el = $('#scanMsg'), line = $('#scanLine'), viewer = $('#viewer');
@@ -105,7 +105,53 @@ const Scanner = {
     this.cv = document.createElement('canvas');
     this.ctx = this.cv.getContext('2d', { willReadFrequently:true });
     this.setState('live', 'Looking for the check-in code');
+    this.mountZoom();
     this.loop(video);
+  },
+
+  mountZoom(){
+    const host = $('#viewer');
+    const track = this.stream && this.stream.getVideoTracks()[0];
+    if (!host || !track || typeof track.getCapabilities !== 'function') return;
+
+    let caps = null, settings = null;
+    try { caps = track.getCapabilities(); } catch (_) { return; }
+    try { settings = track.getSettings(); } catch (_) { settings = null; }
+    const z = caps && caps.zoom;
+    if (!z || typeof z.min !== 'number' || typeof z.max !== 'number' || !(z.max > z.min)) return;
+
+    const step = typeof z.step === 'number' && z.step > 0 ? z.step : (z.max - z.min) / 20;
+    const start = settings && typeof settings.zoom === 'number' ? settings.zoom : z.min;
+    const label = v => `${(Number(v) / z.min).toFixed(1)}×`;
+
+    const el = document.createElement('div');
+    el.className = 'zoom'; el.id = 'zoom';
+    el.innerHTML = `<label class="zoom__lab" for="zoomRange">Zoom</label>
+      <input class="zoom__range" id="zoomRange" type="range"
+             min="${z.min}" max="${z.max}" step="${step}" value="${start}">
+      <output class="zoom__val" for="zoomRange">${label(start)}</output>`;
+    host.appendChild(el);
+    host.classList.add('viewer--zoom');
+
+    const range = el.querySelector('input'), out = el.querySelector('output');
+    let timer = null, want = start;
+    const drop = () => {
+      clearTimeout(timer); timer = null;
+      el.remove(); host.classList.remove('viewer--zoom');
+      if (this.zoom && this.zoom.el === el) this.zoom = null;
+    };
+    const apply = () => {
+      timer = null;
+      if (this.stream !== track.__stream) return;
+      track.applyConstraints({ advanced:[{ zoom:want }] }).catch(drop);
+    };
+    track.__stream = this.stream;
+    range.addEventListener('input', () => {
+      want = Number(range.value);
+      out.textContent = label(want);
+      if (timer === null) timer = setTimeout(apply, 40);
+    });
+    this.zoom = { el, drop };
   },
 
   showLoader(){
@@ -129,7 +175,7 @@ const Scanner = {
       this.raf = requestAnimationFrame(step);
       if (this.locked || video.readyState !== 4 || !window.jsQR) return;
       if ((this.frame++ % 3) !== 0) return;
-      const w = 340, h = Math.round(video.videoHeight / video.videoWidth * w) || 340;
+      const w = 480, h = Math.round(video.videoHeight / video.videoWidth * w) || 480;
       this.cv.width = w; this.cv.height = h;
       this.ctx.drawImage(video, 0, 0, w, h);
       let img;
@@ -175,13 +221,77 @@ const Scanner = {
 
   stop(){
     cancelAnimationFrame(this.raf); this.raf = null;
+    if (this.zoom) this.zoom.drop();
     this.stream?.getTracks().forEach(t => t.stop());
     this.stream = null; this.locked = false;
     $('#viewer')?.classList.remove('viewer--feed');
   },
 };
 
-let pendingCell = -1;
+let pendingStamp = null;
+
+const Landing = {
+  seq: 0,
+  active: false,
+  armed: null,
+  scene: null,
+
+  cellFor(meetingId){
+    const p = Rules.progress();
+    const chrono = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
+    const at = chrono.findIndex(s => s.meetingId === meetingId);
+    if (at < 0) return null;
+    const i = at - p.floor;
+    if (i < 0 || i >= p.span) return null;
+    const cell = $$('#seals .seal')[i];
+    return cell && cell.dataset.seal === 'set' ? cell : null;
+  },
+
+  prime(cell){
+    if (!this.active || !cell) return;
+    this.armed = cell;
+    if (!Motion.off) cell.style.opacity = '0';
+    try { cell.scrollIntoView({ block:'center', inline:'nearest', behavior:'instant' }); }
+    catch (_) { try { cell.scrollIntoView(); } catch (__) {} }
+  },
+
+  async refresh(tries){
+    for (let i = 0; i < tries; i++){
+      await Store.hydrate();
+      if (!Store.failed) return true;
+      await new Promise(r => setTimeout(r, 400 * (i + 1)));
+    }
+    return false;
+  },
+
+  async run(meeting){
+    const seq = ++this.seq;
+    this.active = true;
+    this.armed = null;
+    if (this.scene) this.scene.clear();
+
+    const scene = FX.stampAcquire(meeting);
+    this.scene = scene;
+    const held = new Promise(r => setTimeout(r, Motion.off ? 750 : 900));
+    const [fresh] = await Promise.all([this.refresh(3), held]);
+    if (seq !== this.seq) return;
+
+    pendingStamp = fresh ? { meetingId:meeting.id } : null;
+    go('home', { instant:true });
+    pendingStamp = null;
+
+    const cell = this.armed;
+    this.armed = null;
+    this.active = false;
+    this.scene = null;
+
+    scene.lift(() => {
+      if (seq !== this.seq) return;
+      if (cell && document.body.contains(cell)) FX.stampLand(cell);
+      if (!fresh) Store.hydrate();
+    });
+  },
+};
 
 const SCAN_MESSAGES = {
   INVALID_TOKEN:       ['Not a valid code',      'That code is not from Keystamp. Scan the one on the board screen.'],
@@ -226,12 +336,9 @@ async function submitSeal(raw, fromCamera){
   Scanner.setState('good', 'Verified');
   Scanner.stop();
 
-  await Store.hydrate();
-
-  pendingCell = Rules.progress().filled - 1;
   const meeting = Store.meeting(result.meeting_id) ||
-                  { id:result.meeting_id, no:result.meeting_number };
-  FX.stampAcquire(meeting, () => go('home', { instant:true }));
+                  { id:result.meeting_id, no:result.meeting_number, place:Schedule.PLACE };
+  await Landing.run(meeting);
 }
 
 function rejectVisual(code){

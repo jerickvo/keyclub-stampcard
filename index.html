@@ -281,11 +281,14 @@ body{
   z-index:60;
   --safe-x:max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
   padding:var(--s3) calc(var(--pad) + var(--safe-x))}
-.motion-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;
+.motion-btn{display:inline-grid;grid-auto-flow:column;padding:0;
   background:var(--paper);border:var(--rule-hair) solid var(--ink);
-  color:var(--ink);cursor:pointer;font:500 13px/1 var(--f-body);
-  letter-spacing:0}
-.motion-btn svg{width:14px;height:14px}
+  color:var(--ink);cursor:pointer;font:500 11px/1 var(--f-mono);
+  letter-spacing:.14em;text-transform:uppercase}
+.motion-btn__opt{display:flex;align-items:center;padding:0 11px;color:var(--ink-2)}
+.motion-btn[aria-pressed="true"] .motion-btn__opt:first-child,
+.motion-btn[aria-pressed="false"] .motion-btn__opt:last-child{
+  background:var(--ink);color:var(--paper)}
 
 main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   --safe-x:max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
@@ -555,12 +558,6 @@ select.input{padding-right:var(--s4)}
 }
 html,body{overflow-x:clip;max-width:100%}
 
-.rail__link[aria-current]::before{content:'';position:absolute;
-  right:10px;top:50%;width:14px;height:5px;
-  transform:translateY(-50%) rotate(-16deg);
-  background:var(--ink);
-  clip-path:polygon(0 50%,22% 4%,100% 32%,100% 68%,22% 96%)}
-
 .rig{isolation:isolate}
 
 .panel{
@@ -572,26 +569,61 @@ html,body{overflow-x:clip;max-width:100%}
 .panel > *:not([data-layer]){
   position:relative;z-index:1}
 
-.h2,.rail__link span,.tabs button,.btn,.link,.motion-btn{font-family:var(--f-body);font-weight:500}
+.h2,.tabs button,.btn,.link{font-family:var(--f-body);font-weight:500}
 body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .title{letter-spacing:-.035em}
 .h2{font-size:clamp(14px,1.05vw,16px);letter-spacing:0}
 
-.rail{padding:var(--s5) 0 var(--s5) var(--s3);border-right:0;overflow:hidden}
+.rail{padding:var(--s5) var(--s4) var(--s4);border-right:0;overflow:hidden}
 .rail::after{content:"";position:absolute;top:0;bottom:0;right:0;width:2px;
   background:var(--ink)}
-.rail__brand{padding:0 var(--s3) var(--s5) 0;border-bottom:0}
-.rail__nav{gap:0;padding-top:var(--s5)}
+.rail__brand{display:flex;flex-direction:column;gap:5px;
+  padding:0 0 var(--s4);border-bottom:var(--edge-panel) solid var(--ink)}
+.rail__kick{font:500 10px/1.3 var(--f-mono);letter-spacing:.22em;
+  text-transform:uppercase;color:var(--ink-2)}
+.rail__nav{gap:2px;padding-top:var(--s4)}
 
-.rail__link{display:flex;align-items:center;gap:var(--s3);
-  padding:var(--s3) var(--s3) var(--s3) 0;
-  background:none;text-align:left;position:relative}
-.rail__link svg{display:block;width:18px;height:18px;flex:none}
-.rail__link span{font-family:var(--f-body);font-size:15px;
-  letter-spacing:0;text-transform:none;color:var(--ink-2)}
-.rail__link:hover span{color:var(--ink)}
-.rail__link[aria-current="page"] span{color:var(--ink);font-weight:600}
-.rail__link[aria-current="page"] svg{color:var(--ink)}
+.rail__link{display:grid;grid-template-columns:2.4ch minmax(0,1fr) 18px;
+  align-items:center;column-gap:var(--s3);
+  padding:10px var(--s3);margin:0;
+  background:none;border:0;border-radius:0;text-align:left;position:relative;
+  color:var(--ink);cursor:pointer}
+.rail__idx{font:500 10.5px/1 var(--f-mono);letter-spacing:.08em;color:var(--ink-2)}
+.rail__lab{font-family:var(--f-head);font-weight:400;text-transform:uppercase;
+  font-size:clamp(15px,1.15vw,18px);line-height:1;letter-spacing:.02em;
+  color:var(--ink);min-width:0;overflow-wrap:anywhere}
+.rail__link svg{display:block;width:18px;height:18px;flex:none;
+  color:var(--ink-2);justify-self:end}
+.rail__link:hover{background:var(--tint)}
+.rail__link[aria-current="page"]{background:var(--ink);
+  clip-path:polygon(0 0,100% 0,calc(100% - 9px) 100%,0 100%)}
+.rail__link[aria-current="page"] .rail__idx,
+.rail__link[aria-current="page"] .rail__lab,
+.rail__link[aria-current="page"] svg{color:var(--paper)}
+
+.rail__foot{display:grid;gap:var(--s3);padding-top:var(--s4);
+  border-top:var(--edge-panel) solid var(--ink)}
+.rail__id{display:grid;gap:8px;justify-items:start;min-width:0}
+.rail__who{margin:0;font-family:var(--f-head);font-weight:400;text-transform:uppercase;
+  font-size:clamp(17px,1.35vw,21px);line-height:1;letter-spacing:.01em;
+  color:var(--ink);min-width:0;max-width:100%;overflow-wrap:anywhere}
+.rail__role{display:inline-block;padding:4px 8px 3px;
+  border:var(--edge-panel) solid var(--ink);
+  font:500 10px/1 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ink);transform:rotate(-2deg)}
+.rail__role--board{background:var(--ink);color:var(--paper)}
+.rail__set{display:flex;align-items:center;justify-content:space-between;
+  gap:var(--s3);margin:0;padding:var(--s3) 0;
+  border-top:var(--edge-hair) solid var(--tone);
+  border-bottom:var(--edge-hair) solid var(--tone)}
+.rail__setlab{font:500 10px/1.3 var(--f-mono);letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-2)}
+.rail__out{width:100%;min-height:44px;padding:10px var(--s4);cursor:pointer;
+  border:var(--edge-panel) solid var(--ink);background:var(--paper);color:var(--ink);
+  font-family:var(--f-head);font-weight:400;text-transform:uppercase;
+  font-size:clamp(14px,1.1vw,17px);line-height:1.2;letter-spacing:.02em}
+.rail__out:hover{background:var(--ink);color:var(--paper)}
+.rail__note{margin-top:6px;font-size:12.5px}
 
 .tabs{border-top:0;background:var(--paper);padding-top:0}
 .tabs::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;
@@ -871,13 +903,6 @@ main#view{padding-top:var(--space-tier);
   .bstat:nth-child(2){padding-left:0;border-left:0}
 }
 
-@media(min-width:1024px){
-  .rail__link{align-items:start;gap:2px;
-    padding:clamp(10px,1.1vw,16px) var(--s3) clamp(10px,1.1vw,16px) 0}
-  .rail__link span{font-size:clamp(9.5px,.72vw,11px);
-    letter-spacing:.3em;align-self:start;margin-top:3px}
-}
-
 .empty-reg{position:relative;padding:clamp(22px,4vw,48px) 0 clamp(24px,4vw,52px)}
 .empty{position:relative;display:grid;gap:clamp(18px,3.4vw,40px);align-items:center;
   grid-template-columns:auto minmax(0,1fr);
@@ -1067,12 +1092,61 @@ body{
 .brow__no{color:var(--ink-2)}
 .brow__n{font-family:var(--f-head)}
 
-.brow--confirm{background:var(--ink);color:var(--paper)}
-.brow--confirm b,.brow--confirm .muted{color:var(--paper)}
-.brow--confirm .btn{background:transparent;color:var(--paper);border-color:var(--paper)}
-.brow--confirm .btn--go{background:var(--paper);color:var(--ink);border-color:var(--paper)}
 .brow__del{border-color:var(--tone);color:var(--ink-2)}
 .brow__del:hover,.brow__del:focus-visible{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+.blist--meet .brow{display:grid;column-gap:var(--s3);row-gap:4px;align-items:center;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  grid-template-areas:"no day state" "no when when" "no n act";
+  padding:var(--s3) 0;cursor:default}
+.blist--meet .brow:hover{background:none}
+.blist--meet .brow__no{grid-area:no;flex:none;align-self:start;padding-top:4px;
+  cursor:pointer;min-height:0}
+.blist--meet .brow__day{grid-area:day;cursor:pointer;
+  font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);line-height:1.05;
+  letter-spacing:.01em;color:var(--ink);min-width:0;overflow-wrap:anywhere}
+.blist--meet .brow__when{grid-area:when;min-width:0;overflow-wrap:anywhere;
+  font:500 clamp(11px,.4vw + 9.7px,12.5px)/1.4 var(--f-mono);
+  letter-spacing:.04em;color:var(--ink-2)}
+.blist--meet .bstate{grid-area:state;justify-self:end;align-self:start}
+.blist--meet .brow__n{grid-area:n;display:flex;align-items:baseline;gap:6px;
+  justify-self:start;text-align:left;padding-top:2px}
+.blist--meet .brow__act{grid-area:act;display:flex;justify-content:flex-end;
+  justify-self:end;min-width:0}
+.blist--meet .brow__act:empty{display:none}
+.blist--meet .brow--past .brow__day{color:var(--ink-2)}
+
+.blist--meet .brow--confirm{grid-template-areas:"no day day" "no when when" "act act act";
+  margin-inline:calc(var(--s3) * -1);padding-inline:var(--s3);
+  background:var(--tint);box-shadow:inset var(--edge) 0 0 var(--ink)}
+.blist--meet .brow--confirm .bstate,.blist--meet .brow--confirm .brow__n{display:none}
+.blist--meet .brow--confirm .brow__act{justify-self:stretch}
+.bconfirm{display:flex;align-items:center;justify-content:flex-end;
+  gap:var(--s2);flex-wrap:wrap;width:100%}
+.bconfirm__q{flex:1 1 auto;font-family:var(--f-head);font-weight:400;
+  text-transform:uppercase;font-size:clamp(13px,1vw,15px);letter-spacing:.02em;
+  color:var(--ink);white-space:nowrap}
+.bconfirm .btn{min-height:34px;padding:0 var(--s3);font-size:12px}
+@media(max-width:379px){
+  .bconfirm__q{flex-basis:100%}
+  .bconfirm .btn{flex:1 1 auto}
+}
+.bform .field{display:flex;flex-direction:column;justify-content:flex-end;min-width:0}
+.bform .field > .kicker{flex:none}
+.bform .field > .input{flex:none;width:100%}
+
+@media(min-width:640px){
+  .blist--meet .brow{grid-template-columns:auto minmax(0,1fr) auto auto auto;
+    grid-template-areas:"no day state n act" "no when state n act";row-gap:2px}
+  .blist--meet .brow__no{align-self:center;padding-top:0}
+  .blist--meet .bstate{align-self:center}
+  .blist--meet .brow__n{display:grid;justify-items:end;gap:1px;
+    text-align:right;padding-top:0}
+  .blist--meet .brow__act{min-width:74px}
+  .blist--meet .brow--confirm{grid-template-columns:auto minmax(0,1fr) auto;
+    grid-template-areas:"no day act" "no when act"}
+  .blist--meet .brow--confirm .brow__act{justify-self:end;min-width:0}
+}
 
 .bform{border:var(--edge-panel) solid var(--ink);background:var(--paper);
   padding:var(--s5);box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
@@ -1084,9 +1158,6 @@ body{
 
 .bform .input,.bfilters .input{font-family:var(--f-mono);
   color-scheme:light;accent-color:var(--ink)}
-
-.blist--held{border-left:var(--edge) solid var(--ink);
-  padding-left:clamp(12px,2vw,22px)}
 
 .meetgrid{display:grid;gap:var(--s5);grid-template-columns:minmax(0,1fr);
   grid-template-areas:"err" "form" "up" "held";align-items:start}
@@ -1101,19 +1172,29 @@ body{
   .meetgrid__form .bform{position:sticky;top:var(--s4)}
 }
 
-.meetband{margin:0 0 var(--s3);padding:var(--s2) var(--s4);
+.meetband{display:flex;align-items:baseline;justify-content:space-between;
+  gap:var(--s3);margin:0 0 var(--s3);padding:var(--s2) var(--s4);
   background:var(--ink);color:var(--paper);
   font-family:var(--f-head);font-weight:400;text-transform:uppercase;
   font-size:clamp(17px,2.4vw,24px);line-height:1.2;letter-spacing:.02em}
-.meetband--held{background:none;color:var(--ink);padding-inline:0;
-  border-bottom:var(--edge) solid var(--ink)}
+.meetband__n{font:500 10px/1 var(--f-mono);letter-spacing:.16em;
+  text-transform:uppercase;color:var(--paper);opacity:.8;white-space:nowrap}
 .meetgrid .bsec::before{content:none}
 
-.meetgrid__up{border:var(--edge-panel) solid var(--ink);background:var(--paper);
+.meetpanel{min-width:0;border:var(--edge-panel) solid var(--ink);
+  background:var(--paper);
   box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
-.meetgrid__up .meetband{margin:0}
-.meetgrid__up .blist{padding:0 var(--s4);margin:0}
-.meetgrid__up .bempty{border:0;box-shadow:none}
+.meetpanel .meetband{margin:0}
+.meetpanel .blist{padding:0 var(--s4);margin:0}
+.meetpanel .bempty{border:0;box-shadow:none}
+.meetpanel--held .meetband{background:var(--paper);color:var(--ink);
+  border-bottom:var(--edge-panel) solid var(--ink)}
+.meetpanel--held .meetband__n{color:var(--ink-2);opacity:1}
+
+.bform__row{display:flex;align-items:center;justify-content:space-between;
+  gap:var(--s3);flex-wrap:wrap;margin-top:var(--s3)}
+.bform__reset{min-height:38px;padding-block:0;color:var(--ink-2);
+  font-size:var(--t-caption)}
 
 .brow__n{display:grid;justify-items:end;gap:1px;text-align:right}
 .brow__n b{font-weight:400;font-family:var(--f-head);
@@ -1191,7 +1272,7 @@ body{
 .btn,.motion-btn,.input,.brow__del{
   min-height:38px;
 }
-.motion-btn{padding:0 var(--s4)}
+.motion-btn{padding:0}
 
 .kicker{font-size:clamp(11px,.55vw + 9.2px,13px)}
 
@@ -1224,10 +1305,12 @@ body{
   .bstat{padding:var(--s4) var(--s4) var(--s5)}
 }
 
-.btn:hover,.motion-btn:hover{
+.btn:hover{
   background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.btn:active,.motion-btn:active{transform:translate(2px,2px)}
-.motion-btn:hover svg{stroke:var(--paper)}
+.btn:active{transform:translate(2px,2px)}
+.motion-btn:hover .motion-btn__opt{color:var(--ink)}
+.motion-btn[aria-pressed="true"]:hover .motion-btn__opt:first-child,
+.motion-btn[aria-pressed="false"]:hover .motion-btn__opt:last-child{color:var(--paper)}
 .link:hover{text-decoration-thickness:2px}
 :focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px}
 
@@ -1470,9 +1553,6 @@ main#view:focus,main#view:focus-visible{outline:none}
 .ahead__at{font-size:var(--t-caption);color:var(--ink-2);
   justify-self:end;text-align:right}
 
-.rail__who{font-family:var(--f-body);
-  font-size:clamp(15px,1.3vw,19px);line-height:1.15;overflow-wrap:anywhere}
-.rail__role{margin-top:2px;font-size:13px}
 
 .h2,.ledger__mark,.ahead__mark,.stall__title,.authp__title,.empty__title,
 .bsec,.bnow__lab{font-family:var(--f-head)}
@@ -1827,6 +1907,29 @@ button,input,select,textarea{font-family:inherit}
 .viewer--hit{border-color:var(--ink)}
 .viewer--hit .viewer__scrim{opacity:.35}
 
+.zoom{position:relative;z-index:4;align-self:end;justify-self:stretch;
+  display:flex;align-items:center;gap:var(--s3);margin:0;padding:8px 12px;
+  background:var(--ink);color:var(--paper)}
+.zoom__lab{flex:none;font:500 10px/1 var(--f-mono);letter-spacing:.2em;
+  text-transform:uppercase}
+.zoom__val{flex:none;min-width:4ch;text-align:right;
+  font:500 11px/1 var(--f-mono);letter-spacing:.06em}
+.zoom__range{flex:1 1 auto;min-width:0;height:28px;margin:0;padding:0;
+  background:transparent;cursor:pointer;
+  -webkit-appearance:none;appearance:none;accent-color:var(--paper)}
+.zoom__range::-webkit-slider-runnable-track{height:3px;background:var(--paper)}
+.zoom__range::-moz-range-track{height:3px;background:var(--paper)}
+.zoom__range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+  width:22px;height:22px;margin-top:-9.5px;border-radius:0;
+  background:var(--paper);border:3px solid var(--ink);
+  box-shadow:0 0 0 2px var(--paper)}
+.zoom__range::-moz-range-thumb{width:16px;height:16px;border-radius:0;
+  background:var(--paper);border:3px solid var(--ink);
+  box-shadow:0 0 0 2px var(--paper)}
+.zoom__range:focus-visible{outline:var(--edge-thin) solid var(--paper);outline-offset:2px}
+.viewer--zoom .reticle{width:min(56cqw,62cqh,290px);margin-bottom:44px}
+.viewer--zoom::after{bottom:51px}
+
 .viewer--stalled{aspect-ratio:auto;min-height:clamp(160px,30vw,240px);
   container-type:normal;place-items:stretch;background:var(--paper)}
 .viewer--stalled::after{display:none}
@@ -2050,8 +2153,6 @@ button,input,select,textarea{font-family:inherit}
   justify-content:space-between;gap:var(--s3);padding:var(--s2) 0;
   border-bottom:var(--edge-rule) solid var(--tint)}
 .acct__lab{font-size:var(--t-body)}
-.rail__set{display:flex;align-items:center;justify-content:space-between;
-  gap:var(--s2);margin:var(--s3) 0;font-size:12.5px;color:var(--ink-2)}
 .acct__out{padding:11px var(--s5);cursor:pointer;
   border:var(--edge-panel) solid var(--ink);
   background:var(--paper);color:var(--ink);
@@ -15335,8 +15436,6 @@ const ICON = {
   eye:    SVG('<path d="M2.5 12 7.5 6.5h9l5 5.5-5 5.5h-9z"/><circle cx="12" cy="12" r="2.75"/>'),
   eyeOff: SVG('<path d="M2.5 12 7.5 6.5h9l5 5.5-5 5.5h-9z"/><circle cx="12" cy="12" r="2.75"/><path d="M4 20 20 4"/>'),
 
-  waves:  SVG('<path d="M2.5 16h4v-8h5v8h5v-8h5"/>'),
-  still:  SVG('<path d="M4 12h16"/><path d="M4 8v8M20 8v8"/>'),
 };
 
 const KCI_SEAL = `
@@ -15389,7 +15488,6 @@ const stampMark = (ordinal) => {
 const wordmark = () => `<span class="mark"><span class="mark__word">Key<b>stamp</b></span></span>`;
 
 const Schedule = {
-  TIME: '3:15 PM',
   PLACE: 'MPR',
   today: () => clubDay(),
 };
@@ -16215,6 +16313,26 @@ const Views = {
 /* ── js/03b-board.js ── */
 "use strict";
 
+function nextMeetingNumber(list){
+  let top = 0;
+  (Array.isArray(list) ? list : []).forEach(m => {
+    const n = Number(m && m.meeting_number);
+    if (Number.isInteger(n) && n > top) top = n;
+  });
+  return top + 1;
+}
+
+const MEETING_DEFAULTS = { start:'12:40', end:'13:30' };
+
+function spanTime(start, end){
+  const a = String(start || '').trim(), b = String(end || '').trim();
+  if (!b) return a;
+  const ma = /^(.*?)\s*(AM|PM)$/i.exec(a), mb = /^(.*?)\s*(AM|PM)$/i.exec(b);
+  if (ma && mb && ma[2].toUpperCase() === mb[2].toUpperCase())
+    return `${ma[1]}–${mb[1]} ${mb[2].toUpperCase()}`;
+  return `${a}–${b}`;
+}
+
 const BoardUI = {
   tab: 'club',
   loading: false,
@@ -16231,6 +16349,22 @@ const BoardUI = {
   page: 1,
   confirmDelete: null,
   deleteNote: null,
+  form: null,
+
+  formDefaults(){
+    return { no:String(nextMeetingNumber(this.meetings && this.meetings.meetings)),
+             date:Schedule.today(), start:MEETING_DEFAULTS.start, end:MEETING_DEFAULTS.end };
+  },
+  formValues(){
+    const v = this.formDefaults();
+    const f = this.form || {};
+    ['no', 'date', 'start', 'end'].forEach(k => { if (f[k] !== undefined) v[k] = f[k]; });
+    return v;
+  },
+  hasMeetingNumber(no){
+    const list = (this.meetings && this.meetings.meetings) || [];
+    return list.some(m => Number(m && m.meeting_number) === no);
+  },
 
   message(code){
     return ({
@@ -16375,87 +16509,89 @@ const BoardUI = {
     const upcoming = list.filter(m => m.state === 'UPCOMING').sort(by(1));
     const past = list.filter(m => m.state !== 'UPCOMING').sort(by(-1));
 
+    const band = (title, n) => `<h2 class="meetband"><span>${title}</span>
+      <span class="meetband__n">${n === 1 ? '1 meeting' : `${n} meetings`}</span></h2>`;
+
     return `<div class="bpanel meetgrid">
       ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
 
       <section class="meetgrid__form" data-enter>${this.createForm()}</section>
 
-      <section class="meetgrid__up" data-enter>
-        <h2 class="meetband">Coming up</h2>
+      <section class="meetgrid__up meetpanel" data-enter>
+        ${band('Coming up', upcoming.length)}
         ${upcoming.length
-          ? `<ul class="blist">${upcoming.map(m => this.meetingRow(m)).join('')}</ul>`
+          ? `<ul class="blist blist--meet">${upcoming.map(m => this.meetingRow(m)).join('')}</ul>`
           : this.empty('No upcoming meetings.')}
       </section>
 
-      <section class="meetgrid__held" data-enter>
-        <h2 class="meetband meetband--held">Already held</h2>
+      <section class="meetgrid__held meetpanel meetpanel--held" data-enter>
+        ${band('Already held', past.length)}
         ${past.length
-          ? `<ul class="blist blist--held">${past.map(m => this.meetingRow(m)).join('')}</ul>`
+          ? `<ul class="blist blist--meet">${past.map(m => this.meetingRow(m)).join('')}</ul>`
           : this.empty('No meetings yet.')}
       </section>
     </div>`;
   },
 
   meetingRow(m){
-    if (this.confirmDelete === m.id) return `<li class="brow brow--confirm">
-      <span class="brow__mid">
-        <b>Delete GM ${pad(m.meeting_number)}?</b>
-        <span class="muted">This permanently removes this meeting.</span>
-      </span>
-      <span class="bconfirm">
-        <button class="btn" data-bcancel>Cancel</button>
-        <button class="btn btn--go" data-bdelete="${esc(m.id)}">Delete</button>
-      </span>
-    </li>`;
+    const confirm = this.confirmDelete === m.id;
+    const state = String(m.state || '').toLowerCase();
+    const no = pad(m.meeting_number);
 
-    return `<li class="brow">
-      <span class="brow__no" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">GM ${pad(m.meeting_number)}</span>
-      <span class="brow__mid" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">
-        <b>${esc(fmtDay(m.meeting_date))}</b>
-        <span class="muted">${esc(m.start_time)}${m.end_time ? '-' + esc(m.end_time) : ''} / ${esc(m.location || 'MPR')}</span>
-      </span>
-      <span class="bstate bstate--${m.state.toLowerCase()}">${m.state}</span>
-      <span class="brow__n"><b>${m.attendance_count}</b><span class="brow__nlab">checked in</span></span>
-      ${m.attendance_count === 0
-        ? `<button class="brow__del" data-bconfirm="${esc(m.id)}"
-             aria-label="Delete GM ${pad(m.meeting_number)}">Delete</button>`
+    const action = confirm
+      ? `<span class="bconfirm" role="group" aria-label="Confirm deleting GM ${no}">
+           <span class="bconfirm__q">Delete this meeting?</span>
+           <button class="btn bconfirm__keep" type="button" data-bcancel>Keep</button>
+           <button class="btn btn--go bconfirm__go" type="button" data-bdelete="${esc(m.id)}">Delete</button>
+         </span>`
+      : m.attendance_count === 0
+        ? `<button class="brow__del" type="button" data-bconfirm="${esc(m.id)}"
+             aria-label="Delete GM ${no}">Delete</button>`
         /* TEMP-TEST-TOOLING — a past meeting WITH stamps can be purged,
-           tooling only. It takes the place of the empty spacer rather
-           than adding a sixth cell to the row: appending one squeezed
-           the date and time out of existence at 1024px, which hid the
-           very detail the board needs to confirm what they are
-           deleting. Remove this branch with the rest of the tooling and
-           the spacer below is what is left. */
+           tooling only. Remove this branch with the rest of the tooling
+           and the empty action cell below is what is left. */
         : m.state !== 'UPCOMING'
-        ? `<button class="brow__del" data-bpurgetemp="${esc(m.id)}"
-             data-bpurgeno="${pad(m.meeting_number)}"
+        ? `<button class="brow__del" type="button" data-bpurgetemp="${esc(m.id)}"
+             data-bpurgeno="${no}"
              data-bpurgen="${m.attendance_count}"
-             aria-label="Purge test meeting GM ${pad(m.meeting_number)} and its ${m.attendance_count} stamps"
+             aria-label="Purge test meeting GM ${no} and its ${m.attendance_count} stamps"
              >Purge</button>`
-        : '<span class="brow__del brow__del--off" aria-hidden="true"></span>'}
+        : '';
+
+    return `<li class="brow brow--${state}${confirm ? ' brow--confirm' : ''}">
+      <span class="brow__no" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">GM ${no}</span>
+      <span class="brow__day" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">${esc(fmtDay(m.meeting_date))}</span>
+      <span class="brow__when">${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || 'MPR')}</span>
+      <span class="bstate bstate--${state}">${esc(m.state)}</span>
+      <span class="brow__n"><b>${m.attendance_count}</b><span class="brow__nlab">checked in</span></span>
+      <span class="brow__act">${action}</span>
     </li>`;
   },
 
   createForm(){
-    const f = this.form || {};
-    return `<form class="bform" id="meetingForm">
+    const f = this.formValues();
+    const d = this.formDefaults();
+    return `<form class="bform" id="meetingForm" novalidate>
       <h2 class="h2 bsec bform__head" style="margin-top:0">Schedule a General Meeting
         <span class="bform__seal" aria-hidden="true">${brandSeal('cnh')}</span></h2>
 
       <div class="bform__grid">
         <label class="field"><span class="kicker">Meeting number</span>
-          <input class="input" id="mNo" type="number" min="1" inputmode="numeric"
-                 value="${esc(f.no || '')}" placeholder="12"></label>
+          <input class="input" id="mNo" type="number" min="1" step="1" inputmode="numeric"
+                 value="${esc(f.no)}" placeholder="${esc(d.no)}"></label>
         <label class="field"><span class="kicker">Date</span>
-          <input class="input" id="mDate" type="date" value="${esc(f.date || Schedule.today())}"></label>
+          <input class="input" id="mDate" type="date" value="${esc(f.date)}"></label>
         <label class="field"><span class="kicker">Start</span>
-          <input class="input" id="mStart" type="time" value="${esc(f.start || '15:15')}"></label>
+          <input class="input" id="mStart" type="time" value="${esc(f.start)}"></label>
         <label class="field"><span class="kicker">End</span>
-          <input class="input" id="mEnd" type="time" value="${esc(f.end || '16:15')}"></label>
+          <input class="input" id="mEnd" type="time" value="${esc(f.end)}"></label>
       </div>
 
       <p class="authp__err" id="mErr" role="alert" aria-live="assertive" hidden></p>
-      <button class="btn btn--go" type="submit" id="mGo">Schedule meeting</button>
+      <div class="bform__row">
+        <button class="btn btn--go" type="submit" id="mGo">Schedule meeting</button>
+        <button class="link bform__reset" type="button" data-mreset>Reset</button>
+      </div>
     </form>`;
   },
 
@@ -16732,7 +16868,7 @@ const FX = {
       animate(c, { translateX:0, translateY:0, duration:220, ease:EASE.CALM }));
   },
 
-  stampAcquire(meeting, done){
+  stampAcquire(meeting){
     const scene = document.createElement('div');
     scene.className = 'acq';
     scene.innerHTML = `
@@ -16742,38 +16878,53 @@ const FX = {
           <svg viewBox="0 0 64 64"><path d="${stampShape(7, 0)}"/></svg>
           <b class="acq__plus">+1</b>
         </div>
-        <p class="acq__meet">GM ${pad(meeting.no)} / ${fmtDate(meeting.date)} / ${esc(meeting.place || Schedule.PLACE)}</p>
+        <p class="acq__meet">GM ${pad(meeting.no)} / ${fmtDate(meeting.date || Schedule.today())} / ${esc(meeting.place || Schedule.PLACE)}</p>
       </div>`;
     document.body.appendChild(scene);
-    const clear = () => { try { scene.remove(); } catch (_) {} };
 
-    if (Motion.off){
-      setTimeout(() => { done(); clear(); }, 750);
-      return;
+    let gone = false;
+    const clear = () => { if (gone) return; gone = true; try { scene.remove(); } catch (_) {} };
+    const fuse = setTimeout(clear, 8000);
+
+    if (!Motion.off){
+      const sealEl = scene.querySelector('.acq__seal');
+      aset(sealEl, { scale:1.16, rotate:-4 });
+      animate(sealEl, { scale:[1.16, 1], rotate:[-4, -1.5],
+        duration:110, delay:80, ease:STEP(2) });
+      setTimeout(() => Impact.shake(scene, 3, 80), 170);
     }
 
-    const sealEl = scene.querySelector('.acq__seal');
-
-    aset(sealEl, { scale:1.16, rotate:-4 });
-    animate(sealEl, { scale:[1.16, 1], rotate:[-4, -1.5],
-      duration:110, delay:80, ease:STEP(2) });
-    setTimeout(() => Impact.shake(scene, 3, 80), 170);
-
-    setTimeout(done, 540);
-    setTimeout(() => animate(scene, { translateY:[0, -(innerHeight + 24)], duration:300,
-      ease:cubicBezier(.7, 0, .18, 1), onComplete:clear }), 760);
-    setTimeout(clear, 2000);
+    return {
+      clear(){ clearTimeout(fuse); clear(); },
+      lift(then){
+        clearTimeout(fuse);
+        let fired = false;
+        const done = () => {
+          if (fired) return; fired = true;
+          clear();
+          if (typeof then === 'function') then();
+        };
+        if (Motion.off || gone){ done(); return; }
+        animate(scene, { translateY:[0, -(innerHeight + 24)], duration:300,
+          ease:cubicBezier(.7, 0, .18, 1), onComplete:done });
+        setTimeout(done, 600);
+      },
+    };
   },
 
   stampLand(cell){
-    if (!cell || Motion.off) return;
+    if (!cell) return;
+    if (Motion.off){ cell.style.opacity = ''; return; }
 
     const lean = getComputedStyle(cell).getPropertyValue('--lean').trim() || '0deg';
-    aset(cell, { opacity:0 });
-    animate(cell, { opacity:[0, 1], duration:1, delay:420, ease:STEP(1) });
-    animate(cell, { scale:[1.45, 1], rotate:lean, duration:130, delay:420, ease:STEP(3) });
-    setTimeout(() => { Impact.shake($('.card__face') || $('#shell'), 3, 80); }, 540);
-    setTimeout(() => { Motion.settle(cell); }, 720);
+    const deg = parseFloat(lean) || 0;
+    const face = cell.closest('.card__face') || cell.closest('.card') || $('#shell');
+
+    aset(cell, { opacity:1, scale:1.55, rotate:`${deg - 9}deg` });
+    animate(cell, { scale:[1.55, 1], rotate:[`${deg - 9}deg`, `${deg}deg`],
+      duration:180, delay:70, ease:STEP(4),
+      onComplete(){ Motion.settle(cell); } });
+    setTimeout(() => Impact.shake(face, 3, 90), 230);
   },
 
   rewardUnlock(row){
@@ -17241,7 +17392,7 @@ function paintAttendanceCount(meetingId){
 }
 
 const Scanner = {
-  stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0,
+  stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0, zoom:null,
 
   setState(state, msg){
     const ret = $('#reticle'), el = $('#scanMsg'), line = $('#scanLine'), viewer = $('#viewer');
@@ -17295,7 +17446,53 @@ const Scanner = {
     this.cv = document.createElement('canvas');
     this.ctx = this.cv.getContext('2d', { willReadFrequently:true });
     this.setState('live', 'Looking for the check-in code');
+    this.mountZoom();
     this.loop(video);
+  },
+
+  mountZoom(){
+    const host = $('#viewer');
+    const track = this.stream && this.stream.getVideoTracks()[0];
+    if (!host || !track || typeof track.getCapabilities !== 'function') return;
+
+    let caps = null, settings = null;
+    try { caps = track.getCapabilities(); } catch (_) { return; }
+    try { settings = track.getSettings(); } catch (_) { settings = null; }
+    const z = caps && caps.zoom;
+    if (!z || typeof z.min !== 'number' || typeof z.max !== 'number' || !(z.max > z.min)) return;
+
+    const step = typeof z.step === 'number' && z.step > 0 ? z.step : (z.max - z.min) / 20;
+    const start = settings && typeof settings.zoom === 'number' ? settings.zoom : z.min;
+    const label = v => `${(Number(v) / z.min).toFixed(1)}×`;
+
+    const el = document.createElement('div');
+    el.className = 'zoom'; el.id = 'zoom';
+    el.innerHTML = `<label class="zoom__lab" for="zoomRange">Zoom</label>
+      <input class="zoom__range" id="zoomRange" type="range"
+             min="${z.min}" max="${z.max}" step="${step}" value="${start}">
+      <output class="zoom__val" for="zoomRange">${label(start)}</output>`;
+    host.appendChild(el);
+    host.classList.add('viewer--zoom');
+
+    const range = el.querySelector('input'), out = el.querySelector('output');
+    let timer = null, want = start;
+    const drop = () => {
+      clearTimeout(timer); timer = null;
+      el.remove(); host.classList.remove('viewer--zoom');
+      if (this.zoom && this.zoom.el === el) this.zoom = null;
+    };
+    const apply = () => {
+      timer = null;
+      if (this.stream !== track.__stream) return;
+      track.applyConstraints({ advanced:[{ zoom:want }] }).catch(drop);
+    };
+    track.__stream = this.stream;
+    range.addEventListener('input', () => {
+      want = Number(range.value);
+      out.textContent = label(want);
+      if (timer === null) timer = setTimeout(apply, 40);
+    });
+    this.zoom = { el, drop };
   },
 
   showLoader(){
@@ -17319,7 +17516,7 @@ const Scanner = {
       this.raf = requestAnimationFrame(step);
       if (this.locked || video.readyState !== 4 || !window.jsQR) return;
       if ((this.frame++ % 3) !== 0) return;
-      const w = 340, h = Math.round(video.videoHeight / video.videoWidth * w) || 340;
+      const w = 480, h = Math.round(video.videoHeight / video.videoWidth * w) || 480;
       this.cv.width = w; this.cv.height = h;
       this.ctx.drawImage(video, 0, 0, w, h);
       let img;
@@ -17365,13 +17562,77 @@ const Scanner = {
 
   stop(){
     cancelAnimationFrame(this.raf); this.raf = null;
+    if (this.zoom) this.zoom.drop();
     this.stream?.getTracks().forEach(t => t.stop());
     this.stream = null; this.locked = false;
     $('#viewer')?.classList.remove('viewer--feed');
   },
 };
 
-let pendingCell = -1;
+let pendingStamp = null;
+
+const Landing = {
+  seq: 0,
+  active: false,
+  armed: null,
+  scene: null,
+
+  cellFor(meetingId){
+    const p = Rules.progress();
+    const chrono = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
+    const at = chrono.findIndex(s => s.meetingId === meetingId);
+    if (at < 0) return null;
+    const i = at - p.floor;
+    if (i < 0 || i >= p.span) return null;
+    const cell = $$('#seals .seal')[i];
+    return cell && cell.dataset.seal === 'set' ? cell : null;
+  },
+
+  prime(cell){
+    if (!this.active || !cell) return;
+    this.armed = cell;
+    if (!Motion.off) cell.style.opacity = '0';
+    try { cell.scrollIntoView({ block:'center', inline:'nearest', behavior:'instant' }); }
+    catch (_) { try { cell.scrollIntoView(); } catch (__) {} }
+  },
+
+  async refresh(tries){
+    for (let i = 0; i < tries; i++){
+      await Store.hydrate();
+      if (!Store.failed) return true;
+      await new Promise(r => setTimeout(r, 400 * (i + 1)));
+    }
+    return false;
+  },
+
+  async run(meeting){
+    const seq = ++this.seq;
+    this.active = true;
+    this.armed = null;
+    if (this.scene) this.scene.clear();
+
+    const scene = FX.stampAcquire(meeting);
+    this.scene = scene;
+    const held = new Promise(r => setTimeout(r, Motion.off ? 750 : 900));
+    const [fresh] = await Promise.all([this.refresh(3), held]);
+    if (seq !== this.seq) return;
+
+    pendingStamp = fresh ? { meetingId:meeting.id } : null;
+    go('home', { instant:true });
+    pendingStamp = null;
+
+    const cell = this.armed;
+    this.armed = null;
+    this.active = false;
+    this.scene = null;
+
+    scene.lift(() => {
+      if (seq !== this.seq) return;
+      if (cell && document.body.contains(cell)) FX.stampLand(cell);
+      if (!fresh) Store.hydrate();
+    });
+  },
+};
 
 const SCAN_MESSAGES = {
   INVALID_TOKEN:       ['Not a valid code',      'That code is not from Keystamp. Scan the one on the board screen.'],
@@ -17416,12 +17677,9 @@ async function submitSeal(raw, fromCamera){
   Scanner.setState('good', 'Verified');
   Scanner.stop();
 
-  await Store.hydrate();
-
-  pendingCell = Rules.progress().filled - 1;
   const meeting = Store.meeting(result.meeting_id) ||
-                  { id:result.meeting_id, no:result.meeting_number };
-  FX.stampAcquire(meeting, () => go('home', { instant:true }));
+                  { id:result.meeting_id, no:result.meeting_number, place:Schedule.PLACE };
+  await Landing.run(meeting);
 }
 
 function rejectVisual(code){
@@ -17527,7 +17785,7 @@ function paintBrand(){
   const el = $('#railBrand');
   if (!el) return;
 
-  el.innerHTML = wordmark();
+  el.innerHTML = wordmark() + '<span class="rail__kick">Key Club attendance</span>';
 }
 
 function paintNav(){
@@ -17535,12 +17793,12 @@ function paintNav(){
   $$('.tab', tabs).forEach(el => el.remove());
   $$('.rail__link', rail).forEach(el => el.remove());
 
-  navFor().forEach(n => {
+  navFor().forEach((n, i) => {
     const cur = current === n.id ? ' aria-current="page"' : '';
     tabs.insertAdjacentHTML('beforeend',
       `<button class="tab" data-go="${n.id}"${cur}><span>${n.short || n.label}</span></button>`);
     rail.insertAdjacentHTML('beforeend',
-      `<button class="rail__link" data-go="${n.id}"${cur}>${ICON[n.icon]}<span>${n.label}</span></button>`);
+      `<button class="rail__link" data-go="${n.id}"${cur}><span class="rail__idx">${pad(i + 1)}</span><span class="rail__lab">${n.label}</span>${ICON[n.icon]}</button>`);
   });
 }
 
@@ -17584,12 +17842,12 @@ const seenUnlocked = new Set();
 
 function playViewIntro(id, nav = false){
   if (id === 'home'){
-    if (!nav && pendingCell < 0) FX.sealGrid($('#seals'));
-
-    if (pendingCell >= 0){
-      const cell = $$('#seals .seal')[pendingCell];
-      pendingCell = -1;
-      if (cell && cell.dataset.seal === 'set') FX.stampLand(cell);
+    if (pendingStamp){
+      const cell = Landing.cellFor(pendingStamp.meetingId);
+      pendingStamp = null;
+      Landing.prime(cell);
+    } else if (!nav){
+      FX.sealGrid($('#seals'));
     }
   }
 
@@ -17647,7 +17905,13 @@ document.addEventListener('mousedown', e => {
 });
 
 let bqTimer = null;
+const MEETING_FIELDS = { mNo:'no', mDate:'date', mStart:'start', mEnd:'end' };
 document.addEventListener('input', e => {
+  const key = MEETING_FIELDS[e.target.id];
+  if (key && e.target.closest('#meetingForm')){
+    BoardUI.form = Object.assign({}, BoardUI.form || {}, { [key]:e.target.value });
+    return;
+  }
   if (e.target.id === 'bq'){
     clearTimeout(bqTimer);
     const v = e.target.value;
@@ -17676,27 +17940,31 @@ document.addEventListener('submit', async e => {
     const btn = $('#mGo');
     if (btn && btn.disabled) return;
 
-    const no    = Number($('#mNo').value);
+    const noRaw = String($('#mNo').value || '').trim();
+    const no    = Number(noRaw);
     const date  = $('#mDate').value;
     const start = $('#mStart').value;
     const end   = $('#mEnd').value;
 
-    BoardUI.form = { no:$('#mNo').value, date, start, end };
+    BoardUI.form = { no:noRaw, date, start, end };
 
-    if (!no || no < 1)  return show('Meeting number is required.');
+    if (!noRaw || !Number.isInteger(no) || no < 1)
+      return show('Meeting number must be a whole number, 1 or higher.');
+    if (BoardUI.hasMeetingNumber(no))
+      return show(`GM ${pad(no)} already exists. Use a different number.`);
     if (!date)          return show('Meeting date is required.');
     if (!start || !end) return show('Start and end time are required.');
     if (start >= end)   return show('End time must be after the start time.');
 
-    show(''); btn.disabled = true; btn.textContent = 'Creating…';
+    show(''); btn.disabled = true; btn.textContent = 'Scheduling…';
     try {
       await Backend.createMeeting({ no, date, startTime:to12h(start), endTime:to12h(end) });
       BoardUI.form = null;
-      toast({ key:'board', title:`GM ${pad(no)} created`, detail:'It is now in the schedule.' });
+      toast({ key:'board', title:`GM ${pad(no)} scheduled`, detail:'It is now in the schedule.' });
       boardGoto({ tab:'meetings' });
     } catch (ex){
       show(WriteFailure.explain(ex, 'create meeting'));
-      btn.disabled = false; btn.textContent = 'Create meeting';
+      btn.disabled = false; btn.textContent = 'Schedule meeting';
     }
     return;
   }
@@ -17755,6 +18023,15 @@ document.addEventListener('click', e => {
   }
   const bcancel = e.target.closest('[data-bcancel]');
   if (bcancel){ boardGoto({ confirmDelete:null }); return; }
+
+  const mreset = e.target.closest('[data-mreset]');
+  if (mreset){
+    BoardUI.form = null;
+    const mf = $('#meetingForm');
+    if (mf) mf.outerHTML = BoardUI.createForm();
+    $('#mNo')?.focus({ preventScroll:true });
+    return;
+  }
 
   const bdelete = e.target.closest('[data-bdelete]');
   if (bdelete){
@@ -17985,8 +18262,7 @@ function paintMotion(){
     b.setAttribute('aria-pressed', String(Motion.forced));
     b.setAttribute('aria-label', Motion.forced ? 'Reduced motion is on. Turn animations back on.'
                                                : 'Reduced motion is off. Turn animations off.');
-    b.innerHTML = (Motion.forced ? ICON.still : ICON.waves) +
-                  `<span>${Motion.forced ? 'On' : 'Off'}</span>`;
+    b.innerHTML = '<span class="motion-btn__opt">On</span><span class="motion-btn__opt">Off</span>';
   });
 }
 
@@ -18032,13 +18308,15 @@ function paintIdentity(){
   const foot = $('#railFoot');
   if (!foot) return;
   foot.innerHTML = Store.signedIn
-    ? `<p class="rail__who">${esc(Store.user.name)}</p>
-       <p class="muted rail__role">${Store.isBoard ? 'Board' : 'Member'}</p>
-       <div class="rail__set"><span>Reduced motion</span>
+    ? `<div class="rail__id">
+         <p class="rail__who">${esc(Store.user.name)}</p>
+         <span class="rail__role${Store.isBoard ? ' rail__role--board' : ''}">${Store.isBoard ? 'Board' : 'Member'}</span>
+       </div>
+       <div class="rail__set"><span class="rail__setlab">Reduced motion</span>
          <button class="motion-btn" type="button" data-motion></button></div>
-       <button class="link" data-signout>Sign out</button>`
+       <button class="rail__out" type="button" data-signout>Sign out</button>`
     : `<p class="kicker">Not signed in</p>
-       <p class="muted" style="margin-top:6px;font-size:12.5px">Sign in to see your record.</p>`;
+       <p class="muted rail__note">Sign in to see your record.</p>`;
   paintMotion();
 }
 
