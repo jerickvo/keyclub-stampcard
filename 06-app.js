@@ -88,7 +88,7 @@ function paintBrand(){
   const el = $('#railBrand');
   if (!el) return;
 
-  el.innerHTML = wordmark();
+  el.innerHTML = wordmark() + '<span class="rail__kick">Key Club attendance</span>';
 }
 
 function paintNav(){
@@ -96,12 +96,12 @@ function paintNav(){
   $$('.tab', tabs).forEach(el => el.remove());
   $$('.rail__link', rail).forEach(el => el.remove());
 
-  navFor().forEach(n => {
+  navFor().forEach((n, i) => {
     const cur = current === n.id ? ' aria-current="page"' : '';
     tabs.insertAdjacentHTML('beforeend',
       `<button class="tab" data-go="${n.id}"${cur}><span>${n.short || n.label}</span></button>`);
     rail.insertAdjacentHTML('beforeend',
-      `<button class="rail__link" data-go="${n.id}"${cur}>${ICON[n.icon]}<span>${n.label}</span></button>`);
+      `<button class="rail__link" data-go="${n.id}"${cur}><span class="rail__idx">${pad(i + 1)}</span><span class="rail__lab">${n.label}</span>${ICON[n.icon]}</button>`);
   });
 }
 
@@ -145,12 +145,12 @@ const seenUnlocked = new Set();
 
 function playViewIntro(id, nav = false){
   if (id === 'home'){
-    if (!nav && pendingCell < 0) FX.sealGrid($('#seals'));
-
-    if (pendingCell >= 0){
-      const cell = $$('#seals .seal')[pendingCell];
-      pendingCell = -1;
-      if (cell && cell.dataset.seal === 'set') FX.stampLand(cell);
+    if (pendingStamp){
+      const cell = Landing.cellFor(pendingStamp.meetingId);
+      pendingStamp = null;
+      Landing.prime(cell);
+    } else if (!nav){
+      FX.sealGrid($('#seals'));
     }
   }
 
@@ -208,7 +208,13 @@ document.addEventListener('mousedown', e => {
 });
 
 let bqTimer = null;
+const MEETING_FIELDS = { mNo:'no', mDate:'date', mStart:'start', mEnd:'end' };
 document.addEventListener('input', e => {
+  const key = MEETING_FIELDS[e.target.id];
+  if (key && e.target.closest('#meetingForm')){
+    BoardUI.form = Object.assign({}, BoardUI.form || {}, { [key]:e.target.value });
+    return;
+  }
   if (e.target.id === 'bq'){
     clearTimeout(bqTimer);
     const v = e.target.value;
@@ -237,27 +243,31 @@ document.addEventListener('submit', async e => {
     const btn = $('#mGo');
     if (btn && btn.disabled) return;
 
-    const no    = Number($('#mNo').value);
+    const noRaw = String($('#mNo').value || '').trim();
+    const no    = Number(noRaw);
     const date  = $('#mDate').value;
     const start = $('#mStart').value;
     const end   = $('#mEnd').value;
 
-    BoardUI.form = { no:$('#mNo').value, date, start, end };
+    BoardUI.form = { no:noRaw, date, start, end };
 
-    if (!no || no < 1)  return show('Meeting number is required.');
+    if (!noRaw || !Number.isInteger(no) || no < 1)
+      return show('Meeting number must be a whole number, 1 or higher.');
+    if (BoardUI.hasMeetingNumber(no))
+      return show(`GM ${pad(no)} already exists. Use a different number.`);
     if (!date)          return show('Meeting date is required.');
     if (!start || !end) return show('Start and end time are required.');
     if (start >= end)   return show('End time must be after the start time.');
 
-    show(''); btn.disabled = true; btn.textContent = 'Creating…';
+    show(''); btn.disabled = true; btn.textContent = 'Scheduling…';
     try {
       await Backend.createMeeting({ no, date, startTime:to12h(start), endTime:to12h(end) });
       BoardUI.form = null;
-      toast({ key:'board', title:`GM ${pad(no)} created`, detail:'It is now in the schedule.' });
+      toast({ key:'board', title:`GM ${pad(no)} scheduled`, detail:'It is now in the schedule.' });
       boardGoto({ tab:'meetings' });
     } catch (ex){
       show(WriteFailure.explain(ex, 'create meeting'));
-      btn.disabled = false; btn.textContent = 'Create meeting';
+      btn.disabled = false; btn.textContent = 'Schedule meeting';
     }
     return;
   }
@@ -316,6 +326,15 @@ document.addEventListener('click', e => {
   }
   const bcancel = e.target.closest('[data-bcancel]');
   if (bcancel){ boardGoto({ confirmDelete:null }); return; }
+
+  const mreset = e.target.closest('[data-mreset]');
+  if (mreset){
+    BoardUI.form = null;
+    const mf = $('#meetingForm');
+    if (mf) mf.outerHTML = BoardUI.createForm();
+    $('#mNo')?.focus({ preventScroll:true });
+    return;
+  }
 
   const bdelete = e.target.closest('[data-bdelete]');
   if (bdelete){
@@ -546,8 +565,7 @@ function paintMotion(){
     b.setAttribute('aria-pressed', String(Motion.forced));
     b.setAttribute('aria-label', Motion.forced ? 'Reduced motion is on. Turn animations back on.'
                                                : 'Reduced motion is off. Turn animations off.');
-    b.innerHTML = (Motion.forced ? ICON.still : ICON.waves) +
-                  `<span>${Motion.forced ? 'On' : 'Off'}</span>`;
+    b.innerHTML = '<span class="motion-btn__opt">On</span><span class="motion-btn__opt">Off</span>';
   });
 }
 
@@ -593,12 +611,14 @@ function paintIdentity(){
   const foot = $('#railFoot');
   if (!foot) return;
   foot.innerHTML = Store.signedIn
-    ? `<p class="rail__who">${esc(Store.user.name)}</p>
-       <p class="muted rail__role">${Store.isBoard ? 'Board' : 'Member'}</p>
-       <div class="rail__set"><span>Reduced motion</span>
+    ? `<div class="rail__id">
+         <p class="rail__who">${esc(Store.user.name)}</p>
+         <span class="rail__role${Store.isBoard ? ' rail__role--board' : ''}">${Store.isBoard ? 'Board' : 'Member'}</span>
+       </div>
+       <div class="rail__set"><span class="rail__setlab">Reduced motion</span>
          <button class="motion-btn" type="button" data-motion></button></div>
-       <button class="link" data-signout>Sign out</button>`
+       <button class="rail__out" type="button" data-signout>Sign out</button>`
     : `<p class="kicker">Not signed in</p>
-       <p class="muted" style="margin-top:6px;font-size:12.5px">Sign in to see your record.</p>`;
+       <p class="muted rail__note">Sign in to see your record.</p>`;
   paintMotion();
 }

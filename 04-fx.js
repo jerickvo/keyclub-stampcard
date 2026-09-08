@@ -108,7 +108,7 @@ const FX = {
       animate(c, { translateX:0, translateY:0, duration:220, ease:EASE.CALM }));
   },
 
-  stampAcquire(meeting, done){
+  stampAcquire(meeting){
     const scene = document.createElement('div');
     scene.className = 'acq';
     scene.innerHTML = `
@@ -118,38 +118,53 @@ const FX = {
           <svg viewBox="0 0 64 64"><path d="${stampShape(7, 0)}"/></svg>
           <b class="acq__plus">+1</b>
         </div>
-        <p class="acq__meet">GM ${pad(meeting.no)} / ${fmtDate(meeting.date)} / ${esc(meeting.place || Schedule.PLACE)}</p>
+        <p class="acq__meet">GM ${pad(meeting.no)} / ${fmtDate(meeting.date || Schedule.today())} / ${esc(meeting.place || Schedule.PLACE)}</p>
       </div>`;
     document.body.appendChild(scene);
-    const clear = () => { try { scene.remove(); } catch (_) {} };
 
-    if (Motion.off){
-      setTimeout(() => { done(); clear(); }, 750);
-      return;
+    let gone = false;
+    const clear = () => { if (gone) return; gone = true; try { scene.remove(); } catch (_) {} };
+    const fuse = setTimeout(clear, 8000);
+
+    if (!Motion.off){
+      const sealEl = scene.querySelector('.acq__seal');
+      aset(sealEl, { scale:1.16, rotate:-4 });
+      animate(sealEl, { scale:[1.16, 1], rotate:[-4, -1.5],
+        duration:110, delay:80, ease:STEP(2) });
+      setTimeout(() => Impact.shake(scene, 3, 80), 170);
     }
 
-    const sealEl = scene.querySelector('.acq__seal');
-
-    aset(sealEl, { scale:1.16, rotate:-4 });
-    animate(sealEl, { scale:[1.16, 1], rotate:[-4, -1.5],
-      duration:110, delay:80, ease:STEP(2) });
-    setTimeout(() => Impact.shake(scene, 3, 80), 170);
-
-    setTimeout(done, 540);
-    setTimeout(() => animate(scene, { translateY:[0, -(innerHeight + 24)], duration:300,
-      ease:cubicBezier(.7, 0, .18, 1), onComplete:clear }), 760);
-    setTimeout(clear, 2000);
+    return {
+      clear(){ clearTimeout(fuse); clear(); },
+      lift(then){
+        clearTimeout(fuse);
+        let fired = false;
+        const done = () => {
+          if (fired) return; fired = true;
+          clear();
+          if (typeof then === 'function') then();
+        };
+        if (Motion.off || gone){ done(); return; }
+        animate(scene, { translateY:[0, -(innerHeight + 24)], duration:300,
+          ease:cubicBezier(.7, 0, .18, 1), onComplete:done });
+        setTimeout(done, 600);
+      },
+    };
   },
 
   stampLand(cell){
-    if (!cell || Motion.off) return;
+    if (!cell) return;
+    if (Motion.off){ cell.style.opacity = ''; return; }
 
     const lean = getComputedStyle(cell).getPropertyValue('--lean').trim() || '0deg';
-    aset(cell, { opacity:0 });
-    animate(cell, { opacity:[0, 1], duration:1, delay:420, ease:STEP(1) });
-    animate(cell, { scale:[1.45, 1], rotate:lean, duration:130, delay:420, ease:STEP(3) });
-    setTimeout(() => { Impact.shake($('.card__face') || $('#shell'), 3, 80); }, 540);
-    setTimeout(() => { Motion.settle(cell); }, 720);
+    const deg = parseFloat(lean) || 0;
+    const face = cell.closest('.card__face') || cell.closest('.card') || $('#shell');
+
+    aset(cell, { opacity:1, scale:1.55, rotate:`${deg - 9}deg` });
+    animate(cell, { scale:[1.55, 1], rotate:[`${deg - 9}deg`, `${deg}deg`],
+      duration:180, delay:70, ease:STEP(4),
+      onComplete(){ Motion.settle(cell); } });
+    setTimeout(() => Impact.shake(face, 3, 90), 230);
   },
 
   rewardUnlock(row){
