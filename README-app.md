@@ -73,7 +73,8 @@ so the built `index.html` issues **zero same-origin requests**. Nothing left to
 
 ## Screens
 
-Members get five; board accounts get four and never see the member set.
+Members get five; board accounts get five of their own and never see the
+member set.
 
 | Member | | Board | |
 |---|---|---|---|
@@ -81,7 +82,19 @@ Members get five; board accounts get four and never see the member set.
 | Record | every meeting, stamped or missed | Meetings | schedule and delete meetings |
 | Scan | camera + manual code entry | Check-In | the projector QR and the live count |
 | Rewards | 10 / 20 / 30 tiers | Members | roster, search, per-member detail |
-| Member | identity plate + the card | | |
+| Member | identity plate + the card | Account | sign-out and the motion setting |
+
+Navigation is the page's left margin from 1024px up (`.rail`) and a tab bar
+below that. The rail is composed like a chapter index, not a menu: the
+wordmark over a hand-cut rule, the five screens as numbered lines in the
+heading face, and the current screen marked twice — a burgundy brush tick
+(`--seal`, the one accent in the palette) beside its line, and its number set
+huge in the display face, outlined and screentone-filled, bleeding off the
+left edge under the index (`#railCh`). The right edge is a torn ink strip that
+echoes the page bleed. The bottom is a colophon: the member's name with the
+role pressed over it as a small stamp, a quiet mono line that toggles motion
+(a filled square when animations are on, hollow when off), and Sign out as an
+underlined action. There are no icons and no boxes.
 
 Routing is hash-based (`#/record`). `gate()` in `06-app.js` is the enforcement
 point: signed-out visitors land on the sign-in spread whatever the hash says, a
