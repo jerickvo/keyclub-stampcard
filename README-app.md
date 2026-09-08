@@ -85,16 +85,15 @@ member set.
 | Member | identity plate + the card | Account | sign-out and the motion setting |
 
 Navigation is the page's left margin from 1024px up (`.rail`) and a tab bar
-below that. The rail is composed like a chapter index, not a menu: the
-wordmark over a hand-cut rule, the five screens as numbered lines in the
-heading face, and the current screen marked twice — a burgundy brush tick
-(`--seal`, the one accent in the palette) beside its line, and its number set
-huge in the display face, outlined and screentone-filled, bleeding off the
-left edge under the index (`#railCh`). The right edge is a torn ink strip that
-echoes the page bleed. The bottom is a colophon: the member's name with the
-role pressed over it as a small stamp, a quiet mono line that toggles motion
-(a filled square when animations are on, hollow when off), and Sign out as an
-underlined action. There are no icons and no boxes.
+below that. The rail is a typographic index in the heading face: the wordmark
+over the same hand-cut rule the page titles use, then the five screens as
+numbered lines, with the numbers set small in the mono face as metadata. The
+current screen is marked by a small burgundy brush tick in the gutter and its
+number in the same colour (`--seal`, the one accent in the palette). The
+bottom is a short account block in the mono face: the member's name and role
+on one line, a motion toggle (a filled square when animations are on, hollow
+when off), and Sign out underlined as the one action. No icons, no boxes, no
+decoration.
 
 Routing is hash-based (`#/record`). `gate()` in `06-app.js` is the enforcement
 point: signed-out visitors land on the sign-in spread whatever the hash says, a

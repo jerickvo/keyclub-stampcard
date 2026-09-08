@@ -92,29 +92,17 @@ function paintBrand(){
 }
 
 function paintNav(){
-  const tabs = $('#tabs'), rail = $('#railNav'), ch = $('#railCh');
+  const tabs = $('#tabs'), rail = $('#railNav');
   $$('.tab', tabs).forEach(el => el.remove());
   $$('.rail__link', rail).forEach(el => el.remove());
 
-  let chapter = '';
   navFor().forEach((n, i) => {
-    const on = current === n.id;
-    const cur = on ? ' aria-current="page"' : '';
-    if (on) chapter = pad(i + 1);
+    const cur = current === n.id ? ' aria-current="page"' : '';
     tabs.insertAdjacentHTML('beforeend',
       `<button class="tab" data-go="${n.id}"${cur}><span>${n.short || n.label}</span></button>`);
     rail.insertAdjacentHTML('beforeend',
       `<button class="rail__link" data-go="${n.id}"${cur}><span class="rail__idx">${pad(i + 1)}</span><span class="rail__lab">${n.label}</span></button>`);
   });
-
-  if (ch && ch.textContent !== chapter){
-    ch.textContent = chapter;
-    if (chapter && booted && !Motion.off && window.animate){
-      aset(ch, { scale:1.06, translateY:8 });
-      animate(ch, { scale:[1.06, 1], translateY:[8, 0], duration:150, ease:STEP(3),
-                    onComplete(){ Motion.settle(ch); } });
-    }
-  }
 }
 
 async function go(id, opts = {}){
@@ -625,8 +613,8 @@ function paintIdentity(){
   const foot = $('#railFoot');
   if (!foot) return;
   foot.innerHTML = Store.signedIn
-    ? `<p class="rail__who"><span>${esc(Store.user.name)}</span>
-         <span class="rail__role${Store.isBoard ? ' rail__role--board' : ''}">${Store.isBoard ? 'Board' : 'Member'}</span></p>
+    ? `<p class="rail__who"><span class="rail__name">${esc(Store.user.name)}</span>
+         <span class="rail__role">${Store.isBoard ? 'Board' : 'Member'}</span></p>
        <div class="rail__util">
          <button class="rail__motion" type="button" data-motion></button>
          <button class="rail__out" type="button" data-signout>Sign out</button>
