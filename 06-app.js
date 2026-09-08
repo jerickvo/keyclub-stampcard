@@ -91,18 +91,29 @@ function paintBrand(){
   el.innerHTML = wordmark();
 }
 
+const selfPage = () => navFor()[navFor().length - 1];
+
 function paintNav(){
   const tabs = $('#tabs'), rail = $('#railNav');
   $$('.tab', tabs).forEach(el => el.remove());
   $$('.rail__link', rail).forEach(el => el.remove());
 
-  navFor().forEach((n, i) => {
+  const nav = navFor();
+  const me = selfPage();
+  nav.forEach(n => {
     const cur = current === n.id ? ' aria-current="page"' : '';
     tabs.insertAdjacentHTML('beforeend',
       `<button class="tab" data-go="${n.id}"${cur}><span>${n.short || n.label}</span></button>`);
+    if (n === me) return;
     rail.insertAdjacentHTML('beforeend',
-      `<button class="rail__link" data-go="${n.id}"${cur}><span class="rail__idx">${pad(i + 1)}</span><span class="rail__lab">${n.label}</span></button>`);
+      `<button class="rail__link" data-go="${n.id}"${cur}><span class="rail__lab">${n.label}</span></button>`);
   });
+
+  const mine = $('#railMe');
+  if (mine){
+    if (current === me.id) mine.setAttribute('aria-current', 'page');
+    else mine.removeAttribute('aria-current');
+  }
 }
 
 async function go(id, opts = {}){
@@ -612,9 +623,12 @@ try {
 function paintIdentity(){
   const foot = $('#railFoot');
   if (!foot) return;
+  const me = selfPage();
   foot.innerHTML = Store.signedIn
-    ? `<p class="rail__who"><span class="rail__name">${esc(Store.user.name)}</span>
-         <span class="rail__role">${Store.isBoard ? 'Board' : 'Member'}</span></p>
+    ? `<button class="rail__me" id="railMe" type="button" data-go="${me.id}"${current === me.id ? ' aria-current="page"' : ''}>
+         <span class="rail__name">${esc(Store.user.name)}</span>
+         <span class="rail__role">${Store.isBoard ? 'Board' : 'Member'}</span>
+       </button>
        <div class="rail__util">
          <button class="rail__motion" type="button" data-motion></button>
          <button class="rail__out" type="button" data-signout>Sign out</button>

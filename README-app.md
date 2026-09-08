@@ -84,17 +84,19 @@ member set.
 | Rewards | 10 / 20 / 30 tiers | Members | roster, search, per-member detail |
 | Member | identity plate + the card | Account | sign-out and the motion setting |
 
-Navigation is the page's left margin from 1024px up (`.rail`) and a tab bar
-below that. The rail reuses what the other screens already do: the wordmark
-over the same hand-cut rule the page titles use, then the five screens as a
-mono number column beside heading-face labels, the way the Meetings lists set
-"GM 07" beside a date. The current screen is marked by a small burgundy ink
-dab in the gutter and its number in the same colour (`--seal`, the one accent
-in the palette). The account block sits on a straight 2px rule like a panel
-header: the member's name in the heading face with the role as mono
-metadata, the motion toggle as a filled or hollow square with its word, and
-Sign out as the same small outlined button the lists use for row actions.
-No icons, no boxes, no decoration.
+Navigation is an ink spine from 1024px up (`.rail`) and an ink tab bar
+below that. The spine is the same black block the panel headers and the
+card's left column are made of: the wordmark in paper over the page-title
+rule, then the four working screens as paper labels in the heading face. The
+current screen is a paper notch cut into the spine with a slanted leading
+edge, its label in ink, reaching the page so the paper is continuous with
+the content — that notch is the only active state. The self page (Member or
+Account) is not a chapter: it is reached from the paper foot at the bottom,
+where the member's name is an underlined link (burgundy when you are on
+that page), the role sits under it as mono metadata, the motion toggle is a
+filled or hollow square with its word, and Sign out is the small outlined
+button the lists use for row actions. On phones the topbar and the tab bar
+are ink with paper labels, and the current tab is the same paper notch.
 
 Routing is hash-based (`#/record`). `gate()` in `06-app.js` is the enforcement
 point: signed-out visitors land on the sign-in spread whatever the hash says, a
