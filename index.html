@@ -82,6 +82,7 @@
   --gut:clamp(8px,1vw,14px);
   --gut-tier:clamp(12px,1.8vw,24px);
 
+  --t-title:clamp(38px,9vw,104px);
   --t-head:clamp(27px,4.8vw,54px);
   --t-sub:clamp(19px,2.5vw,29px);
   --t-verb:clamp(22px,3.4vw,38px);
@@ -117,7 +118,130 @@ body{
   clip-path:polygon(24% 0,100% 0,100% 100%);
   -webkit-mask-image:linear-gradient(215deg,#000 30%,transparent 78%);
   mask-image:linear-gradient(215deg,#000 30%,transparent 78%)}
-[data-screen="auth"] .ground::before{display:none}
+.ground::after{content:"";position:absolute;left:-5vw;bottom:-6vh;
+  width:30vw;height:34vh;
+  background-image:radial-gradient(circle at 50% 50%, var(--tone-page) 0 1.6px, transparent 1.75px);
+  background-size:10px 10px;
+  clip-path:polygon(0 0,100% 100%,0 100%);
+  -webkit-mask-image:linear-gradient(35deg,#000 26%,transparent 72%);
+  mask-image:linear-gradient(35deg,#000 26%,transparent 72%)}
+.ground__tone{position:absolute;top:0;bottom:0;right:clamp(14px,1.8vw,28px);
+  width:1px;background:var(--tint);opacity:.6}
+
+.ground__slash{position:absolute;left:-6%;right:-6%;top:34%;
+  height:clamp(70px,14vh,150px);transform:rotate(-11deg);
+  background:var(--tint);opacity:.55;
+  clip-path:polygon(0 55%,9% 34%,28% 16%,52% 6%,74% 16%,100% 44%,
+                    92% 62%,66% 86%,38% 94%,12% 76%)}
+
+.ground__bleed{position:absolute;top:-2%;bottom:-2%;right:0;
+  width:clamp(7px,1vw,15px);background:var(--ink);
+  clip-path:polygon(28% 0,100% 0,100% 100%,40% 100%,12% 88%,52% 74%,
+                    22% 61%,58% 47%,18% 34%,50% 22%,20% 10%)}
+
+.ground__corner{position:absolute;right:clamp(24px,3vw,44px);
+  bottom:clamp(18px,2.6vh,34px);
+  width:clamp(44px,5vw,72px);height:clamp(44px,5vw,72px);
+  border-right:4px solid var(--ink);border-bottom:4px solid var(--ink)}
+
+.ground__d1,.ground__d2{position:absolute;display:none;pointer-events:none}
+
+[data-screen="record"] .ground__slash{top:20%;transform:rotate(-23deg)}
+[data-screen="record"] .ground::before{width:30vw;height:76vh}
+[data-screen="scan"] .ground__slash{top:62%;transform:rotate(-7deg);opacity:.4}
+[data-screen="rewards"] .ground__slash{top:58%;transform:rotate(8deg)}
+[data-screen="rewards"] .ground::after{width:44vw;height:42vh}
+[data-screen="profile"] .ground__slash{top:24%;transform:rotate(-15deg)}
+[data-screen="board"] .ground__slash,
+[data-screen="bmeet"] .ground__slash,
+[data-screen="bcheckin"] .ground__slash,
+[data-screen="bmembers"] .ground__slash,
+[data-screen="baccount"] .ground__slash{top:42%;transform:rotate(14deg)}
+[data-screen="bmeet"] .ground::before{width:52vw;height:44vh}
+[data-screen="auth"] .ground__bleed,
+[data-screen="auth"] .ground__corner,
+[data-screen="auth"] .ground__d1,
+[data-screen="auth"] .ground__d2,
+[data-screen="auth"] .ground__tone{display:none}
+
+[data-screen="home"] .ground__d1{display:block;left:-3%;bottom:6%;
+  width:clamp(160px,22vw,320px);height:clamp(90px,12vw,170px);
+  transform:rotate(-14deg);opacity:.6;
+  background:repeating-linear-gradient(-14deg,var(--tint) 0 3px,transparent 3px 14px);
+  -webkit-mask-image:linear-gradient(76deg,#000 40%,transparent 85%);
+  mask-image:linear-gradient(76deg,#000 40%,transparent 85%)}
+[data-screen="home"] .ground__d2{display:block;right:-8%;top:56%;
+  width:clamp(180px,24vw,360px);height:clamp(120px,16vw,240px);
+  border:3px solid var(--tint);transform:rotate(-4deg)}
+
+[data-screen="record"] .ground__d2{display:block;right:-6%;bottom:-10%;
+  width:clamp(220px,26vw,420px);aspect-ratio:1;border-radius:50%;
+  background-image:radial-gradient(circle,var(--tone-page) 0 2px,transparent 2.4px);
+  background-size:12px 12px;opacity:.5;
+  -webkit-mask-image:radial-gradient(circle,#000 55%,transparent 72%);
+  mask-image:radial-gradient(circle,#000 55%,transparent 72%)}
+
+[data-screen="scan"] .ground__d1{display:block;left:4%;top:12%;
+  width:clamp(90px,12vw,190px);height:clamp(90px,12vw,190px);
+  border-left:4px solid var(--tint);border-top:4px solid var(--tint)}
+[data-screen="scan"] .ground__d2{display:block;right:-14%;top:22%;
+  width:clamp(240px,30vw,460px);aspect-ratio:1;border-radius:50%;
+  border:clamp(14px,2vw,26px) solid var(--tint);opacity:.55}
+
+[data-screen="rewards"] .ground__d1{display:block;right:0;bottom:10%;
+  width:clamp(120px,15vw,240px);height:clamp(180px,26vh,320px);opacity:.8;
+  background:linear-gradient(to top,var(--tint) 0 30%,transparent 30% 36%,
+    var(--tint) 36% 60%,transparent 60% 66%,var(--tint) 66% 84%,transparent 84%);
+  -webkit-mask-image:linear-gradient(260deg,#000 55%,transparent 92%);
+  mask-image:linear-gradient(260deg,#000 55%,transparent 92%)}
+[data-screen="rewards"] .ground__d2{display:block;left:8%;top:14%;
+  width:clamp(140px,18vw,280px);height:14px;transform:rotate(-24deg);
+  border-top:2px solid var(--tint);border-bottom:5px solid var(--tint)}
+
+[data-screen="profile"] .ground__d1{display:block;right:-10%;bottom:-16%;
+  width:clamp(260px,34vw,540px);aspect-ratio:1;border-radius:50%;
+  border:clamp(20px,3vw,40px) solid var(--tint);opacity:.6;
+  -webkit-mask-image:linear-gradient(315deg,#000 45%,transparent 75%);
+  mask-image:linear-gradient(315deg,#000 45%,transparent 75%)}
+[data-screen="profile"] .ground__d2{display:block;left:6%;top:10%;
+  width:clamp(120px,16vw,240px);height:clamp(90px,12vw,180px);opacity:.7;
+  background-image:
+    linear-gradient(var(--tint) 0 2px,transparent 2px),
+    linear-gradient(90deg,var(--tint) 0 2px,transparent 2px);
+  background-size:56px 44px,56px 44px;
+  background-position:0 0,7px -7px;background-repeat:repeat;
+  -webkit-mask-image:radial-gradient(ellipse,#000 30%,transparent 75%);
+  mask-image:radial-gradient(ellipse,#000 30%,transparent 75%)}
+
+[data-screen="board"] .ground__d1{display:block;right:-4%;top:10%;
+  width:clamp(160px,20vw,320px);height:clamp(100px,13vw,210px);
+  border:3px solid var(--tint);transform:rotate(3deg)}
+[data-screen="board"] .ground__d2{display:block;right:-1%;top:16%;
+  width:clamp(140px,17vw,280px);height:clamp(90px,11vw,180px);
+  border:2px solid var(--tint);transform:rotate(-2deg)}
+
+[data-screen="bmeet"] .ground__d1{display:block;right:0;top:20%;
+  width:clamp(80px,10vw,170px);height:clamp(200px,34vh,380px);opacity:.7;
+  background:repeating-linear-gradient(var(--tint) 0 2px,transparent 2px 22px);
+  -webkit-mask-image:linear-gradient(260deg,#000 40%,transparent 90%);
+  mask-image:linear-gradient(260deg,#000 40%,transparent 90%)}
+
+[data-screen="bcheckin"] .ground__d1{display:block;left:30%;right:6%;
+  top:0;height:70vh;opacity:.5;background:var(--tint);
+  clip-path:polygon(46% 0,54% 0,100% 100%,0 100%);
+  -webkit-mask-image:linear-gradient(#000 20%,transparent 95%);
+  mask-image:linear-gradient(#000 20%,transparent 95%)}
+
+[data-screen="bmembers"] .ground__d1{display:block;left:3%;bottom:8%;
+  width:clamp(140px,18vw,300px);height:clamp(120px,16vh,220px);opacity:.7;
+  background-image:linear-gradient(var(--tint) 0 3px,transparent 3px);
+  background-size:38px 26px;background-repeat:repeat;
+  -webkit-mask-image:linear-gradient(35deg,#000 40%,transparent 85%);
+  mask-image:linear-gradient(35deg,#000 40%,transparent 85%)}
+
+@media(max-width:1023px){
+  .ground__corner{display:none}
+}
 
 .shell{
   position:relative;
@@ -188,10 +312,10 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .kicker{font:400 13px/1 var(--f-body);letter-spacing:.1em;color:var(--ink-2)}
 
 .title{
-  font-family:var(--f-head);
-  font-size:var(--t-head);
+  font-family:var(--f-display);
+  font-size:var(--t-title);
   text-transform:uppercase;
-  line-height:.95;
+  line-height:.9;
   overflow-wrap:break-word}
 .h2{
   font:600 15px/1.25 var(--f-body)}
@@ -220,12 +344,14 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 
 .toast{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);
   gap:var(--s3);align-items:start;background:var(--paper);color:var(--ink);
-  border:var(--edge-panel) solid var(--ink);padding:var(--s3) var(--s4)}
+  border:var(--edge-panel) solid var(--ink);padding:var(--s3) var(--s4);
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
 .toast__dot{width:10px;height:10px;margin-top:4px;background:var(--ink)}
 .toast__t{margin:0;font:600 13.5px/1.3 var(--f-body);letter-spacing:.06em}
 .toast__d{margin:4px 0 0;font:500 12px/1.45 var(--f-mono);letter-spacing:.02em;
   color:var(--ink-2)}
-.toast--bad{background:var(--ink);color:var(--paper)}
+.toast--bad{background:var(--ink);color:var(--paper);
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
 .toast--bad .toast__dot{background:var(--paper)}
 .toast--bad .toast__d{color:var(--tint)}
 [hidden]{display:none!important}
@@ -300,6 +426,8 @@ select.input{padding-right:var(--s4)}
   border:0;
   cursor:pointer;
   color:var(--ink);
+  line-height:1;
+  letter-spacing:0;
   position:relative;
   white-space:nowrap;
   overflow:hidden}
@@ -311,6 +439,7 @@ select.input{padding-right:var(--s4)}
 .scene{position:fixed;inset:0;z-index:150;overflow:hidden;pointer-events:none;
   --sg:clamp(10px,2.6vw,16px);--sm:max(18px,5vw)}
 .scene--open{z-index:200}
+.scene--exit{z-index:180}
 .scene.is-done{display:none}
 .scene__base{position:absolute;inset:0;background:var(--paper)}
 .scene__grid{position:absolute;inset:0;display:grid;gap:var(--sg);
@@ -337,7 +466,7 @@ select.input{padding-right:var(--s4)}
   font-size:clamp(46px,19vw,110px);line-height:.9;white-space:nowrap;
   padding-bottom:.06em;transform-origin:0 100%}
 .scene__kick{position:absolute;left:9%;right:8%;top:10%;margin:0;opacity:0;
-  font:500 clamp(9px,2.6vw,12px)/1.5 var(--f-mono);letter-spacing:.24em;
+  font:500 clamp(10px,2.6vw,12px)/1.5 var(--f-mono);letter-spacing:.24em;
   text-transform:uppercase;color:var(--paper)}
 .scene__tail{position:absolute;left:9%;right:8%;bottom:9%;margin:0;opacity:0;
   font-family:var(--f-head);text-transform:uppercase;color:var(--paper);
@@ -346,22 +475,16 @@ select.input{padding-right:var(--s4)}
   transform-origin:65% 65%}
 .scene__seal .brandseal{display:block;width:100%;height:auto;
   --si:var(--ink);--sp:var(--paper)}
-.wipe{position:fixed;z-index:56;overflow:hidden;pointer-events:none;
-  background:var(--paper);contain:layout paint;will-change:transform}
-.wipe__page{position:absolute;inset:0;will-change:transform}
-.wipe__edge,.wipe__tone{position:absolute;top:0;bottom:0;pointer-events:none}
-.wipe__edge{background:var(--ink)}
-.wipe__tone{background:var(--paper) radial-gradient(circle at 50% 50%,
+.ghost{position:fixed;z-index:50;overflow:hidden;background:var(--paper);
+  pointer-events:none;will-change:transform,opacity}
+.cutbox{position:fixed;z-index:56;overflow:hidden;pointer-events:none;
+  contain:layout paint}
+.slab{position:absolute;background:var(--ink);will-change:transform}
+.slab--tone,.slab__tone{background:var(--paper) radial-gradient(circle at 50% 50%,
   var(--ink) 0 1.4px,transparent 1.6px) 0 0/7px 7px}
-
-.veil{position:fixed;inset:0;z-index:180;pointer-events:none;
-  background:var(--ink);color:var(--paper);will-change:transform;
-  display:flex;flex-direction:column;justify-content:flex-end;gap:var(--s2);
-  padding:0 var(--gutter) max(var(--s8),env(safe-area-inset-bottom,0px))}
-.veil__kick{margin:0;font-size:var(--t-caption);letter-spacing:.16em;
-  text-transform:uppercase;color:var(--tint)}
-.veil__word{margin:0;font-family:var(--f-head);text-transform:uppercase;
-  font-size:clamp(34px,9vw,72px);line-height:.95;transform-origin:0 100%}
+.slab__tone{position:absolute;top:0;bottom:0}
+.slab__word{position:absolute;margin:0;color:var(--paper);white-space:nowrap;
+  opacity:0;transform-origin:0 50%}
 
 .scene--play .scene__panel--a .scene__ink{animation:sceneInk 110ms steps(3,end) calc(var(--lead,0ms) + 90ms) both}
 .scene--play .scene__panel--b .scene__ink{animation:sceneInk 100ms steps(3,end) calc(var(--lead,0ms) + 210ms) both}
@@ -371,11 +494,13 @@ select.input{padding-right:var(--s4)}
 .scene--play .scene__word{animation:sceneStamp 120ms steps(3,end) calc(var(--lead,0ms) + 420ms) forwards}
 .scene--play .scene__kick{animation:sceneCut 1ms linear calc(var(--lead,0ms) + 480ms) forwards}
 .scene--play .scene__tail:not(:empty){animation:sceneCut 1ms linear calc(var(--lead,0ms) + 560ms) forwards}
+.scene--welcome.scene--play{animation:sceneSheet 170ms cubic-bezier(.6,0,.2,1) both}
 @keyframes sceneInk{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 @keyframes sceneSeal{from{opacity:1;transform:scale(1.1)}to{opacity:1;transform:scale(1)}}
 @keyframes sceneStamp{from{opacity:1;transform:scale(1.3)}to{opacity:1;transform:scale(1)}}
 @keyframes sceneCut{from{opacity:0}to{opacity:1}}
 @keyframes sceneBreathe{from{opacity:1}to{opacity:.55}}
+@keyframes sceneSheet{from{transform:translateY(-104%)}to{transform:translateY(0)}}
 .scene--set,.scene--set *{animation:none}
 .scene--set .scene__ink{transform:scaleX(1)}
 .scene--set .scene__word,.scene--set .scene__kick,.scene--set .scene__seal,
@@ -398,7 +523,7 @@ select.input{padding-right:var(--s4)}
 
 .shell{grid-template-columns:1fr}
 .rail{display:none}
-.topbar{display:none}
+.topbar{display:flex}
 .tabs{display:flex}
 .view{grid-template-columns:repeat(2,minmax(0,1fr))}
 
@@ -449,7 +574,7 @@ html,body{overflow-x:clip;max-width:100%}
 
 .h2,.rail__link span,.tabs button,.btn,.link,.motion-btn{font-family:var(--f-body);font-weight:500}
 body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
-.title{letter-spacing:.01em}
+.title{letter-spacing:-.035em}
 .h2{font-size:clamp(14px,1.05vw,16px);letter-spacing:0}
 
 .rail{padding:var(--s5) 0 var(--s5) var(--s3);border-right:0;overflow:hidden}
@@ -510,6 +635,18 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 main#view{padding-top:var(--space-tier);
   padding-bottom:calc(var(--space-block) + var(--tabs-h) + var(--rule)
                       + env(safe-area-inset-bottom, 0px))}
+@media(max-width:1023px){
+  .shell > div{display:flex;flex-direction:column}
+  main#view{position:relative;flex:1 0 auto;
+    padding-bottom:calc(var(--tabs-h) + 14px + clamp(44px,5vw,72px) + var(--s4)
+                        + env(safe-area-inset-bottom, 0px))}
+  main#view::after{content:"";position:absolute;pointer-events:none;
+    right:clamp(24px,3vw,44px);
+    bottom:calc(var(--tabs-h) + 14px + env(safe-area-inset-bottom, 0px));
+    width:clamp(44px,5vw,72px);height:clamp(44px,5vw,72px);
+    border-right:4px solid var(--ink);border-bottom:4px solid var(--ink)}
+  [data-screen="auth"] main#view::after{display:none}
+}
 
 .link{display:inline-flex;align-items:center;
   min-height:32px;padding-block:6px}
@@ -525,6 +662,21 @@ main#view{padding-top:var(--space-tier);
 .rail__link svg,.tabs button svg{width:18px;height:18px}
 
 .kicker{display:inline-block}
+
+.acq{position:fixed;inset:0;z-index:160;display:grid;place-items:center;
+  background:var(--ink);color:var(--paper);text-align:center;
+  padding:24px;box-sizing:border-box}
+.acq__stack{display:grid;justify-items:center;gap:clamp(16px,3.4vh,30px);max-width:100%}
+.acq__kick{font:600 var(--t-caption)/1 var(--f-mono);
+  letter-spacing:.34em;text-transform:uppercase;opacity:.85}
+.acq__seal{position:relative;width:min(54vmin,280px);aspect-ratio:1;
+  display:grid;place-items:center}
+.acq__seal svg{position:absolute;inset:0;width:100%;height:100%}
+.acq__seal path{fill:none;stroke:var(--paper);stroke-width:2.4}
+.acq__plus{font-family:var(--f-display);font-weight:400;
+  font-size:clamp(64px,26vmin,150px);line-height:1}
+.acq__meet{font:500 var(--t-caption)/1.5 var(--f-mono);
+  letter-spacing:.16em;text-transform:uppercase;opacity:.75;max-width:88vw}
 
 </style>
 <style>
@@ -666,6 +818,10 @@ main#view{padding-top:var(--space-tier);
 
 .setupbox--warn{border-width:var(--rule);background-image:none}
 
+.bmile__bar{display:block;height:8px;margin-top:var(--s3);
+  border:var(--rule-hair) solid var(--ink);background:var(--paper)}
+.bmile__fill{display:block;height:100%;background:var(--ink)}
+
 .brow__del{border:var(--rule-hair) solid var(--ink);background:none;
   color:var(--ink);font:400 clamp(11px,1vw,12.5px)/1 var(--f-body);letter-spacing:.08em;
   padding:6px 9px;cursor:pointer}
@@ -726,7 +882,8 @@ main#view{padding-top:var(--space-tier);
 .empty{position:relative;display:grid;gap:clamp(18px,3.4vw,40px);align-items:center;
   grid-template-columns:auto minmax(0,1fr);
   border:var(--edge-frame) solid var(--ink);background:var(--paper);
-  padding:clamp(22px,4vw,46px);max-width:760px;min-height:0;overflow:hidden}
+  padding:clamp(22px,4vw,46px);max-width:760px;min-height:0;overflow:hidden;
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
 .empty__tone{right:0;top:0;width:34%;height:46%}
 .empty__seal{position:relative;flex:none;z-index:1;
   width:clamp(92px,15vw,168px);aspect-ratio:1}
@@ -744,6 +901,13 @@ main#view{padding-top:var(--space-tier);
   margin-top:clamp(7px,1vw,11px);color:var(--ink)}
 .empty__note{margin-top:clamp(7px,1vw,11px);max-width:52ch;
   font-size:clamp(12.5px,1vw,14.5px);line-height:1.55;color:var(--ink-2)}
+
+.bmile__bar{position:relative;overflow:hidden}
+.bmile__bar::after{content:"";position:absolute;inset:0;
+  pointer-events:none;z-index:2;
+  background-image:repeating-linear-gradient(to right,
+    transparent 0 calc(10% - 1px),
+    var(--ink) calc(10% - 1px) 10%)}
 
 select.input{appearance:none;-webkit-appearance:none;
   padding-right:calc(var(--s4) + 14px);
@@ -892,6 +1056,8 @@ body{
   line-height:.9}
 .bstat span{color:var(--ink-2)}
 
+.bmile__bar{border:var(--edge-hair) solid var(--ink);background:var(--paper);height:10px}
+.bmile__fill{background:var(--ink)}
 .brow--member .brow__mid b{font-family:var(--f-head);font-weight:400;
   font-size:var(--t-sub);letter-spacing:.01em}
 
@@ -909,7 +1075,7 @@ body{
 .brow__del:hover,.brow__del:focus-visible{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
 .bform{border:var(--edge-panel) solid var(--ink);background:var(--paper);
-  padding:var(--s5)}
+  padding:var(--s5);box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
 .bform .bsec{margin:calc(var(--s5) * -1) calc(var(--s5) * -1) var(--s4);
   padding:var(--s2) var(--s4);border-bottom:0;
   background:var(--ink);color:var(--paper);
@@ -943,7 +1109,8 @@ body{
   border-bottom:var(--edge) solid var(--ink)}
 .meetgrid .bsec::before{content:none}
 
-.meetgrid__up{border:var(--edge-panel) solid var(--ink);background:var(--paper)}
+.meetgrid__up{border:var(--edge-panel) solid var(--ink);background:var(--paper);
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
 .meetgrid__up .meetband{margin:0}
 .meetgrid__up .blist{padding:0 var(--s4);margin:0}
 .meetgrid__up .bempty{border:0;box-shadow:none}
@@ -951,7 +1118,7 @@ body{
 .brow__n{display:grid;justify-items:end;gap:1px;text-align:right}
 .brow__n b{font-weight:400;font-family:var(--f-head);
   font-size:clamp(17px,2vw,22px);line-height:1}
-.brow__nlab{font:500 9.5px/1 var(--f-mono);letter-spacing:.08em;
+.brow__nlab{font:500 10.5px/1 var(--f-mono);letter-spacing:.08em;
   color:var(--ink-2);text-transform:uppercase}
 
 .bstate{font-family:var(--f-head);font-weight:400;letter-spacing:.05em;
@@ -984,20 +1151,23 @@ body{
 .msummary__fig{margin:0;font-family:var(--f-display);line-height:.78;
   padding-bottom:.1em;font-size:clamp(70px,12vw,150px)}
 .msummary__of{margin:0;font-size:var(--t-caption);color:var(--ink-2)}
-.mledger{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;
-  border-top:var(--edge-panel) solid var(--ink)}
-.mline{display:grid;gap:2px var(--s4);align-items:baseline;
-  grid-template-columns:auto minmax(0,1fr) auto;
-  grid-template-areas:"at name pct" "at n pct";
-  padding:var(--s3) 0;border-bottom:var(--edge-rule) solid var(--tint)}
-.mline__at{grid-area:at;font-family:var(--f-head);line-height:.9;
-  font-size:clamp(24px,4.4vw,36px);min-width:2.2ch;color:var(--ink-2);opacity:.7}
-.mline--lit .mline__at{color:var(--ink);opacity:1}
-.mline__name{grid-area:name;font-family:var(--f-head);font-size:var(--t-sub);line-height:1.05}
-.mline__n{grid-area:n;font-size:var(--t-caption);color:var(--ink-2)}
-.mline__n b{font-weight:400;font-family:var(--f-head);font-size:var(--t-sub);color:var(--ink)}
-.mline__pct{grid-area:pct;font-family:var(--f-head);font-size:var(--t-sub);
-  color:var(--ink-2);text-align:right;align-self:center}
+.mplates{list-style:none;margin:0;padding:0;display:grid;gap:var(--gut);
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr))}
+.mplate{display:grid;gap:4px;align-content:start;
+  border:var(--edge-panel) solid var(--ink);background:var(--paper);
+  padding:clamp(12px,1.8vw,20px);
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
+
+.mplate--lit{background:var(--ink);color:var(--paper);
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
+.mplate--lit .bmile__bar{border-color:var(--paper)}
+.mplate--lit .bmile__fill{background:var(--paper)}
+.mplate__no{font-family:var(--f-head);font-size:clamp(30px,4.4vw,52px);
+  line-height:.9}
+.mplate__name{font-family:var(--f-head);font-size:clamp(14px,1.5vw,18px);
+  line-height:1.1}
+.mplate__say{font-size:var(--t-caption);color:inherit;opacity:.72;
+  margin-bottom:var(--s2)}
 .rosterpanel{border:var(--edge-panel) solid var(--ink);background:var(--paper)}
 .rosterpanel .meetband{margin:0}
 .rosterpanel > div{padding:var(--s4) var(--s4) var(--s4)}
@@ -1081,13 +1251,13 @@ main#view:focus,main#view:focus-visible{outline:none}
   font-family:var(--f-head);text-transform:uppercase;line-height:1;
   font-size:clamp(20px,6.2cqw,42px);color:var(--ink);
   border:var(--edge-frame) solid var(--ink);background:var(--paper);
-  padding:.16em .45em;
+  padding:.16em .45em;box-shadow:var(--s2) var(--s2) 0 var(--tone);
   pointer-events:none;white-space:nowrap}
 
 .card__id{background:var(--ink);color:var(--paper);
   padding:clamp(14px,3.4cqw,26px) clamp(16px,4cqw,28px);
   display:flex;flex-direction:column;gap:clamp(4px,1cqw,10px)}
-.card__cardno{font:500 clamp(11px,1.9cqw,12px)/1 var(--f-body);
+.card__cardno{font:500 clamp(11px,1.9cqw,12px)/1 var(--f-mono);
   text-transform:uppercase;letter-spacing:.22em;opacity:.7}
 .card__num{margin:0;display:flex;align-items:baseline;gap:.2em;
   font-family:var(--f-display);line-height:.82;letter-spacing:-.01em}
@@ -1119,7 +1289,7 @@ main#view:focus,main#view:focus-visible{outline:none}
   border-bottom:var(--edge-panel) solid var(--ink)}
 .card__edge{position:absolute;left:clamp(10px,3cqw,22px);bottom:7px;
   right:clamp(10px,3cqw,22px);white-space:nowrap;overflow:hidden;
-  font:500 clamp(9px,1.8cqw,11px)/1 var(--f-body);
+  font:500 clamp(9px,1.8cqw,11px)/1 var(--f-mono);
   text-transform:uppercase;letter-spacing:.18em;color:var(--ink-2);opacity:.75}
 
 @media (max-width:359px){.card__edge-tail{display:none}}
@@ -1207,7 +1377,7 @@ main#view:focus,main#view:focus-visible{outline:none}
   transform:rotate(-5deg);pointer-events:none}
 
 .seal__no{position:absolute;right:-3%;bottom:-5%;
-  font:500 clamp(10px,1.9cqw,11px)/1 var(--f-body);color:var(--ink-2)}
+  font:500 clamp(10px,1.9cqw,11px)/1 var(--f-mono);color:var(--ink-2)}
 
 .seal--mile[data-seal="empty"] .sf-face{stroke-width:1.6;stroke-opacity:.55}
 .seal--mile > svg{height:80%;align-self:start}
@@ -1235,11 +1405,17 @@ main#view:focus,main#view:focus-visible{outline:none}
 .act--live .act__btn{background:var(--ink);color:var(--paper)}
 .act__verb{font-family:var(--f-head);text-transform:uppercase;
   font-size:var(--t-verb);line-height:1;letter-spacing:.01em}
-.act__sub{font-size:var(--t-body);opacity:.7}
+.act__sub{font-size:var(--t-body);opacity:.7;text-wrap:pretty}
 .act__btn:hover{background:var(--ink);color:var(--paper)}
 
 .view--home{position:relative;display:flex;flex-direction:column;gap:var(--s4)}
 
+.view--home::after{content:'';position:absolute;z-index:-1;
+  top:clamp(150px,22vw,260px);right:calc(var(--gutter) * -1);
+  width:clamp(150px,20vw,260px);height:9px;
+  transform:rotate(-14deg);transform-origin:100% 50%;
+  background:var(--ink);
+  clip-path:polygon(0 46%,14% 12%,58% 0,100% 30%,100% 70%,54% 100%,12% 74%)}
 .deck{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr);
   grid-template-areas:"card" "act" "ahead"}
 .deck--live{grid-template-areas:"act" "card" "ahead"}
@@ -1270,11 +1446,16 @@ main#view:focus,main#view:focus-visible{outline:none}
 }
 
 .ahead{position:relative;display:flex;flex-direction:column;
-  border-top:var(--edge-panel) solid var(--ink)}
-.ahead__mark{margin:0;padding:var(--s2) 0 var(--s2);
+  border:var(--edge-panel) solid var(--ink);background:var(--paper)}
+.ahead::before{content:"";position:absolute;z-index:-1;
+  top:-9px;right:-11px;width:36%;height:56%;opacity:.65;
+  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
+  clip-path:polygon(18% 0,100% 0,100% 100%)}
+.ahead__mark{margin:0;padding:var(--s2) var(--s4);
+  background:var(--ink);color:var(--paper);
   font-family:var(--f-head);text-transform:uppercase;
-  font-size:var(--t-sub);line-height:1.1}
-.ahead__list{list-style:none;margin:0;padding:0;
+  font-size:clamp(17px,3vw,22px);line-height:1.2}
+.ahead__list{list-style:none;margin:0;padding:0 var(--s4);
   display:flex;flex-direction:column}
 .ahead__row{display:grid;
   grid-template-columns:auto minmax(0,1fr) auto;
@@ -1297,7 +1478,7 @@ main#view:focus,main#view:focus-visible{outline:none}
 .bsec,.bnow__lab{font-family:var(--f-head)}
 .h2,.bsec{font-size:var(--t-sub);line-height:1.05;letter-spacing:0;
   text-transform:none;font-weight:400}
-.ledger__mark,.ahead__mark{font-size:var(--t-sub);line-height:1.05;
+.ledger__mark,.ahead__mark{font-size:var(--t-head);line-height:1.02;
   text-transform:none}
 
 body{letter-spacing:.012em}
@@ -1328,7 +1509,7 @@ button,input,select,textarea{font-family:inherit}
 .spread__side{position:relative;z-index:1;
   justify-self:center;align-self:end;text-align:center;
   margin:var(--s4) var(--gutter) clamp(14px,2.5dvh,26px);
-  font:500 clamp(9px,1vw,11px)/1.6 var(--f-mono);
+  font:500 clamp(10px,1vw,11px)/1.6 var(--f-mono);
   text-transform:uppercase;letter-spacing:.32em;color:var(--tone)}
 @media(min-width:820px){
   .spread::before{content:'';position:absolute;z-index:0;
@@ -1458,12 +1639,16 @@ button,input,select,textarea{font-family:inherit}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
   overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 
-.rechead{position:relative;display:flex;flex-wrap:wrap;
-  align-items:baseline;justify-content:space-between;gap:var(--s2) var(--s4);
-  padding-bottom:var(--s2);border-bottom:var(--edge-panel) solid var(--ink)}
-.rechead__title{margin:0}
-.rechead__sub{margin:0;font-size:var(--t-body);color:var(--ink-2);
-  min-width:0;overflow-wrap:anywhere}
+.rechead{position:relative;border-bottom:0;
+  padding-bottom:calc(var(--s3) + 7px)}
+.rechead::after{content:'';position:absolute;left:0;right:0;bottom:0;
+  height:7px;background:var(--ink);
+  clip-path:polygon(0 38%,10% 12%,52% 0,86% 18%,100% 46%,99% 60%,55% 100%,12% 78%,0 64%)}
+
+.rechead__title{margin:0;padding-bottom:.2em}
+
+.rechead--tight{padding-bottom:var(--s2)}
+.rechead--tight .rechead__title{font-size:clamp(30px,6.5vw,64px)}
 
 .recbody{display:grid;gap:var(--s4)}
 
@@ -1542,7 +1727,8 @@ button,input,select,textarea{font-family:inherit}
   padding:var(--s4);margin:var(--s3) 0;border-bottom:0;
   width:auto;margin-right:calc(var(--gutter) * -1);
 
-  padding-right:calc(var(--s4) + var(--gutter))}
+  padding-right:calc(var(--s4) + var(--gutter));
+  box-shadow:var(--s2) var(--s2) 0 var(--tone)}
 .lrow--open .lrow__no{color:var(--paper)}
 .lrow--open .lrow__slot{border-color:var(--paper)}
 .lrow--open .lrow__date{font-family:var(--f-head);
@@ -1583,8 +1769,9 @@ button,input,select,textarea{font-family:inherit}
 .viewer{position:relative;display:grid;place-items:center;
   grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);
   isolation:isolate;overflow:hidden;container-type:size;
-  width:100%;aspect-ratio:1;max-height:calc(100dvh - var(--tabs-h) - 210px);min-height:200px;
-  border:var(--edge-frame) solid var(--ink);background:var(--tint)}
+  width:100%;aspect-ratio:1;max-height:calc(100dvh - 318px);min-height:200px;
+  border:var(--edge-frame) solid var(--ink);background:var(--tint);
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
 .viewer::after{content:'';position:absolute;inset:7px;z-index:2;
   pointer-events:none;border:var(--edge-hair) solid var(--paper);opacity:.75}
 
@@ -1629,38 +1816,40 @@ button,input,select,textarea{font-family:inherit}
 .scanline--bad .scanline__dot{background:var(--paper)}
 .scanline--bad .scanline__msg{text-decoration:underline;text-underline-offset:3px}
 
-.viewer__stamp{position:absolute;inset:14%;z-index:4;color:var(--ink);
-  filter:drop-shadow(0 0 2px rgba(247,247,245,.9))}
-.viewer__stamp svg{width:100%;height:100%;display:block;overflow:visible}
-.viewer__stamp .sf-face{fill:var(--ink)}
-.viewer__stamp .seal__mark path{fill:var(--paper)}
+.standing{display:flex;align-items:baseline;justify-content:space-between;
+  gap:var(--s2) var(--s4);flex-wrap:wrap;margin:0;
+  padding-top:var(--s3);border-top:var(--edge-panel) solid var(--ink)}
+.standing__lab{font-size:var(--t-caption);color:var(--ink-2);
+  letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+.standing__at{font-family:var(--f-head);font-size:var(--t-sub);line-height:1.05;
+  color:var(--ink);text-align:right;min-width:0;overflow-wrap:anywhere}
 
 .viewer--hit{border-color:var(--ink)}
 .viewer--hit .viewer__scrim{opacity:.35}
 
-.viewer--stalled{aspect-ratio:auto;min-height:0;
-  container-type:normal;place-items:stretch;
-  background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.viewer--stalled{aspect-ratio:auto;min-height:clamp(160px,30vw,240px);
+  container-type:normal;place-items:stretch;background:var(--paper)}
 .viewer--stalled::after{display:none}
 
 @media(max-height:520px) and (min-aspect-ratio:4/3){
   .view--scan{display:grid;
     grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
-    grid-template-rows:auto minmax(0,1fr);gap:var(--s3) var(--s5);
-    grid-template-areas:"stage head" "stage line"}
-  .view--scan > .rechead{grid-area:head;margin:0;display:block}
+    grid-template-rows:auto auto minmax(0,1fr);gap:var(--s3) var(--s5);
+    grid-template-areas:"stage head" "stage line" "stage standing"}
+  .view--scan > .rechead{grid-area:head;margin:0}
   .view--scan > .viewer{grid-area:stage;margin:0;aspect-ratio:4/3;
-    max-height:calc(100dvh - 120px);min-height:0;align-self:start}
-  .view--scan > .scanline{grid-area:line;align-self:start}
+    max-height:calc(100dvh - 178px);min-height:0;align-self:start}
+  .view--scan > .scanline{grid-area:line}
+  .view--scan > .standing{grid-area:standing;margin:0;align-self:start}
 }
 
 .stall{display:flex;flex-direction:column;justify-content:center;
-  gap:var(--s2);padding:clamp(20px,4vw,32px);text-align:left}
+  gap:var(--s2);padding:var(--s5);text-align:left}
 .stall__title{margin:0;font-family:var(--f-head);
-  text-transform:uppercase;line-height:1;color:var(--paper);
-  font-size:clamp(21px,4vw,30px)}
-.stall__note{margin:0;max-width:46ch;font-size:var(--t-body);
-  line-height:1.45;color:var(--tint)}
+  text-transform:uppercase;line-height:1;
+  font-size:clamp(19px,3.6vw,28px)}
+.stall__note{margin:0;max-width:46ch;font-size:var(--t-caption);
+  line-height:1.45;color:var(--ink-2)}
 
 .manual{display:flex;flex-direction:column;gap:var(--s3);
   border:var(--edge-panel) solid var(--ink);background:var(--paper);
@@ -1683,9 +1872,9 @@ button,input,select,textarea{font-family:inherit}
   outline-offset:3px}
 
 @media(min-width:1024px){
-  .view--scan > .viewer,.view--scan > .scanline{
+  .view--scan > .viewer,.view--scan > .scanline,.view--scan > .standing{
     width:100%;max-width:min(100%,max(720px,48vw));align-self:flex-start}
-  .view--scan > .viewer{max-height:calc(100dvh - 200px);min-height:250px}
+  .view--scan > .viewer{max-height:calc(100dvh - clamp(330px,34vh,360px));min-height:250px}
 }
 
 .view--rewards{display:flex;flex-direction:column;gap:var(--s5)}
@@ -1697,81 +1886,80 @@ button,input,select,textarea{font-family:inherit}
 .ladder__of{margin:0;font-size:var(--t-caption);color:var(--ink-2);
   line-height:1.2}
 
-.tiers{list-style:none;margin:var(--s4) 0 0;padding:0;
-  display:flex;flex-direction:column;
-  border-left:var(--edge-panel) solid var(--ink)}
-.tier{position:relative;display:grid;gap:2px var(--s4);align-items:baseline;
-  grid-template-columns:auto minmax(0,1fr) auto;
-  grid-template-areas:"at name say" "at desc say";
-  padding:var(--s3) 0 var(--s3) clamp(16px,3vw,28px);
-  border-bottom:var(--edge-rule) solid var(--tint);min-width:0}
-.tier::before{content:"";position:absolute;left:0;top:50%;
-  width:clamp(8px,1.6vw,14px);height:var(--edge-panel);
-  background:var(--ink);transform:translateY(-50%)}
-.tier__at{grid-area:at;font-family:var(--f-head);line-height:.9;
-  font-size:clamp(24px,5vw,40px);min-width:2.2ch;color:var(--ink)}
-.tier__name{grid-area:name;font-family:var(--f-head);font-size:var(--t-sub);
+.climb{display:grid;--rgap:clamp(16px,2.6vw,30px);
+  grid-template-columns:clamp(22px,3.4vw,40px) minmax(0,1fr);
+  column-gap:var(--rgap);margin-top:var(--s3)}
+.climb__rail{position:relative;border:var(--edge-panel) solid var(--ink);
+  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
+.climb__fill{position:absolute;left:0;right:0;top:0;height:var(--h,0%);
+  background:var(--ink)}
+.climb__plates{display:flex;flex-direction:column;
+  gap:clamp(20px,3.4vw,40px);padding-block:clamp(4px,1vw,12px);min-width:0}
+
+.tier{position:relative;display:flex;flex-direction:column;align-items:flex-start;
+  gap:var(--s2);min-width:0;
+  padding:clamp(16px,2.4vw,26px);
+  border:var(--edge-panel) solid var(--ink);background:var(--paper)}
+
+.tier::after{content:"";position:absolute;right:100%;top:clamp(22px,3.4vw,40px);
+  width:var(--rgap,20px);height:var(--edge-panel);background:var(--ink)}
+.tier__at{font-family:var(--f-head);line-height:.82;
+  font-size:clamp(46px,8.5vw,86px);color:var(--ink)}
+.tier__body{display:flex;flex-direction:column;gap:3px;min-width:0}
+.tier__name{font-family:var(--f-head);font-size:var(--t-sub);
   line-height:1.05;overflow-wrap:anywhere}
-.tier__desc{grid-area:desc;font-size:var(--t-caption);color:var(--ink-2);line-height:1.35}
-.tier__say{grid-area:say;font-size:var(--t-caption);color:var(--ink-2);
-  text-align:right;white-space:nowrap;align-self:center}
+.tier__desc{font-size:var(--t-caption);color:var(--ink-2);line-height:1.35}
 
-.tier--far,.tier--far .tier__at,.tier--far .tier__name{color:var(--ink-2)}
-.tier--far .tier__at{color:var(--ink-2);opacity:.7}
+.tier__say{margin-top:auto;padding-top:var(--s3);
+  font-size:var(--t-caption);color:var(--ink-2)}
 
-.tier--claimed .tier__at,.tier--claimed .tier__name{color:var(--ink-2)}
-.tier__punch{grid-area:say;justify-self:end;align-self:center;
-  transform:rotate(-8deg);
-  font-family:var(--f-head);text-transform:uppercase;line-height:1;
-  font-size:clamp(13px,2.6vw,17px);color:var(--ink);
-  border:var(--edge-panel) solid var(--ink);padding:.2em .45em}
+.tier--sealed{position:relative;isolation:isolate;max-width:660px}
+.tier--sealed::before{content:"";position:absolute;inset:0;z-index:-1;
+  background-image:radial-gradient(var(--ink) .9px,transparent 1px);
+  background-size:7px 7px;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 8%,transparent 22%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 8%,transparent 22%)}
+.tier--sealed .tier__at{color:var(--ink)}
 
-.tier--target,.tier--ready{margin:var(--s3) 0 var(--s3) -2px;
-  padding:clamp(18px,3.4vw,30px) clamp(16px,3vw,28px);
-  border:var(--edge-panel) solid var(--ink);
-  grid-template-columns:auto minmax(0,1fr);
-  grid-template-areas:"at name" "at desc" "say say";
-  align-items:start}
-.tier--target::before,.tier--ready::before{display:none}
-.tier--target .tier__at,.tier--ready .tier__at{
-  font-size:clamp(52px,12vw,96px);line-height:.82;padding-bottom:.06em}
-.tier--target .tier__name,.tier--ready .tier__name{font-size:var(--t-head);line-height:1}
-.tier--target .tier__say,.tier--ready .tier__say{text-align:left;font-size:var(--t-body);
-  color:var(--ink);margin-top:var(--s2)}
-
-.tier--ready{background:var(--ink);color:var(--paper);border-color:var(--ink);
-  margin-right:calc(var(--gutter) * -1);border-right:0}
-.tier--ready .tier__at,.tier--ready .tier__name{color:var(--paper)}
+.tier--ready{background:var(--ink);color:var(--paper);
+  border-color:var(--ink);
+  margin-right:calc(var(--gutter) * -1);border-right:0;
+  padding-block:clamp(22px,3.4vw,38px)}
+.tier--ready .tier__at{
+  font-size:clamp(58px,10vw,110px);
+  color:var(--paper)}
 .tier--ready .tier__desc{color:var(--tint)}
-.tier__claim{grid-area:say;justify-self:start;margin-top:var(--s3);
-  padding:10px var(--s5);cursor:pointer;
+.tier__claim{margin-top:auto;padding:10px var(--s4);cursor:pointer;
   border:var(--edge-panel) solid var(--paper);
   background:var(--paper);color:var(--ink);
-  font-family:var(--f-head);font-size:var(--t-sub);line-height:1.15;white-space:nowrap}
+  font-family:var(--f-head);
+  font-size:var(--t-sub);line-height:1.15;white-space:nowrap}
 .tier__claim:hover{background:transparent;color:var(--paper)}
 .tier__claim:focus-visible{outline:var(--edge-panel) solid var(--paper);
   outline-offset:3px}
 
+.tier--claimed{background:var(--ink);color:var(--tint);border-color:var(--ink);
+  max-width:700px}
+
+.tier__punch{position:absolute;right:clamp(10px,3vw,34px);top:50%;
+  transform:translateY(-50%) rotate(-12deg);
+  font-family:var(--f-head);text-transform:uppercase;line-height:1;
+  font-size:clamp(24px,4.6vw,44px);color:var(--paper);
+  border:var(--edge-frame) solid var(--paper);padding:.18em .45em;
+  pointer-events:none}
+.tier--claimed .tier__at{color:var(--paper)}
+.tier--claimed .tier__name{color:var(--tint)}
+.tier--claimed .tier__desc{color:var(--ink-2)}
+.tier--claimed .tier__say{color:var(--tint)}
+
 @media(min-width:768px){
-  .tiers{max-width:720px}
+  .tier{gap:var(--s4)}
 }
 
 .view--member{position:relative;display:flex;flex-direction:column;gap:var(--s5)}
 
-.msheet{display:grid;gap:var(--s5);grid-template-columns:minmax(0,1fr);
+.sheet{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr);
   align-items:start}
-.strip{display:grid;gap:var(--s3);align-content:start;
-  border-top:var(--edge-panel) solid var(--ink);padding-top:var(--s3)}
-.strip__mark{margin:0;font-family:var(--f-head);text-transform:uppercase;
-  font-size:var(--t-sub);line-height:1.1;display:flex;gap:var(--s3);align-items:baseline}
-.strip__none{margin:0;color:var(--ink-2);font-size:var(--t-body)}
-.strip__row{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;
-  gap:clamp(10px,2.4vw,16px)}
-.seal.strip__seal{position:relative;left:auto;top:auto;
-  width:clamp(50px,13vw,72px);--lean:0deg}
-.seal.strip__seal .sealmeta{left:0;right:auto;top:calc(100% + 4px)}
-.seal.strip__seal .sealmeta::before{left:-1px;right:auto;
-  border-right:0;border-left:var(--rule) solid var(--ink)}
 .who{position:relative;display:grid;gap:var(--s4);
   grid-template-rows:minmax(clamp(170px,22vw,260px),1fr) auto;
   container-type:inline-size;
@@ -1806,9 +1994,11 @@ button,input,select,textarea{font-family:inherit}
   line-height:1.3;overflow-wrap:anywhere;letter-spacing:.1em}
 
 @media(min-width:900px){
-  .msheet{grid-template-columns:minmax(0,38fr) minmax(0,62fr);
-    gap:clamp(20px,2.8vw,44px);align-items:start}
-  .strip{border-top:0;padding-top:0}
+  .sheet{grid-template-columns:minmax(0,34fr) minmax(0,66fr);
+    gap:clamp(20px,2.8vw,44px);align-items:stretch}
+
+  .view--member .card__field{min-height:clamp(280px,32vw,430px)}
+
   .who{margin-left:0;padding-left:clamp(18px,3vw,32px)}
 }
 
@@ -1876,19 +2066,34 @@ button,input,select,textarea{font-family:inherit}
 @media(min-width:1024px){ .view--member .acct{display:none}
   .view--account .acct{display:grid} }
 
-.bover{display:grid;gap:var(--s5);grid-template-columns:minmax(0,1fr)}
+.bover{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"now" "ident" "band"}
+.bover > .bnow{grid-area:now}
+.bover > .bident{grid-area:ident}
+.bover > .standing-band{grid-area:band}
+@media(min-width:1000px){
+  .bover{grid-template-columns:minmax(0,62fr) minmax(0,38fr);
+    grid-template-areas:"now ident" "band band";align-items:stretch;
+    column-gap:clamp(16px,2.2vw,32px)}
+}
 
-.bnow__seal{position:absolute;right:clamp(12px,2vw,28px);top:clamp(12px,2vw,24px);
-  width:clamp(56px,8vw,96px);pointer-events:none;opacity:.9}
-.bnow__seal .brandseal{width:100%;height:auto;display:block;
-  --si:var(--ink);--sp:var(--paper)}
-.bnow--live .bnow__seal .brandseal{--si:var(--paper);--sp:var(--ink)}
-.bnow--none .bnow__seal{opacity:.5}
+.bident{position:relative;display:flex;align-items:center;
+  justify-content:space-between;gap:clamp(12px,1.6vw,22px);
+  background:var(--ink);color:var(--paper);
+  border:var(--edge-frame) solid var(--ink);
+  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone);
+  padding:clamp(16px,2.4vw,28px);min-height:clamp(140px,18vw,230px)}
+.bident__seal{display:block;flex:none;
+  width:clamp(116px,14vw,182px)}
+.bident__seal .brandseal{width:100%;height:auto;display:block;
+  --si:var(--paper);--sp:var(--ink)}
+.bident__line{margin:0;
+  font-family:var(--f-head);color:var(--paper);
+  font-size:clamp(16px,1.8vw,22px);letter-spacing:.04em;
+  max-width:10ch;line-height:1.12}
 
-.bnow{position:relative;overflow:hidden;
-  margin-right:calc(var(--gutter) * -1);border-right:0;
+.bnow{margin-right:calc(var(--gutter) * -1);border-right:0;
   display:grid;gap:2px var(--s5);
-  padding-right:calc(var(--s5) + clamp(56px,8vw,96px));
   grid-template-columns:minmax(0,1fr);
   grid-template-areas:"lab" "no" "at" "state" "go";
   align-items:start;justify-items:start;
@@ -1937,7 +2142,6 @@ button,input,select,textarea{font-family:inherit}
   outline-offset:3px}
 
 .bover .standing-band{border-top-width:var(--edge-panel)}
-@media(min-width:720px){ .bnow__go{margin-right:clamp(56px,8vw,96px)} }
 
 .ink{background:var(--ink);color:var(--paper);
   border:var(--edge-panel) solid var(--ink)}
@@ -2049,7 +2253,14 @@ button,input,select,textarea{font-family:inherit}
   </div>
 </div>
 
-<div class="ground" aria-hidden="true"></div>
+<div class="ground" aria-hidden="true">
+  <div class="ground__slash"></div>
+  <div class="ground__bleed"></div>
+  <div class="ground__corner"></div>
+  <div class="ground__d1"></div>
+  <div class="ground__d2"></div>
+  <div class="ground__tone"></div>
+</div>
 
 <div class="shell" id="shell">
   <aside class="rail">
@@ -15365,6 +15576,53 @@ const Motion = {
   },
 };
 
+const releaseTransform = els => {
+  (Array.isArray(els) ? els : [els]).forEach(el => {
+    if (el && el.style) el.style.transform = '';
+  });
+};
+
+const Reveal = {
+  io: null,
+  fuses: new Set(),
+
+  enter(el){
+    clearTimeout(el._revealFuse);
+    if (el.dataset.revealed) return;
+    el.dataset.revealed = '1';
+    animate(el, { opacity:[0, 1], duration:MECH.CUT, ease:STEP(1) });
+    FX.slamType(el, MECH.BEAT);
+  },
+
+  watch(el){
+    if (Motion.off || !('IntersectionObserver' in window)){
+      el.style.opacity = '';
+      return;
+    }
+    if (!this.io){
+      this.io = new IntersectionObserver(entries => {
+        entries.forEach(en => {
+          if (!en.isIntersecting) return;
+          this.io.unobserve(en.target);
+          this.enter(en.target);
+        });
+      }, { rootMargin:'0px 0px -6% 0px', threshold:.04 });
+    }
+    this.io.observe(el);
+    el._revealFuse = setTimeout(() => {
+      this.fuses.delete(el._revealFuse);
+      this.io?.unobserve(el);
+      this.enter(el);
+    }, 6000);
+    this.fuses.add(el._revealFuse);
+  },
+
+  clear(){
+    this.io?.disconnect(); this.io = null;
+    this.fuses.forEach(t => clearTimeout(t)); this.fuses.clear();
+  },
+};
+
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"']/g, c =>
@@ -15440,26 +15698,25 @@ function stampShape(seed, grow = 0){
 const STAMP_FIT = .62;
 
 const C = {
-  tier(r, total, target){
+  tier(r, total){
     const open  = total >= r.required;
     const ready = open && !r.claimed;
-    const state = r.claimed ? 'claimed' : ready ? 'ready'
-                : target && target.id === r.id ? 'target' : 'far';
-    const left  = r.required - total;
+    const state = r.claimed ? 'claimed' : ready ? 'ready' : 'sealed';
     const say   = r.claimed ? 'Claimed'
                 : ready     ? 'Ready to claim'
-                : `${left} more ${left === 1 ? 'stamp' : 'stamps'}`;
+                : `${r.required - total} more ${r.required - total === 1 ? 'stamp' : 'stamps'}`;
 
-    return `<li class="tier tier--${state}" data-reward="${r.id}">
+    return `<div class="tier tier--${state}" data-reward="${r.id}">
       <span class="tier__at">${pad(r.required)}</span>
-      <span class="tier__name">${esc(r.name)}</span>
-      ${r.desc && state !== 'far' ? `<span class="tier__desc">${esc(r.desc)}</span>` : ''}
+      <span class="tier__body">
+        <span class="tier__name">${esc(r.name)}</span>
+        <span class="tier__desc">${esc(r.desc || '')}</span>
+      </span>
+      ${r.claimed ? `<span class="tier__punch" aria-hidden="true">Claimed</span>` : ''}
       ${ready
         ? `<button class="tier__claim" type="button" data-claim="${r.id}">Claim</button>`
-        : r.claimed
-          ? `<span class="tier__punch" aria-hidden="true">Claimed</span><span class="sr-only">Claimed</span>`
-          : `<span class="tier__say">${say}</span>`}
-    </li>`;
+        : `<span class="tier__say">${say}</span>`}
+    </div>`;
   },
 
   sealGrid(){
@@ -15512,7 +15769,7 @@ const C = {
       : goal ? `${p.remaining} more until ${goal.name.toLowerCase()}`
              : `${p.remaining} more to finish this card`;
 
-    return `<section class="card${full ? ' card--full' : ''}">
+    return `<section class="card${full ? ' card--full' : ''}" data-enter>
       <div class="card__face">
         <div class="card__id">
           <span class="card__cardno">Card ${pad(cardNo)}</span>
@@ -15531,41 +15788,8 @@ const C = {
     </section>`;
   },
 
-  collection(){
-    const total = Store.totalStamps();
-    const chrono = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
-    const next = Store.nextMeeting();
-    if (!total) return `<section class="strip">
-      <h2 class="strip__mark">Collected</h2>
-      <p class="strip__none">No stamps yet.${next ? ` The first one lands at GM ${pad(next.no)}.` : ''}</p>
-    </section>`;
-
-    const cells = chrono.map((rec, i) => {
-      const m = Store.meetings.find(x => x.id === rec.meetingId);
-      const seed = i + 1;
-      return `<li class="seal seal--set strip__seal" data-seal="set"
-                  style="--press-tilt:${[-2.1, 1.4, -1.2, 2.3, -1.7][i % 5]}deg"${
-                  m ? ` tabindex="0" aria-label="Stamp ${pad(i + 1)}: general meeting ${m.no}, ${fmtDate(m.date)}"` : ''}>
-        <svg viewBox="0 0 64 64" aria-hidden="true">
-          <path class="sf-back" d="${stampShape(seed * 3 + 1, 3.4)}"/>
-          <g class="sf-press">
-            <path class="sf-face" d="${stampShape(seed, 0)}"/>
-            <g class="seal__mark" transform="translate(${(32 - 32 * STAMP_FIT).toFixed(1)} ${(32 - 32 * STAMP_FIT).toFixed(1)}) scale(${STAMP_FIT})">${stampMark(i)}</g>
-          </g>
-        </svg>
-        <span class="seal__no">${pad(i + 1)}</span>
-        ${m ? C.sealMeta(rec, m) : ''}
-      </li>`;
-    }).join('');
-
-    return `<section class="strip">
-      <h2 class="strip__mark">Collected</h2>
-      <ol class="strip__row" aria-label="${total} stamps collected">${cells}</ol>
-    </section>`;
-  },
-
   strike({ verb, sub, go, live = false }){
-    return `<div class="act ${live ? 'act--live' : ''}">
+    return `<div class="act ${live ? 'act--live' : ''}" data-enter>
       <button class="act__btn" data-go="${go}">
         <span class="act__verb">${esc(verb)}</span>
         <span class="act__sub">${esc(sub)}</span>
@@ -15583,7 +15807,7 @@ const C = {
   },
 
   empty(title, body){
-    return `<section class="rig empty-reg">
+    return `<section class="rig empty-reg" data-enter>
       <div class="empty">
         <span class="tone tone--coarse tone--fade-b empty__tone" aria-hidden="true"></span>
         <div class="empty__seal" aria-hidden="true">
@@ -15636,7 +15860,7 @@ const C = {
   },
 };
 
-C.account = () => `<section class="acct">
+C.account = () => `<section class="acct" data-enter>
   <h2 class="acct__mark">Account</h2>
   <div class="acct__row">
     <span class="acct__lab">Reduced motion</span>
@@ -15650,10 +15874,10 @@ const MANUAL_ENTRY = false;
 const Views = {
   loadFailure(title){
     return `<div class="view">
-      <header class="rechead">
+      <header class="rechead" data-enter>
         <h1 class="title rechead__title">${title}</h1>
       </header>
-      <section class="rig">
+      <section class="rig" data-enter>
         <div class="panel bpanel">
           <p class="kicker">Could not load</p>
           <p style="margin-top:8px">Keystamp could not reach the club records, so your
@@ -15696,11 +15920,14 @@ const Views = {
       .slice(0, 3);
 
     return `<div class="view view--home">
-      <h1 class="sr-only">Your card</h1>
-      <div class="deck${live ? ' deck--live' : ''}">
+      <header class="rechead rechead--tight" data-enter>
+        <h1 class="title rechead__title">Your card</h1>
+      </header>
+
+      <div class="deck${live ? ' deck--live' : ''}" data-enter>
         ${C.sealGrid()}
         <div class="deck__act">${action}</div>
-        ${ahead.length ? `<section class="ahead deck__ahead">
+        ${ahead.length ? `<section class="ahead deck__ahead" data-enter>
             <h2 class="ahead__mark">Ahead</h2>
             <ul class="ahead__list">
               ${ahead.map(m => `<li class="ahead__row">
@@ -15727,12 +15954,12 @@ const Views = {
     const frac = counted.length ? kept / counted.length : 0;
 
     return `<div class="view view--record">
-      <header class="rechead">
+      <header class="rechead" data-enter>
         <h1 class="title rechead__title">Record</h1>
       </header>
 
       ${held.length ? `<div class="recbody">
-        <aside class="tally">
+        <aside class="tally" data-enter>
           <p class="tally__fig">${pad(kept)}</p>
           <p class="tally__of">stamped of ${pad(counted.length)} held</p>
           <p class="tally__bar" style="--fill:${(frac*100).toFixed(1)}%" aria-hidden="true"></p>
@@ -15740,14 +15967,14 @@ const Views = {
             ? `${gone} missed` : 'None missed'}</p>
         </aside>
 
-        <section class="ledger">
+        <section class="ledger" data-enter>
           ${held.map(m => C.ledgerRow(m)).join('')}
         </section>
       </div>`
       : C.empty('No general meetings yet',
                 'Your first stamp will land here.')}
 
-      ${upcoming.length ? `<section class="ledger ledger--ahead">
+      ${upcoming.length ? `<section class="ledger ledger--ahead" data-enter>
         <h2 class="ledger__mark">Scheduled</h2>
         ${upcoming.map(m => C.ledgerRow(m)).join('')}
       </section>` : ''}
@@ -15758,40 +15985,49 @@ const Views = {
     if (Store.failed) return this.loadFailure('Rewards');
     const total = Store.totalStamps();
     const tiers = [...Store.rewards].sort((a, b) => a.required - b.required);
+    const top   = tiers[tiers.length - 1]?.required || 10;
+
+    const scale = Math.max(top * 1.06, total * 1.06, 1);
     const next  = tiers.find(t => total < t.required) || null;
-    const ready = tiers.some(t => total >= t.required && !t.claimed);
 
     return `<div class="view view--rewards">
-      <header class="rechead">
+      <header class="rechead" data-enter>
         <h1 class="title rechead__title">Rewards</h1>
       </header>
 
-      <section class="ladder">
+      <section class="ladder" data-enter>
         <p class="ladder__fig">${pad(total)}</p>
         <p class="ladder__of">${total === 1 ? 'stamp' : 'stamps'} so far${
-          next ? ` / ${next.required - total} to ${next.name.toLowerCase()}` : ' / every tier reached'}</p>
+          next ? ` / ${next.required - total} to the next rung` : ' / every rung passed'}</p>
       </section>
 
-      <ol class="tiers">
-        ${tiers.map(t => C.tier(t, total, ready ? null : next)).join('')}
-      </ol>
+      <section class="climb" data-enter>
+        <div class="climb__rail" role="img"
+             aria-label="${total} stamps against rungs at ${tiers.map(t => t.required).join(', ')}">
+          <span class="climb__fill" style="--h:${Math.min(total / scale * 100, 100).toFixed(1)}%"></span>
+        </div>
+        <div class="climb__plates">
+          ${tiers.map(t => C.tier(t, total)).join('')}
+        </div>
+      </section>
     </div>`;
   },
 
   scan(){
     const open = Store.openMeeting();
     const done = open && Store.attended(open.id);
-    const sub = !open ? 'No check-in is open right now'
-              : done  ? `Already stamped for GM ${pad(open.no)}`
-                      : `Checking in to GM ${pad(open.no)} / ${fmtDay(open.date)} / ${esc(open.place)}`;
+    const standing = !open
+      ? { lab:'Nothing open', at:'No check-in right now' }
+      : done
+        ? { lab:'Already stamped', at:`GM ${pad(open.no)}` }
+        : { lab:'Checking in to', at:`GM ${pad(open.no)} / ${fmtDay(open.date)} / ${esc(open.place)}` };
 
     return `<div class="view view--scan">
-      <header class="rechead">
+      <header class="rechead rechead--tight" data-enter>
         <h1 class="title rechead__title">Scan</h1>
-        <p class="rechead__sub">${sub}</p>
       </header>
 
-      <div class="viewer" id="viewer">
+      <div class="viewer" id="viewer" data-enter>
         <video id="cam" playsinline muted autoplay></video>
         <div class="viewer__scrim" aria-hidden="true"></div>
         <div class="reticle" id="reticle" aria-hidden="true">
@@ -15802,12 +16038,17 @@ const Views = {
         </div>
       </div>
 
-      <p class="scanline scanline--boot" id="scanLine" aria-live="polite">
+      <p class="scanline scanline--boot" id="scanLine" data-enter aria-live="polite">
         <i class="scanline__dot" aria-hidden="true"></i>
         <span class="scanline__msg" id="scanMsg">Starting camera</span>
       </p>
 
-      ${MANUAL_ENTRY ? `<div class="manual">
+      <p class="standing" data-enter>
+        <span class="standing__lab">${standing.lab}</span>
+        <span class="standing__at">${standing.at}</span>
+      </p>
+
+      ${MANUAL_ENTRY ? `<div class="manual" data-enter>
         <label class="manual__lab" for="manualInput">Or enter the check-in code</label>
         <div class="manual__f">
           <input class="manual__in" id="manualInput" placeholder="Check-in code"
@@ -15820,10 +16061,10 @@ const Views = {
 
   boardSpread(title){
     return `<div class="view view--board">
-      <header class="rechead">
+      <header class="rechead" data-enter>
         <h1 class="title rechead__title">${title}</h1>
       </header>
-      <section class="rig">
+      <section class="rig" data-enter style="margin-top:var(--gut)">
         <div id="boardPane">${BoardUI.pane()}</div>
       </section>
     </div>`;
@@ -15844,11 +16085,11 @@ const Views = {
     const role     = Store.isBoard ? 'Board' : 'Member';
 
     return `<div class="view view--member">
-      <header class="rechead">
+      <header class="rechead rechead--tight" data-enter>
         <h1 class="title rechead__title">Member</h1>
       </header>
 
-      <div class="msheet">
+      <div class="sheet" data-enter>
         <section class="who">
           <div class="who__mark" aria-hidden="true">
             <span class="who__org">Cali-Nev-Ha District</span>
@@ -15860,10 +16101,10 @@ const Views = {
             <p class="who__name">${esc(name)}</p>
           </div>
         </section>
-        ${C.collection()}
+        ${C.sealGrid()}
       </div>
 
-      <section class="standing-band">
+      <section class="standing-band" data-enter>
         <p class="standing-band__fig">${pad(total)}</p>
         <p class="standing-band__of">${total === 1 ? 'stamp' : 'stamps'} collected</p>
         <dl class="standing-band__rest">
@@ -15881,11 +16122,11 @@ const Views = {
     const name   = memberName();
     const handle = (Store.user && Store.user.username) || name;
     return `<div class="view view--member view--account">
-      <header class="rechead">
+      <header class="rechead rechead--tight" data-enter>
         <h1 class="title rechead__title">Account</h1>
       </header>
 
-      <section class="who">
+      <section class="who" data-enter>
         <div class="who__mark" aria-hidden="true">
           <span class="who__org">Cali-Nev-Ha District</span>
         </div>
@@ -15919,7 +16160,7 @@ const Views = {
 
     return `<div class="view view--auth">
 
-      <div class="spread">
+      <div class="spread" data-enter>
 
         <div class="spread__field crop" aria-hidden="true">
           <svg class="spread__seal crop__art" viewBox="0 0 100 100">${sealArt()}</svg>
@@ -16041,9 +16282,12 @@ const BoardUI = {
     const isLive = Boolean(active);
 
     return `<div class="bover">
+      <aside class="bident" data-enter>
+        <span class="bident__seal" aria-hidden="true">${brandSeal('cnh')}</span>
+        <p class="bident__line">Cali-Nev-Ha District</p>
+      </aside>
       ${focus ? `
         <div class="bnow ${isLive ? 'bnow--live' : ''}">
-          <span class="bnow__seal" aria-hidden="true">${brandSeal('cnh')}</span>
           <p class="bnow__lab">${isLive ? 'Happening now' : 'Next general meeting'}</p>
           <p class="bnow__no">GM ${pad(focus.meeting_number)}</p>
           <p class="bnow__at">${esc(fmtDay(focus.meeting_date))} / ${esc(focus.start_time)}${
@@ -16055,7 +16299,6 @@ const BoardUI = {
             isLive ? 'Show the code' : 'Open check-in'}</button>
         </div>`
         : `<div class="bnow bnow--none">
-             <span class="bnow__seal" aria-hidden="true">${brandSeal('cnh')}</span>
              <p class="bnow__lab">Next general meeting</p>
              <p class="bnow__no">None yet</p>
              <p class="bnow__at">Schedule one to open check-in.</p>
@@ -16086,31 +16329,38 @@ const BoardUI = {
   progressPane(){
     const o = this.overview || {};
     const ms = o.milestones || {};
+    const reached = REWARD_TIERS.map(r => ({ n:r.required, key:'m' + r.required, name:r.name }));
     const participating = o.participating_members;
+
     const total = (this.members && this.members.total);
-
-    const rows = REWARD_TIERS.map(r => {
-      const count = ms['m' + r.required];
-      const known = typeof count === 'number' && typeof participating === 'number';
-      const pct = known && participating > 0 ? Math.round((count / participating) * 100) : 0;
-      return `<li class="mline ${known && count > 0 ? 'mline--lit' : ''}">
-        <span class="mline__at">${pad(r.required)}</span>
-        <span class="mline__name">${esc(r.name)}</span>
-        <span class="mline__n">${known ? `<b>${count}</b> ${count === 1 ? 'member' : 'members'}` : 'Not available'}</span>
-        <span class="mline__pct">${known ? pct + '%' : ''}</span>
-      </li>`;
-    }).join('');
-
     return `<div class="bpanel memgrid">
-      <section class="msummary">
+      <section class="msummary" data-enter>
         <div class="msummary__lead">
           <p class="msummary__fig">${typeof total === 'number' ? pad(total) : '--'}</p>
           <p class="msummary__of">members on the roster</p>
         </div>
-        <ol class="mledger" aria-label="Members who have reached each reward">${rows}</ol>
+        <ul class="mplates">
+          ${reached.map(r => {
+            const count = ms[r.key];
+            const known = typeof count === 'number' && typeof participating === 'number';
+            const pct = known && participating > 0
+              ? Math.round((count / participating) * 100) : 0;
+            return `<li class="mplate ${known && count > 0 ? 'mplate--lit' : ''}">
+              <span class="mplate__no">${r.n}</span>
+              <span class="mplate__name">${esc(r.name)}</span>
+              <span class="mplate__say">${known
+                ? (count === 1 ? '1 member has reached it'
+                               : `${count} members have reached it`)
+                : 'Not available'}</span>
+              <span class="bmile__bar" role="img"
+                aria-label="${known ? `${pct} percent of checked-in members` : 'unavailable'}">
+                <span class="bmile__fill" style="width:${pct}%"></span></span>
+            </li>`;
+          }).join('')}
+        </ul>
       </section>
 
-      <section class="rosterpanel">
+      <section class="rosterpanel" data-enter>
         <h2 class="meetband">Roster</h2>
         ${this.rosterBody()}
       </section>
@@ -16128,16 +16378,16 @@ const BoardUI = {
     return `<div class="bpanel meetgrid">
       ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
 
-      <section class="meetgrid__form">${this.createForm()}</section>
+      <section class="meetgrid__form" data-enter>${this.createForm()}</section>
 
-      <section class="meetgrid__up">
+      <section class="meetgrid__up" data-enter>
         <h2 class="meetband">Coming up</h2>
         ${upcoming.length
           ? `<ul class="blist">${upcoming.map(m => this.meetingRow(m)).join('')}</ul>`
           : this.empty('No upcoming meetings.')}
       </section>
 
-      <section class="meetgrid__held">
+      <section class="meetgrid__held" data-enter>
         <h2 class="meetband meetband--held">Already held</h2>
         ${past.length
           ? `<ul class="blist blist--held">${past.map(m => this.meetingRow(m)).join('')}</ul>`
@@ -16164,7 +16414,7 @@ const BoardUI = {
         <b>${esc(fmtDay(m.meeting_date))}</b>
         <span class="muted">${esc(m.start_time)}${m.end_time ? '-' + esc(m.end_time) : ''} / ${esc(m.location || 'MPR')}</span>
       </span>
-      ${m.state === 'OPEN' ? '<span class="bstate bstate--open">Open</span>' : ''}
+      <span class="bstate bstate--${m.state.toLowerCase()}">${m.state}</span>
       <span class="brow__n"><b>${m.attendance_count}</b><span class="brow__nlab">checked in</span></span>
       ${m.attendance_count === 0
         ? `<button class="brow__del" data-bconfirm="${esc(m.id)}"
@@ -16374,11 +16624,24 @@ const BoardUI = {
 /* ── js/04-fx.js ── */
 "use strict";
 
+const MECH = {
+  CUT:  1,
+  LEAD: 40,
+  GAP:  46,
+  BEAT: 90,
+  SLAM: 130,
+};
+
 const STEP = n => (typeof steps === 'function' ? steps(n) : undefined);
 
+const SLAM_SEL = '.title,.spread__wm,.tally__fig,'
+               + '.ladder__fig,.standing-band__fig,.who__name,'
+               + '.proj__no,.bnow__no';
+
 const EASE = {
-  CUT:  cubicBezier(.03,.9,.1,1),
-  CALM: cubicBezier(.22,.61,.36,1),
+  CUT:    cubicBezier(.03,.9,.1,1),
+  IMPACT: cubicBezier(.34,1.56,.5,1),
+  CALM:   cubicBezier(.22,.61,.36,1),
 };
 
 const Impact = {
@@ -16405,70 +16668,53 @@ const Impact = {
   },
 };
 
-const lean = el => (getComputedStyle(el).getPropertyValue('--lean') || '0deg').trim();
-const clear = els => (Array.isArray(els) ? els : [els]).forEach(el => {
-  if (el && el.style){ el.style.transform = ''; el.style.opacity = ''; }
-});
-
 const FX = {
-  enter(id){
-    if (Motion.off) return;
-    if (id === 'home')    return this.sealGrid($('#seals'));
-    if (id === 'record')  return this.ledger($('.ledger'));
-    if (id === 'rewards') return this.tierSnap($('.tier--ready, .tier--target'));
-    if (id === 'scan')    return this.reticleClose();
-    if (id === 'profile' || id === 'baccount') return this.stampIn($('.who__name'));
+  claimStamp(row){
+    if (!row || Motion.off) return;
+    aset(row, { scale:1.04 });
+    animate(row, { scale:[1.04, 1], duration:120, ease:STEP(3),
+                   onComplete(){ Motion.settle(row); } });
+    Impact.flash(.22, { host:row, delay:40, dur:60 });
+    setTimeout(() => Impact.shake(row, 3, 90), 100);
+  },
+
+  pageEntrance(scope){
+    const els = [...scope.querySelectorAll('[data-enter]')];
+    if (Motion.off || !els.length) return;
+
+    const fold = innerHeight + 40;
+    const near = els.filter(el => el.getBoundingClientRect().top < fold);
+    const far  = els.filter(el => !near.includes(el));
+
+    aset(els, { opacity:0 });
+    animate(near, { opacity:[0, 1], duration:MECH.CUT,
+            delay:stagger(MECH.GAP, { start:MECH.LEAD }), ease:STEP(1) });
+    near.forEach((el, i) => FX.slamType(el, MECH.LEAD + i * MECH.GAP + MECH.BEAT));
+    far.forEach(el => Reveal.watch(el));
+  },
+
+  slamType(panel, at){
+    if (!panel || Motion.off) return;
+    const marks = [...panel.querySelectorAll(SLAM_SEL)];
+    if (!marks.length) return;
+    aset(marks, { opacity:0, translateY:-14 });
+    animate(marks, { opacity:[0, 1], translateY:[-14, 0],
+            duration:MECH.SLAM, delay:stagger(MECH.BEAT / 3, { start:at }),
+            ease:STEP(3), onComplete:() => releaseTransform(marks) });
   },
 
   sealGrid(list){
     if (!list || Motion.off) return;
-    const cells = [...list.querySelectorAll('.seal')];
+    const cells = list.querySelectorAll('.seal');
     if (!cells.length) return;
     aset(cells, { opacity:0 });
-    animate(cells, { opacity:[0, 1], duration:1, delay:stagger(26, { start:60 }) });
-    animate(cells, { scale:[.9, 1], rotate:lean, duration:120,
-            delay:stagger(26, { start:60 }), ease:STEP(3), onComplete:() => clear(cells) });
-  },
+    animate(cells, { opacity:[0, 1], scale:[.86, 1],
+            rotate: el => (getComputedStyle(el).getPropertyValue('--lean') || '0deg').trim(),
+            delay:stagger(46, { start:120 }),
+            ease:spring({ mass:1, stiffness:94, damping:13, velocity:0 }),
+            onComplete(){ cells.forEach(c => { c.style.opacity = '';
 
-  ledger(list){
-    if (!list || Motion.off) return;
-    const rows = [...list.querySelectorAll('.lrow')].slice(0, 16);
-    if (!rows.length) return;
-    aset(rows, { opacity:0 });
-    animate(rows, { opacity:[0, 1], duration:1, delay:stagger(18, { start:40 }),
-            onComplete:() => clear(rows) });
-  },
-
-  tierSnap(row){
-    if (!row || Motion.off) return;
-    aset(row, { scale:1.03 });
-    animate(row, { scale:[1.03, 1], duration:120, delay:40, ease:STEP(3),
-            onComplete:() => clear(row) });
-  },
-
-  reticleClose(){
-    if (Motion.off) return;
-    const dirs = [[-1,-1],[1,-1],[-1,1],[1,1]];
-    const corners = $$('#reticle .reticle__c');
-    corners.forEach((c, i) => {
-      aset(c, { translateX:dirs[i][0] * 14, translateY:dirs[i][1] * 14 });
-      animate(c, { translateX:0, translateY:0, duration:220, delay:60, ease:EASE.CUT });
-    });
-  },
-
-  stampIn(el){
-    if (!el || Motion.off) return;
-    aset(el, { opacity:0 });
-    animate(el, { opacity:[0, 1], duration:1, delay:40 });
-    animate(el, { scale:[1.25, 1], duration:120, delay:40, ease:STEP(3),
-            onComplete:() => clear(el) });
-  },
-
-  claimStamp(row){
-    if (!row || Motion.off) return;
-    aset(row, { scale:1.04 });
-    animate(row, { scale:[1.04, 1], duration:120, ease:STEP(3), onComplete:() => clear(row) });
-    Impact.flash(.22, { host:row, delay:40, dur:60 });
+              c.style.transform = ''; }); } });
   },
 
   scanLock(){
@@ -16486,53 +16732,59 @@ const FX = {
       animate(c, { translateX:0, translateY:0, duration:220, ease:EASE.CALM }));
   },
 
-  scanStamp(ordinal, done){
-    const viewer = $('#viewer'), ret = $('#reticle');
-    if (!viewer || !ret){ done(); return; }
-    const fit = STAMP_FIT, at = (32 - 32 * fit).toFixed(1);
-    const el = document.createElement('div');
-    el.className = 'viewer__stamp';
-    el.setAttribute('aria-hidden', 'true');
-    el.innerHTML = `<svg viewBox="0 0 64 64">
-      <path class="sf-face" d="${stampShape(ordinal + 1, 0)}"/>
-      <g class="seal__mark" transform="translate(${at} ${at}) scale(${fit})">${stampMark(ordinal)}</g></svg>`;
-    ret.appendChild(el);
+  stampAcquire(meeting, done){
+    const scene = document.createElement('div');
+    scene.className = 'acq';
+    scene.innerHTML = `
+      <div class="acq__stack">
+        <p class="acq__kick">Stamp acquired</p>
+        <div class="acq__seal" aria-hidden="true">
+          <svg viewBox="0 0 64 64"><path d="${stampShape(7, 0)}"/></svg>
+          <b class="acq__plus">+1</b>
+        </div>
+        <p class="acq__meet">GM ${pad(meeting.no)} / ${fmtDate(meeting.date)} / ${esc(meeting.place || Schedule.PLACE)}</p>
+      </div>`;
+    document.body.appendChild(scene);
+    const clear = () => { try { scene.remove(); } catch (_) {} };
 
-    if (Motion.off){ setTimeout(done, 520); return; }
+    if (Motion.off){
+      setTimeout(() => { done(); clear(); }, 750);
+      return;
+    }
 
-    aset(el, { opacity:0, scale:1.35, rotate:-3 });
-    Impact.flash(.24, { host:viewer, delay:60, dur:50 });
-    createTimeline({ onComplete:done })
-      .add(el, { opacity:[0, 1], duration:1 }, 40)
-      .add(el, { scale:[1.35, 1], rotate:[-3, -1.5], duration:140, ease:STEP(3) }, 40)
-      .add({ hold:0 }, { hold:1, duration:560 });
+    const sealEl = scene.querySelector('.acq__seal');
+
+    aset(sealEl, { scale:1.16, rotate:-4 });
+    animate(sealEl, { scale:[1.16, 1], rotate:[-4, -1.5],
+      duration:110, delay:80, ease:STEP(2) });
+    setTimeout(() => Impact.shake(scene, 3, 80), 170);
+
+    setTimeout(done, 540);
+    setTimeout(() => animate(scene, { translateY:[0, -(innerHeight + 24)], duration:300,
+      ease:cubicBezier(.7, 0, .18, 1), onComplete:clear }), 760);
+    setTimeout(clear, 2000);
   },
 
   stampLand(cell){
     if (!cell || Motion.off) return;
-    aset(cell, { opacity:0 });
-    const tl = createTimeline();
-    tl.add(cell, { opacity:[0, 1], duration:1 }, 400)
-      .add(cell, { scale:[1.45, 1], rotate:lean(cell), duration:130, ease:STEP(3) }, 400)
-      .call(() => Impact.shake($('.card__face') || $('#shell'), 3, 80), 520)
-      .call(() => clear(cell), 720);
-  },
 
-  cardFull(card){
-    const punch = card && card.querySelector('.card__punch');
-    if (!punch || Motion.off) return;
-    aset(punch, { opacity:0, scale:1.3, rotate:-9 });
-    animate(punch, { opacity:[0, 1], duration:1, delay:760 });
-    animate(punch, { scale:[1.3, 1], rotate:-9, duration:120, delay:760, ease:STEP(3),
-            onComplete:() => clear(punch) });
+    const lean = getComputedStyle(cell).getPropertyValue('--lean').trim() || '0deg';
+    aset(cell, { opacity:0 });
+    animate(cell, { opacity:[0, 1], duration:1, delay:420, ease:STEP(1) });
+    animate(cell, { scale:[1.45, 1], rotate:lean, duration:130, delay:420, ease:STEP(3) });
+    setTimeout(() => { Impact.shake($('.card__face') || $('#shell'), 3, 80); }, 540);
+    setTimeout(() => { Motion.settle(cell); }, 720);
   },
 
   rewardUnlock(row){
     if (Motion.off || !row) return;
     const claim = row.querySelector('.tier__claim');
     Impact.flash(.18, { host:row, dur:60 });
-    if (claim) animate(claim, { scale:[.9, 1.04, 1], duration:360, delay:100, ease:EASE.CALM,
-                                onComplete:() => clear(claim) });
+    Impact.shake(row, 3, 90);
+    if (claim){
+      animate(claim, { scale:[.86, 1.06, 1], duration:420, delay:120,
+                       ease:EASE.IMPACT });
+    }
   },
 
   boardSeal(){
@@ -16544,16 +16796,27 @@ const FX = {
       deg = Math.atan2(m.b, m.a) * 180 / Math.PI;
     } catch (_) {}
     aset(word, { scale:1.45, rotate:deg, opacity:0 });
-    animate(word, { opacity:[0, 1], duration:1, delay:60 });
-    animate(word, { scale:[1.45, 1], rotate:deg, duration:120, delay:60, ease:STEP(3),
-            onComplete:() => clear(word) });
-  },
+    animate(word, { opacity:[0, 1], duration:1, delay:60, ease:STEP(1) });
+    animate(word, { scale:[1.45, 1], rotate:deg, duration:120, delay:60, ease:STEP(3) });
+    setTimeout(() => Impact.shake(word, 3, 80), 190);
+    setTimeout(() => Motion.settle(word), 420);
+  }
 };
 
 </script>
 <script>
 /* ── js/04b-scenes.js ── */
 "use strict";
+
+const SCENE_MARKUP = tail => `
+  <div class="scene__base"></div>
+  <div class="scene__grid">
+    <div class="scene__panel scene__panel--a"><i class="scene__ink"></i><p class="scene__word">Keystamp</p></div>
+    <div class="scene__panel scene__panel--b"><i class="scene__ink"></i>
+      <p class="scene__kick">Key Club attendance</p><p class="scene__tail">${esc(tail || '')}</p></div>
+    <div class="scene__panel scene__panel--c"><i class="scene__ink scene__ink--tone"></i>
+      <span class="scene__seal"><svg class="brandseal" viewBox="0 0 840 875" aria-hidden="true"><use href="#bootseal"/></svg></span></div>
+  </div>`;
 
 const fadeAway = (el, dur, cb) => {
   if (window.animate){ animate(el, { opacity:[1, 0], duration:dur, ease:'linear', onComplete:cb }); return; }
@@ -16569,10 +16832,11 @@ const Scenes = {
     const q = s => root.querySelector(s);
     const panel = k => { const el = q('.scene__panel--' + k); return { el, ink:el.querySelector('.scene__ink') }; };
     return { root, base:q('.scene__base'), grid:q('.scene__grid'),
-             a:panel('a'), b:panel('b'), c:panel('c') };
+             a:panel('a'), b:panel('b'), c:panel('c'),
+             word:q('.scene__word'), kick:q('.scene__kick'), tail:q('.scene__tail'), seal:q('.scene__seal') };
   },
 
-  exitVector(p, W){
+  exitVector(p, W, H){
     const g = p.grid.getBoundingClientRect();
     const mid = g.left + g.width / 2;
     return panel => {
@@ -16583,10 +16847,23 @@ const Scenes = {
     };
   },
 
-  opening({ root, reveal = () => {} }){
-    const el = root;
-    if (!el){ reveal(); return { release(){} }; }
+  opening({ root = null, tail = '', reveal = () => {} } = {}){
+    const boot = Boolean(root);
+    let el = root;
+    if (!el){
+      el = document.createElement('div');
+      el.className = 'scene scene--welcome';
+      el.setAttribute('aria-hidden', 'true');
+      el.style.setProperty('--lead', '170ms');
+      el.innerHTML = SCENE_MARKUP(tail);
+      document.body.appendChild(el);
+    } else {
+      const t = el.querySelector('.scene__tail');
+      if (t) t.textContent = tail;
+    }
     const p = this.parts(el);
+    const lead = boot ? 0 : 170;
+    const t0 = boot ? 0 : performance.now();
     let done = false, released = false, revealed = false;
 
     const revealOnce = () => { if (revealed) return; revealed = true; try { reveal(); } catch (_) {} };
@@ -16606,62 +16883,29 @@ const Scenes = {
       } };
     }
 
-    const MIN = 1000;
+    if (!boot) el.classList.add('scene--play');
+    const hit = lead + 500 - (performance.now() - t0);
+    if (hit > -80) setTimeout(() => Impact.shake(p.grid, 4, 90), Math.max(0, hit));
+
+    const MIN = lead + 1000;
     const open = () => {
       if (done) return;
       el.classList.add('scene--set');
-      const vec = this.exitVector(p, innerWidth);
+      const W = innerWidth;
+      const vec = this.exitVector(p, W, innerHeight);
       const EXIT = cubicBezier(.7, 0, .18, 1);
-      createTimeline()
-        .add(p.a.el, Object.assign({ duration:380, ease:EXIT }, vec(p.a)), 0)
-        .add(p.b.el, Object.assign({ duration:360, ease:EXIT }, vec(p.b)), 40)
-        .add(p.c.el, Object.assign({ duration:360, ease:EXIT }, vec(p.c)), 70)
-        .add(p.base, { translateY:[0, innerHeight + 24], duration:380, ease:EXIT }, 60)
-        .call(revealOnce, 100)
-        .call(finish, 480);
+      animate(p.a.el, Object.assign({ duration:380, ease:EXIT }, vec(p.a)));
+      animate(p.b.el, Object.assign({ duration:360, delay:40, ease:EXIT }, vec(p.b)));
+      animate(p.c.el, Object.assign({ duration:360, delay:70, ease:EXIT }, vec(p.c)));
+      animate(p.base, { translateY:[0, innerHeight + 24], duration:380, delay:60, ease:EXIT });
+      setTimeout(revealOnce, 100);
+      setTimeout(finish, 480);
     };
 
     return { release(){
       if (released) return; released = true;
-      setTimeout(open, Math.max(0, MIN - performance.now()));
+      setTimeout(open, Math.max(0, MIN - (performance.now() - t0)));
     } };
-  },
-
-  veil(word, kick){
-    const el = document.createElement('div');
-    el.className = 'veil';
-    el.setAttribute('aria-hidden', 'true');
-    el.innerHTML = `<p class="veil__kick">${esc(kick || '')}</p><p class="veil__word">${esc(word || '')}</p>`;
-    document.body.appendChild(el);
-    return { el, word:el.querySelector('.veil__word'), kick:el.querySelector('.veil__kick') };
-  },
-
-  enter({ swap, reveal = () => {} }){
-    if (this.busy) return;
-    this.busy = true;
-    const v = this.veil('', '');
-    let done = false;
-    const finish = () => {
-      if (done) return; done = true;
-      clearTimeout(fuse);
-      try { v.el.remove(); } catch (_) {}
-      this.busy = false;
-    };
-    const fuse = setTimeout(() => { try { swap(); } catch (_) {} finish(); }, 3000);
-    const doSwap = () => { try { swap(); } catch (_) {} };
-
-    if (Motion.off){
-      doSwap();
-      setTimeout(() => { reveal(); fadeAway(v.el, 150, finish); }, 120);
-      return;
-    }
-
-    aset(v.el, { translateY:'-100%' });
-    createTimeline({ onComplete:finish })
-      .add(v.el, { translateY:['-100%', '0%'], duration:300, ease:cubicBezier(.6, 0, .2, 1) }, 0)
-      .call(doSwap, 320)
-      .add(v.el, { translateY:['0%', '-100%'], duration:360, ease:cubicBezier(.7, 0, .2, 1) }, 380)
-      .call(reveal, 480);
   },
 
   exit({ swap, fail, btn = null } = {}){
@@ -16670,51 +16914,83 @@ const Scenes = {
     if (this.busy) return;
     this.busy = true;
 
-    const v = this.veil('Signed out', 'Keystamp / Key Club attendance');
+    const el = document.createElement('div');
+    el.className = 'scene scene--exit scene--set';
+    el.setAttribute('aria-hidden', 'true');
+    el.innerHTML = SCENE_MARKUP('Until next meeting');
+    document.body.appendChild(el);
+    const p = this.parts(el);
+    p.word.textContent = 'Signed out';
+    p.kick.textContent = 'Keystamp / Key Club attendance';
+    [p.word, p.kick, p.tail, p.seal].forEach(x => { x.style.opacity = '0'; });
+
     let done = false;
     const finish = () => {
       if (done) return; done = true;
       clearTimeout(fuse);
-      try { v.el.remove(); } catch (_) {}
+      try { el.remove(); } catch (_) {}
       this.busy = false;
     };
     const fuse = setTimeout(finish, 4000);
     const swapNow = () => Promise.resolve().then(doSwap).catch(err => { oops(err); return 'failed'; });
 
     if (Motion.off){
+      [p.word, p.kick, p.tail, p.seal].forEach(x => { x.style.opacity = '1'; });
       setTimeout(async () => {
         await swapNow();
-        setTimeout(() => fadeAway(v.el, 150, finish), 520);
+        setTimeout(() => fadeAway(el, 150, finish), 520);
       }, 120);
       return;
     }
 
     if (btn){
       aset(btn, { scale:.94 });
-      animate(btn, { scale:1, duration:110, delay:90, ease:'outQuad', onComplete(){ btn.style.transform = ''; } });
+      setTimeout(() => animate(btn, { scale:1, duration:110, ease:'outQuad',
+        onComplete(){ btn.style.transform = ''; } }), 90);
     }
 
-    aset(v.el, { translateY:'-100%' });
-    aset([v.word, v.kick], { opacity:0 });
+    const W = innerWidth, H = innerHeight;
+    const vec = this.exitVector(p, W, H);
+    const IN = cubicBezier(.5, 0, .12, 1);
+    const from = panel => { const v = vec(panel); const k = Object.keys(v)[0]; return [k, v[k]]; };
+    [[p.a, 0, 250], [p.b, 30, 230], [p.c, 60, 230]].forEach(([panel, delay, dur]) => {
+      const [k, v] = from(panel);
+      aset(panel.el, { [k]:v });
+      animate(panel.el, { [k]:[v, 0], duration:dur, delay, ease:IN });
+    });
+    aset(p.base, { opacity:0 });
+    animate(p.base, { opacity:[0, 1], duration:200, delay:110, ease:'linear' });
+    setTimeout(() => Impact.shake(p.grid, 3, 80), 300);
+
     let swapped = null;
-    createTimeline()
-      .add(v.el, { translateY:['-100%', '0%'], duration:320, ease:cubicBezier(.5, 0, .12, 1) }, 0)
-      .add(v.word, { opacity:[0, 1], duration:1 }, 300)
-      .add(v.word, { scale:[1.2, 1], duration:110, ease:STEP(3) }, 300)
-      .add(v.kick, { opacity:[0, 1], duration:1 }, 380)
-      .call(() => { swapped = swapNow(); }, 340)
-      .call(async () => {
-        if (done) return;
-        const res = swapped ? await swapped : null;
-        if (res === 'failed'){
-          animate(v.el, { translateY:['0%', '-100%'], duration:300, ease:cubicBezier(.7, 0, .2, 1), onComplete:finish });
-          return;
-        }
-        animate(v.el, { translateY:['0%', '100%'], duration:380, ease:cubicBezier(.55, 0, 1, .45), onComplete:finish });
-        const panel = $('.authp');
-        if (panel) animate(panel, { translateY:[6, 0], duration:160, delay:220, ease:'outQuad',
-          onComplete(){ panel.style.transform = ''; } });
-      }, 900);
+    setTimeout(() => { swapped = swapNow(); }, 340);
+
+    createTimeline({ autoplay:true })
+      .add(p.seal, { opacity:[0, 1], duration:1 }, 360)
+      .add(p.word, { opacity:[0, 1], duration:1 }, 400)
+      .add(p.word, { scale:[1.3, 1], duration:110, ease:STEP(3) }, 400)
+      .add(p.kick, { opacity:[0, 1], duration:1 }, 470)
+      .add(p.tail, { opacity:[0, 1], duration:1 }, 530);
+
+    const drop = async () => {
+      if (done) return;
+      const res = swapped ? await swapped : null;
+      const FALL = cubicBezier(.55, 0, 1, .45);
+      const dist = panel => H - panel.el.getBoundingClientRect().top + 16;
+      [[p.b, 0], [p.c, 50], [p.a, 100]].forEach(([panel, delay]) => {
+        animate(panel.el, { translateY:[0, dist(panel)], duration:420, delay, ease:FALL });
+      });
+      animate(p.base, { translateY:[0, H + 24], duration:420, delay:130, ease:FALL });
+      if (res !== 'failed'){
+        setTimeout(() => {
+          const panel = $('.authp');
+          if (panel) animate(panel, { translateY:[6, 0], duration:160, ease:'outQuad',
+            onComplete(){ panel.style.transform = ''; } });
+        }, 200);
+      }
+      setTimeout(finish, 560);
+    };
+    setTimeout(drop, 940);
   },
 };
 
@@ -16723,13 +16999,13 @@ const Transit = {
            board:0, bmeet:1, bcheckin:2, bmembers:3, baccount:4 },
 
   CHAR: {
-    home:    { dur:260, angle:9, tone:true },
-    record:  { dur:280, angle:4 },
-    scan:    { dur:220, angle:0 },
-    rewards: { dur:280, angle:7 },
-    profile: { dur:300, angle:6 },
-    board:   { dur:240, angle:0, crisp:true },
-    auth:    { dur:240, angle:3 },
+    home:    { in:170, hold:100, out:230, angle:9, par:26, tone:true },
+    record:  { in:200, hold:120, out:280, angle:4, par:16 },
+    scan:    { in:150, hold:80,  out:200, angle:0, par:10 },
+    rewards: { in:180, hold:120, out:260, angle:7, par:22, layered:true, flash:true },
+    profile: { in:220, hold:130, out:300, angle:6, par:14 },
+    board:   { in:160, hold:90,  out:210, angle:0, par:12, crisp:true },
+    auth:    { in:180, hold:90,  out:240, angle:3, par:0,  vertical:true },
   },
 
   profile(to){
@@ -16739,7 +17015,7 @@ const Transit = {
 
   direction(from, to){
     const a = this.ORDER[from], b = this.ORDER[to];
-    if (a === undefined || b === undefined || a === b) return 1;
+    if (a === undefined || b === undefined || a === b) return 0;
     return b > a ? 1 : -1;
   },
 
@@ -16752,7 +17028,10 @@ const Transit = {
     return { left:r.left, width:r.width, top, height:Math.max(0, floor - top), viewTop:r.top };
   },
 
-  clone(view, f){
+  ghost(view, f){
+    const box = document.createElement('div');
+    box.className = 'ghost';
+    box.style.cssText = `left:${f.left}px;top:${f.top}px;width:${f.width}px;height:${f.height}px`;
     const clone = view.cloneNode(true);
     clone.removeAttribute('id');
     clone.removeAttribute('tabindex');
@@ -16762,78 +17041,146 @@ const Transit = {
       `box-sizing:${cs.boxSizing};padding:${cs.padding};margin:0;max-width:none`;
     const src = view.querySelectorAll('canvas'), dst = clone.querySelectorAll('canvas');
     src.forEach((cv, i) => { try { dst[i].getContext('2d').drawImage(cv, 0, 0); } catch (_) {} });
-    return clone;
+    box.appendChild(clone);
+    document.body.appendChild(box);
+    return box;
   },
 
-  run(from, to, swap, reveal){
+  slab(f, dir, c){
+    const box = document.createElement('div');
+    box.className = 'cutbox';
+    box.style.cssText = `left:${f.left}px;top:${f.top}px;width:${f.width}px;height:${f.height}px`;
+    const W = f.width, H = f.height, rad = c.angle * Math.PI / 180;
+    const vertical = Boolean(c.vertical) || dir === 0;
+    const make = cls => {
+      const el = document.createElement('div');
+      el.className = 'slab' + (cls ? ' ' + cls : '');
+      return el;
+    };
+    let off, enter, axis, shape;
+    if (!vertical){
+      off = Math.round(Math.tan(rad) * H);
+      shape = el => {
+        el.style.cssText += `;left:${-off}px;top:0;width:${W + 2 * off}px;height:${H}px`;
+        el.style.clipPath = dir > 0
+          ? `polygon(${off}px 0, 100% 0, calc(100% - ${off}px) 100%, 0 100%)`
+          : `polygon(0 0, calc(100% - ${off}px) 0, 100% 100%, ${off}px 100%)`;
+      };
+      axis = 'translateX';
+      enter = dir > 0 ? W + off : -(W + off);
+    } else {
+      off = Math.round(Math.tan(rad) * W);
+      shape = el => {
+        el.style.cssText += `;left:0;top:${-off}px;width:${W}px;height:${H + 2 * off}px`;
+        el.style.clipPath = `polygon(0 ${off}px, 100% 0, 100% calc(100% - ${off}px), 0 100%)`;
+      };
+      axis = 'translateY';
+      enter = -(H + off);
+    }
+    const under = c.layered ? make('slab--tone') : null;
+    if (under){ shape(under); box.appendChild(under); }
+    const el = make('');
+    shape(el);
+    if (c.tone && !vertical){
+      const t = document.createElement('i');
+      t.className = 'slab__tone';
+      const S = Math.round(W * .12) + off;
+      t.style.cssText = (dir > 0 ? 'left:0;' : 'right:0;') + `width:${S}px`;
+      t.style.clipPath = dir > 0
+        ? `polygon(${off}px 0, 100% 0, calc(100% - ${off}px) 100%, 0 100%)`
+        : `polygon(0 0, calc(100% - ${off}px) 0, 100% 100%, ${off}px 100%)`;
+      el.appendChild(t);
+    }
+    box.appendChild(el);
+    document.body.appendChild(box);
+    return { box, el, under, off, enter, exit:-enter, axis, vertical };
+  },
+
+  word(view, f, cut){
+    const title = view.querySelector('.rechead__title');
+    if (!title) return null;
+    const r = title.getBoundingClientRect();
+    if (r.width < 4 || r.top < f.top - 4 || r.bottom > f.top + f.height + 4) return null;
+    const cs = getComputedStyle(title);
+    const w = document.createElement('p');
+    w.className = 'slab__word';
+    w.textContent = title.textContent;
+    const x = r.left - f.left + (cut.vertical ? 0 : cut.off);
+    const y = r.top - f.top + (cut.vertical ? cut.off : 0);
+    w.style.cssText = `left:${x}px;top:${y}px;width:${Math.ceil(r.width) + 6}px;` +
+      `font-family:${cs.fontFamily};font-size:${cs.fontSize};font-weight:${cs.fontWeight};` +
+      `font-style:${cs.fontStyle};letter-spacing:${cs.letterSpacing};text-transform:${cs.textTransform};` +
+      `line-height:${cs.lineHeight};padding:${cs.padding}`;
+    cut.el.appendChild(w);
+    return w;
+  },
+
+  run(from, to, swap){
     const view = $('#view');
     const doSwap = typeof swap === 'function' ? swap : () => {};
-    const doReveal = typeof reveal === 'function' ? reveal : () => {};
-    if (!window.animate || !view){ doSwap(); doReveal(); return Promise.resolve(); }
+    if (!window.animate || !view){ doSwap(); return Promise.resolve(); }
 
     const f = this.frame(view);
-    const box = document.createElement('div');
-    box.className = 'wipe';
-    const page = document.createElement('div');
-    page.className = 'wipe__page';
-    page.appendChild(this.clone(view, f));
-    box.appendChild(page);
-    box.style.cssText = `left:${f.left}px;top:${f.top}px;width:${f.width}px;height:${f.height}px`;
-    document.body.appendChild(box);
+    const box = this.ghost(view, f);
+
+    if (Motion.reduced){
+      return new Promise(res => {
+        let done = false;
+        const finish = () => { if (done) return; done = true; try { box.remove(); } catch (_) {} Motion.settle(view); res(); };
+        try { doSwap(); } catch (_) {}
+        animate(box, { opacity:[1, 0], duration:140, ease:'linear', onComplete:finish });
+        setTimeout(finish, 420);
+      });
+    }
+
+    const c = this.profile(to);
+    const dir = this.direction(from, to);
+    const cut = this.slab(f, dir, c);
+    const IN  = c.crisp ? cubicBezier(.85, 0, .1, 1) : cubicBezier(.7, 0, .2, 1);
+    const OUT = c.crisp ? cubicBezier(.85, 0, .1, 1) : cubicBezier(.55, 0, .12, 1);
+    const par = dir * c.par;
+    const LAG = 50;
 
     return new Promise(res => {
       let settled = false;
       const finish = () => {
         if (settled) return; settled = true;
+        try { cut.box.remove(); } catch (_) {}
         try { box.remove(); } catch (_) {}
         Motion.settle(view);
         res();
       };
 
-      if (Motion.reduced){
-        doSwap(); doReveal();
-        animate(box, { opacity:[1, 0], duration:140, ease:'linear', onComplete:finish });
-        setTimeout(finish, 420);
-        return;
+      if (cut.under){
+        aset(cut.under, { [cut.axis]:cut.enter });
+        animate(cut.under, { [cut.axis]:[cut.enter, 0], duration:c.in, ease:IN });
       }
+      aset(cut.el, { [cut.axis]:cut.enter });
+      animate(cut.el, { [cut.axis]:[cut.enter, 0], duration:c.in, delay:cut.under ? LAG : 0, ease:IN });
+      if (par) animate(box, { translateX:[0, -par], duration:c.in, ease:'outQuad' });
 
-      const c = this.profile(to);
-      const dir = this.direction(from, to);
-      const W = f.width, H = f.height;
-      const off = Math.round(Math.tan(c.angle * Math.PI / 180) * H);
-      const D = W + off;
-
-      box.style.left = (dir > 0 ? f.left : f.left - off) + 'px';
-      box.style.width = D + 'px';
-      box.style.clipPath = dir > 0
-        ? `polygon(0 0, ${W}px 0, 100% 100%, 0 100%)`
-        : `polygon(${off}px 0, 100% 0, 100% 100%, 0 100%)`;
-      page.style.left = (dir > 0 ? 0 : off) + 'px';
-
-      const strip = (cls, T) => {
-        const el = document.createElement('i');
-        el.className = cls;
-        el.style.width = (T + off) + 'px';
-        if (dir > 0){
-          el.style.right = '0';
-          el.style.clipPath = `polygon(0 0, ${T}px 0, 100% 100%, ${off}px 100%)`;
-        } else {
-          el.style.left = '0';
-          el.style.clipPath = `polygon(${off}px 0, 100% 0, ${T}px 100%, 0 100%)`;
+      const covered = c.in + (cut.under ? LAG : 0);
+      setTimeout(() => {
+        try { doSwap(); } catch (_) {}
+        try { box.remove(); } catch (_) {}
+        aset(view, { translateX:par * .6 });
+        const w = this.word(view, f, cut);
+        if (w){
+          aset(w, { opacity:0, scale:1.18 });
+          animate(w, { opacity:[0, 1], duration:1, delay:20 });
+          animate(w, { scale:[1.18, 1], duration:90, delay:20, ease:STEP(2) });
         }
-        box.appendChild(el);
-      };
-      if (c.tone) strip('wipe__tone', Math.round(W * .1));
-      strip('wipe__edge', 6);
+      }, covered);
 
-      const E = c.crisp ? cubicBezier(.85, 0, .1, 1) : cubicBezier(.7, 0, .2, 1);
-      doSwap();
-      aset(view, { translateX:dir * 10 });
-      animate(view, { translateX:0, duration:c.dur, ease:'outCubic' });
-      animate(box,  { translateX:[0, -dir * D], duration:c.dur, ease:E });
-      animate(page, { translateX:[0,  dir * D], duration:c.dur, ease:E, onComplete:finish });
-      setTimeout(doReveal, Math.round(c.dur * .45));
-      setTimeout(finish, c.dur + 300);
+      const leave = covered + c.hold;
+      setTimeout(() => {
+        animate(cut.el, { [cut.axis]:[0, cut.exit], duration:c.out, ease:OUT });
+        if (cut.under) animate(cut.under, { [cut.axis]:[0, cut.exit], duration:c.out, delay:LAG, ease:OUT });
+        if (c.flash) Impact.flash(.14, { dur:70, delay:30 });
+        animate(view, { translateX:[par * .6, 0], duration:c.out, ease:'outCubic', onComplete:finish });
+      }, leave);
+
+      setTimeout(finish, leave + c.out + (cut.under ? LAG : 0) + 200);
     });
   },
 };
@@ -17066,12 +17413,15 @@ async function submitSeal(raw, fromCamera){
   }
 
   dropToast('scan');
-  Scanner.setState('good', 'Stamped');
+  Scanner.setState('good', 'Verified');
+  Scanner.stop();
 
   await Store.hydrate();
 
   pendingCell = Rules.progress().filled - 1;
-  FX.scanStamp(Store.totalStamps() - 1, () => go('home'));
+  const meeting = Store.meeting(result.meeting_id) ||
+                  { id:result.meeting_id, no:result.meeting_number };
+  FX.stampAcquire(meeting, () => go('home', { instant:true }));
 }
 
 function rejectVisual(code){
@@ -17202,23 +17552,24 @@ async function go(id, opts = {}){
 
   const view = $('#view');
   const from = current;
-  const render = (nav = false, covered = Boolean(opts.covered)) => {
+  const render = (nav = false) => {
     current = id;
     syncHash(id);
     Motion.settle(view);
+    Reveal.clear();
     document.documentElement.dataset.screen = id;
 
     view.innerHTML = Views[id]();
     paintNav();
     try { scrollTo(0, 0); } catch (_) {}
-    afterRender(id, nav, covered);
+    afterRender(id, nav, Boolean(opts.covered));
     view.focus({ preventScroll:true });
   };
 
   const same = from === id && !opts.force;
   if (view.firstChild && booted && !opts.instant && !same && window.animate){
     navigating = true;
-    await Transit.run(from, id, () => render(true, true), () => playViewIntro(id, true));
+    await Transit.run(from, id, () => render(true));
     navigating = false;
     if (pendingNav !== null){
       const next = pendingNav; pendingNav = null;
@@ -17232,18 +17583,15 @@ async function go(id, opts = {}){
 const seenUnlocked = new Set();
 
 function playViewIntro(id, nav = false){
-  if (id === 'home' && pendingCell >= 0){
-    const cell = $$('#seals .seal')[pendingCell];
-    pendingCell = -1;
-    if (cell && cell.dataset.seal === 'set'){
-      FX.stampLand(cell);
-      const p = Rules.progress();
-      if (p.filled === p.span) FX.cardFull($('.card'));
-    }
-    return;
-  }
+  if (id === 'home'){
+    if (!nav && pendingCell < 0) FX.sealGrid($('#seals'));
 
-  FX.enter(id, { nav });
+    if (pendingCell >= 0){
+      const cell = $$('#seals .seal')[pendingCell];
+      pendingCell = -1;
+      if (cell && cell.dataset.seal === 'set') FX.stampLand(cell);
+    }
+  }
 
   if (id === 'rewards'){
     $$('[data-reward]').forEach(row => {
@@ -17369,10 +17717,12 @@ document.addEventListener('submit', async e => {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
 
-    Scenes.enter({
-      swap(){ go('home', { instant:true, covered:true }); },
-      reveal(){ playViewIntro(current); },
-    });
+    const scene = Scenes.opening({ tail: up ? 'Member joined' : 'Welcome back',
+      reveal(){ FX.pageEntrance($('#view')); playViewIntro(current); } });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      go('home', { instant:true, covered:true });
+      scene.release();
+    }));
   } catch (err){
     authErr(err && err.message ? err.message : 'Something went wrong. Try again.');
     authBusy(false);
@@ -17650,6 +18000,7 @@ let opening = null;
 try {
   opening = Scenes.opening({ root:$('#boot'), reveal(){
     booted = true;
+    FX.pageEntrance($('#view'));
     playViewIntro(current);
   } });
 } catch (_) {

@@ -113,23 +113,24 @@ async function go(id, opts = {}){
 
   const view = $('#view');
   const from = current;
-  const render = (nav = false, covered = Boolean(opts.covered)) => {
+  const render = (nav = false) => {
     current = id;
     syncHash(id);
     Motion.settle(view);
+    Reveal.clear();
     document.documentElement.dataset.screen = id;
 
     view.innerHTML = Views[id]();
     paintNav();
     try { scrollTo(0, 0); } catch (_) {}
-    afterRender(id, nav, covered);
+    afterRender(id, nav, Boolean(opts.covered));
     view.focus({ preventScroll:true });
   };
 
   const same = from === id && !opts.force;
   if (view.firstChild && booted && !opts.instant && !same && window.animate){
     navigating = true;
-    await Transit.run(from, id, () => render(true, true), () => playViewIntro(id, true));
+    await Transit.run(from, id, () => render(true));
     navigating = false;
     if (pendingNav !== null){
       const next = pendingNav; pendingNav = null;
@@ -143,18 +144,15 @@ async function go(id, opts = {}){
 const seenUnlocked = new Set();
 
 function playViewIntro(id, nav = false){
-  if (id === 'home' && pendingCell >= 0){
-    const cell = $$('#seals .seal')[pendingCell];
-    pendingCell = -1;
-    if (cell && cell.dataset.seal === 'set'){
-      FX.stampLand(cell);
-      const p = Rules.progress();
-      if (p.filled === p.span) FX.cardFull($('.card'));
-    }
-    return;
-  }
+  if (id === 'home'){
+    if (!nav && pendingCell < 0) FX.sealGrid($('#seals'));
 
-  FX.enter(id, { nav });
+    if (pendingCell >= 0){
+      const cell = $$('#seals .seal')[pendingCell];
+      pendingCell = -1;
+      if (cell && cell.dataset.seal === 'set') FX.stampLand(cell);
+    }
+  }
 
   if (id === 'rewards'){
     $$('[data-reward]').forEach(row => {
@@ -280,10 +278,12 @@ document.addEventListener('submit', async e => {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
 
-    Scenes.enter({
-      swap(){ go('home', { instant:true, covered:true }); },
-      reveal(){ playViewIntro(current); },
-    });
+    const scene = Scenes.opening({ tail: up ? 'Member joined' : 'Welcome back',
+      reveal(){ FX.pageEntrance($('#view')); playViewIntro(current); } });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      go('home', { instant:true, covered:true });
+      scene.release();
+    }));
   } catch (err){
     authErr(err && err.message ? err.message : 'Something went wrong. Try again.');
     authBusy(false);
@@ -561,6 +561,7 @@ let opening = null;
 try {
   opening = Scenes.opening({ root:$('#boot'), reveal(){
     booted = true;
+    FX.pageEntrance($('#view'));
     playViewIntro(current);
   } });
 } catch (_) {

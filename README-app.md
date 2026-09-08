@@ -139,39 +139,30 @@ opens or the day turns over.
 
 ## Motion
 
-Three small modules own it: `04-fx.js` (component motion), `04b-scenes.js`
-(`Scenes` for the two full-screen moments and `Transit` for page changes),
-and `02-motion.js` (the reduced-motion switch). Six categories, each with its
-own language, and nothing outside them moves.
+One scene module, `04b-scenes.js`, owns the three moments that cover the whole
+screen, and one `Transit` object owns every page change.
 
-- **Loading** (`Scenes.opening`, cold load only) — a manga page: three
-  outlined panels, ink wiped into each in hard steps, the seal and the
-  wordmark stamped in, then the panels part and the paper sheet drops. The
-  markup is static in `dev.html` and the beats are CSS keyframes, so the page
-  composes itself from the first paint before the scripts arrive; JS holds the
-  composed page until the first render is done, never less than 1s.
-- **Sign-in** (`Scenes.enter`) — one ink sheet falls over the form, Home
-  renders beneath it, the sheet lifts. About 700ms, no poster, no copy.
-- **Navigation** (`Transit.run`) — the gutter cut without the blackout. A
-  snapshot of the leaving page sits in a clipped box with a tilted ink edge;
-  the box slides one way while the snapshot inside slides the other, so the
-  old page is wiped away along the edge and the destination is already there
-  beneath it. Forward along the tab strip wipes from the right, back from the
-  left. Transform-only, 220–300ms per destination, Home with a halftone edge,
-  board tools crisp. Reduced motion crossfades the snapshot in 140ms.
-- **Component** (`FX.enter`) — one motion per page, owned by its primary
-  object: the stamps land on the card, ledger rows reveal top-down, the target
-  tier snaps into place, the reticle corners close, the member name stamps in.
-- **Success** (`FX.scanStamp`, then `FX.stampLand`) — the reticle locks, the
-  earned symbol inks into it over the live camera, a short hold, the cut to
-  Home, and the stamp lands in its slot on the card with the one impact in the
-  app. `FX.cardFull` stamps CARD FULL when the tenth lands.
-- **Sign-out** (`Scenes.exit`) — the ink sheet falls, SIGNED OUT is printed on
-  it, the session ends, and the sheet falls through to the sign-in spread.
-  About 1.2s, no toast.
-- **Micro** — buttons press, the current tab is underlined, the claim button
-  snaps with a paper flash. Shake is reserved for the two physical events, a
-  stamp landing and a rejected scan.
+- **Opening** (`Scenes.opening`) — a manga page: three outlined panels, ink
+  wiped into each in hard steps, the seal and the wordmark stamped in, then the
+  panels part and the paper sheet drops to reveal the app beneath. The cold
+  load uses the static markup in `dev.html` and CSS keyframes for the intro
+  beats, so the page composes itself from the first paint even before the
+  scripts arrive; JS only holds the composed page until the first render is
+  done and then opens it. Signing in builds the same scene and slides it over
+  the form. ~1.3s from first paint, never less than 1s on a fast load.
+- **Page transitions** (`Transit.run`) — the gutter cut. An ink panel with a
+  tilted leading edge sweeps in from the direction of travel (forward along
+  the tab strip from the right, back from the left) and pushes the leaving
+  page out; under full cover the page swaps and the destination's title is
+  stamped onto the panel at the exact position of the real title; the panel
+  sweeps off and the new page settles with its title already in place. Each
+  destination keeps the same cut with its own personality: Home quick with a
+  halftone edge, Record slow and straight, Scan short, Rewards a layered
+  halftone panel under the ink with a paper flash, Member slowest, board
+  tools crisp. 430–650ms. Reduced motion crossfades the snapshot in 140ms.
+- **Sign-out** (`Scenes.exit`) — the panels slam shut over the app, the paper
+  fills the gutters, SIGNED OUT is stamped, and the whole page drops away to
+  the sign-in spread. Distinct from both the opening and the transitions.
 
 Without anime.js the app still works: `Motion.off` turns every animation into an
 instant state change, and `prefers-reduced-motion` (or the account setting)
