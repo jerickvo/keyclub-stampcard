@@ -574,78 +574,59 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .title{letter-spacing:-.035em}
 .h2{font-size:clamp(14px,1.05vw,16px);letter-spacing:0}
 
-.rail{padding:var(--s5) var(--s5) var(--s4);border-right:0;overflow:hidden}
-.rail::after{content:"";position:absolute;top:-1%;bottom:-1%;right:0;width:7px;
-  background:var(--ink);
-  clip-path:polygon(34% 0,100% 0,100% 100%,48% 100%,14% 89%,58% 76%,
-                    24% 62%,64% 49%,20% 36%,58% 23%,22% 11%)}
+.rail{padding:var(--s5) var(--s5) var(--s5);border-right:0;overflow:hidden}
+.rail::after{content:"";position:absolute;top:0;bottom:0;right:0;
+  width:var(--edge-frame);background:var(--ink)}
 
-.rail__brand{position:relative;padding:0 0 var(--s3)}
-.rail__brand::after{content:"";position:absolute;left:0;right:30%;bottom:0;height:5px;
+.rail__brand{position:relative;padding:2px 0 var(--s3)}
+.rail__brand::after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;
   background:var(--ink);
   clip-path:polygon(0 38%,10% 12%,52% 0,86% 18%,100% 46%,99% 60%,55% 100%,12% 78%,0 64%)}
 .rail__brand .mark{display:block;font-family:var(--f-head);
-  font-size:clamp(24px,2vw,32px);line-height:1;letter-spacing:.01em}
+  font-size:clamp(24px,2vw,30px);line-height:1;letter-spacing:.01em}
 
-.rail__nav{position:relative;z-index:1;flex:0 0 auto;gap:0;padding-top:var(--s4)}
-.rail__link{display:grid;grid-template-columns:2.4ch minmax(0,1fr);column-gap:var(--s2);
-  align-items:baseline;padding:7px 0 7px 16px;margin:0;position:relative;
+.rail__nav{gap:0;padding-top:clamp(26px,4vh,44px)}
+.rail__link{display:grid;grid-template-columns:2.4ch minmax(0,1fr);column-gap:var(--s3);
+  align-items:baseline;padding:10px 0 10px 14px;margin:0;position:relative;
   background:none;border:0;border-radius:0;text-align:left;cursor:pointer;
   color:var(--ink-2)}
 .rail__idx{font:500 10px/1 var(--f-mono);letter-spacing:.1em;color:var(--ink-2)}
 .rail__lab{font-family:var(--f-head);font-weight:400;text-transform:uppercase;
-  font-size:clamp(16px,1.3vw,20px);line-height:1;letter-spacing:.02em;
-  color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
-.rail__link:hover .rail__lab{color:var(--ink)}
-.rail__link[aria-current="page"] .rail__idx,
-.rail__link[aria-current="page"] .rail__lab{color:var(--ink)}
+  font-size:clamp(17px,1.3vw,20px);line-height:1;letter-spacing:.02em;
+  color:var(--ink);min-width:0;overflow-wrap:anywhere}
+.rail__link:hover .rail__lab{text-decoration:underline;text-decoration-thickness:2px;
+  text-underline-offset:4px}
+.rail__link[aria-current="page"] .rail__idx{color:var(--seal)}
 .rail__link[aria-current="page"]::before{content:"";position:absolute;left:0;top:50%;
-  width:11px;height:14px;background:var(--seal);
-  transform:translateY(-52%) skewX(-16deg);
+  width:9px;height:12px;background:var(--seal);
+  transform:translateY(-54%) skewX(-16deg);
   clip-path:polygon(0 4%,100% 0,82% 100%,10% 92%)}
 
-.rail__ch{flex:0 1 auto;min-height:0;
-  margin:clamp(20px,5vh,56px) auto auto calc(var(--s5) * -1 - 12px);
-  padding:0 0 .06em;pointer-events:none;user-select:none;
-  font-family:var(--f-display);line-height:.8;
-  font-size:min(26vh,calc(var(--rail) * 1.05));
-  letter-spacing:-.02em;color:transparent;
-  -webkit-text-stroke:2.5px var(--ink);
-  background-image:radial-gradient(circle at 50% 50%,var(--tone) 0 1.1px,transparent 1.3px);
-  background-size:4px 4px;
-  -webkit-background-clip:text;background-clip:text}
-
-.rail__foot{position:relative;z-index:1;margin-top:var(--s3);
-  padding-top:var(--s4);border-top:0}
-.rail__foot::before{content:"";position:absolute;left:0;right:22%;top:0;height:4px;
+.rail__foot{position:relative;margin-top:var(--s4);padding-top:var(--s4);border-top:0}
+.rail__foot::before{content:"";position:absolute;left:0;right:54%;top:0;height:3px;
   background:var(--ink);
   clip-path:polygon(0 38%,10% 12%,52% 0,86% 18%,100% 46%,99% 60%,55% 100%,12% 78%,0 64%)}
-.rail__who{margin:0;display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;
-  font-family:var(--f-head);font-weight:400;text-transform:uppercase;
-  font-size:clamp(18px,1.45vw,23px);line-height:1;letter-spacing:.01em;
+.rail__who{margin:0;display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 7px;
+  font:500 10.5px/1.5 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;
   color:var(--ink);min-width:0}
-.rail__who > span:first-child{min-width:0;overflow-wrap:anywhere}
-.rail__role{display:inline-block;padding:3px 6px 2px;
-  border:1.5px solid var(--ink);background:var(--paper);
-  font:500 10px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;
-  color:var(--ink);transform:rotate(-4deg) translateY(-2px)}
-.rail__role--board{background:var(--ink);color:var(--paper)}
+.rail__name{min-width:0;overflow-wrap:anywhere}
+.rail__role{color:var(--ink-2)}
+.rail__role::before{content:"/ "}
 .rail__util{display:flex;align-items:flex-end;justify-content:space-between;
-  gap:var(--s3);margin-top:var(--s2)}
+  gap:var(--s3);margin-top:2px}
 .rail__motion{display:inline-flex;align-items:center;gap:7px;min-height:44px;
   padding:0;background:none;border:0;cursor:pointer;
   font:500 10px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;
   color:var(--ink-2)}
-.rail__motion i{width:9px;height:9px;border:1.5px solid var(--ink);background:var(--ink)}
+.rail__motion i{width:8px;height:8px;border:1.5px solid var(--ink);background:var(--ink)}
 .rail__motion[aria-pressed="true"] i{background:transparent}
 .rail__motion:hover{color:var(--ink)}
 .rail__out{position:relative;display:inline-flex;align-items:flex-end;min-height:44px;
-  padding:0 0 5px;background:none;border:0;
-  cursor:pointer;font-family:var(--f-head);font-weight:400;text-transform:uppercase;
-  font-size:clamp(13px,1.05vw,16px);line-height:1;letter-spacing:.03em;color:var(--ink)}
-.rail__out::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;
-  background:var(--ink);
-  clip-path:polygon(0 38%,10% 12%,52% 0,86% 18%,100% 46%,99% 60%,55% 100%,12% 78%,0 64%)}
+  padding:0 0 5px;background:none;border:0;cursor:pointer;
+  font:500 11px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink)}
+.rail__out::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;
+  background:var(--ink)}
 .rail__out:hover{color:var(--seal)}
 .rail__out:hover::after{background:var(--seal)}
 .rail__note{margin-top:6px;font-size:12.5px}
@@ -2398,7 +2379,6 @@ button,input,select,textarea{font-family:inherit}
     <div class="rail__brand" id="railBrand"></div>
     <nav class="rail__nav" id="railNav" aria-label="Main">
     </nav>
-    <div class="rail__ch" id="railCh" aria-hidden="true"></div>
     <div class="rail__foot" id="railFoot"></div>
   </aside>
 
@@ -17814,29 +17794,17 @@ function paintBrand(){
 }
 
 function paintNav(){
-  const tabs = $('#tabs'), rail = $('#railNav'), ch = $('#railCh');
+  const tabs = $('#tabs'), rail = $('#railNav');
   $$('.tab', tabs).forEach(el => el.remove());
   $$('.rail__link', rail).forEach(el => el.remove());
 
-  let chapter = '';
   navFor().forEach((n, i) => {
-    const on = current === n.id;
-    const cur = on ? ' aria-current="page"' : '';
-    if (on) chapter = pad(i + 1);
+    const cur = current === n.id ? ' aria-current="page"' : '';
     tabs.insertAdjacentHTML('beforeend',
       `<button class="tab" data-go="${n.id}"${cur}><span>${n.short || n.label}</span></button>`);
     rail.insertAdjacentHTML('beforeend',
       `<button class="rail__link" data-go="${n.id}"${cur}><span class="rail__idx">${pad(i + 1)}</span><span class="rail__lab">${n.label}</span></button>`);
   });
-
-  if (ch && ch.textContent !== chapter){
-    ch.textContent = chapter;
-    if (chapter && booted && !Motion.off && window.animate){
-      aset(ch, { scale:1.06, translateY:8 });
-      animate(ch, { scale:[1.06, 1], translateY:[8, 0], duration:150, ease:STEP(3),
-                    onComplete(){ Motion.settle(ch); } });
-    }
-  }
 }
 
 async function go(id, opts = {}){
@@ -18347,8 +18315,8 @@ function paintIdentity(){
   const foot = $('#railFoot');
   if (!foot) return;
   foot.innerHTML = Store.signedIn
-    ? `<p class="rail__who"><span>${esc(Store.user.name)}</span>
-         <span class="rail__role${Store.isBoard ? ' rail__role--board' : ''}">${Store.isBoard ? 'Board' : 'Member'}</span></p>
+    ? `<p class="rail__who"><span class="rail__name">${esc(Store.user.name)}</span>
+         <span class="rail__role">${Store.isBoard ? 'Board' : 'Member'}</span></p>
        <div class="rail__util">
          <button class="rail__motion" type="button" data-motion></button>
          <button class="rail__out" type="button" data-signout>Sign out</button>
