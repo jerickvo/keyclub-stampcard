@@ -284,19 +284,17 @@ drop policy if exists meetings_read on public.meetings;
 create policy meetings_read on public.meetings
   for select to authenticated using (true);
 
--- Board writes are SELECT / INSERT / UPDATE only. There is deliberately
--- NO delete policy.
+-- Board writes are split into one policy per verb. INSERT and UPDATE are
+-- below; DELETE is granted separately and narrowly, further down.
 --
--- The previous `for all` policy included DELETE, and attendance.meeting_id
--- is `on delete cascade`. That meant one board account, with nothing but
+-- The original `for all` policy included DELETE while attendance.meeting_id
+-- was `on delete cascade`. That meant one board account, with nothing but
 -- the public anon key and their own session, could issue
 --   DELETE /rest/v1/meetings?id=eq.<uuid>
 -- from a browser console and silently erase every stamp anyone had ever
--- earned at that meeting. No UI offered it, but the browser is hostile by
--- assumption, and a destructive capability that nothing in the product
--- needs should not exist. Correcting a mistyped meeting is an UPDATE.
--- Genuinely removing one is a deliberate act for a service-role script,
--- not a click.
+-- earned at that meeting. Splitting the verbs is what makes the narrow
+-- delete policy below expressible: it can carry its own NOT EXISTS guard
+-- instead of inheriting a blanket grant.
 drop policy if exists meetings_board_write on public.meetings;
 drop policy if exists meetings_board_insert on public.meetings;
 create policy meetings_board_insert on public.meetings

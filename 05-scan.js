@@ -51,7 +51,7 @@ function paintAttendanceCount(meetingId){
 }
 
 const Scanner = {
-  stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0, zoom:null,
+  stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0, zoom:null, run:0,
 
   setState(state, msg){
     const ret = $('#reticle'), el = $('#scanMsg'), line = $('#scanLine'), viewer = $('#viewer');
@@ -80,6 +80,7 @@ const Scanner = {
   async start(){
     const video = $('#cam');
     if (!video) return;
+    const run = ++this.run;
     this.locked = false;
 
     $('#viewer')?.classList.remove('viewer--stalled', 'viewer--feed');
@@ -88,17 +89,26 @@ const Scanner = {
 
     if (!navigator.mediaDevices?.getUserMedia) return this.stall('unsupported');
 
+    let stream;
     try {
-      this.stream = await navigator.mediaDevices.getUserMedia({
+      stream = await navigator.mediaDevices.getUserMedia({
         video:{ facingMode:{ ideal:'environment' }, width:{ ideal:1280 } }, audio:false });
     } catch (err) {
+      if (run !== this.run) return;
       return this.stall(err && err.name === 'NotAllowedError' ? 'denied' : 'unavailable');
     }
-    if (!document.body.contains(video)) return this.stop();
+
+    if (run !== this.run || !document.body.contains(video)){
+      stream.getTracks().forEach(t => t.stop());
+      if (run === this.run) this.stop();
+      return;
+    }
+    this.stream = stream;
 
     this.hideLoader();
     video.srcObject = this.stream;
     try { await video.play(); } catch (_) {}
+    if (run !== this.run) return;
 
     $('#viewer')?.classList.add('viewer--feed');
 
@@ -106,7 +116,7 @@ const Scanner = {
     this.ctx = this.cv.getContext('2d', { willReadFrequently:true });
     this.setState('live', 'Looking for the check-in code');
     this.mountZoom();
-    this.loop(video);
+    this.loop(video, run);
   },
 
   mountZoom(){
@@ -170,8 +180,9 @@ const Scanner = {
   },
   hideLoader(){ $('#camLoader')?.remove(); $('#reticle')?.classList.remove('reticle--wait'); },
 
-  loop(video){
+  loop(video, run){
     const step = () => {
+      if (run !== this.run) return;
       this.raf = requestAnimationFrame(step);
       if (this.locked || video.readyState !== 4 || !window.jsQR) return;
       if ((this.frame++ % 3) !== 0) return;
@@ -220,6 +231,7 @@ const Scanner = {
   },
 
   stop(){
+    this.run++;
     cancelAnimationFrame(this.raf); this.raf = null;
     if (this.zoom) this.zoom.drop();
     this.stream?.getTracks().forEach(t => t.stop());
