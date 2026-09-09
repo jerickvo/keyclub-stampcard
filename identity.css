@@ -89,9 +89,11 @@ body{
   grid-template-areas:"no day state" "no when when" "no n act";
   padding:var(--s3) 0;cursor:default}
 .blist--meet .brow:hover{background:none}
-.blist--meet .brow__no{grid-area:no;flex:none;align-self:start;padding-top:4px;
+.blist--meet .brow__no{grid-area:no;flex:none;align-self:start;
+  padding:10px 4px 6px;margin:-6px -4px;
   cursor:pointer;min-height:0}
 .blist--meet .brow__day{grid-area:day;cursor:pointer;
+  padding-block:6px;margin-block:-6px;
   font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);line-height:1.05;
   letter-spacing:.01em;color:var(--ink);min-width:0;overflow-wrap:anywhere}
 .blist--meet .brow__when{grid-area:when;min-width:0;overflow-wrap:anywhere;
@@ -127,7 +129,7 @@ body{
 @media(min-width:640px){
   .blist--meet .brow{grid-template-columns:auto minmax(0,1fr) auto auto auto;
     grid-template-areas:"no day state n act" "no when state n act";row-gap:2px}
-  .blist--meet .brow__no{align-self:center;padding-top:0}
+  .blist--meet .brow__no{align-self:center;padding-block:6px}
   .blist--meet .bstate{align-self:center}
   .blist--meet .brow__n{display:grid;justify-items:end;gap:1px;
     text-align:right;padding-top:0}
