@@ -412,27 +412,28 @@ create trigger on_auth_user_created
   for each row execute function public.handle_new_user();
 
 -- ═══════════════════════════════════════════════════════════════════
--- TEMP-TEST-TOOLING — REMOVE BEFORE THE CLUB RELIES ON THIS DATA
+-- DELETE A HELD MEETING AND THE STAMPS ON IT
 --
--- Deletes a past meeting AND the attendance rows attached to it, so a
--- test meeting can be cleaned up without leaving orphaned stamps in
--- members' counts. This deliberately does what the normal delete path
--- refuses to do, which is why it is temporary.
+-- The normal delete path (meetings_board_delete) only removes a
+-- meeting nothing has checked in to: attendance has no delete policy,
+-- and the foreign key is ON DELETE RESTRICT. Those stay as they are.
+-- This function is the one audited way through them, for the case the
+-- board actually needs — a meeting that was held, is over, and has to
+-- come off the record along with the stamps it handed out.
 --
--- The normal path (meetings_board_delete) can only remove a meeting
--- nothing has checked in to, attendance has no delete policy at all,
--- and the foreign key is ON DELETE RESTRICT. All three still stand:
--- this is SECURITY DEFINER, so it runs as the owner and is the single
--- audited hole through them. Board-only is enforced HERE, in the
--- database, by is_board() — not by the button being hidden.
+-- Board-only is enforced HERE, in the database, by is_board(), not by
+-- the button being hidden. Held-and-over is enforced here too, so a
+-- meeting that is running right now can never be taken out from under
+-- the members checking in to it.
 --
--- No soft delete, no archive, no undo, no audit trail. It is a
--- delete. attendance_sessions rows go with the meeting through the
--- existing ON DELETE CASCADE.
+-- No soft delete, no archive, no undo. attendance_sessions rows go
+-- with the meeting through the existing ON DELETE CASCADE.
 --
--- TO REMOVE: drop this whole block and run the two lines at the end.
+-- This replaced tmp_test_purge_meeting. A project created before that
+-- change still carries the old name until
+-- migrations/2026-09-10-delete-meeting.sql is run against it.
 -- ═══════════════════════════════════════════════════════════════════
-create or replace function public.tmp_test_purge_meeting(p_meeting_id uuid)
+create or replace function public.delete_meeting_and_stamps(p_meeting_id uuid)
 returns integer
 language plpgsql
 security definer
@@ -442,18 +443,17 @@ declare
   removed integer;
 begin
   if not public.is_board() then
-    raise exception 'TEMP-TEST-TOOLING: board accounts only';
+    raise exception 'only board accounts can delete a meeting';
   end if;
 
-  -- past means the club's day has moved on and check-in is not open,
-  -- so this can never remove a meeting that is running right now
+  -- held means the club's day has moved on and check-in is closed
   if not exists (
     select 1 from public.meetings m
     where m.id = p_meeting_id
       and m.check_in_open = false
       and m.meeting_date < (now() at time zone 'America/Los_Angeles')::date
   ) then
-    raise exception 'TEMP-TEST-TOOLING: not a past meeting';
+    raise exception 'only a meeting that is over can be deleted';
   end if;
 
   delete from public.attendance where meeting_id = p_meeting_id;
@@ -462,9 +462,5 @@ begin
   return removed;
 end $$;
 
-revoke all on function public.tmp_test_purge_meeting(uuid) from public;
-grant execute on function public.tmp_test_purge_meeting(uuid) to authenticated;
-
--- TO REMOVE, run:
---   revoke all on function public.tmp_test_purge_meeting(uuid) from authenticated;
---   drop function if exists public.tmp_test_purge_meeting(uuid);
+revoke all on function public.delete_meeting_and_stamps(uuid) from public;
+grant execute on function public.delete_meeting_and_stamps(uuid) to authenticated;

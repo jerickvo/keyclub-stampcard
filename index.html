@@ -1135,11 +1135,21 @@ body{
 .bconfirm__q{flex:1 1 auto;font-family:var(--f-head);font-weight:400;
   text-transform:uppercase;font-size:clamp(13px,1vw,15px);letter-spacing:.02em;
   color:var(--ink);white-space:nowrap}
-.bconfirm .btn{min-height:34px;padding:0 var(--s3);font-size:12px}
+.bconfirm .btn{min-height:38px;padding:0 var(--s3);font-size:12px}
 @media(max-width:379px){
   .bconfirm__q{flex-basis:100%}
   .bconfirm .btn{flex:1 1 auto}
 }
+@media (pointer:coarse){ .bconfirm .btn{min-height:44px} }
+.bconfirm__why{flex:1 1 100%;order:1;
+  font:500 clamp(11px,.4vw + 9.7px,12.5px)/1.45 var(--f-mono);
+  letter-spacing:.03em;color:var(--ink-2)}
+.bconfirm--heavy .bconfirm__q{white-space:normal;color:var(--seal)}
+.bconfirm--heavy .btn{order:2}
+.bconfirm--heavy .btn--go{background:var(--seal);border-color:var(--seal)}
+.bconfirm--heavy .btn--go:hover,.bconfirm--heavy .btn--go:focus-visible{
+  background:var(--ink);border-color:var(--ink)}
+.blist--meet .brow--confirm-heavy{box-shadow:inset var(--edge) 0 0 var(--seal)}
 .bform .field{display:flex;flex-direction:column;justify-content:flex-end;min-width:0}
 .bform .field > .kicker{flex:none}
 .bform .field > .input{flex:none;width:100%}
@@ -1155,6 +1165,9 @@ body{
   .blist--meet .brow--confirm{grid-template-columns:auto minmax(0,1fr) auto;
     grid-template-areas:"no day act" "no when act"}
   .blist--meet .brow--confirm .brow__act{justify-self:end;min-width:0}
+  .blist--meet .brow--confirm-heavy{grid-template-columns:auto minmax(0,1fr);
+    grid-template-areas:"no day" "no when" "act act"}
+  .blist--meet .brow--confirm-heavy .brow__act{justify-self:stretch}
 }
 
 .bform{border:var(--edge-panel) solid var(--ink);background:var(--paper);
@@ -14987,8 +15000,9 @@ const WriteFailure = {
                say:'The database does not have this operation installed. Re-run schema.sql on the Supabase project.' };
 
     if (code === 'P0001')
-      return { kind:'refused', say: msg.replace(/^TEMP-TEST-TOOLING:\s*/i, '')
-                 .replace(/^\w/, ch => ch.toUpperCase()) + '.' };
+      return { kind:'refused',
+               say: msg.replace(/^TEMP-TEST-TOOLING:\s*/i, '')
+                       .replace(/^\w/, ch => ch.toUpperCase()) + '.' };
     if (/failed to fetch|networkerror|load failed/i.test(msg))
       return { kind:'network', say:'Could not reach the club records. Check the connection and try again.' };
     return { kind:'unknown', say:'Could not save that. Check the details and try again.' };
@@ -15308,13 +15322,14 @@ const SupabaseAdapter = {
 
     return { token: data && data.token };
   },
-  /* TEMP-TEST-TOOLING — remove with the rest of the purge tooling.
-     Deletes a past meeting AND its attendance so test data can be
-     cleaned up before launch. Board-only and past-only are enforced by
-     the database function, not here: this call is just the wire. */
-  async purgeMeetingTEMP(meetingId){
-    const { data, error } = await this.client
-      .rpc('tmp_test_purge_meeting', { p_meeting_id:meetingId });
+  /* Board-only and held-only are enforced by the database function,
+     not here. The legacy name is tried once for projects that have not
+     run migrations/2026-09-10-delete-meeting.sql yet. */
+  async deleteMeetingAndStamps(meetingId){
+    const call = name => this.client.rpc(name, { p_meeting_id:meetingId });
+    let { data, error } = await call('delete_meeting_and_stamps');
+    if (error && /^PGRST2/.test(String(error.code || '')))
+      ({ data, error } = await call('tmp_test_purge_meeting'));
     if (error) throw error;
     return { removed: Number(data) || 0 };
   },
@@ -15347,8 +15362,7 @@ const PreviewAdapter = {
   async issueToken(){ throw new Error('No backend is configured.'); },
   async attendanceCount(){ return 0; },
   async board(){ throw new Error('No backend is configured.'); },
-  /* TEMP-TEST-TOOLING */
-  async purgeMeetingTEMP(){ throw new Error('No backend is configured.'); },
+  async deleteMeetingAndStamps(){ throw new Error('No backend is configured.'); },
 };
 
 const UnavailableAdapter = {
@@ -15360,7 +15374,7 @@ const UnavailableAdapter = {
 ['signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','claimReward','startAttendance',
  'endAttendance','issueToken','attendanceCount','board',
- 'purgeMeetingTEMP'].forEach(fn => {   /* TEMP-TEST-TOOLING */
+ 'deleteMeetingAndStamps'].forEach(fn => {
   UnavailableAdapter[fn] = async () => { throw new Error('BACKEND_UNAVAILABLE'); };
 });
 UnavailableAdapter.verifyCode = async () => ({ ok:false, code:'BACKEND_UNAVAILABLE' });
@@ -15410,7 +15424,7 @@ const Backend = {
 ['currentSession','signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','claimReward','verifyCode',
  'startAttendance','endAttendance','issueToken','attendanceCount','board',
- 'purgeMeetingTEMP'].forEach(fn => {   /* TEMP-TEST-TOOLING */
+ 'deleteMeetingAndStamps'].forEach(fn => {
   Backend[fn] = function(...a){ return this.adapter[fn](...a); };
 });
 
@@ -16369,16 +16383,18 @@ const BoardUI = {
     return list.some(m => Number(m && m.meeting_number) === no);
   },
 
-  message(code){
+  message(note){
     return ({
       NOT_AUTHENTICATED: 'Sign in again to continue.',
       NOT_AUTHORIZED:    'This account is not a board account.',
       MEMBER_NOT_FOUND:  'That member no longer exists.',
       MEETING_NOT_FOUND: 'That meeting no longer exists.',
       DUPLICATE_NUMBER:  'A meeting with that number already exists.',
-      HAS_ATTENDANCE:    'Members have checked in to this meeting, so it cannot be deleted.',
+      HAS_ATTENDANCE:    'Someone has checked in to this meeting. It can be deleted once the meeting is over.',
       SERVER_ERROR:      'Keystamp could not reach the club records. Try again.',
-    })[code] || 'Something went wrong. Try again.';
+    })[note] || (/^[A-Z_]+$/.test(String(note))
+      ? 'Something went wrong. Try again.'
+      : String(note));
   },
 
   pane(){
@@ -16537,38 +16553,48 @@ const BoardUI = {
   },
 
   meetingRow(m){
-    const confirm = this.confirmDelete === m.id;
+    const armed = this.confirmDelete === m.id;
     const state = String(m.state || '').toLowerCase();
     const no = pad(m.meeting_number);
+    const stamps = Number(m.attendance_count) || 0;
+    const deletable = stamps === 0 || m.state === 'PAST';
 
-    const action = confirm
-      ? `<span class="bconfirm" role="group" aria-label="Confirm deleting GM ${no}">
-           <span class="bconfirm__q">Delete this meeting?</span>
-           <button class="btn bconfirm__keep" type="button" data-bcancel>Keep</button>
-           <button class="btn btn--go bconfirm__go" type="button" data-bdelete="${esc(m.id)}">Delete</button>
-         </span>`
-      : m.attendance_count === 0
+    const action = armed
+      ? this.deleteConfirm(m, no, stamps)
+      : deletable
         ? `<button class="brow__del" type="button" data-bconfirm="${esc(m.id)}"
              aria-label="Delete GM ${no}">Delete</button>`
-        /* TEMP-TEST-TOOLING — a past meeting WITH stamps can be purged,
-           tooling only. Remove this branch with the rest of the tooling
-           and the empty action cell below is what is left. */
-        : m.state !== 'UPCOMING'
-        ? `<button class="brow__del" type="button" data-bpurgetemp="${esc(m.id)}"
-             data-bpurgeno="${no}"
-             data-bpurgen="${m.attendance_count}"
-             aria-label="Purge test meeting GM ${no} and its ${m.attendance_count} stamps"
-             >Purge</button>`
         : '';
 
-    return `<li class="brow brow--${state}${confirm ? ' brow--confirm' : ''}">
+    const mark = armed ? ` brow--confirm${stamps ? ' brow--confirm-heavy' : ''}` : '';
+
+    return `<li class="brow brow--${state}${mark}">
       <span class="brow__no" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">GM ${no}</span>
       <span class="brow__day" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">${esc(fmtDay(m.meeting_date))}</span>
       <span class="brow__when">${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || 'MPR')}</span>
       <span class="bstate bstate--${state}">${esc(m.state)}</span>
-      <span class="brow__n"><b>${m.attendance_count}</b><span class="brow__nlab">checked in</span></span>
+      <span class="brow__n"><b>${stamps}</b><span class="brow__nlab">checked in</span></span>
       <span class="brow__act">${action}</span>
     </li>`;
+  },
+
+  deleteConfirm(m, no, stamps){
+    const heavy = stamps > 0;
+    const q = heavy
+      ? `Delete this meeting and its ${stamps} stamp${stamps === 1 ? '' : 's'}?`
+      : 'Delete this meeting?';
+    const why = heavy
+      ? `${stamps === 1 ? 'One member loses' : `${stamps} members lose`} this stamp. There is no undo.`
+      : '';
+
+    return `<span class="bconfirm${heavy ? ' bconfirm--heavy' : ''}" role="group"
+       aria-label="Confirm deleting GM ${no}">
+      <span class="bconfirm__q">${esc(q)}</span>
+      ${why ? `<span class="bconfirm__why">${esc(why)}</span>` : ''}
+      <button class="btn bconfirm__keep" type="button" data-bcancel>Keep</button>
+      <button class="btn btn--go bconfirm__go" type="button"
+              data-bdelete="${esc(m.id)}" data-bstamps="${stamps}">Delete</button>
+    </span>`;
   },
 
   createForm(){
@@ -18050,42 +18076,30 @@ document.addEventListener('click', e => {
 
   const bdelete = e.target.closest('[data-bdelete]');
   if (bdelete){
+    if (bdelete.disabled) return;
     const id = bdelete.dataset.bdelete;
+    const stamps = Number(bdelete.dataset.bstamps) || 0;
     bdelete.disabled = true;
-    Backend.deleteMeeting(id)
-      .then(res => {
-        if (boardMeeting === id) boardMeeting = null;
-        boardGoto({ confirmDelete:null,
-                    deleteNote: res && res.ok ? null : (res && res.code) || 'SERVER_ERROR',
-                    meetings:null, meetingDetail:null });
-      })
-      .catch(() => boardGoto({ confirmDelete:null, deleteNote:'SERVER_ERROR' }));
-    return;
-  }
+    bdelete.textContent = 'Deleting…';
 
-  /* ── TEMP-TEST-TOOLING ──────────────────────────────────────────
-     Purge a past meeting and the stamps attached to it, so test data
-     can be cleared before launch. One browser confirm, no undo. The
-     board-only and past-only rules live in the database function; this
-     handler is only the button. Remove this whole block with the rest
-     of the tooling. */
-  const bpurge = e.target.closest('[data-bpurgetemp]');
-  if (bpurge){
-    if (bpurge.disabled) return;
-    const n = Number(bpurge.dataset.bpurgen) || 0;
-    if (!confirm(`Delete GM ${bpurge.dataset.bpurgeno} and its ${n} stamp${n === 1 ? '' : 's'}?\n\nThis cannot be undone.`)) return;
-    bpurge.disabled = true; bpurge.textContent = 'Purging…';
-    Backend.purgeMeetingTEMP(bpurge.dataset.bpurgetemp)
-      .then(res => {
-        toast({ key:'board', title:`GM ${bpurge.dataset.bpurgeno} purged`,
-                detail:`${res.removed} stamp${res.removed === 1 ? '' : 's'} removed with it.` });
-        boardGoto({ meetings:null, meetingDetail:null });
-      })
-      .catch(ex => {
-        bpurge.disabled = false; bpurge.textContent = 'Purge (test)';
-        toast({ key:'board', bad:true, title:'Could not purge',
-                detail:WriteFailure.explain(ex, 'purge meeting') });
-      });
+    const clear = note => {
+      if (boardMeeting === id) boardMeeting = null;
+      boardGoto({ confirmDelete:null, deleteNote:note || null,
+                  meetings:null, meetingDetail:null });
+    };
+
+    (stamps
+      ? Backend.deleteMeetingAndStamps(id).then(res => {
+          toast({ key:'board', title:'Meeting deleted',
+                  detail:`${res.removed} stamp${res.removed === 1 ? '' : 's'} removed with it.` });
+          clear(null);
+        })
+      : Backend.deleteMeeting(id).then(res =>
+          clear(res && res.ok ? null : (res && res.code) || 'SERVER_ERROR'))
+    ).catch(ex => {
+      boardGoto({ confirmDelete:null,
+                  deleteNote:WriteFailure.explain(ex, 'delete meeting') });
+    });
     return;
   }
 

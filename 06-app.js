@@ -338,42 +338,30 @@ document.addEventListener('click', e => {
 
   const bdelete = e.target.closest('[data-bdelete]');
   if (bdelete){
+    if (bdelete.disabled) return;
     const id = bdelete.dataset.bdelete;
+    const stamps = Number(bdelete.dataset.bstamps) || 0;
     bdelete.disabled = true;
-    Backend.deleteMeeting(id)
-      .then(res => {
-        if (boardMeeting === id) boardMeeting = null;
-        boardGoto({ confirmDelete:null,
-                    deleteNote: res && res.ok ? null : (res && res.code) || 'SERVER_ERROR',
-                    meetings:null, meetingDetail:null });
-      })
-      .catch(() => boardGoto({ confirmDelete:null, deleteNote:'SERVER_ERROR' }));
-    return;
-  }
+    bdelete.textContent = 'Deleting…';
 
-  /* ── TEMP-TEST-TOOLING ──────────────────────────────────────────
-     Purge a past meeting and the stamps attached to it, so test data
-     can be cleared before launch. One browser confirm, no undo. The
-     board-only and past-only rules live in the database function; this
-     handler is only the button. Remove this whole block with the rest
-     of the tooling. */
-  const bpurge = e.target.closest('[data-bpurgetemp]');
-  if (bpurge){
-    if (bpurge.disabled) return;
-    const n = Number(bpurge.dataset.bpurgen) || 0;
-    if (!confirm(`Delete GM ${bpurge.dataset.bpurgeno} and its ${n} stamp${n === 1 ? '' : 's'}?\n\nThis cannot be undone.`)) return;
-    bpurge.disabled = true; bpurge.textContent = 'Purging…';
-    Backend.purgeMeetingTEMP(bpurge.dataset.bpurgetemp)
-      .then(res => {
-        toast({ key:'board', title:`GM ${bpurge.dataset.bpurgeno} purged`,
-                detail:`${res.removed} stamp${res.removed === 1 ? '' : 's'} removed with it.` });
-        boardGoto({ meetings:null, meetingDetail:null });
-      })
-      .catch(ex => {
-        bpurge.disabled = false; bpurge.textContent = 'Purge (test)';
-        toast({ key:'board', bad:true, title:'Could not purge',
-                detail:WriteFailure.explain(ex, 'purge meeting') });
-      });
+    const clear = note => {
+      if (boardMeeting === id) boardMeeting = null;
+      boardGoto({ confirmDelete:null, deleteNote:note || null,
+                  meetings:null, meetingDetail:null });
+    };
+
+    (stamps
+      ? Backend.deleteMeetingAndStamps(id).then(res => {
+          toast({ key:'board', title:'Meeting deleted',
+                  detail:`${res.removed} stamp${res.removed === 1 ? '' : 's'} removed with it.` });
+          clear(null);
+        })
+      : Backend.deleteMeeting(id).then(res =>
+          clear(res && res.ok ? null : (res && res.code) || 'SERVER_ERROR'))
+    ).catch(ex => {
+      boardGoto({ confirmDelete:null,
+                  deleteNote:WriteFailure.explain(ex, 'delete meeting') });
+    });
     return;
   }
 

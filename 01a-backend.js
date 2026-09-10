@@ -49,8 +49,9 @@ const WriteFailure = {
                say:'The database does not have this operation installed. Re-run schema.sql on the Supabase project.' };
 
     if (code === 'P0001')
-      return { kind:'refused', say: msg.replace(/^TEMP-TEST-TOOLING:\s*/i, '')
-                 .replace(/^\w/, ch => ch.toUpperCase()) + '.' };
+      return { kind:'refused',
+               say: msg.replace(/^TEMP-TEST-TOOLING:\s*/i, '')
+                       .replace(/^\w/, ch => ch.toUpperCase()) + '.' };
     if (/failed to fetch|networkerror|load failed/i.test(msg))
       return { kind:'network', say:'Could not reach the club records. Check the connection and try again.' };
     return { kind:'unknown', say:'Could not save that. Check the details and try again.' };
@@ -370,13 +371,14 @@ const SupabaseAdapter = {
 
     return { token: data && data.token };
   },
-  /* TEMP-TEST-TOOLING — remove with the rest of the purge tooling.
-     Deletes a past meeting AND its attendance so test data can be
-     cleaned up before launch. Board-only and past-only are enforced by
-     the database function, not here: this call is just the wire. */
-  async purgeMeetingTEMP(meetingId){
-    const { data, error } = await this.client
-      .rpc('tmp_test_purge_meeting', { p_meeting_id:meetingId });
+  /* Board-only and held-only are enforced by the database function,
+     not here. The legacy name is tried once for projects that have not
+     run migrations/2026-09-10-delete-meeting.sql yet. */
+  async deleteMeetingAndStamps(meetingId){
+    const call = name => this.client.rpc(name, { p_meeting_id:meetingId });
+    let { data, error } = await call('delete_meeting_and_stamps');
+    if (error && /^PGRST2/.test(String(error.code || '')))
+      ({ data, error } = await call('tmp_test_purge_meeting'));
     if (error) throw error;
     return { removed: Number(data) || 0 };
   },
@@ -409,8 +411,7 @@ const PreviewAdapter = {
   async issueToken(){ throw new Error('No backend is configured.'); },
   async attendanceCount(){ return 0; },
   async board(){ throw new Error('No backend is configured.'); },
-  /* TEMP-TEST-TOOLING */
-  async purgeMeetingTEMP(){ throw new Error('No backend is configured.'); },
+  async deleteMeetingAndStamps(){ throw new Error('No backend is configured.'); },
 };
 
 const UnavailableAdapter = {
@@ -422,7 +423,7 @@ const UnavailableAdapter = {
 ['signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','claimReward','startAttendance',
  'endAttendance','issueToken','attendanceCount','board',
- 'purgeMeetingTEMP'].forEach(fn => {   /* TEMP-TEST-TOOLING */
+ 'deleteMeetingAndStamps'].forEach(fn => {
   UnavailableAdapter[fn] = async () => { throw new Error('BACKEND_UNAVAILABLE'); };
 });
 UnavailableAdapter.verifyCode = async () => ({ ok:false, code:'BACKEND_UNAVAILABLE' });
@@ -472,6 +473,6 @@ const Backend = {
 ['currentSession','signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','claimReward','verifyCode',
  'startAttendance','endAttendance','issueToken','attendanceCount','board',
- 'purgeMeetingTEMP'].forEach(fn => {   /* TEMP-TEST-TOOLING */
+ 'deleteMeetingAndStamps'].forEach(fn => {
   Backend[fn] = function(...a){ return this.adapter[fn](...a); };
 });
