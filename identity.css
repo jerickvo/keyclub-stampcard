@@ -117,11 +117,21 @@ body{
 .bconfirm__q{flex:1 1 auto;font-family:var(--f-head);font-weight:400;
   text-transform:uppercase;font-size:clamp(13px,1vw,15px);letter-spacing:.02em;
   color:var(--ink);white-space:nowrap}
-.bconfirm .btn{min-height:34px;padding:0 var(--s3);font-size:12px}
+.bconfirm .btn{min-height:38px;padding:0 var(--s3);font-size:12px}
 @media(max-width:379px){
   .bconfirm__q{flex-basis:100%}
   .bconfirm .btn{flex:1 1 auto}
 }
+@media (pointer:coarse){ .bconfirm .btn{min-height:44px} }
+.bconfirm__why{flex:1 1 100%;order:1;
+  font:500 clamp(11px,.4vw + 9.7px,12.5px)/1.45 var(--f-mono);
+  letter-spacing:.03em;color:var(--ink-2)}
+.bconfirm--heavy .bconfirm__q{white-space:normal;color:var(--seal)}
+.bconfirm--heavy .btn{order:2}
+.bconfirm--heavy .btn--go{background:var(--seal);border-color:var(--seal)}
+.bconfirm--heavy .btn--go:hover,.bconfirm--heavy .btn--go:focus-visible{
+  background:var(--ink);border-color:var(--ink)}
+.blist--meet .brow--confirm-heavy{box-shadow:inset var(--edge) 0 0 var(--seal)}
 .bform .field{display:flex;flex-direction:column;justify-content:flex-end;min-width:0}
 .bform .field > .kicker{flex:none}
 .bform .field > .input{flex:none;width:100%}
@@ -137,6 +147,9 @@ body{
   .blist--meet .brow--confirm{grid-template-columns:auto minmax(0,1fr) auto;
     grid-template-areas:"no day act" "no when act"}
   .blist--meet .brow--confirm .brow__act{justify-self:end;min-width:0}
+  .blist--meet .brow--confirm-heavy{grid-template-columns:auto minmax(0,1fr);
+    grid-template-areas:"no day" "no when" "act act"}
+  .blist--meet .brow--confirm-heavy .brow__act{justify-self:stretch}
 }
 
 .bform{border:var(--edge-panel) solid var(--ink);background:var(--paper);

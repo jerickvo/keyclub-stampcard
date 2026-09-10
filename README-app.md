@@ -168,6 +168,34 @@ opens or the day turns over.
 
 ---
 
+## Deleting a meeting
+
+The board can delete a meeting from **Meetings**, and there are two different
+deletes behind that one button.
+
+A meeting **nobody has checked in to** goes through the ordinary table delete.
+RLS allows it (`meetings_board_delete`), the row disappears, nothing else is
+touched.
+
+A meeting that is **over and carries stamps** goes through
+`delete_meeting_and_stamps()` in `schema.sql`. Attendance has no delete policy
+and the foreign key is `ON DELETE RESTRICT`, so this SECURITY DEFINER function
+is the only way through — and it enforces its own rules in the database, not in
+the button: board accounts only, and only a meeting whose date has passed with
+check-in closed. A meeting that is running can never be deleted out from under
+the members checking in to it.
+
+Because the second kind takes stamps off members' cards, the confirmation names
+the cost — how many stamps go, how many members lose one — and there is no
+undo, no archive and no audit trail. The UI only offers the button where the
+database will accept it, so the two rules stay in step.
+
+A project created before this function existed still has the old
+`tmp_test_purge_meeting`. `migrations/2026-09-10-delete-meeting.sql` moves it
+over; until it is run, the client falls back to the old name.
+
+---
+
 ## Motion
 
 One scene module, `04b-scenes.js`, owns the three moments that cover the whole

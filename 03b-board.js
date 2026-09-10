@@ -53,16 +53,18 @@ const BoardUI = {
     return list.some(m => Number(m && m.meeting_number) === no);
   },
 
-  message(code){
+  message(note){
     return ({
       NOT_AUTHENTICATED: 'Sign in again to continue.',
       NOT_AUTHORIZED:    'This account is not a board account.',
       MEMBER_NOT_FOUND:  'That member no longer exists.',
       MEETING_NOT_FOUND: 'That meeting no longer exists.',
       DUPLICATE_NUMBER:  'A meeting with that number already exists.',
-      HAS_ATTENDANCE:    'Members have checked in to this meeting, so it cannot be deleted.',
+      HAS_ATTENDANCE:    'Someone has checked in to this meeting. It can be deleted once the meeting is over.',
       SERVER_ERROR:      'Keystamp could not reach the club records. Try again.',
-    })[code] || 'Something went wrong. Try again.';
+    })[note] || (/^[A-Z_]+$/.test(String(note))
+      ? 'Something went wrong. Try again.'
+      : String(note));
   },
 
   pane(){
@@ -221,38 +223,48 @@ const BoardUI = {
   },
 
   meetingRow(m){
-    const confirm = this.confirmDelete === m.id;
+    const armed = this.confirmDelete === m.id;
     const state = String(m.state || '').toLowerCase();
     const no = pad(m.meeting_number);
+    const stamps = Number(m.attendance_count) || 0;
+    const deletable = stamps === 0 || m.state === 'PAST';
 
-    const action = confirm
-      ? `<span class="bconfirm" role="group" aria-label="Confirm deleting GM ${no}">
-           <span class="bconfirm__q">Delete this meeting?</span>
-           <button class="btn bconfirm__keep" type="button" data-bcancel>Keep</button>
-           <button class="btn btn--go bconfirm__go" type="button" data-bdelete="${esc(m.id)}">Delete</button>
-         </span>`
-      : m.attendance_count === 0
+    const action = armed
+      ? this.deleteConfirm(m, no, stamps)
+      : deletable
         ? `<button class="brow__del" type="button" data-bconfirm="${esc(m.id)}"
              aria-label="Delete GM ${no}">Delete</button>`
-        /* TEMP-TEST-TOOLING — a past meeting WITH stamps can be purged,
-           tooling only. Remove this branch with the rest of the tooling
-           and the empty action cell below is what is left. */
-        : m.state !== 'UPCOMING'
-        ? `<button class="brow__del" type="button" data-bpurgetemp="${esc(m.id)}"
-             data-bpurgeno="${no}"
-             data-bpurgen="${m.attendance_count}"
-             aria-label="Purge test meeting GM ${no} and its ${m.attendance_count} stamps"
-             >Purge</button>`
         : '';
 
-    return `<li class="brow brow--${state}${confirm ? ' brow--confirm' : ''}">
+    const mark = armed ? ` brow--confirm${stamps ? ' brow--confirm-heavy' : ''}` : '';
+
+    return `<li class="brow brow--${state}${mark}">
       <span class="brow__no" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">GM ${no}</span>
       <span class="brow__day" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">${esc(fmtDay(m.meeting_date))}</span>
       <span class="brow__when">${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || 'MPR')}</span>
       <span class="bstate bstate--${state}">${esc(m.state)}</span>
-      <span class="brow__n"><b>${m.attendance_count}</b><span class="brow__nlab">checked in</span></span>
+      <span class="brow__n"><b>${stamps}</b><span class="brow__nlab">checked in</span></span>
       <span class="brow__act">${action}</span>
     </li>`;
+  },
+
+  deleteConfirm(m, no, stamps){
+    const heavy = stamps > 0;
+    const q = heavy
+      ? `Delete this meeting and its ${stamps} stamp${stamps === 1 ? '' : 's'}?`
+      : 'Delete this meeting?';
+    const why = heavy
+      ? `${stamps === 1 ? 'One member loses' : `${stamps} members lose`} this stamp. There is no undo.`
+      : '';
+
+    return `<span class="bconfirm${heavy ? ' bconfirm--heavy' : ''}" role="group"
+       aria-label="Confirm deleting GM ${no}">
+      <span class="bconfirm__q">${esc(q)}</span>
+      ${why ? `<span class="bconfirm__why">${esc(why)}</span>` : ''}
+      <button class="btn bconfirm__keep" type="button" data-bcancel>Keep</button>
+      <button class="btn btn--go bconfirm__go" type="button"
+              data-bdelete="${esc(m.id)}" data-bstamps="${stamps}">Delete</button>
+    </span>`;
   },
 
   createForm(){
