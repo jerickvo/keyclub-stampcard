@@ -119,8 +119,12 @@ function paintNav(){
 function measureFolio(){
   const f = $('#folio');
   if (!f) return;
-  const fixed = getComputedStyle(f).position === 'fixed';
-  document.documentElement.style.setProperty('--folio-h', fixed ? f.offsetHeight + 'px' : '0px');
+  const cs = getComputedStyle(f);
+  const shown = cs.display !== 'none';
+  const fixed = shown && cs.position === 'fixed';
+  const root = document.documentElement.style;
+  root.setProperty('--folio-h', fixed ? f.offsetHeight + 'px' : '0px');
+  root.setProperty('--head-h', shown && !fixed ? f.offsetHeight + 'px' : '0px');
 }
 
 async function go(id, opts = {}){
@@ -578,6 +582,33 @@ function paintMotion(){
     b.textContent = Motion.forced ? 'Motion off' : 'Motion on';
   });
 }
+
+/* A stamp's docket is written into the card's own caption slot rather
+   than floated over its neighbours. */
+function showDocket(text){
+  const d = $('#cardDocket');
+  if (d) d.textContent = text || '';
+}
+document.addEventListener('mouseover', e => {
+  const s = e.target.closest('.seal[data-docket]');
+  if (s) showDocket(s.dataset.docket);
+});
+document.addEventListener('mouseout', e => {
+  if (e.target.closest('.seal[data-docket]')) showDocket('');
+});
+document.addEventListener('focusin', e => {
+  const s = e.target.closest('.seal[data-docket]');
+  if (s) showDocket(s.dataset.docket);
+});
+document.addEventListener('focusout', e => {
+  if (e.target.closest('.seal[data-docket]')) showDocket('');
+});
+document.addEventListener('click', e => {
+  const s = e.target.closest('.seal[data-docket]');
+  if (!s) return;
+  showDocket(s.dataset.docket);
+  try { s.focus({ preventScroll:true }); } catch (_) {}
+});
 
 addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); });
 

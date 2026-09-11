@@ -114,7 +114,7 @@ const Scanner = {
 
     this.cv = document.createElement('canvas');
     this.ctx = this.cv.getContext('2d', { willReadFrequently:true });
-    this.setState('live', 'Looking for the check-in code');
+    this.setState('live', 'Point at the code');
     this.mountZoom();
     this.loop(video, run);
   },
@@ -194,7 +194,7 @@ const Scanner = {
       const hit = jsQR(img.data, w, h, { inversionAttempts:'dontInvert' });
       if (hit && hit.data){
         this.locked = true;
-        this.setState('hit', 'Locked');
+        this.setState('hit', 'Got it');
         FX.scanLock();
         setTimeout(() => submitSeal(hit.data, true), 190);
       }
@@ -331,7 +331,7 @@ async function submitSeal(raw, fromCamera){
     return;
   }
 
-  if (fromCamera) Scanner.setState('busy', 'Checking with the server');
+  if (fromCamera) Scanner.setState('busy', 'Checking');
 
   const result = await Backend.verifyCode(raw);
 
@@ -359,6 +359,6 @@ function rejectVisual(code){
   setTimeout(() => {
     if (!$('#reticle')) return;
     Scanner.locked = false;
-    Scanner.setState('live', 'Looking for the check-in code');
+    Scanner.setState('live', 'Point at the code');
   }, 1900);
 }
