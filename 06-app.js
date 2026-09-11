@@ -1,20 +1,30 @@
 "use strict";
 
 const MEMBER_NAV = [
-  { id:'home',    label:'Home'    },
+  { id:'home',    label:'Card'    },
   { id:'record',  label:'Record'  },
   { id:'scan',    label:'Scan'    },
   { id:'rewards', label:'Rewards' },
-  { id:'profile', label:'Member'  },
+  { id:'profile', label:'Member', me:true },
 ];
 
 const BOARD_NAV = [
-  { id:'board',    label:'Club Tools', short:'Club' },
-  { id:'bmeet',    label:'Meetings'   },
-  { id:'bcheckin', label:'Check-In'   },
-  { id:'bmembers', label:'Members'    },
-  { id:'baccount', label:'Account'    },
+  { id:'board',    label:'Club'     },
+  { id:'bmeet',    label:'Meetings' },
+  { id:'bcheckin', label:'Check-In' },
+  { id:'bmembers', label:'Members'  },
+  { id:'baccount', label:'Account', me:true },
 ];
+
+const firstName = () => {
+  const n = Store.user && Store.user.name ? String(Store.user.name).trim() : '';
+  return n ? n.split(/\s+/)[0] : '';
+};
+const navLabel = n => (n.me && firstName()) || n.label;
+const chapterOf = id => {
+  const i = navFor().findIndex(n => n.id === id);
+  return i < 0 ? null : pad(i + 1);
+};
 
 const navFor = () => (Store.isBoard ? BOARD_NAV : MEMBER_NAV);
 
@@ -85,24 +95,32 @@ function hashRoute(){
 }
 
 function paintBrand(){
-  const el = $('#railBrand');
-  if (!el) return;
-
-  el.innerHTML = wordmark();
+  const el = $('#barBrand');
+  if (el) el.innerHTML = wordmark();
 }
 
+/* The folio run: every chapter in fixed order. The current chapter is
+   printed as its number only; its word is the page title. */
 function paintNav(){
-  const tabs = $('#tabs'), rail = $('#railNav');
-  $$('.tab', tabs).forEach(el => el.remove());
-  $$('.rail__link', rail).forEach(el => el.remove());
+  const run = $('#folioNav');
+  if (!run) return;
+  run.innerHTML = navFor().map((n, i) => {
+    const no = pad(i + 1);
+    if (current === n.id)
+      return `<span class="folio__here" aria-current="page"><span class="folio__no">${no}</span>` +
+             `<span class="sr-only">${esc(navLabel(n))}, this page</span></span>`;
+    return `<button class="folio__ch" type="button" data-go="${n.id}">` +
+           `<span class="folio__no">${no}</span><span class="folio__lab">${esc(navLabel(n))}</span></button>`;
+  }).join('');
+}
 
-  navFor().forEach((n, i) => {
-    const cur = current === n.id ? ' aria-current="page"' : '';
-    tabs.insertAdjacentHTML('beforeend',
-      `<button class="tab" data-go="${n.id}"${cur}><span>${n.short || n.label}</span></button>`);
-    rail.insertAdjacentHTML('beforeend',
-      `<button class="rail__link" data-go="${n.id}"${cur}><span class="rail__idx">${pad(i + 1)}</span><span class="rail__lab">${n.label}</span></button>`);
-  });
+/* The foot reserves its own height so the page and the camera never
+   sit under it; the token is 0 wherever the folio is a running head. */
+function measureFolio(){
+  const f = $('#folio');
+  if (!f) return;
+  const fixed = getComputedStyle(f).position === 'fixed';
+  document.documentElement.style.setProperty('--folio-h', fixed ? f.offsetHeight + 'px' : '0px');
 }
 
 async function go(id, opts = {}){
@@ -121,7 +139,11 @@ async function go(id, opts = {}){
     document.documentElement.dataset.screen = id;
 
     view.innerHTML = Views[id]();
+    const ch = chapterOf(id), head = view.querySelector('.rechead');
+    if (ch && head && !head.querySelector('.rechead__no'))
+      head.insertAdjacentHTML('afterbegin', `<span class="rechead__no" aria-hidden="true">${ch}</span>`);
     paintNav();
+    measureFolio();
     try { scrollTo(0, 0); } catch (_) {}
     afterRender(id, nav, Boolean(opts.covered));
     view.focus({ preventScroll:true });
@@ -550,12 +572,10 @@ function boardGoto(next){
 
 function paintMotion(){
   $$('[data-motion]').forEach(b => {
-    b.setAttribute('aria-pressed', String(Motion.forced));
-    b.setAttribute('aria-label', Motion.forced ? 'Reduced motion is on. Turn animations back on.'
-                                               : 'Reduced motion is off. Turn animations off.');
-    b.innerHTML = b.classList.contains('rail__motion')
-      ? `<i aria-hidden="true"></i><span>${Motion.forced ? 'Motion off' : 'Motion on'}</span>`
-      : '<span class="motion-btn__opt">On</span><span class="motion-btn__opt">Off</span>';
+    b.setAttribute('role', 'switch');
+    b.setAttribute('aria-checked', String(!Motion.forced));
+    b.setAttribute('aria-label', 'Motion');
+    b.textContent = Motion.forced ? 'Motion off' : 'Motion on';
   });
 }
 
@@ -588,7 +608,6 @@ try {
     });
 
     paintBrand();
-    $('#barBrand').innerHTML  = wordmark();
     paintIdentity();
     paintMotion();
     go(hashRoute());
@@ -598,16 +617,17 @@ try {
 })();
 
 function paintIdentity(){
-  const foot = $('#railFoot');
-  if (!foot) return;
-  foot.innerHTML = Store.signedIn
-    ? `<p class="rail__who"><span class="rail__name">${esc(Store.user.name)}</span>
-         <span class="rail__role">${Store.isBoard ? 'Board' : 'Member'}</span></p>
-       <div class="rail__util">
-         <button class="rail__motion" type="button" data-motion></button>
-         <button class="rail__out" type="button" data-signout>Sign out</button>
-       </div>`
-    : `<p class="kicker">Not signed in</p>
-       <p class="muted rail__note">Sign in to see your record.</p>`;
-  paintMotion();
+  const who = $('#folioWho');
+  if (!who) return;
+  who.innerHTML = Store.signedIn
+    ? `<button class="folio__name" type="button" data-go="${Store.isBoard ? 'baccount' : 'profile'}">${esc(Store.user.name)}</button>
+       <span class="folio__role">${Store.isBoard ? 'Board' : 'Member'}</span>`
+    : '';
+  paintNav();
+}
+
+addEventListener('resize', measureFolio);
+if ('ResizeObserver' in window){
+  const f = document.getElementById('folio');
+  if (f) new ResizeObserver(measureFolio).observe(f);
 }

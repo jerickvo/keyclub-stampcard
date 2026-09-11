@@ -213,10 +213,12 @@ const Transit = {
 
   frame(view){
     const r = view.getBoundingClientRect();
-    const shown = el => el && getComputedStyle(el).display !== 'none';
-    const bar = $('.topbar'), tabs = $('.tabs');
-    const top = shown(bar) ? Math.max(0, bar.getBoundingClientRect().bottom) : 0;
-    const floor = shown(tabs) ? tabs.getBoundingClientRect().top : innerHeight;
+    const f = $('.folio');
+    const cs = f && getComputedStyle(f);
+    const shown = Boolean(cs && cs.display !== 'none');
+    const foot = shown && cs.position === 'fixed';
+    const top = shown && !foot ? Math.max(0, f.getBoundingClientRect().bottom) : 0;
+    const floor = foot ? f.getBoundingClientRect().top : innerHeight;
     return { left:r.left, width:r.width, top, height:Math.max(0, floor - top), viewTop:r.top };
   },
 

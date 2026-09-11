@@ -83,8 +83,8 @@ const fmtDay = iso => new Date(iso + (iso.length === 10 ? 'T12:00:00' : ''))
 const fmtTime = iso => new Date(iso)
   .toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
 
-const TOAST_LIMIT = 3;
-const TOAST_LIFE = 2600;
+const TOAST_LIMIT = 1;
+const TOAST_LIFE = 5000;
 const liveToasts = new Map();
 
 function dropToast(key, immediate){

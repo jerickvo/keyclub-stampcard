@@ -261,7 +261,7 @@ const BoardUI = {
        aria-label="Confirm deleting GM ${no}">
       <span class="bconfirm__q">${esc(q)}</span>
       ${why ? `<span class="bconfirm__why">${esc(why)}</span>` : ''}
-      <button class="btn bconfirm__keep" type="button" data-bcancel>Keep</button>
+      <button class="btn btn--quiet bconfirm__keep" type="button" data-bcancel>Keep</button>
       <button class="btn btn--go bconfirm__go" type="button"
               data-bdelete="${esc(m.id)}" data-bstamps="${stamps}">Delete</button>
     </span>`;
@@ -323,9 +323,9 @@ const BoardUI = {
           </li>`).join('')}
         </ul>
         <div class="bpage">
-          <button class="btn" data-bpage="${Math.max(1, d.page - 1)}" ${d.page <= 1 ? 'disabled' : ''}>Back</button>
+          <button class="btn btn--quiet" data-bpage="${Math.max(1, d.page - 1)}" ${d.page <= 1 ? 'disabled' : ''}>Back</button>
           <span class="muted">Page ${d.page} of ${d.pages} / ${d.total} member${d.total === 1 ? '' : 's'}</span>
-          <button class="btn" data-bpage="${Math.min(d.pages, d.page + 1)}" ${d.page >= d.pages ? 'disabled' : ''}>Next</button>
+          <button class="btn btn--quiet" data-bpage="${Math.min(d.pages, d.page + 1)}" ${d.page >= d.pages ? 'disabled' : ''}>Next</button>
         </div>`
         : this.empty(this.q ? 'No member matches that username.' : 'No member accounts yet.')}
     </div>`;

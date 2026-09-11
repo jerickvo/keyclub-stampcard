@@ -181,8 +181,8 @@ const C = {
 C.account = () => `<section class="acct" data-enter>
   <h2 class="acct__mark">Account</h2>
   <div class="acct__row">
-    <span class="acct__lab">Reduced motion</span>
-    <button class="motion-btn" type="button" data-motion></button>
+    <span class="acct__lab">Animations</span>
+    <button class="link" type="button" data-motion></button>
   </div>
   <button class="acct__out" data-signout type="button">Sign out</button>
 </section>`;

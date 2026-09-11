@@ -18,6 +18,7 @@ FACES = [
     ("CCWildWords-BoldItalic.ttf",  "CC Wild Words",    "700",  "italic"),
     ("JujutsuKaisen.ttf",           "Jujutsu Kaisen",   "400",  "normal"),
     ("BadaBoomBB.ttf",              "BadaBoom BB",      "400",  "normal"),
+    ("KeystampMono.ttf",            "Keystamp Mono",    "400",  "normal"),
 ]
 
 SRC = pathlib.Path("assets/fonts")
@@ -68,6 +69,10 @@ out = ['''/* ══════════════════════�
                    Genuinely unicase: lowercase input draws capitals, so
                    all body copy sets in caps whether the CSS says so or
                    not. Keep sentences short for that reason.
+   Keystamp Mono   the record-keeping register: chapter and card numbers,
+                   seal numbers, times, the scan status line. A subset of
+                   DejaVu Sans Mono (see assets/fonts/README-KeystampMono.md)
+                   embedded so the register renders the same on every device.
 
    All are embedded as base64 rather than fetched. The app is one HTML
    file used on phones in a room with unreliable wifi; a webfont request
