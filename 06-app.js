@@ -348,6 +348,7 @@ document.addEventListener('click', e => {
   const bconfirm = e.target.closest('[data-bconfirm]');
   if (bconfirm){
     boardGoto({ confirmDelete:bconfirm.dataset.bconfirm, deleteNote:null });
+    setTimeout(() => $('.bconfirm__keep')?.focus({ preventScroll:true }), 0);
     return;
   }
   const bcancel = e.target.closest('[data-bcancel]');
@@ -412,9 +413,9 @@ document.addEventListener('click', e => {
     bstart.disabled = true; bstart.textContent = 'Starting…';
     Backend.startAttendance(bstart.dataset.bstart)
       .then(() => { boardMeeting = bstart.dataset.bstart; boardStamp = true; loadBoard(); })
-      .catch(() => { bstart.disabled = false; bstart.textContent = 'Start attendance';
+      .catch(() => { bstart.disabled = false; bstart.textContent = 'Open check-in';
         toast({ key:'board', bad:true, title:'Could not start',
-                detail:'Attendance did not open. Check the connection and try again.' }); });
+                detail:'Check-in did not open. Try again.' }); });
     return;
   }
   const bend = e.target.closest('[data-bend]');
@@ -422,9 +423,9 @@ document.addEventListener('click', e => {
     bend.disabled = true; bend.textContent = 'Ending…';
     Backend.endAttendance(bend.dataset.bend)
       .then(() => { clearInterval(countTimer); boardStamp = true; loadBoard(); })
-      .catch(() => { bend.disabled = false; bend.textContent = 'End attendance';
+      .catch(() => { bend.disabled = false; bend.textContent = 'Close check-in';
         toast({ key:'board', bad:true, title:'Could not end',
-                detail:'Attendance is still open. Try again.' }); });
+                detail:'Check-in is still open. Try again.' }); });
     return;
   }
 

@@ -174,17 +174,12 @@ const Views = {
   loadFailure(title){
     return `<div class="view">
       <header class="rechead" data-enter>
-        <h1 class="title rechead__title">${title}</h1>
+        <h1 class="title rechead__title">${esc(title)}</h1>
       </header>
-      <section class="rig" data-enter>
-        <div class="panel bpanel">
-          <p class="kicker">Could not load</p>
-          <p style="margin-top:8px">Keystamp could not reach the club records, so your
-            attendance cannot be shown right now. Nothing has been lost.</p>
-          <p class="muted" style="margin-top:8px;font-size:12.5px">Check your connection
-            and try again.</p>
-          <button class="btn btn--go" data-reload style="margin-top:var(--s4)">Try again</button>
-        </div>
+      <section class="empty" data-enter>
+        <h2 class="empty__title">Can't reach the club records</h2>
+        <p class="empty__note">Check your connection and try again.</p>
+        <p><button class="btn" data-reload>Try again</button></p>
       </section>
     </div>`;
   },
@@ -359,13 +354,11 @@ const Views = {
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">${title}</h1>
       </header>
-      <section class="rig" data-enter style="margin-top:var(--gut)">
-        <div id="boardPane">${BoardUI.pane()}</div>
-      </section>
+      <div id="boardPane">${BoardUI.pane()}</div>
     </div>`;
   },
 
-  board(){     BoardUI.tab = 'club';     return this.boardSpread('Club Tools'); },
+  board(){     BoardUI.tab = 'club';     return this.boardSpread('Club'); },
   bmeet(){     BoardUI.tab = 'meetings'; return this.boardSpread('Meetings'); },
   bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Check-In'); },
   bmembers(){  BoardUI.tab = 'progress'; return this.boardSpread('Members'); },
@@ -417,6 +410,7 @@ const Views = {
 
   auth(){
     const mode = AuthUI.mode;
+    const up = mode === 'up';
     const passwordField = ({ id, name, label, autocomplete, placeholder = '' }) => `
           <div class="authp__f">
             <label class="authp__lab" for="${id}">${label}</label>
@@ -430,31 +424,26 @@ const Views = {
                       aria-controls="${id}">${ICON.eye}</button>
             </div>
           </div>`;
-    const up = mode === 'up';
 
     return `<div class="view view--auth">
-
       <div class="spread" data-enter>
-
-        <div class="spread__field crop" aria-hidden="true">
-          <svg class="spread__seal crop__art" viewBox="0 0 100 100">${sealArt()}</svg>
+        <div class="spread__field" aria-hidden="true">
+          <svg class="spread__seal" viewBox="0 0 100 100">${sealArt()}</svg>
           <span class="spread__kci">${brandSeal('kci')}</span>
         </div>
 
         <header class="spread__head">
-          <p class="spread__sub"><span>Key Club attendance</span></p>
+          <p class="spread__sub">Key Club attendance</p>
           <h1 class="spread__wm">Keystamp</h1>
         </header>
 
-        <form class="authp" id="authForm" novalidate>
-          <p class="authp__title">${up ? 'Create account' : 'Sign in'}</p>
-
+        <form class="authp" id="authForm" novalidate aria-label="${up ? 'Create account' : 'Sign in'}">
           <div class="authp__f">
             <label class="authp__lab" for="authUser">Username</label>
             <input class="authp__in" id="authUser" name="username" type="text"
                    autocomplete="username" autocapitalize="none" spellcheck="false"
                    inputmode="latin" maxlength="${Config.USERNAME_MAX}"
-                   placeholder="${up ? 'letters, numbers, _ and .' : 'your username'}">
+                   placeholder="${up ? 'letters, numbers, _ and .' : ''}">
           </div>
 
           ${passwordField({ id:'authPass', name:'password', label:'Password',
@@ -464,13 +453,13 @@ const Views = {
           ${up ? passwordField({ id:'authPass2', name:'confirm', label:'Confirm password',
                                  autocomplete:'new-password' }) : ''}
 
-          <p class="authp__err" id="authErr" role="alert" aria-live="assertive" hidden></p>
+          <p class="err authp__err" id="authErr" role="alert" aria-live="assertive" hidden></p>
 
           <div class="authp__act">
-            <button class="authp__go" type="submit" id="authGo">
+            <button class="btn authp__go" type="submit" id="authGo">
               ${up ? 'Create account' : 'Sign in'}
             </button>
-            <button class="authp__swap" type="button" id="authSwap">
+            <button class="link authp__swap" type="button" id="authSwap">
               ${up ? 'I already have an account' : 'Create an account'}
             </button>
           </div>
@@ -478,7 +467,7 @@ const Views = {
           ${AuthUI.setupNotice()}
         </form>
 
-        <span class="spread__side" aria-hidden="true">Key Club International · Cali-Nev-Ha District</span>
+        <p class="spread__side" aria-hidden="true">Key Club International · Cali-Nev-Ha District</p>
       </div>
     </div>`;
   },
