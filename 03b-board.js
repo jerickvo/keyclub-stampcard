@@ -13,11 +13,11 @@ const MEETING_DEFAULTS = { start:'12:40', end:'13:30' };
 
 function spanTime(start, end){
   const a = String(start || '').trim(), b = String(end || '').trim();
-  if (!b) return a;
+  if (!b) return knit(a);
   const ma = /^(.*?)\s*(AM|PM)$/i.exec(a), mb = /^(.*?)\s*(AM|PM)$/i.exec(b);
   if (ma && mb && ma[2].toUpperCase() === mb[2].toUpperCase())
-    return `${ma[1]}–${mb[1]} ${mb[2].toUpperCase()}`;
-  return `${a}–${b}`;
+    return knit(`${ma[1]}–${mb[1]} ${mb[2].toUpperCase()}`);
+  return knit(`${a}–${b}`);
 }
 
 const BoardUI = {

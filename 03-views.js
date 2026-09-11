@@ -113,7 +113,7 @@ const C = {
     return `<button class="strip${live ? ' strip--live' : ''}${quiet ? ' strip--quiet' : ''}"
       type="button" data-go="${go}" data-enter>
       <span class="strip__verb">${esc(verb)}</span>
-      <span class="strip__meta">${esc(meta)}</span>
+      <span class="strip__meta">${esc(knit(meta))}</span>
     </button>`;
   },
 
@@ -141,7 +141,7 @@ const C = {
       set:  (scan ? fmtTime(scan.at) : 'Stamped') + room,
       open: 'Open now' + room,
       miss: 'Missed' + room,
-      upcoming: esc(m.time) + room,
+      upcoming: esc(knit(m.time)) + room,
     }[state];
     const sr = { set:'Attended', open:'Check-in open', miss:'Missed',
                  upcoming:'Scheduled' }[state];
@@ -222,7 +222,7 @@ const Views = {
       </header>
 
       <div class="deck${live ? ' deck--live' : ''}">
-        ${C.sealGrid()}
+        ${live ? '' : C.sealGrid()}
         <div class="deck__side">
           ${action}
           ${ahead.length ? `<section class="next" data-enter>
@@ -231,11 +231,12 @@ const Views = {
                 ${ahead.map(m => `<li class="row next__row">
                   <span class="row__no">GM ${pad(m.no)}</span>
                   <span class="next__day">${fmtDate(m.date)}</span>
-                  <span class="next__at meta">${esc(m.time)}</span>
+                  <span class="next__at meta">${esc(knit(m.time))}</span>
                 </li>`).join('')}
               </ol>
             </section>` : ''}
         </div>
+        ${live ? C.sealGrid() : ''}
       </div>
     </div>`;
   },
@@ -350,6 +351,12 @@ const Views = {
   },
 
   boardSpread(title){
+    /* A chapter is always its own list. An open member or meeting belongs
+       to the chapter it was opened from and does not follow the reader
+       out of it. */
+    BoardUI.memberDetail = null;
+    BoardUI.meetingDetail = null;
+    BoardUI.confirmDelete = null;
     return `<div class="view view--board">
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">${title}</h1>

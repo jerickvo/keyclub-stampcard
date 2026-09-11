@@ -45,8 +45,10 @@ const fmtDate = iso => new Date(iso + (iso.length === 10 ? 'T12:00:00' : ''))
   .toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
 const fmtDay = iso => new Date(iso + (iso.length === 10 ? 'T12:00:00' : ''))
   .toLocaleDateString('en-US', { month:'short', day:'numeric' });
-const fmtTime = iso => new Date(iso)
-  .toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+/* A clock reading is one word: the space before AM/PM never breaks. */
+const knit = s => String(s).replace(/ (AM|PM)\b/gi, '\u00a0$1');
+const fmtTime = iso => knit(new Date(iso)
+  .toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' }));
 
 const TOAST_LIMIT = 1;
 const TOAST_LIFE = 5000;

@@ -56,24 +56,11 @@
   --page-max:1320px;
   --folio-h:0px;
   --safe-x:max(env(safe-area-inset-left,0px),env(safe-area-inset-right,0px));
+  --card-off:clamp(5px,.9vw,9px);   /* the one shadow: the card's offset */
 
-  /* transitional aliases: page rules not yet rewritten read these.
-     They go when the last page section is rebuilt. */
-  --s2:8px; --s3:12px; --s4:16px; --s5:var(--gap-stack);
-  --s6:clamp(22px,2.4vw,32px); --s8:var(--gap-block);
-  --space-hair:var(--gap-hair); --space-tight:var(--gap-tight);
-  --space-stack-sm:12px; --space-stack:var(--gap-stack);
-  --space-panel:clamp(16px,2.2vw,28px); --space-tier:var(--gap-stack);
-  --space-block:var(--gap-block);
-  --gut:clamp(10px,1.6vw,18px); --gut-tier:var(--gap-stack); --pad:var(--gutter);
-  --edge-hair:var(--edge-rule); --edge-thin:var(--edge-panel);
-  --edge:var(--edge-panel); --edge-heavy:var(--edge-frame);
-  --rule:var(--edge-panel); --rule-hair:var(--edge-rule);
-  --pnl-off:clamp(5px,.9vw,9px); --ink-w:2;
-  --t-verb:var(--t-head);
-  --tabs-h:var(--folio-h);
 }
 @media(min-width:1600px){ :root{--page-max:1480px} }
+@media(pointer:coarse){ :root{--link-h:var(--tap)} }
 
 /* ── ground ─────────────────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0}
@@ -93,7 +80,7 @@ main#view:focus,main#view:focus-visible{outline:none}
 .shell{position:relative;z-index:1;display:grid;
   grid-template-rows:auto minmax(0,1fr);min-height:100%}
 main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
-  padding:var(--gap-stack) calc(var(--gutter) + var(--safe-x))
+  padding:calc(var(--gap-stack) + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x))
           calc(var(--gap-block) + var(--folio-h) + env(safe-area-inset-bottom,0px))}
 .view{position:relative}
 
@@ -118,7 +105,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   overflow:hidden;text-overflow:ellipsis}
 .folio__ch:hover .folio__lab,.folio__ch:focus-visible .folio__lab{
   text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
-.folio__ch:focus-visible{outline:0}
 .folio__ch:active{transform:translate(1px,1px)}
 .folio__here{cursor:default;color:var(--seal)}
 .folio__here .folio__no{color:var(--seal)}
@@ -126,13 +112,20 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   width:9px;height:9px;background:var(--seal)}
 .folio__side{display:none}
 [data-screen="auth"] .folio{display:none}
+/* the narrowest phones: the words keep their order, only the current
+   chapter keeps its number */
+@media(max-width:359px){
+  .folio__run{column-gap:10px}
+  .folio__lab{font-size:12px}
+  .folio__ch .folio__no{display:none}
+}
 
 @media(min-width:768px){
   .folio{position:sticky;top:0;bottom:auto;z-index:60;
     display:flex;align-items:baseline;justify-content:space-between;
     gap:var(--gap-block);width:100%;max-width:var(--page-max);margin-inline:auto;
     border-top:0;border-bottom:var(--edge-rule) solid var(--ink);
-    padding:8px calc(var(--gutter) + var(--safe-x)) 6px}
+    padding:calc(8px + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x)) 6px}
   .folio__run{flex-wrap:nowrap;column-gap:clamp(16px,2vw,30px)}
   .folio__here::before{top:auto;bottom:-11px}
   .folio__side{display:flex;align-items:baseline;gap:clamp(14px,1.6vw,26px);
@@ -144,7 +137,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
     text-transform:uppercase}
   .folio__name:hover,.folio__name:focus-visible{text-decoration:underline;
     text-decoration-thickness:2px;text-underline-offset:3px}
-  .folio__name:focus-visible{outline:0}
   .folio__wm{font-family:var(--f-display);font-size:19px;line-height:1;
     text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
   main#view{padding-top:var(--gap-block)}
@@ -203,13 +195,10 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   border:var(--edge-panel) solid var(--ink);padding:8px 14px;
   font-family:var(--f-body);font-size:var(--t-body);text-transform:none;letter-spacing:0}
 .btn--quiet:hover{background:var(--ink);color:var(--paper)}
-.ink .btn,.btn--inv{background:var(--paper);color:var(--ink)}
-.ink .btn:hover,.btn--inv:hover{background:var(--tint)}
-.ink .btn--quiet{background:transparent;color:var(--paper);border-color:var(--paper)}
-.ink .btn--quiet:hover{background:var(--paper);color:var(--ink)}
-.ink :focus-visible{outline-color:var(--paper)}
+.btn--inv{background:var(--paper);color:var(--ink)}
+.btn--inv:hover{background:var(--tint)}
 
-.link{display:inline-flex;align-items:center;min-height:36px;padding:6px 0;
+.link{display:inline-flex;align-items:center;min-height:var(--link-h,36px);padding:6px 0;
   background:none;border:0;border-radius:0;cursor:pointer;color:var(--ink);
   font:400 var(--t-body)/1.2 var(--f-body);letter-spacing:0;
   text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px}
@@ -227,6 +216,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   appearance:none;-webkit-appearance:none;color-scheme:light;accent-color:var(--ink)}
 .input::placeholder{color:var(--ink-2);opacity:1}
 .input:focus{outline:0;border-bottom-width:var(--edge-frame);padding-bottom:7px}
+.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:4px}
 select.input{padding-right:22px;cursor:pointer;
   background-image:linear-gradient(45deg,transparent 50%,var(--ink) 50%),
                    linear-gradient(135deg,var(--ink) 50%,transparent 50%);
@@ -373,4 +363,4 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 
 #guardbar{position:fixed;left:0;right:0;bottom:0;z-index:9999;padding:12px 16px;
   background:var(--ink);color:var(--paper);font-family:var(--f-mono);font-size:12px;
-  line-height:1.5;border-top:var(--rule) solid var(--ink);word-break:break-word}
+  line-height:1.5;border-top:var(--edge-panel) solid var(--ink);word-break:break-word}
