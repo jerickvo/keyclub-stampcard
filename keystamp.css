@@ -166,6 +166,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   text-transform:uppercase;letter-spacing:0;padding-bottom:.06em;
   overflow-wrap:anywhere;text-wrap:balance}
 .rechead__title{margin:0}
+.rechead__title:focus,.spread__wm:focus{outline:none}
 .rechead__kick{flex:1 0 100%;order:-1;margin-bottom:var(--gap-tight)}
 
 /* ── type roles ──────────────────────────────────────────────────── */
@@ -271,19 +272,9 @@ select.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-of
 
 /* ── motion primitives (frozen until the motion pass) ──────────── */
 
-.loader{position:absolute;top:50%;left:50%;
-  width:clamp(54px,42%,116px);aspect-ratio:1;
-  transform:translate(-50%,-50%);
-  color:var(--ink);pointer-events:none;z-index:4;
-  animation:loaderTurn 1.2s steps(12,end) infinite}
-.loader svg{width:100%;height:100%;display:block}
-@keyframes loaderTurn{from{transform:translate(-50%,-50%) rotate(0deg)}
-                      to  {transform:translate(-50%,-50%) rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){ .loader{animation:none} }
 
-.fx{position:fixed;inset:0;z-index:125;pointer-events:none;overflow:hidden;
-  contain:layout paint}
-.flash{position:absolute;inset:0;background:var(--paper);opacity:0}
+
+
 
 .fxdefs{position:absolute;width:0;height:0}
 
@@ -326,32 +317,19 @@ select.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-of
   transform-origin:65% 65%}
 .scene__seal .brandseal{display:block;width:100%;height:auto;
   --si:var(--ink);--sp:var(--paper)}
-.ghost{position:fixed;z-index:50;overflow:hidden;background:var(--paper);
-  pointer-events:none;will-change:transform,opacity}
-.cutbox{position:fixed;z-index:56;overflow:hidden;pointer-events:none;
-  contain:layout paint}
-.slab{position:absolute;background:var(--ink);will-change:transform}
-.slab--tone,.slab__tone{background:var(--paper) radial-gradient(circle at 50% 50%,
-  var(--ink) 0 1.4px,transparent 1.6px) 0 0/7px 7px}
-.slab__tone{position:absolute;top:0;bottom:0}
-.slab__word{position:absolute;margin:0;color:var(--paper);white-space:nowrap;
-  opacity:0;transform-origin:0 50%}
+
 
 .scene--play .scene__panel--a .scene__ink{animation:sceneInk 110ms steps(3,end) calc(var(--lead,0ms) + 90ms) both}
 .scene--play .scene__panel--b .scene__ink{animation:sceneInk 100ms steps(3,end) calc(var(--lead,0ms) + 210ms) both}
-.scene--play .scene__panel--c .scene__ink{animation:sceneInk 100ms steps(3,end) calc(var(--lead,0ms) + 270ms) both,
-  sceneBreathe 1.4s ease-in-out calc(var(--lead,0ms) + 1600ms) infinite alternate}
+.scene--play .scene__panel--c .scene__ink{animation:sceneInk 100ms steps(3,end) calc(var(--lead,0ms) + 270ms) both}
 .scene--play .scene__seal{animation:sceneSeal 90ms steps(2,end) calc(var(--lead,0ms) + 360ms) forwards}
 .scene--play .scene__word{animation:sceneStamp 120ms steps(3,end) calc(var(--lead,0ms) + 420ms) forwards}
 .scene--play .scene__kick{animation:sceneCut 1ms linear calc(var(--lead,0ms) + 480ms) forwards}
 .scene--play .scene__tail:not(:empty){animation:sceneCut 1ms linear calc(var(--lead,0ms) + 560ms) forwards}
-.scene--welcome.scene--play{animation:sceneSheet 170ms cubic-bezier(.6,0,.2,1) both}
 @keyframes sceneInk{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 @keyframes sceneSeal{from{opacity:1;transform:scale(1.1)}to{opacity:1;transform:scale(1)}}
 @keyframes sceneStamp{from{opacity:1;transform:scale(1.3)}to{opacity:1;transform:scale(1)}}
 @keyframes sceneCut{from{opacity:0}to{opacity:1}}
-@keyframes sceneBreathe{from{opacity:1}to{opacity:.55}}
-@keyframes sceneSheet{from{transform:translateY(-104%)}to{transform:translateY(0)}}
 .scene--set,.scene--set *{animation:none}
 .scene--set .scene__ink{transform:scaleX(1)}
 .scene--set .scene__word,.scene--set .scene__kick,.scene--set .scene__seal,
@@ -362,6 +340,25 @@ select.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-of
   .scene--play .scene__word,.scene--play .scene__kick,.scene--play .scene__seal,
   .scene--play .scene__tail:not(:empty){opacity:1;transform:none}
 }
+:root[data-motion-pref="off"] .scene--play,:root[data-motion-pref="off"] .scene--play *{animation:none}
+:root[data-motion-pref="off"] .scene--play .scene__ink{transform:scaleX(1)}
+:root[data-motion-pref="off"] .scene--play .scene__word,:root[data-motion-pref="off"] .scene--play .scene__kick,
+:root[data-motion-pref="off"] .scene--play .scene__seal,
+:root[data-motion-pref="off"] .scene--play .scene__tail:not(:empty){opacity:1;transform:none}
+
+/* ── page change: the torn rule sweeps in the direction of travel ── */
+.rechead.is-cut::after{animation:ruleSweep 150ms steps(5,end) both}
+.rechead.is-cut--back::after{animation-name:ruleSweepBack}
+@keyframes ruleSweep{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes ruleSweepBack{from{clip-path:inset(0 0 0 100%)}to{clip-path:inset(0 0 0 0)}}
+
+/* ── departure: paper reclaims the page from the top, in six cuts ── */
+main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:none}
+@keyframes drain{from{clip-path:inset(0 0 0 0)}to{clip-path:inset(100% 0 0 0)}}
+
+/* ── impact: the card registers a landing stamp as one frame of tint ── */
+.card--hit .card__field{background:var(--tint)}
+.reticle--wait .reticle__c{opacity:.4}
 
 @media(min-aspect-ratio:1/1){
   .scene__grid{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);
@@ -372,20 +369,7 @@ select.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-of
   .scene__seal{width:125%;right:-22%;bottom:-26%}
 }
 
-.acq{position:fixed;inset:0;z-index:160;display:grid;place-items:center;
-  background:var(--ink);color:var(--paper);text-align:center;
-  padding:24px;box-sizing:border-box}
-.acq__stack{display:grid;justify-items:center;gap:clamp(16px,3.4vh,30px);max-width:100%}
-.acq__kick{font:600 var(--t-caption)/1 var(--f-mono);
-  letter-spacing:.34em;text-transform:uppercase;opacity:.85}
-.acq__seal{position:relative;width:min(54vmin,280px);aspect-ratio:1;
-  display:grid;place-items:center}
-.acq__seal svg{position:absolute;inset:0;width:100%;height:100%}
-.acq__seal path{fill:none;stroke:var(--paper);stroke-width:2.4}
-.acq__plus{font-family:var(--f-display);font-weight:400;
-  font-size:clamp(64px,26vmin,150px);line-height:1}
-.acq__meet{font:500 var(--t-caption)/1.5 var(--f-mono);
-  letter-spacing:.16em;text-transform:uppercase;opacity:.75;max-width:88vw}
+
 
 #guardbar{position:fixed;left:0;right:0;bottom:0;z-index:9999;padding:12px 16px;
   background:var(--ink);color:var(--paper);font-family:var(--f-mono);font-size:12px;

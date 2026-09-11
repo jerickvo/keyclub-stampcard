@@ -1,195 +1,89 @@
 "use strict";
 
 const MECH = {
-  CUT:  1,
-  LEAD: 40,
-  GAP:  46,
   BEAT: 90,
   SLAM: 130,
 };
 
 const STEP = n => (typeof steps === 'function' ? steps(n) : undefined);
 
-const SLAM_SEL = '.title,.spread__wm,.tally__fig,'
-               + '.ladder__fig,.standing-band__fig,.who__name,'
-               + '.proj__no,.bnow__no';
-
-const EASE = {
-  CUT:    cubicBezier(.03,.9,.1,1),
-  IMPACT: cubicBezier(.34,1.56,.5,1),
-  CALM:   cubicBezier(.22,.61,.36,1),
-};
+/* The marks that are struck into place when a page arrives: the chapter
+   numeral and word, and the wordmark on the sign-in spread. One slam
+   per screen; body copy is always simply present. */
+const SLAM_SEL = '.rechead__no,.rechead__title,.spread__wm';
 
 const Impact = {
-  flash(peak = .3, { delay = 0, host = null, dur = 52 } = {}){
-    if (Motion.off) return;
-    const el = host ? this.plate(host, 'flash') : $('#flash');
-    if (!el) return;
-    animate(el, { opacity:[0, peak, 0], duration:dur, delay, ease:'linear',
-            onComplete:() => { if (host) el.remove(); } });
-  },
-
-  plate(host, cls){
-    const el = document.createElement('span');
-    el.className = cls;
-    host.appendChild(el);
-    return el;
-  },
-
-  shake(el, px = 5, dur = 110){
+  /* A lateral "no". Used for one thing: a rejected scan. */
+  shake(el, px = 7, dur = 140){
     if (!el || Motion.off) return;
     animate(el, { translateX:[0, -px, px * .7, -px * .35, 0],
-      translateY:[0, px * .5, -px * .4, px * .2, 0],
       duration:dur, ease:'linear', onComplete(){ Motion.settle(el); } });
   },
 };
 
 const FX = {
-  claimStamp(row){
-    if (!row || Motion.off) return;
-    aset(row, { scale:1.04 });
-    animate(row, { scale:[1.04, 1], duration:120, ease:STEP(3),
-                   onComplete(){ Motion.settle(row); } });
-    Impact.flash(.22, { host:row, delay:40, dur:60 });
-    setTimeout(() => Impact.shake(row, 3, 90), 100);
-  },
-
-  pageEntrance(scope){
-    const els = [...scope.querySelectorAll('[data-enter]')];
-    if (Motion.off || !els.length) return;
-
-    const fold = innerHeight + 40;
-    const near = els.filter(el => el.getBoundingClientRect().top < fold);
-    const far  = els.filter(el => !near.includes(el));
-
-    aset(els, { opacity:0 });
-    animate(near, { opacity:[0, 1], duration:MECH.CUT,
-            delay:stagger(MECH.GAP, { start:MECH.LEAD }), ease:STEP(1) });
-    near.forEach((el, i) => FX.slamType(el, MECH.LEAD + i * MECH.GAP + MECH.BEAT));
-    far.forEach(el => Reveal.watch(el));
+  enter(scope){
+    if (!scope || Motion.off) return;
+    FX.slamType(scope, 40);
   },
 
   slamType(panel, at){
     if (!panel || Motion.off) return;
     const marks = [...panel.querySelectorAll(SLAM_SEL)];
     if (!marks.length) return;
-    aset(marks, { opacity:0, translateY:-14 });
-    animate(marks, { opacity:[0, 1], translateY:[-14, 0],
+    aset(marks, { opacity:0, translateY:-10 });
+    animate(marks, { opacity:[0, 1], translateY:[-10, 0],
             duration:MECH.SLAM, delay:stagger(MECH.BEAT / 3, { start:at }),
             ease:STEP(3), onComplete:() => releaseTransform(marks) });
   },
 
-  sealGrid(list){
-    if (!list || Motion.off) return;
-    const cells = list.querySelectorAll('.seal');
-    if (!cells.length) return;
-    aset(cells, { opacity:0 });
-    animate(cells, { opacity:[0, 1], scale:[.86, 1],
-            rotate: el => (getComputedStyle(el).getPropertyValue('--lean') || '0deg').trim(),
-            delay:stagger(46, { start:120 }),
-            ease:spring({ mass:1, stiffness:94, damping:13, velocity:0 }),
-            onComplete(){ cells.forEach(c => { c.style.opacity = '';
-
-              c.style.transform = ''; }); } });
+  /* A stepped press onto the element itself: for a claimed rung, a
+     freshly claimable button, the projector's OPEN and its live count. */
+  press(el, from = 1.18, dur = 140){
+    if (!el || Motion.off) return;
+    aset(el, { scale:from });
+    animate(el, { scale:[from, 1], duration:dur, ease:STEP(3),
+                  onComplete(){ Motion.settle(el); } });
   },
 
-  scanLock(){
-    if (Motion.off) return;
-    const dirs = [[1,1],[-1,1],[1,-1],[-1,-1]];
-    $$('#reticle .reticle__c').forEach((c, i) => animate(c, { translateX:dirs[i][0] * 11, translateY:dirs[i][1] * 11,
-      duration:180, ease:EASE.CUT }));
-    Impact.flash(.24, { host:$('#viewer'), delay:110, dur:50 });
+  claimed(row){ FX.press(row, 1.04, 120); },
+
+  rewardUnlock(row){
+    if (!row || Motion.off) return;
+    FX.press(row.querySelector('.rung__claim') || row, 1.14, 140);
   },
 
-  scanReject(){
-    if (Motion.off) return;
-    Impact.shake($('#viewer'), 4, 100);
-    $$('#reticle .reticle__c').forEach(c =>
-      animate(c, { translateX:0, translateY:0, duration:220, ease:EASE.CALM }));
-  },
+  scanReject(){ Impact.shake($('#reticle')); },
 
-  stampAcquire(meeting){
-    const scene = document.createElement('div');
-    scene.className = 'acq';
-    scene.innerHTML = `
-      <div class="acq__stack">
-        <p class="acq__kick">Stamp acquired</p>
-        <div class="acq__seal" aria-hidden="true">
-          <svg viewBox="0 0 64 64"><path d="${stampShape(7, 0)}"/></svg>
-          <b class="acq__plus">+1</b>
-        </div>
-        <p class="acq__meet">GM ${pad(meeting.no)} / ${fmtDate(meeting.date || Schedule.today())} / ${esc(meeting.place || Schedule.PLACE)}</p>
-      </div>`;
-    document.body.appendChild(scene);
-
-    let gone = false;
-    const clear = () => { if (gone) return; gone = true; try { scene.remove(); } catch (_) {} };
-    const fuse = setTimeout(clear, 8000);
-
-    if (!Motion.off){
-      const sealEl = scene.querySelector('.acq__seal');
-      aset(sealEl, { scale:1.16, rotate:-4 });
-      animate(sealEl, { scale:[1.16, 1], rotate:[-4, -1.5],
-        duration:110, delay:80, ease:STEP(2) });
-      setTimeout(() => Impact.shake(scene, 3, 80), 170);
-    }
-
-    return {
-      clear(){ clearTimeout(fuse); clear(); },
-      lift(then){
-        clearTimeout(fuse);
-        let fired = false;
-        const done = () => {
-          if (fired) return; fired = true;
-          clear();
-          if (typeof then === 'function') then();
-        };
-        if (Motion.off || gone){ done(); return; }
-        animate(scene, { translateY:[0, -(innerHeight + 24)], duration:300,
-          ease:cubicBezier(.7, 0, .18, 1), onComplete:done });
-        setTimeout(done, 600);
-      },
-    };
-  },
-
+  /* The stamp lands on its own cell: oversized and off its lean, then
+     down in four cuts. The card registers the hit as one frame of tint. */
   stampLand(cell){
     if (!cell) return;
     if (Motion.off){ cell.style.opacity = ''; return; }
 
     const lean = getComputedStyle(cell).getPropertyValue('--lean').trim() || '0deg';
     const deg = parseFloat(lean) || 0;
-    const face = cell.closest('.card__face') || cell.closest('.card') || $('#shell');
+    const card = cell.closest('.card');
 
     aset(cell, { opacity:1, scale:1.55, rotate:`${deg - 9}deg` });
     animate(cell, { scale:[1.55, 1], rotate:[`${deg - 9}deg`, `${deg}deg`],
-      duration:180, delay:70, ease:STEP(4),
+      duration:180, delay:60, ease:STEP(4),
       onComplete(){ Motion.settle(cell); } });
-    setTimeout(() => Impact.shake(face, 3, 90), 230);
-  },
-
-  rewardUnlock(row){
-    if (Motion.off || !row) return;
-    const claim = row.querySelector('.tier__claim');
-    Impact.flash(.18, { host:row, dur:60 });
-    Impact.shake(row, 3, 90);
-    if (claim){
-      animate(claim, { scale:[.86, 1.06, 1], duration:420, delay:120,
-                       ease:EASE.IMPACT });
+    if (card){
+      setTimeout(() => {
+        card.classList.add('card--hit');
+        setTimeout(() => card.classList.remove('card--hit'), 90);
+      }, 200);
     }
   },
 
   boardSeal(){
     const word = $('.proj__word');
     if (!word || Motion.off) return;
-    let deg = 0;
-    try {
-      const m = new DOMMatrixReadOnly(getComputedStyle(word).transform);
-      deg = Math.atan2(m.b, m.a) * 180 / Math.PI;
-    } catch (_) {}
-    aset(word, { scale:1.45, rotate:deg, opacity:0 });
-    animate(word, { opacity:[0, 1], duration:1, delay:60, ease:STEP(1) });
-    animate(word, { scale:[1.45, 1], rotate:deg, duration:120, delay:60, ease:STEP(3) });
-    setTimeout(() => Impact.shake(word, 3, 80), 190);
-    setTimeout(() => Motion.settle(word), 420);
-  }
+    aset(word, { opacity:0 });
+    animate(word, { opacity:[0, 1], duration:1, delay:60 });
+    FX.press(word, 1.35, 140);
+  },
+
+  countUp(node){ FX.press(node, 1.3, 120); },
 };

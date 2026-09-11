@@ -241,6 +241,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   text-transform:uppercase;letter-spacing:0;padding-bottom:.06em;
   overflow-wrap:anywhere;text-wrap:balance}
 .rechead__title{margin:0}
+.rechead__title:focus,.spread__wm:focus{outline:none}
 .rechead__kick{flex:1 0 100%;order:-1;margin-bottom:var(--gap-tight)}
 
 /* ── type roles ──────────────────────────────────────────────────── */
@@ -346,19 +347,9 @@ select.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-of
 
 /* ── motion primitives (frozen until the motion pass) ──────────── */
 
-.loader{position:absolute;top:50%;left:50%;
-  width:clamp(54px,42%,116px);aspect-ratio:1;
-  transform:translate(-50%,-50%);
-  color:var(--ink);pointer-events:none;z-index:4;
-  animation:loaderTurn 1.2s steps(12,end) infinite}
-.loader svg{width:100%;height:100%;display:block}
-@keyframes loaderTurn{from{transform:translate(-50%,-50%) rotate(0deg)}
-                      to  {transform:translate(-50%,-50%) rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){ .loader{animation:none} }
 
-.fx{position:fixed;inset:0;z-index:125;pointer-events:none;overflow:hidden;
-  contain:layout paint}
-.flash{position:absolute;inset:0;background:var(--paper);opacity:0}
+
+
 
 .fxdefs{position:absolute;width:0;height:0}
 
@@ -401,32 +392,19 @@ select.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-of
   transform-origin:65% 65%}
 .scene__seal .brandseal{display:block;width:100%;height:auto;
   --si:var(--ink);--sp:var(--paper)}
-.ghost{position:fixed;z-index:50;overflow:hidden;background:var(--paper);
-  pointer-events:none;will-change:transform,opacity}
-.cutbox{position:fixed;z-index:56;overflow:hidden;pointer-events:none;
-  contain:layout paint}
-.slab{position:absolute;background:var(--ink);will-change:transform}
-.slab--tone,.slab__tone{background:var(--paper) radial-gradient(circle at 50% 50%,
-  var(--ink) 0 1.4px,transparent 1.6px) 0 0/7px 7px}
-.slab__tone{position:absolute;top:0;bottom:0}
-.slab__word{position:absolute;margin:0;color:var(--paper);white-space:nowrap;
-  opacity:0;transform-origin:0 50%}
+
 
 .scene--play .scene__panel--a .scene__ink{animation:sceneInk 110ms steps(3,end) calc(var(--lead,0ms) + 90ms) both}
 .scene--play .scene__panel--b .scene__ink{animation:sceneInk 100ms steps(3,end) calc(var(--lead,0ms) + 210ms) both}
-.scene--play .scene__panel--c .scene__ink{animation:sceneInk 100ms steps(3,end) calc(var(--lead,0ms) + 270ms) both,
-  sceneBreathe 1.4s ease-in-out calc(var(--lead,0ms) + 1600ms) infinite alternate}
+.scene--play .scene__panel--c .scene__ink{animation:sceneInk 100ms steps(3,end) calc(var(--lead,0ms) + 270ms) both}
 .scene--play .scene__seal{animation:sceneSeal 90ms steps(2,end) calc(var(--lead,0ms) + 360ms) forwards}
 .scene--play .scene__word{animation:sceneStamp 120ms steps(3,end) calc(var(--lead,0ms) + 420ms) forwards}
 .scene--play .scene__kick{animation:sceneCut 1ms linear calc(var(--lead,0ms) + 480ms) forwards}
 .scene--play .scene__tail:not(:empty){animation:sceneCut 1ms linear calc(var(--lead,0ms) + 560ms) forwards}
-.scene--welcome.scene--play{animation:sceneSheet 170ms cubic-bezier(.6,0,.2,1) both}
 @keyframes sceneInk{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 @keyframes sceneSeal{from{opacity:1;transform:scale(1.1)}to{opacity:1;transform:scale(1)}}
 @keyframes sceneStamp{from{opacity:1;transform:scale(1.3)}to{opacity:1;transform:scale(1)}}
 @keyframes sceneCut{from{opacity:0}to{opacity:1}}
-@keyframes sceneBreathe{from{opacity:1}to{opacity:.55}}
-@keyframes sceneSheet{from{transform:translateY(-104%)}to{transform:translateY(0)}}
 .scene--set,.scene--set *{animation:none}
 .scene--set .scene__ink{transform:scaleX(1)}
 .scene--set .scene__word,.scene--set .scene__kick,.scene--set .scene__seal,
@@ -437,6 +415,25 @@ select.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-of
   .scene--play .scene__word,.scene--play .scene__kick,.scene--play .scene__seal,
   .scene--play .scene__tail:not(:empty){opacity:1;transform:none}
 }
+:root[data-motion-pref="off"] .scene--play,:root[data-motion-pref="off"] .scene--play *{animation:none}
+:root[data-motion-pref="off"] .scene--play .scene__ink{transform:scaleX(1)}
+:root[data-motion-pref="off"] .scene--play .scene__word,:root[data-motion-pref="off"] .scene--play .scene__kick,
+:root[data-motion-pref="off"] .scene--play .scene__seal,
+:root[data-motion-pref="off"] .scene--play .scene__tail:not(:empty){opacity:1;transform:none}
+
+/* ── page change: the torn rule sweeps in the direction of travel ── */
+.rechead.is-cut::after{animation:ruleSweep 150ms steps(5,end) both}
+.rechead.is-cut--back::after{animation-name:ruleSweepBack}
+@keyframes ruleSweep{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes ruleSweepBack{from{clip-path:inset(0 0 0 100%)}to{clip-path:inset(0 0 0 0)}}
+
+/* ── departure: paper reclaims the page from the top, in six cuts ── */
+main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:none}
+@keyframes drain{from{clip-path:inset(0 0 0 0)}to{clip-path:inset(100% 0 0 0)}}
+
+/* ── impact: the card registers a landing stamp as one frame of tint ── */
+.card--hit .card__field{background:var(--tint)}
+.reticle--wait .reticle__c{opacity:.4}
 
 @media(min-aspect-ratio:1/1){
   .scene__grid{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);
@@ -447,20 +444,7 @@ select.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-of
   .scene__seal{width:125%;right:-22%;bottom:-26%}
 }
 
-.acq{position:fixed;inset:0;z-index:160;display:grid;place-items:center;
-  background:var(--ink);color:var(--paper);text-align:center;
-  padding:24px;box-sizing:border-box}
-.acq__stack{display:grid;justify-items:center;gap:clamp(16px,3.4vh,30px);max-width:100%}
-.acq__kick{font:600 var(--t-caption)/1 var(--f-mono);
-  letter-spacing:.34em;text-transform:uppercase;opacity:.85}
-.acq__seal{position:relative;width:min(54vmin,280px);aspect-ratio:1;
-  display:grid;place-items:center}
-.acq__seal svg{position:absolute;inset:0;width:100%;height:100%}
-.acq__seal path{fill:none;stroke:var(--paper);stroke-width:2.4}
-.acq__plus{font-family:var(--f-display);font-weight:400;
-  font-size:clamp(64px,26vmin,150px);line-height:1}
-.acq__meet{font:500 var(--t-caption)/1.5 var(--f-mono);
-  letter-spacing:.16em;text-transform:uppercase;opacity:.75;max-width:88vw}
+
 
 #guardbar{position:fixed;left:0;right:0;bottom:0;z-index:9999;padding:12px 16px;
   background:var(--ink);color:var(--paper);font-family:var(--f-mono);font-size:12px;
@@ -1227,9 +1211,6 @@ select.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-of
   <main id="view" tabindex="-1"></main>
 </div>
 
-<div class="fx" id="fx" aria-hidden="true">
-  <span class="flash" id="flash"></span>
-</div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script>
@@ -14501,6 +14482,10 @@ const Motion = {
   setForced(v){
     this.forced = Boolean(v);
     try { localStorage.setItem(MOTION_KEY, v ? 'off' : 'on'); } catch (_) {}
+    this.mark();
+  },
+  mark(){
+    try { document.documentElement.dataset.motionPref = this.forced ? 'off' : 'on'; } catch (_) {}
   },
   get off(){ return this.forced || !window.animate || systemReducedMotion(); },
   get reduced(){ return this.forced || systemReducedMotion(); },
@@ -14520,46 +14505,7 @@ const releaseTransform = els => {
   });
 };
 
-const Reveal = {
-  io: null,
-  fuses: new Set(),
-
-  enter(el){
-    clearTimeout(el._revealFuse);
-    if (el.dataset.revealed) return;
-    el.dataset.revealed = '1';
-    animate(el, { opacity:[0, 1], duration:MECH.CUT, ease:STEP(1) });
-    FX.slamType(el, MECH.BEAT);
-  },
-
-  watch(el){
-    if (Motion.off || !('IntersectionObserver' in window)){
-      el.style.opacity = '';
-      return;
-    }
-    if (!this.io){
-      this.io = new IntersectionObserver(entries => {
-        entries.forEach(en => {
-          if (!en.isIntersecting) return;
-          this.io.unobserve(en.target);
-          this.enter(en.target);
-        });
-      }, { rootMargin:'0px 0px -6% 0px', threshold:.04 });
-    }
-    this.io.observe(el);
-    el._revealFuse = setTimeout(() => {
-      this.fuses.delete(el._revealFuse);
-      this.io?.unobserve(el);
-      this.enter(el);
-    }, 6000);
-    this.fuses.add(el._revealFuse);
-  },
-
-  clear(){
-    this.io?.disconnect(); this.io = null;
-    this.fuses.forEach(t => clearTimeout(t)); this.fuses.clear();
-  },
-};
+Motion.mark();
 
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -14577,42 +14523,47 @@ const TOAST_LIMIT = 1;
 const TOAST_LIFE = 5000;
 const liveToasts = new Map();
 
-function dropToast(key, immediate){
+function dropToast(key){
   const rec = liveToasts.get(key);
   if (!rec) return;
   clearTimeout(rec.timer);
   liveToasts.delete(key);
-  const el = rec.el;
-  if (immediate || Motion.off) return el.remove();
-  animate(el, { opacity:0, translateY:8, duration:200, ease:'inQuad',
-                onComplete:() => el.remove() });
+  rec.el.remove();
 }
 
+/* A message is a cut: it is there, then it is not. It waits while the
+   pointer or focus is on it, and a tap or Escape dismisses it. */
 function toast({ title, detail, bad = false, key }){
   const host = $('#toasts');
   if (!host) return;
 
   const k = key || `once:${Date.now()}:${Math.random()}`;
-
   const prev = liveToasts.get(k);
   let el;
   if (prev){
     clearTimeout(prev.timer);
     el = prev.el;
   } else {
-    while (liveToasts.size >= TOAST_LIMIT) dropToast(liveToasts.keys().next().value, true);
+    while (liveToasts.size >= TOAST_LIMIT) dropToast(liveToasts.keys().next().value);
     el = document.createElement('div');
+    el.tabIndex = 0;
+    el.setAttribute('role', 'status');
     host.appendChild(el);
-    if (!Motion.off) animate(el, { opacity:[0,1], translateY:[14,0], duration:240, ease:'outQuad' });
   }
 
   el.className = 'toast' + (bad ? ' toast--bad' : '');
-  el.innerHTML = `<span class="toast__dot"></span><div>
-      <p class="toast__t">${esc(title)}</p>
-      ${detail ? `<p class="toast__d">${esc(detail)}</p>` : ''}</div>`;
+  el.innerHTML = `<p class="toast__t">${esc(title)}</p>
+      ${detail ? `<p class="toast__d">${esc(detail)}</p>` : ''}`;
 
-  const timer = setTimeout(() => dropToast(k), TOAST_LIFE);
-  liveToasts.set(k, { el, timer });
+  const arm = () => setTimeout(() => dropToast(k), TOAST_LIFE);
+  const rec = { el, timer:arm() };
+  liveToasts.set(k, rec);
+  const hold = () => { clearTimeout(rec.timer); };
+  const release = () => { clearTimeout(rec.timer); rec.timer = arm(); };
+  el.onmouseenter = hold; el.onfocus = hold;
+  el.onmouseleave = release; el.onblur = release;
+  el.onclick = () => dropToast(k);
+  el.onkeydown = e => { if (e.key === 'Escape' || e.key === 'Enter') dropToast(k); };
 }
 
 </script>
@@ -15548,203 +15499,110 @@ const BoardUI = {
 "use strict";
 
 const MECH = {
-  CUT:  1,
-  LEAD: 40,
-  GAP:  46,
   BEAT: 90,
   SLAM: 130,
 };
 
 const STEP = n => (typeof steps === 'function' ? steps(n) : undefined);
 
-const SLAM_SEL = '.title,.spread__wm,.tally__fig,'
-               + '.ladder__fig,.standing-band__fig,.who__name,'
-               + '.proj__no,.bnow__no';
-
-const EASE = {
-  CUT:    cubicBezier(.03,.9,.1,1),
-  IMPACT: cubicBezier(.34,1.56,.5,1),
-  CALM:   cubicBezier(.22,.61,.36,1),
-};
+/* The marks that are struck into place when a page arrives: the chapter
+   numeral and word, and the wordmark on the sign-in spread. One slam
+   per screen; body copy is always simply present. */
+const SLAM_SEL = '.rechead__no,.rechead__title,.spread__wm';
 
 const Impact = {
-  flash(peak = .3, { delay = 0, host = null, dur = 52 } = {}){
-    if (Motion.off) return;
-    const el = host ? this.plate(host, 'flash') : $('#flash');
-    if (!el) return;
-    animate(el, { opacity:[0, peak, 0], duration:dur, delay, ease:'linear',
-            onComplete:() => { if (host) el.remove(); } });
-  },
-
-  plate(host, cls){
-    const el = document.createElement('span');
-    el.className = cls;
-    host.appendChild(el);
-    return el;
-  },
-
-  shake(el, px = 5, dur = 110){
+  /* A lateral "no". Used for one thing: a rejected scan. */
+  shake(el, px = 7, dur = 140){
     if (!el || Motion.off) return;
     animate(el, { translateX:[0, -px, px * .7, -px * .35, 0],
-      translateY:[0, px * .5, -px * .4, px * .2, 0],
       duration:dur, ease:'linear', onComplete(){ Motion.settle(el); } });
   },
 };
 
 const FX = {
-  claimStamp(row){
-    if (!row || Motion.off) return;
-    aset(row, { scale:1.04 });
-    animate(row, { scale:[1.04, 1], duration:120, ease:STEP(3),
-                   onComplete(){ Motion.settle(row); } });
-    Impact.flash(.22, { host:row, delay:40, dur:60 });
-    setTimeout(() => Impact.shake(row, 3, 90), 100);
-  },
-
-  pageEntrance(scope){
-    const els = [...scope.querySelectorAll('[data-enter]')];
-    if (Motion.off || !els.length) return;
-
-    const fold = innerHeight + 40;
-    const near = els.filter(el => el.getBoundingClientRect().top < fold);
-    const far  = els.filter(el => !near.includes(el));
-
-    aset(els, { opacity:0 });
-    animate(near, { opacity:[0, 1], duration:MECH.CUT,
-            delay:stagger(MECH.GAP, { start:MECH.LEAD }), ease:STEP(1) });
-    near.forEach((el, i) => FX.slamType(el, MECH.LEAD + i * MECH.GAP + MECH.BEAT));
-    far.forEach(el => Reveal.watch(el));
+  enter(scope){
+    if (!scope || Motion.off) return;
+    FX.slamType(scope, 40);
   },
 
   slamType(panel, at){
     if (!panel || Motion.off) return;
     const marks = [...panel.querySelectorAll(SLAM_SEL)];
     if (!marks.length) return;
-    aset(marks, { opacity:0, translateY:-14 });
-    animate(marks, { opacity:[0, 1], translateY:[-14, 0],
+    aset(marks, { opacity:0, translateY:-10 });
+    animate(marks, { opacity:[0, 1], translateY:[-10, 0],
             duration:MECH.SLAM, delay:stagger(MECH.BEAT / 3, { start:at }),
             ease:STEP(3), onComplete:() => releaseTransform(marks) });
   },
 
-  sealGrid(list){
-    if (!list || Motion.off) return;
-    const cells = list.querySelectorAll('.seal');
-    if (!cells.length) return;
-    aset(cells, { opacity:0 });
-    animate(cells, { opacity:[0, 1], scale:[.86, 1],
-            rotate: el => (getComputedStyle(el).getPropertyValue('--lean') || '0deg').trim(),
-            delay:stagger(46, { start:120 }),
-            ease:spring({ mass:1, stiffness:94, damping:13, velocity:0 }),
-            onComplete(){ cells.forEach(c => { c.style.opacity = '';
-
-              c.style.transform = ''; }); } });
+  /* A stepped press onto the element itself: for a claimed rung, a
+     freshly claimable button, the projector's OPEN and its live count. */
+  press(el, from = 1.18, dur = 140){
+    if (!el || Motion.off) return;
+    aset(el, { scale:from });
+    animate(el, { scale:[from, 1], duration:dur, ease:STEP(3),
+                  onComplete(){ Motion.settle(el); } });
   },
 
-  scanLock(){
-    if (Motion.off) return;
-    const dirs = [[1,1],[-1,1],[1,-1],[-1,-1]];
-    $$('#reticle .reticle__c').forEach((c, i) => animate(c, { translateX:dirs[i][0] * 11, translateY:dirs[i][1] * 11,
-      duration:180, ease:EASE.CUT }));
-    Impact.flash(.24, { host:$('#viewer'), delay:110, dur:50 });
+  claimed(row){ FX.press(row, 1.04, 120); },
+
+  rewardUnlock(row){
+    if (!row || Motion.off) return;
+    FX.press(row.querySelector('.rung__claim') || row, 1.14, 140);
   },
 
-  scanReject(){
-    if (Motion.off) return;
-    Impact.shake($('#viewer'), 4, 100);
-    $$('#reticle .reticle__c').forEach(c =>
-      animate(c, { translateX:0, translateY:0, duration:220, ease:EASE.CALM }));
-  },
+  scanReject(){ Impact.shake($('#reticle')); },
 
-  stampAcquire(meeting){
-    const scene = document.createElement('div');
-    scene.className = 'acq';
-    scene.innerHTML = `
-      <div class="acq__stack">
-        <p class="acq__kick">Stamp acquired</p>
-        <div class="acq__seal" aria-hidden="true">
-          <svg viewBox="0 0 64 64"><path d="${stampShape(7, 0)}"/></svg>
-          <b class="acq__plus">+1</b>
-        </div>
-        <p class="acq__meet">GM ${pad(meeting.no)} / ${fmtDate(meeting.date || Schedule.today())} / ${esc(meeting.place || Schedule.PLACE)}</p>
-      </div>`;
-    document.body.appendChild(scene);
-
-    let gone = false;
-    const clear = () => { if (gone) return; gone = true; try { scene.remove(); } catch (_) {} };
-    const fuse = setTimeout(clear, 8000);
-
-    if (!Motion.off){
-      const sealEl = scene.querySelector('.acq__seal');
-      aset(sealEl, { scale:1.16, rotate:-4 });
-      animate(sealEl, { scale:[1.16, 1], rotate:[-4, -1.5],
-        duration:110, delay:80, ease:STEP(2) });
-      setTimeout(() => Impact.shake(scene, 3, 80), 170);
-    }
-
-    return {
-      clear(){ clearTimeout(fuse); clear(); },
-      lift(then){
-        clearTimeout(fuse);
-        let fired = false;
-        const done = () => {
-          if (fired) return; fired = true;
-          clear();
-          if (typeof then === 'function') then();
-        };
-        if (Motion.off || gone){ done(); return; }
-        animate(scene, { translateY:[0, -(innerHeight + 24)], duration:300,
-          ease:cubicBezier(.7, 0, .18, 1), onComplete:done });
-        setTimeout(done, 600);
-      },
-    };
-  },
-
+  /* The stamp lands on its own cell: oversized and off its lean, then
+     down in four cuts. The card registers the hit as one frame of tint. */
   stampLand(cell){
     if (!cell) return;
     if (Motion.off){ cell.style.opacity = ''; return; }
 
     const lean = getComputedStyle(cell).getPropertyValue('--lean').trim() || '0deg';
     const deg = parseFloat(lean) || 0;
-    const face = cell.closest('.card__face') || cell.closest('.card') || $('#shell');
+    const card = cell.closest('.card');
 
     aset(cell, { opacity:1, scale:1.55, rotate:`${deg - 9}deg` });
     animate(cell, { scale:[1.55, 1], rotate:[`${deg - 9}deg`, `${deg}deg`],
-      duration:180, delay:70, ease:STEP(4),
+      duration:180, delay:60, ease:STEP(4),
       onComplete(){ Motion.settle(cell); } });
-    setTimeout(() => Impact.shake(face, 3, 90), 230);
-  },
-
-  rewardUnlock(row){
-    if (Motion.off || !row) return;
-    const claim = row.querySelector('.tier__claim');
-    Impact.flash(.18, { host:row, dur:60 });
-    Impact.shake(row, 3, 90);
-    if (claim){
-      animate(claim, { scale:[.86, 1.06, 1], duration:420, delay:120,
-                       ease:EASE.IMPACT });
+    if (card){
+      setTimeout(() => {
+        card.classList.add('card--hit');
+        setTimeout(() => card.classList.remove('card--hit'), 90);
+      }, 200);
     }
   },
 
   boardSeal(){
     const word = $('.proj__word');
     if (!word || Motion.off) return;
-    let deg = 0;
-    try {
-      const m = new DOMMatrixReadOnly(getComputedStyle(word).transform);
-      deg = Math.atan2(m.b, m.a) * 180 / Math.PI;
-    } catch (_) {}
-    aset(word, { scale:1.45, rotate:deg, opacity:0 });
-    animate(word, { opacity:[0, 1], duration:1, delay:60, ease:STEP(1) });
-    animate(word, { scale:[1.45, 1], rotate:deg, duration:120, delay:60, ease:STEP(3) });
-    setTimeout(() => Impact.shake(word, 3, 80), 190);
-    setTimeout(() => Motion.settle(word), 420);
-  }
+    aset(word, { opacity:0 });
+    animate(word, { opacity:[0, 1], duration:1, delay:60 });
+    FX.press(word, 1.35, 140);
+  },
+
+  countUp(node){ FX.press(node, 1.3, 120); },
 };
 
 </script>
 <script>
 /* ── js/04b-scenes.js ── */
 "use strict";
+
+/* Two whole-screen moments and one page change.
+
+   Arrival — the boot page: three outlined panels, ink wiped into each in
+   hard steps, the seal and the wordmark stamped in, then the panels part
+   and the paper sheet drops. Plays once, on a cold load, and never again.
+
+   Departure — signing out drains the page: paper reclaims the ink from
+   the top down in six cuts, and the sign-in spread is what is left.
+
+   Page change — nothing is covered. The page swaps in one frame and the
+   chapter numeral and title are struck into place; the torn rule under
+   them sweeps in the direction of travel. */
 
 const SCENE_MARKUP = tail => `
   <div class="scene__base"></div>
@@ -15755,13 +15613,6 @@ const SCENE_MARKUP = tail => `
     <div class="scene__panel scene__panel--c"><i class="scene__ink scene__ink--tone"></i>
       <span class="scene__seal"><svg class="brandseal" viewBox="0 0 840 875" aria-hidden="true"><use href="#bootseal"/></svg></span></div>
   </div>`;
-
-const fadeAway = (el, dur, cb) => {
-  if (window.animate){ animate(el, { opacity:[1, 0], duration:dur, ease:'linear', onComplete:cb }); return; }
-  el.style.transition = `opacity ${dur}ms linear`;
-  el.style.opacity = '0';
-  setTimeout(cb, dur + 20);
-};
 
 const Scenes = {
   busy: false,
@@ -15774,7 +15625,7 @@ const Scenes = {
              word:q('.scene__word'), kick:q('.scene__kick'), tail:q('.scene__tail'), seal:q('.scene__seal') };
   },
 
-  exitVector(p, W, H){
+  exitVector(p, W){
     const g = p.grid.getBoundingClientRect();
     const mid = g.left + g.width / 2;
     return panel => {
@@ -15785,23 +15636,20 @@ const Scenes = {
     };
   },
 
+  /* The boot page. `root` is the static markup in dev.html, already
+     animating from first paint; release() opens it once the app is
+     ready, never sooner than MIN after the page composed itself. */
   opening({ root = null, tail = '', reveal = () => {} } = {}){
-    const boot = Boolean(root);
     let el = root;
     if (!el){
       el = document.createElement('div');
-      el.className = 'scene scene--welcome';
+      el.className = 'scene scene--open scene--play';
       el.setAttribute('aria-hidden', 'true');
-      el.style.setProperty('--lead', '170ms');
       el.innerHTML = SCENE_MARKUP(tail);
       document.body.appendChild(el);
-    } else {
-      const t = el.querySelector('.scene__tail');
-      if (t) t.textContent = tail;
     }
     const p = this.parts(el);
-    const lead = boot ? 0 : 170;
-    const t0 = boot ? 0 : performance.now();
+    const t0 = performance.now();
     let done = false, released = false, revealed = false;
 
     const revealOnce = () => { if (revealed) return; revealed = true; try { reveal(); } catch (_) {} };
@@ -15813,31 +15661,25 @@ const Scenes = {
     const fuse = setTimeout(() => { revealOnce(); finish(); }, 7000);
 
     if (Motion.off){
-      el.classList.remove('scene--play');
-      el.classList.add('scene--set');
       return { release(){
         if (released) return; released = true;
-        setTimeout(() => { revealOnce(); fadeAway(el, 150, finish); }, 450);
+        revealOnce(); finish();
       } };
     }
 
-    if (!boot) el.classList.add('scene--play');
-    const hit = lead + 500 - (performance.now() - t0);
-    if (hit > -80) setTimeout(() => Impact.shake(p.grid, 4, 90), Math.max(0, hit));
-
-    const MIN = lead + 1000;
+    const MIN = 700;
     const open = () => {
       if (done) return;
       el.classList.add('scene--set');
       const W = innerWidth;
-      const vec = this.exitVector(p, W, innerHeight);
+      const vec = this.exitVector(p, W);
       const EXIT = cubicBezier(.7, 0, .18, 1);
-      animate(p.a.el, Object.assign({ duration:380, ease:EXIT }, vec(p.a)));
-      animate(p.b.el, Object.assign({ duration:360, delay:40, ease:EXIT }, vec(p.b)));
-      animate(p.c.el, Object.assign({ duration:360, delay:70, ease:EXIT }, vec(p.c)));
-      animate(p.base, { translateY:[0, innerHeight + 24], duration:380, delay:60, ease:EXIT });
-      setTimeout(revealOnce, 100);
-      setTimeout(finish, 480);
+      animate(p.a.el, Object.assign({ duration:340, ease:EXIT }, vec(p.a)));
+      animate(p.b.el, Object.assign({ duration:320, delay:40, ease:EXIT }, vec(p.b)));
+      animate(p.c.el, Object.assign({ duration:320, delay:70, ease:EXIT }, vec(p.c)));
+      animate(p.base, { translateY:[0, innerHeight + 24], duration:340, delay:60, ease:EXIT });
+      setTimeout(revealOnce, 90);
+      setTimeout(finish, 440);
     };
 
     return { release(){
@@ -15846,89 +15688,33 @@ const Scenes = {
     } };
   },
 
-  exit({ swap, fail, btn = null } = {}){
+  /* Signing out: the page drains to paper from the top in hard steps
+     while the sign-out request runs; the sign-in spread is what remains. */
+  exit({ swap, fail } = {}){
     const doSwap = typeof swap === 'function' ? swap : () => Promise.resolve();
     const oops = typeof fail === 'function' ? fail : () => {};
     if (this.busy) return;
     this.busy = true;
+    const view = $('#view');
+    const settle = () => { this.busy = false; view?.classList.remove('is-draining'); };
 
-    const el = document.createElement('div');
-    el.className = 'scene scene--exit scene--set';
-    el.setAttribute('aria-hidden', 'true');
-    el.innerHTML = SCENE_MARKUP('Until next meeting');
-    document.body.appendChild(el);
-    const p = this.parts(el);
-    p.word.textContent = 'Signed out';
-    p.kick.textContent = 'Keystamp / Key Club attendance';
-    [p.word, p.kick, p.tail, p.seal].forEach(x => { x.style.opacity = '0'; });
+    const request = () => Promise.resolve().then(doSwap).then(() => 'ok', err => { oops(err); return 'failed'; });
 
-    let done = false;
-    const finish = () => {
-      if (done) return; done = true;
-      clearTimeout(fuse);
-      try { el.remove(); } catch (_) {}
-      this.busy = false;
-    };
-    const fuse = setTimeout(finish, 4000);
-    const swapNow = () => Promise.resolve().then(doSwap).catch(err => { oops(err); return 'failed'; });
-
-    if (Motion.off){
-      [p.word, p.kick, p.tail, p.seal].forEach(x => { x.style.opacity = '1'; });
-      setTimeout(async () => {
-        await swapNow();
-        setTimeout(() => fadeAway(el, 150, finish), 520);
-      }, 120);
+    if (Motion.off || !view){
+      request().finally(settle);
       return;
     }
 
-    if (btn){
-      aset(btn, { scale:.94 });
-      setTimeout(() => animate(btn, { scale:1, duration:110, ease:'outQuad',
-        onComplete(){ btn.style.transform = ''; } }), 90);
-    }
-
-    const W = innerWidth, H = innerHeight;
-    const vec = this.exitVector(p, W, H);
-    const IN = cubicBezier(.5, 0, .12, 1);
-    const from = panel => { const v = vec(panel); const k = Object.keys(v)[0]; return [k, v[k]]; };
-    [[p.a, 0, 250], [p.b, 30, 230], [p.c, 60, 230]].forEach(([panel, delay, dur]) => {
-      const [k, v] = from(panel);
-      aset(panel.el, { [k]:v });
-      animate(panel.el, { [k]:[v, 0], duration:dur, delay, ease:IN });
-    });
-    aset(p.base, { opacity:0 });
-    animate(p.base, { opacity:[0, 1], duration:200, delay:110, ease:'linear' });
-    setTimeout(() => Impact.shake(p.grid, 3, 80), 300);
-
-    let swapped = null;
-    setTimeout(() => { swapped = swapNow(); }, 340);
-
-    createTimeline({ autoplay:true })
-      .add(p.seal, { opacity:[0, 1], duration:1 }, 360)
-      .add(p.word, { opacity:[0, 1], duration:1 }, 400)
-      .add(p.word, { scale:[1.3, 1], duration:110, ease:STEP(3) }, 400)
-      .add(p.kick, { opacity:[0, 1], duration:1 }, 470)
-      .add(p.tail, { opacity:[0, 1], duration:1 }, 530);
-
-    const drop = async () => {
-      if (done) return;
-      const res = swapped ? await swapped : null;
-      const FALL = cubicBezier(.55, 0, 1, .45);
-      const dist = panel => H - panel.el.getBoundingClientRect().top + 16;
-      [[p.b, 0], [p.c, 50], [p.a, 100]].forEach(([panel, delay]) => {
-        animate(panel.el, { translateY:[0, dist(panel)], duration:420, delay, ease:FALL });
+    /* Drain first, holding the page fully clipped; the sign-in spread
+       then appears in one cut, or the page comes back if the request
+       failed. */
+    view.classList.add('is-draining');
+    setTimeout(() => {
+      request().then(res => {
+        settle();
+        if (res === 'ok') FX.enter($('#view'));
       });
-      animate(p.base, { translateY:[0, H + 24], duration:420, delay:130, ease:FALL });
-      if (res !== 'failed'){
-        setTimeout(() => {
-          const panel = $('.authp');
-          if (panel) animate(panel, { translateY:[6, 0], duration:160, ease:'outQuad',
-            onComplete(){ panel.style.transform = ''; } });
-        }, 200);
-      }
-      setTimeout(finish, 560);
-    };
-    setTimeout(drop, 940);
+    }, 320);
   },
 };
 
@@ -15936,192 +15722,28 @@ const Transit = {
   ORDER: { home:0, record:1, scan:2, rewards:3, profile:4,
            board:0, bmeet:1, bcheckin:2, bmembers:3, baccount:4 },
 
-  CHAR: {
-    home:    { in:170, hold:100, out:230, angle:9, par:26, tone:true },
-    record:  { in:200, hold:120, out:280, angle:4, par:16 },
-    scan:    { in:150, hold:80,  out:200, angle:0, par:10 },
-    rewards: { in:180, hold:120, out:260, angle:7, par:22, layered:true, flash:true },
-    profile: { in:220, hold:130, out:300, angle:6, par:14 },
-    board:   { in:160, hold:90,  out:210, angle:0, par:12, crisp:true },
-    auth:    { in:180, hold:90,  out:240, angle:3, par:0,  vertical:true },
-  },
-
-  profile(to){
-    if (this.CHAR[to]) return this.CHAR[to];
-    return to && to[0] === 'b' ? this.CHAR.board : this.CHAR.home;
-  },
-
   direction(from, to){
     const a = this.ORDER[from], b = this.ORDER[to];
     if (a === undefined || b === undefined || a === b) return 0;
     return b > a ? 1 : -1;
   },
 
-  frame(view){
-    const r = view.getBoundingClientRect();
-    const f = $('.folio');
-    const cs = f && getComputedStyle(f);
-    const shown = Boolean(cs && cs.display !== 'none');
-    const foot = shown && cs.position === 'fixed';
-    const top = shown && !foot ? Math.max(0, f.getBoundingClientRect().bottom) : 0;
-    const floor = foot ? f.getBoundingClientRect().top : innerHeight;
-    return { left:r.left, width:r.width, top, height:Math.max(0, floor - top), viewTop:r.top };
-  },
-
-  ghost(view, f){
-    const box = document.createElement('div');
-    box.className = 'ghost';
-    box.style.cssText = `left:${f.left}px;top:${f.top}px;width:${f.width}px;height:${f.height}px`;
-    const clone = view.cloneNode(true);
-    clone.removeAttribute('id');
-    clone.removeAttribute('tabindex');
-    clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
-    const cs = getComputedStyle(view);
-    clone.style.cssText = `position:absolute;left:0;top:${f.viewTop - f.top}px;width:${f.width}px;` +
-      `box-sizing:${cs.boxSizing};padding:${cs.padding};margin:0;max-width:none`;
-    const src = view.querySelectorAll('canvas'), dst = clone.querySelectorAll('canvas');
-    src.forEach((cv, i) => { try { dst[i].getContext('2d').drawImage(cv, 0, 0); } catch (_) {} });
-    box.appendChild(clone);
-    document.body.appendChild(box);
-    return box;
-  },
-
-  slab(f, dir, c){
-    const box = document.createElement('div');
-    box.className = 'cutbox';
-    box.style.cssText = `left:${f.left}px;top:${f.top}px;width:${f.width}px;height:${f.height}px`;
-    const W = f.width, H = f.height, rad = c.angle * Math.PI / 180;
-    const vertical = Boolean(c.vertical) || dir === 0;
-    const make = cls => {
-      const el = document.createElement('div');
-      el.className = 'slab' + (cls ? ' ' + cls : '');
-      return el;
-    };
-    let off, enter, axis, shape;
-    if (!vertical){
-      off = Math.round(Math.tan(rad) * H);
-      shape = el => {
-        el.style.cssText += `;left:${-off}px;top:0;width:${W + 2 * off}px;height:${H}px`;
-        el.style.clipPath = dir > 0
-          ? `polygon(${off}px 0, 100% 0, calc(100% - ${off}px) 100%, 0 100%)`
-          : `polygon(0 0, calc(100% - ${off}px) 0, 100% 100%, ${off}px 100%)`;
-      };
-      axis = 'translateX';
-      enter = dir > 0 ? W + off : -(W + off);
-    } else {
-      off = Math.round(Math.tan(rad) * W);
-      shape = el => {
-        el.style.cssText += `;left:0;top:${-off}px;width:${W}px;height:${H + 2 * off}px`;
-        el.style.clipPath = `polygon(0 ${off}px, 100% 0, 100% calc(100% - ${off}px), 0 100%)`;
-      };
-      axis = 'translateY';
-      enter = -(H + off);
-    }
-    const under = c.layered ? make('slab--tone') : null;
-    if (under){ shape(under); box.appendChild(under); }
-    const el = make('');
-    shape(el);
-    if (c.tone && !vertical){
-      const t = document.createElement('i');
-      t.className = 'slab__tone';
-      const S = Math.round(W * .12) + off;
-      t.style.cssText = (dir > 0 ? 'left:0;' : 'right:0;') + `width:${S}px`;
-      t.style.clipPath = dir > 0
-        ? `polygon(${off}px 0, 100% 0, calc(100% - ${off}px) 100%, 0 100%)`
-        : `polygon(0 0, calc(100% - ${off}px) 0, 100% 100%, ${off}px 100%)`;
-      el.appendChild(t);
-    }
-    box.appendChild(el);
-    document.body.appendChild(box);
-    return { box, el, under, off, enter, exit:-enter, axis, vertical };
-  },
-
-  word(view, f, cut){
-    const title = view.querySelector('.rechead__title');
-    if (!title) return null;
-    const r = title.getBoundingClientRect();
-    if (r.width < 4 || r.top < f.top - 4 || r.bottom > f.top + f.height + 4) return null;
-    const cs = getComputedStyle(title);
-    const w = document.createElement('p');
-    w.className = 'slab__word';
-    w.textContent = title.textContent;
-    const x = r.left - f.left + (cut.vertical ? 0 : cut.off);
-    const y = r.top - f.top + (cut.vertical ? cut.off : 0);
-    w.style.cssText = `left:${x}px;top:${y}px;width:${Math.ceil(r.width) + 6}px;` +
-      `font-family:${cs.fontFamily};font-size:${cs.fontSize};font-weight:${cs.fontWeight};` +
-      `font-style:${cs.fontStyle};letter-spacing:${cs.letterSpacing};text-transform:${cs.textTransform};` +
-      `line-height:${cs.lineHeight};padding:${cs.padding}`;
-    cut.el.appendChild(w);
-    return w;
-  },
-
+  /* The page swaps in one frame; only the chapter opener moves. */
   run(from, to, swap){
-    const view = $('#view');
     const doSwap = typeof swap === 'function' ? swap : () => {};
-    if (!window.animate || !view){ doSwap(); return Promise.resolve(); }
-
-    const f = this.frame(view);
-    const box = this.ghost(view, f);
-
-    if (Motion.reduced){
-      return new Promise(res => {
-        let done = false;
-        const finish = () => { if (done) return; done = true; try { box.remove(); } catch (_) {} Motion.settle(view); res(); };
-        try { doSwap(); } catch (_) {}
-        animate(box, { opacity:[1, 0], duration:140, ease:'linear', onComplete:finish });
-        setTimeout(finish, 420);
-      });
-    }
-
-    const c = this.profile(to);
     const dir = this.direction(from, to);
-    const cut = this.slab(f, dir, c);
-    const IN  = c.crisp ? cubicBezier(.85, 0, .1, 1) : cubicBezier(.7, 0, .2, 1);
-    const OUT = c.crisp ? cubicBezier(.85, 0, .1, 1) : cubicBezier(.55, 0, .12, 1);
-    const par = dir * c.par;
-    const LAG = 50;
-
-    return new Promise(res => {
-      let settled = false;
-      const finish = () => {
-        if (settled) return; settled = true;
-        try { cut.box.remove(); } catch (_) {}
-        try { box.remove(); } catch (_) {}
-        Motion.settle(view);
-        res();
-      };
-
-      if (cut.under){
-        aset(cut.under, { [cut.axis]:cut.enter });
-        animate(cut.under, { [cut.axis]:[cut.enter, 0], duration:c.in, ease:IN });
-      }
-      aset(cut.el, { [cut.axis]:cut.enter });
-      animate(cut.el, { [cut.axis]:[cut.enter, 0], duration:c.in, delay:cut.under ? LAG : 0, ease:IN });
-      if (par) animate(box, { translateX:[0, -par], duration:c.in, ease:'outQuad' });
-
-      const covered = c.in + (cut.under ? LAG : 0);
-      setTimeout(() => {
-        try { doSwap(); } catch (_) {}
-        try { box.remove(); } catch (_) {}
-        aset(view, { translateX:par * .6 });
-        const w = this.word(view, f, cut);
-        if (w){
-          aset(w, { opacity:0, scale:1.18 });
-          animate(w, { opacity:[0, 1], duration:1, delay:20 });
-          animate(w, { scale:[1.18, 1], duration:90, delay:20, ease:STEP(2) });
-        }
-      }, covered);
-
-      const leave = covered + c.hold;
-      setTimeout(() => {
-        animate(cut.el, { [cut.axis]:[0, cut.exit], duration:c.out, ease:OUT });
-        if (cut.under) animate(cut.under, { [cut.axis]:[0, cut.exit], duration:c.out, delay:LAG, ease:OUT });
-        if (c.flash) Impact.flash(.14, { dur:70, delay:30 });
-        animate(view, { translateX:[par * .6, 0], duration:c.out, ease:'outCubic', onComplete:finish });
-      }, leave);
-
-      setTimeout(finish, leave + c.out + (cut.under ? LAG : 0) + 200);
-    });
+    try { doSwap(); } catch (_) {}
+    if (Motion.reduced || !window.animate) return Promise.resolve();
+    const view = $('#view');
+    const head = view && view.querySelector('.rechead');
+    if (head){
+      head.classList.remove('is-cut', 'is-cut--back');
+      void head.offsetWidth;
+      head.classList.add('is-cut');
+      if (dir < 0) head.classList.add('is-cut--back');
+      FX.slamType(head, 30);
+    }
+    return new Promise(res => setTimeout(res, 170));
   },
 };
 
@@ -16174,7 +15796,10 @@ function paintAttendanceCount(meetingId){
     catch (_) { text = '—'; }
     const node = el();
     if (!node) return clearInterval(countTimer);
+    const before = Number(node.textContent);
     node.textContent = text;
+    const after = Number(text);
+    if (Number.isFinite(before) && Number.isFinite(after) && after > before) FX.countUp(node);
   };
   pull();
   countTimer = setInterval(pull, 6000);
@@ -16294,21 +15919,8 @@ const Scanner = {
     this.zoom = { el, drop };
   },
 
-  showLoader(){
-    const ret = $('#reticle');
-    if (!ret || $('#camLoader')) return;
-    const l = document.createElement('div');
-    l.className = 'loader'; l.id = 'camLoader';
-
-    ret.classList.add('reticle--wait');
-
-    l.innerHTML = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor"
-        stroke-width="3" aria-hidden="true">
-      <circle cx="50" cy="50" r="42" stroke-dasharray="42 90"/>
-      <circle cx="50" cy="50" r="30" stroke-dasharray="24 70" opacity=".5"/></svg>`;
-    ret.appendChild(l);
-  },
-  hideLoader(){ $('#camLoader')?.remove(); $('#reticle')?.classList.remove('reticle--wait'); },
+  showLoader(){ $('#reticle')?.classList.add('reticle--wait'); },
+  hideLoader(){ $('#reticle')?.classList.remove('reticle--wait'); },
 
   loop(video, run){
     const step = () => {
@@ -16325,7 +15937,6 @@ const Scanner = {
       if (hit && hit.data){
         this.locked = true;
         this.setState('hit', 'Got it');
-        FX.scanLock();
         setTimeout(() => submitSeal(hit.data, true), 190);
       }
     };
@@ -16376,8 +15987,6 @@ const Landing = {
   seq: 0,
   active: false,
   armed: null,
-  scene: null,
-
   cellFor(meetingId){
     const p = Rules.progress();
     const chrono = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
@@ -16406,15 +16015,14 @@ const Landing = {
     return false;
   },
 
+  /* The viewer stays in its verified state while the record is re-read;
+     then the page cuts to the card and the stamp lands on its cell. */
   async run(meeting){
     const seq = ++this.seq;
     this.active = true;
     this.armed = null;
-    if (this.scene) this.scene.clear();
 
-    const scene = FX.stampAcquire(meeting);
-    this.scene = scene;
-    const held = new Promise(r => setTimeout(r, Motion.off ? 750 : 900));
+    const held = new Promise(r => setTimeout(r, Motion.off ? 200 : 520));
     const [fresh] = await Promise.all([this.refresh(3), held]);
     if (seq !== this.seq) return;
 
@@ -16425,13 +16033,9 @@ const Landing = {
     const cell = this.armed;
     this.armed = null;
     this.active = false;
-    this.scene = null;
 
-    scene.lift(() => {
-      if (seq !== this.seq) return;
-      if (cell && document.body.contains(cell)) FX.stampLand(cell);
-      if (!fresh) Store.hydrate();
-    });
+    if (cell && document.body.contains(cell)) FX.stampLand(cell);
+    if (!fresh) Store.hydrate();
   },
 };
 
@@ -16637,7 +16241,6 @@ async function go(id, opts = {}){
     current = id;
     syncHash(id);
     Motion.settle(view);
-    Reveal.clear();
     document.documentElement.dataset.screen = id;
 
     view.innerHTML = Views[id]();
@@ -16648,7 +16251,9 @@ async function go(id, opts = {}){
     measureFolio();
     try { scrollTo(0, 0); } catch (_) {}
     afterRender(id, nav, Boolean(opts.covered));
-    view.focus({ preventScroll:true });
+    const h1 = view.querySelector('.rechead__title, .spread__wm');
+    if (h1) h1.setAttribute('tabindex', '-1');
+    (h1 || view).focus({ preventScroll:true });
   };
 
   const same = from === id && !opts.force;
@@ -16668,14 +16273,10 @@ async function go(id, opts = {}){
 const seenUnlocked = new Set();
 
 function playViewIntro(id, nav = false){
-  if (id === 'home'){
-    if (pendingStamp){
-      const cell = Landing.cellFor(pendingStamp.meetingId);
-      pendingStamp = null;
-      Landing.prime(cell);
-    } else if (!nav){
-      FX.sealGrid($('#seals'));
-    }
+  if (id === 'home' && pendingStamp){
+    const cell = Landing.cellFor(pendingStamp.meetingId);
+    pendingStamp = null;
+    Landing.prime(cell);
   }
 
   if (id === 'rewards'){
@@ -16684,7 +16285,7 @@ function playViewIntro(id, nav = false){
       const rid = row.dataset.reward;
       if (seenUnlocked.has(rid)) return;
       seenUnlocked.add(rid);
-      setTimeout(() => FX.rewardUnlock(row), 420);
+      setTimeout(() => FX.rewardUnlock(row), 260);
     });
   }
 }
@@ -16812,12 +16413,8 @@ document.addEventListener('submit', async e => {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
 
-    const scene = Scenes.opening({ tail: up ? 'Member joined' : 'Welcome back',
-      reveal(){ FX.pageEntrance($('#view')); playViewIntro(current); } });
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      go('home', { instant:true, covered:true });
-      scene.release();
-    }));
+    go('home', { instant:true });
+    FX.enter($('#view'));
   } catch (err){
     authErr(err && err.message ? err.message : 'Something went wrong. Try again.');
     authBusy(false);
@@ -16959,7 +16556,6 @@ document.addEventListener('click', e => {
   const out = e.target.closest('[data-signout]');
   if (out){
     Scenes.exit({
-      btn: out,
       swap: () => Store.signOut().then(() => {
         AuthUI.mode = 'in';
         go('auth', { instant:true });
@@ -16989,7 +16585,7 @@ document.addEventListener('click', e => {
     claim.disabled = true;
     Store.claimReward(claim.dataset.claim).then(r => {
       go('rewards', { instant:true });
-      FX.claimStamp($(`[data-reward="${claim.dataset.claim}"]`));
+      FX.claimed($(`[data-reward="${claim.dataset.claim}"]`));
       setTimeout(() => toast({ key:'claim', title:`${r.name} claimed`,
         detail:'Show this screen to a board member to pick it up.' }), 260);
     }).catch(() => {
@@ -17074,7 +16670,7 @@ function boardGoto(next){
 }
 
 function paintMotion(){
-  $$('[data-motion]').forEach(b => {
+  $$('button[data-motion]').forEach(b => {
     b.setAttribute('role', 'switch');
     b.setAttribute('aria-checked', String(!Motion.forced));
     b.setAttribute('aria-label', 'Motion');
@@ -17119,7 +16715,7 @@ let opening = null;
 try {
   opening = Scenes.opening({ root:$('#boot'), reveal(){
     booted = true;
-    FX.pageEntrance($('#view'));
+    FX.enter($('#view'));
     playViewIntro(current);
   } });
 } catch (_) {

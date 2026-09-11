@@ -139,7 +139,6 @@ async function go(id, opts = {}){
     current = id;
     syncHash(id);
     Motion.settle(view);
-    Reveal.clear();
     document.documentElement.dataset.screen = id;
 
     view.innerHTML = Views[id]();
@@ -150,7 +149,9 @@ async function go(id, opts = {}){
     measureFolio();
     try { scrollTo(0, 0); } catch (_) {}
     afterRender(id, nav, Boolean(opts.covered));
-    view.focus({ preventScroll:true });
+    const h1 = view.querySelector('.rechead__title, .spread__wm');
+    if (h1) h1.setAttribute('tabindex', '-1');
+    (h1 || view).focus({ preventScroll:true });
   };
 
   const same = from === id && !opts.force;
@@ -170,14 +171,10 @@ async function go(id, opts = {}){
 const seenUnlocked = new Set();
 
 function playViewIntro(id, nav = false){
-  if (id === 'home'){
-    if (pendingStamp){
-      const cell = Landing.cellFor(pendingStamp.meetingId);
-      pendingStamp = null;
-      Landing.prime(cell);
-    } else if (!nav){
-      FX.sealGrid($('#seals'));
-    }
+  if (id === 'home' && pendingStamp){
+    const cell = Landing.cellFor(pendingStamp.meetingId);
+    pendingStamp = null;
+    Landing.prime(cell);
   }
 
   if (id === 'rewards'){
@@ -186,7 +183,7 @@ function playViewIntro(id, nav = false){
       const rid = row.dataset.reward;
       if (seenUnlocked.has(rid)) return;
       seenUnlocked.add(rid);
-      setTimeout(() => FX.rewardUnlock(row), 420);
+      setTimeout(() => FX.rewardUnlock(row), 260);
     });
   }
 }
@@ -314,12 +311,8 @@ document.addEventListener('submit', async e => {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
 
-    const scene = Scenes.opening({ tail: up ? 'Member joined' : 'Welcome back',
-      reveal(){ FX.pageEntrance($('#view')); playViewIntro(current); } });
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      go('home', { instant:true, covered:true });
-      scene.release();
-    }));
+    go('home', { instant:true });
+    FX.enter($('#view'));
   } catch (err){
     authErr(err && err.message ? err.message : 'Something went wrong. Try again.');
     authBusy(false);
@@ -461,7 +454,6 @@ document.addEventListener('click', e => {
   const out = e.target.closest('[data-signout]');
   if (out){
     Scenes.exit({
-      btn: out,
       swap: () => Store.signOut().then(() => {
         AuthUI.mode = 'in';
         go('auth', { instant:true });
@@ -491,7 +483,7 @@ document.addEventListener('click', e => {
     claim.disabled = true;
     Store.claimReward(claim.dataset.claim).then(r => {
       go('rewards', { instant:true });
-      FX.claimStamp($(`[data-reward="${claim.dataset.claim}"]`));
+      FX.claimed($(`[data-reward="${claim.dataset.claim}"]`));
       setTimeout(() => toast({ key:'claim', title:`${r.name} claimed`,
         detail:'Show this screen to a board member to pick it up.' }), 260);
     }).catch(() => {
@@ -576,7 +568,7 @@ function boardGoto(next){
 }
 
 function paintMotion(){
-  $$('[data-motion]').forEach(b => {
+  $$('button[data-motion]').forEach(b => {
     b.setAttribute('role', 'switch');
     b.setAttribute('aria-checked', String(!Motion.forced));
     b.setAttribute('aria-label', 'Motion');
@@ -621,7 +613,7 @@ let opening = null;
 try {
   opening = Scenes.opening({ root:$('#boot'), reveal(){
     booted = true;
-    FX.pageEntrance($('#view'));
+    FX.enter($('#view'));
     playViewIntro(current);
   } });
 } catch (_) {
