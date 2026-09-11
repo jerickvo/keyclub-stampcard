@@ -95,7 +95,7 @@ const BoardUI = {
   },
 
   when(m){
-    return `${esc(spanTime(m.start_time, m.end_time))}${
+    return `<span class="nb">${esc(spanTime(m.start_time, m.end_time))}</span>${
       m.location && m.location !== Schedule.PLACE ? ' · ' + esc(m.location) : ''}`;
   },
 
@@ -322,7 +322,7 @@ const BoardUI = {
       <section class="standing" data-enter>
         <p class="fig standing__fig">
           <span class="fig__n detail__name">${esc(m.username)}</span>
-          <span class="fig__of">${m.stamps} ${m.stamps === 1 ? 'stamp' : 'stamps'} · joined ${esc(fmtDay(m.created_at))}</span>
+          <span class="fig__of">${m.stamps} ${m.stamps === 1 ? 'stamp' : 'stamps'}<span class="fig__ln">joined ${esc(fmtDay(m.created_at))}</span></span>
         </p>
         <ul class="standing__rest">
           <li class="standing__row"><span class="standing__lab">Meetings attended</span>
@@ -362,7 +362,7 @@ const BoardUI = {
       <section class="standing" data-enter>
         <p class="fig standing__fig">
           <span class="fig__n">GM ${pad(m.meeting_number)}</span>
-          <span class="fig__of">${esc(fmtDate(m.meeting_date))} · ${this.when(m)}</span>
+          <span class="fig__of">${esc(fmtDate(m.meeting_date))}<span class="fig__ln">${this.when(m)}</span></span>
         </p>
         <ul class="standing__rest">
           <li class="standing__row"><span class="standing__lab">Checked in</span>

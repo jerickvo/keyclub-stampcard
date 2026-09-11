@@ -145,6 +145,8 @@ body{color:var(--ink);font:400 var(--t-body)/1.45 var(--f-body);letter-spacing:0
   -webkit-font-smoothing:antialiased}
 button,input,select,textarea{font-family:inherit;color:inherit}
 [hidden]{display:none!important}
+/* a clock reading, a date, a count: reads as one word, wraps as one */
+.nb{white-space:nowrap}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
   overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 :focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:3px}
@@ -249,6 +251,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .fig__n{font-family:var(--f-head);font-weight:400;font-size:var(--t-fig);
   line-height:.85;letter-spacing:-.01em;color:var(--ink);padding-bottom:.06em}
 .fig__of{font-size:var(--t-caption);line-height:1.25;color:var(--ink-2);max-width:26ch}
+.fig__ln{display:block}
 
 .kicker{display:inline-block;font:400 var(--t-caption)/1.25 var(--f-body);
   letter-spacing:0;color:var(--ink-2)}
@@ -15064,7 +15067,7 @@ const BoardUI = {
   },
 
   when(m){
-    return `${esc(spanTime(m.start_time, m.end_time))}${
+    return `<span class="nb">${esc(spanTime(m.start_time, m.end_time))}</span>${
       m.location && m.location !== Schedule.PLACE ? ' · ' + esc(m.location) : ''}`;
   },
 
@@ -15291,7 +15294,7 @@ const BoardUI = {
       <section class="standing" data-enter>
         <p class="fig standing__fig">
           <span class="fig__n detail__name">${esc(m.username)}</span>
-          <span class="fig__of">${m.stamps} ${m.stamps === 1 ? 'stamp' : 'stamps'} · joined ${esc(fmtDay(m.created_at))}</span>
+          <span class="fig__of">${m.stamps} ${m.stamps === 1 ? 'stamp' : 'stamps'}<span class="fig__ln">joined ${esc(fmtDay(m.created_at))}</span></span>
         </p>
         <ul class="standing__rest">
           <li class="standing__row"><span class="standing__lab">Meetings attended</span>
@@ -15331,7 +15334,7 @@ const BoardUI = {
       <section class="standing" data-enter>
         <p class="fig standing__fig">
           <span class="fig__n">GM ${pad(m.meeting_number)}</span>
-          <span class="fig__of">${esc(fmtDate(m.meeting_date))} · ${this.when(m)}</span>
+          <span class="fig__of">${esc(fmtDate(m.meeting_date))}<span class="fig__ln">${this.when(m)}</span></span>
         </p>
         <ul class="standing__rest">
           <li class="standing__row"><span class="standing__lab">Checked in</span>
