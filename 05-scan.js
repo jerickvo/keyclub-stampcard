@@ -44,7 +44,10 @@ function paintAttendanceCount(meetingId){
     catch (_) { text = '—'; }
     const node = el();
     if (!node) return clearInterval(countTimer);
+    const before = Number(node.textContent);
     node.textContent = text;
+    const after = Number(text);
+    if (Number.isFinite(before) && Number.isFinite(after) && after > before) FX.countUp(node);
   };
   pull();
   countTimer = setInterval(pull, 6000);
@@ -114,7 +117,7 @@ const Scanner = {
 
     this.cv = document.createElement('canvas');
     this.ctx = this.cv.getContext('2d', { willReadFrequently:true });
-    this.setState('live', 'Looking for the check-in code');
+    this.setState('live', 'Point at the code');
     this.mountZoom();
     this.loop(video, run);
   },
@@ -164,21 +167,8 @@ const Scanner = {
     this.zoom = { el, drop };
   },
 
-  showLoader(){
-    const ret = $('#reticle');
-    if (!ret || $('#camLoader')) return;
-    const l = document.createElement('div');
-    l.className = 'loader'; l.id = 'camLoader';
-
-    ret.classList.add('reticle--wait');
-
-    l.innerHTML = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor"
-        stroke-width="3" aria-hidden="true">
-      <circle cx="50" cy="50" r="42" stroke-dasharray="42 90"/>
-      <circle cx="50" cy="50" r="30" stroke-dasharray="24 70" opacity=".5"/></svg>`;
-    ret.appendChild(l);
-  },
-  hideLoader(){ $('#camLoader')?.remove(); $('#reticle')?.classList.remove('reticle--wait'); },
+  showLoader(){ $('#reticle')?.classList.add('reticle--wait'); },
+  hideLoader(){ $('#reticle')?.classList.remove('reticle--wait'); },
 
   loop(video, run){
     const step = () => {
@@ -194,8 +184,7 @@ const Scanner = {
       const hit = jsQR(img.data, w, h, { inversionAttempts:'dontInvert' });
       if (hit && hit.data){
         this.locked = true;
-        this.setState('hit', 'Locked');
-        FX.scanLock();
+        this.setState('hit', 'Got it');
         setTimeout(() => submitSeal(hit.data, true), 190);
       }
     };
@@ -246,8 +235,6 @@ const Landing = {
   seq: 0,
   active: false,
   armed: null,
-  scene: null,
-
   cellFor(meetingId){
     const p = Rules.progress();
     const chrono = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
@@ -276,15 +263,14 @@ const Landing = {
     return false;
   },
 
+  /* The viewer stays in its verified state while the record is re-read;
+     then the page cuts to the card and the stamp lands on its cell. */
   async run(meeting){
     const seq = ++this.seq;
     this.active = true;
     this.armed = null;
-    if (this.scene) this.scene.clear();
 
-    const scene = FX.stampAcquire(meeting);
-    this.scene = scene;
-    const held = new Promise(r => setTimeout(r, Motion.off ? 750 : 900));
+    const held = new Promise(r => setTimeout(r, Motion.off ? 200 : 520));
     const [fresh] = await Promise.all([this.refresh(3), held]);
     if (seq !== this.seq) return;
 
@@ -295,13 +281,9 @@ const Landing = {
     const cell = this.armed;
     this.armed = null;
     this.active = false;
-    this.scene = null;
 
-    scene.lift(() => {
-      if (seq !== this.seq) return;
-      if (cell && document.body.contains(cell)) FX.stampLand(cell);
-      if (!fresh) Store.hydrate();
-    });
+    if (cell && document.body.contains(cell)) FX.stampLand(cell);
+    if (!fresh) Store.hydrate();
   },
 };
 
@@ -331,7 +313,7 @@ async function submitSeal(raw, fromCamera){
     return;
   }
 
-  if (fromCamera) Scanner.setState('busy', 'Checking with the server');
+  if (fromCamera) Scanner.setState('busy', 'Checking');
 
   const result = await Backend.verifyCode(raw);
 
@@ -359,6 +341,6 @@ function rejectVisual(code){
   setTimeout(() => {
     if (!$('#reticle')) return;
     Scanner.locked = false;
-    Scanner.setState('live', 'Looking for the check-in code');
+    Scanner.setState('live', 'Point at the code');
   }, 1900);
 }

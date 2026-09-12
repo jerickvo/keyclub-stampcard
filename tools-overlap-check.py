@@ -38,7 +38,7 @@ JS = r"""
 
   // an element that paints its own text (not just via children)
   const textEls = [];
-  const walk = document.querySelectorAll('main#view *, .tabs *, .rail *, .topbar *');
+  const walk = document.querySelectorAll('main#view *, .folio *');
   for (const el of walk) {
     if (isDecor(el)) continue;
     const cs = getComputedStyle(el);
@@ -90,7 +90,7 @@ JS = r"""
   // borders that nearly touch: siblings that each draw an edge
   const GAP = 1.0;
   const boxes = [];
-  for (const el of document.querySelectorAll('main#view .panel, main#view .rec, main#view .head, main#view .strike, main#view .stat, main#view .seal, main#view .narr, main#view .viewer, main#view .manual, main#view .qrpanel')) {
+  for (const el of document.querySelectorAll('main#view .card, main#view .strip, main#view .seal, main#view .viewer, main#view .proj, main#view .rung, main#view .bform, main#view .bconfirm')) {
     const r = el.getBoundingClientRect();
     if (r.width < 4 || r.height < 4) continue;
     boxes.push({el, r});

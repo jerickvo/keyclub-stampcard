@@ -16,10 +16,10 @@ dev.html              multi-file source page (needs a local server)
 build.py              rebuilds index.html from dev.html + the sources
 
 --- sources, in load order ---
-fonts.css             the four faces, embedded as data URIs
-keystamp.css          layout, shell, motion primitives, sign-out scene
-artdirection.css      screentone, panels, buttons, board furniture
-identity.css          design tokens, card face, stamps, spreads
+fonts.css             the five faces, embedded as data URIs
+keystamp.css          tokens, ground, the folio line, type roles, buttons,
+                      inputs, rows, toasts, the boot scene
+identity.css          the stamp card, the live strip, each screen's composition
 00-guard.js           error handling + boot watchdog (loads first)
 jsQR.js               vendored — reads QR codes from the camera
 qrcode.js             vendored — draws the code on the board screen
@@ -27,11 +27,11 @@ anime.umd.min.js      vendored — animation engine
 anime-bridge.js       exposes the anime v4 namespace, degrades if absent
 01a-backend.js        Supabase adapters, config validation, reward tiers
 01-core.js            Store, Rules, Schedule, seal + icon artwork
-02-motion.js          Motion base layer, Reveal, formatting helpers
+02-motion.js          Motion base layer, toasts, formatting helpers
 03-views.js           member screens and the stamp-card component
 03b-board.js          board screens
-04-fx.js              FX layer: impacts, stamps, seals, reveals
-04b-scenes.js         opening, sign-out exit and page transitions
+04-fx.js              FX layer: the title slam, presses, the stamp landing
+04b-scenes.js         the opening, the sign-out drain, page cuts
 05-scan.js            camera scanner, board projector, attendance count
 06-app.js             router, interactions, boot
 
@@ -78,23 +78,34 @@ member set.
 
 | Member | | Board | |
 |---|---|---|---|
-| Home | the stamp card | Club Tools | the meeting happening now + the year's standing |
+| Card | the stamp card, the open meeting, the next dates | Club | the meeting happening now + the year's standing |
 | Record | every meeting, stamped or missed | Meetings | schedule and delete meetings |
 | Scan | camera + manual code entry | Check-In | the projector QR and the live count |
 | Rewards | 10 / 20 / 30 tiers | Members | roster, search, per-member detail |
-| Member | identity plate + the card | Account | sign-out and the motion setting |
+| *your name* | standing, attendance, rewards; the account | *your name* | sign-out and the motion setting |
 
-Navigation is the page's left margin from 1024px up (`.rail`) and a tab bar
-below that. The rail reuses what the other screens already do: the wordmark
-over the same hand-cut rule the page titles use, then the five screens as a
-mono number column beside heading-face labels, the way the Meetings lists set
-"GM 07" beside a date. The current screen is marked by a small burgundy ink
-dab in the gutter and its number in the same colour (`--seal`, the one accent
-in the palette). The account block sits on a straight 2px rule like a panel
-header: the member's name in the heading face with the role as mono
-metadata, the motion toggle as a filled or hollow square with its word, and
-Sign out as the same small outlined button the lists use for row actions.
-No icons, no boxes, no decoration.
+The fifth screen is titled with the signed-in person's first name; its folio
+entry reads the same.
+
+Navigation is a folio line: one running head that lists the five screens in
+a fixed order, in small type, a mono number beside each word. The current
+screen shows only its number, in burgundy (`--seal`, the one accent in the
+palette), with a small burgundy square notching the hairline; its word has
+been promoted into the page title, where it sits beside a hollow chapter
+numeral. On phones the line is the foot of the page: paper, one hairline,
+flush left. From 768px it is the sticky head, with the signed-in name (a
+button to the fifth screen), the role and the wordmark at the right.
+`paintNav()` in `06-app.js` draws it and `measureFolio()` writes its height
+into `--folio-h` so the page and the scanner can make room. No rail, no tab
+bar, no icons.
+
+The rest of the visual system is small on purpose. One object casts a shadow
+(the card). One drawn line (the torn rule under a chapter title). Black fill
+means the live thing: the open meeting's strip, the card's ID plate, the
+projector while check-in is open. Burgundy means here and now: the folio
+mark, the strip's dab, the rail beside a rung that is ready to claim. Four
+edge weights, five gaps and six type steps are defined once as tokens in
+`keystamp.css`; page rules read the tokens and never call `clamp()`.
 
 Routing is hash-based (`#/record`). `gate()` in `06-app.js` is the enforcement
 point: signed-out visitors land on the sign-in spread whatever the hash says, a
@@ -198,47 +209,37 @@ over; until it is run, the client falls back to the old name.
 
 ## Motion
 
-One scene module, `04b-scenes.js`, owns the three moments that cover the whole
-screen, and one `Transit` object owns every page change.
+Three ideas, and nothing else moves.
 
-- **Opening** (`Scenes.opening`) — a manga page: three outlined panels, ink
-  wiped into each in hard steps, the seal and the wordmark stamped in, then the
-  panels part and the paper sheet drops to reveal the app beneath. The cold
-  load uses the static markup in `dev.html` and CSS keyframes for the intro
-  beats, so the page composes itself from the first paint even before the
-  scripts arrive; JS only holds the composed page until the first render is
-  done and then opens it. Signing in builds the same scene and slides it over
-  the form. ~1.3s from first paint, never less than 1s on a fast load.
-- **Page transitions** (`Transit.run`) — the gutter cut. An ink panel with a
-  tilted leading edge sweeps in from the direction of travel (forward along
-  the tab strip from the right, back from the left) and pushes the leaving
-  page out; under full cover the page swaps and the destination's title is
-  stamped onto the panel at the exact position of the real title; the panel
-  sweeps off and the new page settles with its title already in place. Each
-  destination keeps the same cut with its own personality: Home quick with a
-  halftone edge, Record slow and straight, Scan short, Rewards a layered
-  halftone panel under the ink with a paper flash, Member slowest, board
-  tools crisp. 430–650ms. Reduced motion crossfades the snapshot in 140ms.
-- **Sign-out** (`Scenes.exit`) — the panels slam shut over the app, the paper
-  fills the gutters, SIGNED OUT is stamped, and the whole page drops away to
-  the sign-in spread. Distinct from both the opening and the transitions.
-- **Stamp landing** (`Landing` in `05-scan.js`, `FX.stampAcquire` and
-  `FX.stampLand` in `04-fx.js`) — one ordered sequence rather than parallel
-  timers. The moment the server confirms a scan the black "+1" interstitial
-  covers the screen; the store re-reads attendance underneath it (retrying a
-  few times if the network is slow) and the cover holds until the data is in
-  and at least 900ms have passed. Home is then rendered under the cover, the
-  cell that belongs to the verified meeting is found by that meeting's id in
-  the chronological record (so a stale count can never pick the wrong cell),
-  hidden, and scrolled into view; the cover lifts, and only when it has left
-  does the stamp slam onto the card. If the re-read never succeeds the cover
-  lifts without a landing and the page shows its normal load-failure state.
-  A second scan that starts mid-sequence supersedes the first cleanly.
+- **Arrival** (`Scenes.opening` in `04b-scenes.js`) — the boot scene, and
+  only the boot scene. Three outlined panels fill in hard steps, the seal and
+  the wordmark land, the panels part and the paper drops to reveal the first
+  render. The cold load uses the static markup in `dev.html` and CSS
+  keyframes, so the page composes itself before the scripts arrive; JS holds
+  it until the first render is done. Never shorter than 700ms. Signing in
+  does not replay it: Card is rendered and its title struck in.
+- **The cut** (`Transit.run`) — every page change. The new page is swapped in
+  at once; the rule under its chapter title sweeps in over five frames (from
+  the left going forward, from the right coming back) and the numeral and
+  the title are struck into place (`FX.slamType`). Body copy is always simply
+  present. Sign-out (`Scenes.exit`) is the same idea inverted: the page
+  drains downward in six steps and the sign-in spread is underneath.
+- **Impact** (`Landing` in `05-scan.js`, `FX.stampLand` in `04-fx.js`) — the
+  stamp lands on its own cell. When the server confirms a scan the viewer
+  holds for half a second while the store re-reads attendance; Card is then
+  rendered with the verified meeting's cell hidden (found by that meeting's
+  id in the chronological record, never by count) and the stamp comes down in
+  four cuts while the card takes one frame of tint. A rejected scan shakes
+  the reticle. A claimed rung, the projector's OPEN and its live count press
+  once.
 
-Without anime.js the app still works: `Motion.off` turns every animation into an
-instant state change, and `prefers-reduced-motion` (or the account setting)
-shows the composed scenes as stills with a short fade and swaps pages with no
-movement.
+Messages are flat ink strips that cut in and out, one at a time. They wait
+while hovered or focused; a tap or Escape dismisses them.
+
+Without anime.js the app still works: `Motion.off` turns every animation into
+an instant state change. `prefers-reduced-motion` and the account setting
+(`data-motion-pref` on the root) do the same, and the boot scene is shown
+composed and removed at once.
 
 ---
 

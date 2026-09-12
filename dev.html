@@ -20,7 +20,6 @@
 
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/keystamp.css">
-<link rel="stylesheet" href="css/artdirection.css">
 <link rel="stylesheet" href="css/identity.css">
 </head>
 <body>
@@ -36,37 +35,17 @@
   </div>
 </div>
 
-<div class="ground" aria-hidden="true">
-  <div class="ground__slash"></div>
-  <div class="ground__bleed"></div>
-  <div class="ground__corner"></div>
-  <div class="ground__d1"></div>
-  <div class="ground__d2"></div>
-  <div class="ground__tone"></div>
-</div>
-
 <div class="shell" id="shell">
-  <aside class="rail">
-    <div class="rail__brand" id="railBrand"></div>
-    <nav class="rail__nav" id="railNav" aria-label="Main">
-    </nav>
-    <div class="rail__foot" id="railFoot"></div>
-  </aside>
-
-  <div>
-    <header class="topbar">
-      <div id="barBrand"></div>
-    </header>
-    <main id="view" tabindex="-1"></main>
-  </div>
+  <header class="folio" id="folio">
+    <nav class="folio__run" id="folioNav" aria-label="Sections"></nav>
+    <div class="folio__side">
+      <span class="folio__who" id="folioWho"></span>
+      <span class="folio__wm" id="barBrand"></span>
+    </div>
+  </header>
+  <main id="view" tabindex="-1"></main>
 </div>
 
-<nav class="tabs" id="tabs" aria-label="Main">
-</nav>
-
-<div class="fx" id="fx" aria-hidden="true">
-  <span class="flash" id="flash"></span>
-</div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script src="js/00-guard.js"></script>

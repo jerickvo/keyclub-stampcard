@@ -6,7 +6,8 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const src = readFileSync(new URL('./03b-board.js', import.meta.url), 'utf8');
-const ctx = vm.createContext({ Schedule:{ today:() => '2026-09-07', PLACE:'MPR' } });
+const knit = s => String(s).replace(/ (AM|PM)\b/gi, '\u00a0$1');
+const ctx = vm.createContext({ Schedule:{ today:() => '2026-09-07', PLACE:'MPR' }, knit });
 vm.runInContext(src + '\nthis.__x = { nextMeetingNumber, spanTime, BoardUI, MEETING_DEFAULTS };', ctx);
 const { nextMeetingNumber, spanTime, BoardUI, MEETING_DEFAULTS } = ctx.__x;
 const rows = nums => nums.map(n => ({ meeting_number:n }));
@@ -55,8 +56,9 @@ test('duplicate guard reads the loaded list', () => {
   assert.equal(BoardUI.hasMeetingNumber(1), false);
 });
 test('row time span folds a shared meridian', () => {
-  assert.equal(spanTime('12:40 PM', '1:30 PM'), '12:40–1:30 PM');
-  assert.equal(spanTime('3:15 PM', '4:15 PM'), '3:15–4:15 PM');
-  assert.equal(spanTime('11:30 AM', '1:00 PM'), '11:30 AM–1:00 PM');
-  assert.equal(spanTime('3:15 PM', null), '3:15 PM');
+  // the space before AM/PM is non-breaking, so a clock reading never wraps
+  assert.equal(spanTime('12:40 PM', '1:30 PM'), '12:40–1:30\u00a0PM');
+  assert.equal(spanTime('3:15 PM', '4:15 PM'), '3:15–4:15\u00a0PM');
+  assert.equal(spanTime('11:30 AM', '1:00 PM'), '11:30\u00a0AM–1:00\u00a0PM');
+  assert.equal(spanTime('3:15 PM', null), '3:15\u00a0PM');
 });
