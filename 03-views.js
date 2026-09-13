@@ -83,11 +83,13 @@ const C = {
       `<svg class="card__route card__route--p" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <polyline points="16.0,8.6 46.0,13.3 74.0,21.1 81.0,40.6 58.0,50.0 31.0,54.7 11.0,72.7 34.0,81.3 58.0,71.9 83.0,83.6"/></svg>`;
 
+    /* the line breaks only before its last phrase, so the identity
+       column's width decides one or two lines and nothing else */
     const say = full
       ? 'Card full'
-      : p.total === 0 ? 'Your first stamp lands here'
-      : goal ? `${p.remaining} more for ${goal.name}`
-             : `${p.remaining} more to fill this card`;
+      : p.total === 0 ? 'Your first stamp <span class="nb">lands here</span>'
+      : goal ? `${p.remaining} more for <span class="nb">${esc(goal.name)}</span>`
+             : `${p.remaining} more to fill <span class="nb">this card</span>`;
 
     return `<section class="card${full ? ' card--full' : ''}" data-enter>
       <div class="card__face">
@@ -95,7 +97,7 @@ const C = {
           <span class="card__cardno">Card ${pad(cardNo)}</span>
           <p class="card__num"><b>${p.filled}</b><span>/ ${p.span}</span></p>
           <span class="card__idrule" aria-hidden="true"></span>
-          <p class="card__goal">${esc(say)}</p>
+          <p class="card__goal">${say}</p>
           <p class="card__docket" id="cardDocket" aria-hidden="true"></p>
           <span class="card__kci" aria-hidden="true">${brandSeal('kci')}</span>
         </div>

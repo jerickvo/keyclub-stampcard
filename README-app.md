@@ -117,6 +117,19 @@ is `rewardState` in `01a-backend.js`, and the board function and the test
 double carry the same three lines, so the Rewards page, the member's
 standing, the roster and the board's member detail can never disagree.
 
+Layout has three shared mechanics. The *opener rhythm*: the torn rule under a
+chapter title and the chapter's first block are always `--gap-stack` (the
+title's margin) plus `--gap-block` (every page container's top-level gap)
+apart; a line that belongs to the title (a crumb back to a list, the
+account's role line) pulls up to `--gap-tight`. The *register*: a `.rows`
+list is one grid that owns its column tracks (`--tracks`, named by a
+modifier for what the rows hold: `rows--dated`, `rows--counted`,
+`rows--roster`, `rows--who`) and each `.row` lays its cells on those tracks
+with subgrid, so a column is the same width in every row and a row that
+lacks a fact simply has no cell for it. The *page columns*: the two-column
+layouts (standing and account, record, rewards, meetings, the card's deck)
+share one gutter, `--col-gap`.
+
 Numbers: a chapter number and a meeting identifier are labels and keep
 their leading zero (`02`, `GM 04`); a count is a plain integer (`3 of 10`).
 Every screen writes a meeting as `GM 04`.

@@ -208,7 +208,7 @@ const BoardUI = {
       <section class="ledger meetings__next" data-enter>
         <h2 class="sec">Next<span class="sec__n">${count(upcoming.length)}</span></h2>
         ${upcoming.length
-          ? `<ol class="rows">${upcoming.map(m => this.meetingRow(m)).join('')}</ol>`
+          ? `<ol class="rows rows--dated">${upcoming.map(m => this.meetingRow(m)).join('')}</ol>`
           : this.empty('Nothing scheduled.')}
       </section>
 
@@ -217,7 +217,7 @@ const BoardUI = {
       <section class="ledger meetings__held" data-enter>
         <h2 class="sec">Held<span class="sec__n">${count(past.length)}</span></h2>
         ${past.length
-          ? `<ol class="rows">${past.map(m => this.meetingRow(m)).join('')}</ol>`
+          ? `<ol class="rows rows--counted">${past.map(m => this.meetingRow(m)).join('')}</ol>`
           : this.empty('No meetings yet.')}
       </section>
     </div>`;
@@ -232,7 +232,7 @@ const BoardUI = {
       <span class="row__no">GM ${no}</span>
       <span class="mrow__day">${esc(fmtDate(m.meeting_date))}</span>
       <span class="mrow__when meta">${this.when(m)}</span>
-      <span class="mrow__n">${past ? `<b>${n}</b><span class="meta mrow__unit--short"> in</span><span class="meta mrow__unit--long"> checked in</span>` : ''}</span>
+      ${past ? `<span class="mrow__n"><b>${n}</b><span class="meta mrow__unit--short"> in</span><span class="meta mrow__unit--long"> checked in</span></span>` : ''}
     </li>`;
   },
 
@@ -301,7 +301,7 @@ const BoardUI = {
           </select></label>
       </div>
       ${rows.length ? `
-        <ol class="rows roster__rows">
+        <ol class="rows roster__rows rows--roster">
           ${rows.map(m => `<li class="row rrow" data-bmember="${esc(m.id)}" tabindex="0" role="button">
             <span class="rrow__name">${esc(m.username)}</span>
             <span class="rrow__meta meta">${m.last_attendance
@@ -338,12 +338,11 @@ const BoardUI = {
       <section class="ledger" data-enter>
         <h2 class="sec">Attendance<span class="sec__n">${d.attendance.length === 1 ? '1 meeting' : `${d.attendance.length} meetings`}</span></h2>
         ${d.attendance.length
-          ? `<ol class="rows">${d.attendance.map(a => `
+          ? `<ol class="rows rows--dated">${d.attendance.map(a => `
               <li class="row mrow" ${a.meeting_id ? `data-bmeeting="${esc(a.meeting_id)}" tabindex="0" role="button"` : ''}>
                 <span class="row__no">GM ${a.meeting_number ? pad(a.meeting_number) : '-'}</span>
                 <span class="mrow__day">${esc(fmtDate(a.meeting_date))}</span>
                 <span class="mrow__when meta">${esc(fmtTime(a.checked_in_at))}</span>
-                <span class="mrow__n"></span>
               </li>`).join('')}</ol>`
           : this.empty('No attendance yet.')}
       </section>
@@ -378,7 +377,7 @@ const BoardUI = {
       <section class="ledger" data-enter>
         <h2 class="sec">Attendees<span class="sec__n">${stamps === 1 ? '1 member' : `${stamps} members`}</span></h2>
         ${stamps
-          ? `<ol class="rows">${d.attendees.map(a => `
+          ? `<ol class="rows rows--who">${d.attendees.map(a => `
               <li class="row rrow" data-bmember="${esc(a.user_id)}" tabindex="0" role="button">
                 <span class="rrow__name">${esc(a.username)}</span>
                 <span class="rrow__meta meta">${esc(fmtTime(a.checked_in_at))}</span>

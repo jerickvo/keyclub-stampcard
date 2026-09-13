@@ -117,6 +117,7 @@
   --gap-stack:clamp(12px,1.4vw,18px);
   --gap-block:clamp(28px,4vw,56px);
   --gutter:clamp(16px,4.4vw,56px);
+  --col-gap:clamp(28px,4vw,72px);   /* between the two page columns */
 
   /* type: six steps */
   --t-title:clamp(40px,8.6vw,100px);
@@ -222,6 +223,11 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 /* ── chapter opener ──────────────────────────────────────────────
    Hollow chapter numeral, the chapter word at title size, and the one
    drawn line in the app beneath them. ─────────────────────────── */
+/* Opener rhythm. The torn rule and the chapter's first block are always
+   gap-stack (the title's own breath, its margin) + gap-block (the page's
+   block gap) apart, so every page container uses gap-block as its
+   top-level gap. A line that belongs to the title, a crumb back to the
+   list or the account's role line, pulls up to gap-tight instead. */
 .rechead{position:relative;display:flex;align-items:baseline;flex-wrap:wrap;
   gap:0 .22em;padding-bottom:calc(var(--gap-tight) + 7px);margin-bottom:var(--gap-stack)}
 .rechead::after{content:'';position:absolute;left:0;right:0;bottom:0;height:7px;
@@ -304,11 +310,19 @@ select.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-of
 .err{margin:0;padding:6px 0 6px 12px;border-left:var(--edge-frame) solid var(--ink);
   font:700 italic var(--t-body)/1.4 var(--f-body);color:var(--ink)}
 
-/* ── rows: the register ──────────────────────────────────────────── */
-.rows{list-style:none;margin:0;padding:0;border-top:var(--edge-rule) solid var(--tone)}
-.row{display:grid;align-items:baseline;column-gap:var(--gap-stack);
+/* ── rows: the register ───────────────────────────────────────────
+   A register is one grid. The list owns the column tracks (--tracks,
+   named by a modifier for what the rows hold) and every row lays its
+   cells on those tracks, so a column is the same width in every row
+   and an absent cell leaves no empty track behind. Without subgrid a
+   row falls back to laying the same tracks on its own. ─────────── */
+.rows{list-style:none;margin:0;padding:0;border-top:var(--edge-rule) solid var(--tone);
+  display:grid;grid-template-columns:var(--tracks,minmax(0,1fr));column-gap:var(--gap-stack)}
+.row{display:grid;grid-column:1 / -1;grid-template-columns:var(--tracks,minmax(0,1fr));
+  align-items:baseline;column-gap:var(--gap-stack);
   padding:clamp(10px,1.4vw,14px) 0;border-bottom:var(--edge-rule) solid var(--tone);
   min-width:0}
+@supports (grid-template-columns:subgrid){ .row{grid-template-columns:subgrid} }
 .row__no{font:400 var(--t-micro)/1 var(--f-mono);letter-spacing:.06em;color:var(--ink-2);
   white-space:nowrap}
 
@@ -616,7 +630,7 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
    CARD (home) — the card is the page; the strip and the next dates
    are its marginal column.
    ══════════════════════════════════════════════════════════════════ */
-.view--home{display:flex;flex-direction:column;gap:var(--gap-stack)}
+.view--home{display:flex;flex-direction:column;gap:var(--gap-block)}
 .deck{display:grid;grid-template-columns:minmax(0,1fr);row-gap:var(--gap-block);
   align-items:start}
 .deck__side{display:contents}
@@ -625,20 +639,21 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .deck .strip--live{order:1}
 .deck .next{order:4}
 .next .rows{border-top:0}
-.next__row{grid-template-columns:auto minmax(0,1fr) auto}
+.next__rows{--tracks:auto minmax(0,1fr) auto}
 .next__day{font-size:var(--t-body);min-width:0}
 .next__at{justify-self:end;white-space:nowrap}
 
 @media(min-width:768px){
   .deck__side .strip__meta{grid-column:2;text-align:left}
-  .deck__side{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  /* one column per block it holds: the strip alone spans the deck */
+  .deck__side{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));
     column-gap:var(--gap-block);row-gap:var(--gap-block);align-items:start;order:3}
   .deck .strip,.deck .strip--live,.deck .next{order:0}
   .deck--live .deck__side{order:1}
 }
 @media(min-width:1180px){
   .deck,.deck--live{grid-template-columns:minmax(0,64fr) minmax(0,36fr);
-    column-gap:clamp(28px,4vw,64px);align-items:start}
+    column-gap:var(--col-gap);align-items:start}
   .deck > .card{order:1;height:clamp(440px,calc(100dvh - 300px),780px)}
   .deck__side,.deck--live .deck__side{order:2;grid-template-columns:minmax(0,1fr);
     row-gap:var(--gap-block)}
@@ -664,9 +679,9 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 
 /* club */
 .club{display:grid;gap:var(--gap-block)}
+/* the first block under the opener: the torn rule is its top edge */
 .now{position:relative;display:grid;gap:4px;justify-items:start;
-  padding:clamp(18px,3vw,32px) 0;border-top:var(--edge-panel) solid var(--ink);
-  border-bottom:var(--edge-rule) solid var(--tone)}
+  padding:0 0 clamp(18px,3vw,32px);border-bottom:var(--edge-rule) solid var(--tone)}
 .now__kick{margin:0;font:400 var(--t-micro)/1.3 var(--f-mono);letter-spacing:.14em;
   text-transform:uppercase;color:var(--ink-2)}
 .now__no{margin:0;font-family:var(--f-head);font-weight:400;font-size:var(--t-fig);
@@ -677,7 +692,7 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
   line-height:1;color:var(--ink);margin-right:4px}
 .now__go{margin-top:var(--gap-stack)}
 .now--live{background:var(--ink);color:var(--paper);border:0;
-  margin-inline:calc(var(--gutter) * -1);padding-inline:var(--gutter)}
+  margin-inline:calc(var(--gutter) * -1);padding:clamp(18px,3vw,32px) var(--gutter)}
 .now--live::before{content:"";position:absolute;left:var(--gutter);top:clamp(18px,3vw,32px);
   width:9px;height:9px;background:var(--seal)}
 .now--live .now__kick{padding-left:18px;color:var(--tint)}
@@ -696,17 +711,18 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 
 /* meetings */
 .meetings{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--gap-block)}
-.meetings__strip{margin-top:calc(var(--gap-block) * -1 + var(--gap-stack))}
 .ledger .rows{border-top:0}
-.mrow{grid-template-columns:auto minmax(0,1fr) auto;
-  grid-template-areas:"no day n" "no when n";row-gap:2px;cursor:pointer}
+/* a dated row: number, day over time; a counted row adds the count */
+.rows--dated{--tracks:auto minmax(0,1fr)}
+.rows--counted{--tracks:auto minmax(0,1fr) auto}
+.mrow{row-gap:2px;cursor:pointer}
 .mrow[role="button"]:hover .mrow__day,.mrow[role="button"]:focus-visible .mrow__day{
   text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
 .mrow:focus-visible{outline-offset:-3px}
-.mrow .row__no{grid-area:no;align-self:center}
-.mrow__day{grid-area:day;font-size:var(--t-body);line-height:1.2;min-width:0}
-.mrow__when{grid-area:when}
-.mrow__n{grid-area:n;justify-self:end;text-align:right;white-space:nowrap;align-self:center}
+.mrow .row__no{grid-column:1;grid-row:1 / span 2;align-self:center}
+.mrow__day{grid-column:2;grid-row:1;font-size:var(--t-body);line-height:1.2;min-width:0}
+.mrow__when{grid-column:2;grid-row:2}
+.mrow__n{grid-column:3;grid-row:1 / span 2;justify-self:end;text-align:right;white-space:nowrap;align-self:center}
 .mrow__n b{font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);line-height:1}
 .mrow__n .mrow__unit--long{display:none}
 @media(min-width:640px){
@@ -715,24 +731,25 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 }
 .mrow--past .mrow__day{color:var(--ink-2)}
 @media(min-width:640px){
-  .mrow{grid-template-columns:auto minmax(0,1fr) auto auto;grid-template-areas:"no day when n";
-    column-gap:var(--gap-stack)}
-  .mrow__when{justify-self:end;white-space:nowrap}
+  .rows--dated{--tracks:auto minmax(0,1fr) auto}
+  .rows--counted{--tracks:auto minmax(0,1fr) auto auto}
+  .mrow .row__no,.mrow__day,.mrow__when,.mrow__n{grid-row:1}
+  .mrow__when{grid-column:3;justify-self:end;white-space:nowrap}
+  .mrow__n{grid-column:4}
 }
 
 .bform{display:grid;gap:var(--gap-stack)}
 .bform__grid{display:grid;gap:var(--gap-stack);grid-template-columns:repeat(2,minmax(0,1fr))}
-.bform__row{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-stack);flex-wrap:wrap}
+.bform__row{display:flex;align-items:center;gap:var(--gap-stack);flex-wrap:wrap}
 .bform .err[hidden]{display:none}
 
 @media(min-width:1180px){
   /* the left column takes whatever the page has (a note, the live strip,
      next, held) in implicit rows, so an absent item leaves no empty row;
      the form spans them all and sticks */
-  .meetings{grid-template-columns:minmax(0,7fr) minmax(0,5fr);column-gap:clamp(28px,4vw,72px);
+  .meetings{grid-template-columns:minmax(0,7fr) minmax(0,5fr);column-gap:var(--col-gap);
     align-items:start}
   .meetings__err,.meetings__strip,.meetings__next,.meetings__held{grid-column:1}
-  .meetings__strip{margin-top:0}
   .meetings__form{grid-column:2;grid-row:1 / span 4;position:sticky;
     top:calc(var(--head-h,0px) + var(--gap-block))}
   .bform__grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -754,28 +771,34 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .roster{display:grid;gap:var(--gap-stack)}
 .bfilters{display:grid;gap:var(--gap-stack);grid-template-columns:minmax(0,1fr)}
 @media(min-width:640px){ .bfilters{grid-template-columns:minmax(0,2fr) minmax(0,1fr)} }
-.roster__rows{border-top:var(--edge-panel) solid var(--ink);max-width:820px}
-.rrow{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name n" "meta rw";
-  row-gap:2px;cursor:pointer}
+.roster__rows{border-top:var(--edge-panel) solid var(--ink)}
+/* a roster row: name over last-seen, stamps over tier; attendees: name and time */
+.rows--roster{--tracks:minmax(0,1fr) auto}
+.rows--who{--tracks:minmax(0,1fr) auto}
+.rrow{row-gap:2px;cursor:pointer}
 .rrow[role="button"]:hover .rrow__name,.rrow[role="button"]:focus-visible .rrow__name{
   text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
 .rrow:focus-visible{outline-offset:-3px}
-.rrow__name{grid-area:name;font:400 var(--t-body)/1.2 var(--f-mono);overflow-wrap:anywhere}
-.rrow__meta{grid-area:meta}
-.rrow__n{grid-area:n;justify-self:end;white-space:nowrap}
+.rrow__name{grid-column:1;grid-row:1;font:400 var(--t-body)/1.2 var(--f-mono);overflow-wrap:anywhere}
+.rrow__meta{grid-column:1;grid-row:2}
+.rows--who .rrow__meta{grid-column:2;grid-row:1;justify-self:end}
+.rrow__n{grid-column:2;grid-row:1;justify-self:end;white-space:nowrap}
 .rrow__n b{font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);line-height:1}
-.rrow__rw{grid-area:rw;justify-self:end}
+.rrow__rw{grid-column:2;grid-row:2;justify-self:end}
 @media(min-width:640px){
-  .rrow{grid-template-columns:minmax(0,1fr) auto auto auto;grid-template-areas:"name meta n rw";
-    column-gap:var(--gap-block)}
-  .rrow__meta{justify-self:end}
+  .rows--roster{--tracks:minmax(0,1fr) auto auto auto}
+  .roster__rows{column-gap:var(--gap-block)}
+  .rrow__name,.rrow__meta,.rrow__n,.rrow__rw{grid-row:1}
+  .rrow__meta{grid-column:2;justify-self:end}
+  .rrow__n{grid-column:3}
+  .rrow__rw{grid-column:4}
 }
 .bpage{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-stack);
   padding-top:var(--gap-stack);flex-wrap:wrap}
 
 /* detail panes */
 .detail{display:grid;gap:var(--gap-block)}
-.detail__back{margin:calc(var(--gap-block) * -1 + var(--gap-tight)) 0 0}
+.detail__back{margin:calc(var(--gap-block) * -1 + var(--gap-tight)) 0 0}   /* a crumb: belongs to the title */
 .detail__name{font-family:var(--f-mono);font-size:clamp(24px,3.6vw,44px);line-height:1.1;
   letter-spacing:.01em;text-transform:none;overflow-wrap:anywhere}
 
@@ -788,7 +811,9 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .pick:hover{color:var(--ink)}
 
 .proj{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--gap-stack);
-  padding:clamp(18px,3vw,36px) 0;border-top:var(--edge-panel) solid var(--ink)}
+  padding:0 0 clamp(18px,3vw,36px)}
+/* after a strip of meeting tabs the rule is the tab strip's own edge */
+.picks + .proj{border-top:var(--edge-panel) solid var(--ink);padding-top:clamp(18px,3vw,36px)}
 .proj--live{min-height:calc(100dvh - var(--head-h,0px) - var(--folio-h,0px) - 300px)}
 .proj__meet{display:grid;gap:4px;min-width:0}
 .proj__no{margin:0;font-family:var(--f-head);font-weight:400;font-size:var(--t-fig);
@@ -806,7 +831,7 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .proj__count--shut{max-width:32ch;font-size:var(--t-body)}
 .proj__ctl{justify-self:start}
 .proj--live{background:var(--ink);color:var(--paper);border:0;
-  margin-inline:calc(var(--gutter) * -1);padding-inline:var(--gutter)}
+  margin-inline:calc(var(--gutter) * -1);padding:clamp(18px,3vw,36px) var(--gutter)}
 .proj--live .proj__word{color:var(--paper)}
 .proj--live .proj__when,.proj--live .proj__count{color:var(--tint)}
 .proj--live .proj__count b{color:var(--paper)}
@@ -915,14 +940,13 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 }
 
 .view--record{display:flex;flex-direction:column;gap:var(--gap-block)}
-.view--record > .strip{margin-top:calc(var(--gap-block) * -1 + var(--gap-stack))}
 .recbody{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--gap-block);align-items:start}
 .tally{align-items:baseline}
 
 .ledger{display:flex;flex-direction:column;min-width:0}
 .ledger .rows{border-top:0}
-.lrow{grid-template-columns:5.6ch clamp(26px,3.4vw,34px) minmax(0,1fr) auto;
-  align-items:center}
+.ledger__rows{--tracks:5.6ch clamp(26px,3.4vw,34px) minmax(0,1fr) auto}
+.lrow{align-items:center}
 .lrow__stamp{display:grid;place-items:center;aspect-ratio:1;width:100%}
 .lrow__mark{width:100%;height:100%;display:block}
 .lrow__mark path{fill:var(--ink)}
@@ -942,7 +966,7 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 
 @media(min-width:1180px){
   .recbody{grid-template-columns:minmax(0,7fr) minmax(0,4fr);
-    column-gap:clamp(28px,4vw,72px)}
+    column-gap:var(--col-gap)}
   .recbody > .ledger,.recbody > .empty{order:1}
   .recside{display:grid;order:2;align-content:start;gap:var(--gap-block);
     position:sticky;top:calc(var(--head-h,0px) + var(--gap-block))}
@@ -954,6 +978,9 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
    SCAN — the viewer is the page. Its height is whatever the screen
    has left; the standing line rides inside the frame.
    ══════════════════════════════════════════════════════════════════ */
+/* the scanline rides close under the viewer, so this grid's gap is
+   gap-stack and the opener carries the block gap on its own margin */
+.view--scan > .rechead{margin-bottom:var(--gap-block)}
 .view--scan{display:grid;grid-template-rows:auto minmax(0,1fr) auto;
   gap:var(--gap-stack);
   height:calc(100dvh - var(--head-h,0px) - var(--folio-h,0px)
@@ -1071,7 +1098,7 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 }
 @media(min-width:1180px){
   .view--rewards{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,8fr);
-    column-gap:clamp(28px,4vw,72px);align-items:start}
+    column-gap:var(--col-gap);align-items:start}
   .view--rewards > .rechead{grid-column:1 / -1}
   .climb__fig{flex-direction:column;align-items:flex-start;gap:var(--gap-tight)}
   .climb__fig .fig__of{max-width:16ch}
@@ -1082,7 +1109,7 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
    standing is the content, the account rows close it.
    ══════════════════════════════════════════════════════════════════ */
 .view--member{display:flex;flex-direction:column;gap:var(--gap-block)}
-.who__line{margin:calc(var(--gap-stack) * -1) 0 0;display:flex;flex-wrap:wrap;gap:4px 14px}
+.who__line{margin:calc(var(--gap-block) * -1 + var(--gap-tight)) 0 0;display:flex;flex-wrap:wrap;gap:4px 14px}   /* belongs to the title */
 
 .standing{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--gap-block)}
 .standing__fig{align-items:baseline}
@@ -1102,11 +1129,16 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .acct__who{font-family:var(--f-mono);font-size:.94em}
 
 @media(min-width:900px){
-  .standing{grid-template-columns:minmax(0,5fr) minmax(0,7fr);column-gap:clamp(28px,4vw,72px);
+  .standing{grid-template-columns:minmax(0,5fr) minmax(0,7fr);column-gap:var(--col-gap);
     align-items:start}
   .standing__fig{flex-direction:column;align-items:flex-start;gap:var(--gap-tight)}
   .standing__fig .fig__of{max-width:16ch}
-  .view--member > .acct{max-width:560px}
+  /* the account is a second standing: its word at left, its rows on the
+     same right column, so the page has one value edge */
+  .acct{grid-template-columns:minmax(0,5fr) minmax(0,7fr);column-gap:var(--col-gap);align-items:start}
+  .acct > .sec{grid-column:1;grid-row:1;border-bottom:0;padding-bottom:0}
+  .acct__row{grid-column:2}
+  .acct__row:first-of-type{border-top:var(--edge-panel) solid var(--ink)}
 }
 
 </style>
@@ -14590,11 +14622,13 @@ const C = {
       `<svg class="card__route card__route--p" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <polyline points="16.0,8.6 46.0,13.3 74.0,21.1 81.0,40.6 58.0,50.0 31.0,54.7 11.0,72.7 34.0,81.3 58.0,71.9 83.0,83.6"/></svg>`;
 
+    /* the line breaks only before its last phrase, so the identity
+       column's width decides one or two lines and nothing else */
     const say = full
       ? 'Card full'
-      : p.total === 0 ? 'Your first stamp lands here'
-      : goal ? `${p.remaining} more for ${goal.name}`
-             : `${p.remaining} more to fill this card`;
+      : p.total === 0 ? 'Your first stamp <span class="nb">lands here</span>'
+      : goal ? `${p.remaining} more for <span class="nb">${esc(goal.name)}</span>`
+             : `${p.remaining} more to fill <span class="nb">this card</span>`;
 
     return `<section class="card${full ? ' card--full' : ''}" data-enter>
       <div class="card__face">
@@ -14602,7 +14636,7 @@ const C = {
           <span class="card__cardno">Card ${pad(cardNo)}</span>
           <p class="card__num"><b>${p.filled}</b><span>/ ${p.span}</span></p>
           <span class="card__idrule" aria-hidden="true"></span>
-          <p class="card__goal">${esc(say)}</p>
+          <p class="card__goal">${say}</p>
           <p class="card__docket" id="cardDocket" aria-hidden="true"></p>
           <span class="card__kci" aria-hidden="true">${brandSeal('kci')}</span>
         </div>
@@ -15200,7 +15234,7 @@ const BoardUI = {
       <section class="ledger meetings__next" data-enter>
         <h2 class="sec">Next<span class="sec__n">${count(upcoming.length)}</span></h2>
         ${upcoming.length
-          ? `<ol class="rows">${upcoming.map(m => this.meetingRow(m)).join('')}</ol>`
+          ? `<ol class="rows rows--dated">${upcoming.map(m => this.meetingRow(m)).join('')}</ol>`
           : this.empty('Nothing scheduled.')}
       </section>
 
@@ -15209,7 +15243,7 @@ const BoardUI = {
       <section class="ledger meetings__held" data-enter>
         <h2 class="sec">Held<span class="sec__n">${count(past.length)}</span></h2>
         ${past.length
-          ? `<ol class="rows">${past.map(m => this.meetingRow(m)).join('')}</ol>`
+          ? `<ol class="rows rows--counted">${past.map(m => this.meetingRow(m)).join('')}</ol>`
           : this.empty('No meetings yet.')}
       </section>
     </div>`;
@@ -15224,7 +15258,7 @@ const BoardUI = {
       <span class="row__no">GM ${no}</span>
       <span class="mrow__day">${esc(fmtDate(m.meeting_date))}</span>
       <span class="mrow__when meta">${this.when(m)}</span>
-      <span class="mrow__n">${past ? `<b>${n}</b><span class="meta mrow__unit--short"> in</span><span class="meta mrow__unit--long"> checked in</span>` : ''}</span>
+      ${past ? `<span class="mrow__n"><b>${n}</b><span class="meta mrow__unit--short"> in</span><span class="meta mrow__unit--long"> checked in</span></span>` : ''}
     </li>`;
   },
 
@@ -15293,7 +15327,7 @@ const BoardUI = {
           </select></label>
       </div>
       ${rows.length ? `
-        <ol class="rows roster__rows">
+        <ol class="rows roster__rows rows--roster">
           ${rows.map(m => `<li class="row rrow" data-bmember="${esc(m.id)}" tabindex="0" role="button">
             <span class="rrow__name">${esc(m.username)}</span>
             <span class="rrow__meta meta">${m.last_attendance
@@ -15330,12 +15364,11 @@ const BoardUI = {
       <section class="ledger" data-enter>
         <h2 class="sec">Attendance<span class="sec__n">${d.attendance.length === 1 ? '1 meeting' : `${d.attendance.length} meetings`}</span></h2>
         ${d.attendance.length
-          ? `<ol class="rows">${d.attendance.map(a => `
+          ? `<ol class="rows rows--dated">${d.attendance.map(a => `
               <li class="row mrow" ${a.meeting_id ? `data-bmeeting="${esc(a.meeting_id)}" tabindex="0" role="button"` : ''}>
                 <span class="row__no">GM ${a.meeting_number ? pad(a.meeting_number) : '-'}</span>
                 <span class="mrow__day">${esc(fmtDate(a.meeting_date))}</span>
                 <span class="mrow__when meta">${esc(fmtTime(a.checked_in_at))}</span>
-                <span class="mrow__n"></span>
               </li>`).join('')}</ol>`
           : this.empty('No attendance yet.')}
       </section>
@@ -15370,7 +15403,7 @@ const BoardUI = {
       <section class="ledger" data-enter>
         <h2 class="sec">Attendees<span class="sec__n">${stamps === 1 ? '1 member' : `${stamps} members`}</span></h2>
         ${stamps
-          ? `<ol class="rows">${d.attendees.map(a => `
+          ? `<ol class="rows rows--who">${d.attendees.map(a => `
               <li class="row rrow" data-bmember="${esc(a.user_id)}" tabindex="0" role="button">
                 <span class="rrow__name">${esc(a.username)}</span>
                 <span class="rrow__meta meta">${esc(fmtTime(a.checked_in_at))}</span>
