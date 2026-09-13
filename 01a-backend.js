@@ -153,6 +153,15 @@ const REWARD_TIERS = [
   { id:'r3', name:'???',           required:30, desc:'' },
 ];
 
+/* What one tier is to one member, read from the two facts that exist:
+   the stamp count and whether a claim row is on file. A claim is a
+   fact (the prize was handed over), so a claimed tier stays reached
+   even if a deleted meeting later takes stamps back, and every count
+   of "rewards unlocked" is the number of tiers that are not locked.
+   The board function and the test double carry these same lines. */
+const rewardState = (tier, stamps, claimed) =>
+  claimed ? 'claimed' : stamps >= tier.required ? 'unlocked' : 'locked';
+
 const SupabaseAdapter = {
   name: 'supabase',
   client: null,

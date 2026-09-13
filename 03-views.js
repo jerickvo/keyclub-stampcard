@@ -17,13 +17,13 @@ const STAMP_FIT = .62;
 
 const C = {
   rung(r, total, prev){
-    const open  = total >= r.required;
-    const ready = open && !r.claimed;
-    const state = r.claimed ? 'claimed' : ready ? 'ready' : 'sealed';
+    const tier  = Store.tierState(r);
+    const ready = tier === 'unlocked';
+    const state = tier === 'claimed' ? 'claimed' : ready ? 'ready' : 'sealed';
     const left  = r.required - total;
     const fill  = Math.max(0, Math.min(1, (total - prev) / (r.required - prev)));
-    const say   = r.claimed ? 'Claimed'
-                : ready     ? 'Ready'
+    const say   = tier === 'claimed' ? 'Claimed'
+                : ready ? 'Ready'
                 : left === 1 ? '1 more' : `${left} more`;
 
     return `<li class="rung rung--${state}" data-reward="${r.id}" style="--fill:${(fill * 100).toFixed(1)}%">
@@ -93,7 +93,7 @@ const C = {
       <div class="card__face">
         <div class="card__id">
           <span class="card__cardno">Card ${pad(cardNo)}</span>
-          <p class="card__num"><b>${pad(p.filled)}</b><span>/ ${p.span}</span></p>
+          <p class="card__num"><b>${p.filled}</b><span>/ ${p.span}</span></p>
           <span class="card__idrule" aria-hidden="true"></span>
           <p class="card__goal">${esc(say)}</p>
           <p class="card__docket" id="cardDocket" aria-hidden="true"></p>
@@ -147,7 +147,7 @@ const C = {
                  upcoming:'Scheduled' }[state];
 
     return `<li class="row lrow lrow--${state}">
-      <span class="row__no">${pad(m.no)}</span>
+      <span class="row__no">GM ${pad(m.no)}</span>
       <span class="lrow__stamp">${mark}</span>
       <span class="lrow__date">${m.today ? 'Today' : fmtDate(m.date)}</span>
       <span class="lrow__when meta">${detail}</span>
@@ -163,7 +163,7 @@ C.account = () => `<section class="acct" data-enter>
     <button class="link" type="button" data-motion></button>
   </div>
   <div class="acct__row">
-    <span class="acct__lab">Signed in as ${esc((Store.user && Store.user.username) || memberName())}</span>
+    <span class="acct__lab">Signed in as <span class="acct__who">${esc((Store.user && Store.user.username) || memberName())}</span></span>
     <button class="btn btn--quiet" data-signout type="button">Sign out</button>
   </div>
 </section>`;
@@ -191,7 +191,7 @@ const Views = {
     const done = open && Store.attended(open.id);
     const live = Boolean(open && !done);
     const p = Rules.progress();
-    const ready = Store.rewards.find(r => p.total >= r.required && !r.claimed) || null;
+    const ready = Store.rewards.find(r => Store.tierState(r) === 'unlocked') || null;
 
     let action;
     if (live)
@@ -278,8 +278,8 @@ const Views = {
 
         <aside class="recside">
           ${counted.length ? `<p class="tally fig" data-enter>
-            <span class="fig__n tally__fig">${pad(kept)}</span>
-            <span class="fig__of">stamped of ${pad(counted.length)} held${gone
+            <span class="fig__n tally__fig">${kept}</span>
+            <span class="fig__of">stamped of ${counted.length} held${gone
               ? ` / ${gone} missed` : ''}</span>
           </p>` : ''}
 
@@ -309,7 +309,7 @@ const Views = {
       </header>
 
       <p class="fig climb__fig" data-enter>
-        <span class="fig__n">${pad(total)}</span>
+        <span class="fig__n">${total}</span>
         <span class="fig__of">${esc(of)}</span>
       </p>
 
@@ -385,14 +385,14 @@ const Views = {
 
       <section class="standing" data-enter>
         <p class="fig standing__fig">
-          <span class="fig__n">${pad(total)}</span>
+          <span class="fig__n">${total}</span>
           <span class="fig__of">${total === 1 ? 'stamp' : 'stamps'} collected</span>
         </p>
         <ul class="standing__rest">
           <li class="standing__row"><span class="standing__lab">This card</span>
-            <span class="standing__val">${pad(p.filled)} of ${pad(p.span)}</span></li>
+            <span class="standing__val">${p.filled} of ${p.span}</span></li>
           <li class="standing__row"><span class="standing__lab">Meetings attended</span>
-            <span class="standing__val">${pad(attended)} of ${pad(held.length)}</span></li>
+            <span class="standing__val">${attended} of ${held.length}</span></li>
           <li class="standing__row"><span class="standing__lab">Attendance</span>
             <span class="standing__val">${Store.attendanceRate()}%</span></li>
           <li class="standing__row"><span class="standing__lab">Rewards unlocked</span>
@@ -460,7 +460,7 @@ const Views = {
           ${up ? passwordField({ id:'authPass2', name:'confirm', label:'Confirm password',
                                  autocomplete:'new-password' }) : ''}
 
-          <p class="err authp__err" id="authErr" role="alert" aria-live="assertive" hidden></p>
+          <p class="err authp__err" id="authErr" role="alert" aria-live="assertive"></p>
 
           <div class="authp__act">
             <button class="btn authp__go" type="submit" id="authGo">

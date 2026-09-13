@@ -180,7 +180,8 @@ const Store = {
   },
   heldMeetings(){ return this.meetings.filter(m => !m.upcoming); },
   countedMeetings(){ return this.meetings.filter(m => !m.upcoming && (!m.open || this.attended(m.id))); },
-  rewardsUnlocked(){ const t = this.totalStamps(); return this.rewards.filter(r => t >= r.required).length; },
+  tierState(r){ return rewardState(r, this.totalStamps(), r.claimed); },
+  rewardsUnlocked(){ return this.rewards.filter(r => this.tierState(r) !== 'locked').length; },
   attendanceRate(){
     const held = this.countedMeetings();
     if (!held.length) return 0;

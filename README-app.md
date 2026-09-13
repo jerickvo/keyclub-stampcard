@@ -107,6 +107,20 @@ mark, the strip's dab, the rail beside a rung that is ready to claim. Four
 edge weights, five gaps and six type steps are defined once as tokens in
 `keystamp.css`; page rules read the tokens and never call `clamp()`.
 
+One rule decides what a reward tier is to a member, and it reads two
+facts: the stamp count and whether a claim row is on file. A tier is
+*claimed* when the claim exists, else *unlocked* when the stamps reach its
+threshold, else *locked*; "rewards unlocked" anywhere is the number of tiers
+that are not locked. A claim is a fact (the prize was handed over), so it
+stays counted even if a deleted meeting later takes stamps back. The rule
+is `rewardState` in `01a-backend.js`, and the board function and the test
+double carry the same three lines, so the Rewards page, the member's
+standing, the roster and the board's member detail can never disagree.
+
+Numbers: a chapter number and a meeting identifier are labels and keep
+their leading zero (`02`, `GM 04`); a count is a plain integer (`3 of 10`).
+Every screen writes a meeting as `GM 04`.
+
 Routing is hash-based (`#/record`). `gate()` in `06-app.js` is the enforcement
 point: signed-out visitors land on the sign-in spread whatever the hash says, a
 member cannot reach a board route, and a board account lands in Club Tools.
@@ -114,9 +128,14 @@ member cannot reach a board route, and a board account lands in Club Tools.
 Credentials: usernames are case-insensitive (`Config.canonUsername` lowercases
 them only to build the synthetic sign-in address; the typed form is kept as the
 display name), passwords are case-sensitive and are passed to Supabase exactly
-as typed. The sign-in inputs are set in the mono face on purpose: the body face
-is unicase, so anything typed in it looks uppercase. Each password field has a
-show/hide toggle that swaps the input type and never touches the value.
+as typed. Anything a person types, and any name that is theirs, is set in the
+mono face on purpose: the body face is unicase, so `aBcD` set in it reads
+`ABCD`. That covers the sign-in fields, every `.input` (the roster search, the
+schedule form), roster and attendee names, the member detail's name and the
+"Signed in as" line. Each password field has a show/hide toggle that swaps
+the input type and never touches the value. A refused sign-in shows its
+message in a slot that is always reserved, so the form does not move, and
+focus lands on the first field at fault in form order.
 
 ---
 
@@ -278,4 +297,5 @@ python3 tools-build-fonts.py     # assets/fonts/*.ttf  ->  fonts.css
 python3 tools-trace-stamps.py    # stamp artwork -> traced vector paths
 python3 tools-overlap-check.py   # renders index.html, reports collisions
 node --test tools-test-meetings.mjs   # meeting-number and form-default rules
+node --test tools-test-rewards.mjs    # the reward-tier rule
 ```

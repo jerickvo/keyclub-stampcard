@@ -290,7 +290,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .input{display:block;width:100%;min-width:0;min-height:var(--tap);
   padding:10px 0 8px;background:transparent;color:var(--ink);
   border:0;border-bottom:var(--edge-panel) solid var(--ink);border-radius:0;
-  font:400 max(16px,var(--t-body))/1.2 var(--f-body);letter-spacing:0;
+  font:400 max(16px,var(--t-body))/1.2 var(--f-mono);letter-spacing:0;
   appearance:none;-webkit-appearance:none;color-scheme:light;accent-color:var(--ink)}
 .input::placeholder{color:var(--ink-2);opacity:1}
 .input:focus{outline:0;border-bottom-width:var(--edge-frame);padding-bottom:7px}
@@ -760,7 +760,7 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .rrow[role="button"]:hover .rrow__name,.rrow[role="button"]:focus-visible .rrow__name{
   text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
 .rrow:focus-visible{outline-offset:-3px}
-.rrow__name{grid-area:name;font-size:var(--t-body);line-height:1.2;overflow-wrap:anywhere}
+.rrow__name{grid-area:name;font:400 var(--t-body)/1.2 var(--f-mono);overflow-wrap:anywhere}
 .rrow__meta{grid-area:meta}
 .rrow__n{grid-area:n;justify-self:end;white-space:nowrap}
 .rrow__n b{font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);line-height:1}
@@ -776,7 +776,8 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 /* detail panes */
 .detail{display:grid;gap:var(--gap-block)}
 .detail__back{margin:calc(var(--gap-block) * -1 + var(--gap-tight)) 0 0}
-.detail__name{font-size:clamp(34px,6vw,72px);overflow-wrap:anywhere}
+.detail__name{font-family:var(--f-mono);font-size:clamp(24px,3.6vw,44px);line-height:1.1;
+  letter-spacing:.01em;text-transform:none;overflow-wrap:anywhere}
 
 /* check-in: the projector */
 .checkin{display:grid;gap:var(--gap-stack)}
@@ -869,9 +870,11 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
   display:flex;flex-direction:column;gap:var(--gap-stack);max-width:520px;width:100%}
 .authp__f{display:flex;flex-direction:column;gap:var(--gap-hair);min-width:0;margin:0}
 .authp__lab{font:400 var(--t-caption)/1.25 var(--f-body);color:var(--ink-2)}
+/* what a person types is set in the mono face: the body face is unicase
+   and would show every username and password as capitals */
 .authp__in{display:block;width:100%;min-width:0;min-height:var(--tap);padding:10px 0 8px;
   background:transparent;color:var(--ink);border:0;border-bottom:var(--edge-panel) solid var(--ink);
-  border-radius:0;font:400 max(16px,var(--t-body))/1.2 var(--f-body);letter-spacing:0;appearance:none}
+  border-radius:0;font:400 max(16px,var(--t-body))/1.2 var(--f-mono);letter-spacing:0;appearance:none}
 .authp__in::placeholder{color:var(--ink-2);opacity:1}
 .authp__in:focus{outline:0;border-bottom-width:var(--edge-frame);padding-bottom:7px}
 .authp__in:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:4px}
@@ -883,7 +886,13 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .authp__eye svg{width:22px;height:22px;display:block}
 .authp__eye:hover,.authp__eye[aria-pressed="true"]{color:var(--ink)}
 .authp__eye:focus-visible{outline-offset:-4px}
-.authp__err{margin:0}
+/* the message has its place whether or not there is one, so the form
+   never moves under the person typing into it */
+.authp__err{margin:0;min-height:calc(3.9em + 12px);line-height:1.3;visibility:hidden}
+.authp__err.is-on{visibility:visible}
+/* the tablet column is the narrowest the paper half gets: the longest
+   message runs to a fourth line there */
+@media(min-width:768px) and (max-width:923px){ .authp__err{min-height:calc(5.2em + 12px)} }
 .authp__act{display:grid;gap:var(--gap-tight);margin-top:var(--gap-tight);justify-items:start}
 .authp__go{width:100%;min-height:54px;font-size:var(--t-head)}
 .authp__swap{padding:6px 0}
@@ -912,7 +921,7 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 
 .ledger{display:flex;flex-direction:column;min-width:0}
 .ledger .rows{border-top:0}
-.lrow{grid-template-columns:3.6ch clamp(26px,3.4vw,34px) minmax(0,1fr) auto;
+.lrow{grid-template-columns:5.6ch clamp(26px,3.4vw,34px) minmax(0,1fr) auto;
   align-items:center}
 .lrow__stamp{display:grid;place-items:center;aspect-ratio:1;width:100%}
 .lrow__mark{width:100%;height:100%;display:block}
@@ -1090,6 +1099,7 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .acct__row{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-stack);
   padding:clamp(10px,1.4vw,14px) 0;border-bottom:var(--edge-rule) solid var(--tone)}
 .acct__lab{font-size:var(--t-body)}
+.acct__who{font-family:var(--f-mono);font-size:.94em}
 
 @media(min-width:900px){
   .standing{grid-template-columns:minmax(0,5fr) minmax(0,7fr);column-gap:clamp(28px,4vw,72px);
@@ -13822,6 +13832,15 @@ const REWARD_TIERS = [
   { id:'r3', name:'???',           required:30, desc:'' },
 ];
 
+/* What one tier is to one member, read from the two facts that exist:
+   the stamp count and whether a claim row is on file. A claim is a
+   fact (the prize was handed over), so a claimed tier stays reached
+   even if a deleted meeting later takes stamps back, and every count
+   of "rewards unlocked" is the number of tiers that are not locked.
+   The board function and the test double carry these same lines. */
+const rewardState = (tier, stamps, claimed) =>
+  claimed ? 'claimed' : stamps >= tier.required ? 'unlocked' : 'locked';
+
 const SupabaseAdapter = {
   name: 'supabase',
   client: null,
@@ -14331,7 +14350,8 @@ const Store = {
   },
   heldMeetings(){ return this.meetings.filter(m => !m.upcoming); },
   countedMeetings(){ return this.meetings.filter(m => !m.upcoming && (!m.open || this.attended(m.id))); },
-  rewardsUnlocked(){ const t = this.totalStamps(); return this.rewards.filter(r => t >= r.required).length; },
+  tierState(r){ return rewardState(r, this.totalStamps(), r.claimed); },
+  rewardsUnlocked(){ return this.rewards.filter(r => this.tierState(r) !== 'locked').length; },
   attendanceRate(){
     const held = this.countedMeetings();
     if (!held.length) return 0;
@@ -14504,13 +14524,13 @@ const STAMP_FIT = .62;
 
 const C = {
   rung(r, total, prev){
-    const open  = total >= r.required;
-    const ready = open && !r.claimed;
-    const state = r.claimed ? 'claimed' : ready ? 'ready' : 'sealed';
+    const tier  = Store.tierState(r);
+    const ready = tier === 'unlocked';
+    const state = tier === 'claimed' ? 'claimed' : ready ? 'ready' : 'sealed';
     const left  = r.required - total;
     const fill  = Math.max(0, Math.min(1, (total - prev) / (r.required - prev)));
-    const say   = r.claimed ? 'Claimed'
-                : ready     ? 'Ready'
+    const say   = tier === 'claimed' ? 'Claimed'
+                : ready ? 'Ready'
                 : left === 1 ? '1 more' : `${left} more`;
 
     return `<li class="rung rung--${state}" data-reward="${r.id}" style="--fill:${(fill * 100).toFixed(1)}%">
@@ -14580,7 +14600,7 @@ const C = {
       <div class="card__face">
         <div class="card__id">
           <span class="card__cardno">Card ${pad(cardNo)}</span>
-          <p class="card__num"><b>${pad(p.filled)}</b><span>/ ${p.span}</span></p>
+          <p class="card__num"><b>${p.filled}</b><span>/ ${p.span}</span></p>
           <span class="card__idrule" aria-hidden="true"></span>
           <p class="card__goal">${esc(say)}</p>
           <p class="card__docket" id="cardDocket" aria-hidden="true"></p>
@@ -14634,7 +14654,7 @@ const C = {
                  upcoming:'Scheduled' }[state];
 
     return `<li class="row lrow lrow--${state}">
-      <span class="row__no">${pad(m.no)}</span>
+      <span class="row__no">GM ${pad(m.no)}</span>
       <span class="lrow__stamp">${mark}</span>
       <span class="lrow__date">${m.today ? 'Today' : fmtDate(m.date)}</span>
       <span class="lrow__when meta">${detail}</span>
@@ -14650,7 +14670,7 @@ C.account = () => `<section class="acct" data-enter>
     <button class="link" type="button" data-motion></button>
   </div>
   <div class="acct__row">
-    <span class="acct__lab">Signed in as ${esc((Store.user && Store.user.username) || memberName())}</span>
+    <span class="acct__lab">Signed in as <span class="acct__who">${esc((Store.user && Store.user.username) || memberName())}</span></span>
     <button class="btn btn--quiet" data-signout type="button">Sign out</button>
   </div>
 </section>`;
@@ -14678,7 +14698,7 @@ const Views = {
     const done = open && Store.attended(open.id);
     const live = Boolean(open && !done);
     const p = Rules.progress();
-    const ready = Store.rewards.find(r => p.total >= r.required && !r.claimed) || null;
+    const ready = Store.rewards.find(r => Store.tierState(r) === 'unlocked') || null;
 
     let action;
     if (live)
@@ -14765,8 +14785,8 @@ const Views = {
 
         <aside class="recside">
           ${counted.length ? `<p class="tally fig" data-enter>
-            <span class="fig__n tally__fig">${pad(kept)}</span>
-            <span class="fig__of">stamped of ${pad(counted.length)} held${gone
+            <span class="fig__n tally__fig">${kept}</span>
+            <span class="fig__of">stamped of ${counted.length} held${gone
               ? ` / ${gone} missed` : ''}</span>
           </p>` : ''}
 
@@ -14796,7 +14816,7 @@ const Views = {
       </header>
 
       <p class="fig climb__fig" data-enter>
-        <span class="fig__n">${pad(total)}</span>
+        <span class="fig__n">${total}</span>
         <span class="fig__of">${esc(of)}</span>
       </p>
 
@@ -14872,14 +14892,14 @@ const Views = {
 
       <section class="standing" data-enter>
         <p class="fig standing__fig">
-          <span class="fig__n">${pad(total)}</span>
+          <span class="fig__n">${total}</span>
           <span class="fig__of">${total === 1 ? 'stamp' : 'stamps'} collected</span>
         </p>
         <ul class="standing__rest">
           <li class="standing__row"><span class="standing__lab">This card</span>
-            <span class="standing__val">${pad(p.filled)} of ${pad(p.span)}</span></li>
+            <span class="standing__val">${p.filled} of ${p.span}</span></li>
           <li class="standing__row"><span class="standing__lab">Meetings attended</span>
-            <span class="standing__val">${pad(attended)} of ${pad(held.length)}</span></li>
+            <span class="standing__val">${attended} of ${held.length}</span></li>
           <li class="standing__row"><span class="standing__lab">Attendance</span>
             <span class="standing__val">${Store.attendanceRate()}%</span></li>
           <li class="standing__row"><span class="standing__lab">Rewards unlocked</span>
@@ -14947,7 +14967,7 @@ const Views = {
           ${up ? passwordField({ id:'authPass2', name:'confirm', label:'Confirm password',
                                  autocomplete:'new-password' }) : ''}
 
-          <p class="err authp__err" id="authErr" role="alert" aria-live="assertive" hidden></p>
+          <p class="err authp__err" id="authErr" role="alert" aria-live="assertive"></p>
 
           <div class="authp__act">
             <button class="btn authp__go" type="submit" id="authGo">
@@ -15109,7 +15129,7 @@ const BoardUI = {
       ${now}
       <section class="standing" data-enter>
         <p class="fig standing__fig">
-          <span class="fig__n">${pad(o.meetings_held ?? 0)}</span>
+          <span class="fig__n">${o.meetings_held ?? 0}</span>
           <span class="fig__of">general meetings held</span>
         </p>
         <ul class="standing__rest">
@@ -15134,7 +15154,7 @@ const BoardUI = {
     return `<div class="members">
       <section class="standing" data-enter>
         <p class="fig standing__fig">
-          <span class="fig__n">${typeof total === 'number' ? pad(total) : '--'}</span>
+          <span class="fig__n">${typeof total === 'number' ? total : '--'}</span>
           <span class="fig__of">${total === 1 ? 'member' : 'members'} on the roster</span>
         </p>
         <ul class="standing__rest">
@@ -15301,7 +15321,8 @@ const BoardUI = {
             <span class="standing__val">${d.attendance.length}</span></li>
           ${d.rewards.map(r => `<li class="standing__row">
             <span class="standing__lab"><span class="row__no">${r.required}</span> ${esc(r.name)}</span>
-            <span class="standing__val standing__val--word">${r.claimed ? 'Claimed' : r.unlocked ? 'Unlocked' : 'Locked'}</span>
+            <span class="standing__val standing__val--word">${
+              { claimed:'Claimed', unlocked:'Unlocked', locked:'Locked' }[r.state || rewardState(r, m.stamps, r.claimed)]}</span>
           </li>`).join('')}
         </ul>
       </section>
@@ -16226,7 +16247,7 @@ function afterRender(id, nav = false, covered = false){
 function authErr(msg){
   const box = $('#authErr');
   if (!box) return;
-  box.hidden = !msg;
+  box.classList.toggle('is-on', Boolean(msg));
   box.textContent = msg || '';
 }
 
@@ -16339,9 +16360,22 @@ document.addEventListener('submit', async e => {
     go('home', { instant:true });
     FX.enter($('#view'));
   } catch (err){
-    authErr(err && err.message ? err.message : 'Something went wrong. Try again.');
+    const msg = err && err.message ? err.message : 'Something went wrong. Try again.';
+    authErr(msg);
     authBusy(false);
-    const pw = $('#authPass'); if (pw) { pw.value = ''; pw.focus(); }
+    /* Focus lands on the first field at fault, in form order. A password
+       that was refused is cleared so it can be retyped; a username that
+       was refused stays, so it can be corrected. */
+    const at = Config.validateUsername(username) ? '#authUser'
+             : Config.validatePassword(password) ? '#authPass'
+             : (up && password !== confirm)      ? '#authPass2'
+             : /^username/i.test(msg)             ? '#authUser'   /* "Username is already taken." */
+             : '#authPass';                                      /* a refused pair: retype the password */
+    const field = $(at);
+    if (field){
+      if (at !== '#authUser') field.value = '';
+      field.focus();
+    }
   }
 });
 

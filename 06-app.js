@@ -201,7 +201,7 @@ function afterRender(id, nav = false, covered = false){
 function authErr(msg){
   const box = $('#authErr');
   if (!box) return;
-  box.hidden = !msg;
+  box.classList.toggle('is-on', Boolean(msg));
   box.textContent = msg || '';
 }
 
@@ -314,9 +314,22 @@ document.addEventListener('submit', async e => {
     go('home', { instant:true });
     FX.enter($('#view'));
   } catch (err){
-    authErr(err && err.message ? err.message : 'Something went wrong. Try again.');
+    const msg = err && err.message ? err.message : 'Something went wrong. Try again.';
+    authErr(msg);
     authBusy(false);
-    const pw = $('#authPass'); if (pw) { pw.value = ''; pw.focus(); }
+    /* Focus lands on the first field at fault, in form order. A password
+       that was refused is cleared so it can be retyped; a username that
+       was refused stays, so it can be corrected. */
+    const at = Config.validateUsername(username) ? '#authUser'
+             : Config.validatePassword(password) ? '#authPass'
+             : (up && password !== confirm)      ? '#authPass2'
+             : /^username/i.test(msg)             ? '#authUser'   /* "Username is already taken." */
+             : '#authPass';                                      /* a refused pair: retype the password */
+    const field = $(at);
+    if (field){
+      if (at !== '#authUser') field.value = '';
+      field.focus();
+    }
   }
 });
 

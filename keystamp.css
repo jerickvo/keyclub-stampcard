@@ -215,7 +215,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .input{display:block;width:100%;min-width:0;min-height:var(--tap);
   padding:10px 0 8px;background:transparent;color:var(--ink);
   border:0;border-bottom:var(--edge-panel) solid var(--ink);border-radius:0;
-  font:400 max(16px,var(--t-body))/1.2 var(--f-body);letter-spacing:0;
+  font:400 max(16px,var(--t-body))/1.2 var(--f-mono);letter-spacing:0;
   appearance:none;-webkit-appearance:none;color-scheme:light;accent-color:var(--ink)}
 .input::placeholder{color:var(--ink-2);opacity:1}
 .input:focus{outline:0;border-bottom-width:var(--edge-frame);padding-bottom:7px}

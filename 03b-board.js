@@ -137,7 +137,7 @@ const BoardUI = {
       ${now}
       <section class="standing" data-enter>
         <p class="fig standing__fig">
-          <span class="fig__n">${pad(o.meetings_held ?? 0)}</span>
+          <span class="fig__n">${o.meetings_held ?? 0}</span>
           <span class="fig__of">general meetings held</span>
         </p>
         <ul class="standing__rest">
@@ -162,7 +162,7 @@ const BoardUI = {
     return `<div class="members">
       <section class="standing" data-enter>
         <p class="fig standing__fig">
-          <span class="fig__n">${typeof total === 'number' ? pad(total) : '--'}</span>
+          <span class="fig__n">${typeof total === 'number' ? total : '--'}</span>
           <span class="fig__of">${total === 1 ? 'member' : 'members'} on the roster</span>
         </p>
         <ul class="standing__rest">
@@ -329,7 +329,8 @@ const BoardUI = {
             <span class="standing__val">${d.attendance.length}</span></li>
           ${d.rewards.map(r => `<li class="standing__row">
             <span class="standing__lab"><span class="row__no">${r.required}</span> ${esc(r.name)}</span>
-            <span class="standing__val standing__val--word">${r.claimed ? 'Claimed' : r.unlocked ? 'Unlocked' : 'Locked'}</span>
+            <span class="standing__val standing__val--word">${
+              { claimed:'Claimed', unlocked:'Unlocked', locked:'Locked' }[r.state || rewardState(r, m.stamps, r.claimed)]}</span>
           </li>`).join('')}
         </ul>
       </section>
