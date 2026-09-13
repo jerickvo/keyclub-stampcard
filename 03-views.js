@@ -16,10 +16,10 @@ function stampShape(seed, grow = 0){
 const STAMP_FIT = .62;
 
 const C = {
-  rung(r, total, prev){
+  rung(r, total, prev, next = false){
     const tier  = Store.tierState(r);
     const ready = tier === 'unlocked';
-    const state = tier === 'claimed' ? 'claimed' : ready ? 'ready' : 'sealed';
+    const state = tier === 'claimed' ? 'claimed' : ready ? 'ready' : next ? 'next' : 'sealed';
     const left  = r.required - total;
     const fill  = Math.max(0, Math.min(1, (total - prev) / (r.required - prev)));
     const say   = tier === 'claimed' ? 'Claimed'
@@ -165,7 +165,7 @@ C.account = () => `<section class="acct" data-enter>
     <button class="link" type="button" data-motion></button>
   </div>
   <div class="acct__row">
-    <span class="acct__lab">Signed in as <span class="acct__who">${esc((Store.user && Store.user.username) || memberName())}</span></span>
+    <span class="acct__lab">${Store.isBoard ? 'Board account' : 'Member account'}</span>
     <button class="btn btn--quiet" data-signout type="button">Sign out</button>
   </div>
 </section>`;
@@ -217,6 +217,8 @@ const Views = {
       .filter(m => m.upcoming && m.id !== showing)
       .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)
       .slice(0, 3);
+    const lastScan = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? 1 : -1)[0] || null;
+    const lastMtg  = lastScan ? Store.meeting(lastScan.meetingId) : null;
 
     return `<div class="view view--home">
       <header class="rechead" data-enter>
@@ -235,6 +237,16 @@ const Views = {
                   <span class="next__day">${fmtDate(m.date)}</span>
                   <span class="next__at meta">${esc(knit(m.time))}</span>
                 </li>`).join('')}
+              </ol>
+            </section>` : ''}
+          ${lastMtg ? `<section class="latest" data-enter>
+              <h2 class="sec">Last stamp</h2>
+              <ol class="rows next__rows">
+                <li class="row next__row">
+                  <span class="row__no">GM ${pad(lastMtg.no)}</span>
+                  <span class="next__day">${fmtDate(lastMtg.date)}</span>
+                  <span class="next__at meta">${esc(fmtTime(lastScan.at))}</span>
+                </li>
               </ol>
             </section>` : ''}
         </div>
@@ -271,7 +283,8 @@ const Views = {
 
       <div class="recbody">
         ${held.length ? `<section class="ledger" data-enter>
-          <h2 class="sec">Held<span class="sec__n">${held.length === 1 ? '1 meeting' : `${held.length} meetings`}</span></h2>
+          <h2 class="sec">Held<span class="sec__n">${held.length === 1 ? '1 meeting' : `${held.length} meetings`}${
+            counted.length ? ` · ${kept} stamped${gone ? ` · ${gone} missed` : ''}` : ''}</span></h2>
           <ol class="rows ledger__rows">
             ${held.map(m => C.ledgerRow(m)).join('')}
           </ol>
@@ -279,12 +292,6 @@ const Views = {
         : C.empty('No general meetings yet', 'Your first stamp lands here.')}
 
         <aside class="recside">
-          ${counted.length ? `<p class="tally fig" data-enter>
-            <span class="fig__n tally__fig">${kept}</span>
-            <span class="fig__of">stamped of ${counted.length} held${gone
-              ? ` / ${gone} missed` : ''}</span>
-          </p>` : ''}
-
           ${upcoming.length ? `<section class="ledger ledger--ahead" data-enter>
             <h2 class="sec">Next<span class="sec__n">${upcoming.length === 1 ? '1 meeting' : `${upcoming.length} meetings`}</span></h2>
             <ol class="rows ledger__rows">
@@ -310,14 +317,12 @@ const Views = {
         <h1 class="title rechead__title">Rewards</h1>
       </header>
 
-      <p class="fig climb__fig" data-enter>
-        <span class="fig__n">${total}</span>
-        <span class="fig__of">${esc(of)}</span>
-      </p>
-
-      <ol class="rungs" data-enter aria-label="${total} stamps against rewards at ${tiers.map(t => t.required).join(', ')}">
-        ${tiers.map((t, i) => C.rung(t, total, i ? tiers[i - 1].required : 0)).join('')}
-      </ol>
+      <div class="climb" data-enter>
+        <p class="climb__sum">${total} ${esc(of)}</p>
+        <ol class="rungs" aria-label="${total} stamps against rewards at ${tiers.map(t => t.required).join(', ')}">
+          ${tiers.map((t, i) => C.rung(t, total, i ? tiers[i - 1].required : 0, t === next)).join('')}
+        </ol>
+      </div>
     </div>`;
   },
 
@@ -412,7 +417,6 @@ const Views = {
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">${esc(name)}</h1>
       </header>
-      <p class="who__line meta" data-enter>Board account</p>
       ${C.account()}
     </div>`;
   },

@@ -82,3 +82,18 @@ test('a register names its tracks for what its rows hold', () => {
   assert.equal(html.includes('class="rows rows--dated"'), true);
   assert.equal(html.includes('class="rows rows--counted"'), true);
 });
+
+test('the club docket is one object, and no meeting is one line of type', () => {
+  const base = { meetings_held:16, total_seals:214, participating_members:25, average_attendance:13.4, today_attendance:0 };
+  BoardUI.overview = { ...base, active_meeting:null, next_meeting:null };
+  const none = BoardUI.clubPane();
+  assert.equal(none.includes('now--none'), true);
+  assert.equal(none.includes('class="now__no"'), false);
+  assert.equal(none.includes('Schedule one'), true);
+  BoardUI.overview = { ...base, active_meeting:null,
+    next_meeting:{ id:'m9', meeting_number:9, meeting_date:'2026-09-16', start_time:'12:40 PM', end_time:'1:30 PM', check_in_open:false } };
+  const ahead = BoardUI.clubPane();
+  assert.equal(ahead.includes('GM 09'), true);
+  assert.equal(ahead.includes('Check-in closed'), true);
+  assert.equal(ahead.includes('standing--flat'), true);
+});

@@ -78,11 +78,19 @@ member set.
 
 | Member | | Board | |
 |---|---|---|---|
-| Card | the stamp card, the open meeting, the next dates | Club | the meeting happening now + the year's standing |
-| Record | every meeting, stamped or missed | Meetings | schedule and delete meetings |
+| Card | the stamp card, the open meeting, the next dates | Club | the next or open meeting as a docket, then the standing |
+| Record | the attendance ledger, stamped or missed | Meetings | schedule and delete meetings |
 | Scan | camera + manual code entry | Check-In | the projector QR and the live count |
-| Rewards | 10 / 20 / 30 tiers | Members | roster, search, per-member detail |
-| *your name* | standing, attendance, rewards; the account | *your name* | sign-out and the motion setting |
+| Rewards | one track from 0 to 30 with three milestones | Members | the roster, then the standing beside it |
+| *your name* | standing, attendance, rewards; the account | *your name* | the account |
+
+Each chapter is one of a few compositions: an object page (Card, Check-In),
+a ledger (Record, Meetings, a meeting's docket, a member's detail), a track
+(Rewards), a status page (the member's own page) and a notice (Club). They
+share every component; only the hierarchy differs. The one large figure a
+page may carry is the one that means something there: the card's count, the
+member's stamp total, the meeting's number on Club. A ledger opens with its
+rows, a detail with a compact head, and Members with the roster.
 
 The fifth screen is titled with the signed-in person's first name; its folio
 entry reads the same.

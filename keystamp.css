@@ -172,10 +172,10 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 /* ── type roles ──────────────────────────────────────────────────── */
 .sec{margin:0;padding-bottom:var(--gap-tight);
   border-bottom:var(--edge-panel) solid var(--ink);
-  display:flex;align-items:baseline;justify-content:space-between;gap:var(--gap-stack);
+  display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:0 var(--gap-stack);
   font-family:var(--f-head);font-weight:400;font-size:var(--t-head);line-height:1;
   text-transform:uppercase;letter-spacing:.01em;color:var(--ink)}
-.sec__n{font:400 var(--t-micro)/1 var(--f-mono);letter-spacing:.06em;
+.sec__n{margin-left:auto;text-align:right;font:400 var(--t-micro)/1 var(--f-mono);letter-spacing:.06em;
   color:var(--ink-2);text-transform:none;white-space:nowrap}
 
 .fig{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 12px;min-width:0}

@@ -247,10 +247,10 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 /* ── type roles ──────────────────────────────────────────────────── */
 .sec{margin:0;padding-bottom:var(--gap-tight);
   border-bottom:var(--edge-panel) solid var(--ink);
-  display:flex;align-items:baseline;justify-content:space-between;gap:var(--gap-stack);
+  display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:0 var(--gap-stack);
   font-family:var(--f-head);font-weight:400;font-size:var(--t-head);line-height:1;
   text-transform:uppercase;letter-spacing:.01em;color:var(--ink)}
-.sec__n{font:400 var(--t-micro)/1 var(--f-mono);letter-spacing:.06em;
+.sec__n{margin-left:auto;text-align:right;font:400 var(--t-micro)/1 var(--f-mono);letter-spacing:.06em;
   color:var(--ink-2);text-transform:none;white-space:nowrap}
 
 .fig{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 12px;min-width:0}
@@ -651,12 +651,16 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
   .deck .strip,.deck .strip--live,.deck .next{order:0}
   .deck--live .deck__side{order:1}
 }
+/* the side column's last-stamp row exists for the wide layout; on
+   smaller screens the card's newest seal already says it */
+.latest{display:none}
 @media(min-width:1180px){
   .deck,.deck--live{grid-template-columns:minmax(0,64fr) minmax(0,36fr);
     column-gap:var(--col-gap);align-items:start}
-  .deck > .card{order:1;height:clamp(440px,calc(100dvh - 300px),780px)}
+  .deck > .card{order:1;height:auto;aspect-ratio:16 / 10}
   .deck__side,.deck--live .deck__side{order:2;grid-template-columns:minmax(0,1fr);
     row-gap:var(--gap-block)}
+  .latest{display:block}
   .view--home .card__field{min-height:0}
 }
 
@@ -679,32 +683,39 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 
 /* club */
 .club{display:grid;gap:var(--gap-block)}
-/* the first block under the opener: the torn rule is its top edge */
+/* The docket: the meeting's number, its facts and the one board action
+   as a single notice. It is the first block under the opener, so the
+   torn rule is its top edge. No meeting is one line of type. */
 .now{position:relative;display:grid;gap:4px;justify-items:start;
   padding:0 0 clamp(18px,3vw,32px);border-bottom:var(--edge-rule) solid var(--tone)}
 .now__kick{margin:0;font:400 var(--t-micro)/1.3 var(--f-mono);letter-spacing:.14em;
   text-transform:uppercase;color:var(--ink-2)}
 .now__no{margin:0;font-family:var(--f-head);font-weight:400;font-size:var(--t-fig);
   line-height:.85;letter-spacing:-.01em;padding-bottom:.06em}
+.now__facts{display:grid;gap:4px;justify-items:start;min-width:0}
 .now__meta{margin:0}
-.now__count{margin:var(--gap-tight) 0 0;font-size:var(--t-body);color:var(--ink-2)}
-.now__count b{font-family:var(--f-head);font-weight:400;font-size:var(--t-head);
+.now__state{margin:var(--gap-hair) 0 0;font-size:var(--t-body);color:var(--ink-2)}
+.now__state b{font-family:var(--f-head);font-weight:400;font-size:var(--t-head);
   line-height:1;color:var(--ink);margin-right:4px}
+.now__none{margin:0;font-size:var(--t-sub);line-height:1.3;max-width:34ch}
 .now__go{margin-top:var(--gap-stack)}
 .now--live{background:var(--ink);color:var(--paper);border:0;
   margin-inline:calc(var(--gutter) * -1);padding:clamp(18px,3vw,32px) var(--gutter)}
 .now--live::before{content:"";position:absolute;left:var(--gutter);top:clamp(18px,3vw,32px);
   width:9px;height:9px;background:var(--seal)}
 .now--live .now__kick{padding-left:18px;color:var(--tint)}
-.now--live .now__meta,.now--live .now__count{color:var(--tint)}
-.now--live .now__count b{color:var(--paper)}
+.now--live .now__meta,.now--live .now__state{color:var(--tint)}
+.now--live .now__state b{color:var(--paper)}
 .now--live .now__go{background:var(--paper);color:var(--ink)}
 .now--live .now__go:hover{background:var(--tint)}
 @media(min-width:900px){
-  .now{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"kick go" "no go" "meta go" "count go";
-    align-items:end;column-gap:var(--gap-block)}
-  .now__kick{grid-area:kick} .now__no{grid-area:no} .now__meta{grid-area:meta}
-  .now__count{grid-area:count} .now__go{grid-area:go;align-self:center;margin:0}
+  /* the number at left, its facts and action beside it: one object,
+     and the space to the right is its own */
+  .now{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"kick kick" "no facts";
+    align-items:start;column-gap:var(--gap-block)}
+  .now__kick{grid-area:kick} .now__no{grid-area:no} .now__facts{grid-area:facts;padding-top:.3em}
+  .now--none{grid-template-columns:minmax(0,1fr);grid-template-areas:"kick" "none" "go"}
+  .now__none{grid-area:none} .now--none .now__go{grid-area:go}
   .now--live{margin-inline:0;padding-inline:clamp(20px,2.6vw,36px)}
   .now--live::before{left:clamp(20px,2.6vw,36px)}
 }
@@ -765,6 +776,15 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 
 /* members */
 .members{display:grid;gap:var(--gap-block)}
+@media(min-width:1180px){
+  .members{grid-template-columns:minmax(0,7fr) minmax(0,5fr);column-gap:var(--col-gap);align-items:start}
+  .members > .roster{grid-column:1}
+  /* beside the roster the standing is narrow: its word above its rows */
+  .members > .members__standing{grid-column:2;grid-template-columns:minmax(0,1fr);
+    position:sticky;top:calc(var(--head-h,0px) + var(--gap-block))}
+  .members > .members__standing > .sec{grid-column:1;border-bottom:var(--edge-panel) solid var(--ink);padding-bottom:var(--gap-tight)}
+  .members > .members__standing .standing__rest{grid-column:1;border-top:0}
+}
 .standing__lab .row__no{margin-right:6px}
 .standing__unit{font:400 var(--t-caption)/1 var(--f-body);text-transform:none;color:var(--ink-2)}
 .standing__val--word{font-size:var(--t-sub)}
@@ -799,8 +819,15 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 /* detail panes */
 .detail{display:grid;gap:var(--gap-block)}
 .detail__back{margin:calc(var(--gap-block) * -1 + var(--gap-tight)) 0 0}   /* a crumb: belongs to the title */
-.detail__name{font-family:var(--f-mono);font-size:clamp(24px,3.6vw,44px);line-height:1.1;
-  letter-spacing:.01em;text-transform:none;overflow-wrap:anywhere}
+/* the head of a detail: an identifier large enough to establish the
+   page, and one or two mono lines of facts; the ledger is the body */
+.detail__head{display:grid;gap:var(--gap-hair);justify-items:start}
+.detail__id{margin:0;font-family:var(--f-head);font-weight:400;font-size:clamp(28px,4vw,48px);
+  line-height:.9;letter-spacing:-.01em;text-transform:uppercase;padding-bottom:.08em}
+.detail__name{font-family:var(--f-mono);text-transform:none;letter-spacing:.01em;line-height:1.1;
+  overflow-wrap:anywhere}
+.detail__meta{margin:0}
+.detail__on{color:var(--ink)}
 
 /* check-in: the projector */
 .checkin{display:grid;gap:var(--gap-stack)}
@@ -941,7 +968,6 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 
 .view--record{display:flex;flex-direction:column;gap:var(--gap-block)}
 .recbody{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--gap-block);align-items:start}
-.tally{align-items:baseline}
 
 .ledger{display:flex;flex-direction:column;min-width:0}
 .ledger .rows{border-top:0}
@@ -959,19 +985,13 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .lrow--upcoming .lrow__slot{border-color:var(--tone)}
 
 .recside{display:contents}
-.recbody > .ledger{order:2}
-.recside .tally{order:1}
-.recside .ledger--ahead{order:3}
-.recbody > .empty{order:2}
 
 @media(min-width:1180px){
   .recbody{grid-template-columns:minmax(0,7fr) minmax(0,4fr);
     column-gap:var(--col-gap)}
-  .recbody > .ledger,.recbody > .empty{order:1}
-  .recside{display:grid;order:2;align-content:start;gap:var(--gap-block);
+  .recside{display:grid;align-content:start;gap:var(--gap-block);
     position:sticky;top:calc(var(--head-h,0px) + var(--gap-block))}
-  .recside .tally{flex-direction:column;align-items:flex-start;gap:var(--gap-tight)}
-  .recside .tally .fig__of{max-width:18ch}
+  .recside:empty{display:none}
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1055,8 +1075,15 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
   .view--scan > .scanline{grid-area:line;align-self:start}
 }
 
+/* ── one track from 0 to 30. On a phone it runs down the left edge
+   through the three rungs; from 900px it runs across the top, the
+   three segments butting together, each milestone's label ending at
+   its own point. The fill is the member's stamps; the burgundy square
+   is where they stand now. ────────────────────────────────────────── */
 .view--rewards{display:flex;flex-direction:column;gap:var(--gap-block)}
-.climb__fig{align-items:baseline}
+.climb{display:grid;gap:var(--gap-stack)}
+.climb__sum{margin:0;font:400 var(--t-caption)/1.4 var(--f-mono);letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-2)}
 .rungs{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr)}
 .rung{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;
   align-items:center;column-gap:clamp(14px,2.4vw,24px);
@@ -1071,9 +1098,11 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
   text-transform:uppercase;letter-spacing:.01em;text-wrap:balance}
 .rung__desc{font-size:var(--t-caption);color:var(--ink-2);max-width:32ch}
 .rung__say{white-space:nowrap;text-align:right}
-.rung--sealed .rung__at{color:var(--ink-2)}
-.rung--sealed .rung__name{color:var(--ink-2)}
-.rung--claimed .rung__say{color:var(--ink)}
+/* states: claimed and next are ink; the milestones beyond recede */
+.rung--sealed .rung__at,.rung--sealed .rung__name{color:var(--ink-2)}
+.rung--next .rung__say,.rung--claimed .rung__say{color:var(--ink)}
+.rung--next::after{content:"";position:absolute;left:-1.5px;top:calc(var(--fill,0%) - 4px);
+  width:9px;height:9px;background:var(--seal)}
 .rung--ready{background:var(--ink);color:var(--paper);
   margin-right:calc(var(--gutter) * -1);
   padding-right:calc(clamp(16px,2.2vw,26px) + var(--gutter))}
@@ -1084,24 +1113,18 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .rung--ready :focus-visible{outline-color:var(--paper)}
 
 @media(min-width:900px){
-  .rungs{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:clamp(20px,3vw,44px)}
-  .rung{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;
-    align-content:start;align-items:start;row-gap:var(--gap-stack);
-    padding:clamp(18px,2.4vw,28px) 0 0}
+  .rungs{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:0}
+  .rung{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;
+    justify-items:end;text-align:right;align-content:start;row-gap:var(--gap-tight);
+    padding:clamp(18px,2.4vw,28px) 0 0 clamp(16px,2vw,26px)}
   .rung::before{left:0;right:0;top:0;bottom:auto;width:auto;height:6px;
     background:linear-gradient(to right,var(--ink) var(--fill,0%),var(--tint) var(--fill,0%))}
-  .rung__at{font-size:clamp(48px,6.4vw,92px)}
-  .rung__say,.rung__claim{grid-column:1 / -1;justify-self:start;text-align:left}
-  .rung--ready{margin:0;padding:clamp(18px,2.4vw,28px) clamp(16px,2vw,26px) clamp(18px,2.4vw,28px) 0;
-    padding-left:clamp(16px,2vw,26px)}
+  .rung--next::after{left:calc(var(--fill,0%) - 4px);top:-1.5px}
+  .rung__at{font-size:clamp(48px,6.4vw,92px);min-width:0}
+  .rung__body{justify-items:end}
+  .rung__say,.rung__claim{justify-self:end;text-align:right}
+  .rung--ready{margin:0;padding:clamp(18px,2.4vw,28px) clamp(16px,2vw,26px)}
   .rung--ready::before{left:0;right:0}
-}
-@media(min-width:1180px){
-  .view--rewards{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,8fr);
-    column-gap:var(--col-gap);align-items:start}
-  .view--rewards > .rechead{grid-column:1 / -1}
-  .climb__fig{flex-direction:column;align-items:flex-start;gap:var(--gap-tight)}
-  .climb__fig .fig__of{max-width:16ch}
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1109,7 +1132,6 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
    standing is the content, the account rows close it.
    ══════════════════════════════════════════════════════════════════ */
 .view--member{display:flex;flex-direction:column;gap:var(--gap-block)}
-.who__line{margin:calc(var(--gap-block) * -1 + var(--gap-tight)) 0 0;display:flex;flex-wrap:wrap;gap:4px 14px}   /* belongs to the title */
 
 .standing{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--gap-block)}
 .standing__fig{align-items:baseline}
@@ -1126,7 +1148,12 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .acct__row{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-stack);
   padding:clamp(10px,1.4vw,14px) 0;border-bottom:var(--edge-rule) solid var(--tone)}
 .acct__lab{font-size:var(--t-body)}
-.acct__who{font-family:var(--f-mono);font-size:.94em}
+
+/* a standing without a figure: its word at left, its rows at right on
+   wide screens; the word above the rows on a phone */
+.standing--flat{gap:0}
+.standing--flat > .sec{margin:0}
+.standing--flat .standing__rest{border-top:0}
 
 @media(min-width:900px){
   .standing{grid-template-columns:minmax(0,5fr) minmax(0,7fr);column-gap:var(--col-gap);
@@ -1139,6 +1166,8 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
   .acct > .sec{grid-column:1;grid-row:1;border-bottom:0;padding-bottom:0}
   .acct__row{grid-column:2}
   .acct__row:first-of-type{border-top:var(--edge-panel) solid var(--ink)}
+  .standing--flat > .sec{grid-column:1;grid-row:1;border-bottom:0;padding-bottom:0}
+  .standing--flat .standing__rest{grid-column:2;border-top:var(--edge-panel) solid var(--ink)}
 }
 
 </style>
@@ -14555,10 +14584,10 @@ function stampShape(seed, grow = 0){
 const STAMP_FIT = .62;
 
 const C = {
-  rung(r, total, prev){
+  rung(r, total, prev, next = false){
     const tier  = Store.tierState(r);
     const ready = tier === 'unlocked';
-    const state = tier === 'claimed' ? 'claimed' : ready ? 'ready' : 'sealed';
+    const state = tier === 'claimed' ? 'claimed' : ready ? 'ready' : next ? 'next' : 'sealed';
     const left  = r.required - total;
     const fill  = Math.max(0, Math.min(1, (total - prev) / (r.required - prev)));
     const say   = tier === 'claimed' ? 'Claimed'
@@ -14704,7 +14733,7 @@ C.account = () => `<section class="acct" data-enter>
     <button class="link" type="button" data-motion></button>
   </div>
   <div class="acct__row">
-    <span class="acct__lab">Signed in as <span class="acct__who">${esc((Store.user && Store.user.username) || memberName())}</span></span>
+    <span class="acct__lab">${Store.isBoard ? 'Board account' : 'Member account'}</span>
     <button class="btn btn--quiet" data-signout type="button">Sign out</button>
   </div>
 </section>`;
@@ -14756,6 +14785,8 @@ const Views = {
       .filter(m => m.upcoming && m.id !== showing)
       .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)
       .slice(0, 3);
+    const lastScan = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? 1 : -1)[0] || null;
+    const lastMtg  = lastScan ? Store.meeting(lastScan.meetingId) : null;
 
     return `<div class="view view--home">
       <header class="rechead" data-enter>
@@ -14774,6 +14805,16 @@ const Views = {
                   <span class="next__day">${fmtDate(m.date)}</span>
                   <span class="next__at meta">${esc(knit(m.time))}</span>
                 </li>`).join('')}
+              </ol>
+            </section>` : ''}
+          ${lastMtg ? `<section class="latest" data-enter>
+              <h2 class="sec">Last stamp</h2>
+              <ol class="rows next__rows">
+                <li class="row next__row">
+                  <span class="row__no">GM ${pad(lastMtg.no)}</span>
+                  <span class="next__day">${fmtDate(lastMtg.date)}</span>
+                  <span class="next__at meta">${esc(fmtTime(lastScan.at))}</span>
+                </li>
               </ol>
             </section>` : ''}
         </div>
@@ -14810,7 +14851,8 @@ const Views = {
 
       <div class="recbody">
         ${held.length ? `<section class="ledger" data-enter>
-          <h2 class="sec">Held<span class="sec__n">${held.length === 1 ? '1 meeting' : `${held.length} meetings`}</span></h2>
+          <h2 class="sec">Held<span class="sec__n">${held.length === 1 ? '1 meeting' : `${held.length} meetings`}${
+            counted.length ? ` · ${kept} stamped${gone ? ` · ${gone} missed` : ''}` : ''}</span></h2>
           <ol class="rows ledger__rows">
             ${held.map(m => C.ledgerRow(m)).join('')}
           </ol>
@@ -14818,12 +14860,6 @@ const Views = {
         : C.empty('No general meetings yet', 'Your first stamp lands here.')}
 
         <aside class="recside">
-          ${counted.length ? `<p class="tally fig" data-enter>
-            <span class="fig__n tally__fig">${kept}</span>
-            <span class="fig__of">stamped of ${counted.length} held${gone
-              ? ` / ${gone} missed` : ''}</span>
-          </p>` : ''}
-
           ${upcoming.length ? `<section class="ledger ledger--ahead" data-enter>
             <h2 class="sec">Next<span class="sec__n">${upcoming.length === 1 ? '1 meeting' : `${upcoming.length} meetings`}</span></h2>
             <ol class="rows ledger__rows">
@@ -14849,14 +14885,12 @@ const Views = {
         <h1 class="title rechead__title">Rewards</h1>
       </header>
 
-      <p class="fig climb__fig" data-enter>
-        <span class="fig__n">${total}</span>
-        <span class="fig__of">${esc(of)}</span>
-      </p>
-
-      <ol class="rungs" data-enter aria-label="${total} stamps against rewards at ${tiers.map(t => t.required).join(', ')}">
-        ${tiers.map((t, i) => C.rung(t, total, i ? tiers[i - 1].required : 0)).join('')}
-      </ol>
+      <div class="climb" data-enter>
+        <p class="climb__sum">${total} ${esc(of)}</p>
+        <ol class="rungs" aria-label="${total} stamps against rewards at ${tiers.map(t => t.required).join(', ')}">
+          ${tiers.map((t, i) => C.rung(t, total, i ? tiers[i - 1].required : 0, t === next)).join('')}
+        </ol>
+      </div>
     </div>`;
   },
 
@@ -14951,7 +14985,6 @@ const Views = {
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">${esc(name)}</h1>
       </header>
-      <p class="who__line meta" data-enter>Board account</p>
       ${C.account()}
     </div>`;
   },
@@ -15132,27 +15165,35 @@ const BoardUI = {
     const next = o.next_meeting;
     const today = Schedule.today();
 
+    /* The docket: the meeting's number, its facts and the one board
+       action, composed as a single notice. No meeting is one line of
+       type, and the schedule action carries the weight. */
     let now;
     if (active){
       now = `<section class="now now--live" data-enter>
         <p class="now__kick">Happening now</p>
         <p class="now__no">GM ${pad(active.meeting_number)}</p>
-        <p class="now__meta meta">${esc(fmtDate(active.meeting_date))} · ${this.when(active)}</p>
-        <p class="now__count"><b>${esc(String(o.today_attendance ?? 0))}</b> checked in so far</p>
-        <button class="btn now__go" type="button" data-go="bcheckin">Show the code</button>
+        <div class="now__facts">
+          <p class="now__meta meta">${esc(fmtDate(active.meeting_date))} · ${this.when(active)}</p>
+          <p class="now__state"><b>${esc(String(o.today_attendance ?? 0))}</b> checked in so far</p>
+          <button class="btn now__go" type="button" data-go="bcheckin">Show the code</button>
+        </div>
       </section>`;
     } else if (next){
       const isToday = next.meeting_date === today;
       now = `<section class="now" data-enter>
         <p class="now__kick">${isToday ? 'Today' : 'Next general meeting'}</p>
         <p class="now__no">GM ${pad(next.meeting_number)}</p>
-        <p class="now__meta meta">${esc(fmtDate(next.meeting_date))} · ${this.when(next)}</p>
-        <button class="btn now__go" type="button" data-go="bcheckin">Open check-in</button>
+        <div class="now__facts">
+          <p class="now__meta meta">${esc(fmtDate(next.meeting_date))} · ${this.when(next)}</p>
+          <p class="now__state">Check-in ${next.check_in_open ? 'open' : 'closed'}</p>
+          <button class="btn now__go" type="button" data-go="bcheckin">Open check-in</button>
+        </div>
       </section>`;
     } else {
-      now = `<section class="now" data-enter>
+      now = `<section class="now now--none" data-enter>
         <p class="now__kick">Next general meeting</p>
-        <p class="now__no">None yet</p>
+        <p class="now__none">No general meeting is scheduled.</p>
         <button class="btn now__go" type="button" data-go="bmeet">Schedule one</button>
       </section>`;
     }
@@ -15161,12 +15202,11 @@ const BoardUI = {
       ? '-' : esc(String(o.average_attendance));
     return `<div class="club">
       ${now}
-      <section class="standing" data-enter>
-        <p class="fig standing__fig">
-          <span class="fig__n">${o.meetings_held ?? 0}</span>
-          <span class="fig__of">general meetings held</span>
-        </p>
+      <section class="standing standing--flat" data-enter>
+        <h2 class="sec">Standing</h2>
         <ul class="standing__rest">
+          <li class="standing__row"><span class="standing__lab">General meetings held</span>
+            <span class="standing__val">${esc(String(o.meetings_held ?? 0))}</span></li>
           <li class="standing__row"><span class="standing__lab">Stamps earned</span>
             <span class="standing__val">${esc(String(o.total_seals ?? 0))}</span></li>
           <li class="standing__row"><span class="standing__lab">Members checked in</span>
@@ -15186,11 +15226,12 @@ const BoardUI = {
     const participating = o.participating_members;
 
     return `<div class="members">
-      <section class="standing" data-enter>
-        <p class="fig standing__fig">
-          <span class="fig__n">${typeof total === 'number' ? total : '--'}</span>
-          <span class="fig__of">${total === 1 ? 'member' : 'members'} on the roster</span>
-        </p>
+      <section class="roster" data-enter>
+        ${this.rosterBody()}
+      </section>
+
+      <section class="standing standing--flat members__standing" data-enter>
+        <h2 class="sec">Standing</h2>
         <ul class="standing__rest">
           ${REWARD_TIERS.map(r => {
             const count = ms['m' + r.required];
@@ -15205,10 +15246,6 @@ const BoardUI = {
             <span class="standing__lab">Ever checked in</span>
             <span class="standing__val">${participating}</span></li>` : ''}
         </ul>
-      </section>
-
-      <section class="roster" data-enter>
-        ${this.rosterBody()}
       </section>
     </div>`;
   },
@@ -15345,21 +15382,14 @@ const BoardUI = {
     const m = d.member;
     return `<div class="detail">
       <p class="detail__back"><button class="link link--quiet" data-bback>&larr; Roster</button></p>
-      <section class="standing" data-enter>
-        <p class="fig standing__fig">
-          <span class="fig__n detail__name">${esc(m.username)}</span>
-          <span class="fig__of">${m.stamps} ${m.stamps === 1 ? 'stamp' : 'stamps'}<span class="fig__ln">joined ${esc(fmtDay(m.created_at))}</span></span>
-        </p>
-        <ul class="standing__rest">
-          <li class="standing__row"><span class="standing__lab">Meetings attended</span>
-            <span class="standing__val">${d.attendance.length}</span></li>
-          ${d.rewards.map(r => `<li class="standing__row">
-            <span class="standing__lab"><span class="row__no">${r.required}</span> ${esc(r.name)}</span>
-            <span class="standing__val standing__val--word">${
-              { claimed:'Claimed', unlocked:'Unlocked', locked:'Locked' }[r.state || rewardState(r, m.stamps, r.claimed)]}</span>
-          </li>`).join('')}
-        </ul>
-      </section>
+      <header class="detail__head" data-enter>
+        <p class="detail__id detail__name">${esc(m.username)}</p>
+        <p class="detail__meta meta">${m.stamps} ${m.stamps === 1 ? 'stamp' : 'stamps'} · joined ${esc(fmtDay(m.created_at))}</p>
+        <p class="detail__meta meta">${d.rewards.map(r => {
+          const s = r.state || rewardState(r, m.stamps, r.claimed);
+          return `<span${s === 'locked' ? '' : ' class="detail__on"'}>${r.required} ${esc(r.name)} ${s}</span>`;
+        }).join(' · ')}</p>
+      </header>
 
       <section class="ledger" data-enter>
         <h2 class="sec">Attendance<span class="sec__n">${d.attendance.length === 1 ? '1 meeting' : `${d.attendance.length} meetings`}</span></h2>
@@ -15385,23 +15415,14 @@ const BoardUI = {
     return `<div class="detail">
       <p class="detail__back"><button class="link link--quiet" data-bback>&larr; Meetings</button></p>
       ${this.deleteNote ? `<p class="err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
-      <section class="standing" data-enter>
-        <p class="fig standing__fig">
-          <span class="fig__n">GM ${pad(m.meeting_number)}</span>
-          <span class="fig__of">${esc(fmtDate(m.meeting_date))}<span class="fig__ln">${this.when(m)}</span></span>
-        </p>
-        <ul class="standing__rest">
-          <li class="standing__row"><span class="standing__lab">Checked in</span>
-            <span class="standing__val">${stamps}</span></li>
-          <li class="standing__row"><span class="standing__lab">Of members who attend</span>
-            <span class="standing__val">${this.shareOfClub(stamps)}</span></li>
-          <li class="standing__row"><span class="standing__lab">Check-in</span>
-            <span class="standing__val standing__val--word">${m.check_in_open ? 'Open' : 'Closed'}</span></li>
-        </ul>
-      </section>
+      <header class="detail__head" data-enter>
+        <p class="detail__id">GM ${pad(m.meeting_number)}</p>
+        <p class="detail__meta meta">${esc(fmtDate(m.meeting_date))} · ${this.when(m)} · Check-in ${m.check_in_open ? 'open' : 'closed'}</p>
+      </header>
 
       <section class="ledger" data-enter>
-        <h2 class="sec">Attendees<span class="sec__n">${stamps === 1 ? '1 member' : `${stamps} members`}</span></h2>
+        <h2 class="sec">Attendees<span class="sec__n">${stamps === 1 ? '1 member' : `${stamps} members`}${
+          this.shareOfClub(stamps) === '-' ? '' : ` · ${this.shareOfClub(stamps)} of members who attend`}</span></h2>
         ${stamps
           ? `<ol class="rows rows--who">${d.attendees.map(a => `
               <li class="row rrow" data-bmember="${esc(a.user_id)}" tabindex="0" role="button">
