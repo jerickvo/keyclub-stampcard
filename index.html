@@ -157,8 +157,9 @@ main#view:focus,main#view:focus-visible{outline:none}
 /* ── shell ───────────────────────────────────────────────────────── */
 .shell{position:relative;z-index:1;display:grid;
   grid-template-rows:auto minmax(0,1fr);min-height:100%}
-main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
-  padding:calc(var(--gap-stack) + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x))
+main#view{--view-top:var(--gap-stack);
+  width:100%;max-width:var(--page-max);margin-inline:auto;
+  padding:calc(var(--view-top) + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x))
           calc(var(--gap-block) + var(--folio-h) + env(safe-area-inset-bottom,0px))}
 .view{position:relative}
 
@@ -217,7 +218,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
     text-decoration-thickness:2px;text-underline-offset:3px}
   .folio__wm{font-family:var(--f-display);font-size:19px;line-height:1;
     text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
-  main#view{padding-top:var(--gap-block)}
+  main#view{--view-top:var(--gap-block)}
 }
 
 /* ── chapter opener ──────────────────────────────────────────────
@@ -272,21 +273,31 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   background:var(--ink);color:var(--paper);cursor:pointer;
   font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);line-height:1;
   text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
-.btn:hover{background:var(--ink-2)}
+/* hover inverts the button inside its own frame; a working button is
+   faded and stays put, so the two are never the same grey */
+.btn:hover{background:var(--paper);color:var(--ink);
+  box-shadow:inset 0 0 0 var(--edge-panel) var(--ink)}
 .btn:active{transform:translate(2px,2px)}
-.btn[disabled]{opacity:.55;cursor:progress;transform:none}
 .btn--quiet{background:var(--paper);color:var(--ink);
   border:var(--edge-panel) solid var(--ink);padding:8px 14px;
   font-family:var(--f-body);font-size:var(--t-body);text-transform:none;letter-spacing:0}
-.btn--quiet:hover{background:var(--ink);color:var(--paper)}
+.btn--quiet:hover{background:var(--ink);color:var(--paper);box-shadow:none}
 .btn--inv{background:var(--paper);color:var(--ink)}
-.btn--inv:hover{background:var(--tint)}
+.btn--inv:hover{background:var(--tint);box-shadow:none}
+/* a button that names its progress word is as wide as the wider of its
+   two labels from the start, so working never resizes it */
+.btn[data-busy]{flex-direction:column;gap:0}
+.btn[data-busy]::after{content:attr(data-busy);display:block;height:0;overflow:hidden;visibility:hidden}
+/* a working button is its resting self, faded, and deaf to the pointer:
+   no hover, no press, whatever colours its composition gave it */
+.btn[disabled]{opacity:.55;pointer-events:none;transform:none}
 
 .link{display:inline-flex;align-items:center;min-height:var(--link-h,36px);padding:6px 0;
   background:none;border:0;border-radius:0;cursor:pointer;color:var(--ink);
   font:400 var(--t-body)/1.2 var(--f-body);letter-spacing:0;
   text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px}
 .link:hover{text-decoration-thickness:2.5px}
+.link:active{transform:translate(1px,1px)}
 .link--quiet{color:var(--ink-2)}
 .link--quiet:hover{color:var(--ink)}
 
@@ -336,6 +347,10 @@ select.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-of
 .toast__t{margin:0;font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);
   line-height:1.1;text-transform:uppercase;letter-spacing:.02em}
 .toast__d{margin:0;font:400 var(--t-caption)/1.4 var(--f-body);color:var(--tint)}
+/* a refusal is the strip inverted: ink on paper behind a burgundy rule */
+.toast--bad{background:var(--paper);color:var(--ink);
+  border-left:6px solid var(--seal);box-shadow:inset 0 0 0 var(--edge-panel) var(--ink)}
+.toast--bad .toast__d{color:var(--ink-2)}
 @media(min-width:768px){
   .toasts{left:auto;right:var(--gutter);bottom:var(--gap-stack);max-width:min(380px,40vw)}
   .toast{padding:12px 16px}
@@ -678,7 +693,15 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
    the roster standing and the roster.
    ══════════════════════════════════════════════════════════════════ */
 .view--board{display:flex;flex-direction:column;gap:var(--gap-block)}
-.bwait{margin:0}
+/* the loading beat: one rule drawn across the column in six cuts, the
+   word under it; when motion is off the rule is simply there */
+.bwait{display:grid;gap:var(--gap-tight);margin:0;min-height:var(--tap);align-content:start}
+.bwait__rule{display:block;height:var(--edge-panel);background:var(--ink);
+  transform-origin:left center;animation:ruleDraw 420ms steps(6,end) both}
+.bwait__msg{color:var(--ink-2)}
+@keyframes ruleDraw{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media(prefers-reduced-motion:reduce){ .bwait__rule{animation:none} }
+:root[data-motion-pref="off"] .bwait__rule{animation:none}
 .bempty{margin:0;padding:var(--gap-stack) 0;font-size:var(--t-body);color:var(--ink-2)}
 
 /* club */
@@ -707,7 +730,7 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .now--live .now__meta,.now--live .now__state{color:var(--tint)}
 .now--live .now__state b{color:var(--paper)}
 .now--live .now__go{background:var(--paper);color:var(--ink)}
-.now--live .now__go:hover{background:var(--tint)}
+.now--live .now__go:hover{background:var(--tint);box-shadow:none}
 @media(min-width:900px){
   /* the number at left, its facts and action beside it: one object,
      and the space to the right is its own */
@@ -1004,7 +1027,7 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .view--scan{display:grid;grid-template-rows:auto minmax(0,1fr) auto;
   gap:var(--gap-stack);
   height:calc(100dvh - var(--head-h,0px) - var(--folio-h,0px)
-              - var(--gap-stack) - var(--gap-block) - env(safe-area-inset-bottom,0px));
+              - var(--view-top,var(--gap-stack)) - var(--gap-block) - env(safe-area-inset-bottom,0px));
   min-height:420px}
 .viewer{position:relative;isolation:isolate;overflow:hidden;container-type:size;
   width:100%;min-height:0;
@@ -1060,8 +1083,12 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .zoom__range:focus-visible{outline:var(--edge-panel) solid var(--paper);outline-offset:2px}
 .viewer--zoom .reticle{margin-top:-22px}
 
+/* the note sits at the foot of the viewer; the feed and the reticle
+   are put away, the meeting line stays */
 .viewer--stalled{container-type:normal;background:var(--paper);display:grid;align-items:end}
+.viewer--stalled video,.viewer--stalled .reticle{display:none}
 .stall{display:grid;gap:var(--gap-tight);padding:var(--gap-stack)}
+.stall__retry{justify-self:start}
 .stall__title{margin:0;font-family:var(--f-head);font-weight:400;text-transform:uppercase;
   line-height:1;font-size:var(--t-head)}
 .stall__note{margin:0;max-width:46ch;font-size:var(--t-caption);line-height:1.45;color:var(--ink-2)}
@@ -1109,7 +1136,7 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .rung--ready::before{background:var(--seal)}
 .rung--ready .rung__desc{color:var(--tint)}
 .rung--ready .rung__claim{background:var(--paper);color:var(--ink)}
-.rung--ready .rung__claim:hover{background:var(--tint)}
+.rung--ready .rung__claim:hover{background:var(--tint);box-shadow:none}
 .rung--ready :focus-visible{outline-color:var(--paper)}
 
 @media(min-width:900px){
@@ -14361,6 +14388,18 @@ const Store = {
 
   get failed(){ return this.loadError !== null; },
 
+  /* One line that changes whenever a page would: who is signed in, what
+     loaded, which meetings are open or ahead, the stamps, the claims.
+     A re-read that finds nothing new repaints nothing. */
+  stamp(){
+    return JSON.stringify([
+      this.user ? this.user.id : null, this.loadError,
+      this.meetings.map(m => [m.id, m.no, m.date, m.time, m.open, m.upcoming]),
+      this.scans.map(s => [s.meetingId, s.at]),
+      this.rewards.map(r => [r.id, r.claimed]),
+    ]);
+  },
+
   get signedIn(){ return Boolean(this.user); },
   get role(){ return this.user ? this.user.role : null; },
   get isBoard(){ return this.role === 'board'; },
@@ -14749,7 +14788,7 @@ const Views = {
       <section class="empty" data-enter>
         <h2 class="empty__title">Can't reach the club records</h2>
         <p class="empty__note">Check your connection and try again.</p>
-        <p><button class="btn" data-reload>Try again</button></p>
+        <p><button class="btn" type="button" data-reload data-busy="Retrying…">Try again</button></p>
       </section>
     </div>`;
   },
@@ -14774,10 +14813,10 @@ const Views = {
       action = C.strip({ verb:`Claim ${ready.name}`, go:'rewards',
                          meta:`Card ${pad(p.card)} filled` });
     else if (next)
-      action = C.strip({ verb:'Nothing open', go:'scan', quiet:true,
+      action = C.strip({ verb:'Nothing open', go:'record', quiet:true,
                          meta:`Next GM ${pad(next.no)} · ${fmtDate(next.date)}` });
     else
-      action = C.strip({ verb:'Nothing open', go:'scan', quiet:true,
+      action = C.strip({ verb:'Nothing open', go:'record', quiet:true,
                          meta:'No meetings scheduled yet' });
 
     const showing = open ? open.id : next ? next.id : null;
@@ -14895,11 +14934,7 @@ const Views = {
   },
 
   scan(){
-    const open = Store.openMeeting();
-    const done = open && Store.attended(open.id);
-    const standing = !open ? 'Nothing open'
-      : done ? `Already stamped · GM ${pad(open.no)}`
-      : `GM ${pad(open.no)} · today · ${open.time}`;
+    const standing = scanStanding();
 
     return `<div class="view view--scan">
       <header class="rechead" data-enter>
@@ -14932,6 +14967,10 @@ const Views = {
     BoardUI.memberDetail = null;
     BoardUI.meetingDetail = null;
     BoardUI.confirmDelete = null;
+    /* a fresh chapter opens on the loading beat, never on another
+       chapter's data */
+    BoardUI.loading = true;
+    BoardUI.shown = null;
     return `<div class="view view--board">
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">${title}</h1>
@@ -15037,7 +15076,7 @@ const Views = {
           <p class="err authp__err" id="authErr" role="alert" aria-live="assertive"></p>
 
           <div class="authp__act">
-            <button class="btn authp__go" type="submit" id="authGo">
+            <button class="btn authp__go" type="submit" id="authGo" data-busy="${up ? 'Creating…' : 'Signing in…'}">
               ${up ? 'Create account' : 'Sign in'}
             </button>
             <button class="link authp__swap" type="button" id="authSwap">
@@ -15082,6 +15121,7 @@ function spanTime(start, end){
 const BoardUI = {
   tab: 'club',
   loading: false,
+  shown: null,          /* the tab whose loaded content the pane holds */
   error: null,
 
   overview: null,
@@ -15137,8 +15177,13 @@ const BoardUI = {
     return this.sessionPane();
   },
 
+  /* The loading beat: one rule drawn across the column in six cuts,
+     the word under it. Nothing spins. */
   skeleton(){
-    return `<p class="bwait meta" aria-busy="true">Loading</p>`;
+    return `<div class="bwait" role="status" aria-busy="true">
+      <i class="bwait__rule" aria-hidden="true"></i>
+      <span class="bwait__msg meta">Loading</span>
+    </div>`;
   },
 
   failure(code){
@@ -15313,7 +15358,7 @@ const BoardUI = {
       <p class="bconfirm__q" role="alert">${esc(q)}</p>
       <p class="bconfirm__why">${esc(why)}</p>
       <div class="bconfirm__act">
-        <button class="btn" type="button" data-bdelete="${esc(m.id)}" data-bstamps="${stamps}">Delete</button>
+        <button class="btn" type="button" data-bdelete="${esc(m.id)}" data-bstamps="${stamps}" data-busy="Deleting…">Delete</button>
         <button class="btn btn--quiet bconfirm__keep" type="button" data-bcancel>Keep</button>
       </div>
     </div>`;
@@ -15337,7 +15382,7 @@ const BoardUI = {
       </div>
       <p class="err" id="mErr" role="alert" aria-live="assertive" hidden></p>
       <div class="bform__row">
-        <button class="btn" type="submit" id="mGo">Schedule meeting</button>
+        <button class="btn" type="submit" id="mGo" data-busy="Scheduling…">Schedule meeting</button>
         <button class="link link--quiet" type="button" data-mreset>Reset</button>
       </div>
     </form>`;
@@ -15481,10 +15526,10 @@ const BoardUI = {
             <p class="proj__cap">Scan to check in</p>
           </div>
           <p class="proj__count"><b id="attCount">-</b><span>checked in</span></p>
-          <button class="btn btn--inv proj__ctl" type="button" data-bend="${esc(sel.id)}">Close check-in</button>
+          <button class="btn btn--inv proj__ctl" type="button" data-bend="${esc(sel.id)}" data-busy="Ending…">Close check-in</button>
         ` : `
           <p class="proj__count proj__count--shut"><span>Members see the code here once it opens.</span></p>
-          <button class="btn proj__ctl" type="button" data-bstart="${esc(sel.id)}">Open check-in</button>
+          <button class="btn proj__ctl" type="button" data-bstart="${esc(sel.id)}" data-busy="Starting…">Open check-in</button>
         `}
       </section>
     </div>`;
@@ -15803,6 +15848,21 @@ function paintAttendanceCount(meetingId){
   countTimer = setInterval(pull, 6000);
 }
 
+/* The line printed over the viewer: which meeting a scan would stamp.
+   It is re-read from the record whenever the record changes, so a
+   check-in that opens or closes while the camera is up is reflected. */
+function scanStanding(){
+  const open = Store.openMeeting();
+  const done = open && Store.attended(open.id);
+  return !open ? 'Nothing open'
+    : done ? `Already stamped · GM ${pad(open.no)}`
+    : `GM ${pad(open.no)} · today · ${open.time}`;
+}
+function paintScanStanding(){
+  const el = $('.viewer__standing');
+  if (el) el.textContent = scanStanding();
+}
+
 const Scanner = {
   stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0, zoom:null, run:0,
 
@@ -15837,6 +15897,7 @@ const Scanner = {
     this.locked = false;
 
     $('#viewer')?.classList.remove('viewer--stalled', 'viewer--feed');
+    $('#viewer .stall')?.remove();
     this.setState('boot', 'Starting camera');
     this.showLoader();
 
@@ -15857,6 +15918,16 @@ const Scanner = {
       return;
     }
     this.stream = stream;
+
+    /* Permission revoked or the device taken mid-scan: the track ends.
+       The page says so and offers the camera again, instead of holding
+       a dead feed under a live reticle. */
+    const track = stream.getVideoTracks()[0];
+    if (track) track.addEventListener('ended', () => {
+      if (run !== this.run || this.stream !== stream) return;
+      this.stop();
+      this.stall('ended');
+    }, { once:true });
 
     this.hideLoader();
     video.srcObject = this.stream;
@@ -15935,7 +16006,7 @@ const Scanner = {
       if (hit && hit.data){
         this.locked = true;
         this.setState('hit', 'Got it');
-        setTimeout(() => submitSeal(hit.data, true), 190);
+        setTimeout(() => submitSeal(hit.data, true, run), 190);
       }
     };
     step();
@@ -15949,20 +16020,27 @@ const Scanner = {
 
     const more = MANUAL_ENTRY ? ' Or enter the check-in code below.' : '';
     const copy = {
-      denied:{ title:'Camera permission is off',
-        body:'Allow camera access for this page in your browser settings, then reload.' + more },
-      unavailable:{ title:'No camera found',
+      denied:{ title:'Camera permission is off', retry:true,
+        body:'Allow camera access for this page in your browser settings, then try again.' + more },
+      ended:{ title:'Camera stopped', retry:true,
+        body:'The camera feed ended. Check that camera access is still allowed, then try again.' + more },
+      unavailable:{ title:'No camera found', retry:true,
         body:'This device has no camera.' + (MANUAL_ENTRY
           ? ' Enter the check-in code below instead.'
           : ' Sign in on a phone with a camera to scan the code.') },
-      unsupported:{ title:'Scanning needs a secure page',
+      unsupported:{ title:'Scanning needs a secure page', retry:false,
         body:'Camera access only works over https.' + more },
-    }[kind];
+    }[kind] || { title:'Camera off', retry:true, body:'The camera could not be started.' + more };
 
-    viewer.innerHTML = `<div class="stall">
+    /* The note sits over the viewer; the video and the meeting line
+       stay in place, so the camera can be offered again without a
+       reload and the page keeps saying which meeting it is for. */
+    viewer.querySelector('.stall')?.remove();
+    viewer.insertAdjacentHTML('beforeend', `<div class="stall">
       <h2 class="stall__title">${copy.title}</h2>
       <p class="stall__note">${copy.body}</p>
-    </div>`;
+      ${copy.retry ? `<button class="link stall__retry" type="button" data-scan-retry>Try again</button>` : ''}
+    </div>`);
 
     viewer.classList.add('viewer--stalled');
     this.setState('off', 'Camera off');
@@ -16024,6 +16102,15 @@ const Landing = {
     const [fresh] = await Promise.all([this.refresh(3), held]);
     if (seq !== this.seq) return;
 
+    /* The reader may have left Scan during the hold. The record is
+       fresh either way; the page they chose is not taken from them. */
+    if (current !== 'scan'){
+      this.armed = null;
+      this.active = false;
+      if (!fresh) Store.hydrate();
+      return;
+    }
+
     pendingStamp = fresh ? { meetingId:meeting.id } : null;
     go('home', { instant:true });
     pendingStamp = null;
@@ -16055,11 +16142,13 @@ const SCAN_MESSAGES = {
 };
 const scanMessage = code => SCAN_MESSAGES[code] || SCAN_MESSAGES.SERVER_ERROR;
 
-async function submitSeal(raw, fromCamera){
+/* `run` is the camera run that read the code; the refusal, if any, is
+   shown on that run and no other. */
+async function submitSeal(raw, fromCamera, run = Scanner.run){
   if (!QRFormat.looksLikeKeystamp(raw)){
     const [t, d] = scanMessage('INVALID_TOKEN');
     toast({ key:'scan', title:t, detail:d, bad:true });
-    if (fromCamera) rejectVisual('INVALID_TOKEN');
+    if (fromCamera) rejectVisual('INVALID_TOKEN', run);
     return;
   }
 
@@ -16072,7 +16161,7 @@ async function submitSeal(raw, fromCamera){
     const [t, d] = scanMessage(code);
 
     toast({ key:'scan', title:t, detail:d, bad:true });
-    if (fromCamera) rejectVisual(code);
+    if (fromCamera) rejectVisual(code, run);
     return;
   }
 
@@ -16085,11 +16174,14 @@ async function submitSeal(raw, fromCamera){
   await Landing.run(meeting);
 }
 
-function rejectVisual(code){
+/* The refusal is shown on the camera run that read the code; a run
+   that has since been stopped or restarted is left alone. */
+function rejectVisual(code, run = Scanner.run){
+  if (run !== Scanner.run) return;
   Scanner.setState('bad', scanMessage(code)[0]);
   FX.scanReject();
   setTimeout(() => {
-    if (!$('#reticle')) return;
+    if (run !== Scanner.run || !$('#reticle')) return;
     Scanner.locked = false;
     Scanner.setState('live', 'Point at the code');
   }, 1900);
@@ -16182,6 +16274,38 @@ let navigating = false;
 let pendingNav = null;
 let booted = false;
 let loadSeq = 0;
+let painted = null;   /* Store.stamp() as of the last paint */
+
+/* A working button keeps its box: the label changes, the width does
+   not, and it is neither hoverable nor pressable until it is released.
+   A button that names its progress word (data-busy) carries the other
+   label as a hidden line, so it is as wide as the wider of the two at
+   rest and while working; any other is held at the width it had. */
+function hold(btn, label){
+  if (!btn || btn.hasAttribute('aria-busy')) return;
+  const word = btn.dataset.busy || label;
+  if (btn.dataset.busy !== undefined){
+    btn.dataset.rest = btn.textContent.trim();
+    btn.dataset.busy = btn.dataset.rest;
+  } else {
+    btn.style.minWidth = btn.getBoundingClientRect().width + 'px';
+  }
+  btn.disabled = true;
+  btn.setAttribute('aria-busy', 'true');
+  btn.textContent = word;
+}
+function release(btn, label){
+  if (!btn) return;
+  const word = label !== undefined ? label : (btn.dataset.rest || btn.textContent);
+  if (btn.dataset.rest !== undefined){
+    btn.dataset.busy = btn.textContent;
+    delete btn.dataset.rest;
+  }
+  btn.disabled = false;
+  btn.removeAttribute('aria-busy');
+  btn.style.minWidth = '';
+  btn.textContent = word;
+}
 
 function syncHash(id){
   try { if (location.hash !== '#/' + id) history.replaceState(null, '', '#/' + id); }
@@ -16242,6 +16366,7 @@ async function go(id, opts = {}){
     document.documentElement.dataset.screen = id;
 
     view.innerHTML = Views[id]();
+    painted = Store.stamp();
     const ch = chapterOf(id), head = view.querySelector('.rechead');
     if (ch && head && !head.querySelector('.rechead__no'))
       head.insertAdjacentHTML('afterbegin', `<span class="rechead__no" aria-hidden="true">${ch}</span>`);
@@ -16309,9 +16434,8 @@ function authBusy(on, label){
   AuthUI.busy = on;
   const btn = $('#authGo');
   if (!btn) return;
-  btn.disabled = on;
-  btn.setAttribute('aria-busy', String(on));
-  btn.textContent = on ? label : (AuthUI.mode === 'up' ? 'Create account' : 'Sign in');
+  if (on) hold(btn, label);
+  else release(btn, AuthUI.mode === 'up' ? 'Create account' : 'Sign in');
 }
 
 document.addEventListener('keydown', e => {
@@ -16336,6 +16460,16 @@ document.addEventListener('input', e => {
   const key = MEETING_FIELDS[e.target.id];
   if (key && e.target.closest('#meetingForm')){
     BoardUI.form = Object.assign({}, BoardUI.form || {}, { [key]:e.target.value });
+    /* the last refusal is withdrawn as soon as the form is edited */
+    const err = $('#mErr');
+    if (err && !err.hidden){ err.hidden = true; err.textContent = ''; }
+    return;
+  }
+  if (e.target.closest('#authForm')){
+    /* likewise on the sign-in spread: a refusal is withdrawn on the
+       first keystroke; the box keeps its height, so nothing moves */
+    const box = $('#authErr');
+    if (box && box.classList.contains('is-on')) authErr('');
     return;
   }
   if (e.target.id === 'bq'){
@@ -16382,7 +16516,7 @@ document.addEventListener('submit', async e => {
     if (!start || !end) return show('Start and end time are required.');
     if (start >= end)   return show('End time must be after the start time.');
 
-    show(''); btn.disabled = true; btn.textContent = 'Scheduling…';
+    show(''); hold(btn, 'Scheduling…');
     try {
       await Backend.createMeeting({ no, date, startTime:to12h(start), endTime:to12h(end) });
       BoardUI.form = null;
@@ -16390,7 +16524,7 @@ document.addEventListener('submit', async e => {
       boardGoto({ tab:'meetings' });
     } catch (ex){
       show(WriteFailure.explain(ex, 'create meeting'));
-      btn.disabled = false; btn.textContent = 'Schedule meeting';
+      release(btn, 'Schedule meeting');
     }
     return;
   }
@@ -16474,8 +16608,7 @@ document.addEventListener('click', e => {
     if (bdelete.disabled) return;
     const id = bdelete.dataset.bdelete;
     const stamps = Number(bdelete.dataset.bstamps) || 0;
-    bdelete.disabled = true;
-    bdelete.textContent = 'Deleting…';
+    hold(bdelete, 'Deleting…');
 
     const clear = note => {
       if (boardMeeting === id) boardMeeting = null;
@@ -16504,10 +16637,12 @@ document.addEventListener('click', e => {
   if (bpage){ boardGoto({ page:Number(bpage.dataset.bpage) || 1 }); return; }
   const reload = e.target.closest('[data-reload]');
   if (reload){
-    reload.disabled = true; reload.textContent = 'Retrying…';
+    hold(reload, 'Retrying…');
     Store.hydrate().then(() => go(current, { instant:true }));
     return;
   }
+  const retry = e.target.closest('[data-scan-retry]');
+  if (retry){ Scanner.start(); return; }
 
   const breload = e.target.closest('[data-breload]');
   if (breload){ loadBoard(); return; }
@@ -16516,20 +16651,20 @@ document.addEventListener('click', e => {
 
   const bstart = e.target.closest('[data-bstart]');
   if (bstart){
-    bstart.disabled = true; bstart.textContent = 'Starting…';
+    hold(bstart, 'Starting…');
     Backend.startAttendance(bstart.dataset.bstart)
       .then(() => { boardMeeting = bstart.dataset.bstart; boardStamp = true; loadBoard(); })
-      .catch(() => { bstart.disabled = false; bstart.textContent = 'Open check-in';
+      .catch(() => { release(bstart, 'Open check-in');
         toast({ key:'board', bad:true, title:'Could not start',
                 detail:'Check-in did not open. Try again.' }); });
     return;
   }
   const bend = e.target.closest('[data-bend]');
   if (bend){
-    bend.disabled = true; bend.textContent = 'Ending…';
+    hold(bend, 'Ending…');
     Backend.endAttendance(bend.dataset.bend)
       .then(() => { clearInterval(countTimer); boardStamp = true; loadBoard(); })
-      .catch(() => { bend.disabled = false; bend.textContent = 'Close check-in';
+      .catch(() => { release(bend, 'Close check-in');
         toast({ key:'board', bad:true, title:'Could not end',
                 detail:'Check-in is still open. Try again.' }); });
     return;
@@ -16633,8 +16768,24 @@ async function loadBoard(){
   const seq = ++loadSeq;
   const pane = () => (seq === loadSeq ? $('#boardPane') : null);
   BoardUI.error = null;
-  BoardUI.loading = true;
-  if (pane()) pane().innerHTML = BoardUI.pane();
+
+  /* A pane that already holds this chapter's content keeps it while the
+     record is re-read: opening or closing check-in, a search, a page
+     turn, opening a member. Only an empty chapter shows the beat. */
+  const box = pane();
+  const keep = Boolean(box) && !BoardUI.loading && BoardUI.shown === BoardUI.tab;
+  /* a field the reader is typing in (the roster search) gets its focus
+     back after the repaint */
+  const active = document.activeElement;
+  const focusId = keep && active && active.id && box.contains(active) ? active.id : null;
+  /* the code already on the projector stays up while its token is
+     re-issued; a code that was not on screen is never shown early */
+  const shownQR = keep && boardMeeting ? { meeting:boardMeeting, svg:$('#qrBox svg', box)?.outerHTML || null } : null;
+  if (keep) box.setAttribute('aria-busy', 'true');
+  else if (!BoardUI.loading){
+    BoardUI.loading = true;
+    if (box) box.innerHTML = BoardUI.pane();
+  }
 
   try {
     if (BoardUI.memberDetail === 'pending'){
@@ -16658,8 +16809,17 @@ async function loadBoard(){
 
   if (seq !== loadSeq) return;
   BoardUI.loading = false;
+  BoardUI.shown = BoardUI.error ? null : BoardUI.tab;
   if (pane()){
     pane().innerHTML = BoardUI.pane();
+    pane().removeAttribute('aria-busy');
+    const again = focusId && document.getElementById(focusId);
+    if (again){
+      again.focus({ preventScroll:true });
+      try { const n = again.value.length; again.setSelectionRange(n, n); } catch (_) {}
+    }
+    const qb = shownQR && shownQR.svg && boardMeeting === shownQR.meeting ? $('#qrBox') : null;
+    if (qb) qb.innerHTML = shownQR.svg;
   }
 
   if (BoardUI.tab === 'session' && !BoardUI.error && $('#qrBox')){
@@ -16739,9 +16899,27 @@ try {
     await Backend.init();
     await Store.hydrate();
 
+    /* The record changed: the page is repainted only if what it shows
+       would differ, and Scan only refreshes its meeting line, so the
+       camera is never restarted under the reader. */
     Store.onChange(() => {
-      if (current && current !== 'auth' && current !== 'scan') go(current, { instant:true });
+      if (current === 'scan') paintScanStanding();
+      else if (current && current !== 'auth' && Store.stamp() !== painted)
+        go(current, { instant:true, force:true });   /* force: not dropped if it lands mid-cut */
       paintIdentity();
+    });
+
+    /* Coming back to the tab re-reads what the page shows: the record
+       for a member, the chapter's own data for a board pane (kept in
+       place while it loads). Nothing is re-read under a working button
+       or a scene. */
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible') return;
+      if (!booted || !Store.signedIn || Landing.active || Scenes.busy) return;
+      if (PANE_ROUTES.includes(current)){
+        if (BoardUI.loading || $('#boardPane [aria-busy]')) return;
+        loadBoard();
+      } else Store.hydrate();
     });
 
     paintBrand();

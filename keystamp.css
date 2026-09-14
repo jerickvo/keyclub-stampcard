@@ -82,8 +82,9 @@ main#view:focus,main#view:focus-visible{outline:none}
 /* ── shell ───────────────────────────────────────────────────────── */
 .shell{position:relative;z-index:1;display:grid;
   grid-template-rows:auto minmax(0,1fr);min-height:100%}
-main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
-  padding:calc(var(--gap-stack) + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x))
+main#view{--view-top:var(--gap-stack);
+  width:100%;max-width:var(--page-max);margin-inline:auto;
+  padding:calc(var(--view-top) + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x))
           calc(var(--gap-block) + var(--folio-h) + env(safe-area-inset-bottom,0px))}
 .view{position:relative}
 
@@ -142,7 +143,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
     text-decoration-thickness:2px;text-underline-offset:3px}
   .folio__wm{font-family:var(--f-display);font-size:19px;line-height:1;
     text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
-  main#view{padding-top:var(--gap-block)}
+  main#view{--view-top:var(--gap-block)}
 }
 
 /* ── chapter opener ──────────────────────────────────────────────
@@ -197,21 +198,31 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   background:var(--ink);color:var(--paper);cursor:pointer;
   font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);line-height:1;
   text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
-.btn:hover{background:var(--ink-2)}
+/* hover inverts the button inside its own frame; a working button is
+   faded and stays put, so the two are never the same grey */
+.btn:hover{background:var(--paper);color:var(--ink);
+  box-shadow:inset 0 0 0 var(--edge-panel) var(--ink)}
 .btn:active{transform:translate(2px,2px)}
-.btn[disabled]{opacity:.55;cursor:progress;transform:none}
 .btn--quiet{background:var(--paper);color:var(--ink);
   border:var(--edge-panel) solid var(--ink);padding:8px 14px;
   font-family:var(--f-body);font-size:var(--t-body);text-transform:none;letter-spacing:0}
-.btn--quiet:hover{background:var(--ink);color:var(--paper)}
+.btn--quiet:hover{background:var(--ink);color:var(--paper);box-shadow:none}
 .btn--inv{background:var(--paper);color:var(--ink)}
-.btn--inv:hover{background:var(--tint)}
+.btn--inv:hover{background:var(--tint);box-shadow:none}
+/* a button that names its progress word is as wide as the wider of its
+   two labels from the start, so working never resizes it */
+.btn[data-busy]{flex-direction:column;gap:0}
+.btn[data-busy]::after{content:attr(data-busy);display:block;height:0;overflow:hidden;visibility:hidden}
+/* a working button is its resting self, faded, and deaf to the pointer:
+   no hover, no press, whatever colours its composition gave it */
+.btn[disabled]{opacity:.55;pointer-events:none;transform:none}
 
 .link{display:inline-flex;align-items:center;min-height:var(--link-h,36px);padding:6px 0;
   background:none;border:0;border-radius:0;cursor:pointer;color:var(--ink);
   font:400 var(--t-body)/1.2 var(--f-body);letter-spacing:0;
   text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px}
 .link:hover{text-decoration-thickness:2.5px}
+.link:active{transform:translate(1px,1px)}
 .link--quiet{color:var(--ink-2)}
 .link--quiet:hover{color:var(--ink)}
 
@@ -261,6 +272,10 @@ select.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-of
 .toast__t{margin:0;font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);
   line-height:1.1;text-transform:uppercase;letter-spacing:.02em}
 .toast__d{margin:0;font:400 var(--t-caption)/1.4 var(--f-body);color:var(--tint)}
+/* a refusal is the strip inverted: ink on paper behind a burgundy rule */
+.toast--bad{background:var(--paper);color:var(--ink);
+  border-left:6px solid var(--seal);box-shadow:inset 0 0 0 var(--edge-panel) var(--ink)}
+.toast--bad .toast__d{color:var(--ink-2)}
 @media(min-width:768px){
   .toasts{left:auto;right:var(--gutter);bottom:var(--gap-stack);max-width:min(380px,40vw)}
   .toast{padding:12px 16px}

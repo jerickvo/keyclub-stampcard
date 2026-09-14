@@ -53,6 +53,21 @@ function paintAttendanceCount(meetingId){
   countTimer = setInterval(pull, 6000);
 }
 
+/* The line printed over the viewer: which meeting a scan would stamp.
+   It is re-read from the record whenever the record changes, so a
+   check-in that opens or closes while the camera is up is reflected. */
+function scanStanding(){
+  const open = Store.openMeeting();
+  const done = open && Store.attended(open.id);
+  return !open ? 'Nothing open'
+    : done ? `Already stamped · GM ${pad(open.no)}`
+    : `GM ${pad(open.no)} · today · ${open.time}`;
+}
+function paintScanStanding(){
+  const el = $('.viewer__standing');
+  if (el) el.textContent = scanStanding();
+}
+
 const Scanner = {
   stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0, zoom:null, run:0,
 
@@ -87,6 +102,7 @@ const Scanner = {
     this.locked = false;
 
     $('#viewer')?.classList.remove('viewer--stalled', 'viewer--feed');
+    $('#viewer .stall')?.remove();
     this.setState('boot', 'Starting camera');
     this.showLoader();
 
@@ -107,6 +123,16 @@ const Scanner = {
       return;
     }
     this.stream = stream;
+
+    /* Permission revoked or the device taken mid-scan: the track ends.
+       The page says so and offers the camera again, instead of holding
+       a dead feed under a live reticle. */
+    const track = stream.getVideoTracks()[0];
+    if (track) track.addEventListener('ended', () => {
+      if (run !== this.run || this.stream !== stream) return;
+      this.stop();
+      this.stall('ended');
+    }, { once:true });
 
     this.hideLoader();
     video.srcObject = this.stream;
@@ -185,7 +211,7 @@ const Scanner = {
       if (hit && hit.data){
         this.locked = true;
         this.setState('hit', 'Got it');
-        setTimeout(() => submitSeal(hit.data, true), 190);
+        setTimeout(() => submitSeal(hit.data, true, run), 190);
       }
     };
     step();
@@ -199,20 +225,27 @@ const Scanner = {
 
     const more = MANUAL_ENTRY ? ' Or enter the check-in code below.' : '';
     const copy = {
-      denied:{ title:'Camera permission is off',
-        body:'Allow camera access for this page in your browser settings, then reload.' + more },
-      unavailable:{ title:'No camera found',
+      denied:{ title:'Camera permission is off', retry:true,
+        body:'Allow camera access for this page in your browser settings, then try again.' + more },
+      ended:{ title:'Camera stopped', retry:true,
+        body:'The camera feed ended. Check that camera access is still allowed, then try again.' + more },
+      unavailable:{ title:'No camera found', retry:true,
         body:'This device has no camera.' + (MANUAL_ENTRY
           ? ' Enter the check-in code below instead.'
           : ' Sign in on a phone with a camera to scan the code.') },
-      unsupported:{ title:'Scanning needs a secure page',
+      unsupported:{ title:'Scanning needs a secure page', retry:false,
         body:'Camera access only works over https.' + more },
-    }[kind];
+    }[kind] || { title:'Camera off', retry:true, body:'The camera could not be started.' + more };
 
-    viewer.innerHTML = `<div class="stall">
+    /* The note sits over the viewer; the video and the meeting line
+       stay in place, so the camera can be offered again without a
+       reload and the page keeps saying which meeting it is for. */
+    viewer.querySelector('.stall')?.remove();
+    viewer.insertAdjacentHTML('beforeend', `<div class="stall">
       <h2 class="stall__title">${copy.title}</h2>
       <p class="stall__note">${copy.body}</p>
-    </div>`;
+      ${copy.retry ? `<button class="link stall__retry" type="button" data-scan-retry>Try again</button>` : ''}
+    </div>`);
 
     viewer.classList.add('viewer--stalled');
     this.setState('off', 'Camera off');
@@ -274,6 +307,15 @@ const Landing = {
     const [fresh] = await Promise.all([this.refresh(3), held]);
     if (seq !== this.seq) return;
 
+    /* The reader may have left Scan during the hold. The record is
+       fresh either way; the page they chose is not taken from them. */
+    if (current !== 'scan'){
+      this.armed = null;
+      this.active = false;
+      if (!fresh) Store.hydrate();
+      return;
+    }
+
     pendingStamp = fresh ? { meetingId:meeting.id } : null;
     go('home', { instant:true });
     pendingStamp = null;
@@ -305,11 +347,13 @@ const SCAN_MESSAGES = {
 };
 const scanMessage = code => SCAN_MESSAGES[code] || SCAN_MESSAGES.SERVER_ERROR;
 
-async function submitSeal(raw, fromCamera){
+/* `run` is the camera run that read the code; the refusal, if any, is
+   shown on that run and no other. */
+async function submitSeal(raw, fromCamera, run = Scanner.run){
   if (!QRFormat.looksLikeKeystamp(raw)){
     const [t, d] = scanMessage('INVALID_TOKEN');
     toast({ key:'scan', title:t, detail:d, bad:true });
-    if (fromCamera) rejectVisual('INVALID_TOKEN');
+    if (fromCamera) rejectVisual('INVALID_TOKEN', run);
     return;
   }
 
@@ -322,7 +366,7 @@ async function submitSeal(raw, fromCamera){
     const [t, d] = scanMessage(code);
 
     toast({ key:'scan', title:t, detail:d, bad:true });
-    if (fromCamera) rejectVisual(code);
+    if (fromCamera) rejectVisual(code, run);
     return;
   }
 
@@ -335,11 +379,14 @@ async function submitSeal(raw, fromCamera){
   await Landing.run(meeting);
 }
 
-function rejectVisual(code){
+/* The refusal is shown on the camera run that read the code; a run
+   that has since been stopped or restarted is left alone. */
+function rejectVisual(code, run = Scanner.run){
+  if (run !== Scanner.run) return;
   Scanner.setState('bad', scanMessage(code)[0]);
   FX.scanReject();
   setTimeout(() => {
-    if (!$('#reticle')) return;
+    if (run !== Scanner.run || !$('#reticle')) return;
     Scanner.locked = false;
     Scanner.setState('live', 'Point at the code');
   }, 1900);

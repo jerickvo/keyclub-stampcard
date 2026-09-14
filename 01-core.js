@@ -130,6 +130,18 @@ const Store = {
 
   get failed(){ return this.loadError !== null; },
 
+  /* One line that changes whenever a page would: who is signed in, what
+     loaded, which meetings are open or ahead, the stamps, the claims.
+     A re-read that finds nothing new repaints nothing. */
+  stamp(){
+    return JSON.stringify([
+      this.user ? this.user.id : null, this.loadError,
+      this.meetings.map(m => [m.id, m.no, m.date, m.time, m.open, m.upcoming]),
+      this.scans.map(s => [s.meetingId, s.at]),
+      this.rewards.map(r => [r.id, r.claimed]),
+    ]);
+  },
+
   get signedIn(){ return Boolean(this.user); },
   get role(){ return this.user ? this.user.role : null; },
   get isBoard(){ return this.role === 'board'; },

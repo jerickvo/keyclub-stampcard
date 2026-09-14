@@ -217,7 +217,15 @@
    the roster standing and the roster.
    ══════════════════════════════════════════════════════════════════ */
 .view--board{display:flex;flex-direction:column;gap:var(--gap-block)}
-.bwait{margin:0}
+/* the loading beat: one rule drawn across the column in six cuts, the
+   word under it; when motion is off the rule is simply there */
+.bwait{display:grid;gap:var(--gap-tight);margin:0;min-height:var(--tap);align-content:start}
+.bwait__rule{display:block;height:var(--edge-panel);background:var(--ink);
+  transform-origin:left center;animation:ruleDraw 420ms steps(6,end) both}
+.bwait__msg{color:var(--ink-2)}
+@keyframes ruleDraw{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media(prefers-reduced-motion:reduce){ .bwait__rule{animation:none} }
+:root[data-motion-pref="off"] .bwait__rule{animation:none}
 .bempty{margin:0;padding:var(--gap-stack) 0;font-size:var(--t-body);color:var(--ink-2)}
 
 /* club */
@@ -246,7 +254,7 @@
 .now--live .now__meta,.now--live .now__state{color:var(--tint)}
 .now--live .now__state b{color:var(--paper)}
 .now--live .now__go{background:var(--paper);color:var(--ink)}
-.now--live .now__go:hover{background:var(--tint)}
+.now--live .now__go:hover{background:var(--tint);box-shadow:none}
 @media(min-width:900px){
   /* the number at left, its facts and action beside it: one object,
      and the space to the right is its own */
@@ -543,7 +551,7 @@
 .view--scan{display:grid;grid-template-rows:auto minmax(0,1fr) auto;
   gap:var(--gap-stack);
   height:calc(100dvh - var(--head-h,0px) - var(--folio-h,0px)
-              - var(--gap-stack) - var(--gap-block) - env(safe-area-inset-bottom,0px));
+              - var(--view-top,var(--gap-stack)) - var(--gap-block) - env(safe-area-inset-bottom,0px));
   min-height:420px}
 .viewer{position:relative;isolation:isolate;overflow:hidden;container-type:size;
   width:100%;min-height:0;
@@ -599,8 +607,12 @@
 .zoom__range:focus-visible{outline:var(--edge-panel) solid var(--paper);outline-offset:2px}
 .viewer--zoom .reticle{margin-top:-22px}
 
+/* the note sits at the foot of the viewer; the feed and the reticle
+   are put away, the meeting line stays */
 .viewer--stalled{container-type:normal;background:var(--paper);display:grid;align-items:end}
+.viewer--stalled video,.viewer--stalled .reticle{display:none}
 .stall{display:grid;gap:var(--gap-tight);padding:var(--gap-stack)}
+.stall__retry{justify-self:start}
 .stall__title{margin:0;font-family:var(--f-head);font-weight:400;text-transform:uppercase;
   line-height:1;font-size:var(--t-head)}
 .stall__note{margin:0;max-width:46ch;font-size:var(--t-caption);line-height:1.45;color:var(--ink-2)}
@@ -648,7 +660,7 @@
 .rung--ready::before{background:var(--seal)}
 .rung--ready .rung__desc{color:var(--tint)}
 .rung--ready .rung__claim{background:var(--paper);color:var(--ink)}
-.rung--ready .rung__claim:hover{background:var(--tint)}
+.rung--ready .rung__claim:hover{background:var(--tint);box-shadow:none}
 .rung--ready :focus-visible{outline-color:var(--paper)}
 
 @media(min-width:900px){

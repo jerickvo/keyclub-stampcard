@@ -181,7 +181,7 @@ const Views = {
       <section class="empty" data-enter>
         <h2 class="empty__title">Can't reach the club records</h2>
         <p class="empty__note">Check your connection and try again.</p>
-        <p><button class="btn" data-reload>Try again</button></p>
+        <p><button class="btn" type="button" data-reload data-busy="Retrying…">Try again</button></p>
       </section>
     </div>`;
   },
@@ -206,10 +206,10 @@ const Views = {
       action = C.strip({ verb:`Claim ${ready.name}`, go:'rewards',
                          meta:`Card ${pad(p.card)} filled` });
     else if (next)
-      action = C.strip({ verb:'Nothing open', go:'scan', quiet:true,
+      action = C.strip({ verb:'Nothing open', go:'record', quiet:true,
                          meta:`Next GM ${pad(next.no)} · ${fmtDate(next.date)}` });
     else
-      action = C.strip({ verb:'Nothing open', go:'scan', quiet:true,
+      action = C.strip({ verb:'Nothing open', go:'record', quiet:true,
                          meta:'No meetings scheduled yet' });
 
     const showing = open ? open.id : next ? next.id : null;
@@ -327,11 +327,7 @@ const Views = {
   },
 
   scan(){
-    const open = Store.openMeeting();
-    const done = open && Store.attended(open.id);
-    const standing = !open ? 'Nothing open'
-      : done ? `Already stamped · GM ${pad(open.no)}`
-      : `GM ${pad(open.no)} · today · ${open.time}`;
+    const standing = scanStanding();
 
     return `<div class="view view--scan">
       <header class="rechead" data-enter>
@@ -364,6 +360,10 @@ const Views = {
     BoardUI.memberDetail = null;
     BoardUI.meetingDetail = null;
     BoardUI.confirmDelete = null;
+    /* a fresh chapter opens on the loading beat, never on another
+       chapter's data */
+    BoardUI.loading = true;
+    BoardUI.shown = null;
     return `<div class="view view--board">
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">${title}</h1>
@@ -469,7 +469,7 @@ const Views = {
           <p class="err authp__err" id="authErr" role="alert" aria-live="assertive"></p>
 
           <div class="authp__act">
-            <button class="btn authp__go" type="submit" id="authGo">
+            <button class="btn authp__go" type="submit" id="authGo" data-busy="${up ? 'Creating…' : 'Signing in…'}">
               ${up ? 'Create account' : 'Sign in'}
             </button>
             <button class="link authp__swap" type="button" id="authSwap">

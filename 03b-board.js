@@ -23,6 +23,7 @@ function spanTime(start, end){
 const BoardUI = {
   tab: 'club',
   loading: false,
+  shown: null,          /* the tab whose loaded content the pane holds */
   error: null,
 
   overview: null,
@@ -78,8 +79,13 @@ const BoardUI = {
     return this.sessionPane();
   },
 
+  /* The loading beat: one rule drawn across the column in six cuts,
+     the word under it. Nothing spins. */
   skeleton(){
-    return `<p class="bwait meta" aria-busy="true">Loading</p>`;
+    return `<div class="bwait" role="status" aria-busy="true">
+      <i class="bwait__rule" aria-hidden="true"></i>
+      <span class="bwait__msg meta">Loading</span>
+    </div>`;
   },
 
   failure(code){
@@ -254,7 +260,7 @@ const BoardUI = {
       <p class="bconfirm__q" role="alert">${esc(q)}</p>
       <p class="bconfirm__why">${esc(why)}</p>
       <div class="bconfirm__act">
-        <button class="btn" type="button" data-bdelete="${esc(m.id)}" data-bstamps="${stamps}">Delete</button>
+        <button class="btn" type="button" data-bdelete="${esc(m.id)}" data-bstamps="${stamps}" data-busy="Deleting…">Delete</button>
         <button class="btn btn--quiet bconfirm__keep" type="button" data-bcancel>Keep</button>
       </div>
     </div>`;
@@ -278,7 +284,7 @@ const BoardUI = {
       </div>
       <p class="err" id="mErr" role="alert" aria-live="assertive" hidden></p>
       <div class="bform__row">
-        <button class="btn" type="submit" id="mGo">Schedule meeting</button>
+        <button class="btn" type="submit" id="mGo" data-busy="Scheduling…">Schedule meeting</button>
         <button class="link link--quiet" type="button" data-mreset>Reset</button>
       </div>
     </form>`;
@@ -422,10 +428,10 @@ const BoardUI = {
             <p class="proj__cap">Scan to check in</p>
           </div>
           <p class="proj__count"><b id="attCount">-</b><span>checked in</span></p>
-          <button class="btn btn--inv proj__ctl" type="button" data-bend="${esc(sel.id)}">Close check-in</button>
+          <button class="btn btn--inv proj__ctl" type="button" data-bend="${esc(sel.id)}" data-busy="Ending…">Close check-in</button>
         ` : `
           <p class="proj__count proj__count--shut"><span>Members see the code here once it opens.</span></p>
-          <button class="btn proj__ctl" type="button" data-bstart="${esc(sel.id)}">Open check-in</button>
+          <button class="btn proj__ctl" type="button" data-bstart="${esc(sel.id)}" data-busy="Starting…">Open check-in</button>
         `}
       </section>
     </div>`;
