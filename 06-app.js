@@ -13,7 +13,6 @@ const BOARD_NAV = [
   { id:'bmeet',    label:'Meetings'   },
   { id:'bcheckin', label:'Check-In'   },
   { id:'bmembers', label:'Members'    },
-  { id:'baccount', label:'Account'    },
 ];
 
 const navFor = () => (Store.isBoard ? BOARD_NAV : MEMBER_NAV);

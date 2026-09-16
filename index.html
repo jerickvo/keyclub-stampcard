@@ -160,8 +160,7 @@ body{
 [data-screen="board"] .ground__slash,
 [data-screen="bmeet"] .ground__slash,
 [data-screen="bcheckin"] .ground__slash,
-[data-screen="bmembers"] .ground__slash,
-[data-screen="baccount"] .ground__slash{top:42%;transform:rotate(14deg)}
+[data-screen="bmembers"] .ground__slash{top:42%;transform:rotate(14deg)}
 [data-screen="bmeet"] .ground::before{width:52vw;height:44vh}
 [data-screen="auth"] .ground__bleed,
 [data-screen="auth"] .ground__corner,
@@ -2188,11 +2187,8 @@ button,input,select,textarea{font-family:inherit}
 .acct__out:hover{background:var(--ink);color:var(--paper)}
 .acct__out:focus-visible{outline:var(--edge-panel) solid var(--ink);
   outline-offset:3px}
-@media(min-width:900px){
-  .view--account{max-width:560px}
-}
-@media(min-width:1024px){ .view--member .acct{display:none}
-  .view--account .acct{display:grid} }
+/* from 1024px up the rail's foot carries the account block */
+@media(min-width:1024px){ .view--member .acct,.view--board .acct{display:none} }
 
 .bover{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr);
   grid-template-areas:"now" "ident" "band"}
@@ -16244,7 +16240,7 @@ const Views = {
     </div>`;
   },
 
-  boardSpread(title){
+  boardSpread(title, tail = ''){
     /* A chapter is always its own list. An open member or meeting belongs
        to the chapter it was opened from and does not follow the reader
        out of it. */
@@ -16262,10 +16258,13 @@ const Views = {
       <section class="rig" data-enter style="margin-top:var(--gut)">
         <div id="boardPane">${BoardUI.pane()}</div>
       </section>
+      ${tail}
     </div>`;
   },
 
-  board(){     BoardUI.tab = 'club';     return this.boardSpread('Club Tools'); },
+  /* Club Tools ends with the account block on phones, the way Member
+     does; from 1024px up the rail's foot carries it instead. */
+  board(){     BoardUI.tab = 'club';     return this.boardSpread('Club Tools', C.account()); },
   bmeet(){     BoardUI.tab = 'meetings'; return this.boardSpread('Meetings'); },
   bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Check-In'); },
   bmembers(){  BoardUI.tab = 'progress'; return this.boardSpread('Members'); },
@@ -16307,29 +16306,6 @@ const Views = {
           <div><dt>Attendance rate</dt><dd>${Store.attendanceRate()}%</dd></div>
           <div><dt>Rewards unlocked</dt><dd>${Store.rewardsUnlocked()} of ${Store.rewards.length}</dd></div>
         </dl>
-      </section>
-
-      ${C.account()}
-    </div>`;
-  },
-
-  baccount(){
-    const name   = memberName();
-    const handle = (Store.user && Store.user.username) || name;
-    return `<div class="view view--member view--account">
-      <header class="rechead rechead--tight" data-enter>
-        <h1 class="title rechead__title">Account</h1>
-      </header>
-
-      <section class="who" data-enter>
-        <div class="who__mark" aria-hidden="true">
-          <span class="who__org">Cali-Nev-Ha District</span>
-        </div>
-        <span class="who__emblem" aria-hidden="true">${brandSeal('cnh')}</span>
-        <div class="who__id">
-          <p class="who__hand">Signed in / Board${handle !== name ? ` / ${esc(handle)}` : ''}</p>
-          <p class="who__name">${esc(name)}</p>
-        </div>
       </section>
 
       ${C.account()}
@@ -17259,7 +17235,7 @@ const Scenes = {
 
 const Transit = {
   ORDER: { home:0, record:1, scan:2, rewards:3, profile:4,
-           board:0, bmeet:1, bcheckin:2, bmembers:3, baccount:4 },
+           board:0, bmeet:1, bcheckin:2, bmembers:3 },
 
   CHAR: {
     home:    { in:170, hold:100, out:230, angle:9, par:26, tone:true },
@@ -17884,7 +17860,6 @@ const BOARD_NAV = [
   { id:'bmeet',    label:'Meetings'   },
   { id:'bcheckin', label:'Check-In'   },
   { id:'bmembers', label:'Members'    },
-  { id:'baccount', label:'Account'    },
 ];
 
 const navFor = () => (Store.isBoard ? BOARD_NAV : MEMBER_NAV);
