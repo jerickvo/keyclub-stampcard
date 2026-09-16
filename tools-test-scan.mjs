@@ -34,14 +34,17 @@ function load({ meetings = [], scans = [], claims = [] } = {}){
 }
 
 test('the meeting line over the viewer follows the record', () => {
+  const line = () => { const s = scanStanding(); return `${s.lab} | ${s.at}`; };
   load({ meetings:[...held(3), meeting(4, { upcoming:true })] });
-  assert.equal(scanStanding(), 'Nothing open');
+  assert.equal(line(), 'Nothing open | No check-in right now');
   load({ meetings:[...held(3), meeting(4, { open:true, today:true })] });
-  assert.equal(scanStanding(), 'GM 04 · today · 12:40 PM');
+  assert.equal(line(), 'Checking in to | GM 04 / Sep 14 / MPR');
   load({ meetings:[...held(3), meeting(4, { open:true, today:true })], scans:[{ meetingId:'m4', at:'2026-09-14T19:50:00Z' }] });
-  assert.equal(scanStanding(), 'Already stamped · GM 04');
-  // the Scan page prints the same line it will later refresh
-  assert.equal(Views.scan().includes('<p class="viewer__standing">Already stamped · GM 04</p>'), true);
+  assert.equal(line(), 'Already stamped | GM 04');
+  // the Scan page prints the same line it will later refresh in place
+  const page = Views.scan();
+  assert.equal(page.includes('<span class="standing__lab">Already stamped</span>'), true);
+  assert.equal(page.includes('<span class="standing__at">GM 04</span>'), true);
 });
 
 test('the store fingerprint changes only when a page would', () => {
@@ -61,17 +64,20 @@ test('the store fingerprint changes only when a page would', () => {
 });
 
 test('the Card sends a member to Scan only while a meeting is open and unstamped', () => {
-  const target = html => (html.match(/class="strip[^"]*"[^>]*data-go="([a-z]+)"/) || [])[1];
+  const target = html => (html.match(/class="act__btn"[^>]*data-go="([a-z]+)"/) || [])[1];
   load({ meetings:[...held(3), meeting(4, { open:true, today:true })] });
   assert.equal(target(Views.home()), 'scan');
+  assert.equal(Views.home().includes('act act--live'), true);
   load({ meetings:[...held(3), meeting(4, { open:true, today:true })], scans:[{ meetingId:'m4', at:'2026-09-14T19:50:00Z' }] });
   assert.equal(target(Views.home()), 'record');
+  assert.equal(Views.home().includes('GM 04 is stamped'), true);
   load({ meetings:[...held(3), meeting(4, { upcoming:true })] });
   assert.equal(target(Views.home()), 'record');
   assert.equal(Views.home().includes('Nothing open'), true);
+  assert.equal(Views.home().includes('Check-in opens at GM 04'), true);
   load({ meetings:held(3) });
   assert.equal(target(Views.home()), 'record');
-  assert.equal(Views.home().includes('No meetings scheduled yet'), true);
+  assert.equal(Views.home().includes('No meeting is taking check-ins right now'), true);
 });
 
 test('every refusal the verifier can send has its own words; an unknown one has the safe words', () => {

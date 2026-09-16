@@ -8,7 +8,8 @@ import vm from 'node:vm';
 const src = readFileSync(new URL('./03b-board.js', import.meta.url), 'utf8');
 const knit = s => String(s).replace(/ (AM|PM)\b/gi, '\u00a0$1');
 const ctx = vm.createContext({ Schedule:{ today:() => '2026-09-07', PLACE:'MPR' }, knit,
-  esc:s => String(s), pad:n => String(n).padStart(2, '0'), fmtDate:iso => iso, fmtTime:iso => iso });
+  esc:s => String(s), pad:n => String(n).padStart(2, '0'), fmtDate:iso => iso, fmtTime:iso => iso,
+  fmtDay:iso => iso, brandSeal:() => '<svg></svg>' });
 vm.runInContext(src + '\nthis.__x = { nextMeetingNumber, spanTime, BoardUI, MEETING_DEFAULTS };', ctx);
 const { nextMeetingNumber, spanTime, BoardUI, MEETING_DEFAULTS } = ctx.__x;
 const rows = nums => nums.map(n => ({ meeting_number:n }));
@@ -64,36 +65,51 @@ test('row time span folds a shared meridian', () => {
   assert.equal(spanTime('3:15 PM', null), '3:15\u00a0PM');
 });
 
-test('a meeting row has a count cell only once the meeting is held', () => {
+test('a meeting row carries its count, and the count only means something once held', () => {
   const m = { id:'m1', meeting_number:4, meeting_date:'2026-09-09', start_time:'12:40 PM', end_time:'1:30 PM', location:'MPR' };
   const ahead = BoardUI.meetingRow({ ...m, state:'UPCOMING' });
   const held  = BoardUI.meetingRow({ ...m, state:'PAST', attendance_count:12 });
-  assert.equal(ahead.includes('mrow__n'), false);
-  assert.equal(held.includes('<span class="mrow__n"><b>12</b>'), true);
+  assert.equal(ahead.includes('brow--upcoming'), true);
+  assert.equal(ahead.includes('<span class="brow__n"><b>0</b>'), true);
+  assert.equal(held.includes('brow--past'), true);
+  assert.equal(held.includes('<span class="brow__n"><b>12</b>'), true);
   assert.equal(ahead.includes('GM 04'), true);
+  // an unheld meeting with no stamps can be deleted; a held one always can
+  assert.equal(ahead.includes('data-bconfirm="m1"'), true);
+  assert.equal(held.includes('data-bconfirm="m1"'), true);
+  assert.equal(BoardUI.meetingRow({ ...m, state:'ACTIVE', attendance_count:3 }).includes('data-bconfirm'), false);
 });
-test('a register names its tracks for what its rows hold', () => {
+test('the meetings register splits into coming up and already held', () => {
   BoardUI.meetings = { meetings:[
     { id:'a', meeting_number:1, meeting_date:'2026-09-02', start_time:'12:40 PM', end_time:'1:30 PM', state:'PAST', attendance_count:3 },
     { id:'b', meeting_number:2, meeting_date:'2026-09-16', start_time:'12:40 PM', end_time:'1:30 PM', state:'UPCOMING', attendance_count:0 },
   ] };
   BoardUI.form = null; BoardUI.deleteNote = null;
   const html = BoardUI.meetingsPane();
-  assert.equal(html.includes('class="rows rows--dated"'), true);
-  assert.equal(html.includes('class="rows rows--counted"'), true);
+  assert.equal(html.includes('Coming up'), true);
+  assert.equal(html.includes('Already held'), true);
+  assert.equal((html.match(/class="blist blist--meet"/g) || []).length, 2);
+  assert.equal(html.indexOf('GM 02') < html.indexOf('GM 01'), true);
 });
 
-test('the club docket is one object, and no meeting is one line of type', () => {
+test('the club overview leads with the next meeting, or says there is none', () => {
   const base = { meetings_held:16, total_seals:214, participating_members:25, average_attendance:13.4, today_attendance:0 };
   BoardUI.overview = { ...base, active_meeting:null, next_meeting:null };
   const none = BoardUI.clubPane();
-  assert.equal(none.includes('now--none'), true);
-  assert.equal(none.includes('class="now__no"'), false);
+  assert.equal(none.includes('bnow--none'), true);
+  assert.equal(none.includes('None yet'), true);
   assert.equal(none.includes('Schedule one'), true);
+  assert.equal(none.includes('bnow--live'), false);
   BoardUI.overview = { ...base, active_meeting:null,
     next_meeting:{ id:'m9', meeting_number:9, meeting_date:'2026-09-16', start_time:'12:40 PM', end_time:'1:30 PM', check_in_open:false } };
   const ahead = BoardUI.clubPane();
   assert.equal(ahead.includes('GM 09'), true);
   assert.equal(ahead.includes('Check-in closed'), true);
-  assert.equal(ahead.includes('standing--flat'), true);
+  assert.equal(ahead.includes('bnow--none'), false);
+  BoardUI.overview = { ...base, today_attendance:4, next_meeting:null,
+    active_meeting:{ id:'m9', meeting_number:9, meeting_date:'2026-09-16', start_time:'12:40 PM', end_time:'1:30 PM', check_in_open:true } };
+  const live = BoardUI.clubPane();
+  assert.equal(live.includes('bnow--live'), true);
+  assert.equal(live.includes('Check-in open / 4 checked in so far'), true);
+  assert.equal(live.includes('Show the code'), true);
 });

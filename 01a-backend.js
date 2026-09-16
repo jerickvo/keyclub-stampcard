@@ -150,7 +150,7 @@ const Config = {
 const REWARD_TIERS = [
   { id:'r1', name:'Club Merch',    required:10, desc:'' },
   { id:'r2', name:'Free Blindbox', required:20, desc:'' },
-  { id:'r3', name:'???',           required:30, desc:'' },
+  { id:'r3', name:'???',           required:30, desc:'A surprise. You will find out.' },
 ];
 
 /* What one tier is to one member, read from the two facts that exist:
