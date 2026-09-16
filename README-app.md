@@ -73,7 +73,7 @@ so the built `index.html` issues **zero same-origin requests**. Nothing left to
 
 ## Screens
 
-Members get five; board accounts get five of their own and never see the
+Members get five; board accounts get four of their own and never see the
 member set.
 
 | Member | | Board | |
@@ -82,18 +82,22 @@ member set.
 | Record | every meeting, stamped or missed | Meetings | schedule and delete meetings |
 | Scan | camera + manual code entry | Check-In | the projector QR and the live count |
 | Rewards | 10 / 20 / 30 tiers | Members | roster, search, per-member detail |
-| Member | identity plate + the card | Account | sign-out and the motion setting |
+| Member | identity plate + the card; sign-out and the motion setting | | |
 
 Navigation is the page's left margin from 1024px up (`.rail`) and a tab bar
-below that. The rail reuses what the other screens already do: the wordmark
-over the same hand-cut rule the page titles use, then the five screens as a
-mono number column beside heading-face labels, the way the Meetings lists set
+below that. Sign-out and the motion setting live in the rail's foot; below
+1024px they sit at the foot of Member and of Club Tools, so neither role has
+a page that exists only to hold them.
+
+The rail reuses what the other screens already do: the wordmark
+over the same hand-cut rule the page titles use, then the screens as a mono
+number column beside heading-face labels, the way the Meetings lists set
 "GM 07" beside a date. The current screen is marked by a small burgundy ink
 dab in the gutter and its number in the same colour (`--seal`, the one accent
 in the palette). The account block sits on a straight 2px rule like a panel
-header: the member's name in the heading face with the role as mono
-metadata, the motion toggle as a filled or hollow square with its word, and
-Sign out as the same small outlined button the lists use for row actions.
+header: the signed-in name in the mono face with the role beside it, the
+motion toggle as a filled or hollow square with its word, and Sign out as
+the same small outlined button the lists use for row actions.
 No icons, no boxes, no decoration.
 
 One rule decides what a reward tier is to a member, and it reads two

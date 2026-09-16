@@ -372,7 +372,7 @@ const Views = {
     </div>`;
   },
 
-  boardSpread(title){
+  boardSpread(title, tail = ''){
     /* A chapter is always its own list. An open member or meeting belongs
        to the chapter it was opened from and does not follow the reader
        out of it. */
@@ -390,10 +390,13 @@ const Views = {
       <section class="rig" data-enter style="margin-top:var(--gut)">
         <div id="boardPane">${BoardUI.pane()}</div>
       </section>
+      ${tail}
     </div>`;
   },
 
-  board(){     BoardUI.tab = 'club';     return this.boardSpread('Club Tools'); },
+  /* Club Tools ends with the account block on phones, the way Member
+     does; from 1024px up the rail's foot carries it instead. */
+  board(){     BoardUI.tab = 'club';     return this.boardSpread('Club Tools', C.account()); },
   bmeet(){     BoardUI.tab = 'meetings'; return this.boardSpread('Meetings'); },
   bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Check-In'); },
   bmembers(){  BoardUI.tab = 'progress'; return this.boardSpread('Members'); },
@@ -435,29 +438,6 @@ const Views = {
           <div><dt>Attendance rate</dt><dd>${Store.attendanceRate()}%</dd></div>
           <div><dt>Rewards unlocked</dt><dd>${Store.rewardsUnlocked()} of ${Store.rewards.length}</dd></div>
         </dl>
-      </section>
-
-      ${C.account()}
-    </div>`;
-  },
-
-  baccount(){
-    const name   = memberName();
-    const handle = (Store.user && Store.user.username) || name;
-    return `<div class="view view--member view--account">
-      <header class="rechead rechead--tight" data-enter>
-        <h1 class="title rechead__title">Account</h1>
-      </header>
-
-      <section class="who" data-enter>
-        <div class="who__mark" aria-hidden="true">
-          <span class="who__org">Cali-Nev-Ha District</span>
-        </div>
-        <span class="who__emblem" aria-hidden="true">${brandSeal('cnh')}</span>
-        <div class="who__id">
-          <p class="who__hand">Signed in / Board${handle !== name ? ` / ${esc(handle)}` : ''}</p>
-          <p class="who__name">${esc(name)}</p>
-        </div>
       </section>
 
       ${C.account()}

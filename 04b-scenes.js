@@ -188,7 +188,7 @@ const Scenes = {
 
 const Transit = {
   ORDER: { home:0, record:1, scan:2, rewards:3, profile:4,
-           board:0, bmeet:1, bcheckin:2, bmembers:3, baccount:4 },
+           board:0, bmeet:1, bcheckin:2, bmembers:3 },
 
   CHAR: {
     home:    { in:170, hold:100, out:230, angle:9, par:26, tone:true },
