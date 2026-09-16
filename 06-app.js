@@ -1,30 +1,20 @@
 "use strict";
 
 const MEMBER_NAV = [
-  { id:'home',    label:'Card'    },
+  { id:'home',    label:'Home'    },
   { id:'record',  label:'Record'  },
   { id:'scan',    label:'Scan'    },
   { id:'rewards', label:'Rewards' },
-  { id:'profile', label:'Member', me:true },
+  { id:'profile', label:'Member'  },
 ];
 
 const BOARD_NAV = [
-  { id:'board',    label:'Club'     },
-  { id:'bmeet',    label:'Meetings' },
-  { id:'bcheckin', label:'Check-In' },
-  { id:'bmembers', label:'Members'  },
-  { id:'baccount', label:'Account', me:true },
+  { id:'board',    label:'Club Tools', short:'Club' },
+  { id:'bmeet',    label:'Meetings'   },
+  { id:'bcheckin', label:'Check-In'   },
+  { id:'bmembers', label:'Members'    },
+  { id:'baccount', label:'Account'    },
 ];
-
-const firstName = () => {
-  const n = Store.user && Store.user.name ? String(Store.user.name).trim() : '';
-  return n ? n.split(/\s+/)[0] : '';
-};
-const navLabel = n => (n.me && firstName()) || n.label;
-const chapterOf = id => {
-  const i = navFor().findIndex(n => n.id === id);
-  return i < 0 ? null : pad(i + 1);
-};
 
 const navFor = () => (Store.isBoard ? BOARD_NAV : MEMBER_NAV);
 
@@ -127,36 +117,24 @@ function hashRoute(){
 }
 
 function paintBrand(){
-  const el = $('#barBrand');
-  if (el) el.innerHTML = wordmark();
+  const el = $('#railBrand');
+  if (!el) return;
+
+  el.innerHTML = wordmark();
 }
 
-/* The folio run: every chapter in fixed order. The current chapter is
-   printed as its number only; its word is the page title. */
 function paintNav(){
-  const run = $('#folioNav');
-  if (!run) return;
-  run.innerHTML = navFor().map((n, i) => {
-    const no = pad(i + 1);
-    if (current === n.id)
-      return `<span class="folio__here" aria-current="page"><span class="folio__no">${no}</span>` +
-             `<span class="sr-only">${esc(navLabel(n))}, this page</span></span>`;
-    return `<button class="folio__ch" type="button" data-go="${n.id}">` +
-           `<span class="folio__no">${no}</span><span class="folio__lab">${esc(navLabel(n))}</span></button>`;
-  }).join('');
-}
+  const tabs = $('#tabs'), rail = $('#railNav');
+  $$('.tab', tabs).forEach(el => el.remove());
+  $$('.rail__link', rail).forEach(el => el.remove());
 
-/* The foot reserves its own height so the page and the camera never
-   sit under it; the token is 0 wherever the folio is a running head. */
-function measureFolio(){
-  const f = $('#folio');
-  if (!f) return;
-  const cs = getComputedStyle(f);
-  const shown = cs.display !== 'none';
-  const fixed = shown && cs.position === 'fixed';
-  const root = document.documentElement.style;
-  root.setProperty('--folio-h', fixed ? f.offsetHeight + 'px' : '0px');
-  root.setProperty('--head-h', shown && !fixed ? f.offsetHeight + 'px' : '0px');
+  navFor().forEach((n, i) => {
+    const cur = current === n.id ? ' aria-current="page"' : '';
+    tabs.insertAdjacentHTML('beforeend',
+      `<button class="tab" data-go="${n.id}"${cur}><span>${n.short || n.label}</span></button>`);
+    rail.insertAdjacentHTML('beforeend',
+      `<button class="rail__link" data-go="${n.id}"${cur}><span class="rail__idx">${pad(i + 1)}</span><span class="rail__lab">${n.label}</span></button>`);
+  });
 }
 
 async function go(id, opts = {}){
@@ -171,20 +149,15 @@ async function go(id, opts = {}){
     current = id;
     syncHash(id);
     Motion.settle(view);
+    Reveal.clear();
     document.documentElement.dataset.screen = id;
 
     view.innerHTML = Views[id]();
     painted = Store.stamp();
-    const ch = chapterOf(id), head = view.querySelector('.rechead');
-    if (ch && head && !head.querySelector('.rechead__no'))
-      head.insertAdjacentHTML('afterbegin', `<span class="rechead__no" aria-hidden="true">${ch}</span>`);
     paintNav();
-    measureFolio();
     try { scrollTo(0, 0); } catch (_) {}
     afterRender(id, nav, Boolean(opts.covered));
-    const h1 = view.querySelector('.rechead__title, .spread__wm');
-    if (h1) h1.setAttribute('tabindex', '-1');
-    (h1 || view).focus({ preventScroll:true });
+    view.focus({ preventScroll:true });
   };
 
   const same = from === id && !opts.force;
@@ -204,10 +177,14 @@ async function go(id, opts = {}){
 const seenUnlocked = new Set();
 
 function playViewIntro(id, nav = false){
-  if (id === 'home' && pendingStamp){
-    const cell = Landing.cellFor(pendingStamp.meetingId);
-    pendingStamp = null;
-    Landing.prime(cell);
+  if (id === 'home'){
+    if (pendingStamp){
+      const cell = Landing.cellFor(pendingStamp.meetingId);
+      pendingStamp = null;
+      Landing.prime(cell);
+    } else if (!nav){
+      FX.sealGrid($('#seals'));
+    }
   }
 
   if (id === 'rewards'){
@@ -216,7 +193,7 @@ function playViewIntro(id, nav = false){
       const rid = row.dataset.reward;
       if (seenUnlocked.has(rid)) return;
       seenUnlocked.add(rid);
-      setTimeout(() => FX.rewardUnlock(row), 260);
+      setTimeout(() => FX.rewardUnlock(row), 420);
     });
   }
 }
@@ -231,6 +208,8 @@ function afterRender(id, nav = false, covered = false){
   else { clearInterval(countTimer); }
 }
 
+/* The error box keeps its room whether or not it has words, so a
+   refusal never moves the button under the finger. */
 function authErr(msg){
   const box = $('#authErr');
   if (!box) return;
@@ -274,8 +253,8 @@ document.addEventListener('input', e => {
     return;
   }
   if (e.target.closest('#authForm')){
-    /* likewise on the sign-in spread: a refusal is withdrawn on the
-       first keystroke; the box keeps its height, so nothing moves */
+    /* likewise on the sign-in form: a refusal is withdrawn on the first
+       keystroke; the box keeps its height, so nothing moves */
     const box = $('#authErr');
     if (box && box.classList.contains('is-on')) authErr('');
     return;
@@ -353,8 +332,12 @@ document.addEventListener('submit', async e => {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
 
-    go('home', { instant:true });
-    FX.enter($('#view'));
+    const scene = Scenes.opening({ tail: up ? 'Member joined' : 'Welcome back',
+      reveal(){ FX.pageEntrance($('#view')); playViewIntro(current); } });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      go('home', { instant:true, covered:true });
+      scene.release();
+    }));
   } catch (err){
     const msg = err && err.message ? err.message : 'Something went wrong. Try again.';
     authErr(msg);
@@ -396,7 +379,6 @@ document.addEventListener('click', e => {
   const bconfirm = e.target.closest('[data-bconfirm]');
   if (bconfirm){
     boardGoto({ confirmDelete:bconfirm.dataset.bconfirm, deleteNote:null });
-    setTimeout(() => $('.bconfirm__keep')?.focus({ preventScroll:true }), 0);
     return;
   }
   const bcancel = e.target.closest('[data-bcancel]');
@@ -510,6 +492,7 @@ document.addEventListener('click', e => {
   const out = e.target.closest('[data-signout]');
   if (out){
     Scenes.exit({
+      btn: out,
       swap: () => Store.signOut().then(() => {
         AuthUI.mode = 'in';
         go('auth', { instant:true });
@@ -539,7 +522,7 @@ document.addEventListener('click', e => {
     claim.disabled = true;
     Store.claimReward(claim.dataset.claim).then(r => {
       go('rewards', { instant:true });
-      FX.claimed($(`[data-reward="${claim.dataset.claim}"]`));
+      FX.claimStamp($(`[data-reward="${claim.dataset.claim}"]`));
       setTimeout(() => toast({ key:'claim', title:`${r.name} claimed`,
         detail:'Show this screen to a board member to pick it up.' }), 260);
     }).catch(() => {
@@ -579,7 +562,7 @@ async function loadBoard(){
 
   /* A pane that already holds this chapter's content keeps it while the
      record is re-read: opening or closing check-in, a search, a page
-     turn, opening a member. Only an empty chapter shows the beat. */
+     turn, opening a member. Only an empty chapter shows the wait panel. */
   const box = pane();
   const keep = Boolean(box) && !BoardUI.loading && BoardUI.shown === BoardUI.tab;
   /* a field the reader is typing in (the roster search) gets its focus
@@ -649,40 +632,15 @@ function boardGoto(next){
 }
 
 function paintMotion(){
-  $$('button[data-motion]').forEach(b => {
-    b.setAttribute('role', 'switch');
-    b.setAttribute('aria-checked', String(!Motion.forced));
-    b.setAttribute('aria-label', 'Motion');
-    b.textContent = Motion.forced ? 'Motion off' : 'Motion on';
+  $$('[data-motion]').forEach(b => {
+    b.setAttribute('aria-pressed', String(Motion.forced));
+    b.setAttribute('aria-label', Motion.forced ? 'Reduced motion is on. Turn animations back on.'
+                                               : 'Reduced motion is off. Turn animations off.');
+    b.innerHTML = b.classList.contains('rail__motion')
+      ? `<i aria-hidden="true"></i><span>${Motion.forced ? 'Motion off' : 'Motion on'}</span>`
+      : '<span class="motion-btn__opt">On</span><span class="motion-btn__opt">Off</span>';
   });
 }
-
-/* A stamp's docket is written into the card's own caption slot rather
-   than floated over its neighbours. */
-function showDocket(text){
-  const d = $('#cardDocket');
-  if (d) d.textContent = text || '';
-}
-document.addEventListener('mouseover', e => {
-  const s = e.target.closest('.seal[data-docket]');
-  if (s) showDocket(s.dataset.docket);
-});
-document.addEventListener('mouseout', e => {
-  if (e.target.closest('.seal[data-docket]')) showDocket('');
-});
-document.addEventListener('focusin', e => {
-  const s = e.target.closest('.seal[data-docket]');
-  if (s) showDocket(s.dataset.docket);
-});
-document.addEventListener('focusout', e => {
-  if (e.target.closest('.seal[data-docket]')) showDocket('');
-});
-document.addEventListener('click', e => {
-  const s = e.target.closest('.seal[data-docket]');
-  if (!s) return;
-  showDocket(s.dataset.docket);
-  try { s.focus({ preventScroll:true }); } catch (_) {}
-});
 
 /* an unknown hash resolves to the page already showing; the address is
    corrected so it never names a page that does not exist */
@@ -696,7 +654,7 @@ let opening = null;
 try {
   opening = Scenes.opening({ root:$('#boot'), reveal(){
     booted = true;
-    FX.enter($('#view'));
+    FX.pageEntrance($('#view'));
     playViewIntro(current);
   } });
 } catch (_) {
@@ -722,7 +680,7 @@ try {
     /* Coming back to the tab re-reads what the page shows: the record
        for a member, the chapter's own data for a board pane (kept in
        place while it loads). Nothing is re-read under a working button
-       or a scene. */
+       or during a scene. */
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState !== 'visible') return;
       if (!booted || !Store.signedIn || Landing.active || Scenes.busy) return;
@@ -733,6 +691,7 @@ try {
     });
 
     paintBrand();
+    $('#barBrand').innerHTML  = wordmark();
     paintIdentity();
     paintMotion();
     go(hashRoute());
@@ -742,17 +701,16 @@ try {
 })();
 
 function paintIdentity(){
-  const who = $('#folioWho');
-  if (!who) return;
-  who.innerHTML = Store.signedIn
-    ? `<button class="folio__name" type="button" data-go="${Store.isBoard ? 'baccount' : 'profile'}">${esc(Store.user.name)}</button>
-       <span class="folio__role">${Store.isBoard ? 'Board' : 'Member'}</span>`
-    : '';
-  paintNav();
-}
-
-addEventListener('resize', measureFolio);
-if ('ResizeObserver' in window){
-  const f = document.getElementById('folio');
-  if (f) new ResizeObserver(measureFolio).observe(f);
+  const foot = $('#railFoot');
+  if (!foot) return;
+  foot.innerHTML = Store.signedIn
+    ? `<p class="rail__who"><span class="rail__name">${esc(Store.user.name)}</span>
+         <span class="rail__role">${Store.isBoard ? 'Board' : 'Member'}</span></p>
+       <div class="rail__util">
+         <button class="rail__motion" type="button" data-motion></button>
+         <button class="rail__out" type="button" data-signout>Sign out</button>
+       </div>`
+    : `<p class="kicker">Not signed in</p>
+       <p class="muted rail__note">Sign in to see your record.</p>`;
+  paintMotion();
 }

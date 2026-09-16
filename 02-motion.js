@@ -11,10 +11,6 @@ const Motion = {
   setForced(v){
     this.forced = Boolean(v);
     try { localStorage.setItem(MOTION_KEY, v ? 'off' : 'on'); } catch (_) {}
-    this.mark();
-  },
-  mark(){
-    try { document.documentElement.dataset.motionPref = this.forced ? 'off' : 'on'; } catch (_) {}
   },
   get off(){ return this.forced || !window.animate || systemReducedMotion(); },
   get reduced(){ return this.forced || systemReducedMotion(); },
@@ -34,7 +30,46 @@ const releaseTransform = els => {
   });
 };
 
-Motion.mark();
+const Reveal = {
+  io: null,
+  fuses: new Set(),
+
+  enter(el){
+    clearTimeout(el._revealFuse);
+    if (el.dataset.revealed) return;
+    el.dataset.revealed = '1';
+    animate(el, { opacity:[0, 1], duration:MECH.CUT, ease:STEP(1) });
+    FX.slamType(el, MECH.BEAT);
+  },
+
+  watch(el){
+    if (Motion.off || !('IntersectionObserver' in window)){
+      el.style.opacity = '';
+      return;
+    }
+    if (!this.io){
+      this.io = new IntersectionObserver(entries => {
+        entries.forEach(en => {
+          if (!en.isIntersecting) return;
+          this.io.unobserve(en.target);
+          this.enter(en.target);
+        });
+      }, { rootMargin:'0px 0px -6% 0px', threshold:.04 });
+    }
+    this.io.observe(el);
+    el._revealFuse = setTimeout(() => {
+      this.fuses.delete(el._revealFuse);
+      this.io?.unobserve(el);
+      this.enter(el);
+    }, 6000);
+    this.fuses.add(el._revealFuse);
+  },
+
+  clear(){
+    this.io?.disconnect(); this.io = null;
+    this.fuses.forEach(t => clearTimeout(t)); this.fuses.clear();
+  },
+};
 
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -50,49 +85,63 @@ const knit = s => String(s).replace(/ (AM|PM)\b/gi, '\u00a0$1');
 const fmtTime = iso => knit(new Date(iso)
   .toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' }));
 
-const TOAST_LIMIT = 1;
-const TOAST_LIFE = 5000;
+const TOAST_LIMIT = 3;
+const TOAST_LIFE = 2600;
 const liveToasts = new Map();
 
-function dropToast(key){
+function dropToast(key, immediate){
   const rec = liveToasts.get(key);
   if (!rec) return;
   clearTimeout(rec.timer);
   liveToasts.delete(key);
-  rec.el.remove();
+  const el = rec.el;
+  if (immediate || Motion.off) return el.remove();
+  animate(el, { opacity:0, translateY:8, duration:200, ease:'inQuad',
+                onComplete:() => el.remove() });
 }
 
-/* A message is a cut: it is there, then it is not. It waits while the
-   pointer or focus is on it, and a tap or Escape dismisses it. */
 function toast({ title, detail, bad = false, key }){
   const host = $('#toasts');
   if (!host) return;
 
   const k = key || `once:${Date.now()}:${Math.random()}`;
+
   const prev = liveToasts.get(k);
   let el;
   if (prev){
     clearTimeout(prev.timer);
     el = prev.el;
   } else {
-    while (liveToasts.size >= TOAST_LIMIT) dropToast(liveToasts.keys().next().value);
+    while (liveToasts.size >= TOAST_LIMIT) dropToast(liveToasts.keys().next().value, true);
     el = document.createElement('div');
-    el.tabIndex = 0;
-    el.setAttribute('role', 'status');
     host.appendChild(el);
+    if (!Motion.off) animate(el, { opacity:[0,1], translateY:[14,0], duration:240, ease:'outQuad' });
   }
 
   el.className = 'toast' + (bad ? ' toast--bad' : '');
-  el.innerHTML = `<p class="toast__t">${esc(title)}</p>
-      ${detail ? `<p class="toast__d">${esc(detail)}</p>` : ''}`;
+  el.setAttribute('role', 'status');
+  el.tabIndex = 0;
+  el.innerHTML = `<span class="toast__dot"></span><div>
+      <p class="toast__t">${esc(title)}</p>
+      ${detail ? `<p class="toast__d">${esc(detail)}</p>` : ''}</div>`;
 
-  const arm = () => setTimeout(() => dropToast(k), TOAST_LIFE);
-  const rec = { el, timer:arm() };
+  /* A message waits while it is hovered or focused, and a tap, Enter or
+     Escape dismisses it, so a reader is never racing the timer. */
+  const rec = { el, timer:null, held:prev ? prev.held : false };
+  const cur = () => liveToasts.get(k);
+  const arm = r => { clearTimeout(r.timer); r.timer = setTimeout(() => dropToast(k), TOAST_LIFE); };
+  if (!prev){
+    const hold = () => { const r = cur(); if (r){ r.held = true; clearTimeout(r.timer); } };
+    const free = () => { const r = cur(); if (r){ r.held = false; arm(r); } };
+    el.addEventListener('mouseenter', hold);
+    el.addEventListener('focus', hold);
+    el.addEventListener('mouseleave', free);
+    el.addEventListener('blur', free);
+    el.addEventListener('click', () => dropToast(k));
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Escape' || e.key === 'Enter'){ e.preventDefault(); dropToast(k); }
+    });
+  }
   liveToasts.set(k, rec);
-  const hold = () => { clearTimeout(rec.timer); };
-  const release = () => { clearTimeout(rec.timer); rec.timer = arm(); };
-  el.onmouseenter = hold; el.onfocus = hold;
-  el.onmouseleave = release; el.onblur = release;
-  el.onclick = () => dropToast(k);
-  el.onkeydown = e => { if (e.key === 'Escape' || e.key === 'Enter') dropToast(k); };
+  if (!rec.held) arm(rec);
 }
