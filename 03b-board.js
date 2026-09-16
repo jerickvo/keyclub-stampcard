@@ -23,6 +23,7 @@ function spanTime(start, end){
 const BoardUI = {
   tab: 'club',
   loading: false,
+  shown: null,          /* the tab whose loaded content the pane holds */
   error: null,
 
   overview: null,
@@ -78,8 +79,13 @@ const BoardUI = {
     return this.sessionPane();
   },
 
+  /* The loading beat: one rule drawn across the column in six cuts,
+     the word under it. Nothing spins. */
   skeleton(){
-    return `<p class="bwait meta" aria-busy="true">Loading</p>`;
+    return `<div class="bwait" role="status" aria-busy="true">
+      <i class="bwait__rule" aria-hidden="true"></i>
+      <span class="bwait__msg meta">Loading</span>
+    </div>`;
   },
 
   failure(code){
@@ -106,27 +112,35 @@ const BoardUI = {
     const next = o.next_meeting;
     const today = Schedule.today();
 
+    /* The docket: the meeting's number, its facts and the one board
+       action, composed as a single notice. No meeting is one line of
+       type, and the schedule action carries the weight. */
     let now;
     if (active){
       now = `<section class="now now--live" data-enter>
         <p class="now__kick">Happening now</p>
         <p class="now__no">GM ${pad(active.meeting_number)}</p>
-        <p class="now__meta meta">${esc(fmtDate(active.meeting_date))} · ${this.when(active)}</p>
-        <p class="now__count"><b>${esc(String(o.today_attendance ?? 0))}</b> checked in so far</p>
-        <button class="btn now__go" type="button" data-go="bcheckin">Show the code</button>
+        <div class="now__facts">
+          <p class="now__meta meta">${esc(fmtDate(active.meeting_date))} · ${this.when(active)}</p>
+          <p class="now__state"><b>${esc(String(o.today_attendance ?? 0))}</b> checked in so far</p>
+          <button class="btn now__go" type="button" data-go="bcheckin">Show the code</button>
+        </div>
       </section>`;
     } else if (next){
       const isToday = next.meeting_date === today;
       now = `<section class="now" data-enter>
         <p class="now__kick">${isToday ? 'Today' : 'Next general meeting'}</p>
         <p class="now__no">GM ${pad(next.meeting_number)}</p>
-        <p class="now__meta meta">${esc(fmtDate(next.meeting_date))} · ${this.when(next)}</p>
-        <button class="btn now__go" type="button" data-go="bcheckin">Open check-in</button>
+        <div class="now__facts">
+          <p class="now__meta meta">${esc(fmtDate(next.meeting_date))} · ${this.when(next)}</p>
+          <p class="now__state">Check-in ${next.check_in_open ? 'open' : 'closed'}</p>
+          <button class="btn now__go" type="button" data-go="bcheckin">Open check-in</button>
+        </div>
       </section>`;
     } else {
-      now = `<section class="now" data-enter>
+      now = `<section class="now now--none" data-enter>
         <p class="now__kick">Next general meeting</p>
-        <p class="now__no">None yet</p>
+        <p class="now__none">No general meeting is scheduled.</p>
         <button class="btn now__go" type="button" data-go="bmeet">Schedule one</button>
       </section>`;
     }
@@ -135,12 +149,11 @@ const BoardUI = {
       ? '-' : esc(String(o.average_attendance));
     return `<div class="club">
       ${now}
-      <section class="standing" data-enter>
-        <p class="fig standing__fig">
-          <span class="fig__n">${pad(o.meetings_held ?? 0)}</span>
-          <span class="fig__of">general meetings held</span>
-        </p>
+      <section class="standing standing--flat" data-enter>
+        <h2 class="sec">Standing</h2>
         <ul class="standing__rest">
+          <li class="standing__row"><span class="standing__lab">General meetings held</span>
+            <span class="standing__val">${esc(String(o.meetings_held ?? 0))}</span></li>
           <li class="standing__row"><span class="standing__lab">Stamps earned</span>
             <span class="standing__val">${esc(String(o.total_seals ?? 0))}</span></li>
           <li class="standing__row"><span class="standing__lab">Members checked in</span>
@@ -160,11 +173,12 @@ const BoardUI = {
     const participating = o.participating_members;
 
     return `<div class="members">
-      <section class="standing" data-enter>
-        <p class="fig standing__fig">
-          <span class="fig__n">${typeof total === 'number' ? pad(total) : '--'}</span>
-          <span class="fig__of">${total === 1 ? 'member' : 'members'} on the roster</span>
-        </p>
+      <section class="roster" data-enter>
+        ${this.rosterBody()}
+      </section>
+
+      <section class="standing standing--flat members__standing" data-enter>
+        <h2 class="sec">Standing</h2>
         <ul class="standing__rest">
           ${REWARD_TIERS.map(r => {
             const count = ms['m' + r.required];
@@ -179,10 +193,6 @@ const BoardUI = {
             <span class="standing__lab">Ever checked in</span>
             <span class="standing__val">${participating}</span></li>` : ''}
         </ul>
-      </section>
-
-      <section class="roster" data-enter>
-        ${this.rosterBody()}
       </section>
     </div>`;
   },
@@ -208,7 +218,7 @@ const BoardUI = {
       <section class="ledger meetings__next" data-enter>
         <h2 class="sec">Next<span class="sec__n">${count(upcoming.length)}</span></h2>
         ${upcoming.length
-          ? `<ol class="rows">${upcoming.map(m => this.meetingRow(m)).join('')}</ol>`
+          ? `<ol class="rows rows--dated">${upcoming.map(m => this.meetingRow(m)).join('')}</ol>`
           : this.empty('Nothing scheduled.')}
       </section>
 
@@ -217,7 +227,7 @@ const BoardUI = {
       <section class="ledger meetings__held" data-enter>
         <h2 class="sec">Held<span class="sec__n">${count(past.length)}</span></h2>
         ${past.length
-          ? `<ol class="rows">${past.map(m => this.meetingRow(m)).join('')}</ol>`
+          ? `<ol class="rows rows--counted">${past.map(m => this.meetingRow(m)).join('')}</ol>`
           : this.empty('No meetings yet.')}
       </section>
     </div>`;
@@ -232,7 +242,7 @@ const BoardUI = {
       <span class="row__no">GM ${no}</span>
       <span class="mrow__day">${esc(fmtDate(m.meeting_date))}</span>
       <span class="mrow__when meta">${this.when(m)}</span>
-      <span class="mrow__n">${past ? `<b>${n}</b><span class="meta mrow__unit--short"> in</span><span class="meta mrow__unit--long"> checked in</span>` : ''}</span>
+      ${past ? `<span class="mrow__n"><b>${n}</b><span class="meta mrow__unit--short"> in</span><span class="meta mrow__unit--long"> checked in</span></span>` : ''}
     </li>`;
   },
 
@@ -250,7 +260,7 @@ const BoardUI = {
       <p class="bconfirm__q" role="alert">${esc(q)}</p>
       <p class="bconfirm__why">${esc(why)}</p>
       <div class="bconfirm__act">
-        <button class="btn" type="button" data-bdelete="${esc(m.id)}" data-bstamps="${stamps}">Delete</button>
+        <button class="btn" type="button" data-bdelete="${esc(m.id)}" data-bstamps="${stamps}" data-busy="Deleting…">Delete</button>
         <button class="btn btn--quiet bconfirm__keep" type="button" data-bcancel>Keep</button>
       </div>
     </div>`;
@@ -274,7 +284,7 @@ const BoardUI = {
       </div>
       <p class="err" id="mErr" role="alert" aria-live="assertive" hidden></p>
       <div class="bform__row">
-        <button class="btn" type="submit" id="mGo">Schedule meeting</button>
+        <button class="btn" type="submit" id="mGo" data-busy="Scheduling…">Schedule meeting</button>
         <button class="link link--quiet" type="button" data-mreset>Reset</button>
       </div>
     </form>`;
@@ -301,7 +311,7 @@ const BoardUI = {
           </select></label>
       </div>
       ${rows.length ? `
-        <ol class="rows roster__rows">
+        <ol class="rows roster__rows rows--roster">
           ${rows.map(m => `<li class="row rrow" data-bmember="${esc(m.id)}" tabindex="0" role="button">
             <span class="rrow__name">${esc(m.username)}</span>
             <span class="rrow__meta meta">${m.last_attendance
@@ -319,30 +329,23 @@ const BoardUI = {
     const m = d.member;
     return `<div class="detail">
       <p class="detail__back"><button class="link link--quiet" data-bback>&larr; Roster</button></p>
-      <section class="standing" data-enter>
-        <p class="fig standing__fig">
-          <span class="fig__n detail__name">${esc(m.username)}</span>
-          <span class="fig__of">${m.stamps} ${m.stamps === 1 ? 'stamp' : 'stamps'}<span class="fig__ln">joined ${esc(fmtDay(m.created_at))}</span></span>
-        </p>
-        <ul class="standing__rest">
-          <li class="standing__row"><span class="standing__lab">Meetings attended</span>
-            <span class="standing__val">${d.attendance.length}</span></li>
-          ${d.rewards.map(r => `<li class="standing__row">
-            <span class="standing__lab"><span class="row__no">${r.required}</span> ${esc(r.name)}</span>
-            <span class="standing__val standing__val--word">${r.claimed ? 'Claimed' : r.unlocked ? 'Unlocked' : 'Locked'}</span>
-          </li>`).join('')}
-        </ul>
-      </section>
+      <header class="detail__head" data-enter>
+        <p class="detail__id detail__name">${esc(m.username)}</p>
+        <p class="detail__meta meta">${m.stamps} ${m.stamps === 1 ? 'stamp' : 'stamps'} · joined ${esc(fmtDay(m.created_at))}</p>
+        <p class="detail__meta meta">${d.rewards.map(r => {
+          const s = r.state || rewardState(r, m.stamps, r.claimed);
+          return `<span${s === 'locked' ? '' : ' class="detail__on"'}>${r.required} ${esc(r.name)} ${s}</span>`;
+        }).join(' · ')}</p>
+      </header>
 
       <section class="ledger" data-enter>
         <h2 class="sec">Attendance<span class="sec__n">${d.attendance.length === 1 ? '1 meeting' : `${d.attendance.length} meetings`}</span></h2>
         ${d.attendance.length
-          ? `<ol class="rows">${d.attendance.map(a => `
+          ? `<ol class="rows rows--dated">${d.attendance.map(a => `
               <li class="row mrow" ${a.meeting_id ? `data-bmeeting="${esc(a.meeting_id)}" tabindex="0" role="button"` : ''}>
                 <span class="row__no">GM ${a.meeting_number ? pad(a.meeting_number) : '-'}</span>
                 <span class="mrow__day">${esc(fmtDate(a.meeting_date))}</span>
                 <span class="mrow__when meta">${esc(fmtTime(a.checked_in_at))}</span>
-                <span class="mrow__n"></span>
               </li>`).join('')}</ol>`
           : this.empty('No attendance yet.')}
       </section>
@@ -359,25 +362,16 @@ const BoardUI = {
     return `<div class="detail">
       <p class="detail__back"><button class="link link--quiet" data-bback>&larr; Meetings</button></p>
       ${this.deleteNote ? `<p class="err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
-      <section class="standing" data-enter>
-        <p class="fig standing__fig">
-          <span class="fig__n">GM ${pad(m.meeting_number)}</span>
-          <span class="fig__of">${esc(fmtDate(m.meeting_date))}<span class="fig__ln">${this.when(m)}</span></span>
-        </p>
-        <ul class="standing__rest">
-          <li class="standing__row"><span class="standing__lab">Checked in</span>
-            <span class="standing__val">${stamps}</span></li>
-          <li class="standing__row"><span class="standing__lab">Of members who attend</span>
-            <span class="standing__val">${this.shareOfClub(stamps)}</span></li>
-          <li class="standing__row"><span class="standing__lab">Check-in</span>
-            <span class="standing__val standing__val--word">${m.check_in_open ? 'Open' : 'Closed'}</span></li>
-        </ul>
-      </section>
+      <header class="detail__head" data-enter>
+        <p class="detail__id">GM ${pad(m.meeting_number)}</p>
+        <p class="detail__meta meta">${esc(fmtDate(m.meeting_date))} · ${this.when(m)} · Check-in ${m.check_in_open ? 'open' : 'closed'}</p>
+      </header>
 
       <section class="ledger" data-enter>
-        <h2 class="sec">Attendees<span class="sec__n">${stamps === 1 ? '1 member' : `${stamps} members`}</span></h2>
+        <h2 class="sec">Attendees<span class="sec__n">${stamps === 1 ? '1 member' : `${stamps} members`}${
+          this.shareOfClub(stamps) === '-' ? '' : ` · ${this.shareOfClub(stamps)} of members who attend`}</span></h2>
         ${stamps
-          ? `<ol class="rows">${d.attendees.map(a => `
+          ? `<ol class="rows rows--who">${d.attendees.map(a => `
               <li class="row rrow" data-bmember="${esc(a.user_id)}" tabindex="0" role="button">
                 <span class="rrow__name">${esc(a.username)}</span>
                 <span class="rrow__meta meta">${esc(fmtTime(a.checked_in_at))}</span>
@@ -434,10 +428,10 @@ const BoardUI = {
             <p class="proj__cap">Scan to check in</p>
           </div>
           <p class="proj__count"><b id="attCount">-</b><span>checked in</span></p>
-          <button class="btn btn--inv proj__ctl" type="button" data-bend="${esc(sel.id)}">Close check-in</button>
+          <button class="btn btn--inv proj__ctl" type="button" data-bend="${esc(sel.id)}" data-busy="Ending…">Close check-in</button>
         ` : `
           <p class="proj__count proj__count--shut"><span>Members see the code here once it opens.</span></p>
-          <button class="btn proj__ctl" type="button" data-bstart="${esc(sel.id)}">Open check-in</button>
+          <button class="btn proj__ctl" type="button" data-bstart="${esc(sel.id)}" data-busy="Starting…">Open check-in</button>
         `}
       </section>
     </div>`;

@@ -78,11 +78,19 @@ member set.
 
 | Member | | Board | |
 |---|---|---|---|
-| Card | the stamp card, the open meeting, the next dates | Club | the meeting happening now + the year's standing |
-| Record | every meeting, stamped or missed | Meetings | schedule and delete meetings |
+| Card | the stamp card, the open meeting, the next dates | Club | the next or open meeting as a docket, then the standing |
+| Record | the attendance ledger, stamped or missed | Meetings | schedule and delete meetings |
 | Scan | camera + manual code entry | Check-In | the projector QR and the live count |
-| Rewards | 10 / 20 / 30 tiers | Members | roster, search, per-member detail |
-| *your name* | standing, attendance, rewards; the account | *your name* | sign-out and the motion setting |
+| Rewards | one track from 0 to 30 with three milestones | Members | the roster, then the standing beside it |
+| *your name* | standing, attendance, rewards; the account | *your name* | the account |
+
+Each chapter is one of a few compositions: an object page (Card, Check-In),
+a ledger (Record, Meetings, a meeting's docket, a member's detail), a track
+(Rewards), a status page (the member's own page) and a notice (Club). They
+share every component; only the hierarchy differs. The one large figure a
+page may carry is the one that means something there: the card's count, the
+member's stamp total, the meeting's number on Club. A ledger opens with its
+rows, a detail with a compact head, and Members with the roster.
 
 The fifth screen is titled with the signed-in person's first name; its folio
 entry reads the same.
@@ -94,7 +102,8 @@ palette), with a small burgundy square notching the hairline; its word has
 been promoted into the page title, where it sits beside a hollow chapter
 numeral. On phones the line is the foot of the page: paper, one hairline,
 flush left. From 768px it is the sticky head, with the signed-in name (a
-button to the fifth screen), the role and the wordmark at the right.
+button to the fifth screen, cut with an ellipsis past the length a username
+can have), the role and the wordmark at the right.
 `paintNav()` in `06-app.js` draws it and `measureFolio()` writes its height
 into `--folio-h` so the page and the scanner can make room. No rail, no tab
 bar, no icons.
@@ -107,6 +116,33 @@ mark, the strip's dab, the rail beside a rung that is ready to claim. Four
 edge weights, five gaps and six type steps are defined once as tokens in
 `keystamp.css`; page rules read the tokens and never call `clamp()`.
 
+One rule decides what a reward tier is to a member, and it reads two
+facts: the stamp count and whether a claim row is on file. A tier is
+*claimed* when the claim exists, else *unlocked* when the stamps reach its
+threshold, else *locked*; "rewards unlocked" anywhere is the number of tiers
+that are not locked. A claim is a fact (the prize was handed over), so it
+stays counted even if a deleted meeting later takes stamps back. The rule
+is `rewardState` in `01a-backend.js`, and the board function and the test
+double carry the same three lines, so the Rewards page, the member's
+standing, the roster and the board's member detail can never disagree.
+
+Layout has three shared mechanics. The *opener rhythm*: the torn rule under a
+chapter title and the chapter's first block are always `--gap-stack` (the
+title's margin) plus `--gap-block` (every page container's top-level gap)
+apart; a line that belongs to the title (a crumb back to a list, the
+account's role line) pulls up to `--gap-tight`. The *register*: a `.rows`
+list is one grid that owns its column tracks (`--tracks`, named by a
+modifier for what the rows hold: `rows--dated`, `rows--counted`,
+`rows--roster`, `rows--who`) and each `.row` lays its cells on those tracks
+with subgrid, so a column is the same width in every row and a row that
+lacks a fact simply has no cell for it. The *page columns*: the two-column
+layouts (standing and account, record, rewards, meetings, the card's deck)
+share one gutter, `--col-gap`.
+
+Numbers: a chapter number and a meeting identifier are labels and keep
+their leading zero (`02`, `GM 04`); a count is a plain integer (`3 of 10`).
+Every screen writes a meeting as `GM 04`.
+
 Routing is hash-based (`#/record`). `gate()` in `06-app.js` is the enforcement
 point: signed-out visitors land on the sign-in spread whatever the hash says, a
 member cannot reach a board route, and a board account lands in Club Tools.
@@ -114,9 +150,14 @@ member cannot reach a board route, and a board account lands in Club Tools.
 Credentials: usernames are case-insensitive (`Config.canonUsername` lowercases
 them only to build the synthetic sign-in address; the typed form is kept as the
 display name), passwords are case-sensitive and are passed to Supabase exactly
-as typed. The sign-in inputs are set in the mono face on purpose: the body face
-is unicase, so anything typed in it looks uppercase. Each password field has a
-show/hide toggle that swaps the input type and never touches the value.
+as typed. Anything a person types, and any name that is theirs, is set in the
+mono face on purpose: the body face is unicase, so `aBcD` set in it reads
+`ABCD`. That covers the sign-in fields, every `.input` (the roster search, the
+schedule form), roster and attendee names, the member detail's name and the
+"Signed in as" line. Each password field has a show/hide toggle that swaps
+the input type and never touches the value. A refused sign-in shows its
+message in a slot that is always reserved, so the form does not move, and
+focus lands on the first field at fault in form order.
 
 ---
 
@@ -133,6 +174,18 @@ never restarted and the frame loop keeps decoding. Cameras and browsers that
 expose no zoom capability get no control and no errors; a track that rejects
 the constraint drops the control quietly. The decoder samples the feed at
 480px wide so a small code at the back of the room still resolves.
+
+The line printed over the viewer names the meeting a scan would stamp
+(`scanStanding` in `05-scan.js`); it is re-read whenever the record changes,
+so check-in opening or closing while the camera is up shows there without a
+reload and without restarting the camera. When the camera cannot start —
+permission off, no device, an insecure page — or its track ends mid-scan
+(permission revoked, the device taken by another app), the viewer keeps its
+frame and the meeting line and prints the reason at its foot with a
+**Try again** link that asks for the camera afresh; nothing tells the member
+to reload. If the member leaves Scan while the store re-reads a verified
+scan, the page they chose is left alone; the stamp is in the record either
+way.
 
 **The server is the only authority.** The scanned payload goes to the
 `verify-attendance` Edge Function, which decides whether a stamp is awarded;
@@ -234,7 +287,29 @@ Three ideas, and nothing else moves.
   once.
 
 Messages are flat ink strips that cut in and out, one at a time. They wait
-while hovered or focused; a tap or Escape dismisses them.
+while hovered or focused; a tap or Escape dismisses them. A refusal is the
+same strip inverted — ink on paper behind a burgundy rule (`.toast--bad`) —
+so a check-in that did not open never reads like one that did.
+
+A refusal on the sign-in spread or the schedule form is withdrawn on the
+first keystroke that follows it; the sign-in box keeps its height, so
+nothing moves.
+
+A button that is working keeps its box: `hold` swaps its label for the
+progress word and fixes its width, `release` gives the label back
+(`06-app.js`). Hovering a filled button inverts it inside its own frame; a
+held button is faded and does not answer to the pointer, so the two states
+are never the same grey. A board pane that is re-read keeps what it shows
+(`aria-busy` on `#boardPane`) until the new data is painted; only a chapter
+with nothing loaded yet shows the loading beat — one rule drawn across the
+column in six cuts, the word under it (`BoardUI.skeleton`). Nothing spins.
+
+The page is re-read when the tab comes back into view: the record for a
+member, the chapter's own data for a board pane (kept in place while it
+loads; the projector keeps its code up). A re-read that finds nothing new
+repaints nothing (`Store.stamp` against the last paint), so returning to the
+app does not reset the page under the reader; Scan only refreshes its
+meeting line, and nothing is re-read under a working button.
 
 Without anime.js the app still works: `Motion.off` turns every animation into
 an instant state change. `prefers-reduced-motion` and the account setting
@@ -278,4 +353,5 @@ python3 tools-build-fonts.py     # assets/fonts/*.ttf  ->  fonts.css
 python3 tools-trace-stamps.py    # stamp artwork -> traced vector paths
 python3 tools-overlap-check.py   # renders index.html, reports collisions
 node --test tools-test-meetings.mjs   # meeting-number and form-default rules
+node --test tools-test-rewards.mjs    # the reward-tier rule
 ```

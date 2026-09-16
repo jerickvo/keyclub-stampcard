@@ -130,6 +130,18 @@ const Store = {
 
   get failed(){ return this.loadError !== null; },
 
+  /* One line that changes whenever a page would: who is signed in, what
+     loaded, which meetings are open or ahead, the stamps, the claims.
+     A re-read that finds nothing new repaints nothing. */
+  stamp(){
+    return JSON.stringify([
+      this.user ? this.user.id : null, this.loadError,
+      this.meetings.map(m => [m.id, m.no, m.date, m.time, m.open, m.upcoming]),
+      this.scans.map(s => [s.meetingId, s.at]),
+      this.rewards.map(r => [r.id, r.claimed]),
+    ]);
+  },
+
   get signedIn(){ return Boolean(this.user); },
   get role(){ return this.user ? this.user.role : null; },
   get isBoard(){ return this.role === 'board'; },
@@ -180,7 +192,8 @@ const Store = {
   },
   heldMeetings(){ return this.meetings.filter(m => !m.upcoming); },
   countedMeetings(){ return this.meetings.filter(m => !m.upcoming && (!m.open || this.attended(m.id))); },
-  rewardsUnlocked(){ const t = this.totalStamps(); return this.rewards.filter(r => t >= r.required).length; },
+  tierState(r){ return rewardState(r, this.totalStamps(), r.claimed); },
+  rewardsUnlocked(){ return this.rewards.filter(r => this.tierState(r) !== 'locked').length; },
   attendanceRate(){
     const held = this.countedMeetings();
     if (!held.length) return 0;

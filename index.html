@@ -117,6 +117,7 @@
   --gap-stack:clamp(12px,1.4vw,18px);
   --gap-block:clamp(28px,4vw,56px);
   --gutter:clamp(16px,4.4vw,56px);
+  --col-gap:clamp(28px,4vw,72px);   /* between the two page columns */
 
   /* type: six steps */
   --t-title:clamp(40px,8.6vw,100px);
@@ -154,10 +155,13 @@ main#view:focus,main#view:focus-visible{outline:none}
 :where(svg:not(.fxdefs):not([width])){width:22px;height:22px;flex:none}
 
 /* ── shell ───────────────────────────────────────────────────────── */
+/* one column that can never grow past the viewport, whatever the
+   running head's own width wants */
 .shell{position:relative;z-index:1;display:grid;
-  grid-template-rows:auto minmax(0,1fr);min-height:100%}
-main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
-  padding:calc(var(--gap-stack) + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x))
+  grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);min-height:100%}
+main#view{--view-top:var(--gap-stack);
+  width:100%;max-width:var(--page-max);margin-inline:auto;
+  padding:calc(var(--view-top) + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x))
           calc(var(--gap-block) + var(--folio-h) + env(safe-area-inset-bottom,0px))}
 .view{position:relative}
 
@@ -207,21 +211,28 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   .folio__here::before{top:auto;bottom:-11px}
   .folio__side{display:flex;align-items:baseline;gap:clamp(14px,1.6vw,26px);
     white-space:nowrap;min-width:0}
-  .folio__who{display:inline-flex;align-items:baseline;gap:8px;
+  .folio__who{display:inline-flex;align-items:baseline;gap:8px;min-width:0;
     font:400 var(--t-micro)/1 var(--f-mono);letter-spacing:.06em;color:var(--ink-2)}
+  /* a long name is cut with an ellipsis, as the chapter labels are */
   .folio__name{background:none;border:0;padding:10px 0 8px;min-height:38px;
     cursor:pointer;font:inherit;color:var(--ink);letter-spacing:.06em;
-    text-transform:uppercase}
+    text-transform:uppercase;max-width:28ch;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .folio__name:hover,.folio__name:focus-visible{text-decoration:underline;
     text-decoration-thickness:2px;text-underline-offset:3px}
   .folio__wm{font-family:var(--f-display);font-size:19px;line-height:1;
     text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
-  main#view{padding-top:var(--gap-block)}
+  main#view{--view-top:var(--gap-block)}
 }
 
 /* ── chapter opener ──────────────────────────────────────────────
    Hollow chapter numeral, the chapter word at title size, and the one
    drawn line in the app beneath them. ─────────────────────────── */
+/* Opener rhythm. The torn rule and the chapter's first block are always
+   gap-stack (the title's own breath, its margin) + gap-block (the page's
+   block gap) apart, so every page container uses gap-block as its
+   top-level gap. A line that belongs to the title, a crumb back to the
+   list or the account's role line, pulls up to gap-tight instead. */
 .rechead{position:relative;display:flex;align-items:baseline;flex-wrap:wrap;
   gap:0 .22em;padding-bottom:calc(var(--gap-tight) + 7px);margin-bottom:var(--gap-stack)}
 .rechead::after{content:'';position:absolute;left:0;right:0;bottom:0;height:7px;
@@ -241,10 +252,10 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 /* ── type roles ──────────────────────────────────────────────────── */
 .sec{margin:0;padding-bottom:var(--gap-tight);
   border-bottom:var(--edge-panel) solid var(--ink);
-  display:flex;align-items:baseline;justify-content:space-between;gap:var(--gap-stack);
+  display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:0 var(--gap-stack);
   font-family:var(--f-head);font-weight:400;font-size:var(--t-head);line-height:1;
   text-transform:uppercase;letter-spacing:.01em;color:var(--ink)}
-.sec__n{font:400 var(--t-micro)/1 var(--f-mono);letter-spacing:.06em;
+.sec__n{margin-left:auto;text-align:right;font:400 var(--t-micro)/1 var(--f-mono);letter-spacing:.06em;
   color:var(--ink-2);text-transform:none;white-space:nowrap}
 
 .fig{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 12px;min-width:0}
@@ -266,21 +277,31 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   background:var(--ink);color:var(--paper);cursor:pointer;
   font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);line-height:1;
   text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
-.btn:hover{background:var(--ink-2)}
+/* hover inverts the button inside its own frame; a working button is
+   faded and stays put, so the two are never the same grey */
+.btn:hover{background:var(--paper);color:var(--ink);
+  box-shadow:inset 0 0 0 var(--edge-panel) var(--ink)}
 .btn:active{transform:translate(2px,2px)}
-.btn[disabled]{opacity:.55;cursor:progress;transform:none}
 .btn--quiet{background:var(--paper);color:var(--ink);
   border:var(--edge-panel) solid var(--ink);padding:8px 14px;
   font-family:var(--f-body);font-size:var(--t-body);text-transform:none;letter-spacing:0}
-.btn--quiet:hover{background:var(--ink);color:var(--paper)}
+.btn--quiet:hover{background:var(--ink);color:var(--paper);box-shadow:none}
 .btn--inv{background:var(--paper);color:var(--ink)}
-.btn--inv:hover{background:var(--tint)}
+.btn--inv:hover{background:var(--tint);box-shadow:none}
+/* a button that names its progress word is as wide as the wider of its
+   two labels from the start, so working never resizes it */
+.btn[data-busy]{flex-direction:column;gap:0}
+.btn[data-busy]::after{content:attr(data-busy);display:block;height:0;overflow:hidden;visibility:hidden}
+/* a working button is its resting self, faded, and deaf to the pointer:
+   no hover, no press, whatever colours its composition gave it */
+.btn[disabled]{opacity:.55;pointer-events:none;transform:none}
 
 .link{display:inline-flex;align-items:center;min-height:var(--link-h,36px);padding:6px 0;
   background:none;border:0;border-radius:0;cursor:pointer;color:var(--ink);
   font:400 var(--t-body)/1.2 var(--f-body);letter-spacing:0;
   text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px}
 .link:hover{text-decoration-thickness:2.5px}
+.link:active{transform:translate(1px,1px)}
 .link--quiet{color:var(--ink-2)}
 .link--quiet:hover{color:var(--ink)}
 
@@ -290,11 +311,14 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .input{display:block;width:100%;min-width:0;min-height:var(--tap);
   padding:10px 0 8px;background:transparent;color:var(--ink);
   border:0;border-bottom:var(--edge-panel) solid var(--ink);border-radius:0;
-  font:400 max(16px,var(--t-body))/1.2 var(--f-body);letter-spacing:0;
+  font:400 max(16px,var(--t-body))/1.2 var(--f-mono);letter-spacing:0;
   appearance:none;-webkit-appearance:none;color-scheme:light;accent-color:var(--ink)}
 .input::placeholder{color:var(--ink-2);opacity:1}
 .input:focus{outline:0;border-bottom-width:var(--edge-frame);padding-bottom:7px}
-.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:4px}
+/* :focus-within, not :focus-visible: a field is always keyboard-editable,
+   and the date and time fields hand focus to their own parts (month, day,
+   year, the picker) while the cursor moves through them */
+.input:focus-within{outline:var(--edge-panel) solid var(--ink);outline-offset:4px}
 select.input{padding-right:22px;cursor:pointer;
   background-image:linear-gradient(45deg,transparent 50%,var(--ink) 50%),
                    linear-gradient(135deg,var(--ink) 50%,transparent 50%);
@@ -304,11 +328,19 @@ select.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-of
 .err{margin:0;padding:6px 0 6px 12px;border-left:var(--edge-frame) solid var(--ink);
   font:700 italic var(--t-body)/1.4 var(--f-body);color:var(--ink)}
 
-/* ── rows: the register ──────────────────────────────────────────── */
-.rows{list-style:none;margin:0;padding:0;border-top:var(--edge-rule) solid var(--tone)}
-.row{display:grid;align-items:baseline;column-gap:var(--gap-stack);
+/* ── rows: the register ───────────────────────────────────────────
+   A register is one grid. The list owns the column tracks (--tracks,
+   named by a modifier for what the rows hold) and every row lays its
+   cells on those tracks, so a column is the same width in every row
+   and an absent cell leaves no empty track behind. Without subgrid a
+   row falls back to laying the same tracks on its own. ─────────── */
+.rows{list-style:none;margin:0;padding:0;border-top:var(--edge-rule) solid var(--tone);
+  display:grid;grid-template-columns:var(--tracks,minmax(0,1fr));column-gap:var(--gap-stack)}
+.row{display:grid;grid-column:1 / -1;grid-template-columns:var(--tracks,minmax(0,1fr));
+  align-items:baseline;column-gap:var(--gap-stack);
   padding:clamp(10px,1.4vw,14px) 0;border-bottom:var(--edge-rule) solid var(--tone);
   min-width:0}
+@supports (grid-template-columns:subgrid){ .row{grid-template-columns:subgrid} }
 .row__no{font:400 var(--t-micro)/1 var(--f-mono);letter-spacing:.06em;color:var(--ink-2);
   white-space:nowrap}
 
@@ -322,6 +354,10 @@ select.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-of
 .toast__t{margin:0;font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);
   line-height:1.1;text-transform:uppercase;letter-spacing:.02em}
 .toast__d{margin:0;font:400 var(--t-caption)/1.4 var(--f-body);color:var(--tint)}
+/* a refusal is the strip inverted: ink on paper behind a burgundy rule */
+.toast--bad{background:var(--paper);color:var(--ink);
+  border-left:6px solid var(--seal);box-shadow:inset 0 0 0 var(--edge-panel) var(--ink)}
+.toast--bad .toast__d{color:var(--ink-2)}
 @media(min-width:768px){
   .toasts{left:auto;right:var(--gutter);bottom:var(--gap-stack);max-width:min(380px,40vw)}
   .toast{padding:12px 16px}
@@ -616,7 +652,7 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
    CARD (home) — the card is the page; the strip and the next dates
    are its marginal column.
    ══════════════════════════════════════════════════════════════════ */
-.view--home{display:flex;flex-direction:column;gap:var(--gap-stack)}
+.view--home{display:flex;flex-direction:column;gap:var(--gap-block)}
 .deck{display:grid;grid-template-columns:minmax(0,1fr);row-gap:var(--gap-block);
   align-items:start}
 .deck__side{display:contents}
@@ -625,23 +661,28 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .deck .strip--live{order:1}
 .deck .next{order:4}
 .next .rows{border-top:0}
-.next__row{grid-template-columns:auto minmax(0,1fr) auto}
+.next__rows{--tracks:auto minmax(0,1fr) auto}
 .next__day{font-size:var(--t-body);min-width:0}
 .next__at{justify-self:end;white-space:nowrap}
 
 @media(min-width:768px){
   .deck__side .strip__meta{grid-column:2;text-align:left}
-  .deck__side{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  /* one column per block it holds: the strip alone spans the deck */
+  .deck__side{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));
     column-gap:var(--gap-block);row-gap:var(--gap-block);align-items:start;order:3}
   .deck .strip,.deck .strip--live,.deck .next{order:0}
   .deck--live .deck__side{order:1}
 }
+/* the side column's last-stamp row exists for the wide layout; on
+   smaller screens the card's newest seal already says it */
+.latest{display:none}
 @media(min-width:1180px){
   .deck,.deck--live{grid-template-columns:minmax(0,64fr) minmax(0,36fr);
-    column-gap:clamp(28px,4vw,64px);align-items:start}
-  .deck > .card{order:1;height:clamp(440px,calc(100dvh - 300px),780px)}
+    column-gap:var(--col-gap);align-items:start}
+  .deck > .card{order:1;height:auto;aspect-ratio:16 / 10}
   .deck__side,.deck--live .deck__side{order:2;grid-template-columns:minmax(0,1fr);
     row-gap:var(--gap-block)}
+  .latest{display:block}
   .view--home .card__field{min-height:0}
 }
 
@@ -659,54 +700,70 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
    the roster standing and the roster.
    ══════════════════════════════════════════════════════════════════ */
 .view--board{display:flex;flex-direction:column;gap:var(--gap-block)}
-.bwait{margin:0}
+/* the loading beat: one rule drawn across the column in six cuts, the
+   word under it; when motion is off the rule is simply there */
+.bwait{display:grid;gap:var(--gap-tight);margin:0;min-height:var(--tap);align-content:start}
+.bwait__rule{display:block;height:var(--edge-panel);background:var(--ink);
+  transform-origin:left center;animation:ruleDraw 420ms steps(6,end) both}
+.bwait__msg{color:var(--ink-2)}
+@keyframes ruleDraw{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media(prefers-reduced-motion:reduce){ .bwait__rule{animation:none} }
+:root[data-motion-pref="off"] .bwait__rule{animation:none}
 .bempty{margin:0;padding:var(--gap-stack) 0;font-size:var(--t-body);color:var(--ink-2)}
 
 /* club */
 .club{display:grid;gap:var(--gap-block)}
+/* The docket: the meeting's number, its facts and the one board action
+   as a single notice. It is the first block under the opener, so the
+   torn rule is its top edge. No meeting is one line of type. */
 .now{position:relative;display:grid;gap:4px;justify-items:start;
-  padding:clamp(18px,3vw,32px) 0;border-top:var(--edge-panel) solid var(--ink);
-  border-bottom:var(--edge-rule) solid var(--tone)}
+  padding:0 0 clamp(18px,3vw,32px);border-bottom:var(--edge-rule) solid var(--tone)}
 .now__kick{margin:0;font:400 var(--t-micro)/1.3 var(--f-mono);letter-spacing:.14em;
   text-transform:uppercase;color:var(--ink-2)}
 .now__no{margin:0;font-family:var(--f-head);font-weight:400;font-size:var(--t-fig);
   line-height:.85;letter-spacing:-.01em;padding-bottom:.06em}
+.now__facts{display:grid;gap:4px;justify-items:start;min-width:0}
 .now__meta{margin:0}
-.now__count{margin:var(--gap-tight) 0 0;font-size:var(--t-body);color:var(--ink-2)}
-.now__count b{font-family:var(--f-head);font-weight:400;font-size:var(--t-head);
+.now__state{margin:var(--gap-hair) 0 0;font-size:var(--t-body);color:var(--ink-2)}
+.now__state b{font-family:var(--f-head);font-weight:400;font-size:var(--t-head);
   line-height:1;color:var(--ink);margin-right:4px}
+.now__none{margin:0;font-size:var(--t-sub);line-height:1.3;max-width:34ch}
 .now__go{margin-top:var(--gap-stack)}
 .now--live{background:var(--ink);color:var(--paper);border:0;
-  margin-inline:calc(var(--gutter) * -1);padding-inline:var(--gutter)}
+  margin-inline:calc(var(--gutter) * -1);padding:clamp(18px,3vw,32px) var(--gutter)}
 .now--live::before{content:"";position:absolute;left:var(--gutter);top:clamp(18px,3vw,32px);
   width:9px;height:9px;background:var(--seal)}
 .now--live .now__kick{padding-left:18px;color:var(--tint)}
-.now--live .now__meta,.now--live .now__count{color:var(--tint)}
-.now--live .now__count b{color:var(--paper)}
+.now--live .now__meta,.now--live .now__state{color:var(--tint)}
+.now--live .now__state b{color:var(--paper)}
 .now--live .now__go{background:var(--paper);color:var(--ink)}
-.now--live .now__go:hover{background:var(--tint)}
+.now--live .now__go:hover{background:var(--tint);box-shadow:none}
 @media(min-width:900px){
-  .now{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"kick go" "no go" "meta go" "count go";
-    align-items:end;column-gap:var(--gap-block)}
-  .now__kick{grid-area:kick} .now__no{grid-area:no} .now__meta{grid-area:meta}
-  .now__count{grid-area:count} .now__go{grid-area:go;align-self:center;margin:0}
+  /* the number at left, its facts and action beside it: one object,
+     and the space to the right is its own */
+  .now{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"kick kick" "no facts";
+    align-items:start;column-gap:var(--gap-block)}
+  .now__kick{grid-area:kick} .now__no{grid-area:no} .now__facts{grid-area:facts;padding-top:.3em}
+  .now--none{grid-template-columns:minmax(0,1fr);grid-template-areas:"kick" "none" "go"}
+  .now__none{grid-area:none} .now--none .now__go{grid-area:go}
   .now--live{margin-inline:0;padding-inline:clamp(20px,2.6vw,36px)}
   .now--live::before{left:clamp(20px,2.6vw,36px)}
 }
 
 /* meetings */
 .meetings{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--gap-block)}
-.meetings__strip{margin-top:calc(var(--gap-block) * -1 + var(--gap-stack))}
 .ledger .rows{border-top:0}
-.mrow{grid-template-columns:auto minmax(0,1fr) auto;
-  grid-template-areas:"no day n" "no when n";row-gap:2px;cursor:pointer}
+/* a dated row: number, day over time; a counted row adds the count */
+.rows--dated{--tracks:auto minmax(0,1fr)}
+.rows--counted{--tracks:auto minmax(0,1fr) auto}
+.mrow{row-gap:2px;cursor:pointer}
 .mrow[role="button"]:hover .mrow__day,.mrow[role="button"]:focus-visible .mrow__day{
   text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
 .mrow:focus-visible{outline-offset:-3px}
-.mrow .row__no{grid-area:no;align-self:center}
-.mrow__day{grid-area:day;font-size:var(--t-body);line-height:1.2;min-width:0}
-.mrow__when{grid-area:when}
-.mrow__n{grid-area:n;justify-self:end;text-align:right;white-space:nowrap;align-self:center}
+.mrow .row__no{grid-column:1;grid-row:1 / span 2;align-self:center}
+.mrow__day{grid-column:2;grid-row:1;font-size:var(--t-body);line-height:1.2;min-width:0}
+.mrow__when{grid-column:2;grid-row:2}
+.mrow__n{grid-column:3;grid-row:1 / span 2;justify-self:end;text-align:right;white-space:nowrap;align-self:center}
 .mrow__n b{font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);line-height:1}
 .mrow__n .mrow__unit--long{display:none}
 @media(min-width:640px){
@@ -715,24 +772,25 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 }
 .mrow--past .mrow__day{color:var(--ink-2)}
 @media(min-width:640px){
-  .mrow{grid-template-columns:auto minmax(0,1fr) auto auto;grid-template-areas:"no day when n";
-    column-gap:var(--gap-stack)}
-  .mrow__when{justify-self:end;white-space:nowrap}
+  .rows--dated{--tracks:auto minmax(0,1fr) auto}
+  .rows--counted{--tracks:auto minmax(0,1fr) auto auto}
+  .mrow .row__no,.mrow__day,.mrow__when,.mrow__n{grid-row:1}
+  .mrow__when{grid-column:3;justify-self:end;white-space:nowrap}
+  .mrow__n{grid-column:4}
 }
 
 .bform{display:grid;gap:var(--gap-stack)}
 .bform__grid{display:grid;gap:var(--gap-stack);grid-template-columns:repeat(2,minmax(0,1fr))}
-.bform__row{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-stack);flex-wrap:wrap}
+.bform__row{display:flex;align-items:center;gap:var(--gap-stack);flex-wrap:wrap}
 .bform .err[hidden]{display:none}
 
 @media(min-width:1180px){
   /* the left column takes whatever the page has (a note, the live strip,
      next, held) in implicit rows, so an absent item leaves no empty row;
      the form spans them all and sticks */
-  .meetings{grid-template-columns:minmax(0,7fr) minmax(0,5fr);column-gap:clamp(28px,4vw,72px);
+  .meetings{grid-template-columns:minmax(0,7fr) minmax(0,5fr);column-gap:var(--col-gap);
     align-items:start}
   .meetings__err,.meetings__strip,.meetings__next,.meetings__held{grid-column:1}
-  .meetings__strip{margin-top:0}
   .meetings__form{grid-column:2;grid-row:1 / span 4;position:sticky;
     top:calc(var(--head-h,0px) + var(--gap-block))}
   .bform__grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -748,35 +806,58 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 
 /* members */
 .members{display:grid;gap:var(--gap-block)}
+@media(min-width:1180px){
+  .members{grid-template-columns:minmax(0,7fr) minmax(0,5fr);column-gap:var(--col-gap);align-items:start}
+  .members > .roster{grid-column:1}
+  /* beside the roster the standing is narrow: its word above its rows */
+  .members > .members__standing{grid-column:2;grid-template-columns:minmax(0,1fr);
+    position:sticky;top:calc(var(--head-h,0px) + var(--gap-block))}
+  .members > .members__standing > .sec{grid-column:1;border-bottom:var(--edge-panel) solid var(--ink);padding-bottom:var(--gap-tight)}
+  .members > .members__standing .standing__rest{grid-column:1;border-top:0}
+}
 .standing__lab .row__no{margin-right:6px}
 .standing__unit{font:400 var(--t-caption)/1 var(--f-body);text-transform:none;color:var(--ink-2)}
 .standing__val--word{font-size:var(--t-sub)}
 .roster{display:grid;gap:var(--gap-stack)}
 .bfilters{display:grid;gap:var(--gap-stack);grid-template-columns:minmax(0,1fr)}
 @media(min-width:640px){ .bfilters{grid-template-columns:minmax(0,2fr) minmax(0,1fr)} }
-.roster__rows{border-top:var(--edge-panel) solid var(--ink);max-width:820px}
-.rrow{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name n" "meta rw";
-  row-gap:2px;cursor:pointer}
+.roster__rows{border-top:var(--edge-panel) solid var(--ink)}
+/* a roster row: name over last-seen, stamps over tier; attendees: name and time */
+.rows--roster{--tracks:minmax(0,1fr) auto}
+.rows--who{--tracks:minmax(0,1fr) auto}
+.rrow{row-gap:2px;cursor:pointer}
 .rrow[role="button"]:hover .rrow__name,.rrow[role="button"]:focus-visible .rrow__name{
   text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
 .rrow:focus-visible{outline-offset:-3px}
-.rrow__name{grid-area:name;font-size:var(--t-body);line-height:1.2;overflow-wrap:anywhere}
-.rrow__meta{grid-area:meta}
-.rrow__n{grid-area:n;justify-self:end;white-space:nowrap}
+.rrow__name{grid-column:1;grid-row:1;font:400 var(--t-body)/1.2 var(--f-mono);overflow-wrap:anywhere}
+.rrow__meta{grid-column:1;grid-row:2}
+.rows--who .rrow__meta{grid-column:2;grid-row:1;justify-self:end}
+.rrow__n{grid-column:2;grid-row:1;justify-self:end;white-space:nowrap}
 .rrow__n b{font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);line-height:1}
-.rrow__rw{grid-area:rw;justify-self:end}
+.rrow__rw{grid-column:2;grid-row:2;justify-self:end}
 @media(min-width:640px){
-  .rrow{grid-template-columns:minmax(0,1fr) auto auto auto;grid-template-areas:"name meta n rw";
-    column-gap:var(--gap-block)}
-  .rrow__meta{justify-self:end}
+  .rows--roster{--tracks:minmax(0,1fr) auto auto auto}
+  .roster__rows{column-gap:var(--gap-block)}
+  .rrow__name,.rrow__meta,.rrow__n,.rrow__rw{grid-row:1}
+  .rrow__meta{grid-column:2;justify-self:end}
+  .rrow__n{grid-column:3}
+  .rrow__rw{grid-column:4}
 }
 .bpage{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-stack);
   padding-top:var(--gap-stack);flex-wrap:wrap}
 
 /* detail panes */
 .detail{display:grid;gap:var(--gap-block)}
-.detail__back{margin:calc(var(--gap-block) * -1 + var(--gap-tight)) 0 0}
-.detail__name{font-size:clamp(34px,6vw,72px);overflow-wrap:anywhere}
+.detail__back{margin:calc(var(--gap-block) * -1 + var(--gap-tight)) 0 0}   /* a crumb: belongs to the title */
+/* the head of a detail: an identifier large enough to establish the
+   page, and one or two mono lines of facts; the ledger is the body */
+.detail__head{display:grid;gap:var(--gap-hair);justify-items:start}
+.detail__id{margin:0;font-family:var(--f-head);font-weight:400;font-size:clamp(28px,4vw,48px);
+  line-height:.9;letter-spacing:-.01em;text-transform:uppercase;padding-bottom:.08em}
+.detail__name{font-family:var(--f-mono);text-transform:none;letter-spacing:.01em;line-height:1.1;
+  overflow-wrap:anywhere}
+.detail__meta{margin:0}
+.detail__on{color:var(--ink)}
 
 /* check-in: the projector */
 .checkin{display:grid;gap:var(--gap-stack)}
@@ -787,7 +868,9 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .pick:hover{color:var(--ink)}
 
 .proj{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--gap-stack);
-  padding:clamp(18px,3vw,36px) 0;border-top:var(--edge-panel) solid var(--ink)}
+  padding:0 0 clamp(18px,3vw,36px)}
+/* after a strip of meeting tabs the rule is the tab strip's own edge */
+.picks + .proj{border-top:var(--edge-panel) solid var(--ink);padding-top:clamp(18px,3vw,36px)}
 .proj--live{min-height:calc(100dvh - var(--head-h,0px) - var(--folio-h,0px) - 300px)}
 .proj__meet{display:grid;gap:4px;min-width:0}
 .proj__no{margin:0;font-family:var(--f-head);font-weight:400;font-size:var(--t-fig);
@@ -805,7 +888,7 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .proj__count--shut{max-width:32ch;font-size:var(--t-body)}
 .proj__ctl{justify-self:start}
 .proj--live{background:var(--ink);color:var(--paper);border:0;
-  margin-inline:calc(var(--gutter) * -1);padding-inline:var(--gutter)}
+  margin-inline:calc(var(--gutter) * -1);padding:clamp(18px,3vw,36px) var(--gutter)}
 .proj--live .proj__word{color:var(--paper)}
 .proj--live .proj__when,.proj--live .proj__count{color:var(--tint)}
 .proj--live .proj__count b{color:var(--paper)}
@@ -869,9 +952,11 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
   display:flex;flex-direction:column;gap:var(--gap-stack);max-width:520px;width:100%}
 .authp__f{display:flex;flex-direction:column;gap:var(--gap-hair);min-width:0;margin:0}
 .authp__lab{font:400 var(--t-caption)/1.25 var(--f-body);color:var(--ink-2)}
+/* what a person types is set in the mono face: the body face is unicase
+   and would show every username and password as capitals */
 .authp__in{display:block;width:100%;min-width:0;min-height:var(--tap);padding:10px 0 8px;
   background:transparent;color:var(--ink);border:0;border-bottom:var(--edge-panel) solid var(--ink);
-  border-radius:0;font:400 max(16px,var(--t-body))/1.2 var(--f-body);letter-spacing:0;appearance:none}
+  border-radius:0;font:400 max(16px,var(--t-body))/1.2 var(--f-mono);letter-spacing:0;appearance:none}
 .authp__in::placeholder{color:var(--ink-2);opacity:1}
 .authp__in:focus{outline:0;border-bottom-width:var(--edge-frame);padding-bottom:7px}
 .authp__in:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:4px}
@@ -883,7 +968,13 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .authp__eye svg{width:22px;height:22px;display:block}
 .authp__eye:hover,.authp__eye[aria-pressed="true"]{color:var(--ink)}
 .authp__eye:focus-visible{outline-offset:-4px}
-.authp__err{margin:0}
+/* the message has its place whether or not there is one, so the form
+   never moves under the person typing into it */
+.authp__err{margin:0;min-height:calc(3.9em + 12px);line-height:1.3;visibility:hidden}
+.authp__err.is-on{visibility:visible}
+/* the tablet column is the narrowest the paper half gets: the longest
+   message runs to a fourth line there */
+@media(min-width:768px) and (max-width:923px){ .authp__err{min-height:calc(5.2em + 12px)} }
 .authp__act{display:grid;gap:var(--gap-tight);margin-top:var(--gap-tight);justify-items:start}
 .authp__go{width:100%;min-height:54px;font-size:var(--t-head)}
 .authp__swap{padding:6px 0}
@@ -906,14 +997,12 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 }
 
 .view--record{display:flex;flex-direction:column;gap:var(--gap-block)}
-.view--record > .strip{margin-top:calc(var(--gap-block) * -1 + var(--gap-stack))}
 .recbody{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--gap-block);align-items:start}
-.tally{align-items:baseline}
 
 .ledger{display:flex;flex-direction:column;min-width:0}
 .ledger .rows{border-top:0}
-.lrow{grid-template-columns:3.6ch clamp(26px,3.4vw,34px) minmax(0,1fr) auto;
-  align-items:center}
+.ledger__rows{--tracks:5.6ch clamp(26px,3.4vw,34px) minmax(0,1fr) auto}
+.lrow{align-items:center}
 .lrow__stamp{display:grid;place-items:center;aspect-ratio:1;width:100%}
 .lrow__mark{width:100%;height:100%;display:block}
 .lrow__mark path{fill:var(--ink)}
@@ -926,29 +1015,26 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .lrow--upcoming .lrow__slot{border-color:var(--tone)}
 
 .recside{display:contents}
-.recbody > .ledger{order:2}
-.recside .tally{order:1}
-.recside .ledger--ahead{order:3}
-.recbody > .empty{order:2}
 
 @media(min-width:1180px){
   .recbody{grid-template-columns:minmax(0,7fr) minmax(0,4fr);
-    column-gap:clamp(28px,4vw,72px)}
-  .recbody > .ledger,.recbody > .empty{order:1}
-  .recside{display:grid;order:2;align-content:start;gap:var(--gap-block);
+    column-gap:var(--col-gap)}
+  .recside{display:grid;align-content:start;gap:var(--gap-block);
     position:sticky;top:calc(var(--head-h,0px) + var(--gap-block))}
-  .recside .tally{flex-direction:column;align-items:flex-start;gap:var(--gap-tight)}
-  .recside .tally .fig__of{max-width:18ch}
+  .recside:empty{display:none}
 }
 
 /* ══════════════════════════════════════════════════════════════════
    SCAN — the viewer is the page. Its height is whatever the screen
    has left; the standing line rides inside the frame.
    ══════════════════════════════════════════════════════════════════ */
+/* the scanline rides close under the viewer, so this grid's gap is
+   gap-stack and the opener carries the block gap on its own margin */
+.view--scan > .rechead{margin-bottom:var(--gap-block)}
 .view--scan{display:grid;grid-template-rows:auto minmax(0,1fr) auto;
   gap:var(--gap-stack);
   height:calc(100dvh - var(--head-h,0px) - var(--folio-h,0px)
-              - var(--gap-stack) - var(--gap-block) - env(safe-area-inset-bottom,0px));
+              - var(--view-top,var(--gap-stack)) - var(--gap-block) - env(safe-area-inset-bottom,0px));
   min-height:420px}
 .viewer{position:relative;isolation:isolate;overflow:hidden;container-type:size;
   width:100%;min-height:0;
@@ -1004,8 +1090,12 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
 .zoom__range:focus-visible{outline:var(--edge-panel) solid var(--paper);outline-offset:2px}
 .viewer--zoom .reticle{margin-top:-22px}
 
+/* the note sits at the foot of the viewer; the feed and the reticle
+   are put away, the meeting line stays */
 .viewer--stalled{container-type:normal;background:var(--paper);display:grid;align-items:end}
+.viewer--stalled video,.viewer--stalled .reticle{display:none}
 .stall{display:grid;gap:var(--gap-tight);padding:var(--gap-stack)}
+.stall__retry{justify-self:start}
 .stall__title{margin:0;font-family:var(--f-head);font-weight:400;text-transform:uppercase;
   line-height:1;font-size:var(--t-head)}
 .stall__note{margin:0;max-width:46ch;font-size:var(--t-caption);line-height:1.45;color:var(--ink-2)}
@@ -1019,8 +1109,15 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
   .view--scan > .scanline{grid-area:line;align-self:start}
 }
 
+/* ── one track from 0 to 30. On a phone it runs down the left edge
+   through the three rungs; from 900px it runs across the top, the
+   three segments butting together, each milestone's label ending at
+   its own point. The fill is the member's stamps; the burgundy square
+   is where they stand now. ────────────────────────────────────────── */
 .view--rewards{display:flex;flex-direction:column;gap:var(--gap-block)}
-.climb__fig{align-items:baseline}
+.climb{display:grid;gap:var(--gap-stack)}
+.climb__sum{margin:0;font:400 var(--t-caption)/1.4 var(--f-mono);letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-2)}
 .rungs{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr)}
 .rung{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;
   align-items:center;column-gap:clamp(14px,2.4vw,24px);
@@ -1035,37 +1132,33 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
   text-transform:uppercase;letter-spacing:.01em;text-wrap:balance}
 .rung__desc{font-size:var(--t-caption);color:var(--ink-2);max-width:32ch}
 .rung__say{white-space:nowrap;text-align:right}
-.rung--sealed .rung__at{color:var(--ink-2)}
-.rung--sealed .rung__name{color:var(--ink-2)}
-.rung--claimed .rung__say{color:var(--ink)}
+/* states: claimed and next are ink; the milestones beyond recede */
+.rung--sealed .rung__at,.rung--sealed .rung__name{color:var(--ink-2)}
+.rung--next .rung__say,.rung--claimed .rung__say{color:var(--ink)}
+.rung--next::after{content:"";position:absolute;left:-1.5px;top:calc(var(--fill,0%) - 4px);
+  width:9px;height:9px;background:var(--seal)}
 .rung--ready{background:var(--ink);color:var(--paper);
   margin-right:calc(var(--gutter) * -1);
   padding-right:calc(clamp(16px,2.2vw,26px) + var(--gutter))}
 .rung--ready::before{background:var(--seal)}
 .rung--ready .rung__desc{color:var(--tint)}
 .rung--ready .rung__claim{background:var(--paper);color:var(--ink)}
-.rung--ready .rung__claim:hover{background:var(--tint)}
+.rung--ready .rung__claim:hover{background:var(--tint);box-shadow:none}
 .rung--ready :focus-visible{outline-color:var(--paper)}
 
 @media(min-width:900px){
-  .rungs{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:clamp(20px,3vw,44px)}
-  .rung{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;
-    align-content:start;align-items:start;row-gap:var(--gap-stack);
-    padding:clamp(18px,2.4vw,28px) 0 0}
+  .rungs{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:0}
+  .rung{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;
+    justify-items:end;text-align:right;align-content:start;row-gap:var(--gap-tight);
+    padding:clamp(18px,2.4vw,28px) 0 0 clamp(16px,2vw,26px)}
   .rung::before{left:0;right:0;top:0;bottom:auto;width:auto;height:6px;
     background:linear-gradient(to right,var(--ink) var(--fill,0%),var(--tint) var(--fill,0%))}
-  .rung__at{font-size:clamp(48px,6.4vw,92px)}
-  .rung__say,.rung__claim{grid-column:1 / -1;justify-self:start;text-align:left}
-  .rung--ready{margin:0;padding:clamp(18px,2.4vw,28px) clamp(16px,2vw,26px) clamp(18px,2.4vw,28px) 0;
-    padding-left:clamp(16px,2vw,26px)}
+  .rung--next::after{left:calc(var(--fill,0%) - 4px);top:-1.5px}
+  .rung__at{font-size:clamp(48px,6.4vw,92px);min-width:0}
+  .rung__body{justify-items:end}
+  .rung__say,.rung__claim{justify-self:end;text-align:right}
+  .rung--ready{margin:0;padding:clamp(18px,2.4vw,28px) clamp(16px,2vw,26px)}
   .rung--ready::before{left:0;right:0}
-}
-@media(min-width:1180px){
-  .view--rewards{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,8fr);
-    column-gap:clamp(28px,4vw,72px);align-items:start}
-  .view--rewards > .rechead{grid-column:1 / -1}
-  .climb__fig{flex-direction:column;align-items:flex-start;gap:var(--gap-tight)}
-  .climb__fig .fig__of{max-width:16ch}
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1073,7 +1166,6 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
    standing is the content, the account rows close it.
    ══════════════════════════════════════════════════════════════════ */
 .view--member{display:flex;flex-direction:column;gap:var(--gap-block)}
-.who__line{margin:calc(var(--gap-stack) * -1) 0 0;display:flex;flex-wrap:wrap;gap:4px 14px}
 
 .standing{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--gap-block)}
 .standing__fig{align-items:baseline}
@@ -1091,12 +1183,25 @@ main#view.is-draining{animation:drain 300ms steps(6,end) both;pointer-events:non
   padding:clamp(10px,1.4vw,14px) 0;border-bottom:var(--edge-rule) solid var(--tone)}
 .acct__lab{font-size:var(--t-body)}
 
+/* a standing without a figure: its word at left, its rows at right on
+   wide screens; the word above the rows on a phone */
+.standing--flat{gap:0}
+.standing--flat > .sec{margin:0}
+.standing--flat .standing__rest{border-top:0}
+
 @media(min-width:900px){
-  .standing{grid-template-columns:minmax(0,5fr) minmax(0,7fr);column-gap:clamp(28px,4vw,72px);
+  .standing{grid-template-columns:minmax(0,5fr) minmax(0,7fr);column-gap:var(--col-gap);
     align-items:start}
   .standing__fig{flex-direction:column;align-items:flex-start;gap:var(--gap-tight)}
   .standing__fig .fig__of{max-width:16ch}
-  .view--member > .acct{max-width:560px}
+  /* the account is a second standing: its word at left, its rows on the
+     same right column, so the page has one value edge */
+  .acct{grid-template-columns:minmax(0,5fr) minmax(0,7fr);column-gap:var(--col-gap);align-items:start}
+  .acct > .sec{grid-column:1;grid-row:1;border-bottom:0;padding-bottom:0}
+  .acct__row{grid-column:2}
+  .acct__row:first-of-type{border-top:var(--edge-panel) solid var(--ink)}
+  .standing--flat > .sec{grid-column:1;grid-row:1;border-bottom:0;padding-bottom:0}
+  .standing--flat .standing__rest{grid-column:2;border-top:var(--edge-panel) solid var(--ink)}
 }
 
 </style>
@@ -13822,6 +13927,15 @@ const REWARD_TIERS = [
   { id:'r3', name:'???',           required:30, desc:'' },
 ];
 
+/* What one tier is to one member, read from the two facts that exist:
+   the stamp count and whether a claim row is on file. A claim is a
+   fact (the prize was handed over), so a claimed tier stays reached
+   even if a deleted meeting later takes stamps back, and every count
+   of "rewards unlocked" is the number of tiers that are not locked.
+   The board function and the test double carry these same lines. */
+const rewardState = (tier, stamps, claimed) =>
+  claimed ? 'claimed' : stamps >= tier.required ? 'unlocked' : 'locked';
+
 const SupabaseAdapter = {
   name: 'supabase',
   client: null,
@@ -14281,6 +14395,18 @@ const Store = {
 
   get failed(){ return this.loadError !== null; },
 
+  /* One line that changes whenever a page would: who is signed in, what
+     loaded, which meetings are open or ahead, the stamps, the claims.
+     A re-read that finds nothing new repaints nothing. */
+  stamp(){
+    return JSON.stringify([
+      this.user ? this.user.id : null, this.loadError,
+      this.meetings.map(m => [m.id, m.no, m.date, m.time, m.open, m.upcoming]),
+      this.scans.map(s => [s.meetingId, s.at]),
+      this.rewards.map(r => [r.id, r.claimed]),
+    ]);
+  },
+
   get signedIn(){ return Boolean(this.user); },
   get role(){ return this.user ? this.user.role : null; },
   get isBoard(){ return this.role === 'board'; },
@@ -14331,7 +14457,8 @@ const Store = {
   },
   heldMeetings(){ return this.meetings.filter(m => !m.upcoming); },
   countedMeetings(){ return this.meetings.filter(m => !m.upcoming && (!m.open || this.attended(m.id))); },
-  rewardsUnlocked(){ const t = this.totalStamps(); return this.rewards.filter(r => t >= r.required).length; },
+  tierState(r){ return rewardState(r, this.totalStamps(), r.claimed); },
+  rewardsUnlocked(){ return this.rewards.filter(r => this.tierState(r) !== 'locked').length; },
   attendanceRate(){
     const held = this.countedMeetings();
     if (!held.length) return 0;
@@ -14503,14 +14630,14 @@ function stampShape(seed, grow = 0){
 const STAMP_FIT = .62;
 
 const C = {
-  rung(r, total, prev){
-    const open  = total >= r.required;
-    const ready = open && !r.claimed;
-    const state = r.claimed ? 'claimed' : ready ? 'ready' : 'sealed';
+  rung(r, total, prev, next = false){
+    const tier  = Store.tierState(r);
+    const ready = tier === 'unlocked';
+    const state = tier === 'claimed' ? 'claimed' : ready ? 'ready' : next ? 'next' : 'sealed';
     const left  = r.required - total;
     const fill  = Math.max(0, Math.min(1, (total - prev) / (r.required - prev)));
-    const say   = r.claimed ? 'Claimed'
-                : ready     ? 'Ready'
+    const say   = tier === 'claimed' ? 'Claimed'
+                : ready ? 'Ready'
                 : left === 1 ? '1 more' : `${left} more`;
 
     return `<li class="rung rung--${state}" data-reward="${r.id}" style="--fill:${(fill * 100).toFixed(1)}%">
@@ -14570,19 +14697,21 @@ const C = {
       `<svg class="card__route card__route--p" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <polyline points="16.0,8.6 46.0,13.3 74.0,21.1 81.0,40.6 58.0,50.0 31.0,54.7 11.0,72.7 34.0,81.3 58.0,71.9 83.0,83.6"/></svg>`;
 
+    /* the line breaks only before its last phrase, so the identity
+       column's width decides one or two lines and nothing else */
     const say = full
       ? 'Card full'
-      : p.total === 0 ? 'Your first stamp lands here'
-      : goal ? `${p.remaining} more for ${goal.name}`
-             : `${p.remaining} more to fill this card`;
+      : p.total === 0 ? 'Your first stamp <span class="nb">lands here</span>'
+      : goal ? `${p.remaining} more for <span class="nb">${esc(goal.name)}</span>`
+             : `${p.remaining} more to fill <span class="nb">this card</span>`;
 
     return `<section class="card${full ? ' card--full' : ''}" data-enter>
       <div class="card__face">
         <div class="card__id">
           <span class="card__cardno">Card ${pad(cardNo)}</span>
-          <p class="card__num"><b>${pad(p.filled)}</b><span>/ ${p.span}</span></p>
+          <p class="card__num"><b>${p.filled}</b><span>/ ${p.span}</span></p>
           <span class="card__idrule" aria-hidden="true"></span>
-          <p class="card__goal">${esc(say)}</p>
+          <p class="card__goal">${say}</p>
           <p class="card__docket" id="cardDocket" aria-hidden="true"></p>
           <span class="card__kci" aria-hidden="true">${brandSeal('kci')}</span>
         </div>
@@ -14634,7 +14763,7 @@ const C = {
                  upcoming:'Scheduled' }[state];
 
     return `<li class="row lrow lrow--${state}">
-      <span class="row__no">${pad(m.no)}</span>
+      <span class="row__no">GM ${pad(m.no)}</span>
       <span class="lrow__stamp">${mark}</span>
       <span class="lrow__date">${m.today ? 'Today' : fmtDate(m.date)}</span>
       <span class="lrow__when meta">${detail}</span>
@@ -14650,7 +14779,7 @@ C.account = () => `<section class="acct" data-enter>
     <button class="link" type="button" data-motion></button>
   </div>
   <div class="acct__row">
-    <span class="acct__lab">Signed in as ${esc((Store.user && Store.user.username) || memberName())}</span>
+    <span class="acct__lab">${Store.isBoard ? 'Board account' : 'Member account'}</span>
     <button class="btn btn--quiet" data-signout type="button">Sign out</button>
   </div>
 </section>`;
@@ -14666,7 +14795,7 @@ const Views = {
       <section class="empty" data-enter>
         <h2 class="empty__title">Can't reach the club records</h2>
         <p class="empty__note">Check your connection and try again.</p>
-        <p><button class="btn" data-reload>Try again</button></p>
+        <p><button class="btn" type="button" data-reload data-busy="Retrying…">Try again</button></p>
       </section>
     </div>`;
   },
@@ -14678,7 +14807,7 @@ const Views = {
     const done = open && Store.attended(open.id);
     const live = Boolean(open && !done);
     const p = Rules.progress();
-    const ready = Store.rewards.find(r => p.total >= r.required && !r.claimed) || null;
+    const ready = Store.rewards.find(r => Store.tierState(r) === 'unlocked') || null;
 
     let action;
     if (live)
@@ -14691,10 +14820,10 @@ const Views = {
       action = C.strip({ verb:`Claim ${ready.name}`, go:'rewards',
                          meta:`Card ${pad(p.card)} filled` });
     else if (next)
-      action = C.strip({ verb:'Nothing open', go:'scan', quiet:true,
+      action = C.strip({ verb:'Nothing open', go:'record', quiet:true,
                          meta:`Next GM ${pad(next.no)} · ${fmtDate(next.date)}` });
     else
-      action = C.strip({ verb:'Nothing open', go:'scan', quiet:true,
+      action = C.strip({ verb:'Nothing open', go:'record', quiet:true,
                          meta:'No meetings scheduled yet' });
 
     const showing = open ? open.id : next ? next.id : null;
@@ -14702,6 +14831,8 @@ const Views = {
       .filter(m => m.upcoming && m.id !== showing)
       .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)
       .slice(0, 3);
+    const lastScan = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? 1 : -1)[0] || null;
+    const lastMtg  = lastScan ? Store.meeting(lastScan.meetingId) : null;
 
     return `<div class="view view--home">
       <header class="rechead" data-enter>
@@ -14720,6 +14851,16 @@ const Views = {
                   <span class="next__day">${fmtDate(m.date)}</span>
                   <span class="next__at meta">${esc(knit(m.time))}</span>
                 </li>`).join('')}
+              </ol>
+            </section>` : ''}
+          ${lastMtg ? `<section class="latest" data-enter>
+              <h2 class="sec">Last stamp</h2>
+              <ol class="rows next__rows">
+                <li class="row next__row">
+                  <span class="row__no">GM ${pad(lastMtg.no)}</span>
+                  <span class="next__day">${fmtDate(lastMtg.date)}</span>
+                  <span class="next__at meta">${esc(fmtTime(lastScan.at))}</span>
+                </li>
               </ol>
             </section>` : ''}
         </div>
@@ -14756,7 +14897,8 @@ const Views = {
 
       <div class="recbody">
         ${held.length ? `<section class="ledger" data-enter>
-          <h2 class="sec">Held<span class="sec__n">${held.length === 1 ? '1 meeting' : `${held.length} meetings`}</span></h2>
+          <h2 class="sec">Held<span class="sec__n">${held.length === 1 ? '1 meeting' : `${held.length} meetings`}${
+            counted.length ? ` · ${kept} stamped${gone ? ` · ${gone} missed` : ''}` : ''}</span></h2>
           <ol class="rows ledger__rows">
             ${held.map(m => C.ledgerRow(m)).join('')}
           </ol>
@@ -14764,12 +14906,6 @@ const Views = {
         : C.empty('No general meetings yet', 'Your first stamp lands here.')}
 
         <aside class="recside">
-          ${counted.length ? `<p class="tally fig" data-enter>
-            <span class="fig__n tally__fig">${pad(kept)}</span>
-            <span class="fig__of">stamped of ${pad(counted.length)} held${gone
-              ? ` / ${gone} missed` : ''}</span>
-          </p>` : ''}
-
           ${upcoming.length ? `<section class="ledger ledger--ahead" data-enter>
             <h2 class="sec">Next<span class="sec__n">${upcoming.length === 1 ? '1 meeting' : `${upcoming.length} meetings`}</span></h2>
             <ol class="rows ledger__rows">
@@ -14795,23 +14931,17 @@ const Views = {
         <h1 class="title rechead__title">Rewards</h1>
       </header>
 
-      <p class="fig climb__fig" data-enter>
-        <span class="fig__n">${pad(total)}</span>
-        <span class="fig__of">${esc(of)}</span>
-      </p>
-
-      <ol class="rungs" data-enter aria-label="${total} stamps against rewards at ${tiers.map(t => t.required).join(', ')}">
-        ${tiers.map((t, i) => C.rung(t, total, i ? tiers[i - 1].required : 0)).join('')}
-      </ol>
+      <div class="climb" data-enter>
+        <p class="climb__sum">${total} ${esc(of)}</p>
+        <ol class="rungs" aria-label="${total} stamps against rewards at ${tiers.map(t => t.required).join(', ')}">
+          ${tiers.map((t, i) => C.rung(t, total, i ? tiers[i - 1].required : 0, t === next)).join('')}
+        </ol>
+      </div>
     </div>`;
   },
 
   scan(){
-    const open = Store.openMeeting();
-    const done = open && Store.attended(open.id);
-    const standing = !open ? 'Nothing open'
-      : done ? `Already stamped · GM ${pad(open.no)}`
-      : `GM ${pad(open.no)} · today · ${open.time}`;
+    const standing = scanStanding();
 
     return `<div class="view view--scan">
       <header class="rechead" data-enter>
@@ -14844,6 +14974,10 @@ const Views = {
     BoardUI.memberDetail = null;
     BoardUI.meetingDetail = null;
     BoardUI.confirmDelete = null;
+    /* a fresh chapter opens on the loading beat, never on another
+       chapter's data */
+    BoardUI.loading = true;
+    BoardUI.shown = null;
     return `<div class="view view--board">
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">${title}</h1>
@@ -14872,14 +15006,14 @@ const Views = {
 
       <section class="standing" data-enter>
         <p class="fig standing__fig">
-          <span class="fig__n">${pad(total)}</span>
+          <span class="fig__n">${total}</span>
           <span class="fig__of">${total === 1 ? 'stamp' : 'stamps'} collected</span>
         </p>
         <ul class="standing__rest">
           <li class="standing__row"><span class="standing__lab">This card</span>
-            <span class="standing__val">${pad(p.filled)} of ${pad(p.span)}</span></li>
+            <span class="standing__val">${p.filled} of ${p.span}</span></li>
           <li class="standing__row"><span class="standing__lab">Meetings attended</span>
-            <span class="standing__val">${pad(attended)} of ${pad(held.length)}</span></li>
+            <span class="standing__val">${attended} of ${held.length}</span></li>
           <li class="standing__row"><span class="standing__lab">Attendance</span>
             <span class="standing__val">${Store.attendanceRate()}%</span></li>
           <li class="standing__row"><span class="standing__lab">Rewards unlocked</span>
@@ -14897,7 +15031,6 @@ const Views = {
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">${esc(name)}</h1>
       </header>
-      <p class="who__line meta" data-enter>Board account</p>
       ${C.account()}
     </div>`;
   },
@@ -14947,10 +15080,10 @@ const Views = {
           ${up ? passwordField({ id:'authPass2', name:'confirm', label:'Confirm password',
                                  autocomplete:'new-password' }) : ''}
 
-          <p class="err authp__err" id="authErr" role="alert" aria-live="assertive" hidden></p>
+          <p class="err authp__err" id="authErr" role="alert" aria-live="assertive"></p>
 
           <div class="authp__act">
-            <button class="btn authp__go" type="submit" id="authGo">
+            <button class="btn authp__go" type="submit" id="authGo" data-busy="${up ? 'Creating…' : 'Signing in…'}">
               ${up ? 'Create account' : 'Sign in'}
             </button>
             <button class="link authp__swap" type="button" id="authSwap">
@@ -14995,6 +15128,7 @@ function spanTime(start, end){
 const BoardUI = {
   tab: 'club',
   loading: false,
+  shown: null,          /* the tab whose loaded content the pane holds */
   error: null,
 
   overview: null,
@@ -15050,8 +15184,13 @@ const BoardUI = {
     return this.sessionPane();
   },
 
+  /* The loading beat: one rule drawn across the column in six cuts,
+     the word under it. Nothing spins. */
   skeleton(){
-    return `<p class="bwait meta" aria-busy="true">Loading</p>`;
+    return `<div class="bwait" role="status" aria-busy="true">
+      <i class="bwait__rule" aria-hidden="true"></i>
+      <span class="bwait__msg meta">Loading</span>
+    </div>`;
   },
 
   failure(code){
@@ -15078,27 +15217,35 @@ const BoardUI = {
     const next = o.next_meeting;
     const today = Schedule.today();
 
+    /* The docket: the meeting's number, its facts and the one board
+       action, composed as a single notice. No meeting is one line of
+       type, and the schedule action carries the weight. */
     let now;
     if (active){
       now = `<section class="now now--live" data-enter>
         <p class="now__kick">Happening now</p>
         <p class="now__no">GM ${pad(active.meeting_number)}</p>
-        <p class="now__meta meta">${esc(fmtDate(active.meeting_date))} · ${this.when(active)}</p>
-        <p class="now__count"><b>${esc(String(o.today_attendance ?? 0))}</b> checked in so far</p>
-        <button class="btn now__go" type="button" data-go="bcheckin">Show the code</button>
+        <div class="now__facts">
+          <p class="now__meta meta">${esc(fmtDate(active.meeting_date))} · ${this.when(active)}</p>
+          <p class="now__state"><b>${esc(String(o.today_attendance ?? 0))}</b> checked in so far</p>
+          <button class="btn now__go" type="button" data-go="bcheckin">Show the code</button>
+        </div>
       </section>`;
     } else if (next){
       const isToday = next.meeting_date === today;
       now = `<section class="now" data-enter>
         <p class="now__kick">${isToday ? 'Today' : 'Next general meeting'}</p>
         <p class="now__no">GM ${pad(next.meeting_number)}</p>
-        <p class="now__meta meta">${esc(fmtDate(next.meeting_date))} · ${this.when(next)}</p>
-        <button class="btn now__go" type="button" data-go="bcheckin">Open check-in</button>
+        <div class="now__facts">
+          <p class="now__meta meta">${esc(fmtDate(next.meeting_date))} · ${this.when(next)}</p>
+          <p class="now__state">Check-in ${next.check_in_open ? 'open' : 'closed'}</p>
+          <button class="btn now__go" type="button" data-go="bcheckin">Open check-in</button>
+        </div>
       </section>`;
     } else {
-      now = `<section class="now" data-enter>
+      now = `<section class="now now--none" data-enter>
         <p class="now__kick">Next general meeting</p>
-        <p class="now__no">None yet</p>
+        <p class="now__none">No general meeting is scheduled.</p>
         <button class="btn now__go" type="button" data-go="bmeet">Schedule one</button>
       </section>`;
     }
@@ -15107,12 +15254,11 @@ const BoardUI = {
       ? '-' : esc(String(o.average_attendance));
     return `<div class="club">
       ${now}
-      <section class="standing" data-enter>
-        <p class="fig standing__fig">
-          <span class="fig__n">${pad(o.meetings_held ?? 0)}</span>
-          <span class="fig__of">general meetings held</span>
-        </p>
+      <section class="standing standing--flat" data-enter>
+        <h2 class="sec">Standing</h2>
         <ul class="standing__rest">
+          <li class="standing__row"><span class="standing__lab">General meetings held</span>
+            <span class="standing__val">${esc(String(o.meetings_held ?? 0))}</span></li>
           <li class="standing__row"><span class="standing__lab">Stamps earned</span>
             <span class="standing__val">${esc(String(o.total_seals ?? 0))}</span></li>
           <li class="standing__row"><span class="standing__lab">Members checked in</span>
@@ -15132,11 +15278,12 @@ const BoardUI = {
     const participating = o.participating_members;
 
     return `<div class="members">
-      <section class="standing" data-enter>
-        <p class="fig standing__fig">
-          <span class="fig__n">${typeof total === 'number' ? pad(total) : '--'}</span>
-          <span class="fig__of">${total === 1 ? 'member' : 'members'} on the roster</span>
-        </p>
+      <section class="roster" data-enter>
+        ${this.rosterBody()}
+      </section>
+
+      <section class="standing standing--flat members__standing" data-enter>
+        <h2 class="sec">Standing</h2>
         <ul class="standing__rest">
           ${REWARD_TIERS.map(r => {
             const count = ms['m' + r.required];
@@ -15151,10 +15298,6 @@ const BoardUI = {
             <span class="standing__lab">Ever checked in</span>
             <span class="standing__val">${participating}</span></li>` : ''}
         </ul>
-      </section>
-
-      <section class="roster" data-enter>
-        ${this.rosterBody()}
       </section>
     </div>`;
   },
@@ -15180,7 +15323,7 @@ const BoardUI = {
       <section class="ledger meetings__next" data-enter>
         <h2 class="sec">Next<span class="sec__n">${count(upcoming.length)}</span></h2>
         ${upcoming.length
-          ? `<ol class="rows">${upcoming.map(m => this.meetingRow(m)).join('')}</ol>`
+          ? `<ol class="rows rows--dated">${upcoming.map(m => this.meetingRow(m)).join('')}</ol>`
           : this.empty('Nothing scheduled.')}
       </section>
 
@@ -15189,7 +15332,7 @@ const BoardUI = {
       <section class="ledger meetings__held" data-enter>
         <h2 class="sec">Held<span class="sec__n">${count(past.length)}</span></h2>
         ${past.length
-          ? `<ol class="rows">${past.map(m => this.meetingRow(m)).join('')}</ol>`
+          ? `<ol class="rows rows--counted">${past.map(m => this.meetingRow(m)).join('')}</ol>`
           : this.empty('No meetings yet.')}
       </section>
     </div>`;
@@ -15204,7 +15347,7 @@ const BoardUI = {
       <span class="row__no">GM ${no}</span>
       <span class="mrow__day">${esc(fmtDate(m.meeting_date))}</span>
       <span class="mrow__when meta">${this.when(m)}</span>
-      <span class="mrow__n">${past ? `<b>${n}</b><span class="meta mrow__unit--short"> in</span><span class="meta mrow__unit--long"> checked in</span>` : ''}</span>
+      ${past ? `<span class="mrow__n"><b>${n}</b><span class="meta mrow__unit--short"> in</span><span class="meta mrow__unit--long"> checked in</span></span>` : ''}
     </li>`;
   },
 
@@ -15222,7 +15365,7 @@ const BoardUI = {
       <p class="bconfirm__q" role="alert">${esc(q)}</p>
       <p class="bconfirm__why">${esc(why)}</p>
       <div class="bconfirm__act">
-        <button class="btn" type="button" data-bdelete="${esc(m.id)}" data-bstamps="${stamps}">Delete</button>
+        <button class="btn" type="button" data-bdelete="${esc(m.id)}" data-bstamps="${stamps}" data-busy="Deleting…">Delete</button>
         <button class="btn btn--quiet bconfirm__keep" type="button" data-bcancel>Keep</button>
       </div>
     </div>`;
@@ -15246,7 +15389,7 @@ const BoardUI = {
       </div>
       <p class="err" id="mErr" role="alert" aria-live="assertive" hidden></p>
       <div class="bform__row">
-        <button class="btn" type="submit" id="mGo">Schedule meeting</button>
+        <button class="btn" type="submit" id="mGo" data-busy="Scheduling…">Schedule meeting</button>
         <button class="link link--quiet" type="button" data-mreset>Reset</button>
       </div>
     </form>`;
@@ -15273,7 +15416,7 @@ const BoardUI = {
           </select></label>
       </div>
       ${rows.length ? `
-        <ol class="rows roster__rows">
+        <ol class="rows roster__rows rows--roster">
           ${rows.map(m => `<li class="row rrow" data-bmember="${esc(m.id)}" tabindex="0" role="button">
             <span class="rrow__name">${esc(m.username)}</span>
             <span class="rrow__meta meta">${m.last_attendance
@@ -15291,30 +15434,23 @@ const BoardUI = {
     const m = d.member;
     return `<div class="detail">
       <p class="detail__back"><button class="link link--quiet" data-bback>&larr; Roster</button></p>
-      <section class="standing" data-enter>
-        <p class="fig standing__fig">
-          <span class="fig__n detail__name">${esc(m.username)}</span>
-          <span class="fig__of">${m.stamps} ${m.stamps === 1 ? 'stamp' : 'stamps'}<span class="fig__ln">joined ${esc(fmtDay(m.created_at))}</span></span>
-        </p>
-        <ul class="standing__rest">
-          <li class="standing__row"><span class="standing__lab">Meetings attended</span>
-            <span class="standing__val">${d.attendance.length}</span></li>
-          ${d.rewards.map(r => `<li class="standing__row">
-            <span class="standing__lab"><span class="row__no">${r.required}</span> ${esc(r.name)}</span>
-            <span class="standing__val standing__val--word">${r.claimed ? 'Claimed' : r.unlocked ? 'Unlocked' : 'Locked'}</span>
-          </li>`).join('')}
-        </ul>
-      </section>
+      <header class="detail__head" data-enter>
+        <p class="detail__id detail__name">${esc(m.username)}</p>
+        <p class="detail__meta meta">${m.stamps} ${m.stamps === 1 ? 'stamp' : 'stamps'} · joined ${esc(fmtDay(m.created_at))}</p>
+        <p class="detail__meta meta">${d.rewards.map(r => {
+          const s = r.state || rewardState(r, m.stamps, r.claimed);
+          return `<span${s === 'locked' ? '' : ' class="detail__on"'}>${r.required} ${esc(r.name)} ${s}</span>`;
+        }).join(' · ')}</p>
+      </header>
 
       <section class="ledger" data-enter>
         <h2 class="sec">Attendance<span class="sec__n">${d.attendance.length === 1 ? '1 meeting' : `${d.attendance.length} meetings`}</span></h2>
         ${d.attendance.length
-          ? `<ol class="rows">${d.attendance.map(a => `
+          ? `<ol class="rows rows--dated">${d.attendance.map(a => `
               <li class="row mrow" ${a.meeting_id ? `data-bmeeting="${esc(a.meeting_id)}" tabindex="0" role="button"` : ''}>
                 <span class="row__no">GM ${a.meeting_number ? pad(a.meeting_number) : '-'}</span>
                 <span class="mrow__day">${esc(fmtDate(a.meeting_date))}</span>
                 <span class="mrow__when meta">${esc(fmtTime(a.checked_in_at))}</span>
-                <span class="mrow__n"></span>
               </li>`).join('')}</ol>`
           : this.empty('No attendance yet.')}
       </section>
@@ -15331,25 +15467,16 @@ const BoardUI = {
     return `<div class="detail">
       <p class="detail__back"><button class="link link--quiet" data-bback>&larr; Meetings</button></p>
       ${this.deleteNote ? `<p class="err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
-      <section class="standing" data-enter>
-        <p class="fig standing__fig">
-          <span class="fig__n">GM ${pad(m.meeting_number)}</span>
-          <span class="fig__of">${esc(fmtDate(m.meeting_date))}<span class="fig__ln">${this.when(m)}</span></span>
-        </p>
-        <ul class="standing__rest">
-          <li class="standing__row"><span class="standing__lab">Checked in</span>
-            <span class="standing__val">${stamps}</span></li>
-          <li class="standing__row"><span class="standing__lab">Of members who attend</span>
-            <span class="standing__val">${this.shareOfClub(stamps)}</span></li>
-          <li class="standing__row"><span class="standing__lab">Check-in</span>
-            <span class="standing__val standing__val--word">${m.check_in_open ? 'Open' : 'Closed'}</span></li>
-        </ul>
-      </section>
+      <header class="detail__head" data-enter>
+        <p class="detail__id">GM ${pad(m.meeting_number)}</p>
+        <p class="detail__meta meta">${esc(fmtDate(m.meeting_date))} · ${this.when(m)} · Check-in ${m.check_in_open ? 'open' : 'closed'}</p>
+      </header>
 
       <section class="ledger" data-enter>
-        <h2 class="sec">Attendees<span class="sec__n">${stamps === 1 ? '1 member' : `${stamps} members`}</span></h2>
+        <h2 class="sec">Attendees<span class="sec__n">${stamps === 1 ? '1 member' : `${stamps} members`}${
+          this.shareOfClub(stamps) === '-' ? '' : ` · ${this.shareOfClub(stamps)} of members who attend`}</span></h2>
         ${stamps
-          ? `<ol class="rows">${d.attendees.map(a => `
+          ? `<ol class="rows rows--who">${d.attendees.map(a => `
               <li class="row rrow" data-bmember="${esc(a.user_id)}" tabindex="0" role="button">
                 <span class="rrow__name">${esc(a.username)}</span>
                 <span class="rrow__meta meta">${esc(fmtTime(a.checked_in_at))}</span>
@@ -15406,10 +15533,10 @@ const BoardUI = {
             <p class="proj__cap">Scan to check in</p>
           </div>
           <p class="proj__count"><b id="attCount">-</b><span>checked in</span></p>
-          <button class="btn btn--inv proj__ctl" type="button" data-bend="${esc(sel.id)}">Close check-in</button>
+          <button class="btn btn--inv proj__ctl" type="button" data-bend="${esc(sel.id)}" data-busy="Ending…">Close check-in</button>
         ` : `
           <p class="proj__count proj__count--shut"><span>Members see the code here once it opens.</span></p>
-          <button class="btn proj__ctl" type="button" data-bstart="${esc(sel.id)}">Open check-in</button>
+          <button class="btn proj__ctl" type="button" data-bstart="${esc(sel.id)}" data-busy="Starting…">Open check-in</button>
         `}
       </section>
     </div>`;
@@ -15728,6 +15855,21 @@ function paintAttendanceCount(meetingId){
   countTimer = setInterval(pull, 6000);
 }
 
+/* The line printed over the viewer: which meeting a scan would stamp.
+   It is re-read from the record whenever the record changes, so a
+   check-in that opens or closes while the camera is up is reflected. */
+function scanStanding(){
+  const open = Store.openMeeting();
+  const done = open && Store.attended(open.id);
+  return !open ? 'Nothing open'
+    : done ? `Already stamped · GM ${pad(open.no)}`
+    : `GM ${pad(open.no)} · today · ${open.time}`;
+}
+function paintScanStanding(){
+  const el = $('.viewer__standing');
+  if (el) el.textContent = scanStanding();
+}
+
 const Scanner = {
   stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0, zoom:null, run:0,
 
@@ -15762,6 +15904,7 @@ const Scanner = {
     this.locked = false;
 
     $('#viewer')?.classList.remove('viewer--stalled', 'viewer--feed');
+    $('#viewer .stall')?.remove();
     this.setState('boot', 'Starting camera');
     this.showLoader();
 
@@ -15782,6 +15925,16 @@ const Scanner = {
       return;
     }
     this.stream = stream;
+
+    /* Permission revoked or the device taken mid-scan: the track ends.
+       The page says so and offers the camera again, instead of holding
+       a dead feed under a live reticle. */
+    const track = stream.getVideoTracks()[0];
+    if (track) track.addEventListener('ended', () => {
+      if (run !== this.run || this.stream !== stream) return;
+      this.stop();
+      this.stall('ended');
+    }, { once:true });
 
     this.hideLoader();
     video.srcObject = this.stream;
@@ -15860,7 +16013,7 @@ const Scanner = {
       if (hit && hit.data){
         this.locked = true;
         this.setState('hit', 'Got it');
-        setTimeout(() => submitSeal(hit.data, true), 190);
+        setTimeout(() => submitSeal(hit.data, true, run), 190);
       }
     };
     step();
@@ -15874,20 +16027,27 @@ const Scanner = {
 
     const more = MANUAL_ENTRY ? ' Or enter the check-in code below.' : '';
     const copy = {
-      denied:{ title:'Camera permission is off',
-        body:'Allow camera access for this page in your browser settings, then reload.' + more },
-      unavailable:{ title:'No camera found',
+      denied:{ title:'Camera permission is off', retry:true,
+        body:'Allow camera access for this page in your browser settings, then try again.' + more },
+      ended:{ title:'Camera stopped', retry:true,
+        body:'The camera feed ended. Check that camera access is still allowed, then try again.' + more },
+      unavailable:{ title:'No camera found', retry:true,
         body:'This device has no camera.' + (MANUAL_ENTRY
           ? ' Enter the check-in code below instead.'
           : ' Sign in on a phone with a camera to scan the code.') },
-      unsupported:{ title:'Scanning needs a secure page',
+      unsupported:{ title:'Scanning needs a secure page', retry:false,
         body:'Camera access only works over https.' + more },
-    }[kind];
+    }[kind] || { title:'Camera off', retry:true, body:'The camera could not be started.' + more };
 
-    viewer.innerHTML = `<div class="stall">
+    /* The note sits over the viewer; the video and the meeting line
+       stay in place, so the camera can be offered again without a
+       reload and the page keeps saying which meeting it is for. */
+    viewer.querySelector('.stall')?.remove();
+    viewer.insertAdjacentHTML('beforeend', `<div class="stall">
       <h2 class="stall__title">${copy.title}</h2>
       <p class="stall__note">${copy.body}</p>
-    </div>`;
+      ${copy.retry ? `<button class="link stall__retry" type="button" data-scan-retry>Try again</button>` : ''}
+    </div>`);
 
     viewer.classList.add('viewer--stalled');
     this.setState('off', 'Camera off');
@@ -15949,6 +16109,15 @@ const Landing = {
     const [fresh] = await Promise.all([this.refresh(3), held]);
     if (seq !== this.seq) return;
 
+    /* The reader may have left Scan during the hold. The record is
+       fresh either way; the page they chose is not taken from them. */
+    if (current !== 'scan'){
+      this.armed = null;
+      this.active = false;
+      if (!fresh) Store.hydrate();
+      return;
+    }
+
     pendingStamp = fresh ? { meetingId:meeting.id } : null;
     go('home', { instant:true });
     pendingStamp = null;
@@ -15980,11 +16149,13 @@ const SCAN_MESSAGES = {
 };
 const scanMessage = code => SCAN_MESSAGES[code] || SCAN_MESSAGES.SERVER_ERROR;
 
-async function submitSeal(raw, fromCamera){
+/* `run` is the camera run that read the code; the refusal, if any, is
+   shown on that run and no other. */
+async function submitSeal(raw, fromCamera, run = Scanner.run){
   if (!QRFormat.looksLikeKeystamp(raw)){
     const [t, d] = scanMessage('INVALID_TOKEN');
     toast({ key:'scan', title:t, detail:d, bad:true });
-    if (fromCamera) rejectVisual('INVALID_TOKEN');
+    if (fromCamera) rejectVisual('INVALID_TOKEN', run);
     return;
   }
 
@@ -15997,7 +16168,7 @@ async function submitSeal(raw, fromCamera){
     const [t, d] = scanMessage(code);
 
     toast({ key:'scan', title:t, detail:d, bad:true });
-    if (fromCamera) rejectVisual(code);
+    if (fromCamera) rejectVisual(code, run);
     return;
   }
 
@@ -16010,11 +16181,14 @@ async function submitSeal(raw, fromCamera){
   await Landing.run(meeting);
 }
 
-function rejectVisual(code){
+/* The refusal is shown on the camera run that read the code; a run
+   that has since been stopped or restarted is left alone. */
+function rejectVisual(code, run = Scanner.run){
+  if (run !== Scanner.run) return;
   Scanner.setState('bad', scanMessage(code)[0]);
   FX.scanReject();
   setTimeout(() => {
-    if (!$('#reticle')) return;
+    if (run !== Scanner.run || !$('#reticle')) return;
     Scanner.locked = false;
     Scanner.setState('live', 'Point at the code');
   }, 1900);
@@ -16107,6 +16281,38 @@ let navigating = false;
 let pendingNav = null;
 let booted = false;
 let loadSeq = 0;
+let painted = null;   /* Store.stamp() as of the last paint */
+
+/* A working button keeps its box: the label changes, the width does
+   not, and it is neither hoverable nor pressable until it is released.
+   A button that names its progress word (data-busy) carries the other
+   label as a hidden line, so it is as wide as the wider of the two at
+   rest and while working; any other is held at the width it had. */
+function hold(btn, label){
+  if (!btn || btn.hasAttribute('aria-busy')) return;
+  const word = btn.dataset.busy || label;
+  if (btn.dataset.busy !== undefined){
+    btn.dataset.rest = btn.textContent.trim();
+    btn.dataset.busy = btn.dataset.rest;
+  } else {
+    btn.style.minWidth = btn.getBoundingClientRect().width + 'px';
+  }
+  btn.disabled = true;
+  btn.setAttribute('aria-busy', 'true');
+  btn.textContent = word;
+}
+function release(btn, label){
+  if (!btn) return;
+  const word = label !== undefined ? label : (btn.dataset.rest || btn.textContent);
+  if (btn.dataset.rest !== undefined){
+    btn.dataset.busy = btn.textContent;
+    delete btn.dataset.rest;
+  }
+  btn.disabled = false;
+  btn.removeAttribute('aria-busy');
+  btn.style.minWidth = '';
+  btn.textContent = word;
+}
 
 function syncHash(id){
   try { if (location.hash !== '#/' + id) history.replaceState(null, '', '#/' + id); }
@@ -16167,6 +16373,7 @@ async function go(id, opts = {}){
     document.documentElement.dataset.screen = id;
 
     view.innerHTML = Views[id]();
+    painted = Store.stamp();
     const ch = chapterOf(id), head = view.querySelector('.rechead');
     if (ch && head && !head.querySelector('.rechead__no'))
       head.insertAdjacentHTML('afterbegin', `<span class="rechead__no" aria-hidden="true">${ch}</span>`);
@@ -16226,7 +16433,7 @@ function afterRender(id, nav = false, covered = false){
 function authErr(msg){
   const box = $('#authErr');
   if (!box) return;
-  box.hidden = !msg;
+  box.classList.toggle('is-on', Boolean(msg));
   box.textContent = msg || '';
 }
 
@@ -16234,9 +16441,8 @@ function authBusy(on, label){
   AuthUI.busy = on;
   const btn = $('#authGo');
   if (!btn) return;
-  btn.disabled = on;
-  btn.setAttribute('aria-busy', String(on));
-  btn.textContent = on ? label : (AuthUI.mode === 'up' ? 'Create account' : 'Sign in');
+  if (on) hold(btn, label);
+  else release(btn, AuthUI.mode === 'up' ? 'Create account' : 'Sign in');
 }
 
 document.addEventListener('keydown', e => {
@@ -16261,6 +16467,16 @@ document.addEventListener('input', e => {
   const key = MEETING_FIELDS[e.target.id];
   if (key && e.target.closest('#meetingForm')){
     BoardUI.form = Object.assign({}, BoardUI.form || {}, { [key]:e.target.value });
+    /* the last refusal is withdrawn as soon as the form is edited */
+    const err = $('#mErr');
+    if (err && !err.hidden){ err.hidden = true; err.textContent = ''; }
+    return;
+  }
+  if (e.target.closest('#authForm')){
+    /* likewise on the sign-in spread: a refusal is withdrawn on the
+       first keystroke; the box keeps its height, so nothing moves */
+    const box = $('#authErr');
+    if (box && box.classList.contains('is-on')) authErr('');
     return;
   }
   if (e.target.id === 'bq'){
@@ -16307,7 +16523,7 @@ document.addEventListener('submit', async e => {
     if (!start || !end) return show('Start and end time are required.');
     if (start >= end)   return show('End time must be after the start time.');
 
-    show(''); btn.disabled = true; btn.textContent = 'Scheduling…';
+    show(''); hold(btn, 'Scheduling…');
     try {
       await Backend.createMeeting({ no, date, startTime:to12h(start), endTime:to12h(end) });
       BoardUI.form = null;
@@ -16315,7 +16531,7 @@ document.addEventListener('submit', async e => {
       boardGoto({ tab:'meetings' });
     } catch (ex){
       show(WriteFailure.explain(ex, 'create meeting'));
-      btn.disabled = false; btn.textContent = 'Schedule meeting';
+      release(btn, 'Schedule meeting');
     }
     return;
   }
@@ -16339,9 +16555,22 @@ document.addEventListener('submit', async e => {
     go('home', { instant:true });
     FX.enter($('#view'));
   } catch (err){
-    authErr(err && err.message ? err.message : 'Something went wrong. Try again.');
+    const msg = err && err.message ? err.message : 'Something went wrong. Try again.';
+    authErr(msg);
     authBusy(false);
-    const pw = $('#authPass'); if (pw) { pw.value = ''; pw.focus(); }
+    /* Focus lands on the first field at fault, in form order. A password
+       that was refused is cleared so it can be retyped; a username that
+       was refused stays, so it can be corrected. */
+    const at = Config.validateUsername(username) ? '#authUser'
+             : Config.validatePassword(password) ? '#authPass'
+             : (up && password !== confirm)      ? '#authPass2'
+             : /^username/i.test(msg)             ? '#authUser'   /* "Username is already taken." */
+             : '#authPass';                                      /* a refused pair: retype the password */
+    const field = $(at);
+    if (field){
+      if (at !== '#authUser') field.value = '';
+      field.focus();
+    }
   }
 });
 
@@ -16386,8 +16615,7 @@ document.addEventListener('click', e => {
     if (bdelete.disabled) return;
     const id = bdelete.dataset.bdelete;
     const stamps = Number(bdelete.dataset.bstamps) || 0;
-    bdelete.disabled = true;
-    bdelete.textContent = 'Deleting…';
+    hold(bdelete, 'Deleting…');
 
     const clear = note => {
       if (boardMeeting === id) boardMeeting = null;
@@ -16416,10 +16644,12 @@ document.addEventListener('click', e => {
   if (bpage){ boardGoto({ page:Number(bpage.dataset.bpage) || 1 }); return; }
   const reload = e.target.closest('[data-reload]');
   if (reload){
-    reload.disabled = true; reload.textContent = 'Retrying…';
+    hold(reload, 'Retrying…');
     Store.hydrate().then(() => go(current, { instant:true }));
     return;
   }
+  const retry = e.target.closest('[data-scan-retry]');
+  if (retry){ Scanner.start(); return; }
 
   const breload = e.target.closest('[data-breload]');
   if (breload){ loadBoard(); return; }
@@ -16428,20 +16658,20 @@ document.addEventListener('click', e => {
 
   const bstart = e.target.closest('[data-bstart]');
   if (bstart){
-    bstart.disabled = true; bstart.textContent = 'Starting…';
+    hold(bstart, 'Starting…');
     Backend.startAttendance(bstart.dataset.bstart)
       .then(() => { boardMeeting = bstart.dataset.bstart; boardStamp = true; loadBoard(); })
-      .catch(() => { bstart.disabled = false; bstart.textContent = 'Open check-in';
+      .catch(() => { release(bstart, 'Open check-in');
         toast({ key:'board', bad:true, title:'Could not start',
                 detail:'Check-in did not open. Try again.' }); });
     return;
   }
   const bend = e.target.closest('[data-bend]');
   if (bend){
-    bend.disabled = true; bend.textContent = 'Ending…';
+    hold(bend, 'Ending…');
     Backend.endAttendance(bend.dataset.bend)
       .then(() => { clearInterval(countTimer); boardStamp = true; loadBoard(); })
-      .catch(() => { bend.disabled = false; bend.textContent = 'Close check-in';
+      .catch(() => { release(bend, 'Close check-in');
         toast({ key:'board', bad:true, title:'Could not end',
                 detail:'Check-in is still open. Try again.' }); });
     return;
@@ -16545,8 +16775,24 @@ async function loadBoard(){
   const seq = ++loadSeq;
   const pane = () => (seq === loadSeq ? $('#boardPane') : null);
   BoardUI.error = null;
-  BoardUI.loading = true;
-  if (pane()) pane().innerHTML = BoardUI.pane();
+
+  /* A pane that already holds this chapter's content keeps it while the
+     record is re-read: opening or closing check-in, a search, a page
+     turn, opening a member. Only an empty chapter shows the beat. */
+  const box = pane();
+  const keep = Boolean(box) && !BoardUI.loading && BoardUI.shown === BoardUI.tab;
+  /* a field the reader is typing in (the roster search) gets its focus
+     back after the repaint */
+  const active = document.activeElement;
+  const focusId = keep && active && active.id && box.contains(active) ? active.id : null;
+  /* the code already on the projector stays up while its token is
+     re-issued; a code that was not on screen is never shown early */
+  const shownQR = keep && boardMeeting ? { meeting:boardMeeting, svg:$('#qrBox svg', box)?.outerHTML || null } : null;
+  if (keep) box.setAttribute('aria-busy', 'true');
+  else if (!BoardUI.loading){
+    BoardUI.loading = true;
+    if (box) box.innerHTML = BoardUI.pane();
+  }
 
   try {
     if (BoardUI.memberDetail === 'pending'){
@@ -16570,8 +16816,17 @@ async function loadBoard(){
 
   if (seq !== loadSeq) return;
   BoardUI.loading = false;
+  BoardUI.shown = BoardUI.error ? null : BoardUI.tab;
   if (pane()){
     pane().innerHTML = BoardUI.pane();
+    pane().removeAttribute('aria-busy');
+    const again = focusId && document.getElementById(focusId);
+    if (again){
+      again.focus({ preventScroll:true });
+      try { const n = again.value.length; again.setSelectionRange(n, n); } catch (_) {}
+    }
+    const qb = shownQR && shownQR.svg && boardMeeting === shownQR.meeting ? $('#qrBox') : null;
+    if (qb) qb.innerHTML = shownQR.svg;
   }
 
   if (BoardUI.tab === 'session' && !BoardUI.error && $('#qrBox')){
@@ -16628,7 +16883,9 @@ document.addEventListener('click', e => {
   try { s.focus({ preventScroll:true }); } catch (_) {}
 });
 
-addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); });
+/* an unknown hash resolves to the page already showing; the address is
+   corrected so it never names a page that does not exist */
+addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); else syncHash(current); });
 
 addEventListener('pagehide', () => {
   Scanner.stop(); clearInterval(countTimer);
@@ -16651,9 +16908,27 @@ try {
     await Backend.init();
     await Store.hydrate();
 
+    /* The record changed: the page is repainted only if what it shows
+       would differ, and Scan only refreshes its meeting line, so the
+       camera is never restarted under the reader. */
     Store.onChange(() => {
-      if (current && current !== 'auth' && current !== 'scan') go(current, { instant:true });
+      if (current === 'scan') paintScanStanding();
+      else if (current && current !== 'auth' && Store.stamp() !== painted)
+        go(current, { instant:true, force:true });   /* force: not dropped if it lands mid-cut */
       paintIdentity();
+    });
+
+    /* Coming back to the tab re-reads what the page shows: the record
+       for a member, the chapter's own data for a board pane (kept in
+       place while it loads). Nothing is re-read under a working button
+       or a scene. */
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible') return;
+      if (!booted || !Store.signedIn || Landing.active || Scenes.busy) return;
+      if (PANE_ROUTES.includes(current)){
+        if (BoardUI.loading || $('#boardPane [aria-busy]')) return;
+        loadBoard();
+      } else Store.hydrate();
     });
 
     paintBrand();

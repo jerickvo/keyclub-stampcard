@@ -7,7 +7,8 @@ import vm from 'node:vm';
 
 const src = readFileSync(new URL('./03b-board.js', import.meta.url), 'utf8');
 const knit = s => String(s).replace(/ (AM|PM)\b/gi, '\u00a0$1');
-const ctx = vm.createContext({ Schedule:{ today:() => '2026-09-07', PLACE:'MPR' }, knit });
+const ctx = vm.createContext({ Schedule:{ today:() => '2026-09-07', PLACE:'MPR' }, knit,
+  esc:s => String(s), pad:n => String(n).padStart(2, '0'), fmtDate:iso => iso, fmtTime:iso => iso });
 vm.runInContext(src + '\nthis.__x = { nextMeetingNumber, spanTime, BoardUI, MEETING_DEFAULTS };', ctx);
 const { nextMeetingNumber, spanTime, BoardUI, MEETING_DEFAULTS } = ctx.__x;
 const rows = nums => nums.map(n => ({ meeting_number:n }));
@@ -61,4 +62,38 @@ test('row time span folds a shared meridian', () => {
   assert.equal(spanTime('3:15 PM', '4:15 PM'), '3:15–4:15\u00a0PM');
   assert.equal(spanTime('11:30 AM', '1:00 PM'), '11:30\u00a0AM–1:00\u00a0PM');
   assert.equal(spanTime('3:15 PM', null), '3:15\u00a0PM');
+});
+
+test('a meeting row has a count cell only once the meeting is held', () => {
+  const m = { id:'m1', meeting_number:4, meeting_date:'2026-09-09', start_time:'12:40 PM', end_time:'1:30 PM', location:'MPR' };
+  const ahead = BoardUI.meetingRow({ ...m, state:'UPCOMING' });
+  const held  = BoardUI.meetingRow({ ...m, state:'PAST', attendance_count:12 });
+  assert.equal(ahead.includes('mrow__n'), false);
+  assert.equal(held.includes('<span class="mrow__n"><b>12</b>'), true);
+  assert.equal(ahead.includes('GM 04'), true);
+});
+test('a register names its tracks for what its rows hold', () => {
+  BoardUI.meetings = { meetings:[
+    { id:'a', meeting_number:1, meeting_date:'2026-09-02', start_time:'12:40 PM', end_time:'1:30 PM', state:'PAST', attendance_count:3 },
+    { id:'b', meeting_number:2, meeting_date:'2026-09-16', start_time:'12:40 PM', end_time:'1:30 PM', state:'UPCOMING', attendance_count:0 },
+  ] };
+  BoardUI.form = null; BoardUI.deleteNote = null;
+  const html = BoardUI.meetingsPane();
+  assert.equal(html.includes('class="rows rows--dated"'), true);
+  assert.equal(html.includes('class="rows rows--counted"'), true);
+});
+
+test('the club docket is one object, and no meeting is one line of type', () => {
+  const base = { meetings_held:16, total_seals:214, participating_members:25, average_attendance:13.4, today_attendance:0 };
+  BoardUI.overview = { ...base, active_meeting:null, next_meeting:null };
+  const none = BoardUI.clubPane();
+  assert.equal(none.includes('now--none'), true);
+  assert.equal(none.includes('class="now__no"'), false);
+  assert.equal(none.includes('Schedule one'), true);
+  BoardUI.overview = { ...base, active_meeting:null,
+    next_meeting:{ id:'m9', meeting_number:9, meeting_date:'2026-09-16', start_time:'12:40 PM', end_time:'1:30 PM', check_in_open:false } };
+  const ahead = BoardUI.clubPane();
+  assert.equal(ahead.includes('GM 09'), true);
+  assert.equal(ahead.includes('Check-in closed'), true);
+  assert.equal(ahead.includes('standing--flat'), true);
 });

@@ -250,6 +250,9 @@ function mkClient(){
                          {id:'r2',name:'Free Blindbox',required:20},
                          {id:'r3',name:'???',required:30}];
           const stampsOf = id => A.filter(a => a.user_id === id).length;
+          const claimedOf = id => new Set((db.reward_claims||[]).filter(c => c.user_id === id).map(c => c.reward_id));
+          // the same three lines as rewardState in 01a-backend.js and board-data
+          const tierState = (t, stamps, claimed) => claimed ? 'claimed' : stamps >= t.required ? 'unlocked' : 'locked';
           const lastOf = id => A.filter(a => a.user_id === id)
                 .map(a => a.checked_in_at).sort().pop() || null;
           const today = new Intl.DateTimeFormat('en-CA', { timeZone:'America/Los_Angeles',
@@ -264,15 +267,15 @@ function mkClient(){
                           .sort((a,b) => String(a.meeting_date).localeCompare(String(b.meeting_date)))[0] || null;
             const per = new Map();
             for (const a of A) per.set(a.user_id, (per.get(a.user_id) || 0) + 1);
-            const counts = [...per.values()];
-            const atLeast = n => counts.filter(c => c >= n).length;
+            const everyone = new Set([...per.keys(), ...(db.reward_claims||[]).map(c => c.user_id)]);
+            const atTier = t => [...everyone].filter(id => tierState(t, per.get(id) || 0, claimedOf(id).has(t.id)) !== 'locked').length;
             return { data:{ ok:true,
               total_members:P.filter(p => p.role === 'member').length,
               total_seals:A.length, total_meetings:M.length,
               meetings_held:held,
               participating_members:per.size,
               average_attendance:held > 0 ? Math.round((A.length / held) * 10) / 10 : null,
-              milestones:{ m10:atLeast(10), m20:atLeast(20), m30:atLeast(30) },
+              milestones:{ m10:atTier(TIERS[0]), m20:atTier(TIERS[1]), m30:atTier(TIERS[2]) },
               active_meeting:open, next_meeting:next, server_date:today,
               today_attendance:open ? A.filter(a => a.meeting_id === open.id).length : 0 }, error:null };
           }
@@ -282,7 +285,7 @@ function mkClient(){
                         .filter(p => !q || p.username.toLowerCase().includes(q))
                         .map(p => ({ id:p.id, username:p.display_name || p.username,
                           stamps:stampsOf(p.id),
-                          rewards_unlocked:TIERS.filter(t => stampsOf(p.id) >= t.required).length,
+                          rewards_unlocked:TIERS.filter(t => tierState(t, stampsOf(p.id), claimedOf(p.id).has(t.id)) !== 'locked').length,
                           created_at:p.created_at, last_attendance:lastOf(p.id) }));
             const sort = body.sort || 'username';
             rows.sort((a,b) =>
@@ -306,7 +309,8 @@ function mkClient(){
             return { data:{ ok:true,
               member:{ id:p.id, username:p.display_name || p.username, role:p.role,
                        created_at:p.created_at, stamps, last_attendance:mine[0]?.checked_in_at || null },
-              rewards:TIERS.map(t => ({ ...t, unlocked:stamps >= t.required, claimed:claimed.has(t.id) })),
+              rewards:TIERS.map(t => ({ ...t, unlocked:stamps >= t.required, claimed:claimed.has(t.id),
+                                        state:tierState(t, stamps, claimed.has(t.id)) })),
               attendance:mine.map(a => {
                 const m = M.find(x => x.id === a.meeting_id) || {};
                 return { id:a.id, meeting_id:a.meeting_id, meeting_number:m.meeting_number || null,

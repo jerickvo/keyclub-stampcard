@@ -54,6 +54,26 @@ const TIERS = [
   { id: 'r3', name: '???',           required: 30 },
 ];
 
+// What one tier is to one member: the same three lines the client's
+// 01a-backend.js applies to its own stamps and claims. A claim is a fact
+// (the prize was handed over), so a claimed tier stays reached even if a
+// deleted meeting later takes stamps back. Every "rewards unlocked"
+// figure this function returns counts the tiers that are not locked.
+type Tier = { id: string; name: string; required: number };
+const rewardState = (tier: Tier, stamps: number, claimed: boolean) =>
+  claimed ? 'claimed' : stamps >= tier.required ? 'unlocked' : 'locked';
+const reached = (stamps: number, claimed: Set<string> | undefined) =>
+  TIERS.filter(t => rewardState(t, stamps, claimed?.has(t.id) ?? false) !== 'locked').length;
+// claims grouped by member, from one read
+const claimsByMember = (rows: { user_id: string; reward_id: string }[] | null) => {
+  const by = new Map<string, Set<string>>();
+  for (const c of rows ?? []) {
+    if (!by.has(c.user_id)) by.set(c.user_id, new Set());
+    by.get(c.user_id)!.add(c.reward_id);
+  }
+  return by;
+};
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info',
@@ -96,7 +116,7 @@ Deno.serve(async (req) => {
     // ── OVERVIEW ───────────────────────────────────────────────────
     if (action === 'overview') {
       const today = clubDay();
-      const [members, seals, meetings, open, held, next, roll] = await Promise.all([
+      const [members, seals, meetings, open, held, next, roll, claimRows] = await Promise.all([
         admin.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'member'),
         admin.from('attendance').select('id', { count: 'exact', head: true }),
         admin.from('meetings').select('id', { count: 'exact', head: true }),
@@ -116,6 +136,9 @@ Deno.serve(async (req) => {
         // the same rows the member's own stamp total comes from, so the
         // board and the member can never disagree.
         admin.from('attendance').select('user_id').limit(20000),
+        // and one pass over claims: a milestone counts a member who
+        // reached the tier or who holds its prize.
+        admin.from('reward_claims').select('user_id, reward_id').limit(20000),
       ]);
 
       // Each of these four was previously `?? 0`. Every one of those was
@@ -129,8 +152,11 @@ Deno.serve(async (req) => {
 
       const perMember = new Map<string, number>();
       for (const a of must(roll) ?? []) perMember.set(a.user_id, (perMember.get(a.user_id) ?? 0) + 1);
-      const counts = [...perMember.values()];
-      const atLeast = (n: number) => counts.filter(c => c >= n).length;
+      const claimed = claimsByMember(must(claimRows));
+      const everyone = new Set([...perMember.keys(), ...claimed.keys()]);
+      const atTier = (t: Tier) => [...everyone]
+        .filter(id => rewardState(t, perMember.get(id) ?? 0, claimed.get(id)?.has(t.id) ?? false) !== 'locked')
+        .length;
 
       let todayCount = 0;
       if (activeMeeting?.id) {
@@ -150,7 +176,7 @@ Deno.serve(async (req) => {
         average_attendance: meetingsHeld > 0
           ? Math.round((totalSeals / meetingsHeld) * 10) / 10
           : null,
-        milestones: { m10: atLeast(10), m20: atLeast(20), m30: atLeast(30) },
+        milestones: { m10: atTier(TIERS[0]), m20: atTier(TIERS[1]), m30: atTier(TIERS[2]) },
         active_meeting: activeMeeting ?? null,
         next_meeting: nextMeeting,
         today_attendance: todayCount,
@@ -185,6 +211,7 @@ Deno.serve(async (req) => {
       const ids = (rows ?? []).map(r => r.id);
       const totals = new Map<string, number>();
       const lastAt = new Map<string, string>();
+      let claimed = new Map<string, Set<string>>();
 
       if (ids.length) {
         // one read, aggregated here, rather than a query per member.
@@ -197,6 +224,8 @@ Deno.serve(async (req) => {
           const prev = lastAt.get(a.user_id);
           if (!prev || a.checked_in_at > prev) lastAt.set(a.user_id, a.checked_in_at);
         }
+        claimed = claimsByMember(must(await admin.from('reward_claims')
+          .select('user_id, reward_id').in('user_id', ids)));
       }
 
       let members = (rows ?? []).map(r => {
@@ -205,7 +234,7 @@ Deno.serve(async (req) => {
           id: r.id,
           username: r.display_name || r.username,
           stamps,
-          rewards_unlocked: TIERS.filter(t => stamps >= t.required).length,
+          rewards_unlocked: reached(stamps, claimed.get(r.id)),
           created_at: r.created_at,
           last_attendance: lastAt.get(r.id) ?? null,
         };
@@ -269,6 +298,7 @@ Deno.serve(async (req) => {
           id: t.id, name: t.name, required: t.required,
           unlocked: stamps >= t.required,
           claimed: claimed.has(t.id),
+          state: rewardState(t, stamps, claimed.has(t.id)),
         })),
         attendance: (att ?? []).map(a => {
           const m = meetings.get(a.meeting_id) ?? {};

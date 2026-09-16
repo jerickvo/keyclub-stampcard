@@ -82,6 +82,38 @@ let navigating = false;
 let pendingNav = null;
 let booted = false;
 let loadSeq = 0;
+let painted = null;   /* Store.stamp() as of the last paint */
+
+/* A working button keeps its box: the label changes, the width does
+   not, and it is neither hoverable nor pressable until it is released.
+   A button that names its progress word (data-busy) carries the other
+   label as a hidden line, so it is as wide as the wider of the two at
+   rest and while working; any other is held at the width it had. */
+function hold(btn, label){
+  if (!btn || btn.hasAttribute('aria-busy')) return;
+  const word = btn.dataset.busy || label;
+  if (btn.dataset.busy !== undefined){
+    btn.dataset.rest = btn.textContent.trim();
+    btn.dataset.busy = btn.dataset.rest;
+  } else {
+    btn.style.minWidth = btn.getBoundingClientRect().width + 'px';
+  }
+  btn.disabled = true;
+  btn.setAttribute('aria-busy', 'true');
+  btn.textContent = word;
+}
+function release(btn, label){
+  if (!btn) return;
+  const word = label !== undefined ? label : (btn.dataset.rest || btn.textContent);
+  if (btn.dataset.rest !== undefined){
+    btn.dataset.busy = btn.textContent;
+    delete btn.dataset.rest;
+  }
+  btn.disabled = false;
+  btn.removeAttribute('aria-busy');
+  btn.style.minWidth = '';
+  btn.textContent = word;
+}
 
 function syncHash(id){
   try { if (location.hash !== '#/' + id) history.replaceState(null, '', '#/' + id); }
@@ -142,6 +174,7 @@ async function go(id, opts = {}){
     document.documentElement.dataset.screen = id;
 
     view.innerHTML = Views[id]();
+    painted = Store.stamp();
     const ch = chapterOf(id), head = view.querySelector('.rechead');
     if (ch && head && !head.querySelector('.rechead__no'))
       head.insertAdjacentHTML('afterbegin', `<span class="rechead__no" aria-hidden="true">${ch}</span>`);
@@ -201,7 +234,7 @@ function afterRender(id, nav = false, covered = false){
 function authErr(msg){
   const box = $('#authErr');
   if (!box) return;
-  box.hidden = !msg;
+  box.classList.toggle('is-on', Boolean(msg));
   box.textContent = msg || '';
 }
 
@@ -209,9 +242,8 @@ function authBusy(on, label){
   AuthUI.busy = on;
   const btn = $('#authGo');
   if (!btn) return;
-  btn.disabled = on;
-  btn.setAttribute('aria-busy', String(on));
-  btn.textContent = on ? label : (AuthUI.mode === 'up' ? 'Create account' : 'Sign in');
+  if (on) hold(btn, label);
+  else release(btn, AuthUI.mode === 'up' ? 'Create account' : 'Sign in');
 }
 
 document.addEventListener('keydown', e => {
@@ -236,6 +268,16 @@ document.addEventListener('input', e => {
   const key = MEETING_FIELDS[e.target.id];
   if (key && e.target.closest('#meetingForm')){
     BoardUI.form = Object.assign({}, BoardUI.form || {}, { [key]:e.target.value });
+    /* the last refusal is withdrawn as soon as the form is edited */
+    const err = $('#mErr');
+    if (err && !err.hidden){ err.hidden = true; err.textContent = ''; }
+    return;
+  }
+  if (e.target.closest('#authForm')){
+    /* likewise on the sign-in spread: a refusal is withdrawn on the
+       first keystroke; the box keeps its height, so nothing moves */
+    const box = $('#authErr');
+    if (box && box.classList.contains('is-on')) authErr('');
     return;
   }
   if (e.target.id === 'bq'){
@@ -282,7 +324,7 @@ document.addEventListener('submit', async e => {
     if (!start || !end) return show('Start and end time are required.');
     if (start >= end)   return show('End time must be after the start time.');
 
-    show(''); btn.disabled = true; btn.textContent = 'Scheduling…';
+    show(''); hold(btn, 'Scheduling…');
     try {
       await Backend.createMeeting({ no, date, startTime:to12h(start), endTime:to12h(end) });
       BoardUI.form = null;
@@ -290,7 +332,7 @@ document.addEventListener('submit', async e => {
       boardGoto({ tab:'meetings' });
     } catch (ex){
       show(WriteFailure.explain(ex, 'create meeting'));
-      btn.disabled = false; btn.textContent = 'Schedule meeting';
+      release(btn, 'Schedule meeting');
     }
     return;
   }
@@ -314,9 +356,22 @@ document.addEventListener('submit', async e => {
     go('home', { instant:true });
     FX.enter($('#view'));
   } catch (err){
-    authErr(err && err.message ? err.message : 'Something went wrong. Try again.');
+    const msg = err && err.message ? err.message : 'Something went wrong. Try again.';
+    authErr(msg);
     authBusy(false);
-    const pw = $('#authPass'); if (pw) { pw.value = ''; pw.focus(); }
+    /* Focus lands on the first field at fault, in form order. A password
+       that was refused is cleared so it can be retyped; a username that
+       was refused stays, so it can be corrected. */
+    const at = Config.validateUsername(username) ? '#authUser'
+             : Config.validatePassword(password) ? '#authPass'
+             : (up && password !== confirm)      ? '#authPass2'
+             : /^username/i.test(msg)             ? '#authUser'   /* "Username is already taken." */
+             : '#authPass';                                      /* a refused pair: retype the password */
+    const field = $(at);
+    if (field){
+      if (at !== '#authUser') field.value = '';
+      field.focus();
+    }
   }
 });
 
@@ -361,8 +416,7 @@ document.addEventListener('click', e => {
     if (bdelete.disabled) return;
     const id = bdelete.dataset.bdelete;
     const stamps = Number(bdelete.dataset.bstamps) || 0;
-    bdelete.disabled = true;
-    bdelete.textContent = 'Deleting…';
+    hold(bdelete, 'Deleting…');
 
     const clear = note => {
       if (boardMeeting === id) boardMeeting = null;
@@ -391,10 +445,12 @@ document.addEventListener('click', e => {
   if (bpage){ boardGoto({ page:Number(bpage.dataset.bpage) || 1 }); return; }
   const reload = e.target.closest('[data-reload]');
   if (reload){
-    reload.disabled = true; reload.textContent = 'Retrying…';
+    hold(reload, 'Retrying…');
     Store.hydrate().then(() => go(current, { instant:true }));
     return;
   }
+  const retry = e.target.closest('[data-scan-retry]');
+  if (retry){ Scanner.start(); return; }
 
   const breload = e.target.closest('[data-breload]');
   if (breload){ loadBoard(); return; }
@@ -403,20 +459,20 @@ document.addEventListener('click', e => {
 
   const bstart = e.target.closest('[data-bstart]');
   if (bstart){
-    bstart.disabled = true; bstart.textContent = 'Starting…';
+    hold(bstart, 'Starting…');
     Backend.startAttendance(bstart.dataset.bstart)
       .then(() => { boardMeeting = bstart.dataset.bstart; boardStamp = true; loadBoard(); })
-      .catch(() => { bstart.disabled = false; bstart.textContent = 'Open check-in';
+      .catch(() => { release(bstart, 'Open check-in');
         toast({ key:'board', bad:true, title:'Could not start',
                 detail:'Check-in did not open. Try again.' }); });
     return;
   }
   const bend = e.target.closest('[data-bend]');
   if (bend){
-    bend.disabled = true; bend.textContent = 'Ending…';
+    hold(bend, 'Ending…');
     Backend.endAttendance(bend.dataset.bend)
       .then(() => { clearInterval(countTimer); boardStamp = true; loadBoard(); })
-      .catch(() => { bend.disabled = false; bend.textContent = 'Close check-in';
+      .catch(() => { release(bend, 'Close check-in');
         toast({ key:'board', bad:true, title:'Could not end',
                 detail:'Check-in is still open. Try again.' }); });
     return;
@@ -520,8 +576,24 @@ async function loadBoard(){
   const seq = ++loadSeq;
   const pane = () => (seq === loadSeq ? $('#boardPane') : null);
   BoardUI.error = null;
-  BoardUI.loading = true;
-  if (pane()) pane().innerHTML = BoardUI.pane();
+
+  /* A pane that already holds this chapter's content keeps it while the
+     record is re-read: opening or closing check-in, a search, a page
+     turn, opening a member. Only an empty chapter shows the beat. */
+  const box = pane();
+  const keep = Boolean(box) && !BoardUI.loading && BoardUI.shown === BoardUI.tab;
+  /* a field the reader is typing in (the roster search) gets its focus
+     back after the repaint */
+  const active = document.activeElement;
+  const focusId = keep && active && active.id && box.contains(active) ? active.id : null;
+  /* the code already on the projector stays up while its token is
+     re-issued; a code that was not on screen is never shown early */
+  const shownQR = keep && boardMeeting ? { meeting:boardMeeting, svg:$('#qrBox svg', box)?.outerHTML || null } : null;
+  if (keep) box.setAttribute('aria-busy', 'true');
+  else if (!BoardUI.loading){
+    BoardUI.loading = true;
+    if (box) box.innerHTML = BoardUI.pane();
+  }
 
   try {
     if (BoardUI.memberDetail === 'pending'){
@@ -545,8 +617,17 @@ async function loadBoard(){
 
   if (seq !== loadSeq) return;
   BoardUI.loading = false;
+  BoardUI.shown = BoardUI.error ? null : BoardUI.tab;
   if (pane()){
     pane().innerHTML = BoardUI.pane();
+    pane().removeAttribute('aria-busy');
+    const again = focusId && document.getElementById(focusId);
+    if (again){
+      again.focus({ preventScroll:true });
+      try { const n = again.value.length; again.setSelectionRange(n, n); } catch (_) {}
+    }
+    const qb = shownQR && shownQR.svg && boardMeeting === shownQR.meeting ? $('#qrBox') : null;
+    if (qb) qb.innerHTML = shownQR.svg;
   }
 
   if (BoardUI.tab === 'session' && !BoardUI.error && $('#qrBox')){
@@ -603,7 +684,9 @@ document.addEventListener('click', e => {
   try { s.focus({ preventScroll:true }); } catch (_) {}
 });
 
-addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); });
+/* an unknown hash resolves to the page already showing; the address is
+   corrected so it never names a page that does not exist */
+addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); else syncHash(current); });
 
 addEventListener('pagehide', () => {
   Scanner.stop(); clearInterval(countTimer);
@@ -626,9 +709,27 @@ try {
     await Backend.init();
     await Store.hydrate();
 
+    /* The record changed: the page is repainted only if what it shows
+       would differ, and Scan only refreshes its meeting line, so the
+       camera is never restarted under the reader. */
     Store.onChange(() => {
-      if (current && current !== 'auth' && current !== 'scan') go(current, { instant:true });
+      if (current === 'scan') paintScanStanding();
+      else if (current && current !== 'auth' && Store.stamp() !== painted)
+        go(current, { instant:true, force:true });   /* force: not dropped if it lands mid-cut */
       paintIdentity();
+    });
+
+    /* Coming back to the tab re-reads what the page shows: the record
+       for a member, the chapter's own data for a board pane (kept in
+       place while it loads). Nothing is re-read under a working button
+       or a scene. */
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible') return;
+      if (!booted || !Store.signedIn || Landing.active || Scenes.busy) return;
+      if (PANE_ROUTES.includes(current)){
+        if (BoardUI.loading || $('#boardPane [aria-busy]')) return;
+        loadBoard();
+      } else Store.hydrate();
     });
 
     paintBrand();

@@ -42,6 +42,7 @@
   --gap-stack:clamp(12px,1.4vw,18px);
   --gap-block:clamp(28px,4vw,56px);
   --gutter:clamp(16px,4.4vw,56px);
+  --col-gap:clamp(28px,4vw,72px);   /* between the two page columns */
 
   /* type: six steps */
   --t-title:clamp(40px,8.6vw,100px);
@@ -79,10 +80,13 @@ main#view:focus,main#view:focus-visible{outline:none}
 :where(svg:not(.fxdefs):not([width])){width:22px;height:22px;flex:none}
 
 /* ── shell ───────────────────────────────────────────────────────── */
+/* one column that can never grow past the viewport, whatever the
+   running head's own width wants */
 .shell{position:relative;z-index:1;display:grid;
-  grid-template-rows:auto minmax(0,1fr);min-height:100%}
-main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
-  padding:calc(var(--gap-stack) + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x))
+  grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);min-height:100%}
+main#view{--view-top:var(--gap-stack);
+  width:100%;max-width:var(--page-max);margin-inline:auto;
+  padding:calc(var(--view-top) + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x))
           calc(var(--gap-block) + var(--folio-h) + env(safe-area-inset-bottom,0px))}
 .view{position:relative}
 
@@ -132,21 +136,28 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   .folio__here::before{top:auto;bottom:-11px}
   .folio__side{display:flex;align-items:baseline;gap:clamp(14px,1.6vw,26px);
     white-space:nowrap;min-width:0}
-  .folio__who{display:inline-flex;align-items:baseline;gap:8px;
+  .folio__who{display:inline-flex;align-items:baseline;gap:8px;min-width:0;
     font:400 var(--t-micro)/1 var(--f-mono);letter-spacing:.06em;color:var(--ink-2)}
+  /* a long name is cut with an ellipsis, as the chapter labels are */
   .folio__name{background:none;border:0;padding:10px 0 8px;min-height:38px;
     cursor:pointer;font:inherit;color:var(--ink);letter-spacing:.06em;
-    text-transform:uppercase}
+    text-transform:uppercase;max-width:28ch;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .folio__name:hover,.folio__name:focus-visible{text-decoration:underline;
     text-decoration-thickness:2px;text-underline-offset:3px}
   .folio__wm{font-family:var(--f-display);font-size:19px;line-height:1;
     text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
-  main#view{padding-top:var(--gap-block)}
+  main#view{--view-top:var(--gap-block)}
 }
 
 /* ── chapter opener ──────────────────────────────────────────────
    Hollow chapter numeral, the chapter word at title size, and the one
    drawn line in the app beneath them. ─────────────────────────── */
+/* Opener rhythm. The torn rule and the chapter's first block are always
+   gap-stack (the title's own breath, its margin) + gap-block (the page's
+   block gap) apart, so every page container uses gap-block as its
+   top-level gap. A line that belongs to the title, a crumb back to the
+   list or the account's role line, pulls up to gap-tight instead. */
 .rechead{position:relative;display:flex;align-items:baseline;flex-wrap:wrap;
   gap:0 .22em;padding-bottom:calc(var(--gap-tight) + 7px);margin-bottom:var(--gap-stack)}
 .rechead::after{content:'';position:absolute;left:0;right:0;bottom:0;height:7px;
@@ -166,10 +177,10 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 /* ── type roles ──────────────────────────────────────────────────── */
 .sec{margin:0;padding-bottom:var(--gap-tight);
   border-bottom:var(--edge-panel) solid var(--ink);
-  display:flex;align-items:baseline;justify-content:space-between;gap:var(--gap-stack);
+  display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:0 var(--gap-stack);
   font-family:var(--f-head);font-weight:400;font-size:var(--t-head);line-height:1;
   text-transform:uppercase;letter-spacing:.01em;color:var(--ink)}
-.sec__n{font:400 var(--t-micro)/1 var(--f-mono);letter-spacing:.06em;
+.sec__n{margin-left:auto;text-align:right;font:400 var(--t-micro)/1 var(--f-mono);letter-spacing:.06em;
   color:var(--ink-2);text-transform:none;white-space:nowrap}
 
 .fig{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 12px;min-width:0}
@@ -191,21 +202,31 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   background:var(--ink);color:var(--paper);cursor:pointer;
   font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);line-height:1;
   text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
-.btn:hover{background:var(--ink-2)}
+/* hover inverts the button inside its own frame; a working button is
+   faded and stays put, so the two are never the same grey */
+.btn:hover{background:var(--paper);color:var(--ink);
+  box-shadow:inset 0 0 0 var(--edge-panel) var(--ink)}
 .btn:active{transform:translate(2px,2px)}
-.btn[disabled]{opacity:.55;cursor:progress;transform:none}
 .btn--quiet{background:var(--paper);color:var(--ink);
   border:var(--edge-panel) solid var(--ink);padding:8px 14px;
   font-family:var(--f-body);font-size:var(--t-body);text-transform:none;letter-spacing:0}
-.btn--quiet:hover{background:var(--ink);color:var(--paper)}
+.btn--quiet:hover{background:var(--ink);color:var(--paper);box-shadow:none}
 .btn--inv{background:var(--paper);color:var(--ink)}
-.btn--inv:hover{background:var(--tint)}
+.btn--inv:hover{background:var(--tint);box-shadow:none}
+/* a button that names its progress word is as wide as the wider of its
+   two labels from the start, so working never resizes it */
+.btn[data-busy]{flex-direction:column;gap:0}
+.btn[data-busy]::after{content:attr(data-busy);display:block;height:0;overflow:hidden;visibility:hidden}
+/* a working button is its resting self, faded, and deaf to the pointer:
+   no hover, no press, whatever colours its composition gave it */
+.btn[disabled]{opacity:.55;pointer-events:none;transform:none}
 
 .link{display:inline-flex;align-items:center;min-height:var(--link-h,36px);padding:6px 0;
   background:none;border:0;border-radius:0;cursor:pointer;color:var(--ink);
   font:400 var(--t-body)/1.2 var(--f-body);letter-spacing:0;
   text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px}
 .link:hover{text-decoration-thickness:2.5px}
+.link:active{transform:translate(1px,1px)}
 .link--quiet{color:var(--ink-2)}
 .link--quiet:hover{color:var(--ink)}
 
@@ -215,11 +236,14 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .input{display:block;width:100%;min-width:0;min-height:var(--tap);
   padding:10px 0 8px;background:transparent;color:var(--ink);
   border:0;border-bottom:var(--edge-panel) solid var(--ink);border-radius:0;
-  font:400 max(16px,var(--t-body))/1.2 var(--f-body);letter-spacing:0;
+  font:400 max(16px,var(--t-body))/1.2 var(--f-mono);letter-spacing:0;
   appearance:none;-webkit-appearance:none;color-scheme:light;accent-color:var(--ink)}
 .input::placeholder{color:var(--ink-2);opacity:1}
 .input:focus{outline:0;border-bottom-width:var(--edge-frame);padding-bottom:7px}
-.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:4px}
+/* :focus-within, not :focus-visible: a field is always keyboard-editable,
+   and the date and time fields hand focus to their own parts (month, day,
+   year, the picker) while the cursor moves through them */
+.input:focus-within{outline:var(--edge-panel) solid var(--ink);outline-offset:4px}
 select.input{padding-right:22px;cursor:pointer;
   background-image:linear-gradient(45deg,transparent 50%,var(--ink) 50%),
                    linear-gradient(135deg,var(--ink) 50%,transparent 50%);
@@ -229,11 +253,19 @@ select.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-of
 .err{margin:0;padding:6px 0 6px 12px;border-left:var(--edge-frame) solid var(--ink);
   font:700 italic var(--t-body)/1.4 var(--f-body);color:var(--ink)}
 
-/* ── rows: the register ──────────────────────────────────────────── */
-.rows{list-style:none;margin:0;padding:0;border-top:var(--edge-rule) solid var(--tone)}
-.row{display:grid;align-items:baseline;column-gap:var(--gap-stack);
+/* ── rows: the register ───────────────────────────────────────────
+   A register is one grid. The list owns the column tracks (--tracks,
+   named by a modifier for what the rows hold) and every row lays its
+   cells on those tracks, so a column is the same width in every row
+   and an absent cell leaves no empty track behind. Without subgrid a
+   row falls back to laying the same tracks on its own. ─────────── */
+.rows{list-style:none;margin:0;padding:0;border-top:var(--edge-rule) solid var(--tone);
+  display:grid;grid-template-columns:var(--tracks,minmax(0,1fr));column-gap:var(--gap-stack)}
+.row{display:grid;grid-column:1 / -1;grid-template-columns:var(--tracks,minmax(0,1fr));
+  align-items:baseline;column-gap:var(--gap-stack);
   padding:clamp(10px,1.4vw,14px) 0;border-bottom:var(--edge-rule) solid var(--tone);
   min-width:0}
+@supports (grid-template-columns:subgrid){ .row{grid-template-columns:subgrid} }
 .row__no{font:400 var(--t-micro)/1 var(--f-mono);letter-spacing:.06em;color:var(--ink-2);
   white-space:nowrap}
 
@@ -247,6 +279,10 @@ select.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-of
 .toast__t{margin:0;font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);
   line-height:1.1;text-transform:uppercase;letter-spacing:.02em}
 .toast__d{margin:0;font:400 var(--t-caption)/1.4 var(--f-body);color:var(--tint)}
+/* a refusal is the strip inverted: ink on paper behind a burgundy rule */
+.toast--bad{background:var(--paper);color:var(--ink);
+  border-left:6px solid var(--seal);box-shadow:inset 0 0 0 var(--edge-panel) var(--ink)}
+.toast--bad .toast__d{color:var(--ink-2)}
 @media(min-width:768px){
   .toasts{left:auto;right:var(--gutter);bottom:var(--gap-stack);max-width:min(380px,40vw)}
   .toast{padding:12px 16px}

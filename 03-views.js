@@ -16,14 +16,14 @@ function stampShape(seed, grow = 0){
 const STAMP_FIT = .62;
 
 const C = {
-  rung(r, total, prev){
-    const open  = total >= r.required;
-    const ready = open && !r.claimed;
-    const state = r.claimed ? 'claimed' : ready ? 'ready' : 'sealed';
+  rung(r, total, prev, next = false){
+    const tier  = Store.tierState(r);
+    const ready = tier === 'unlocked';
+    const state = tier === 'claimed' ? 'claimed' : ready ? 'ready' : next ? 'next' : 'sealed';
     const left  = r.required - total;
     const fill  = Math.max(0, Math.min(1, (total - prev) / (r.required - prev)));
-    const say   = r.claimed ? 'Claimed'
-                : ready     ? 'Ready'
+    const say   = tier === 'claimed' ? 'Claimed'
+                : ready ? 'Ready'
                 : left === 1 ? '1 more' : `${left} more`;
 
     return `<li class="rung rung--${state}" data-reward="${r.id}" style="--fill:${(fill * 100).toFixed(1)}%">
@@ -83,19 +83,21 @@ const C = {
       `<svg class="card__route card__route--p" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <polyline points="16.0,8.6 46.0,13.3 74.0,21.1 81.0,40.6 58.0,50.0 31.0,54.7 11.0,72.7 34.0,81.3 58.0,71.9 83.0,83.6"/></svg>`;
 
+    /* the line breaks only before its last phrase, so the identity
+       column's width decides one or two lines and nothing else */
     const say = full
       ? 'Card full'
-      : p.total === 0 ? 'Your first stamp lands here'
-      : goal ? `${p.remaining} more for ${goal.name}`
-             : `${p.remaining} more to fill this card`;
+      : p.total === 0 ? 'Your first stamp <span class="nb">lands here</span>'
+      : goal ? `${p.remaining} more for <span class="nb">${esc(goal.name)}</span>`
+             : `${p.remaining} more to fill <span class="nb">this card</span>`;
 
     return `<section class="card${full ? ' card--full' : ''}" data-enter>
       <div class="card__face">
         <div class="card__id">
           <span class="card__cardno">Card ${pad(cardNo)}</span>
-          <p class="card__num"><b>${pad(p.filled)}</b><span>/ ${p.span}</span></p>
+          <p class="card__num"><b>${p.filled}</b><span>/ ${p.span}</span></p>
           <span class="card__idrule" aria-hidden="true"></span>
-          <p class="card__goal">${esc(say)}</p>
+          <p class="card__goal">${say}</p>
           <p class="card__docket" id="cardDocket" aria-hidden="true"></p>
           <span class="card__kci" aria-hidden="true">${brandSeal('kci')}</span>
         </div>
@@ -147,7 +149,7 @@ const C = {
                  upcoming:'Scheduled' }[state];
 
     return `<li class="row lrow lrow--${state}">
-      <span class="row__no">${pad(m.no)}</span>
+      <span class="row__no">GM ${pad(m.no)}</span>
       <span class="lrow__stamp">${mark}</span>
       <span class="lrow__date">${m.today ? 'Today' : fmtDate(m.date)}</span>
       <span class="lrow__when meta">${detail}</span>
@@ -163,7 +165,7 @@ C.account = () => `<section class="acct" data-enter>
     <button class="link" type="button" data-motion></button>
   </div>
   <div class="acct__row">
-    <span class="acct__lab">Signed in as ${esc((Store.user && Store.user.username) || memberName())}</span>
+    <span class="acct__lab">${Store.isBoard ? 'Board account' : 'Member account'}</span>
     <button class="btn btn--quiet" data-signout type="button">Sign out</button>
   </div>
 </section>`;
@@ -179,7 +181,7 @@ const Views = {
       <section class="empty" data-enter>
         <h2 class="empty__title">Can't reach the club records</h2>
         <p class="empty__note">Check your connection and try again.</p>
-        <p><button class="btn" data-reload>Try again</button></p>
+        <p><button class="btn" type="button" data-reload data-busy="Retrying…">Try again</button></p>
       </section>
     </div>`;
   },
@@ -191,7 +193,7 @@ const Views = {
     const done = open && Store.attended(open.id);
     const live = Boolean(open && !done);
     const p = Rules.progress();
-    const ready = Store.rewards.find(r => p.total >= r.required && !r.claimed) || null;
+    const ready = Store.rewards.find(r => Store.tierState(r) === 'unlocked') || null;
 
     let action;
     if (live)
@@ -204,10 +206,10 @@ const Views = {
       action = C.strip({ verb:`Claim ${ready.name}`, go:'rewards',
                          meta:`Card ${pad(p.card)} filled` });
     else if (next)
-      action = C.strip({ verb:'Nothing open', go:'scan', quiet:true,
+      action = C.strip({ verb:'Nothing open', go:'record', quiet:true,
                          meta:`Next GM ${pad(next.no)} · ${fmtDate(next.date)}` });
     else
-      action = C.strip({ verb:'Nothing open', go:'scan', quiet:true,
+      action = C.strip({ verb:'Nothing open', go:'record', quiet:true,
                          meta:'No meetings scheduled yet' });
 
     const showing = open ? open.id : next ? next.id : null;
@@ -215,6 +217,8 @@ const Views = {
       .filter(m => m.upcoming && m.id !== showing)
       .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)
       .slice(0, 3);
+    const lastScan = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? 1 : -1)[0] || null;
+    const lastMtg  = lastScan ? Store.meeting(lastScan.meetingId) : null;
 
     return `<div class="view view--home">
       <header class="rechead" data-enter>
@@ -233,6 +237,16 @@ const Views = {
                   <span class="next__day">${fmtDate(m.date)}</span>
                   <span class="next__at meta">${esc(knit(m.time))}</span>
                 </li>`).join('')}
+              </ol>
+            </section>` : ''}
+          ${lastMtg ? `<section class="latest" data-enter>
+              <h2 class="sec">Last stamp</h2>
+              <ol class="rows next__rows">
+                <li class="row next__row">
+                  <span class="row__no">GM ${pad(lastMtg.no)}</span>
+                  <span class="next__day">${fmtDate(lastMtg.date)}</span>
+                  <span class="next__at meta">${esc(fmtTime(lastScan.at))}</span>
+                </li>
               </ol>
             </section>` : ''}
         </div>
@@ -269,7 +283,8 @@ const Views = {
 
       <div class="recbody">
         ${held.length ? `<section class="ledger" data-enter>
-          <h2 class="sec">Held<span class="sec__n">${held.length === 1 ? '1 meeting' : `${held.length} meetings`}</span></h2>
+          <h2 class="sec">Held<span class="sec__n">${held.length === 1 ? '1 meeting' : `${held.length} meetings`}${
+            counted.length ? ` · ${kept} stamped${gone ? ` · ${gone} missed` : ''}` : ''}</span></h2>
           <ol class="rows ledger__rows">
             ${held.map(m => C.ledgerRow(m)).join('')}
           </ol>
@@ -277,12 +292,6 @@ const Views = {
         : C.empty('No general meetings yet', 'Your first stamp lands here.')}
 
         <aside class="recside">
-          ${counted.length ? `<p class="tally fig" data-enter>
-            <span class="fig__n tally__fig">${pad(kept)}</span>
-            <span class="fig__of">stamped of ${pad(counted.length)} held${gone
-              ? ` / ${gone} missed` : ''}</span>
-          </p>` : ''}
-
           ${upcoming.length ? `<section class="ledger ledger--ahead" data-enter>
             <h2 class="sec">Next<span class="sec__n">${upcoming.length === 1 ? '1 meeting' : `${upcoming.length} meetings`}</span></h2>
             <ol class="rows ledger__rows">
@@ -308,23 +317,17 @@ const Views = {
         <h1 class="title rechead__title">Rewards</h1>
       </header>
 
-      <p class="fig climb__fig" data-enter>
-        <span class="fig__n">${pad(total)}</span>
-        <span class="fig__of">${esc(of)}</span>
-      </p>
-
-      <ol class="rungs" data-enter aria-label="${total} stamps against rewards at ${tiers.map(t => t.required).join(', ')}">
-        ${tiers.map((t, i) => C.rung(t, total, i ? tiers[i - 1].required : 0)).join('')}
-      </ol>
+      <div class="climb" data-enter>
+        <p class="climb__sum">${total} ${esc(of)}</p>
+        <ol class="rungs" aria-label="${total} stamps against rewards at ${tiers.map(t => t.required).join(', ')}">
+          ${tiers.map((t, i) => C.rung(t, total, i ? tiers[i - 1].required : 0, t === next)).join('')}
+        </ol>
+      </div>
     </div>`;
   },
 
   scan(){
-    const open = Store.openMeeting();
-    const done = open && Store.attended(open.id);
-    const standing = !open ? 'Nothing open'
-      : done ? `Already stamped · GM ${pad(open.no)}`
-      : `GM ${pad(open.no)} · today · ${open.time}`;
+    const standing = scanStanding();
 
     return `<div class="view view--scan">
       <header class="rechead" data-enter>
@@ -357,6 +360,10 @@ const Views = {
     BoardUI.memberDetail = null;
     BoardUI.meetingDetail = null;
     BoardUI.confirmDelete = null;
+    /* a fresh chapter opens on the loading beat, never on another
+       chapter's data */
+    BoardUI.loading = true;
+    BoardUI.shown = null;
     return `<div class="view view--board">
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">${title}</h1>
@@ -385,14 +392,14 @@ const Views = {
 
       <section class="standing" data-enter>
         <p class="fig standing__fig">
-          <span class="fig__n">${pad(total)}</span>
+          <span class="fig__n">${total}</span>
           <span class="fig__of">${total === 1 ? 'stamp' : 'stamps'} collected</span>
         </p>
         <ul class="standing__rest">
           <li class="standing__row"><span class="standing__lab">This card</span>
-            <span class="standing__val">${pad(p.filled)} of ${pad(p.span)}</span></li>
+            <span class="standing__val">${p.filled} of ${p.span}</span></li>
           <li class="standing__row"><span class="standing__lab">Meetings attended</span>
-            <span class="standing__val">${pad(attended)} of ${pad(held.length)}</span></li>
+            <span class="standing__val">${attended} of ${held.length}</span></li>
           <li class="standing__row"><span class="standing__lab">Attendance</span>
             <span class="standing__val">${Store.attendanceRate()}%</span></li>
           <li class="standing__row"><span class="standing__lab">Rewards unlocked</span>
@@ -410,7 +417,6 @@ const Views = {
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">${esc(name)}</h1>
       </header>
-      <p class="who__line meta" data-enter>Board account</p>
       ${C.account()}
     </div>`;
   },
@@ -460,10 +466,10 @@ const Views = {
           ${up ? passwordField({ id:'authPass2', name:'confirm', label:'Confirm password',
                                  autocomplete:'new-password' }) : ''}
 
-          <p class="err authp__err" id="authErr" role="alert" aria-live="assertive" hidden></p>
+          <p class="err authp__err" id="authErr" role="alert" aria-live="assertive"></p>
 
           <div class="authp__act">
-            <button class="btn authp__go" type="submit" id="authGo">
+            <button class="btn authp__go" type="submit" id="authGo" data-busy="${up ? 'Creating…' : 'Signing in…'}">
               ${up ? 'Create account' : 'Sign in'}
             </button>
             <button class="link authp__swap" type="button" id="authSwap">
