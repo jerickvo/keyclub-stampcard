@@ -684,7 +684,9 @@ document.addEventListener('click', e => {
   try { s.focus({ preventScroll:true }); } catch (_) {}
 });
 
-addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); });
+/* an unknown hash resolves to the page already showing; the address is
+   corrected so it never names a page that does not exist */
+addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); else syncHash(current); });
 
 addEventListener('pagehide', () => {
   Scanner.stop(); clearInterval(countTimer);

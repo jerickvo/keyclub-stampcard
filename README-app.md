@@ -102,7 +102,8 @@ palette), with a small burgundy square notching the hairline; its word has
 been promoted into the page title, where it sits beside a hollow chapter
 numeral. On phones the line is the foot of the page: paper, one hairline,
 flush left. From 768px it is the sticky head, with the signed-in name (a
-button to the fifth screen), the role and the wordmark at the right.
+button to the fifth screen, cut with an ellipsis past the length a username
+can have), the role and the wordmark at the right.
 `paintNav()` in `06-app.js` draws it and `measureFolio()` writes its height
 into `--folio-h` so the page and the scanner can make room. No rail, no tab
 bar, no icons.

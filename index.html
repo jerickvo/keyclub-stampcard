@@ -155,8 +155,10 @@ main#view:focus,main#view:focus-visible{outline:none}
 :where(svg:not(.fxdefs):not([width])){width:22px;height:22px;flex:none}
 
 /* ── shell ───────────────────────────────────────────────────────── */
+/* one column that can never grow past the viewport, whatever the
+   running head's own width wants */
 .shell{position:relative;z-index:1;display:grid;
-  grid-template-rows:auto minmax(0,1fr);min-height:100%}
+  grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);min-height:100%}
 main#view{--view-top:var(--gap-stack);
   width:100%;max-width:var(--page-max);margin-inline:auto;
   padding:calc(var(--view-top) + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x))
@@ -209,11 +211,13 @@ main#view{--view-top:var(--gap-stack);
   .folio__here::before{top:auto;bottom:-11px}
   .folio__side{display:flex;align-items:baseline;gap:clamp(14px,1.6vw,26px);
     white-space:nowrap;min-width:0}
-  .folio__who{display:inline-flex;align-items:baseline;gap:8px;
+  .folio__who{display:inline-flex;align-items:baseline;gap:8px;min-width:0;
     font:400 var(--t-micro)/1 var(--f-mono);letter-spacing:.06em;color:var(--ink-2)}
+  /* a long name is cut with an ellipsis, as the chapter labels are */
   .folio__name{background:none;border:0;padding:10px 0 8px;min-height:38px;
     cursor:pointer;font:inherit;color:var(--ink);letter-spacing:.06em;
-    text-transform:uppercase}
+    text-transform:uppercase;max-width:28ch;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .folio__name:hover,.folio__name:focus-visible{text-decoration:underline;
     text-decoration-thickness:2px;text-underline-offset:3px}
   .folio__wm{font-family:var(--f-display);font-size:19px;line-height:1;
@@ -311,7 +315,10 @@ main#view{--view-top:var(--gap-stack);
   appearance:none;-webkit-appearance:none;color-scheme:light;accent-color:var(--ink)}
 .input::placeholder{color:var(--ink-2);opacity:1}
 .input:focus{outline:0;border-bottom-width:var(--edge-frame);padding-bottom:7px}
-.input:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:4px}
+/* :focus-within, not :focus-visible: a field is always keyboard-editable,
+   and the date and time fields hand focus to their own parts (month, day,
+   year, the picker) while the cursor moves through them */
+.input:focus-within{outline:var(--edge-panel) solid var(--ink);outline-offset:4px}
 select.input{padding-right:22px;cursor:pointer;
   background-image:linear-gradient(45deg,transparent 50%,var(--ink) 50%),
                    linear-gradient(135deg,var(--ink) 50%,transparent 50%);
@@ -16876,7 +16883,9 @@ document.addEventListener('click', e => {
   try { s.focus({ preventScroll:true }); } catch (_) {}
 });
 
-addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); });
+/* an unknown hash resolves to the page already showing; the address is
+   corrected so it never names a page that does not exist */
+addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); else syncHash(current); });
 
 addEventListener('pagehide', () => {
   Scanner.stop(); clearInterval(countTimer);
