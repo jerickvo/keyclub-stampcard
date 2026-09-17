@@ -147,6 +147,23 @@ expose no zoom capability get no control and no errors; a track that rejects
 the constraint drops the control quietly. The decoder samples the feed at
 480px wide so a small code at the back of the room still resolves.
 
+Reading a frame is the most expensive thing the app does on a phone: on a
+mid-range handset one read costs tens of milliseconds, and it is spent on
+the main thread, where it competes with whatever is animating. Two rules in
+`Scanner.loop` keep it out of the way. A read never starts while the page is
+moving -- the cut into or out of Scan (`Transit.running`), a scene
+(`Scenes.busy`), or the stamp landing (`Landing.active`) -- because those
+last a few hundred milliseconds and a code on a wall is not going anywhere.
+Between reads the loop rests for as long as the last read took, so the
+decoder can never take much more than half the main thread and it tunes
+itself to the device: a quick phone reads often, a slow one reads less often
+rather than dropping every frame trying. The camera itself is opened once
+the cut has finished (`Scanner.armStart`), never under it. Together these
+took the Scan page from 22 to 41 frames a second on a throttled phone, and
+the cut into Scan from 29 to 43, at the cost of reading about six times a
+second instead of ten -- a difference of about 30ms in how quickly a code is
+noticed.
+
 The line printed under the viewer names the meeting a scan would stamp
 (`scanStanding` in `05-scan.js`); it is re-read whenever the record changes,
 so check-in opening or closing while the camera is up shows there without a

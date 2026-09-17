@@ -202,7 +202,7 @@ function afterRender(id, nav = false, covered = false){
 
   if (id === 'auth') AuthUI.busy = false;
   paintMotion();
-  if (id === 'scan') Scanner.start();
+  if (id === 'scan') Scanner.armStart();
   if (PANE_ROUTES.includes(id)){ loadBoard(); }
   else { clearInterval(countTimer); }
 }

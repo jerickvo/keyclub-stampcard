@@ -17234,6 +17234,20 @@ const Scenes = {
 };
 
 const Transit = {
+  running: false,
+
+  /* Work that would be seen as a stutter waits for the cut to finish.
+     Under the slab there is nothing to see anyway, and the deadline means
+     a cut that never reports done cannot strand the work. */
+  after(fn, wait = 1200){
+    const deadline = performance.now() + wait;
+    const tick = () => {
+      if (this.running && performance.now() < deadline) return setTimeout(tick, 50);
+      fn();
+    };
+    return setTimeout(tick, 0);
+  },
+
   ORDER: { home:0, record:1, scan:2, rewards:3, profile:4,
            board:0, bmeet:1, bcheckin:2, bmembers:3 },
 
@@ -17361,11 +17375,12 @@ const Transit = {
 
     const f = this.frame(view);
     const box = this.ghost(view, f);
+    this.running = true;
 
     if (Motion.reduced){
       return new Promise(res => {
         let done = false;
-        const finish = () => { if (done) return; done = true; try { box.remove(); } catch (_) {} Motion.settle(view); res(); };
+        const finish = () => { if (done) return; done = true; Transit.running = false; try { box.remove(); } catch (_) {} Motion.settle(view); res(); };
         try { doSwap(); } catch (_) {}
         animate(box, { opacity:[1, 0], duration:140, ease:'linear', onComplete:finish });
         setTimeout(finish, 420);
@@ -17384,6 +17399,7 @@ const Transit = {
       let settled = false;
       const finish = () => {
         if (settled) return; settled = true;
+        Transit.running = false;
         try { cut.box.remove(); } catch (_) {}
         try { box.remove(); } catch (_) {}
         Motion.settle(view);
@@ -17499,7 +17515,7 @@ function paintScanStanding(){
 }
 
 const Scanner = {
-  stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0, zoom:null, run:0,
+  stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0, zoom:null, run:0, armTimer:null,
 
   setState(state, msg){
     const ret = $('#reticle'), el = $('#scanMsg'), line = $('#scanLine'), viewer = $('#viewer');
@@ -17523,6 +17539,14 @@ const Scanner = {
       viewer.classList.remove('viewer--bad');
       if (state === 'bad'){ void viewer.offsetWidth; viewer.classList.add('viewer--bad'); }
     }
+  },
+
+  /* The camera is opened after the page cut has finished, never under it:
+     getUserMedia and the first frames are heavy enough to be seen as a
+     stutter, and the viewer already says it is starting. */
+  armStart(){
+    clearTimeout(this.armTimer);
+    this.armTimer = Transit.after(() => { this.armTimer = null; this.start(); });
   },
 
   async start(){
@@ -17639,18 +17663,44 @@ const Scanner = {
   },
   hideLoader(){ $('#camLoader')?.remove(); $('#reticle')?.classList.remove('reticle--wait'); },
 
+  /* Reading a frame costs real time on a phone -- tens of milliseconds --
+     and it is spent on the main thread, where it competes with whatever is
+     animating. Two rules keep it out of the way.
+
+     A read never starts while the page is moving: a cut into or out of
+     Scan, a scene, or the stamp landing. Those last a few hundred
+     milliseconds and a code on a wall is not going anywhere.
+
+     Between reads the loop rests for as long as the last read took. So the
+     decoder can never take more than about half the main thread, and it
+     tunes itself: a quick phone reads often, a slow one reads less often
+     rather than dropping every frame trying. */
+  paused(){
+    return (typeof Scenes !== 'undefined' && Scenes.busy)
+        || (typeof Landing !== 'undefined' && Landing.active)
+        || (typeof Transit !== 'undefined' && Transit.running)
+        || (typeof current !== 'undefined' && current !== 'scan');
+  },
+
   loop(video, run){
+    const REST = 1;        /* rest for 1x the time the last read took */
+    const FLOOR = 40;      /* never read more than ~25 times a second */
+    let next = 0;
     const step = () => {
       if (run !== this.run) return;
       this.raf = requestAnimationFrame(step);
       if (this.locked || video.readyState !== 4 || !window.jsQR) return;
-      if ((this.frame++ % 3) !== 0) return;
+      const now = performance.now();
+      if (now < next) return;
+      if (this.paused()){ next = now + 90; return; }
+      this.frame++;
       const w = 480, h = Math.round(video.videoHeight / video.videoWidth * w) || 480;
       this.cv.width = w; this.cv.height = h;
       this.ctx.drawImage(video, 0, 0, w, h);
       let img;
-      try { img = this.ctx.getImageData(0, 0, w, h); } catch (_) { return; }
+      try { img = this.ctx.getImageData(0, 0, w, h); } catch (_) { next = now + FLOOR; return; }
       const hit = jsQR(img.data, w, h, { inversionAttempts:'dontInvert' });
+      next = performance.now() + Math.max(FLOOR, (performance.now() - now) * REST);
       if (hit && hit.data){
         this.locked = true;
         this.setState('hit', 'Locked');
@@ -17697,6 +17747,7 @@ const Scanner = {
 
   stop(){
     this.run++;
+    clearTimeout(this.armTimer); this.armTimer = null;
     cancelAnimationFrame(this.raf); this.raf = null;
     if (this.zoom) this.zoom.drop();
     this.stream?.getTracks().forEach(t => t.stop());
@@ -18049,7 +18100,7 @@ function afterRender(id, nav = false, covered = false){
 
   if (id === 'auth') AuthUI.busy = false;
   paintMotion();
-  if (id === 'scan') Scanner.start();
+  if (id === 'scan') Scanner.armStart();
   if (PANE_ROUTES.includes(id)){ loadBoard(); }
   else { clearInterval(countTimer); }
 }

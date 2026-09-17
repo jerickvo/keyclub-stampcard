@@ -187,6 +187,20 @@ const Scenes = {
 };
 
 const Transit = {
+  running: false,
+
+  /* Work that would be seen as a stutter waits for the cut to finish.
+     Under the slab there is nothing to see anyway, and the deadline means
+     a cut that never reports done cannot strand the work. */
+  after(fn, wait = 1200){
+    const deadline = performance.now() + wait;
+    const tick = () => {
+      if (this.running && performance.now() < deadline) return setTimeout(tick, 50);
+      fn();
+    };
+    return setTimeout(tick, 0);
+  },
+
   ORDER: { home:0, record:1, scan:2, rewards:3, profile:4,
            board:0, bmeet:1, bcheckin:2, bmembers:3 },
 
@@ -314,11 +328,12 @@ const Transit = {
 
     const f = this.frame(view);
     const box = this.ghost(view, f);
+    this.running = true;
 
     if (Motion.reduced){
       return new Promise(res => {
         let done = false;
-        const finish = () => { if (done) return; done = true; try { box.remove(); } catch (_) {} Motion.settle(view); res(); };
+        const finish = () => { if (done) return; done = true; Transit.running = false; try { box.remove(); } catch (_) {} Motion.settle(view); res(); };
         try { doSwap(); } catch (_) {}
         animate(box, { opacity:[1, 0], duration:140, ease:'linear', onComplete:finish });
         setTimeout(finish, 420);
@@ -337,6 +352,7 @@ const Transit = {
       let settled = false;
       const finish = () => {
         if (settled) return; settled = true;
+        Transit.running = false;
         try { cut.box.remove(); } catch (_) {}
         try { box.remove(); } catch (_) {}
         Motion.settle(view);
