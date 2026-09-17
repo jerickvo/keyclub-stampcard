@@ -1,11 +1,16 @@
 "use strict";
 
 const CLUB_TZ = 'America/Los_Angeles';
+/* Building the formatter costs about as much as reading twenty meetings
+   does, and toMeeting() asks for the club's date once per row, so the
+   one formatter is kept and only the reading is repeated. */
+let clubFmt = null;
 const clubDay = (d = new Date()) => {
   try {
-    return new Intl.DateTimeFormat('en-CA', {
+    if (!clubFmt) clubFmt = new Intl.DateTimeFormat('en-CA', {
       timeZone: CLUB_TZ, year:'numeric', month:'2-digit', day:'2-digit',
-    }).format(d);
+    });
+    return clubFmt.format(d);
   } catch (_) {
     const p = n => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;

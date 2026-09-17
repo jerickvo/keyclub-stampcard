@@ -327,10 +327,12 @@ const Transit = {
     if (!window.animate || !view){ doSwap(); return Promise.resolve(); }
 
     const f = this.frame(view);
-    const box = this.ghost(view, f);
     this.running = true;
 
     if (Motion.reduced){
+      /* no cut to hide the change, so the old page is held as a copy and
+         faded over the new one */
+      const box = this.ghost(view, f);
       return new Promise(res => {
         let done = false;
         const finish = () => { if (done) return; done = true; Transit.running = false; try { box.remove(); } catch (_) {} Motion.settle(view); res(); };
@@ -354,7 +356,6 @@ const Transit = {
         if (settled) return; settled = true;
         Transit.running = false;
         try { cut.box.remove(); } catch (_) {}
-        try { box.remove(); } catch (_) {}
         Motion.settle(view);
         res();
       };
@@ -365,12 +366,13 @@ const Transit = {
       }
       aset(cut.el, { [cut.axis]:cut.enter });
       animate(cut.el, { [cut.axis]:[cut.enter, 0], duration:c.in, delay:cut.under ? LAG : 0, ease:IN });
-      if (par) animate(box, { translateX:[0, -par], duration:c.in, ease:'outQuad' });
+      /* the slab covers the page before it is repainted, so the page
+         itself carries the parallax; a copy of it would only be paid for */
+      if (par) animate(view, { translateX:[0, -par], duration:c.in, ease:'outQuad' });
 
       const covered = c.in + (cut.under ? LAG : 0);
       setTimeout(() => {
         try { doSwap(); } catch (_) {}
-        try { box.remove(); } catch (_) {}
         aset(view, { translateX:par * .6 });
         const w = this.word(view, f, cut);
         if (w){

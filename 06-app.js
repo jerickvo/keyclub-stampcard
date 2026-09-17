@@ -156,7 +156,9 @@ async function go(id, opts = {}){
     paintNav();
     try { scrollTo(0, 0); } catch (_) {}
     afterRender(id, nav, Boolean(opts.covered));
-    view.focus({ preventScroll:true });
+    /* focus follows a page turn; the first paint has nowhere to move it
+       from, and asking costs a whole layout of a page nobody has seen */
+    if (booted) view.focus({ preventScroll:true });
   };
 
   const same = from === id && !opts.force;

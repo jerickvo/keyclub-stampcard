@@ -141,13 +141,19 @@ def main():
     html = re.sub(r'<link rel="stylesheet" href="([^"]+)"\s*/?>', css_sub, html)
 
     # ── scripts, in source order ────────────────────────────────────
+    # data-file names which source each block came from. The scanner uses
+    # it to read the vendored decoder's own text back out of the DOM and
+    # hand it to its Blob worker — the one way to get a worker its code
+    # here, since there is no second file to fetch. Deliberately not
+    # `data-src`: the "remaining same-origin requests" check below looks
+    # for src=", and would count these as unresolved fetches.
     def js_sub(m):
         src = m.group(1)
         if src.startswith("http"):
             return m.group(0)          # CDN stays a CDN
         inlined.append(src)
         body = read(src).replace("</script>", "<\\/script>")
-        return f"<script>\n/* ── {src} ── */\n{body}\n</script>"
+        return f'<script data-file="{src}">\n/* ── {src} ── */\n{body}\n</script>'
 
     html = re.sub(r'<script src="([^"]+)"></script>', js_sub, html)
 
