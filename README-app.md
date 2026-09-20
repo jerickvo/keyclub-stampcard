@@ -147,17 +147,46 @@ expose no zoom capability get no control and no errors; a track that rejects
 the constraint drops the control quietly. The decoder samples the feed at
 480px wide so a small code at the back of the room still resolves.
 
-The line printed under the viewer names the meeting a scan would stamp
-(`scanStanding` in `05-scan.js`); it is re-read whenever the record changes,
-so check-in opening or closing while the camera is up shows there without a
-reload and without restarting the camera. When the camera cannot start —
-permission off, no device, an insecure page — or its track ends mid-scan
-(permission revoked, the device taken by another app), the viewer turns into
-a short paper panel that prints the reason with a **Try again** link that
-asks for the camera afresh, and the meeting line stays under it; nothing
-tells the member to reload. If the member leaves Scan while the store re-reads a verified
-scan, the page they chose is left alone; the stamp is in the record either
-way.
+Reading a frame is the most expensive thing the app does on a phone. Done
+on the main thread it costs tens of milliseconds and it is spent where the
+animations live, which is what used to make Scan stutter: the page ran at
+about 22 frames a second with the camera up, and suspending the decoder
+alone took the same page to a flat 60.
+
+So the decode does not run there. `Decoder` in `05-scan.js` builds a Web
+Worker and hands it each frame. A worker normally wants its own URL, which
+the single-file build has nothing to serve, so this one is built from a
+Blob URL -- still nothing fetched, and a Blob worker constructs from
+`file://` too, where it simply inherits the page's opaque origin, so a copy
+opened off a zip mount keeps its fast decode. The worker gets the decoder
+by reading the text of the `<script>` the build inlined jsQR into, which is
+why `build.py` tags each inlined block with `data-file`. Frames are
+*transferred*, not copied: a `VideoFrame` where WebCodecs exists (a handle
+on the frame the video already holds, costing nothing to make), otherwise
+an `ImageBitmap`. Only one frame is in flight at a time, so a slow phone
+decodes less often instead of stacking frames up.
+
+Every piece of that is checked before it is used, and anything missing or
+misbehaving latches `Decoder.off` for good and falls back to the inline
+decode the page always did -- a browser without `Worker`, without either
+handoff, or the multi-file dev layout where that `<script>` has a src and
+no text to read. Two rules keep that fallback out of the way, and they are
+worth understanding because they are what the slow path relies on: a read
+never starts while the page is moving (`Transit.running`, `Scenes.busy`,
+`Landing.active`), and between reads the loop rests for as long as the last
+read took, so the decoder cannot take much more than half the main thread
+and tunes itself to the device. The camera itself is opened once the page
+cut has finished (`Scanner.armStart`), never under it, and leaving Scan
+before it opens cancels the opening rather than turning the camera on
+behind the reader.
+
+Measured at 6x CPU throttle and a phone's pixel ratio, against a real code
+through the camera: the Scan page goes from 22 to 60 frames a second with
+no long tasks at all, the cut into Scan from 29 to 59, and the stamp
+landing from 27 to 59. A code is read *faster* than before, not slower --
+about 64ms against 111ms -- because the main thread is now free to come
+round to the next frame. The fallback paths still read a real code in
+88-111ms.
 
 **The server is the only authority.** The scanned payload goes to the
 `verify-attendance` Edge Function, which decides whether a stamp is awarded;

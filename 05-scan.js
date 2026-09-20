@@ -69,8 +69,132 @@ function paintScanStanding(){
   if (at) at.innerHTML = s.at;
 }
 
+/* The decode is the one thing on this page heavy enough to drop frames:
+   drawImage + getImageData + jsQR ran on the main thread every third
+   frame and took about three quarters of it. It runs in a worker now.
+
+   A worker normally wants its own URL, which the single-file build has
+   nothing to serve. This one is built from a Blob URL instead, so there
+   is still nothing to fetch — and a Blob worker does construct from
+   file://, where the blob simply inherits the page's opaque origin, so
+   a page opened off a zip mount keeps its fast decode too. The worker
+   gets the decoder by reading the text of the <script> the build
+   inlined it into, and each frame is handed over rather than copied
+   (see `send`), so the pixels never cross the wire.
+
+   Every piece of that is checked before it is used, and a worker that
+   throws or goes quiet is dropped for good: `loop` below then does the
+   old inline decode, which is what the page always did. */
+const DECODE_WORKER = `
+var cv = null, cx = null;
+self.onmessage = function(e){
+  var m = e.data, img;
+  try {
+    if (!cv || cv.width !== m.w || cv.height !== m.h){
+      cv = new OffscreenCanvas(m.w, m.h);
+      cx = cv.getContext('2d', { willReadFrequently:true });
+    }
+    cx.drawImage(m.frame, 0, 0, m.w, m.h);
+    m.frame.close();
+    img = cx.getImageData(0, 0, m.w, m.h);
+  } catch (_){ try { m.frame.close(); } catch (__){} self.postMessage({ fail:1 }); return; }
+  var hit = null;
+  try { hit = jsQR(img.data, m.w, m.h, { inversionAttempts:'dontInvert' }); }
+  catch (_){}
+  self.postMessage({ text: hit && hit.data ? hit.data : null });
+};
+`;
+
+const Decoder = {
+  worker:null, url:null, off:false, sent:null, handoff:null,
+
+  /* The decoder's source, read back from the inlined <script>. In the
+     multi-file dev layout that script has a src and no text of its own,
+     so there is nothing to give a worker and the inline path is used. */
+  source(){
+    const el = document.querySelector('script[data-file$="jsQR.js"]');
+    const text = el && !el.src ? el.textContent : '';
+    return text && text.length > 1000 ? text : null;
+  },
+
+  /* Built while the camera is still opening, so the first frame does
+     not wait on a cold worker. It outlives Scanner.stop(): coming back
+     to Scan is common, and a second build is pure delay. */
+  start(){
+    if (this.worker || this.off) return;
+    const able = typeof Worker === 'function' &&
+      (typeof VideoFrame === 'function' || typeof createImageBitmap === 'function');
+    const lib = able ? this.source() : null;
+    if (!lib) return void (this.off = true);
+    this.handoff = typeof VideoFrame === 'function' ? 'frame' : 'bitmap';
+    try {
+      this.url = URL.createObjectURL(new Blob([lib, DECODE_WORKER], { type:'text/javascript' }));
+      this.worker = new Worker(this.url);
+    } catch (_) { return this.drop(); }
+    this.worker.onerror = () => this.drop();
+    this.worker.onmessage = e => {
+      const msg = e.data || {}, sent = this.sent;
+      this.sent = null;
+      if (msg.fail) return this.drop();
+      if (!sent || sent.run !== Scanner.run) return;
+      if (msg.text) Scanner.hit(msg.text, sent.run);
+    };
+  },
+
+  /* One frame in flight at a time. A phone that cannot keep up should
+     decode less often, not stack frames up behind the worker. */
+  ready(){
+    if (!this.worker) this.start();
+    if (!this.worker) return false;
+    if (!this.sent) return true;
+    if (performance.now() - this.sent.at < 2500) return false;
+    this.drop();                       // answered nothing: it is not coming
+    return false;
+  },
+
+  /* Getting the frame out of the <video> is the only main-thread work
+     left, and the two ways of doing it are not close. A VideoFrame is a
+     handle on the frame the video already holds and costs nothing;
+     createImageBitmap has to copy and rescale the frame here first,
+     about 25ms on a throttled phone — still far better than the 35ms
+     drawImage alone used to cost, so it stays as the second choice.
+     Either one is transferred, so no pixels are copied to the worker. */
+  send(video, w, h, run){
+    this.sent = { run, at:performance.now() };
+    if (this.handoff === 'frame'){
+      let frame = null;
+      try { frame = new VideoFrame(video); }
+      /* Some browsers have the class but will not make a frame out of a
+         <video>; one refusal settles it on the copy for good, because a
+         handoff that always throws would scan nothing and say nothing. */
+      catch (_) { this.handoff = typeof createImageBitmap === 'function' ? 'bitmap' : null; }
+      if (frame) return this.hand(frame, w, h, run);
+      if (!this.handoff){ this.sent = null; return this.drop(); }
+    }
+    createImageBitmap(video, { resizeWidth:w, resizeHeight:h, resizeQuality:'low' })
+      .then(frame => this.hand(frame, w, h, run))
+      /* A frame that failed because the camera was stopped out from
+         under it is a race, not a broken worker; only a run that is
+         still live condemns it. */
+      .catch(() => { if (run === Scanner.run) this.drop(); else this.sent = null; });
+  },
+
+  hand(frame, w, h, run){
+    if (!this.worker || run !== Scanner.run){ frame.close(); this.sent = null; return; }
+    try { this.worker.postMessage({ frame, w, h }, [frame]); }
+    catch (_) { try { frame.close(); } catch (__) {} this.drop(); }
+  },
+
+  drop(){
+    this.off = true;
+    if (this.worker){ this.worker.terminate(); this.worker = null; }
+    if (this.url){ URL.revokeObjectURL(this.url); this.url = null; }
+    this.sent = null;
+  },
+};
+
 const Scanner = {
-  stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0, zoom:null, run:0,
+  stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0, zoom:null, run:0, armTimer:null,
 
   setState(state, msg){
     const ret = $('#reticle'), el = $('#scanMsg'), line = $('#scanLine'), viewer = $('#viewer');
@@ -96,6 +220,14 @@ const Scanner = {
     }
   },
 
+  /* The camera is opened after the page cut has finished, never under it:
+     getUserMedia and the first frames are heavy enough to be seen as a
+     stutter, and the viewer already says it is starting. */
+  armStart(){
+    clearTimeout(this.armTimer);
+    this.armTimer = Transit.after(() => { this.armTimer = null; this.start(); });
+  },
+
   async start(){
     const video = $('#cam');
     if (!video) return;
@@ -108,6 +240,8 @@ const Scanner = {
     this.showLoader();
 
     if (!navigator.mediaDevices?.getUserMedia) return this.stall('unsupported');
+
+    Decoder.start();
 
     let stream;
     try {
@@ -210,26 +344,69 @@ const Scanner = {
   },
   hideLoader(){ $('#camLoader')?.remove(); $('#reticle')?.classList.remove('reticle--wait'); },
 
+  /* Reading a frame costs real time on a phone -- tens of milliseconds --
+     and it is spent on the main thread, where it competes with whatever is
+     animating. Two rules keep it out of the way.
+
+     A read never starts while the page is moving: a cut into or out of
+     Scan, a scene, or the stamp landing. Those last a few hundred
+     milliseconds and a code on a wall is not going anywhere.
+
+     Between reads the loop rests for as long as the last read took. So the
+     decoder can never take more than about half the main thread, and it
+     tunes itself: a quick phone reads often, a slow one reads less often
+     rather than dropping every frame trying. */
+  paused(){
+    return (typeof Scenes !== 'undefined' && Scenes.busy)
+        || (typeof Landing !== 'undefined' && Landing.active)
+        || (typeof Transit !== 'undefined' && Transit.running)
+        || (typeof current !== 'undefined' && current !== 'scan');
+  },
+
   loop(video, run){
+    const REST = 1;        /* the inline fallback rests 1x its last read */
+    const FLOOR = 40;
+    let next = 0;
+    /* What the page always did, kept for a browser the worker cannot
+       serve. There the read is expensive, so it is the one that rests. */
+    const inline = (w, h) => {
+      const at = performance.now();
+      this.cv.width = w; this.cv.height = h;
+      this.ctx.drawImage(video, 0, 0, w, h);
+      let img;
+      try { img = this.ctx.getImageData(0, 0, w, h); }
+      catch (_) { next = performance.now() + FLOOR; return; }
+      const found = jsQR(img.data, w, h, { inversionAttempts:'dontInvert' });
+      next = performance.now() + Math.max(FLOOR, (performance.now() - at) * REST);
+      if (found && found.data) this.hit(found.data, run);
+    };
     const step = () => {
       if (run !== this.run) return;
       this.raf = requestAnimationFrame(step);
       if (this.locked || video.readyState !== 4 || !window.jsQR) return;
-      if ((this.frame++ % 3) !== 0) return;
+      if (this.paused()) return;
       const w = 480, h = Math.round(video.videoHeight / video.videoWidth * w) || 480;
-      this.cv.width = w; this.cv.height = h;
-      this.ctx.drawImage(video, 0, 0, w, h);
-      let img;
-      try { img = this.ctx.getImageData(0, 0, w, h); } catch (_) { return; }
-      const hit = jsQR(img.data, w, h, { inversionAttempts:'dontInvert' });
-      if (hit && hit.data){
-        this.locked = true;
-        this.setState('hit', 'Locked');
-        FX.scanLock();
-        setTimeout(() => submitSeal(hit.data, true, run), 190);
+      if (Decoder.ready()){
+        if ((this.frame++ % 3) !== 0) return;
+        Decoder.send(video, w, h, run);
+        return;
       }
+      if (!Decoder.off) return;                   /* a frame is still with the worker */
+      if (performance.now() < next) return;
+      this.frame++;
+      inline(w, h);
     };
     step();
+  },
+
+  /* A code was read -- off the worker or off the inline path, and on a
+     camera run that is still the current one. */
+  hit(text, run){
+    if (run !== this.run || this.locked) return;
+    this.locked = true;
+    this.setState('hit', 'Locked');
+    FX.scanLock();
+    setTimeout(() => submitSeal(text, true, run), 190);
   },
 
   stall(kind){
@@ -268,6 +445,7 @@ const Scanner = {
 
   stop(){
     this.run++;
+    clearTimeout(this.armTimer); this.armTimer = null;
     cancelAnimationFrame(this.raf); this.raf = null;
     if (this.zoom) this.zoom.drop();
     this.stream?.getTracks().forEach(t => t.stop());

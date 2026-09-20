@@ -17,6 +17,9 @@ const Motion = {
 
   settle(el){
     if (!el || !el.style) return;
+    /* nothing written, nothing to take back: reading the two styles is
+       cheaper than building the reset, and a first paint does it a lot */
+    if (!el.style.transform && !el.style.opacity) return;
     try { aset(el, { translateX:0, translateY:0, skewX:0, skewY:0, rotate:0, scale:1, opacity:1 }); }
     catch (_) {}
     el.style.transform = '';
