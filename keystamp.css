@@ -72,14 +72,6 @@ body{
 .rail__link svg{width:17px;height:17px;stroke-width:1.9}
 .rail__foot{padding-top:var(--sp-pad);border-top:var(--rule-hair) solid var(--ink)}
 
-.motion-btn{display:inline-grid;grid-auto-flow:column;padding:0;
-  background:var(--paper);border:var(--rule-hair) solid var(--ink);
-  color:var(--ink);cursor:pointer;font:500 11px/1 var(--f-mono);
-  letter-spacing:.14em;text-transform:uppercase}
-.motion-btn__opt{display:flex;align-items:center;padding:0 11px;color:var(--ink-2)}
-.motion-btn[aria-pressed="true"] .motion-btn__opt:first-child,
-.motion-btn[aria-pressed="false"] .motion-btn__opt:last-child{
-  background:var(--ink);color:var(--paper)}
 
 main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   --safe-x:max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
@@ -384,12 +376,13 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
   color:var(--ink-2)}
 .rail__util{display:flex;align-items:center;justify-content:space-between;
   flex-wrap:wrap;gap:2px var(--sp-row);margin-top:var(--sp-tight)}
-.rail__motion{display:inline-flex;align-items:center;gap:7px;min-height:44px;
+/* one toggle, named for what it does; the square is filled while on */
+.rail__motion{display:inline-flex;align-items:center;gap:8px;min-height:44px;
   padding:0;background:none;border:0;cursor:pointer;white-space:nowrap;
-  font:500 10px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;
-  color:var(--ink-2)}
-.rail__motion i{width:8px;height:8px;border:1.5px solid var(--ink);background:var(--ink)}
-.rail__motion[aria-pressed="true"] i{background:transparent}
+  font:400 11.5px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink)}
+.rail__motion i{width:10px;height:10px;border:1.5px solid var(--ink);background:transparent}
+.rail__motion[aria-pressed="true"] i{background:var(--ink)}
 @media (hover:hover){.rail__motion:hover{color:var(--ink)}}
 .rail__out{min-height:44px;padding:8px 12px;cursor:pointer;white-space:nowrap;
   border:var(--rule-hair) solid var(--tone);background:none;color:var(--ink-2);
@@ -431,13 +424,12 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
   min-height:32px;padding-block:6px}
 @media(pointer:coarse){
   .link{min-height:44px;padding-block:11px}
-  .motion-btn{min-height:40px}
 }
 
 :where(svg:not(.fxdefs):not([width])){width:22px;height:22px;flex:none}
 
 .qrpanel__code svg{width:100%;height:100%}
-.btn svg,.motion-btn svg{width:16px;height:16px}
+.btn svg{width:16px;height:16px}
 .rail__link svg,.tabs button svg{width:18px;height:18px}
 
 .kicker{display:inline-block}

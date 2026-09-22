@@ -32,8 +32,7 @@ const C = {
     const got   = Math.max(0, Math.min(span, total - prev));
     const left  = r.required - total;
     const far   = state === 'sealed' && total < prev;
-    const say   = ready ? 'Ready to claim'
-                : state === 'sealed' ? `${left} more ${left === 1 ? 'stamp' : 'stamps'}` : '';
+    const say   = state === 'sealed' && !far ? `${left} more ${left === 1 ? 'stamp' : 'stamps'}` : '';
     const ticks = Array.from({ length:span }, (_, i) =>
       `<i class="${i < got ? 'is-on' : ''}"></i>`).join('');
 
@@ -43,7 +42,7 @@ const C = {
         <span class="tier__name">${esc(r.name)}</span>
         <span class="tier__desc">${esc(r.desc || '')}</span>
       </span>
-      ${state === 'sealed' && !far ? `<span class="tier__ticks" role="img" aria-label="${got} of ${span} stamps toward ${esc(r.name)}">${ticks}</span>` : ''}
+      ${state === 'sealed' && !far ? `<span class="tier__ticks" aria-hidden="true">${ticks}</span>` : ''}
       ${at === 'claimed' ? `<span class="tier__punch">Claimed</span>` : ''}
       ${ready
         ? `<button class="tier__claim" type="button" data-claim="${r.id}">Claim</button>`
@@ -97,11 +96,8 @@ const C = {
         <polyline points="16.0,8.6 46.0,13.3 74.0,21.1 81.0,40.6 58.0,50.0 31.0,54.7 11.0,72.7 34.0,81.3 58.0,71.9 83.0,83.6"/></svg>`;
 
     const say = full
-      ? (goal && !goal.claimed ? `${goal.name} ready to claim`
-        : goal ? `${goal.name} claimed` : 'Card complete')
-      : p.total === 0 ? 'No stamps yet'
-      : goal ? `${p.remaining} more until ${goal.name.toLowerCase()}`
-             : `${p.remaining} more to finish this card`;
+      ? (goal && !goal.claimed ? `${goal.name} ready to claim` : goal ? `${goal.name} claimed` : '')
+      : goal ? `${pad(p.remaining)} to ${goal.name}` : `${pad(p.remaining)} to a full card`;
 
     return `<section class="card${full ? ' card--full' : ''}">
       <div class="card__face">
@@ -111,7 +107,7 @@ const C = {
           <span class="card__idrule" aria-hidden="true"></span>
           ${full && goal && !goal.claimed
             ? `<button class="card__goal card__goal--go link" type="button" data-go="rewards">${esc(say)}</button>`
-            : `<p class="card__goal">${esc(say)}</p>`}
+            : say ? `<p class="card__goal">${esc(say)}</p>` : ''}
           <span class="card__kci" aria-hidden="true">${brandSeal('kci')}</span>
         </div>
         <div class="card__field">
@@ -166,15 +162,15 @@ const C = {
     const away = m.place && m.place !== Schedule.PLACE ? ` / ${esc(m.place)}` : '';
     const detail = {
       set:  (scan ? fmtTime(scan.at) : 'Stamped') + away,
-      open: 'Open now' + away,
+      open: 'Check-in open' + away,
       miss: 'Missed' + away,
       upcoming: esc(m.time) + away,
     }[state];
 
     const el   = state === 'open' ? 'button' : 'div';
     const attr = state === 'open' ? ' type="button" data-go="scan"' : '';
-    const sr   = { set:'Attended', open:'Check-in open', miss:'Missed',
-                   upcoming:'Scheduled' }[state];
+    /* read aloud only what the visible row does not already say */
+    const sr   = state === 'set' ? 'Stamped' : '';
 
     return `<${el} class="lrow lrow--${state}"${attr}>
       <span class="lrow__no">${pad(m.no)}</span>
@@ -184,7 +180,7 @@ const C = {
         <span class="lrow__when">${detail}</span>
       </span>
       ${state === 'open' ? '<span class="lrow__go">Scan</span>' : ''}
-      <span class="sr-only">${sr}</span>
+      ${sr ? `<span class="sr-only">${sr}</span>` : ''}
     </${el}>`;
   },
 };
@@ -192,8 +188,7 @@ const C = {
 C.account = () => `<section class="acct">
   <h2 class="acct__mark">Account</h2>
   <div class="acct__row">
-    <span class="acct__lab">Reduced motion</span>
-    <button class="motion-btn" type="button" data-motion></button>
+    <button class="rail__motion" type="button" data-motion aria-pressed="false"></button>
   </div>
   <button class="acct__out" data-signout type="button">Sign out</button>
 </section>`;
@@ -207,7 +202,7 @@ const Views = {
       <section class="rig">
         <div class="panel bpanel fail">
           <p class="kicker">Could not load</p>
-          <p>Your record did not load. Nothing is lost. Check your connection.</p>
+          <p>Check your connection.</p>
           <button class="btn btn--go" type="button" data-reload data-busy="Retrying">Try again</button>
         </div>
       </section>
@@ -245,13 +240,13 @@ const Views = {
       </header>
 
       <div class="deck${live ? ' deck--live' : ''}">
-        ${C.sealGrid(live)}
         ${action ? `<div class="deck__act">${action}</div>` : ''}
+        ${C.sealGrid(live)}
         ${ahead.length ? `<section class="ahead deck__ahead">
             <h2 class="ahead__mark">Ahead</h2>
             <ul class="ahead__list">
               ${ahead.map(m => `<li class="ahead__row">
-                <span class="ahead__no">${pad(m.no)}</span>
+                <span class="ahead__no">GM ${pad(m.no)}</span>
                 <span class="ahead__day">${fmtDate(m.date)}</span>
                 ${unusual(m).length ? `<span class="ahead__at">${unusual(m).map(esc).join(' / ')}</span>` : ''}
               </li>`).join('')}
@@ -412,7 +407,7 @@ const Views = {
         <p class="standing-band__of">${total === 1 ? 'stamp' : 'stamps'}</p>
         <dl class="standing-band__rest">
           <div><dt>Attendance</dt><dd>${held.length ? Store.attendanceRate() : 0}%</dd></div>
-          <div><dt>First stamp</dt><dd>${fmtDay(first.at)}</dd></div>
+          ${cards ? '' : `<div><dt>First stamp</dt><dd>${fmtDay(first.at)}</dd></div>`}
           <div><dt>Latest stamp</dt><dd>${fmtDay(last.at)}</dd></div>
         </dl>
       </section>` : `<p class="nowline"><b class="nowline__lab">No attendance yet</b></p>`}
@@ -427,7 +422,7 @@ const Views = {
             <span class="cards__marks" aria-hidden="true">${run.map((_, i) =>
               `<svg viewBox="0 0 64 64">${stampMark(k * Rules.CARD + i)}</svg>`).join('')}</span>
             <span class="cards__when">${fmtDay(run[0].at)} – ${fmtDay(run[run.length - 1].at)}</span>
-            ${prize ? `<span class="cards__prize">${esc(prize.name)}${prize.claimed ? ' / claimed' : ''}</span>` : ''}
+            ${prize ? `<span class="cards__prize">${esc(prize.name)} / ${prize.claimed ? 'claimed' : 'not claimed'}</span>` : ''}
           </li>`;
         }).join('')}</ol>
       </section>` : ''}
@@ -438,18 +433,18 @@ const Views = {
 
   auth(){
     const mode = AuthUI.mode;
-    const passwordField = ({ id, name, label, autocomplete, placeholder = '' }) => `
+    const passwordField = ({ id, name, label, autocomplete, rule = '' }) => `
           <div class="authp__f">
             <label class="authp__lab" for="${id}">${label}</label>
             <div class="authp__pw">
               <input class="authp__in" id="${id}" name="${name}" type="password"
                      autocomplete="${autocomplete}" autocapitalize="none"
-                     autocorrect="off" spellcheck="false"
-                     placeholder="${placeholder}">
+                     autocorrect="off" spellcheck="false"${rule ? ` aria-describedby="${id}Rule"` : ''}>
               <button class="authp__eye" type="button" data-eye="${id}"
                       aria-label="Show password" aria-pressed="false"
                       aria-controls="${id}">${ICON.eye}</button>
             </div>
+            ${rule ? `<span class="authp__rule" id="${id}Rule">${rule}</span>` : ''}
           </div>`;
     const up = mode === 'up';
 
@@ -468,19 +463,18 @@ const Views = {
         </header>
 
         <form class="authp" id="authForm" novalidate>
-          <p class="authp__title">${up ? 'Create account' : 'Sign in'}</p>
 
           <div class="authp__f">
             <label class="authp__lab" for="authUser">Username</label>
             <input class="authp__in" id="authUser" name="username" type="text"
                    autocomplete="username" autocapitalize="none" spellcheck="false"
-                   inputmode="latin" maxlength="${Config.USERNAME_MAX}"
-                   placeholder="${up ? 'a–z 0–9 _ .' : 'your username'}">
+                   inputmode="latin" maxlength="${Config.USERNAME_MAX}"${up ? ' aria-describedby="userRule"' : ''}>
+            ${up ? '<span class="authp__rule" id="userRule">Letters, numbers, _ and .</span>' : ''}
           </div>
 
           ${passwordField({ id:'authPass', name:'password', label:'Password',
                             autocomplete: up ? 'new-password' : 'current-password',
-                            placeholder: up ? '8+ characters' : '' })}
+                            rule: up ? '8 characters or more' : '' })}
 
           ${up ? passwordField({ id:'authPass2', name:'confirm', label:'Confirm password',
                                  autocomplete:'new-password' }) : ''}
@@ -490,7 +484,7 @@ const Views = {
               ${up ? 'Create account' : 'Sign in'}
             </button>
             <button class="authp__swap" type="button" id="authSwap">
-              ${up ? 'I already have an account' : 'Create an account'}
+              ${up ? 'Sign in' : 'Create account'}
             </button>
           </div>
 

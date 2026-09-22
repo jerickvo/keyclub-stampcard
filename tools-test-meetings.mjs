@@ -93,7 +93,7 @@ test('the meetings register splits into coming up and already held', () => {
   ] };
   BoardUI.form = null; BoardUI.deleteNote = null;
   const html = BoardUI.meetingsPane();
-  assert.equal(html.includes('Scheduled'), true);
+  assert.equal(html.includes('Upcoming'), true);
   assert.equal(html.includes('>Held<'), true);
   assert.equal((html.match(/class="blist blist--meet"/g) || []).length, 2);
   assert.equal(html.indexOf('GM 02') < html.indexOf('GM 01'), true);
@@ -138,8 +138,11 @@ test('check-in is offered only for today; an open one is shown whatever its date
   html = BoardUI.sessionPane();
   assert.equal(html.includes('GM 19'), true);
   assert.equal(html.includes('data-bend="old"'), true);
-  assert.equal(html.includes('data-bfull'), true);
-  assert.equal(html.includes('never closed'), true);        // named as left open, not as today's
+  // its codes have expired: no code, no count and no full screen, only Close
+  assert.equal(html.includes('Left open'), true);
+  assert.equal(html.includes('qrBox'), false);
+  assert.equal(html.includes('data-bfull'), false);
+  assert.equal(html.includes('proj--live'), false);
 });
 
 test('a meeting dated today is today\'s meeting until its end time, then it has ended', () => {

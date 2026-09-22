@@ -30,11 +30,8 @@ const AuthUI = {
 
     if (st === 'unavailable'){
       return `<div class="setupbox setupbox--warn">
-        <p class="kicker">Backend connection failed</p>
-        <p>Keystamp could not reach the club records. This is not
-           a problem with your username or password.</p>
-        <p class="setupbox__hint">Check the connection and reload. If it keeps
-           happening, tell a board member.</p>
+        <p class="kicker">Could not reach the club records</p>
+        <p>Reload the page. If it keeps happening, tell a board member.</p>
       </div>`;
     }
 
@@ -164,7 +161,15 @@ async function go(id, opts = {}){
     afterRender(id, nav, Boolean(opts.covered || opts.quiet));
     /* focus follows a page turn; the first paint has nowhere to move it
        from, and asking costs a whole layout of a page nobody has seen */
-    if (booted) view.focus({ preventScroll:true });
+    /* the page is named in the tab title and read from its heading */
+    document.title = id === 'auth' ? 'Sign in / Keystamp'
+      : `${(navFor().find(n => n.id === id) || {}).label || 'Keystamp'} / Keystamp`;
+    /* a background refresh never moves the reader's focus */
+    if (booted && !opts.quiet){
+      const head = $('.rechead__title', view);
+      if (head){ head.setAttribute('tabindex', '-1'); head.focus({ preventScroll:true }); }
+      else view.focus({ preventScroll:true });
+    }
   };
 
   const same = from === id && !opts.force;
@@ -333,7 +338,7 @@ document.addEventListener('submit', async e => {
       scene.release();
     }));
   } catch (err){
-    const msg = err && err.message ? err.message : 'Something went wrong. Try again.';
+    const msg = err && err.message ? err.message : 'Could not sign in. Try again.';
     authErr(msg);
     authBusy(false);
     /* Focus lands on the first field at fault, in form order. A password
@@ -363,12 +368,14 @@ document.addEventListener('click', e => {
   }
   const bmember = e.target.closest('[data-bmember]');
   if (bmember){
-    boardGoto({ memberDetail:'pending', meetingDetail:null, pendingId:bmember.dataset.bmember });
+    boardGoto({ memberDetail:'pending', meetingDetail:null, pendingId:bmember.dataset.bmember, refocus:'[data-bback]',
+                leftFrom:`button[data-bmember="${bmember.dataset.bmember}"]` });
     return;
   }
   const bmeeting = e.target.closest('[data-bmeeting]');
   if (bmeeting){
-    boardGoto({ meetingDetail:'pending', memberDetail:null, pendingId:bmeeting.dataset.bmeeting });
+    boardGoto({ meetingDetail:'pending', memberDetail:null, pendingId:bmeeting.dataset.bmeeting, refocus:'[data-bback]',
+                leftFrom:`button[data-bmeeting="${bmeeting.dataset.bmeeting}"]` });
     return;
   }
   const bconfirm = e.target.closest('[data-bconfirm]');
@@ -398,6 +405,7 @@ document.addEventListener('click', e => {
     if (bdelete.disabled) return;
     const id = bdelete.dataset.bdelete;
     const stamps = Number(bdelete.dataset.bstamps) || 0;
+    const gm = bdelete.dataset.bno ? `GM ${bdelete.dataset.bno}` : 'Meeting';
     hold(bdelete, 'Deleting');
 
     const clear = note => {
@@ -408,8 +416,8 @@ document.addEventListener('click', e => {
 
     (stamps
       ? Backend.deleteMeetingAndStamps(id).then(res => {
-          toast({ key:'board', title:'Meeting deleted',
-                  detail:`${res.removed} stamp${res.removed === 1 ? '' : 's'} removed with it.` });
+          toast({ key:'board', title:`${gm} deleted`,
+                  detail:`${res.removed} stamp${res.removed === 1 ? '' : 's'} removed` });
           clear(null);
         })
       : Backend.deleteMeeting(id).then(res =>
@@ -422,9 +430,9 @@ document.addEventListener('click', e => {
   }
 
   const bback = e.target.closest('[data-bback]');
-  if (bback){ boardGoto({ memberDetail:null, meetingDetail:null }); return; }
+  if (bback){ boardGoto({ memberDetail:null, meetingDetail:null, refocus:BoardUI.leftFrom || null, leftFrom:null }); return; }
   const bpage = e.target.closest('[data-bpage]');
-  if (bpage){ boardGoto({ page:Number(bpage.dataset.bpage) || 1 }); return; }
+  if (bpage){ boardGoto({ page:Number(bpage.dataset.bpage) || 1, refocus:'[data-bpage]:not([disabled])' }); return; }
   const reload = e.target.closest('[data-reload]');
   if (reload){
     hold(reload, 'Retrying');
@@ -443,7 +451,8 @@ document.addEventListener('click', e => {
   if (bstart){
     hold(bstart, 'Opening');
     Backend.startAttendance(bstart.dataset.bstart)
-      .then(() => { boardMeeting = bstart.dataset.bstart; boardStamp = true; loadBoard(); })
+      .then(() => { boardMeeting = bstart.dataset.bstart; boardStamp = true;
+                    BoardUI.refocus = '[data-bfull]'; loadBoard(); })
       .catch(err => { release(bstart, 'Open check-in');
         toast({ key:'board', bad:true, title:'Could not open check-in',
                 detail:BoardUI.message(err && err.message) }); });
@@ -453,7 +462,8 @@ document.addEventListener('click', e => {
   if (bend){
     hold(bend, 'Closing');
     Backend.endAttendance(bend.dataset.bend)
-      .then(() => { clearInterval(countTimer); boardStamp = true; loadBoard(); })
+      .then(() => { clearInterval(countTimer); boardStamp = true;
+                    BoardUI.refocus = '[data-bstart]'; loadBoard(); })
       .catch(err => { release(bend, 'Close check-in');
         toast({ key:'board', bad:true, title:'Could not close check-in',
                 detail:BoardUI.message(err && err.message) }); });
@@ -520,15 +530,14 @@ document.addEventListener('click', e => {
     if (!claim.dataset.armed){
       claim.dataset.armed = '1';
       claim.textContent = 'Confirm claim';
-      clearTimeout(claim._disarm);
-      claim._disarm = setTimeout(() => {
-        if (!document.body.contains(claim) || claim.disabled) return;
+      /* it stays armed until the reader moves on, not on a timer */
+      claim.addEventListener('blur', () => {
+        if (claim.disabled) return;
         delete claim.dataset.armed;
         claim.textContent = 'Claim';
-      }, 4000);
+      }, { once:true });
       return;
     }
-    clearTimeout(claim._disarm);
     claim.disabled = true;
     Store.claimReward(claim.dataset.claim).then(r => {
       go('rewards', { instant:true });
@@ -632,11 +641,8 @@ function boardGoto(next){
 function paintMotion(){
   $$('[data-motion]').forEach(b => {
     b.setAttribute('aria-pressed', String(Motion.forced));
-    b.setAttribute('aria-label', Motion.forced ? 'Reduced motion is on. Turn animations back on.'
-                                               : 'Reduced motion is off. Turn animations off.');
-    b.innerHTML = b.classList.contains('rail__motion')
-      ? `<i aria-hidden="true"></i><span>${Motion.forced ? 'Motion off' : 'Motion on'}</span>`
-      : '<span class="motion-btn__opt">On</span><span class="motion-btn__opt">Off</span>';
+    /* one control, one name: Reduce motion, pressed while it is on */
+    b.innerHTML = '<i aria-hidden="true"></i><span>Reduce motion</span>';
   });
 }
 
@@ -654,7 +660,7 @@ function projector(on){
   stage.classList.toggle('proj--full', on);
   document.documentElement.classList.toggle('is-projecting', on);
   const b = $('[data-bfull]');
-  if (b){ b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Leave projector' : 'Project'; }
+  if (b) b.textContent = on ? 'Exit full screen' : 'Full screen';
   try {
     if (on && document.fullscreenEnabled && !document.fullscreenElement)
       document.documentElement.requestFullscreen().catch(() => {});

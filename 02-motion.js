@@ -81,7 +81,6 @@ function toast({ title, detail, bad = false, key }){
   }
 
   el.className = 'toast' + (bad ? ' toast--bad' : '');
-  el.setAttribute('role', 'status');
   el.tabIndex = 0;
   el.innerHTML = `<span class="toast__dot"></span><div>
       <p class="toast__t">${esc(title)}</p>
@@ -94,7 +93,7 @@ function toast({ title, detail, bad = false, key }){
   const arm = r => { clearTimeout(r.timer); r.timer = setTimeout(() => dropToast(k), TOAST_LIFE); };
   if (!prev){
     const hold = () => { const r = cur(); if (r){ r.held = true; clearTimeout(r.timer); } };
-    const free = () => { const r = cur(); if (r){ r.held = false; arm(r); } };
+    const free = () => { const r = cur(); if (r){ r.held = false; if (!bad) arm(r); } };
     el.addEventListener('mouseenter', hold);
     el.addEventListener('focus', hold);
     el.addEventListener('mouseleave', free);
@@ -105,5 +104,6 @@ function toast({ title, detail, bad = false, key }){
     });
   }
   liveToasts.set(k, rec);
-  if (!rec.held) arm(rec);
+  /* a failure stays until it is read and dismissed, or replaced */
+  if (!rec.held && !bad) arm(rec);
 }

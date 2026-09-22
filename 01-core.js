@@ -151,7 +151,7 @@ const Store = {
     if (st === 'unconfigured')
       throw new Error('Keystamp is not connected to a Supabase project yet.');
     if (st === 'unavailable')
-      throw new Error('Keystamp cannot reach the server right now. Try again in a moment.');
+      throw new Error('Could not reach the club records. Try again.');
   },
 
   async signIn(username, password){

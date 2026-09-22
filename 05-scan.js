@@ -27,7 +27,7 @@ function paintBoard(){
     box.innerHTML = svg || `<p class="qrpanel__fail">The code could not be drawn. Reload the page.</p>`;
   }).catch(() => {
     if (!document.body.contains(box)) return;
-    box.innerHTML = `<p class="qrpanel__fail">Could not reach the attendance server.</p>`;
+    box.innerHTML = `<p class="qrpanel__fail">Could not load the code. Reload the page.</p>`;
   });
 }
 
@@ -51,7 +51,7 @@ function paintAttendanceCount(meetingId){
     catch (_) { return; }
     const node = el();
     if (!node) return clearInterval(countTimer);
-    node.textContent = text;
+    if (node.textContent !== text) node.textContent = text;
     if (open === false){ clearInterval(countTimer); boardStamp = true; loadBoard(); }
   };
   pull();
@@ -64,7 +64,7 @@ function paintAttendanceCount(meetingId){
 function scanStanding(){
   const open = Store.openMeeting();
   const done = open && Store.attended(open.id);
-  if (Store.failed) return { lab:'Record not loaded', at:'Could not reach the club records' };
+  if (Store.failed) return { lab:'Record not loaded', at:'Check your connection' };
   return !open || done
     ? { lab:'Check-in', at:open ? `GM ${pad(open.no)} stamped` : 'Closed' }
     : { lab:'Checking in to', at:`GM ${pad(open.no)}` };
@@ -444,8 +444,7 @@ const Scanner = {
         body:'Check camera access, then try again.' },
       unavailable:{ title:'No camera found', retry:true,
         body:'Scan the code from a phone.' },
-      unsupported:{ title:'Scanning needs a secure page', retry:false,
-        body:'Camera access needs https.' },
+      unsupported:{ title:'Camera blocked on this page', retry:false, body:'' },
     }[kind] || { title:'Camera unavailable', retry:true, body:'Close other apps using the camera, then try again.' };
 
     /* The note sits over the viewer; the video stays in place, so the
@@ -458,7 +457,7 @@ const Scanner = {
     </div>`);
 
     viewer.classList.add('viewer--stalled');
-    this.setState('off', 'Camera off');
+    this.setState('off', copy.body ? `${copy.title}. ${copy.body}` : copy.title);
   },
 
   stop(){
@@ -550,20 +549,20 @@ const Landing = {
 /* [what happened, what to do]; the scan line under the camera prints
    both, and nothing else repeats them */
 const SCAN_MESSAGES = {
-  INVALID_TOKEN:       ['Not a Keystamp code',     'Scan the code on the board screen'],
-  EXPIRED_TOKEN:       ['Code expired',            'Scan the code on the board screen'],
+  INVALID_TOKEN:       ['Not a Keystamp code',     ''],
+  EXPIRED_TOKEN:       ['Code expired',            ''],
   MEETING_NOT_FOUND:   ['No matching meeting',     'Ask a board member'],
   MEETING_NOT_ACTIVE:  ['Check-in not open',       ''],
   ATTENDANCE_CLOSED:   ['Check-in has ended',      ''],
   WRONG_DAY:           ['Code is for another day', ''],
   ALREADY_CHECKED_IN:  ['Already checked in',      ''],
-  PROFILE_NOT_READY:   ['Account still setting up','Try again in a moment'],
+  PROFILE_NOT_READY:   ['Account not ready',       'Hold the code in view'],
   NOT_AUTHENTICATED:   ['Sign in first',           ''],
   NOT_AUTHORIZED:      ['Not allowed',             'This account cannot check in'],
   NETWORK_ERROR:       ['No connection',           'Check your signal'],
   VERIFIER_UNAVAILABLE:['Check-in unavailable',    'Tell a board member'],
-  SERVER_ERROR:        ['Something went wrong',    'Try again in a moment'],
-  NO_BACKEND:          ['Not connected',           'This build has no backend'],
+  SERVER_ERROR:        ['Not recorded',            'Hold the code in view'],
+  NO_BACKEND:          ['Not connected',           ''],
 };
 const scanMessage = code => SCAN_MESSAGES[code] || SCAN_MESSAGES.SERVER_ERROR;
 /* refusals that may pass on a second try; the same code is sent again,
@@ -586,9 +585,11 @@ async function submitSeal(raw, run = Scanner.run){
     return rejectVisual(code, raw, run);
   }
 
-  Scanner.stop();
   const meeting = Store.meeting(result.meeting_id) ||
                   { id:result.meeting_id, no:result.meeting_number, place:Schedule.PLACE };
+  /* said on the live line, under the scene, so a screen reader hears it */
+  Scanner.setState('good', `Stamp acquired. GM ${pad(meeting.no)}`);
+  Scanner.stop();
   await Landing.run(meeting);
 }
 

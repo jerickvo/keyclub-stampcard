@@ -30,7 +30,7 @@ const WriteFailure = {
     const c    = this.constraintOf(ex);
 
     if (/BACKEND_UNAVAILABLE|No backend is configured/i.test(msg))
-      return { kind:'backend', say:'The club records are unreachable right now. Try again in a moment.' };
+      return { kind:'backend', say:'Could not reach the club records. Try again.' };
     if (code === '42501' || /row-level security|permission denied/i.test(msg))
       return { kind:'permission', say:'That account is not allowed to schedule meetings.' };
     if (code === '401' || code === '403' || /jwt|not signed in|invalid token/i.test(msg))
@@ -58,7 +58,7 @@ const WriteFailure = {
                say: msg.replace(/^TEMP-TEST-TOOLING:\s*/i, '')
                        .replace(/^\w/, ch => ch.toUpperCase()) + '.' };
     if (/failed to fetch|networkerror|load failed/i.test(msg))
-      return { kind:'network', say:'Could not reach the club records. Check the connection and try again.' };
+      return { kind:'network', say:'Could not reach the club records. Check your connection.' };
     return { kind:'unknown', say:'Could not save that. Check the details and try again.' };
   },
 
@@ -236,7 +236,7 @@ const SupabaseAdapter = {
       email: Config.emailForUsername(username), password });
     if (error){
       if (this.authUnreachable(error))
-        throw new Error('Keystamp cannot reach the server right now. Try again in a moment.');
+        throw new Error('Could not reach the club records. Try again.');
 
       throw new Error('That username and password do not match.');
     }
@@ -258,7 +258,7 @@ const SupabaseAdapter = {
       if (m.includes('already registered') || m.includes('already exists') || error.status === 422)
         throw new Error('Username is already taken.');
       if (m.includes('password')) throw new Error('Password is too weak. Use at least 8 characters.');
-      throw new Error('Could not create that account. Try again in a moment.');
+      throw new Error('Could not create that account. Try again.');
     }
     if (!data.session){
       throw new Error('Account created but sign-in is not enabled. Ask a board member to turn off email confirmation.');
@@ -306,7 +306,9 @@ const SupabaseAdapter = {
       time: row.start_time,
       endTime: row.end_time,
       place: row.location || 'MPR',
-      open: Boolean(row.check_in_open),
+      /* a check-in left open from an earlier day takes no scans (its
+         codes have expired), so for a member it is a held meeting */
+      open: Boolean(row.check_in_open) && row.meeting_date === today,
       today: row.meeting_date === today,
       upcoming: row.meeting_date >= today && !row.check_in_open,
     };

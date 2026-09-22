@@ -93,7 +93,7 @@ test('the Card sends a member to Scan only while a meeting is open and unstamped
 test('every refusal the verifier can send has its own words; an unknown one has the safe words', () => {
   for (const code of ['INVALID_TOKEN', 'EXPIRED_TOKEN', 'ATTENDANCE_CLOSED', 'MEETING_NOT_ACTIVE', 'ALREADY_CHECKED_IN', 'NETWORK_ERROR', 'VERIFIER_UNAVAILABLE'])
     assert.equal(scanMessage(code), SCAN_MESSAGES[code]);
-  assert.equal(scanMessage('SOMETHING_NEW')[0], 'Something went wrong');
+  assert.equal(scanMessage('SOMETHING_NEW')[0], 'Not recorded');
   assert.equal(scanMessage('ALREADY_CHECKED_IN')[0], 'Already checked in');
   assert.equal(scanMessage('ATTENDANCE_CLOSED')[0], 'Check-in has ended');
 });
