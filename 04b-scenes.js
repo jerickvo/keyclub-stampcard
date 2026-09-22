@@ -112,7 +112,7 @@ const Scenes = {
     el.innerHTML = SCENE_MARKUP('Until next meeting');
     document.body.appendChild(el);
     const p = this.parts(el);
-    p.word.textContent = 'Signed out';
+    p.word.textContent = 'Signing out';
     p.kick.textContent = 'Keystamp / Key Club attendance';
     [p.word, p.kick, p.tail, p.seal].forEach(x => { x.style.opacity = '0'; });
 
@@ -124,7 +124,9 @@ const Scenes = {
       this.busy = false;
     };
     const fuse = setTimeout(finish, 4000);
-    const swapNow = () => Promise.resolve().then(doSwap).catch(err => { oops(err); return 'failed'; });
+    const swapNow = () => Promise.resolve().then(doSwap).catch(err => { oops(err); return 'failed'; })
+      .then(res => { p.word.textContent = res === 'failed' ? 'Still signed in' : 'Signed out';
+                     if (res === 'failed') p.tail.textContent = ''; return res; });
 
     if (Motion.off){
       [p.word, p.kick, p.tail, p.seal].forEach(x => { x.style.opacity = '1'; });
@@ -205,13 +207,14 @@ const Transit = {
            board:0, bmeet:1, bcheckin:2, bmembers:3 },
 
   CHAR: {
-    home:    { in:170, hold:100, out:230, angle:9, par:26, tone:true },
-    record:  { in:200, hold:120, out:280, angle:4, par:16 },
-    scan:    { in:150, hold:80,  out:200, angle:0, par:10 },
-    rewards: { in:180, hold:120, out:260, angle:7, par:22, layered:true, flash:true },
-    profile: { in:220, hold:130, out:300, angle:6, par:14 },
-    board:   { in:160, hold:90,  out:210, angle:0, par:12, crisp:true },
-    auth:    { in:180, hold:90,  out:240, angle:3, par:0,  vertical:true },
+    /* a page turn is a quick cut, not a scene: about a quarter second */
+    home:    { in:100, hold:40, out:140, angle:9, par:12, tone:true },
+    record:  { in:110, hold:50, out:150, angle:4, par:8 },
+    scan:    { in:90,  hold:30, out:120, angle:0, par:6 },
+    rewards: { in:100, hold:50, out:140, angle:7, par:10 },
+    profile: { in:110, hold:50, out:160, angle:6, par:8 },
+    board:   { in:90,  hold:40, out:120, angle:0, par:6, crisp:true },
+    auth:    { in:100, hold:40, out:130, angle:3, par:0,  vertical:true },
   },
 
   profile(to){
@@ -330,16 +333,11 @@ const Transit = {
     this.running = true;
 
     if (Motion.reduced){
-      /* no cut to hide the change, so the old page is held as a copy and
-         faded over the new one */
-      const box = this.ghost(view, f);
-      return new Promise(res => {
-        let done = false;
-        const finish = () => { if (done) return; done = true; Transit.running = false; try { box.remove(); } catch (_) {} Motion.settle(view); res(); };
-        try { doSwap(); } catch (_) {}
-        animate(box, { opacity:[1, 0], duration:140, ease:'linear', onComplete:finish });
-        setTimeout(finish, 420);
-      });
+      /* no cut and no crossfade: the page changes, and that is the cue */
+      try { doSwap(); } catch (_) {}
+      this.running = false;
+      Motion.settle(view);
+      return Promise.resolve();
     }
 
     const c = this.profile(to);

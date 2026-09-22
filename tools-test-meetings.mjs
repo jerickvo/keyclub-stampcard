@@ -10,8 +10,8 @@ const knit = s => String(s).replace(/ (AM|PM)\b/gi, '\u00a0$1');
 const ctx = vm.createContext({ Schedule:{ today:() => '2026-09-07', PLACE:'MPR' }, knit,
   esc:s => String(s), pad:n => String(n).padStart(2, '0'), fmtDate:iso => iso, fmtTime:iso => iso,
   fmtDay:iso => iso, brandSeal:() => '<svg></svg>' });
-vm.runInContext(src + '\nthis.__x = { nextMeetingNumber, spanTime, BoardUI, MEETING_DEFAULTS };', ctx);
-const { nextMeetingNumber, spanTime, BoardUI, MEETING_DEFAULTS } = ctx.__x;
+vm.runInContext('const CLUB_TZ = "America/Los_Angeles";\n' + src + '\nthis.__x = { nextMeetingNumber, spanTime, BoardUI, MEETING_DEFAULTS, meetingPhase };', ctx);
+const { nextMeetingNumber, spanTime, BoardUI, MEETING_DEFAULTS, meetingPhase } = ctx.__x;
 const rows = nums => nums.map(n => ({ meeting_number:n }));
 
 test('next number: no meetings -> 1', () => {
@@ -58,10 +58,11 @@ test('duplicate guard reads the loaded list', () => {
   assert.equal(BoardUI.hasMeetingNumber(1), false);
 });
 test('row time span folds a shared meridian', () => {
-  // the space before AM/PM is non-breaking, so a clock reading never wraps
-  assert.equal(spanTime('12:40 PM', '1:30 PM'), '12:40–1:30\u00a0PM');
-  assert.equal(spanTime('3:15 PM', '4:15 PM'), '3:15–4:15\u00a0PM');
-  assert.equal(spanTime('11:30 AM', '1:00 PM'), '11:30\u00a0AM–1:00\u00a0PM');
+  // the space before AM/PM is non-breaking, so a clock reading never wraps;
+  // the range is a hyphen because the comic faces carry no en dash
+  assert.equal(spanTime('12:40 PM', '1:30 PM'), '12:40-1:30\u00a0PM');
+  assert.equal(spanTime('3:15 PM', '4:15 PM'), '3:15-4:15\u00a0PM');
+  assert.equal(spanTime('11:30 AM', '1:00 PM'), '11:30\u00a0AM-1:00\u00a0PM');
   assert.equal(spanTime('3:15 PM', null), '3:15\u00a0PM');
 });
 
@@ -70,14 +71,20 @@ test('a meeting row carries its count, and the count only means something once h
   const ahead = BoardUI.meetingRow({ ...m, state:'UPCOMING' });
   const held  = BoardUI.meetingRow({ ...m, state:'PAST', attendance_count:12 });
   assert.equal(ahead.includes('brow--upcoming'), true);
-  assert.equal(ahead.includes('<span class="brow__n"><b>0</b>'), true);
+  // a meeting that has not happened has no count to show
+  assert.equal(ahead.includes('class="brow__n"'), false);
+  // a state word is printed only for a live or just-ended meeting
+  assert.equal(ahead.includes('bstate'), false);
+  assert.equal(held.includes('bstate'), false);
+  assert.equal(BoardUI.meetingRow({ ...m, state:'OPEN', attendance_count:3 }).includes('>Open</span>'), true);
   assert.equal(held.includes('brow--past'), true);
   assert.equal(held.includes('<span class="brow__n"><b>12</b>'), true);
   assert.equal(ahead.includes('GM 04'), true);
-  // an unheld meeting with no stamps can be deleted; a held one always can
-  assert.equal(ahead.includes('data-bconfirm="m1"'), true);
-  assert.equal(held.includes('data-bconfirm="m1"'), true);
-  assert.equal(BoardUI.meetingRow({ ...m, state:'ACTIVE', attendance_count:3 }).includes('data-bconfirm'), false);
+  // rows carry no delete control; the usual time and room are not repeated
+  assert.equal(ahead.includes('data-bconfirm'), false);
+  assert.equal(held.includes('data-bconfirm'), false);
+  assert.equal(held.includes('brow__when'), false);
+  assert.equal(BoardUI.meetingRow({ ...m, start_time:'3:15 PM', end_time:'4:15 PM', state:'PAST' }).includes('3:15-4:15'), true);
 });
 test('the meetings register splits into coming up and already held', () => {
   BoardUI.meetings = { meetings:[
@@ -86,8 +93,8 @@ test('the meetings register splits into coming up and already held', () => {
   ] };
   BoardUI.form = null; BoardUI.deleteNote = null;
   const html = BoardUI.meetingsPane();
-  assert.equal(html.includes('Coming up'), true);
-  assert.equal(html.includes('Already held'), true);
+  assert.equal(html.includes('Scheduled'), true);
+  assert.equal(html.includes('>Held<'), true);
   assert.equal((html.match(/class="blist blist--meet"/g) || []).length, 2);
   assert.equal(html.indexOf('GM 02') < html.indexOf('GM 01'), true);
 });
@@ -106,10 +113,62 @@ test('the club overview leads with the next meeting, or says there is none', () 
   assert.equal(ahead.includes('GM 09'), true);
   assert.equal(ahead.includes('Check-in closed'), true);
   assert.equal(ahead.includes('bnow--none'), false);
-  BoardUI.overview = { ...base, today_attendance:4, next_meeting:null,
+  BoardUI.overview = { ...base, today_attendance:4, next_meeting:null, server_date:'2026-09-16',
     active_meeting:{ id:'m9', meeting_number:9, meeting_date:'2026-09-16', start_time:'12:40 PM', end_time:'1:30 PM', check_in_open:true } };
   const live = BoardUI.clubPane();
   assert.equal(live.includes('bnow--live'), true);
-  assert.equal(live.includes('Check-in open / 4 checked in so far'), true);
+  assert.equal(live.includes('Check-in open'), true);
+  assert.equal(live.includes('4 checked in'), true);
   assert.equal(live.includes('Show the code'), true);
+  assert.equal(live.includes('left open'), false);
+});
+
+test('a check-in left open from another day is named as such, not as live', () => {
+  BoardUI.overview = { meetings_held:16, total_seals:214, participating_members:25, average_attendance:13.4,
+    today_attendance:0, next_meeting:null, server_date:'2026-09-22',
+    active_meeting:{ id:'m9', meeting_number:9, meeting_date:'2026-09-16', start_time:'12:40 PM', end_time:'1:30 PM', check_in_open:true } };
+  const html = BoardUI.clubPane();
+  assert.equal(html.includes('Check-in left open'), true);
+  assert.equal(html.includes('never closed'), true);
+  assert.equal(html.includes('Close it'), true);
+  assert.equal(html.includes('checked in so far'), false);
+});
+
+test('the schedule form stays folded until asked for, unless nothing is scheduled', () => {
+  BoardUI.form = null; BoardUI.deleteNote = null; BoardUI.formOpen = false;
+  BoardUI.meetings = { meetings:[
+    { id:'b', meeting_number:2, meeting_date:'2026-09-16', start_time:'12:40 PM', end_time:'1:30 PM', state:'UPCOMING', attendance_count:0 },
+  ] };
+  assert.equal(BoardUI.meetingsPane().includes('id="meetingForm"'), false);
+  assert.equal(BoardUI.meetingsPane().includes('data-mform'), true);
+  BoardUI.formOpen = true;
+  assert.equal(BoardUI.meetingsPane().includes('id="meetingForm"'), true);
+  BoardUI.formOpen = false;
+  BoardUI.meetings = { meetings:[] };
+  assert.equal(BoardUI.meetingsPane().includes('id="meetingForm"'), true);
+});
+
+test('a meeting dated today is today\'s meeting until its end time, then it has ended', () => {
+  const m = { meeting_date:'2026-09-22', end_time:'1:30 PM', state:'ENDED' };
+  assert.equal(meetingPhase(m, '2026-09-22', 10 * 60), 'TODAY');
+  assert.equal(meetingPhase(m, '2026-09-22', 13 * 60 + 29), 'TODAY');
+  assert.equal(meetingPhase(m, '2026-09-22', 13 * 60 + 30), 'ENDED');
+  assert.equal(meetingPhase({ ...m, meeting_date:'2026-09-21' }, '2026-09-22', 600), 'ENDED');
+  assert.equal(meetingPhase({ ...m, state:'OPEN' }, '2026-09-22', 600), 'OPEN');
+  assert.equal(meetingPhase({ ...m, state:'UPCOMING' }, '2026-09-22', 600), 'UPCOMING');
+  assert.equal(BoardUI.meetingRow({ id:'t', meeting_number:5, meeting_date:'2026-09-22', start_time:'12:40 PM',
+    end_time:'1:30 PM', location:'MPR', state:'TODAY', attendance_count:0 }).includes('>Today</span>'), true);
+});
+
+test('delete lives on the meeting page: any time with no stamps, with stamps only once it is over, never while open', () => {
+  BoardUI.confirmDelete = null;
+  const m = { id:'d1', meeting_number:7, meeting_date:'2026-09-20', start_time:'12:40 PM', end_time:'1:30 PM', check_in_open:false };
+  assert.equal(BoardUI.deleteBlock({ ...m, meeting_date:'2026-09-30' }, 0).includes('data-bconfirm="d1"'), true);
+  assert.equal(BoardUI.deleteBlock(m, 12), '');                                         // stamped and still ahead
+  assert.equal(BoardUI.deleteBlock({ ...m, meeting_date:'2026-09-01' }, 12).includes('data-bconfirm'), true);
+  assert.equal(BoardUI.deleteBlock({ ...m, meeting_date:'2026-09-07' }, 3), '');            // today, stamped: not over yet
+  assert.equal(BoardUI.deleteBlock({ ...m, check_in_open:true }, 0), '');
+  BoardUI.confirmDelete = 'd1';
+  assert.equal(BoardUI.deleteBlock({ ...m, meeting_date:'2026-09-01' }, 12).includes('data-bdelete="d1"'), true);
+  BoardUI.confirmDelete = null;
 });

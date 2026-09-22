@@ -16,29 +16,37 @@ function stampShape(seed, grow = 0){
 const STAMP_FIT = .62;
 
 const C = {
-  tier(r, total){
-    /* one rule for a tier, read from the store (rewardState) */
+  tier(r, total, prev = 0){
+    /* one rule for a tier, read from the store (rewardState); the ticks
+       count only the stamps between the rung below and this one, so a
+       rung reads as reached exactly when it is */
     const at    = Store.tierState(r);
     const ready = at === 'unlocked';
     const state = at === 'claimed' ? 'claimed' : ready ? 'ready' : 'sealed';
-    const say   = at === 'claimed' ? 'Claimed'
-                : ready            ? 'Ready to claim'
-                : `${r.required - total} more ${r.required - total === 1 ? 'stamp' : 'stamps'}`;
+    const span  = Math.max(1, r.required - prev);
+    const got   = Math.max(0, Math.min(span, total - prev));
+    const left  = r.required - total;
+    const far   = state === 'sealed' && total < prev;
+    const say   = ready ? 'Ready to claim'
+                : state === 'sealed' ? `${left} more ${left === 1 ? 'stamp' : 'stamps'}` : '';
+    const ticks = Array.from({ length:span }, (_, i) =>
+      `<i class="${i < got ? 'is-on' : ''}"></i>`).join('');
 
-    return `<div class="tier tier--${state}" data-reward="${r.id}">
+    return `<div class="tier tier--${state}${far ? ' tier--far' : ''}" data-reward="${r.id}">
       <span class="tier__at">${pad(r.required)}</span>
       <span class="tier__body">
         <span class="tier__name">${esc(r.name)}</span>
         <span class="tier__desc">${esc(r.desc || '')}</span>
       </span>
-      ${at === 'claimed' ? `<span class="tier__punch" aria-hidden="true">Claimed</span>` : ''}
+      ${state === 'sealed' && !far ? `<span class="tier__ticks" role="img" aria-label="${got} of ${span} stamps toward ${esc(r.name)}">${ticks}</span>` : ''}
+      ${at === 'claimed' ? `<span class="tier__punch">Claimed</span>` : ''}
       ${ready
         ? `<button class="tier__claim" type="button" data-claim="${r.id}">Claim</button>`
-        : `<span class="tier__say">${say}</span>`}
+        : say ? `<span class="tier__say">${say}</span>` : ''}
     </div>`;
   },
 
-  sealGrid(){
+  sealGrid(live = false){
     const p = Rules.progress();
     const chrono = [...Store.scans]
       .sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
@@ -48,7 +56,8 @@ const C = {
     const full = p.filled >= p.span;
 
     const cells = Array.from({ length:p.span }, (_, i) => {
-      const state = i < p.filled ? 'set' : i === p.filled ? 'next' : '';
+      /* the next slot is ringed only while a check-in is open for it */
+      const state = i < p.filled ? 'set' : live && i === p.filled ? 'next' : '';
       const hero = state === 'set' && i === p.filled - 1 ? ' seal--hero' : '';
       const mile = i === p.span - 1 ? ' seal--mile' : '';
 
@@ -65,14 +74,13 @@ const C = {
         docket ? ` tabindex="0" aria-label="Stamp ${pad(p.floor + i + 1)}: general meeting ${
           mtg.no}, ${fmtDate(mtg.date)}, checked in at ${fmtTime(rec.at)}"` : ''}>
         <svg viewBox="0 0 64 64" aria-hidden="true">
-          <path class="sf-back" d="${stampShape(seed * 3 + 1, 3.4)}"/>
+          ${mile ? `<path class="sf-back" d="${stampShape(seed * 3 + 1, 3.4)}"/>` : ''}
           <g class="sf-press">
             <path class="sf-face" d="${stampShape(seed, 0)}"/>
             <g class="seal__mark" transform="translate(${(32 - 32 * fit).toFixed(1)} ${(32 - 32 * fit).toFixed(1)}) scale(${fit})">${stampMark(p.floor + i)}</g>
           </g>
         </svg>
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
-        ${mile && goal ? `<span class="seal__tag">${esc(goal.name)}</span>` : ''}
         ${docket}
       </li>`;
     }).join('');
@@ -84,7 +92,9 @@ const C = {
         <polyline points="16.0,8.6 46.0,13.3 74.0,21.1 81.0,40.6 58.0,50.0 31.0,54.7 11.0,72.7 34.0,81.3 58.0,71.9 83.0,83.6"/></svg>`;
 
     const say = full
-      ? (goal ? 'Card complete. Claim it in Rewards' : 'Card complete')
+      ? (goal && !goal.claimed ? `${goal.name} ready to claim`
+        : goal ? `${goal.name} claimed` : 'Card complete')
+      : p.total === 0 ? 'No stamps yet'
       : goal ? `${p.remaining} more until ${goal.name.toLowerCase()}`
              : `${p.remaining} more to finish this card`;
 
@@ -99,12 +109,16 @@ const C = {
         </div>
         <div class="card__field">
           ${route}
-          <ol class="seals" id="seals" aria-label="${p.filled} of ${p.span} stamps in this tier">${cells}</ol>
-          <span class="card__edge" aria-hidden="true">Keystamp · Key Club attendance<span class="card__edge-tail"> · Cali-Nev-Ha</span></span>
+          <ol class="seals" id="seals" aria-label="${p.filled} of ${p.span} stamps on this card">${cells}</ol>
         </div>
       </div>
       ${full ? '<span class="card__punch" aria-hidden="true">Card full</span>' : ''}
     </section>`;
+  },
+
+  /* a state that asks nothing of the member is a line of type */
+  line(lab, text){
+    return `<p class="nowline" data-enter><b class="nowline__lab">${esc(lab)}</b><span>${text}</span></p>`;
   },
 
   strike({ verb, sub, go, live = false }){
@@ -117,28 +131,15 @@ const C = {
   },
 
   sealMeta(rec, m){
+    const away = m.place && m.place !== Schedule.PLACE ? ` / ${esc(m.place)}` : '';
     return `<span class="sealmeta" data-layer aria-hidden="true">
       <b class="sealmeta__no">GM ${pad(m.no)}</b>
-      <span>${fmtDate(m.date)}</span>
-      <span>${fmtTime(rec.at)} / ${esc((rec.method || 'qr').toUpperCase())}</span>
-      <span>${esc(m.place)}</span>
+      <span>${fmtDate(m.date)} / ${fmtTime(rec.at)}${away}</span>
     </span>`;
   },
 
-  empty(title, body){
-    return `<section class="rig empty-reg" data-enter>
-      <div class="empty">
-        <span class="tone tone--coarse tone--fade-b empty__tone" aria-hidden="true"></span>
-        <div class="empty__seal" aria-hidden="true">
-          <svg viewBox="0 0 100 100">${sealArt()}</svg>
-          <span class="empty__void"></span>
-        </div>
-        <div class="empty__body">
-          <h3 class="empty__title">${esc(title)}</h3>
-          ${body ? `<p class="empty__note">${esc(body)}</p>` : ''}
-        </div>
-      </div>
-    </section>`;
+  empty(title){
+    return C.line(title, '');
   },
 
   ledgerRow(m){
@@ -153,12 +154,14 @@ const C = {
       ? `<svg class="lrow__mark" viewBox="0 0 64 64" aria-hidden="true">${stampMark(idx)}</svg>`
       : `<span class="lrow__slot" aria-hidden="true"></span>`;
 
+    /* the glyph already says stamped; the place is said only when it is
+       not the usual room */
+    const away = m.place && m.place !== Schedule.PLACE ? ` / ${esc(m.place)}` : '';
     const detail = {
-      set:  scan ? `Stamped ${fmtTime(scan.at)} / ${esc(m.place)}`
-                 : `Stamped / ${esc(m.place)}`,
-      open: `Open now / ${esc(m.place)}`,
-      miss: `Not stamped / ${esc(m.place)}`,
-      upcoming: `${esc(m.time)} / ${esc(m.place)}`,
+      set:  (scan ? fmtTime(scan.at) : 'Stamped') + away,
+      open: 'Open now' + away,
+      miss: 'Missed' + away,
+      upcoming: esc(m.time) + away,
     }[state];
 
     const el   = state === 'open' ? 'button' : 'div';
@@ -188,8 +191,6 @@ C.account = () => `<section class="acct" data-enter>
   <button class="acct__out" data-signout type="button">Sign out</button>
 </section>`;
 
-const MANUAL_ENTRY = false;
-
 const Views = {
   loadFailure(title){
     return `<div class="view">
@@ -197,40 +198,33 @@ const Views = {
         <h1 class="title rechead__title">${title}</h1>
       </header>
       <section class="rig" data-enter>
-        <div class="panel bpanel">
+        <div class="panel bpanel fail">
           <p class="kicker">Could not load</p>
-          <p style="margin-top:8px">Keystamp could not reach the club records, so your
-            attendance cannot be shown right now. Nothing has been lost.</p>
-          <p class="muted" style="margin-top:8px;font-size:12.5px">Check your connection
-            and try again.</p>
-          <button class="btn btn--go" type="button" data-reload data-busy="Retrying…" style="margin-top:var(--s4)">Try again</button>
+          <p>Your record did not load. Nothing is lost. Check your connection.</p>
+          <button class="btn btn--go" type="button" data-reload data-busy="Retrying">Try again</button>
         </div>
       </section>
     </div>`;
   },
 
   home(){
-    if (Store.failed) return this.loadFailure('Home');
+    if (Store.failed) return this.loadFailure('Your card');
     const open = Store.openMeeting();
     const next = Store.nextMeeting();
     const done = open && Store.attended(open.id);
     const live = Boolean(open && !done);
 
-    let action;
+    let action = '';
     if (open && !done)
       action = C.strike({ verb:'Check in',
-                          sub:`GM ${pad(open.no)} / ${fmtDay(open.date)} / ${esc(open.time)} / ${esc(open.place)}`,
+                          sub:[`GM ${pad(open.no)}`, open.today ? 'Today' : fmtDay(open.date), open.time, open.place].join('\u00a0/ '),
                           go:'scan', live:true });
-    else if (open && done)
-      action = C.strike({ verb:'Your record',
-                          sub:`GM ${pad(open.no)} is stamped`, go:'record' });
+    else if (open && done){
+      const scan = Store.scanFor(open.id);
+      action = C.line('Checked in', `GM ${pad(open.no)}${scan ? ` / ${fmtTime(scan.at)}` : ''}`);
+    }
     else if (next)
-      action = C.strike({ verb:'Nothing open',
-                          sub:`Check-in opens at GM ${pad(next.no)} / ${fmtDay(next.date)}`,
-                          go:'record' });
-    else
-      action = C.strike({ verb:'Nothing open',
-                          sub:'No meeting is taking check-ins right now', go:'record' });
+      action = C.line('Next', `GM ${pad(next.no)} / ${fmtDate(next.date)} / ${esc(next.time)} / ${esc(next.place)}`);
 
     const showing = open ? open.id : next ? next.id : null;
     const ahead = Store.meetings
@@ -239,13 +233,13 @@ const Views = {
       .slice(0, 3);
 
     return `<div class="view view--home">
-      <header class="rechead rechead--tight" data-enter>
+      <header class="rechead" data-enter>
         <h1 class="title rechead__title">Your card</h1>
       </header>
 
       <div class="deck${live ? ' deck--live' : ''}" data-enter>
-        ${C.sealGrid()}
-        <div class="deck__act">${action}</div>
+        ${C.sealGrid(live)}
+        ${action ? `<div class="deck__act">${action}</div>` : ''}
         ${ahead.length ? `<section class="ahead deck__ahead" data-enter>
             <h2 class="ahead__mark">Ahead</h2>
             <ul class="ahead__list">
@@ -264,13 +258,10 @@ const Views = {
     if (Store.failed) return this.loadFailure('Record');
 
     const newest = (a, b) => String(a.date) < String(b.date) ? 1 : -1;
-    const soonest = (a, b) => String(a.date) < String(b.date) ? -1 : 1;
     const held = [...Store.heldMeetings()].sort(newest);
-    const upcoming = Store.meetings.filter(m => m.upcoming).sort(soonest);
     const counted = Store.countedMeetings();
     const kept = counted.filter(m => Store.attended(m.id)).length;
     const gone = counted.length - kept;
-    const frac = counted.length ? kept / counted.length : 0;
 
     return `<div class="view view--record">
       <header class="rechead" data-enter>
@@ -279,24 +270,19 @@ const Views = {
 
       ${held.length ? `<div class="recbody">
         <aside class="tally" data-enter>
-          <p class="tally__fig">${kept}</p>
-          <p class="tally__of">stamped of ${counted.length} held</p>
-          <p class="tally__bar" style="--fill:${(frac*100).toFixed(1)}%" aria-hidden="true"></p>
-          <p class="tally__gone">${gone
-            ? `${gone} missed` : 'None missed'}</p>
+          <p class="figline">
+            <span><b>${kept}</b> stamped</span>
+            <span><b>${gone}</b> missed</span>
+            <span><b>${counted.length}</b> held</span>
+          </p>
         </aside>
 
         <section class="ledger" data-enter>
           ${held.map(m => C.ledgerRow(m)).join('')}
         </section>
       </div>`
-      : C.empty('No general meetings yet',
-                'Your first stamp will land here.')}
+      : C.empty('No meetings held yet')}
 
-      ${upcoming.length ? `<section class="ledger ledger--ahead" data-enter>
-        <h2 class="ledger__mark">Scheduled</h2>
-        ${upcoming.map(m => C.ledgerRow(m)).join('')}
-      </section>` : ''}
     </div>`;
   },
 
@@ -304,30 +290,18 @@ const Views = {
     if (Store.failed) return this.loadFailure('Rewards');
     const total = Store.totalStamps();
     const tiers = [...Store.rewards].sort((a, b) => a.required - b.required);
-    const top   = tiers[tiers.length - 1]?.required || 10;
-
-    const scale = Math.max(top * 1.06, total * 1.06, 1);
-    const next  = tiers.find(t => total < t.required) || null;
 
     return `<div class="view view--rewards">
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">Rewards</h1>
       </header>
 
-      <section class="ladder" data-enter>
-        <p class="ladder__fig">${total}</p>
-        <p class="ladder__of">${total === 1 ? 'stamp' : 'stamps'} so far${
-          next ? ` / ${next.required - total} to the next rung` : ' / every rung passed'}</p>
-      </section>
+      <p class="figline" data-enter>
+        <span><b>${total}</b> ${total === 1 ? 'stamp' : 'stamps'}</span>
+      </p>
 
-      <section class="climb" data-enter>
-        <div class="climb__rail" role="img"
-             aria-label="${total} stamps against rungs at ${tiers.map(t => t.required).join(', ')}">
-          <span class="climb__fill" style="--h:${Math.min(total / scale * 100, 100).toFixed(1)}%"></span>
-        </div>
-        <div class="climb__plates">
-          ${tiers.map(t => C.tier(t, total)).join('')}
-        </div>
+      <section class="tiers" data-enter>
+        ${tiers.map((t, i) => C.tier(t, total, i ? tiers[i - 1].required : 0)).join('')}
       </section>
     </div>`;
   },
@@ -336,7 +310,7 @@ const Views = {
     const standing = scanStanding();
 
     return `<div class="view view--scan">
-      <header class="rechead rechead--tight" data-enter>
+      <header class="rechead" data-enter>
         <h1 class="title rechead__title">Scan</h1>
       </header>
 
@@ -360,15 +334,6 @@ const Views = {
         <span class="standing__lab">${standing.lab}</span>
         <span class="standing__at">${standing.at}</span>
       </p>
-
-      ${MANUAL_ENTRY ? `<div class="manual" data-enter>
-        <label class="manual__lab" for="manualInput">Or enter the check-in code</label>
-        <div class="manual__f">
-          <input class="manual__in" id="manualInput" placeholder="Check-in code"
-                 autocomplete="off" spellcheck="false" enterkeyhint="go">
-          <button class="manual__go" id="manualGo" type="button">Verify</button>
-        </div>
-      </div>` : ''}
     </div>`;
   },
 
@@ -387,7 +352,7 @@ const Views = {
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">${title}</h1>
       </header>
-      <section class="rig" data-enter style="margin-top:var(--gut)">
+      <section class="rig" data-enter>
         <div id="boardPane">${BoardUI.pane()}</div>
       </section>
       ${tail}
@@ -398,47 +363,55 @@ const Views = {
      does; from 1024px up the rail's foot carries it instead. */
   board(){     BoardUI.tab = 'club';     return this.boardSpread('Club Tools', C.account()); },
   bmeet(){     BoardUI.tab = 'meetings'; return this.boardSpread('Meetings'); },
-  bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Check-In'); },
+  bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Check-in'); },
   bmembers(){  BoardUI.tab = 'progress'; return this.boardSpread('Members'); },
 
   profile(){
     if (Store.failed) return this.loadFailure('Member');
     const held     = Store.countedMeetings();
-    const attended = held.filter(m => Store.attended(m.id)).length;
     const total    = Store.totalStamps();
     const name     = memberName();
     const handle   = (Store.user && Store.user.username) || name;
-    const role     = Store.isBoard ? 'Board' : 'Member';
+    const chrono   = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
+    const first    = chrono[0], last = chrono[chrono.length - 1];
+    const cards    = Math.floor(total / Rules.CARD);
 
     return `<div class="view view--member">
-      <header class="rechead rechead--tight" data-enter>
+      <header class="rechead" data-enter>
         <h1 class="title rechead__title">Member</h1>
       </header>
 
-      <div class="sheet" data-enter>
-        <section class="who">
-          <div class="who__mark" aria-hidden="true">
-            <span class="who__org">Cali-Nev-Ha District</span>
-          </div>
-          <span class="who__emblem" aria-hidden="true">${brandSeal('cnh')}</span>
-          <div class="who__id">
-            <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
-              handle !== name ? ` / ${esc(handle)}` : ''}</p>
-            <p class="who__name">${esc(name)}</p>
-          </div>
-        </section>
-        ${C.sealGrid()}
-      </div>
-
-      <section class="standing-band" data-enter>
-        <p class="standing-band__fig">${total}</p>
-        <p class="standing-band__of">${total === 1 ? 'stamp' : 'stamps'} collected</p>
-        <dl class="standing-band__rest">
-          <div><dt>Meetings attended</dt><dd>${attended} of ${held.length}</dd></div>
-          <div><dt>Attendance rate</dt><dd>${Store.attendanceRate()}%</dd></div>
-          <div><dt>Rewards unlocked</dt><dd>${Store.rewardsUnlocked()} of ${Store.rewards.length}</dd></div>
-        </dl>
+      <section class="who" data-enter>
+        <p class="who__name">${esc(name)}</p>
+        <p class="who__line">${Store.isBoard ? 'Board' : 'Member'} / Cali-Nev-Ha District${
+          handle.toLowerCase() !== name.toLowerCase() ? ` / ${esc(handle)}` : ''}</p>
+        <span class="who__seal" aria-hidden="true">${brandSeal('cnh')}</span>
       </section>
+
+      ${total ? `<section class="standing-band" data-enter>
+        <p class="standing-band__fig">${total}</p>
+        <p class="standing-band__of">${total === 1 ? 'stamp' : 'stamps'}</p>
+        <dl class="standing-band__rest">
+          <div><dt>Attendance</dt><dd>${held.length ? Store.attendanceRate() : 0}%</dd></div>
+          <div><dt>First stamp</dt><dd>${fmtDay(first.at)}</dd></div>
+          <div><dt>Latest stamp</dt><dd>${fmtDay(last.at)}</dd></div>
+        </dl>
+      </section>` : `<p class="nowline" data-enter><b class="nowline__lab">No attendance yet</b></p>`}
+
+      ${cards ? `<section class="cards" data-enter>
+        <h2 class="ledger__mark">Completed cards</h2>
+        <ol class="cards__list">${Array.from({ length:cards }, (_, k) => {
+          const run = chrono.slice(k * Rules.CARD, (k + 1) * Rules.CARD);
+          const prize = Store.rewards.find(r => r.required === (k + 1) * Rules.CARD);
+          return `<li class="cards__row">
+            <span class="cards__no">Card ${pad(k + 1)}</span>
+            <span class="cards__marks" aria-hidden="true">${run.map((_, i) =>
+              `<svg viewBox="0 0 64 64">${stampMark(k * Rules.CARD + i)}</svg>`).join('')}</span>
+            <span class="cards__when">${fmtDay(run[0].at)} – ${fmtDay(run[run.length - 1].at)}</span>
+            ${prize ? `<span class="cards__prize">${esc(prize.name)}${prize.claimed ? ' / claimed' : ''}</span>` : ''}
+          </li>`;
+        }).join('')}</ol>
+      </section>` : ''}
 
       ${C.account()}
     </div>`;
@@ -494,7 +467,7 @@ const Views = {
                                  autocomplete:'new-password' }) : ''}
 
           <div class="authp__act">
-            <button class="authp__go" type="submit" id="authGo" data-busy="${up ? 'Creating…' : 'Signing in…'}">
+            <button class="authp__go" type="submit" id="authGo" data-busy="${up ? 'Creating' : 'Signing in'}">
               ${up ? 'Create account' : 'Sign in'}
             </button>
             <button class="authp__swap" type="button" id="authSwap">

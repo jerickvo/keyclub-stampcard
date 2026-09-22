@@ -59,7 +59,7 @@ function mkClient(){
     from(table){
       const rows = () => db[table] || [];
       const q = { _f:[], _table:table };
-      q.select = function(){ return this; };
+      q.select = function(_cols, opts){ if (opts && opts.count) this._count = true; if (opts && opts.head) this._head = true; return this; };
       q.eq = function(col, val){ this._f.push([col, val]); return this; };
       q.order = function(){ return this; };
       q._rows = function(){
@@ -76,7 +76,9 @@ function mkClient(){
       };
       q.then = function(res){
         if (this._fail()) return Promise.resolve({ data:null, error:{ message:'network' } }).then(res);
-        return Promise.resolve({ data:this._rows(), error:null }).then(res);
+        const found = this._rows();
+        if (this._count) return Promise.resolve({ data:this._head ? null : found, count:found.length, error:null }).then(res);
+        return Promise.resolve({ data:found, error:null }).then(res);
       };
       /* Mirrors the meetings_board_delete policy: board only, and only a
          meeting nothing has been checked in to. A meeting with attendance

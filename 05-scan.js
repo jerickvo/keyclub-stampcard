@@ -24,8 +24,7 @@ function paintBoard(){
   Backend.issueToken(boardMeeting).then(({ token }) => {
     if (!document.body.contains(box)) return;
     const svg = qrSVG(token);
-    box.innerHTML = svg || `<p class="qrpanel__fail">The QR encoder did not load. Ask members
-      to check in at the door instead.</p>`;
+    box.innerHTML = svg || `<p class="qrpanel__fail">The code could not be drawn. Reload the page.</p>`;
   }).catch(() => {
     if (!document.body.contains(box)) return;
     box.innerHTML = `<p class="qrpanel__fail">Could not reach the attendance server.</p>`;
@@ -38,16 +37,19 @@ function paintAttendanceCount(meetingId){
   const el = () => document.querySelector('#attCount');
   const pull = async () => {
     if (!el()) return clearInterval(countTimer);
+    if (document.hidden) return;
 
+    /* a failed poll keeps the last count on the wall; the next poll
+       tries again */
     let text;
     try { text = String(await Backend.attendanceCount(meetingId)); }
-    catch (_) { text = '—'; }
+    catch (_) { return; }
     const node = el();
     if (!node) return clearInterval(countTimer);
     node.textContent = text;
   };
   pull();
-  countTimer = setInterval(pull, 6000);
+  countTimer = setInterval(pull, 3000);
 }
 
 /* The line printed under the viewer: which meeting a scan would stamp.
@@ -56,11 +58,12 @@ function paintAttendanceCount(meetingId){
 function scanStanding(){
   const open = Store.openMeeting();
   const done = open && Store.attended(open.id);
+  if (Store.failed) return { lab:'Record not loaded', at:'Could not reach the club records' };
   return !open
-    ? { lab:'Nothing open', at:'No check-in right now' }
+    ? { lab:'Check-in', at:'Closed' }
     : done
       ? { lab:'Already stamped', at:`GM ${pad(open.no)}` }
-      : { lab:'Checking in to', at:`GM ${pad(open.no)} / ${fmtDay(open.date)} / ${esc(open.place)}` };
+      : { lab:'Checking in to', at:`GM ${pad(open.no)}` };
 }
 function paintScanStanding(){
   const s = scanStanding();
@@ -195,9 +198,17 @@ const Decoder = {
 
 const Scanner = {
   stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0, zoom:null, run:0, armTimer:null,
+  /* the last code the server refused; while it stays in view it is not
+     sent again, so a refusal is said once, not every two seconds */
+  refused:null, forgive:null, lastBad:null,
+
+  stamped(){
+    const o = Store.openMeeting();
+    return Boolean(o && Store.attended(o.id));
+  },
 
   setState(state, msg){
-    const ret = $('#reticle'), el = $('#scanMsg'), line = $('#scanLine'), viewer = $('#viewer');
+    const ret = $('#reticle'), el = $('#scanMsg'), line = $('#scanLine');
     if (el) el.textContent = msg;
     if (line){
       const tone = state === 'hit' ? 'good' : state;
@@ -205,18 +216,8 @@ const Scanner = {
         line.classList.toggle('scanline--' + s, s === tone));
     }
     if (ret){
-      ret.classList.toggle('reticle--live', state === 'live');
-      ret.classList.toggle('reticle--good', state === 'good' || state === 'hit');
+      ret.classList.toggle('reticle--good', state === 'hit' || state === 'busy');
       ret.classList.toggle('reticle--bad',  state === 'bad');
-
-      ret.classList.toggle('reticle--busy', state === 'busy');
-    }
-
-    viewer?.classList.toggle('viewer--hit', state === 'good' || state === 'hit');
-
-    if (viewer){
-      viewer.classList.remove('viewer--bad');
-      if (state === 'bad'){ void viewer.offsetWidth; viewer.classList.add('viewer--bad'); }
     }
   },
 
@@ -233,9 +234,14 @@ const Scanner = {
     if (!video) return;
     const run = ++this.run;
     this.locked = false;
+    this.refused = null; this.lastBad = null; clearTimeout(this.forgive);
 
-    $('#viewer')?.classList.remove('viewer--stalled', 'viewer--feed');
+    $('#viewer')?.classList.remove('viewer--stalled');
     $('#viewer .stall')?.remove();
+
+    /* a member already stamped for the open meeting has nothing to scan */
+    if (this.stamped()) return this.stall('stamped');
+
     this.setState('boot', 'Starting camera');
     this.showLoader();
 
@@ -243,13 +249,24 @@ const Scanner = {
 
     Decoder.start();
 
+    /* a permission sheet left open, or a camera wedged by another app,
+       never answers; after ten seconds the page says so and offers the
+       camera again */
+    const slow = setTimeout(() => { if (run === this.run) this.stall('failed'); }, 10000);
     let stream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
         video:{ facingMode:{ ideal:'environment' }, width:{ ideal:1280 } }, audio:false });
     } catch (err) {
+      clearTimeout(slow);
       if (run !== this.run) return;
-      return this.stall(err && err.name === 'NotAllowedError' ? 'denied' : 'unavailable');
+      const name = err && err.name;
+      return this.stall(name === 'NotAllowedError' ? 'denied' : name === 'NotFoundError' ? 'unavailable' : 'failed');
+    }
+    clearTimeout(slow);
+    if (run === this.run && $('#viewer .stall')){
+      $('#viewer')?.classList.remove('viewer--stalled');
+      $('#viewer .stall')?.remove();
     }
 
     if (run !== this.run || !document.body.contains(video)){
@@ -274,11 +291,9 @@ const Scanner = {
     try { await video.play(); } catch (_) {}
     if (run !== this.run) return;
 
-    $('#viewer')?.classList.add('viewer--feed');
-
     this.cv = document.createElement('canvas');
     this.ctx = this.cv.getContext('2d', { willReadFrequently:true });
-    this.setState('live', 'Looking for the check-in code');
+    this.setState('live', 'Scanning');
     this.mountZoom();
     this.loop(video, run);
   },
@@ -334,15 +349,13 @@ const Scanner = {
     const l = document.createElement('div');
     l.className = 'loader'; l.id = 'camLoader';
 
-    ret.classList.add('reticle--wait');
-
     l.innerHTML = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor"
         stroke-width="3" aria-hidden="true">
       <circle cx="50" cy="50" r="42" stroke-dasharray="42 90"/>
       <circle cx="50" cy="50" r="30" stroke-dasharray="24 70" opacity=".5"/></svg>`;
     ret.appendChild(l);
   },
-  hideLoader(){ $('#camLoader')?.remove(); $('#reticle')?.classList.remove('reticle--wait'); },
+  hideLoader(){ $('#camLoader')?.remove(); },
 
   /* Reading a frame costs real time on a phone -- tens of milliseconds --
      and it is spent on the main thread, where it competes with whatever is
@@ -402,32 +415,39 @@ const Scanner = {
   /* A code was read -- off the worker or off the inline path, and on a
      camera run that is still the current one. */
   hit(text, run){
-    if (run !== this.run || this.locked) return;
+    if (run !== this.run || this.locked || text === this.refused) return;
     this.locked = true;
-    this.setState('hit', 'Locked');
+    /* the frame holds on the code that was read while it is checked */
+    try { $('#cam')?.pause(); } catch (_) {}
+    this.setState('hit', 'Code read');
     FX.scanLock();
-    setTimeout(() => submitSeal(text, true, run), 190);
+    submitSeal(text, run);
+  },
+
+  /* back to reading, on the same run, after a refusal */
+  resume(run){
+    if (run !== this.run) return;
+    this.locked = false;
+    try { $('#cam')?.play()?.catch(() => {}); } catch (_) {}
   },
 
   stall(kind){
     const viewer = $('#viewer');
     if (!viewer) return;
     this.hideLoader();
-    viewer.classList.remove('viewer--feed');
 
-    const more = MANUAL_ENTRY ? ' Or enter the check-in code below.' : '';
     const copy = {
       denied:{ title:'Camera permission is off', retry:true,
-        body:'Allow camera access for this page in your browser settings, then try again.' + more },
+        body:'Allow the camera in browser settings.' },
       ended:{ title:'Camera stopped', retry:true,
-        body:'The camera feed ended. Check that camera access is still allowed, then try again.' + more },
+        body:'Check camera access, then try again.' },
       unavailable:{ title:'No camera found', retry:true,
-        body:'This device has no camera.' + (MANUAL_ENTRY
-          ? ' Enter the check-in code below instead.'
-          : ' Sign in on a phone with a camera to scan the code.') },
+        body:'Scan the code from a phone.' },
       unsupported:{ title:'Scanning needs a secure page', retry:false,
-        body:'Camera access only works over https.' + more },
-    }[kind] || { title:'Camera off', retry:true, body:'The camera could not be started.' + more };
+        body:'Camera access needs https.' },
+      /* the line under the panel already names the meeting */
+      stamped:{ title:'You are checked in', retry:false, body:'' },
+    }[kind] || { title:'Camera unavailable', retry:true, body:'Close other apps using the camera, then try again.' };
 
     /* The note sits over the viewer; the video stays in place, so the
        camera can be offered again without a reload. */
@@ -440,7 +460,6 @@ const Scanner = {
 
     viewer.classList.add('viewer--stalled');
     this.setState('off', 'Camera off');
-    $('#manualInput')?.focus({ preventScroll:true });
   },
 
   stop(){
@@ -450,7 +469,7 @@ const Scanner = {
     if (this.zoom) this.zoom.drop();
     this.stream?.getTracks().forEach(t => t.stop());
     this.stream = null; this.locked = false;
-    $('#viewer')?.classList.remove('viewer--feed');
+    clearTimeout(this.forgive);
   },
 };
 
@@ -477,7 +496,8 @@ const Landing = {
     if (!this.active || !cell) return;
     this.armed = cell;
     if (!Motion.off) cell.style.opacity = '0';
-    try { cell.scrollIntoView({ block:'center', inline:'nearest', behavior:'instant' }); }
+    /* only as far as needed: a full card's figure and punch stay in view */
+    try { cell.scrollIntoView({ block:'nearest', inline:'nearest', behavior:'instant' }); }
     catch (_) { try { cell.scrollIntoView(); } catch (__) {} }
   },
 
@@ -528,65 +548,64 @@ const Landing = {
   },
 };
 
+/* [what happened, what to do]; the scan line under the camera prints
+   both, and nothing else repeats them */
 const SCAN_MESSAGES = {
-  INVALID_TOKEN:       ['Not a valid code',      'That code is not from Keystamp. Scan the one on the board screen.'],
-  EXPIRED_TOKEN:       ['Code expired',          'That code is no longer valid. Scan the code on the board screen, or ask a board member.'],
-  MEETING_NOT_FOUND:   ['No matching meeting',   'Keystamp has no meeting for that code. Ask a board member.'],
-  MEETING_NOT_ACTIVE:  ['Check-in not open',     'This meeting is not taking check-ins yet.'],
-  ATTENDANCE_CLOSED:   ['Check-in has ended',    'Attendance for this meeting is closed. A board member can add you.'],
-  WRONG_DAY:           ['Wrong day',             'That code is for a different meeting date.'],
-  ALREADY_CHECKED_IN:  ['Already checked in',    'Your stamp for this general meeting is already recorded.'],
-  PROFILE_NOT_READY:   ['Account still setting up','Your account was made seconds ago. Wait a moment and scan again.'],
-  NOT_AUTHENTICATED:   ['Sign in first',         'Sign in to record your attendance.'],
-  NOT_AUTHORIZED:      ['Not allowed',           'Your account cannot check in to this meeting.'],
-  NETWORK_ERROR:       ['No connection',         'Keystamp could not reach the server. Check your signal and try again.'],
-  VERIFIER_UNAVAILABLE:['Check-in unavailable',  'Attendance verification is not running. Tell a board member.'],
-  SERVER_ERROR:        ['Something went wrong',  'Keystamp could not check that code. Try again in a moment.'],
-  NO_BACKEND:          ['Not connected',         'This build has no backend configured, so check-in is unavailable.'],
+  INVALID_TOKEN:       ['Not a Keystamp code',     'Scan the code on the board screen'],
+  EXPIRED_TOKEN:       ['Code expired',            'Scan the code on the board screen'],
+  MEETING_NOT_FOUND:   ['No matching meeting',     'Ask a board member'],
+  MEETING_NOT_ACTIVE:  ['Check-in not open',       ''],
+  ATTENDANCE_CLOSED:   ['Check-in has ended',      ''],
+  WRONG_DAY:           ['Code is for another day', ''],
+  ALREADY_CHECKED_IN:  ['Already checked in',      ''],
+  PROFILE_NOT_READY:   ['Account still setting up','Try again in a moment'],
+  NOT_AUTHENTICATED:   ['Sign in first',           ''],
+  NOT_AUTHORIZED:      ['Not allowed',             'This account cannot check in'],
+  NETWORK_ERROR:       ['No connection',           'Check your signal'],
+  VERIFIER_UNAVAILABLE:['Check-in unavailable',    'Tell a board member'],
+  SERVER_ERROR:        ['Something went wrong',    'Try again in a moment'],
+  NO_BACKEND:          ['Not connected',           'This build has no backend'],
 };
 const scanMessage = code => SCAN_MESSAGES[code] || SCAN_MESSAGES.SERVER_ERROR;
+/* refusals that may pass on a second try; the same code is sent again,
+   quietly, after a short wait */
+const SCAN_TRANSIENT = new Set(['NETWORK_ERROR', 'SERVER_ERROR', 'VERIFIER_UNAVAILABLE', 'PROFILE_NOT_READY']);
+/* refusals that mean the record on this page is out of date */
+const SCAN_STALE = new Set(['ALREADY_CHECKED_IN', 'ATTENDANCE_CLOSED', 'MEETING_NOT_ACTIVE', 'WRONG_DAY']);
 
 /* `run` is the camera run that read the code; the refusal, if any, is
    shown on that run and no other. */
-async function submitSeal(raw, fromCamera, run = Scanner.run){
-  if (!QRFormat.looksLikeKeystamp(raw)){
-    const [t, d] = scanMessage('INVALID_TOKEN');
-    toast({ key:'scan', title:t, detail:d, bad:true });
-    if (fromCamera) rejectVisual('INVALID_TOKEN', run);
-    return;
-  }
+async function submitSeal(raw, run = Scanner.run){
+  if (!QRFormat.looksLikeKeystamp(raw)) return rejectVisual('INVALID_TOKEN', raw, run);
 
-  if (fromCamera) Scanner.setState('busy', 'Checking with the server');
-
+  Scanner.setState('busy', 'Checking');
   const result = await Backend.verifyCode(raw);
 
   if (!result || !result.ok){
     const code = (result && result.code) || 'SERVER_ERROR';
-    const [t, d] = scanMessage(code);
-
-    toast({ key:'scan', title:t, detail:d, bad:true });
-    if (fromCamera) rejectVisual(code, run);
-    return;
+    if (SCAN_STALE.has(code)) Store.hydrate();
+    return rejectVisual(code, raw, run);
   }
 
-  dropToast('scan');
-  Scanner.setState('good', 'Verified');
   Scanner.stop();
-
   const meeting = Store.meeting(result.meeting_id) ||
                   { id:result.meeting_id, no:result.meeting_number, place:Schedule.PLACE };
   await Landing.run(meeting);
 }
 
-/* The refusal is shown on the camera run that read the code; a run
-   that has since been stopped or restarted is left alone. */
-function rejectVisual(code, run = Scanner.run){
+/* The refusal is shown on the camera run that read the code and stays
+   on the line until another code is read; a run that has since been
+   stopped or restarted is left alone. */
+function rejectVisual(code, raw, run = Scanner.run){
   if (run !== Scanner.run) return;
-  Scanner.setState('bad', scanMessage(code)[0]);
-  FX.scanReject();
-  setTimeout(() => {
-    if (run !== Scanner.run || !$('#reticle')) return;
-    Scanner.locked = false;
-    Scanner.setState('live', 'Looking for the check-in code');
-  }, 1900);
+  const [what, todo] = scanMessage(code);
+  Scanner.setState('bad', todo ? `${what}. ${todo}` : what);
+  /* the same refusal again, after a quiet retry, is not shaken twice */
+  if (Scanner.lastBad !== code + raw) FX.scanReject();
+  Scanner.lastBad = code + raw;
+  Scanner.refused = raw;
+  clearTimeout(Scanner.forgive);
+  if (SCAN_TRANSIENT.has(code))
+    Scanner.forgive = setTimeout(() => { if (run === Scanner.run) Scanner.refused = null; }, 4000);
+  Scanner.resume(run);
 }

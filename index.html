@@ -76,7 +76,6 @@
 :root{
   --edge-hair:1px;
   --edge-thin:2px;
-  --edge:3px;
   --edge-heavy:6px;
 
   --rule:2.5px;
@@ -84,25 +83,25 @@
 
   --page-max:1320px;
   --gutter:clamp(16px,4.4vw,56px);
-  --gut:clamp(8px,1vw,14px);
-  --gut-tier:clamp(12px,1.8vw,24px);
 
-  --t-title:clamp(38px,9vw,104px);
-  --t-head:clamp(27px,4.8vw,54px);
+  --t-title:clamp(28px,3.6vw,44px);
+  --t-head:clamp(24px,3.4vw,40px);
   --t-sub:clamp(19px,2.5vw,29px);
   --t-verb:clamp(22px,3.4vw,38px);
 
   --t-body:clamp(15px,.28vw + 14.3px,17px);
-  --t-caption:clamp(12px,.8vw,14px);
+  --t-caption:clamp(13px,.25vw + 12px,14px);
   --tap:44px;
   --tabs-h:56px;
 
-  --s2:8px; --s3:12px; --s4:16px;
-  --s5:clamp(18px,1.6vw,22px);
-  --s6:clamp(22px,2.4vw,32px);
-  --s8:clamp(40px,5vw,72px);
+  /* five steps, named by the job they do */
+  --sp-tight:8px;                    /* inside a group: title to rule, label to field */
+  --sp-row:12px;                     /* list-row padding, siblings on one line */
+  --sp-pad:16px;                     /* inside slabs and plates */
+  --sp-block:clamp(24px,2.4vw,32px); /* between blocks, on every page */
+  --sp-page:clamp(40px,5vw,64px);    /* the page foot */
 
-  --rail:clamp(208px,20vw,340px); --pad:var(--gutter);
+  --rail:clamp(208px,20vw,340px);
   }
 
 *{box-sizing:border-box;margin:0;padding:0}
@@ -116,136 +115,11 @@ body{
 
 .ground{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
   background:var(--paper)}
-.ground::before{content:"";position:absolute;top:-4vh;right:-6vw;
-  width:44vw;height:52vh;
-  background-image:radial-gradient(circle at 50% 50%, var(--tone-page) 0 1px, transparent 1.1px);
-  background-size:7px 7px;
-  clip-path:polygon(24% 0,100% 0,100% 100%);
-  -webkit-mask-image:linear-gradient(215deg,#000 30%,transparent 78%);
-  mask-image:linear-gradient(215deg,#000 30%,transparent 78%)}
-.ground::after{content:"";position:absolute;left:-5vw;bottom:-6vh;
-  width:30vw;height:34vh;
-  background-image:radial-gradient(circle at 50% 50%, var(--tone-page) 0 1.6px, transparent 1.75px);
-  background-size:10px 10px;
-  clip-path:polygon(0 0,100% 100%,0 100%);
-  -webkit-mask-image:linear-gradient(35deg,#000 26%,transparent 72%);
-  mask-image:linear-gradient(35deg,#000 26%,transparent 72%)}
-.ground__tone{position:absolute;top:0;bottom:0;right:clamp(14px,1.8vw,28px);
-  width:1px;background:var(--tint);opacity:.6}
-
-.ground__slash{position:absolute;left:-6%;right:-6%;top:34%;
-  height:clamp(70px,14vh,150px);transform:rotate(-11deg);
-  background:var(--tint);opacity:.55;
-  clip-path:polygon(0 55%,9% 34%,28% 16%,52% 6%,74% 16%,100% 44%,
-                    92% 62%,66% 86%,38% 94%,12% 76%)}
-
 .ground__bleed{position:absolute;top:-2%;bottom:-2%;right:0;
   width:clamp(7px,1vw,15px);background:var(--ink);
   clip-path:polygon(28% 0,100% 0,100% 100%,40% 100%,12% 88%,52% 74%,
                     22% 61%,58% 47%,18% 34%,50% 22%,20% 10%)}
-
-.ground__corner{position:absolute;right:clamp(24px,3vw,44px);
-  bottom:clamp(18px,2.6vh,34px);
-  width:clamp(44px,5vw,72px);height:clamp(44px,5vw,72px);
-  border-right:4px solid var(--ink);border-bottom:4px solid var(--ink)}
-
-.ground__d1,.ground__d2{position:absolute;display:none;pointer-events:none}
-
-[data-screen="record"] .ground__slash{top:20%;transform:rotate(-23deg)}
-[data-screen="record"] .ground::before{width:30vw;height:76vh}
-[data-screen="scan"] .ground__slash{top:62%;transform:rotate(-7deg);opacity:.4}
-[data-screen="rewards"] .ground__slash{top:58%;transform:rotate(8deg)}
-[data-screen="rewards"] .ground::after{width:44vw;height:42vh}
-[data-screen="profile"] .ground__slash{top:24%;transform:rotate(-15deg)}
-[data-screen="board"] .ground__slash,
-[data-screen="bmeet"] .ground__slash,
-[data-screen="bcheckin"] .ground__slash,
-[data-screen="bmembers"] .ground__slash{top:42%;transform:rotate(14deg)}
-[data-screen="bmeet"] .ground::before{width:52vw;height:44vh}
-[data-screen="auth"] .ground__bleed,
-[data-screen="auth"] .ground__corner,
-[data-screen="auth"] .ground__d1,
-[data-screen="auth"] .ground__d2,
-[data-screen="auth"] .ground__tone{display:none}
-
-[data-screen="home"] .ground__d1{display:block;left:-3%;bottom:6%;
-  width:clamp(160px,22vw,320px);height:clamp(90px,12vw,170px);
-  transform:rotate(-14deg);opacity:.6;
-  background:repeating-linear-gradient(-14deg,var(--tint) 0 3px,transparent 3px 14px);
-  -webkit-mask-image:linear-gradient(76deg,#000 40%,transparent 85%);
-  mask-image:linear-gradient(76deg,#000 40%,transparent 85%)}
-[data-screen="home"] .ground__d2{display:block;right:-8%;top:56%;
-  width:clamp(180px,24vw,360px);height:clamp(120px,16vw,240px);
-  border:3px solid var(--tint);transform:rotate(-4deg)}
-
-[data-screen="record"] .ground__d2{display:block;right:-6%;bottom:-10%;
-  width:clamp(220px,26vw,420px);aspect-ratio:1;border-radius:50%;
-  background-image:radial-gradient(circle,var(--tone-page) 0 2px,transparent 2.4px);
-  background-size:12px 12px;opacity:.5;
-  -webkit-mask-image:radial-gradient(circle,#000 55%,transparent 72%);
-  mask-image:radial-gradient(circle,#000 55%,transparent 72%)}
-
-[data-screen="scan"] .ground__d1{display:block;left:4%;top:12%;
-  width:clamp(90px,12vw,190px);height:clamp(90px,12vw,190px);
-  border-left:4px solid var(--tint);border-top:4px solid var(--tint)}
-[data-screen="scan"] .ground__d2{display:block;right:-14%;top:22%;
-  width:clamp(240px,30vw,460px);aspect-ratio:1;border-radius:50%;
-  border:clamp(14px,2vw,26px) solid var(--tint);opacity:.55}
-
-[data-screen="rewards"] .ground__d1{display:block;right:0;bottom:10%;
-  width:clamp(120px,15vw,240px);height:clamp(180px,26vh,320px);opacity:.8;
-  background:linear-gradient(to top,var(--tint) 0 30%,transparent 30% 36%,
-    var(--tint) 36% 60%,transparent 60% 66%,var(--tint) 66% 84%,transparent 84%);
-  -webkit-mask-image:linear-gradient(260deg,#000 55%,transparent 92%);
-  mask-image:linear-gradient(260deg,#000 55%,transparent 92%)}
-[data-screen="rewards"] .ground__d2{display:block;left:8%;top:14%;
-  width:clamp(140px,18vw,280px);height:14px;transform:rotate(-24deg);
-  border-top:2px solid var(--tint);border-bottom:5px solid var(--tint)}
-
-[data-screen="profile"] .ground__d1{display:block;right:-10%;bottom:-16%;
-  width:clamp(260px,34vw,540px);aspect-ratio:1;border-radius:50%;
-  border:clamp(20px,3vw,40px) solid var(--tint);opacity:.6;
-  -webkit-mask-image:linear-gradient(315deg,#000 45%,transparent 75%);
-  mask-image:linear-gradient(315deg,#000 45%,transparent 75%)}
-[data-screen="profile"] .ground__d2{display:block;left:6%;top:10%;
-  width:clamp(120px,16vw,240px);height:clamp(90px,12vw,180px);opacity:.7;
-  background-image:
-    linear-gradient(var(--tint) 0 2px,transparent 2px),
-    linear-gradient(90deg,var(--tint) 0 2px,transparent 2px);
-  background-size:56px 44px,56px 44px;
-  background-position:0 0,7px -7px;background-repeat:repeat;
-  -webkit-mask-image:radial-gradient(ellipse,#000 30%,transparent 75%);
-  mask-image:radial-gradient(ellipse,#000 30%,transparent 75%)}
-
-[data-screen="board"] .ground__d1{display:block;right:-4%;top:10%;
-  width:clamp(160px,20vw,320px);height:clamp(100px,13vw,210px);
-  border:3px solid var(--tint);transform:rotate(3deg)}
-[data-screen="board"] .ground__d2{display:block;right:-1%;top:16%;
-  width:clamp(140px,17vw,280px);height:clamp(90px,11vw,180px);
-  border:2px solid var(--tint);transform:rotate(-2deg)}
-
-[data-screen="bmeet"] .ground__d1{display:block;right:0;top:20%;
-  width:clamp(80px,10vw,170px);height:clamp(200px,34vh,380px);opacity:.7;
-  background:repeating-linear-gradient(var(--tint) 0 2px,transparent 2px 22px);
-  -webkit-mask-image:linear-gradient(260deg,#000 40%,transparent 90%);
-  mask-image:linear-gradient(260deg,#000 40%,transparent 90%)}
-
-[data-screen="bcheckin"] .ground__d1{display:block;left:30%;right:6%;
-  top:0;height:70vh;opacity:.5;background:var(--tint);
-  clip-path:polygon(46% 0,54% 0,100% 100%,0 100%);
-  -webkit-mask-image:linear-gradient(#000 20%,transparent 95%);
-  mask-image:linear-gradient(#000 20%,transparent 95%)}
-
-[data-screen="bmembers"] .ground__d1{display:block;left:3%;bottom:8%;
-  width:clamp(140px,18vw,300px);height:clamp(120px,16vh,220px);opacity:.7;
-  background-image:linear-gradient(var(--tint) 0 3px,transparent 3px);
-  background-size:38px 26px;background-repeat:repeat;
-  -webkit-mask-image:linear-gradient(35deg,#000 40%,transparent 85%);
-  mask-image:linear-gradient(35deg,#000 40%,transparent 85%)}
-
-@media(max-width:1023px){
-  .ground__corner{display:none}
-}
+[data-screen="auth"] .ground__bleed{display:none}
 
 .shell{
   position:relative;
@@ -261,19 +135,17 @@ body{
   position:sticky;
   top:0;
   height:100dvh}
-.rail__brand{
-  padding-bottom:var(--s5)}
 .rail__nav{
   position:relative;
   display:flex;
   flex-direction:column;
   flex:1}
-.rail__link{display:flex;align-items:center;gap:var(--s3);
-  padding:9px var(--s3);background:none;border:0;cursor:pointer;
+.rail__link{display:flex;align-items:center;gap:var(--sp-row);
+  padding:9px var(--sp-row);background:none;border:0;cursor:pointer;
   font:500 14px/1 var(--f-body);letter-spacing:0;
   color:var(--ink);border-radius:0}
 .rail__link svg{width:17px;height:17px;stroke-width:1.9}
-.rail__foot{padding-top:var(--s4);border-top:var(--rule-hair) solid var(--ink)}
+.rail__foot{padding-top:var(--sp-pad);border-top:var(--rule-hair) solid var(--ink)}
 
 .topbar{
   align-items:center;
@@ -284,7 +156,7 @@ body{
   top:0;
   z-index:60;
   --safe-x:max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
-  padding:var(--s3) calc(var(--pad) + var(--safe-x))}
+  padding:var(--sp-row) calc(var(--gutter) + var(--safe-x))}
 .motion-btn{display:inline-grid;grid-auto-flow:column;padding:0;
   background:var(--paper);border:var(--rule-hair) solid var(--ink);
   color:var(--ink);cursor:pointer;font:500 11px/1 var(--f-mono);
@@ -296,15 +168,12 @@ body{
 
 main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   --safe-x:max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
-  padding:var(--gut-tier) calc(var(--gutter) + var(--safe-x))
-          var(--s8) calc(var(--gutter) + var(--safe-x))}
+  padding:var(--sp-pad) calc(var(--gutter) + var(--safe-x))
+          calc(var(--sp-page) + var(--tabs-h) + env(safe-area-inset-bottom, 0px))}
 
-.view{
-  display:grid;
-  gap:var(--gut-tier) var(--gut);
-  align-content:start;
-  position:relative}
-.view > *{grid-column:1/-1;min-width:0}
+/* one rhythm for every page: blocks sit one step apart */
+.view{position:relative;display:flex;flex-direction:column;gap:var(--sp-block)}
+.view > *{min-width:0}
 
 .rig{position:relative;min-width:0}
 .rig > .panel{margin-block:0}
@@ -325,15 +194,15 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   line-height:.9;
   overflow-wrap:break-word}
 .h2{
-  font:600 15px/1.25 var(--f-body)}
+  font:400 15px/1.25 var(--f-body)}
 
 .muted{color:var(--ink-2)}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  min-height:var(--tap);padding:10px var(--s4);
+  min-height:var(--tap);padding:10px var(--sp-pad);
   border:var(--rule-hair) solid var(--ink);background:var(--paper);color:var(--ink);
-  cursor:pointer;border-radius:0;font:500 11px/1 var(--f-body);
-  letter-spacing:.16em;position:relative;overflow:hidden}
+  cursor:pointer;border-radius:0;font:400 14px/1.1 var(--f-body);
+  letter-spacing:.04em;position:relative;overflow:hidden}
 .btn:hover{transform:translate(-1px,-1px)}
 
 .link{background:none;border:0;cursor:pointer;
@@ -345,20 +214,18 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   z-index:45;
   display:flex;
   flex-direction:column;
-  gap:var(--s3);
+  gap:var(--sp-row);
   pointer-events:none}
 .toasts > *{pointer-events:auto}
 
 .toast{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);
-  gap:var(--s3);align-items:start;background:var(--paper);color:var(--ink);
-  border:var(--edge-panel) solid var(--ink);padding:var(--s3) var(--s4);
-  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
+  gap:var(--sp-row);align-items:start;background:var(--paper);color:var(--ink);
+  border:var(--edge-panel) solid var(--ink);padding:var(--sp-row) var(--sp-pad)}
 .toast__dot{width:10px;height:10px;margin-top:4px;background:var(--ink)}
-.toast__t{margin:0;font:600 13.5px/1.3 var(--f-body);letter-spacing:.06em}
+.toast__t{margin:0;font:400 14px/1.3 var(--f-body);letter-spacing:.04em}
 .toast__d{margin:4px 0 0;font:500 12px/1.45 var(--f-mono);letter-spacing:.02em;
   color:var(--ink-2)}
-.toast--bad{background:var(--ink);color:var(--paper);
-  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
+.toast--bad{background:var(--ink);color:var(--paper)}
 .toast--bad .toast__dot{background:var(--paper)}
 .toast--bad .toast__d{color:var(--tint)}
 [hidden]{display:none!important}
@@ -375,7 +242,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 
 .field{
   display:flex;
-  gap:var(--s2);
+  gap:var(--sp-tight);
   flex-wrap:wrap;
   align-items:stretch;
   position:relative}
@@ -386,7 +253,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .field > .input{flex:999 1 min(100%,13ch)}
 
 .input{flex:1 1 min(100%,13ch);min-width:0;
-  padding:11px var(--s2) 9px;
+  padding:11px var(--sp-tight) 9px;
   background:transparent;color:var(--ink);
   border:0;border-bottom:var(--edge-thin) solid var(--ink);border-radius:0;
   font:500 clamp(13px,.4vw + 11.7px,14.5px)/1.2 var(--f-mono);
@@ -396,12 +263,12 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .input:focus{outline:0;border-bottom-color:var(--ink);
   border-bottom-width:var(--edge-heavy)}
 .field:focus-within::before{content:">";position:absolute;left:2px;bottom:11px;
-  font:700 13px/1 var(--f-mono);color:var(--ink);pointer-events:none;z-index:2}
-.field:focus-within > .input{padding-left:var(--s4)}
-select.input{padding-right:var(--s4)}
+  font:400 13px/1 var(--f-mono);color:var(--ink);pointer-events:none;z-index:2}
+.field:focus-within > .input{padding-left:var(--sp-pad)}
+select.input{padding-right:var(--sp-pad)}
 
-.qrpanel__code{display:grid;place-items:center;padding:var(--s5);background:#fff;
-  margin-top:var(--s4);border:var(--rule) solid var(--ink)}
+.qrpanel__code{display:grid;place-items:center;padding:var(--sp-pad);background:#fff;
+  margin-top:var(--sp-pad);border:var(--rule) solid var(--ink)}
 
 .fx{position:fixed;inset:0;z-index:125;pointer-events:none;overflow:hidden;
   contain:layout paint}
@@ -532,7 +399,6 @@ select.input{padding-right:var(--s4)}
 .rail{display:none}
 .topbar{display:flex}
 .tabs{display:flex}
-.view{grid-template-columns:repeat(2,minmax(0,1fr))}
 
 @media(min-width:1024px){
   :root{--tabs-h:0px;--rule:3px}
@@ -540,7 +406,6 @@ select.input{padding-right:var(--s4)}
   .rail{display:flex}
   .topbar{display:none}
   .tabs{display:none}
-  .view{grid-template-columns:repeat(6,minmax(0,1fr))}
 }
 
 @media(min-width:1600px){
@@ -556,9 +421,9 @@ select.input{padding-right:var(--s4)}
 #barBrand svg{width:26px;height:26px}
 
 .toasts{left:var(--gutter);right:var(--gutter);max-width:none;
-  bottom:calc(var(--tabs-h) + var(--s3) + env(safe-area-inset-bottom, 0px))}
+  bottom:calc(var(--tabs-h) + var(--sp-row) + env(safe-area-inset-bottom, 0px))}
 @media(min-width:1024px){
-  .toasts{left:auto;right:var(--s5);bottom:var(--s5);max-width:min(330px,32vw)}
+  .toasts{left:auto;right:var(--sp-pad);bottom:var(--sp-pad);max-width:min(330px,32vw)}
 }
 html,body{overflow-x:clip;max-width:100%}
 
@@ -578,11 +443,11 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .title{letter-spacing:-.035em}
 .h2{font-size:clamp(14px,1.05vw,16px);letter-spacing:0}
 
-.rail{padding:var(--s5) var(--s5) var(--s5);border-right:0;overflow:hidden}
+.rail{padding:var(--sp-pad);border-right:0;overflow:hidden}
 .rail::after{content:"";position:absolute;top:0;bottom:0;right:0;
   width:var(--edge-frame);background:var(--ink)}
 
-.rail__brand{position:relative;padding:2px 0 var(--s3)}
+.rail__brand{position:relative;padding:2px 0 var(--sp-row)}
 .rail__brand::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;
   background:var(--ink);
   clip-path:polygon(0 38%,10% 12%,52% 0,86% 18%,100% 46%,99% 60%,55% 100%,12% 78%,0 64%)}
@@ -590,7 +455,7 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
   font-size:clamp(24px,2vw,30px);line-height:1;letter-spacing:.01em}
 
 .rail__nav{gap:0;padding-top:clamp(28px,4.2vh,44px)}
-.rail__link{display:grid;grid-template-columns:2.6ch minmax(0,1fr);column-gap:var(--s3);
+.rail__link{display:grid;grid-template-columns:2.6ch minmax(0,1fr);column-gap:var(--sp-row);
   align-items:baseline;padding:11px 0 11px 18px;margin:0;position:relative;
   background:none;border:0;border-radius:0;text-align:left;cursor:pointer;
   color:var(--ink)}
@@ -605,9 +470,9 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
   width:8px;height:8px;background:var(--seal);
   transform:translateY(-60%) rotate(-8deg)}
 
-.rail__foot{margin-top:var(--s4);padding-top:var(--s4);
+.rail__foot{margin-top:var(--sp-pad);padding-top:var(--sp-pad);
   border-top:var(--edge-panel) solid var(--ink)}
-.rail__who{margin:0;display:flex;align-items:baseline;flex-wrap:wrap;gap:2px var(--s3);
+.rail__who{margin:0;display:flex;align-items:baseline;flex-wrap:wrap;gap:2px var(--sp-row);
   min-width:0}
 .rail__name{min-width:0;overflow-wrap:anywhere;font-family:var(--f-head);font-weight:400;
   text-transform:uppercase;font-size:clamp(16px,1.25vw,19px);line-height:1;
@@ -615,7 +480,7 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .rail__role{font:500 10px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;
   color:var(--ink-2)}
 .rail__util{display:flex;align-items:center;justify-content:space-between;
-  flex-wrap:wrap;gap:2px var(--s3);margin-top:var(--s2)}
+  flex-wrap:wrap;gap:2px var(--sp-row);margin-top:var(--sp-tight)}
 .rail__motion{display:inline-flex;align-items:center;gap:7px;min-height:44px;
   padding:0;background:none;border:0;cursor:pointer;white-space:nowrap;
   font:500 10px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;
@@ -639,51 +504,22 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .tabs button span{font-family:var(--f-body);
   font-size:clamp(12px,3.2vw,14px);letter-spacing:0}
 .tabs button[aria-current="page"]{background:transparent;color:var(--ink)}
-.tabs button[aria-current="page"] span{font-weight:700}
 
-@media(min-width:1024px){
-  }
+.panel{padding:var(--sp-pad)}
 
-:root{
-  --space-hair:4px;
-  --space-tight:8px;
-  --space-stack-sm:clamp(10px,1vw,14px);
-  --space-stack:clamp(14px,1.5vw,22px);
-  --space-panel:clamp(16px,2.2vw,28px);
-  --space-tier:clamp(14px,1.7vw,26px);
-  --space-block:clamp(30px,4vw,68px);
-}
-
-.view{gap:var(--space-block) var(--space-tier)}
-
-.panel{padding:var(--space-panel)}
-
-.h2 + *{margin-top:var(--space-stack-sm)}
-.kicker + *{margin-top:var(--space-hair)}
-.field{gap:var(--space-tight)}
+.h2 + *{margin-top:var(--sp-tight)}
+.kicker + *{margin-top:4px}
 
 .qrpanel__code{
   margin-inline:auto;
-  padding:var(--space-stack);
   max-width:min(420px,100%)}
 .qrpanel__code canvas,.qrpanel__code img,.qrpanel__code svg{
   width:100%;height:auto;display:block;image-rendering:pixelated}
 @media(min-width:768px){.qrpanel__code{max-width:min(420px,58vw)}}
 
-main#view{padding-top:var(--space-tier);
-  padding-bottom:calc(var(--space-block) + var(--tabs-h) + var(--rule)
-                      + env(safe-area-inset-bottom, 0px))}
 @media(max-width:1023px){
   .shell > div{display:flex;flex-direction:column}
-  main#view{position:relative;flex:1 0 auto;
-    padding-bottom:calc(var(--tabs-h) + 14px + clamp(44px,5vw,72px) + var(--s4)
-                        + env(safe-area-inset-bottom, 0px))}
-  main#view::after{content:"";position:absolute;pointer-events:none;
-    right:clamp(24px,3vw,44px);
-    bottom:calc(var(--tabs-h) + 14px + env(safe-area-inset-bottom, 0px));
-    width:clamp(44px,5vw,72px);height:clamp(44px,5vw,72px);
-    border-right:4px solid var(--ink);border-bottom:4px solid var(--ink)}
-  [data-screen="auth"] main#view::after{display:none}
+  main#view{position:relative;flex:1 0 auto}
 }
 
 .link{display:inline-flex;align-items:center;
@@ -705,14 +541,13 @@ main#view{padding-top:var(--space-tier);
   background:var(--ink);color:var(--paper);text-align:center;
   padding:24px;box-sizing:border-box}
 .acq__stack{display:grid;justify-items:center;gap:clamp(16px,3.4vh,30px);max-width:100%}
-.acq__kick{font:600 var(--t-caption)/1 var(--f-mono);
+.acq__kick{font:400 var(--t-caption)/1 var(--f-mono);
   letter-spacing:.34em;text-transform:uppercase;opacity:.85}
 .acq__seal{position:relative;width:min(54vmin,280px);aspect-ratio:1;
   display:grid;place-items:center}
 .acq__seal svg{position:absolute;inset:0;width:100%;height:100%}
-.acq__seal path{fill:none;stroke:var(--paper);stroke-width:2.4}
-.acq__plus{font-family:var(--f-display);font-weight:400;
-  font-size:clamp(64px,26vmin,150px);line-height:1}
+.acq__seal .acq__face{fill:var(--paper);stroke:none}
+.acq__seal .acq__mark path{fill:var(--ink);stroke:none}
 .acq__meet{font:500 var(--t-caption)/1.5 var(--f-mono);
   letter-spacing:.16em;text-transform:uppercase;opacity:.75;max-width:88vw}
 
@@ -725,22 +560,14 @@ main#view{padding-top:var(--space-tier);
 :root{
   --tone-dot-a:radial-gradient(circle at 50% 50%, var(--ink) 0 1.05px, transparent 1.15px);
   --tone-cell-a:5px 5px;
-  --gut:clamp(10px,1.6vw,18px);
   --pnl-off:clamp(5px,.9vw,9px);
   --ink-w:2.8}
 
-.tone{position:absolute;pointer-events:none;z-index:0;
-  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
-.tone--coarse{background-image:radial-gradient(circle at 50% 50%, var(--ink) 0 1.7px, transparent 1.85px);
-  background-size:8px 8px}
-.tone--fade-b{-webkit-mask-image:linear-gradient(#000 40%,transparent);
-  mask-image:linear-gradient(#000 40%,transparent)}
-
-.authp__f{display:block;margin-bottom:var(--s4)}
+.authp__f{display:block;margin-bottom:var(--sp-pad)}
 .authp__f .kicker{display:block;margin-bottom:6px}
 .authp .input{width:100%;box-sizing:border-box;min-width:0}
 
-.authp__err{margin:0 0 var(--s4);padding:9px 12px;
+.authp__err{margin:0 0 var(--sp-pad);padding:9px 12px;
   border-left:4px solid var(--ink);background:var(--paper);
   font:500 12.5px/1.45 var(--f-body);color:var(--ink)}
 
@@ -748,41 +575,36 @@ main#view{padding-top:var(--space-tier);
   display:flex;
   align-items:center;
   flex-wrap:wrap;
-  gap:var(--s3)}
-.authp__act .btn--go{min-height:44px;padding:0 var(--s5)}
+  gap:var(--sp-row)}
+.authp__act .btn--go{min-height:44px;padding:0 var(--sp-pad)}
 .authp__act .btn--go[disabled]{opacity:.55;cursor:progress}
 .authp__act .btn--go{flex:1 1 100%;justify-content:center}
 @media(min-width:768px){
-  .authp__act{gap:var(--s4)}
+  .authp__act{gap:var(--sp-pad)}
   .authp__act .btn--go{flex:0 0 auto;min-width:12ch}
 }
 
 [data-screen="auth"] .rail__nav,
 [data-screen="auth"] .tabs{display:none}
 
-[data-screen="auth"] main#view{padding:0}
+[data-screen="auth"] main#view{padding:0;max-width:none}
 
 .bpanel{
   position:relative}
 .bpanel--wait{opacity:.7}
-.bempty{margin:var(--s4) 0;font-size:13px}
-.bsec{margin:var(--s6) 0 var(--s3);padding-bottom:6px;
+.bempty{margin:var(--sp-pad) 0;font-size:13px}
+.bsec{margin:var(--sp-block) 0 var(--sp-row);padding-bottom:6px;
   border-bottom:2px solid var(--ink)}
-.bstats--tight{grid-template-columns:repeat(auto-fit,minmax(min(100%,108px),1fr))}
-.bstat b{display:block;font-family:var(--f-head);font-weight:400;
-  font-size:clamp(22px,2.4vw,30px);line-height:1;letter-spacing:-.02em}
-.bstat span{display:block;margin-top:var(--s3);font:500 10px/1.3 var(--f-body);
-  letter-spacing:.18em;color:var(--tone)}
 
 .blist{list-style:none;margin:0;padding:0}
-.brow{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2) var(--s3);
-  padding:var(--s4) 0;border-bottom:var(--rule-hair) solid var(--tint);
+.brow{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-tight) var(--sp-row);
+  padding:var(--sp-pad) 0;border-bottom:var(--rule-hair) solid var(--tint);
   cursor:pointer;min-width:0}
 .brow > *{flex:none;min-width:0}
 .brow__no{flex:1 0 100%}
 .brow__mid{flex:1 1 12ch}
 @media(min-width:768px){
-  .brow{flex-wrap:nowrap;padding:var(--s3) 0}
+  .brow{flex-wrap:nowrap;padding:var(--sp-row) 0}
   .brow__no{flex:none}
 }
 
@@ -800,7 +622,6 @@ main#view{padding-top:var(--space-tier);
 .brow__mid b{display:block;font-size:14px}
 .brow__mid .muted{display:block;font-size:12px;margin-top:2px}
 .brow__n{font-family:var(--f-head);font-size:19px;line-height:1;text-align:right}
-.brow__sub{font-size:11px;font-family:var(--f-mono)}
 
 .bstate{font:400 clamp(11px,1vw,13px)/1 var(--f-body);letter-spacing:.1em;
   padding:5px 8px;white-space:nowrap;border:1.5px solid var(--ink)}
@@ -809,45 +630,43 @@ main#view{padding-top:var(--space-tier);
 .bstate--ended,.bstate--past{background:none;color:var(--tone);border-color:var(--tone)}
 
 .bdetail__name{font-family:var(--f-head);font-size:clamp(26px,3.4vw,42px);
-  line-height:1;margin:4px 0 var(--s5);text-transform:uppercase;letter-spacing:-.03em}
+  line-height:1;margin:4px 0 var(--sp-pad);text-transform:uppercase;letter-spacing:-.03em}
 
 .bfilters{
   display:grid;
-  gap:var(--s3);
-  margin-bottom:var(--s4);
+  gap:var(--sp-row);
+  margin-bottom:var(--sp-pad);
   grid-template-columns:1fr}
 .bfilters .input{width:100%;box-sizing:border-box;min-width:0}
 .bpage{
   display:flex;
   align-items:center;
-  gap:var(--s3);
-  margin-top:var(--s5);
-  padding-top:var(--s4);
+  gap:var(--sp-row);
+  margin-top:var(--sp-block);
+  padding-top:var(--sp-pad);
   border-top:2px solid var(--ink);
   flex-wrap:wrap;
   font-size:12px;
   justify-content:center}
 
-.bform{margin-bottom:var(--s6);padding-bottom:var(--s5);
-  border-bottom:2px solid var(--ink)}
 .bform__grid{
   display:grid;
-  gap:var(--s3);
+  gap:var(--sp-row);
   grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr))}
 .bform .field{display:block;min-width:0}
 .bform .kicker{display:block;margin-bottom:5px}
 .bform .input{width:100%;box-sizing:border-box;min-width:0}
-.bform .btn{margin-top:var(--s4)}
+.bform .btn{margin-top:var(--sp-pad)}
 
-.bpanel{padding:var(--s4)}
+.bpanel{padding:var(--sp-pad)}
 
 @media(min-width:768px){
-  .bpanel{padding:var(--s5)}
+  .bpanel{padding:var(--sp-pad)}
   .bfilters{grid-template-columns:2fr 1fr}
   .bpage{justify-content:space-between}
 }
 
-.setupbox{margin-top:var(--s5);padding:var(--s4);
+.setupbox{margin-top:var(--sp-pad);padding:var(--sp-pad);
   border:var(--rule-hair) solid var(--ink);position:relative;isolation:isolate;
   background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
 .setupbox > *{position:relative;z-index:1}
@@ -860,25 +679,13 @@ main#view{padding-top:var(--space-tier);
 
 .setupbox--warn{border-width:var(--rule);background-image:none}
 
-.bmile__bar{display:block;height:8px;margin-top:var(--s3);
-  border:var(--rule-hair) solid var(--ink);background:var(--paper)}
-.bmile__fill{display:block;height:100%;background:var(--ink)}
-
-.brow__del{border:var(--rule-hair) solid var(--ink);background:none;
-  color:var(--ink);font:400 clamp(11px,1vw,12.5px)/1 var(--f-body);letter-spacing:.08em;
-  padding:6px 9px;cursor:pointer}
-.brow__del:hover,.brow__del:focus-visible{background:var(--ink);color:var(--paper)}
-
-.brow__del--off{visibility:hidden}
-.brow__del--off::before{content:"Delete"}
-.brow--confirm{background:var(--paper)}
 .bconfirm{
   display:flex;
-  gap:var(--s3);
+  gap:var(--sp-row);
   align-items:center;
   flex-wrap:wrap;
   flex:1 1 100%;
-  margin-top:var(--s3)}
+  margin-top:var(--sp-row)}
 .bconfirm .btn{
   padding:8px 14px;
   font-size:11px;
@@ -898,54 +705,8 @@ main#view{padding-top:var(--space-tier);
 #boardPane > .bpanel > .bsec:first-child{padding-top:0;margin-top:0}
 #boardPane > .bpanel > .bsec:first-child::before{content:none}
 
-.bstats{display:grid;gap:0;grid-template-columns:repeat(2,minmax(0,1fr));
-  border-top:var(--edge) solid var(--ink)}
-.bstat{border:0;background:none;
-  padding:clamp(13px,1.8vw,20px) clamp(12px,1.6vw,18px) clamp(13px,1.8vw,20px) 0;
-  border-bottom:var(--rule-hair) solid var(--tone)}
-.bstat + .bstat{padding-left:clamp(12px,1.6vw,18px);
-  border-left:var(--rule-hair) solid var(--tone)}
-.bstat:first-child b{font-size:clamp(38px,5.2vw,72px);line-height:.86}
-.bstat:first-child{grid-column:1/-1;padding-left:0;
-  border-left:0;border-bottom-color:var(--ink)}
-@media(min-width:768px){
-  .bstats{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .bstat:nth-child(2){padding-left:0;border-left:0}
-}
-
-.empty-reg{position:relative;padding:clamp(22px,4vw,48px) 0 clamp(24px,4vw,52px)}
-.empty{position:relative;display:grid;gap:clamp(18px,3.4vw,40px);align-items:center;
-  grid-template-columns:auto minmax(0,1fr);
-  border:var(--edge-frame) solid var(--ink);background:var(--paper);
-  padding:clamp(22px,4vw,46px);max-width:760px;min-height:0;overflow:hidden;
-  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
-.empty__tone{right:0;top:0;width:34%;height:46%}
-.empty__seal{position:relative;flex:none;z-index:1;
-  width:clamp(92px,15vw,168px);aspect-ratio:1}
-.empty__seal svg{width:100%;height:100%;display:block;opacity:.5}
-
-.empty__seal svg circle,.empty__seal svg polygon,
-.empty__seal svg path,.empty__seal svg line{
-  fill:none;stroke:var(--tone);stroke-width:2;vector-effect:non-scaling-stroke}
-
-.empty__void{position:absolute;left:50%;top:50%;width:56%;height:var(--edge-thin);
-  background:var(--tone);transform:translate(-50%,-50%) rotate(-32deg)}
-.empty__body{min-width:0;position:relative;z-index:1}
-.empty__title{font-family:var(--f-head);text-transform:uppercase;
-  font-size:clamp(17px,2.4vw,30px);line-height:1.02;letter-spacing:-.01em;
-  margin-top:clamp(7px,1vw,11px);color:var(--ink)}
-.empty__note{margin-top:clamp(7px,1vw,11px);max-width:52ch;
-  font-size:clamp(12.5px,1vw,14.5px);line-height:1.55;color:var(--ink-2)}
-
-.bmile__bar{position:relative;overflow:hidden}
-.bmile__bar::after{content:"";position:absolute;inset:0;
-  pointer-events:none;z-index:2;
-  background-image:repeating-linear-gradient(to right,
-    transparent 0 calc(10% - 1px),
-    var(--ink) calc(10% - 1px) 10%)}
-
 select.input{appearance:none;-webkit-appearance:none;
-  padding-right:calc(var(--s4) + 14px);
+  padding-right:calc(var(--sp-pad) + 14px);
   background-image:
     linear-gradient(45deg, transparent 50%, var(--ink) 50%),
     linear-gradient(135deg, var(--ink) 50%, transparent 50%);
@@ -955,7 +716,7 @@ select.input{appearance:none;-webkit-appearance:none;
 select.input:focus-visible{outline:none}
 
 .sealmeta{position:absolute;left:calc(100% - 2px);top:-2px;z-index:40;
-  display:none;width:max-content;min-width:132px;
+  display:none;width:max-content;max-width:44cqw;
   padding:9px 11px;background:var(--paper);
   border:var(--edge-thin) solid var(--ink);
   font:400 10.5px/1.55 var(--f-mono);letter-spacing:.06em;
@@ -997,12 +758,13 @@ select.input:focus-visible{outline:none}
 
 @container (min-width:480px){
   .seal:nth-child(3) .sealmeta,
-  .seal:nth-child(4) .sealmeta,
   .seal:nth-child(9) .sealmeta{left:calc(100% - 2px);right:auto}
   .seal:nth-child(3) .sealmeta::before,
-  .seal:nth-child(4) .sealmeta::before,
   .seal:nth-child(9) .sealmeta::before{right:auto;left:-1px;
     border-right:0;border-left:var(--rule) solid var(--ink)}
+  .seal:nth-child(6) .sealmeta{left:auto;right:calc(100% - 2px)}
+  .seal:nth-child(6) .sealmeta::before{left:auto;right:-1px;
+    border-left:0;border-right:var(--rule) solid var(--ink)}
 }
 
 .btn--go{background:var(--ink);color:var(--paper);border-color:var(--ink)}
@@ -1012,8 +774,7 @@ select.input:focus-visible{outline:none}
 .btn--go:active{background:var(--ink);border-color:var(--ink)}
 
 .btn:focus-visible,
-.link:focus-visible,
-.brow__del:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px}
+.link:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px}
 .btn--go:focus-visible{outline-color:var(--ink);outline-offset:3px}
 
 .bconfirm .btn--go{background:var(--ink);border-width:var(--edge-thin)}
@@ -1036,7 +797,7 @@ select.input:focus-visible{outline:none}
 
   --edge-hair:var(--edge-rule);
   --edge-thin:var(--edge-panel);
-  --edge:var(--edge-panel); --edge-heavy:var(--edge-panel);
+  --edge-heavy:var(--edge-panel);
   --rule:var(--edge-panel); --rule-hair:var(--edge-rule);
 
   --f-display:'Jujutsu Kaisen',ui-sans-serif,system-ui,sans-serif;
@@ -1044,7 +805,6 @@ select.input:focus-visible{outline:none}
   --f-body:'CC Wild Words',ui-rounded,'Comic Sans MS',ui-sans-serif,sans-serif;
   --f-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
 
-  --tone-page: rgba(23,19,15,.085);
   }
 
 body{
@@ -1069,7 +829,6 @@ body{
 
 .btn--go{
   background:var(--ink);border-color:var(--ink);color:var(--paper);
-  font-weight:600;
 }
 .btn--go:hover{background:var(--ink);border-color:var(--ink)}
 .btn--go:active{transform:translate(1px,1px)}
@@ -1084,18 +843,8 @@ body{
   *{animation-duration:.01ms!important;animation-iteration-count:1!important}
 }
 
-.bstats{gap:var(--edge-thin)}
-
-.bstat:first-child b{color:var(--ink)}
-.bstat:first-child span{color:var(--ink-2)}
-.bstat b{
-  line-height:.9}
-.bstat span{color:var(--ink-2)}
-
-.bmile__bar{border:var(--edge-hair) solid var(--ink);background:var(--paper);height:10px}
-.bmile__fill{background:var(--ink)}
 .brow--member .brow__mid b{font-family:var(--f-head);font-weight:400;
-  font-size:var(--t-sub);letter-spacing:.01em}
+  font-size:var(--t-body);letter-spacing:.01em}
 
 .brow{border-bottom:var(--edge-hair) solid var(--tone)}
 .brow:hover,.brow:focus-visible{background:var(--tint)}
@@ -1103,19 +852,18 @@ body{
 .brow__no{color:var(--ink-2)}
 .brow__n{font-family:var(--f-head)}
 
-.brow__del{border-color:var(--tone);color:var(--ink-2)}
-.brow__del:hover,.brow__del:focus-visible{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-
-.blist--meet .brow{display:grid;column-gap:var(--s3);row-gap:4px;align-items:center;
+.blist--meet .brow{display:grid;column-gap:var(--sp-row);row-gap:4px;align-items:center;
   grid-template-columns:auto minmax(0,1fr) auto;
-  grid-template-areas:"no day state" "no when when" "no n act";
-  padding:var(--s3) 0;cursor:default}
+  grid-template-areas:"no day state" "no when when" "no n n";
+  padding:var(--sp-row) 0;cursor:default}
 .blist--meet .brow:hover{background:none}
+.blist--meet .brow__day:hover,.blist--meet .brow__no:hover + .brow__day{text-decoration-color:var(--ink)}
 .blist--meet .brow__no{grid-area:no;flex:none;align-self:start;
   padding:10px 4px 6px;margin:-6px -4px;
   cursor:pointer;min-height:0}
 .blist--meet .brow__day{grid-area:day;cursor:pointer;
   padding-block:6px;margin-block:-6px;
+  text-decoration:underline;text-decoration-color:var(--tint);text-underline-offset:4px;
   font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);line-height:1.05;
   letter-spacing:.01em;color:var(--ink);min-width:0;overflow-wrap:anywhere}
 .blist--meet .brow__when{grid-area:when;min-width:0;overflow-wrap:anywhere;
@@ -1124,22 +872,13 @@ body{
 .blist--meet .bstate{grid-area:state;justify-self:end;align-self:start}
 .blist--meet .brow__n{grid-area:n;display:flex;align-items:baseline;gap:6px;
   justify-self:start;text-align:left;padding-top:2px}
-.blist--meet .brow__act{grid-area:act;display:flex;justify-content:flex-end;
-  justify-self:end;min-width:0}
-.blist--meet .brow__act:empty{display:none}
 .blist--meet .brow--past .brow__day{color:var(--ink-2)}
 
-.blist--meet .brow--confirm{grid-template-areas:"no day day" "no when when" "act act act";
-  margin-inline:calc(var(--s3) * -1);padding-inline:var(--s3);
-  background:var(--tint);box-shadow:inset var(--edge) 0 0 var(--ink)}
-.blist--meet .brow--confirm .bstate,.blist--meet .brow--confirm .brow__n{display:none}
-.blist--meet .brow--confirm .brow__act{justify-self:stretch}
 .bconfirm{display:flex;align-items:center;justify-content:flex-end;
-  gap:var(--s2);flex-wrap:wrap;width:100%}
-.bconfirm__q{flex:1 1 auto;font-family:var(--f-head);font-weight:400;
-  text-transform:uppercase;font-size:clamp(13px,1vw,15px);letter-spacing:.02em;
+  gap:var(--sp-tight);flex-wrap:wrap;width:100%}
+.bconfirm__q{flex:1 1 auto;font-size:var(--t-body);letter-spacing:.02em;
   color:var(--ink);white-space:nowrap}
-.bconfirm .btn{min-height:38px;padding:0 var(--s3);font-size:12px}
+.bconfirm .btn{min-height:38px;padding:0 var(--sp-row)}
 @media(max-width:379px){
   .bconfirm__q{flex-basis:100%}
   .bconfirm .btn{flex:1 1 auto}
@@ -1153,141 +892,129 @@ body{
 .bconfirm--heavy .btn--go{background:var(--seal);border-color:var(--seal)}
 .bconfirm--heavy .btn--go:hover,.bconfirm--heavy .btn--go:focus-visible{
   background:var(--ink);border-color:var(--ink)}
-.blist--meet .brow--confirm-heavy{box-shadow:inset var(--edge) 0 0 var(--seal)}
 .bform .field{display:flex;flex-direction:column;justify-content:flex-end;min-width:0}
+.bform .bform__grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:339px){ .bform .bform__grid{grid-template-columns:minmax(0,1fr)} }
 .bform .field > .kicker{flex:none}
 .bform .field > .input{flex:none;width:100%}
 
 @media(min-width:640px){
-  .blist--meet .brow{grid-template-columns:auto minmax(0,1fr) auto auto auto;
-    grid-template-areas:"no day state n act" "no when state n act";row-gap:2px}
+  .blist--meet .brow{grid-template-columns:auto minmax(0,1fr) auto auto;
+    grid-template-areas:"no day state n" "no when state n";row-gap:2px}
   .blist--meet .brow__no{align-self:center;padding-block:6px}
   .blist--meet .bstate{align-self:center}
   .blist--meet .brow__n{display:grid;justify-items:end;gap:1px;
     text-align:right;padding-top:0}
-  .blist--meet .brow__act{min-width:74px}
-  .blist--meet .brow--confirm{grid-template-columns:auto minmax(0,1fr) auto;
-    grid-template-areas:"no day act" "no when act"}
-  .blist--meet .brow--confirm .brow__act{justify-self:end;min-width:0}
-  .blist--meet .brow--confirm-heavy{grid-template-columns:auto minmax(0,1fr);
-    grid-template-areas:"no day" "no when" "act act"}
-  .blist--meet .brow--confirm-heavy .brow__act{justify-self:stretch}
 }
 
 .bform{border:var(--edge-panel) solid var(--ink);background:var(--paper);
-  padding:var(--s5);box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
-.bform .bsec{margin:calc(var(--s5) * -1) calc(var(--s5) * -1) var(--s4);
-  padding:var(--s2) var(--s4);border-bottom:0;
-  background:var(--ink);color:var(--paper);
+  padding:var(--sp-pad)}
+.bform .bsec{margin:0 0 var(--sp-pad);padding:0 0 var(--sp-tight);
+  border-bottom:var(--edge-panel) solid var(--ink);
   font-family:var(--f-head);font-weight:400;text-transform:uppercase;
   font-size:clamp(17px,2.4vw,24px);line-height:1.2}
 
 .bform .input,.bfilters .input{font-family:var(--f-mono);
   color-scheme:light;accent-color:var(--ink)}
 
-.meetgrid{display:grid;gap:var(--s5);grid-template-columns:minmax(0,1fr);
-  grid-template-areas:"err" "form" "up" "held";align-items:start}
-.meetgrid__err{grid-area:err}
-.meetgrid__form{grid-area:form}
-.meetgrid__up{grid-area:up;min-width:0}
-.meetgrid__held{grid-area:held;min-width:0}
+.meetgrid{display:flex;flex-direction:column;gap:var(--sp-block)}
+.meetgrid > *{min-width:0}
 @media(min-width:1280px){
-  .meetgrid{grid-template-columns:minmax(0,58fr) minmax(0,42fr);
-    column-gap:clamp(20px,3vw,44px);
+  .meetgrid--form{display:grid;align-items:start;
+    grid-template-columns:minmax(0,58fr) minmax(0,42fr);column-gap:var(--sp-block);
     grid-template-areas:"err err" "up form" "held form"}
-  .meetgrid__form .bform{position:sticky;top:var(--s4)}
+  .meetgrid--form .meetgrid__err{grid-area:err}
+  .meetgrid--form .meetgrid__form{grid-area:form}
+  .meetgrid--form .meetgrid__up{grid-area:up}
+  .meetgrid--form .meetgrid__held{grid-area:held}
+  .meetgrid--form .meetgrid__form .bform{position:sticky;top:var(--sp-pad)}
+}
+@media(min-width:1024px){
+  .meetgrid:not(.meetgrid--form) .blist--meet .brow{
+    grid-template-columns:7ch minmax(9ch,12ch) minmax(0,1fr) auto minmax(8ch,auto);
+    grid-template-areas:"no day when state n";align-items:center;row-gap:0}
+  .meetgrid:not(.meetgrid--form) .blist--meet .brow__n{display:flex;align-items:baseline;gap:6px;justify-self:end}
 }
 
 .meetband{display:flex;align-items:baseline;justify-content:space-between;
-  gap:var(--s3);margin:0 0 var(--s3);padding:var(--s2) var(--s4);
-  background:var(--ink);color:var(--paper);
+  gap:var(--sp-row);margin:0 0 var(--sp-tight);padding:0 0 var(--sp-tight);
+  border-bottom:var(--edge-panel) solid var(--ink);
   font-family:var(--f-head);font-weight:400;text-transform:uppercase;
-  font-size:clamp(17px,2.4vw,24px);line-height:1.2;letter-spacing:.02em}
+  font-size:clamp(19px,3.6vw,26px);line-height:1;letter-spacing:.02em}
 .meetband__n{font:500 10px/1 var(--f-mono);letter-spacing:.16em;
-  text-transform:uppercase;color:var(--paper);opacity:.8;white-space:nowrap}
-.meetgrid .bsec::before{content:none}
+  text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.bdel{margin-top:var(--sp-block);padding-top:var(--sp-row);border-top:var(--edge-rule) solid var(--tint)}
+.bdel__go{color:var(--ink-2);font-size:var(--t-caption)}
+.bdel .bconfirm{justify-content:flex-start}
+.meetband .meetband__act{min-height:44px;margin-block:-14px;padding:0;
+  font-family:var(--f-body);text-transform:none;
+  font-size:var(--t-body);letter-spacing:.02em;white-space:nowrap}
+/* the Held band names its count column once, where the column exists */
+.meetpanel--held .meetband__n{display:none}
+@media(min-width:640px){
+  .meetpanel--held .meetband__n{display:inline}
+  .meetpanel--held .brow__nlab{display:none}
+}
+.meetpanel--held .brow__day{font:500 clamp(12px,.4vw + 10px,14px)/1.4 var(--f-mono);
+  letter-spacing:.04em;text-transform:uppercase}
+.meetgrid .bsec::before,.bsec.meetband::before{content:none}
+.bsec.meetband{padding-top:0}
 
-.meetpanel{min-width:0;border:var(--edge-panel) solid var(--ink);
-  background:var(--paper);
-  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
+.meetpanel{min-width:0}
 .meetpanel .meetband{margin:0}
-.meetpanel .blist{padding:0 var(--s4);margin:0}
-.meetpanel .bempty{border:0;box-shadow:none}
-.meetpanel--held .meetband{background:var(--paper);color:var(--ink);
-  border-bottom:var(--edge-panel) solid var(--ink)}
-.meetpanel--held .meetband__n{color:var(--ink-2);opacity:1}
+.meetpanel .blist{padding:0;margin:0}
+.meetpanel .bempty{border:0;box-shadow:none;padding:var(--sp-pad) 0}
 
 .bform__row{display:flex;align-items:center;justify-content:space-between;
-  gap:var(--s3);flex-wrap:wrap;margin-top:var(--s3)}
+  gap:var(--sp-row);flex-wrap:wrap;margin-top:var(--sp-row)}
 .bform__reset{min-height:38px;padding-block:0;color:var(--ink-2);
   font-size:var(--t-caption)}
 
 .brow__n{display:grid;justify-items:end;gap:1px;text-align:right}
-.brow__n b{font-weight:400;font-family:var(--f-head);
-  font-size:clamp(17px,2vw,22px);line-height:1}
+.brow__n b{font:400 15px/1 var(--f-mono);letter-spacing:.02em}
 .brow__nlab{font:500 10.5px/1 var(--f-mono);letter-spacing:.08em;
   color:var(--ink-2);text-transform:uppercase}
 
-.bstate{font-family:var(--f-head);font-weight:400;letter-spacing:.05em;
+.bstate{font:400 11.5px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;
   border:var(--edge-hair) solid var(--ink);border-radius:0}
-.bstate--past{background:var(--ink);color:var(--paper);border-color:var(--ink);
-  transform:rotate(-3deg)}
-.bstate--upcoming{border-width:var(--edge-panel);transform:rotate(1.6deg)}
 
-.bempty{position:relative;overflow:hidden;margin:0;
-  border:var(--edge-panel) solid var(--ink);background:var(--paper);
-  padding:clamp(20px,3.4vw,34px)}
-.bempty p{margin:0;position:relative;z-index:1;max-width:26ch;
-  font-family:var(--f-head);font-size:clamp(17px,2.2vw,24px);
-  text-transform:uppercase;color:var(--ink)}
-.bempty::before{content:'';position:absolute;right:0;bottom:0;
-  width:38%;height:76%;opacity:.55;
-  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
-  clip-path:polygon(30% 0,100% 0,100% 100%,0 100%)}
+.bempty{position:relative;margin:0;padding:var(--sp-pad) 0}
+.bempty p{margin:0;max-width:34ch;font-size:var(--t-body);color:var(--ink-2)}
 
-.memgrid{display:grid;gap:var(--s6)}
-.msummary{display:grid;gap:var(--s5);align-items:end;
-  border-bottom:var(--edge) solid var(--ink);
-  padding-bottom:clamp(16px,2.4vw,28px)}
-@media(min-width:900px){
-  .msummary{grid-template-columns:auto minmax(0,1fr);
-    column-gap:clamp(28px,4vw,64px);align-items:start}
-  .msummary .mplates{grid-template-columns:repeat(3,minmax(0,1fr))}
+.memgrid{display:grid;gap:var(--sp-block)}
+.rosterpanel .meetband{margin:0 0 var(--sp-row)}
+.rosterpanel > div{padding:0}
+
+/* the roster reads as columns from a tablet up, as two lines on a phone */
+.blist__head{display:none}
+.blist--members .brow{display:grid;column-gap:var(--sp-row);row-gap:2px;align-items:baseline;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:"name n" "last n"}
+.blist--members .brow__mid{grid-area:name}
+.blist--members .brow__cell{font:500 clamp(11px,.4vw + 9.7px,12.5px)/1.4 var(--f-mono);
+  letter-spacing:.04em;color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
+.blist--members .brow__cell--last{grid-area:last}
+.blist--members .brow__cell--last::before{content:"Last check-in ";color:var(--tone);text-transform:uppercase}
+.blist--members .brow__n{grid-area:n;align-self:center}
+.brow__none{color:var(--tone)}
+@media(min-width:768px){
+  .blist__head,.blist--members .brow{display:grid;
+    grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(88px,auto);
+    grid-template-areas:"name last n";column-gap:var(--sp-pad)}
+  .blist__head{padding:0 0 var(--sp-tight);border-bottom:var(--edge-panel) solid var(--ink);
+    font:500 10px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+  .blist__head span:nth-child(3){text-align:right}
+  .blist--members .brow__cell--last::before{content:none}
+  .blist--members .brow__n{justify-self:end}
+  .blist--members .brow__nlab{display:none}
 }
-.msummary__lead{min-width:0}
-.msummary__fig{margin:0;font-family:var(--f-display);line-height:.78;
-  padding-bottom:.1em;font-size:clamp(70px,12vw,150px)}
-.msummary__of{margin:0;font-size:var(--t-caption);color:var(--ink-2)}
-.mplates{list-style:none;margin:0;padding:0;display:grid;gap:var(--gut);
-  grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr))}
-.mplate{display:grid;gap:4px;align-content:start;
-  border:var(--edge-panel) solid var(--ink);background:var(--paper);
-  padding:clamp(12px,1.8vw,20px);
-  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
-
-.mplate--lit{background:var(--ink);color:var(--paper);
-  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
-.mplate--lit .bmile__bar{border-color:var(--paper)}
-.mplate--lit .bmile__fill{background:var(--paper)}
-.mplate__no{font-family:var(--f-head);font-size:clamp(30px,4.4vw,52px);
-  line-height:.9}
-.mplate__name{font-family:var(--f-head);font-size:clamp(14px,1.5vw,18px);
-  line-height:1.1}
-.mplate__say{font-size:var(--t-caption);color:inherit;opacity:.72;
-  margin-bottom:var(--s2)}
-.rosterpanel{border:var(--edge-panel) solid var(--ink);background:var(--paper)}
-.rosterpanel .meetband{margin:0}
-.rosterpanel > div{padding:var(--s4) var(--s4) var(--s4)}
 .bsec{border-bottom:var(--edge-thin) solid var(--ink);color:var(--ink)}
 
 .panel{box-shadow:none}
 
 :where(.panel){--ink-w:2}
 
-.bstat b{font-size:clamp(22px,6vw,30px)}
-
-.brow{padding-block:var(--s3)}
-.brow__del{min-height:38px;padding:8px 10px}
+.brow{padding-block:var(--sp-row)}
 
 .btn,.link{min-height:44px}
 
@@ -1295,7 +1022,7 @@ body{
   :where(.panel){--ink-w:3}
   }
 
-.btn,.motion-btn,.input,.brow__del{
+.btn,.motion-btn,.input{
   min-height:38px;
 }
 .motion-btn{padding:0}
@@ -1304,32 +1031,22 @@ body{
 
 .rail,.rail__brand,.rail__nav,.rail__foot{min-width:0}
 .rail__brand .mark,.rail__brand .mark__word{min-width:0;overflow-wrap:anywhere}
-.brow__mid .muted,.bstat span{font-size:clamp(12px,.45vw + 10.6px,13.5px)}
+.brow__mid .muted{font-size:clamp(12px,.45vw + 10.6px,13.5px)}
 
-.bstate,.brow__del,.brow__no,.brow__sub{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
+.brow__no{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
 
-.muted,.empty,
-.setupbox__hint,.bstat span,
-.brow__no,.brow__sub,
-.brow__mid .muted{color:var(--ink-2)}
+.muted,.setupbox__hint,.brow__no,.brow__mid .muted{color:var(--ink-2)}
 
 .rig > *,.brow__mid{min-width:0}
 .brow__mid b{overflow-wrap:anywhere}
 
 @media (pointer:coarse){
-  .btn,.motion-btn,.input,.link,.brow__del,
-  .tab,select{min-height:44px}
-  .input{padding-inline:var(--s4)}
-  .btn{padding-inline:var(--s5)}
+  .btn,.motion-btn,.input,.link,select{min-height:44px}
+  .input{padding-inline:var(--sp-pad)}
 }
 
-.brow__n{font-size:clamp(17px,4vw,19px)}
-.bstat{padding:var(--s4)}
-.bsec{margin-top:var(--s5)}
 
-@media (min-width:768px){
-  .bstat{padding:var(--s4) var(--s4) var(--s5)}
-}
+.bsec{margin-top:var(--sp-block)}
 
 .btn:hover{
   background:var(--ink);color:var(--paper);border-color:var(--ink)}
@@ -1348,11 +1065,10 @@ main#view:focus,main#view:focus-visible{outline:none}
   [data-screen="auth"] .shell{grid-template-columns:1fr}
 }
 
-.view--home .card__field{min-height:clamp(300px,38vw,500px)}
 
 .card{position:relative;border:var(--edge-card) solid var(--ink);
   background:var(--paper);width:100%;
-  container-type:inline-size;
+  container-type:inline-size;display:flex;flex-direction:column;
 
   box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
 .card__punch{position:absolute;z-index:3;right:4%;top:4.5%;
@@ -1360,7 +1076,7 @@ main#view:focus,main#view:focus-visible{outline:none}
   font-family:var(--f-head);text-transform:uppercase;line-height:1;
   font-size:clamp(20px,6.2cqw,42px);color:var(--ink);
   border:var(--edge-frame) solid var(--ink);background:var(--paper);
-  padding:.16em .45em;box-shadow:var(--s2) var(--s2) 0 var(--tone);
+  padding:.16em .45em;
   pointer-events:none;white-space:nowrap}
 
 .card__id{background:var(--ink);color:var(--paper);
@@ -1371,8 +1087,8 @@ main#view:focus,main#view:focus-visible{outline:none}
 .card__num{margin:0;display:flex;align-items:baseline;gap:.2em;
   font-family:var(--f-display);line-height:.82;letter-spacing:-.01em}
 .card__num b{font-weight:inherit;font-size:clamp(58px,15cqw,124px)}
-.card__num span{font-size:clamp(19px,4cqw,34px);opacity:.55;
-  letter-spacing:-.02em}
+.card__num span{font:400 clamp(13px,2.4cqw,16px)/1 var(--f-mono);
+  letter-spacing:.04em;opacity:.7}
 
 .card__idrule{display:block;width:clamp(52px,42%,120px);height:5px;
   background:var(--paper);opacity:.9;
@@ -1381,6 +1097,13 @@ main#view:focus,main#view:focus-visible{outline:none}
   max-width:22ch}
 
 .card__kci{display:block;margin-top:auto;padding-top:clamp(8px,2cqw,16px)}
+@container (max-width:479px){
+  .card__id{position:relative}
+  .card__kci{position:absolute;top:clamp(14px,3.4cqw,26px);right:clamp(16px,4cqw,28px);
+    margin:0;padding:0}
+  .card__kci .brandseal{width:44px}
+  .card--full .card__kci{display:none}
+}
 .card__kci .brandseal{display:block;height:auto;
   width:clamp(54px,11cqw,84px);opacity:.92;
   --si:var(--paper);--sp:var(--ink)}
@@ -1396,12 +1119,7 @@ main#view:focus,main#view:focus-visible{outline:none}
 .card__field::after{right:6px;bottom:6px;
   border-right:var(--edge-panel) solid var(--ink);
   border-bottom:var(--edge-panel) solid var(--ink)}
-.card__edge{position:absolute;left:clamp(10px,3cqw,22px);bottom:7px;
-  right:clamp(10px,3cqw,22px);white-space:nowrap;overflow:hidden;
-  font:500 clamp(9px,1.8cqw,11px)/1 var(--f-mono);
-  text-transform:uppercase;letter-spacing:.18em;color:var(--ink-2);opacity:.75}
 
-@media (max-width:359px){.card__edge-tail{display:none}}
 
 .card__route{position:absolute;inset:0;width:100%;height:100%;
   pointer-events:none;z-index:0}
@@ -1430,11 +1148,12 @@ main#view:focus,main#view:focus-visible{outline:none}
 .seal:nth-child(10){--x:71.0%; --y:74.2%; --s:24%; --lean:-2.5deg}
 
 @container (min-width:480px){
-  .card__face{display:grid;height:100%;
+  .card__face{display:grid;flex:1 1 auto;min-height:0;
     grid-template-columns:minmax(150px,30%) minmax(0,1fr);
     align-items:stretch}
 
-  .card__field{aspect-ratio:auto;height:100%;min-height:190px}
+  /* the landscape seat map and its route are drawn for this ratio */
+  .card__field{aspect-ratio:10/9}
   .card__punch{right:2.5%;top:3.5%;font-size:clamp(14px,3cqw,24px)}
   .card__route--l{display:block}
   .card__route--p{display:none}
@@ -1455,30 +1174,25 @@ main#view:focus,main#view:focus-visible{outline:none}
 .sf-back,.sf-face{fill:none}
 .seal__mark path{stroke:none}
 
-.seal[data-seal="empty"] .sf-face{fill:var(--paper);
+.seal:not(.seal--set) .sf-face{fill:var(--paper);
   stroke:var(--ink);stroke-width:1.1;stroke-opacity:.5}
-.seal[data-seal="empty"] .seal__mark{opacity:.12}
-.seal[data-seal="empty"] .seal__mark path{fill:var(--ink)}
-.seal[data-seal="empty"] .seal__no{color:var(--ink-2);opacity:.7}
+.seal:not(.seal--set) .seal__mark{opacity:.12}
+.seal:not(.seal--set) .seal__mark path{fill:var(--ink)}
 
-.seal--set > svg{filter:drop-shadow(2.5px 3px 0 var(--tone))}
-.seal--set .sf-back{fill:var(--paper);stroke:var(--tone);
-  stroke-width:.8}
 .seal--set .sf-face{fill:var(--ink)}
 .seal--set .sf-press{transform-box:fill-box;transform-origin:center;
   transform:rotate(var(--press-tilt,0deg))}
 .seal--set .seal__mark path{fill:var(--paper)}
-.seal--set .seal__no{color:var(--ink-2)}
 
-.seal--hero > svg{filter:drop-shadow(3.5px 4.5px 0 var(--tone))}
+/* the tenth seal, the one a prize hangs on, carries a second rim */
+.seal--mile .sf-back{stroke:var(--ink);stroke-width:1.2;stroke-opacity:.5}
+.seal--mile.seal--set .sf-back{stroke-opacity:1}
+
 .seal--hero{z-index:1}
-.seal--hero .sf-back{stroke-width:1.2}
+.seal[tabindex]{cursor:pointer}
 
 .seal--next{z-index:2}
-.seal--next .sf-face{fill:var(--paper);stroke:var(--ink);stroke-width:2.6}
 .seal--next .seal__mark{opacity:.22}
-.seal--next .seal__mark path{fill:var(--ink)}
-.seal--next .seal__no{color:var(--ink-2)}
 
 .seal--next::after{content:'';position:absolute;inset:-6%;
   border:2.5px solid var(--ink);
@@ -1486,117 +1200,89 @@ main#view:focus,main#view:focus-visible{outline:none}
   transform:rotate(-5deg);pointer-events:none}
 
 .seal__no{position:absolute;right:-3%;bottom:-5%;
-  font:500 clamp(10px,1.9cqw,11px)/1 var(--f-mono);color:var(--ink-2)}
-
-.seal--mile[data-seal="empty"] .sf-face{stroke-width:1.6;stroke-opacity:.55}
-.seal--mile > svg{height:80%;align-self:start}
-
-.seal__tag{position:absolute;left:50%;bottom:3%;
-  transform:translateX(-50%);max-width:132%;
-  font:500 clamp(8px,1.6cqw,11px)/1 var(--f-mono);
-  text-transform:uppercase;letter-spacing:.1em;color:var(--ink-2);
-  background:var(--paper);padding:.2em .45em;box-sizing:border-box;
-  white-space:nowrap}
-
-.seal--set .seal__tag{color:var(--paper);
-  background:var(--ink);padding:.25em .5em}
-
-.seal[data-seal="locked"] .seal__mark{opacity:.4}
+  font:500 clamp(11px,1.9cqw,12px)/1 var(--f-mono);color:var(--ink-2)}
 
 .act{display:flex}
+.nowline{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px var(--sp-row);margin:0;
+  font:500 clamp(11px,.5vw + 9.4px,13px)/1.4 var(--f-mono);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-2)}
+.nowline__lab{font-family:var(--f-head);font-weight:400;letter-spacing:.02em;
+  font-size:var(--t-sub);line-height:1;color:var(--ink)}
 
 .act__btn{position:relative;overflow:hidden;isolation:isolate;
   display:grid;align-content:end;gap:4px;
-  width:100%;min-height:clamp(96px,18vw,140px);
-  padding:var(--s5);border:var(--edge-panel) solid var(--ink);
+  width:100%;min-height:clamp(84px,12vw,112px);
+  padding:var(--sp-pad);border:var(--edge-panel) solid var(--ink);
   background:var(--paper);color:var(--ink);text-align:left;cursor:pointer;
   font-family:var(--f-body)}
 .act--live .act__btn{background:var(--ink);color:var(--paper)}
+.act:not(.act--live) .act__btn{min-height:0;padding:var(--sp-row) 0 0;border:0;
+  border-top:var(--edge-panel) solid var(--ink);background:none}
+.act:not(.act--live) .act__verb{font-size:var(--t-sub)}
+.act:not(.act--live) .act__sub{font-size:var(--t-caption);opacity:1;color:var(--ink-2)}
+.act:not(.act--live) .act__btn:hover{background:none;color:var(--ink)}
+.act:not(.act--live) .act__btn:hover .act__verb{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
 .act__verb{font-family:var(--f-head);text-transform:uppercase;
   font-size:var(--t-verb);line-height:1;letter-spacing:.01em}
-.act__sub{font-size:var(--t-body);opacity:.7;text-wrap:pretty}
+.act__sub{font-size:var(--t-body);line-height:1.3;opacity:.7;text-wrap:pretty}
 .act__btn:hover{background:var(--ink);color:var(--paper)}
 
-.view--home{position:relative;display:flex;flex-direction:column;gap:var(--s4)}
-
-.view--home::after{content:'';position:absolute;z-index:-1;
-  top:clamp(150px,22vw,260px);right:calc(var(--gutter) * -1);
-  width:clamp(150px,20vw,260px);height:9px;
-  transform:rotate(-14deg);transform-origin:100% 50%;
-  background:var(--ink);
-  clip-path:polygon(0 46%,14% 12%,58% 0,100% 30%,100% 70%,54% 100%,12% 74%)}
-.deck{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr);
-  grid-template-areas:"card" "act" "ahead"}
-.deck--live{grid-template-areas:"act" "card" "ahead"}
+.deck{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"act" "card" "ahead"}
 .deck > .card{grid-area:card}
 .deck__act{grid-area:act;min-width:0}
 .deck__ahead{grid-area:ahead}
 
 .deck .act--live .act__btn{
   clip-path:polygon(0 clamp(10px,2vw,22px),100% 0,100% 100%,0 100%);
-  padding-top:calc(var(--s5) + clamp(10px,2vw,22px));
+  padding-top:calc(var(--sp-pad) + clamp(10px,2vw,22px));
   border-right:0}
 
 .deck .act--live{margin-right:calc(var(--gutter) * -1)}
 
-@media(min-width:1024px){
-  .deck{grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-    grid-template-areas:"card card" "act ahead";
-    gap:clamp(20px,2.6vw,40px);align-items:start;align-content:start;
-    margin-top:calc(var(--s3) * -1)}
-  .deck--live{grid-template-areas:"act act" "card card" "ahead ahead"}
-  .deck > .card{max-width:none}
-}
 @media(min-width:1280px){
-  .deck,.deck--live{grid-template-columns:minmax(0,70fr) minmax(0,30fr);
-    grid-template-areas:"card act" "card ahead"}
-  .deck .ahead__row{grid-template-columns:auto minmax(0,1fr)}
-  .deck .ahead__at{grid-column:2;justify-self:start;text-align:left}
+  .deck{grid-template-columns:minmax(0,68fr) minmax(0,32fr);
+    grid-template-areas:"card act" "card ahead" "card .";
+    grid-template-rows:auto auto minmax(0,1fr);align-items:start}
+  .deck .act--live{margin-right:0}
+  .deck .act--live .act__btn{border-right:var(--edge-panel) solid var(--ink)}
 }
 
-.ahead{position:relative;display:flex;flex-direction:column;
-  border:var(--edge-panel) solid var(--ink);background:var(--paper)}
-.ahead::before{content:"";position:absolute;z-index:-1;
-  top:-9px;right:-11px;width:36%;height:56%;opacity:.65;
-  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
-  clip-path:polygon(18% 0,100% 0,100% 100%)}
-.ahead__mark{margin:0;padding:var(--s2) var(--s4);
-  background:var(--ink);color:var(--paper);
+.ahead{position:relative;display:flex;flex-direction:column}
+.ahead__mark{margin:0 0 var(--sp-tight);padding-bottom:var(--sp-tight);
+  border-bottom:var(--edge-panel) solid var(--ink);
   font-family:var(--f-head);text-transform:uppercase;
-  font-size:clamp(17px,3vw,22px);line-height:1.2}
-.ahead__list{list-style:none;margin:0;padding:0 var(--s4);
+  font-size:clamp(19px,3.6vw,26px);line-height:1}
+.ahead__list{list-style:none;margin:0;padding:0;
   display:flex;flex-direction:column}
 .ahead__row{display:grid;
   grid-template-columns:auto minmax(0,1fr) auto;
-  align-items:baseline;gap:var(--s3);
+  align-items:baseline;gap:var(--sp-row);
   padding:clamp(9px,1.4vw,13px) 0;
   border-bottom:var(--edge-rule) solid var(--tint)}
 .ahead__row:last-child{border-bottom:0}
-.ahead__no{font-family:var(--f-head);line-height:1;
-  font-size:clamp(21px,4.4vw,30px);color:var(--ink-2);
-  min-width:2.4ch;letter-spacing:-.02em}
+.ahead__no{font:400 14px/1 var(--f-mono);letter-spacing:.04em;
+  color:var(--ink-2);min-width:2ch}
 .ahead__day{font-size:var(--t-body);color:var(--ink-2)}
-.ahead__at{font-size:var(--t-caption);color:var(--ink-2);
-  justify-self:end;text-align:right}
+.ahead__at{font:400 12.5px/1.35 var(--f-mono);letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink-2);justify-self:end;text-align:right}
 
-
-.h2,.ledger__mark,.ahead__mark,.stall__title,.authp__title,.empty__title,
-.bsec,.bnow__lab{font-family:var(--f-head)}
+.h2,.ledger__mark,.ahead__mark,.stall__title,.authp__title,.bsec{font-family:var(--f-head)}
 .h2,.bsec{font-size:var(--t-sub);line-height:1.05;letter-spacing:0;
   text-transform:none;font-weight:400}
-.ledger__mark,.ahead__mark{font-size:var(--t-head);line-height:1.02;
-  text-transform:none}
 
 body{letter-spacing:.012em}
 
 button,input,select,textarea{font-family:inherit}
+/* each face ships one upright weight; never let the browser fake a bold */
+html{font-synthesis:none}
 
 .view--auth{display:block;width:100%;max-width:none;padding:0;margin:0}
 
 .spread{--band:clamp(230px,42dvh,400px);--lap:clamp(34px,9vw,64px);
   position:relative;width:100%;box-sizing:border-box;
   display:grid;grid-template-columns:minmax(0,1fr);
-  grid-template-rows:calc(var(--band) - var(--gut-tier)) auto 1fr;
+  grid-template-rows:calc(var(--band) - var(--sp-row)) auto 1fr;
   align-content:start;isolation:isolate;overflow:hidden;
   min-height:100dvh}
 
@@ -1605,27 +1291,11 @@ button,input,select,textarea{font-family:inherit}
   top:0;height:var(--band);
   background:var(--ink);z-index:0}
 
-.spread::after{content:'';position:absolute;z-index:0;
-  right:-4%;bottom:6%;width:clamp(240px,38vw,560px);
-  height:clamp(40px,7vh,74px);
-  transform:rotate(-12deg);background:var(--tint);opacity:.8;
-  clip-path:polygon(0 55%,9% 34%,28% 16%,52% 6%,74% 16%,100% 44%,
-                    92% 62%,66% 86%,38% 94%,12% 76%)}
-
 .spread__side{position:relative;z-index:1;
   justify-self:center;align-self:end;text-align:center;
-  margin:var(--s4) var(--gutter) clamp(14px,2.5dvh,26px);
+  margin:var(--sp-pad) var(--gutter) clamp(14px,2.5dvh,26px);
   font:500 clamp(10px,1vw,11px)/1.6 var(--f-mono);
   text-transform:uppercase;letter-spacing:.32em;color:var(--tone)}
-@media(min-width:820px){
-  .spread::before{content:'';position:absolute;z-index:0;
-    right:0;top:0;width:clamp(180px,30vw,420px);
-    height:clamp(200px,44vh,380px);
-    background-image:var(--tone-dot-a);background-size:var(--tone-cell-a);
-    opacity:.55;clip-path:polygon(28% 0,100% 0,100% 100%);
-    -webkit-mask-image:linear-gradient(205deg,#000 35%,transparent 80%);
-    mask-image:linear-gradient(205deg,#000 35%,transparent 80%)}
-}
 
 .spread__seal{position:absolute;--swirl:min(86vw,430px,calc(var(--band) * .95));
   left:calc(var(--swirl) * -.3);top:auto;bottom:calc(var(--swirl) * -.42);
@@ -1635,7 +1305,7 @@ button,input,select,textarea{font-family:inherit}
 .spread__head{grid-row:1;position:relative;z-index:2;
   padding:clamp(26px,7vw,44px) var(--gutter) 0;
   color:var(--paper);align-self:start}
-.spread__sub{margin:0 0 var(--s3);font-size:var(--t-caption);
+.spread__sub{margin:0 0 var(--sp-row);font-size:var(--t-caption);
   letter-spacing:.16em;color:var(--tint);
   display:flex;align-items:center;gap:clamp(8px,1.4vw,14px)}
 
@@ -1653,9 +1323,6 @@ button,input,select,textarea{font-family:inherit}
 
 .bform__head{display:flex;align-items:center;
   justify-content:space-between;gap:12px}
-.bform__seal{flex:none;width:clamp(30px,3vw,46px)}
-.bform__seal .brandseal{display:block;width:100%;height:auto;
-  --si:var(--paper);--sp:var(--ink)}
 .spread__wm{font-family:var(--f-display);text-transform:uppercase;
   font-size:clamp(52px,15vw,124px);line-height:.9;letter-spacing:.01em;
   margin:0;padding-bottom:.06em}
@@ -1665,7 +1332,7 @@ button,input,select,textarea{font-family:inherit}
   background:var(--paper);
   border:var(--edge-frame) solid var(--ink);
   padding:clamp(20px,5vw,32px);
-  display:flex;flex-direction:column;gap:var(--s4);
+  display:flex;flex-direction:column;gap:var(--sp-pad);
   max-width:460px;width:auto;box-sizing:border-box;
   box-shadow:0 0 0 var(--edge-panel) var(--paper),
              var(--pnl-off) var(--pnl-off) 0 var(--edge-panel) var(--ink)}
@@ -1694,7 +1361,7 @@ button,input,select,textarea{font-family:inherit}
 
 .authp__err{margin:0;color:var(--ink);font-style:italic;font-weight:700;
   border-left:var(--edge-frame) solid var(--ink);padding-left:10px}
-.authp__act{display:flex;flex-direction:column;gap:var(--s3);margin-top:var(--s2)}
+.authp__act{display:flex;flex-direction:column;gap:var(--sp-row);margin-top:var(--sp-tight)}
 .authp__go{display:block;width:100%;min-height:54px;box-sizing:border-box;
   padding:12px 16px;border:0;border-radius:0;cursor:pointer;
   background:var(--ink);color:var(--paper);
@@ -1732,82 +1399,55 @@ button,input,select,textarea{font-family:inherit}
 
   .spread__wm{font-size:clamp(44px,7.4vw,104px)}
   .authp{grid-row:1;grid-column:2;margin:0 var(--gutter) 0 0;
-    justify-self:stretch;width:auto;max-width:none}
+    justify-self:start;width:100%;max-width:460px}
 
-  .spread__side{grid-row:2;grid-column:2;align-self:start;
-    margin:var(--s4) var(--gutter) 0 0}
+  .spread__side{grid-row:2;grid-column:2;align-self:start;justify-self:start;
+    text-align:left;margin:var(--sp-pad) var(--gutter) 0 0}
 }
 
 .mark__word b{font-weight:inherit}
-
-.view--record{display:flex;flex-direction:column;gap:var(--s5)}
 
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
   overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 
 .rechead{position:relative;border-bottom:0;
-  padding-bottom:calc(var(--s3) + 7px)}
+  padding-bottom:calc(var(--sp-tight) + 7px)}
 .rechead::after{content:'';position:absolute;left:0;right:0;bottom:0;
   height:7px;background:var(--ink);
   clip-path:polygon(0 38%,10% 12%,52% 0,86% 18%,100% 46%,99% 60%,55% 100%,12% 78%,0 64%)}
 
 .rechead__title{margin:0;padding-bottom:.2em}
 
-.rechead--tight{padding-bottom:var(--s2)}
-.rechead--tight .rechead__title{font-size:clamp(30px,6.5vw,64px)}
+.recbody{display:grid;gap:var(--sp-pad)}
 
-.recbody{display:grid;gap:var(--s4)}
+/* the ledger line: the figures a page is about, set as type, not display */
+.figline{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--sp-tight) clamp(16px,2.4vw,32px);
+  margin:0;font:500 clamp(11px,.5vw + 9.4px,13px)/1.2 var(--f-mono);
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.figline b{font-family:var(--f-head);font-weight:400;letter-spacing:0;
+  font-size:clamp(24px,2.6vw,34px);line-height:1;color:var(--ink);margin-right:.3em}
+.figline--club{padding-top:var(--sp-pad);border-top:var(--edge-panel) solid var(--ink)}
 
-.tally{display:grid;gap:2px;
-  grid-template-columns:auto minmax(0,1fr);
-  grid-template-areas:"fig of" "bar bar" "gone gone";
-  align-items:end}
-.tally__fig{grid-area:fig;margin:0;font-family:var(--f-display);
-  line-height:.78;font-size:clamp(64px,15vw,120px);color:var(--ink)}
-.tally__of{grid-area:of;margin:0 0 .55em var(--s3);
-  font-size:var(--t-caption);color:var(--ink-2);line-height:1.2}
-
-.tally__bar{grid-area:bar;position:relative;margin:var(--s3) 0 0;
-  width:auto;margin-right:calc(var(--gutter) * -1);
-  height:clamp(11px,1.6vw,18px);
-  background:var(--tone);overflow:hidden}
-@media(min-width:760px){ .tally__bar{margin-right:0} }
-.tally__bar::before{content:"";position:absolute;inset:0 auto 0 0;
-  width:var(--fill,0%);background:var(--ink)}
-.tally__gone{grid-area:gone;margin:var(--s2) 0 0;
-  font-size:var(--t-caption);color:var(--ink-2);line-height:1.2}
-
-@media(min-width:760px){
-  .tally{grid-template-columns:auto auto minmax(0,1fr) auto;
-    grid-template-areas:"fig of bar gone";
-    align-items:center;column-gap:var(--s4)}
-  .tally__of{margin:0;align-self:end;padding-bottom:.5em}
-  .tally__bar{margin:0}
-  .tally__gone{margin:0;align-self:end;padding-bottom:.5em;
-    white-space:nowrap}
-}
+.tally{display:grid;gap:var(--sp-row)}
 
 .ledger{display:flex;flex-direction:column;
   border-top:var(--edge-panel) solid var(--ink)}
-.ledger--ahead{margin-top:var(--s4);border-top:0}
 
-.ledger__mark{margin:0 0 var(--s2);padding-bottom:var(--s2);
+.ledger__mark{margin:0 0 var(--sp-tight);padding-bottom:var(--sp-tight);
   border-bottom:var(--edge-panel) solid var(--ink);
   font-family:var(--f-head);text-transform:uppercase;
   font-size:clamp(19px,3.6vw,26px);line-height:1}
-.ledger--ahead .ledger__mark{margin-top:0}
 
 .lrow{display:grid;
   grid-template-columns:auto clamp(30px,7vw,42px) minmax(0,1fr) auto;
-  align-items:center;gap:var(--s3);
+  align-items:center;gap:var(--sp-row);
   width:100%;text-align:left;background:none;border:0;border-radius:0;
   color:inherit;font:inherit;
   padding:clamp(9px,1.4vw,13px) 0;
   border-bottom:var(--edge-rule) solid var(--tint)}
 
-.lrow__no{font-family:var(--f-head);line-height:1;
-  font-size:clamp(21px,4.4vw,30px);color:var(--tone);
-  min-width:2.4ch;letter-spacing:-.02em}
+.lrow__no{font:400 14px/1 var(--f-mono);letter-spacing:.04em;
+  color:var(--tone);min-width:2ch}
 .lrow__stamp{display:grid;place-items:center;aspect-ratio:1}
 .lrow__mark{width:100%;height:100%;display:block}
 .lrow__mark path{fill:var(--ink)}
@@ -1817,7 +1457,8 @@ button,input,select,textarea{font-family:inherit}
 
 .lrow__body{display:flex;flex-direction:column;gap:0;min-width:0}
 .lrow__date{font-size:var(--t-body);line-height:1.15}
-.lrow__when{font-size:var(--t-caption);color:var(--ink-2);line-height:1.3}
+.lrow__when{font:400 12.5px/1.35 var(--f-mono);letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink-2)}
 
 .lrow--set .lrow__no{color:var(--ink)}
 
@@ -1830,58 +1471,43 @@ button,input,select,textarea{font-family:inherit}
 .lrow--upcoming .lrow__when{color:var(--ink-2)}
 
 .lrow--open{background:var(--ink);color:var(--paper);cursor:pointer;
-  padding:var(--s4);margin:var(--s3) 0;border-bottom:0;
+  padding:var(--sp-pad);margin:var(--sp-row) 0;border-bottom:0;
   width:auto;margin-right:calc(var(--gutter) * -1);
-
-  padding-right:calc(var(--s4) + var(--gutter));
-  box-shadow:var(--s2) var(--s2) 0 var(--tone)}
+  padding-right:calc(var(--sp-pad) + var(--gutter))}
 .lrow--open .lrow__no{color:var(--paper)}
 .lrow--open .lrow__slot{border-color:var(--paper)}
 .lrow--open .lrow__date{font-family:var(--f-head);
   text-transform:uppercase;font-size:clamp(21px,4.6vw,30px);line-height:1}
 .lrow--open .lrow__when{color:var(--tint)}
-.lrow__go{font-family:var(--f-head);text-transform:uppercase;
-  font-size:clamp(15px,3vw,20px);line-height:1;color:var(--paper);
-  white-space:nowrap}
+.lrow__go{font:400 12.5px/1 var(--f-mono);letter-spacing:.12em;
+  text-transform:uppercase;color:var(--paper);white-space:nowrap;
+  text-decoration:underline;text-underline-offset:4px}
 .lrow--open:hover{background:var(--ink-2)}
 .lrow--open:focus-visible{outline:var(--edge-panel) solid var(--ink);
   outline-offset:3px}
 
 @media(min-width:768px){
-  .lrow{gap:var(--s4)}
+  .lrow{gap:var(--sp-pad)}
 }
 
 @media(min-width:900px){
-  .lrow{grid-template-columns:auto clamp(34px,3vw,44px) minmax(7rem,auto)
-      minmax(0,1fr) auto;
-    align-items:baseline;column-gap:var(--s4)}
+  .recbody{max-width:700px}
+  .lrow{grid-template-columns:auto 32px minmax(7rem,auto)
+      minmax(0,1fr) auto;padding-block:var(--sp-tight);
+    align-items:baseline;column-gap:var(--sp-pad)}
+  .lrow--open{margin-right:0;padding-right:var(--sp-pad);padding-block:var(--sp-pad)}
   .lrow__body{display:contents}
   .lrow__stamp{align-self:center}
   .lrow__date{grid-column:3}
-  .lrow__when{grid-column:4;justify-self:end;text-align:right}
+  .lrow__when{grid-column:4;justify-self:start;text-align:left}
   .lrow__go{grid-column:5}
 }
-
-@media(min-width:1180px){
-  .ledger{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
-    column-gap:clamp(32px,4vw,72px)}
-  .ledger__mark,.lrow--open{grid-column:1 / -1}
-  .lrow{column-gap:var(--s3)}
-  .lrow--open{column-gap:var(--s4)}
-}
-
-.view--scan{display:flex;flex-direction:column;gap:var(--s4)}
 
 .viewer{position:relative;display:grid;place-items:center;
   grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);
   isolation:isolate;overflow:hidden;container-type:size;
-  width:100%;aspect-ratio:1;max-height:calc(100dvh - 318px);min-height:200px;
-  border:var(--edge-frame) solid var(--ink);background:var(--tint);
-  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--ink)}
-.viewer::after{content:'';position:absolute;inset:7px;z-index:2;
-  pointer-events:none;border:var(--edge-hair) solid var(--paper);opacity:.75}
-
-@media(min-width:600px){ .viewer{aspect-ratio:4/3} }
+  width:100%;height:clamp(220px,calc(100dvh - 341px),640px);
+  border:var(--edge-frame) solid var(--ink);background:var(--tint)}
 
 .viewer > *{grid-column:1;grid-row:1;min-height:0;min-width:0}
 .viewer video{width:100%;height:100%;display:block;
@@ -1897,44 +1523,44 @@ button,input,select,textarea{font-family:inherit}
   pointer-events:none;z-index:3}
 .reticle__c{position:absolute;width:15%;height:15%;
   border:var(--edge-frame) solid var(--paper);
-  filter:drop-shadow(0 0 1px rgba(10,10,10,.55))}
+  /* an ink keyline, so the corners read over a white screen too */
+  filter:drop-shadow(1.5px 1.5px 0 var(--ink)) drop-shadow(-1.5px -1.5px 0 var(--ink))}
 .reticle__c--tl{top:0;left:0;border-right:0;border-bottom:0}
 .reticle__c--tr{top:0;right:0;border-left:0;border-bottom:0}
 .reticle__c--bl{bottom:0;left:0;border-right:0;border-top:0}
 .reticle__c--br{bottom:0;right:0;border-left:0;border-top:0}
 
 .reticle--good .reticle__c{width:19%;height:19%}
-.reticle--busy .reticle__c{opacity:.55}
 .reticle--bad .reticle__c{width:12%;height:12%}
 
-.scanline{display:flex;align-items:center;gap:var(--s3);margin:0;min-height:26px;
-  font:500 clamp(11px,2.9vw,13px)/1.35 var(--f-mono);letter-spacing:.14em;
+.scanline{display:flex;align-items:center;gap:var(--sp-row);margin:0;min-height:26px;
+  font:400 clamp(13px,3.6vw,15px)/1.35 var(--f-mono);letter-spacing:.1em;
   text-transform:uppercase;color:var(--ink)}
 .scanline__dot{flex:none;width:9px;height:9px;
   border:2px solid var(--ink);background:transparent}
 .scanline__msg{min-width:0;overflow-wrap:anywhere}
 .scanline--boot{color:var(--ink-2)}
-.scanline--boot .scanline__dot,.scanline--off .scanline__dot{opacity:.4}
+.scanline--boot .scanline__dot{opacity:.4}
+/* with the camera off the panel says so; the line would only repeat it */
+.viewer--stalled + .scanline{display:none}
 .scanline--live .scanline__dot{background:var(--ink)}
 .scanline--busy .scanline__dot{background:var(--tone);border-color:var(--tone)}
 .scanline--good .scanline__dot{background:var(--ink)}
-.scanline--good .scanline__msg{background:var(--ink);color:var(--paper);padding:3px 8px}
+.scanline--good .scanline__msg,.scanline--busy .scanline__msg{background:var(--ink);color:var(--paper);padding:3px 8px}
 .scanline--bad .scanline__dot{background:var(--paper)}
-.scanline--bad .scanline__msg{text-decoration:underline;text-underline-offset:3px}
+.scanline--bad .scanline__msg{text-decoration:underline 2px;text-underline-offset:4px}
 
 .standing{display:flex;align-items:baseline;justify-content:space-between;
-  gap:var(--s2) var(--s4);flex-wrap:wrap;margin:0;
-  padding-top:var(--s3);border-top:var(--edge-panel) solid var(--ink)}
+  gap:var(--sp-tight) var(--sp-pad);flex-wrap:wrap;margin:0;
+  padding-top:var(--sp-row);border-top:var(--edge-panel) solid var(--ink)}
 .standing__lab{font-size:var(--t-caption);color:var(--ink-2);
   letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
 .standing__at{font-family:var(--f-head);font-size:var(--t-sub);line-height:1.05;
   color:var(--ink);text-align:right;min-width:0;overflow-wrap:anywhere}
 
-.viewer--hit{border-color:var(--ink)}
-.viewer--hit .viewer__scrim{opacity:.35}
 
 .zoom{position:relative;z-index:4;align-self:end;justify-self:stretch;
-  display:flex;align-items:center;gap:var(--s3);margin:0;padding:8px 12px;
+  display:flex;align-items:center;gap:var(--sp-row);margin:0;padding:8px 12px;
   background:var(--ink);color:var(--paper)}
 .zoom__lab{flex:none;font:500 10px/1 var(--f-mono);letter-spacing:.2em;
   text-transform:uppercase}
@@ -1954,111 +1580,64 @@ button,input,select,textarea{font-family:inherit}
   box-shadow:0 0 0 2px var(--paper)}
 .zoom__range:focus-visible{outline:var(--edge-thin) solid var(--paper);outline-offset:2px}
 .viewer--zoom .reticle{width:min(56cqw,62cqh,290px);margin-bottom:44px}
-.viewer--zoom::after{bottom:51px}
 
-.viewer--stalled{aspect-ratio:auto;min-height:clamp(160px,30vw,240px);
+.viewer--stalled{aspect-ratio:auto;height:auto;min-height:clamp(160px,30vw,240px);
   container-type:normal;place-items:stretch;background:var(--paper)}
-.viewer--stalled::after{display:none}
 
 @media(max-height:520px) and (min-aspect-ratio:4/3){
   .view--scan{display:grid;
-    grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
-    grid-template-rows:auto auto minmax(0,1fr);gap:var(--s3) var(--s5);
+    grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);
+    grid-template-rows:auto auto minmax(0,1fr);gap:var(--sp-row) var(--sp-block);
     grid-template-areas:"stage head" "stage line" "stage standing"}
   .view--scan > .rechead{grid-area:head;margin:0}
-  .view--scan > .viewer{grid-area:stage;margin:0;aspect-ratio:4/3;
-    max-height:calc(100dvh - 178px);min-height:0;align-self:start}
+  .view--scan > .viewer{grid-area:stage;margin:0;aspect-ratio:4/3;height:auto;
+    max-height:calc(100dvh - 136px);min-height:0;align-self:start}
   .view--scan > .scanline{grid-area:line}
   .view--scan > .standing{grid-area:standing;margin:0;align-self:start}
 }
 
 .stall{display:flex;flex-direction:column;justify-content:center;
-  gap:var(--s2);padding:var(--s5);text-align:left}
+  gap:var(--sp-tight);padding:var(--sp-pad);text-align:left}
 .stall__title{margin:0;font-family:var(--f-head);
   text-transform:uppercase;line-height:1;
   font-size:clamp(19px,3.6vw,28px)}
 .stall__note{margin:0;max-width:46ch;font-size:var(--t-caption);
   line-height:1.45;color:var(--ink-2)}
+.stall__note:empty{display:none}
 
-.manual{display:flex;flex-direction:column;gap:var(--s3);
-  border:var(--edge-panel) solid var(--ink);background:var(--paper);
-  padding:var(--s4)}
-.manual__lab{font-size:var(--t-caption);color:var(--ink-2);line-height:1.35}
-.manual__f{display:flex;gap:var(--s2);flex-wrap:wrap;align-items:stretch}
-.manual__in{flex:999 1 min(100%,14ch);min-width:0;
-  padding:11px 2px 9px;background:transparent;color:var(--ink);
-  border:0;border-bottom:var(--edge-panel) solid var(--ink);border-radius:0;
-  font-family:var(--f-mono);font-size:var(--t-caption);letter-spacing:.06em}
-.manual__in::placeholder{color:var(--tone)}
-.manual__in:focus{outline:0;border-bottom-width:var(--edge-frame)}
-.manual__go{flex:1 1 auto;min-width:max-content;
-  padding:11px var(--s4);border:var(--edge-panel) solid var(--ink);
-  background:var(--ink);color:var(--paper);cursor:pointer;
-  font-family:var(--f-head);text-transform:uppercase;
-  font-size:clamp(15px,3vw,20px);line-height:1.2}
-.manual__go:hover{background:var(--paper);color:var(--ink)}
-.manual__go:focus-visible{outline:var(--edge-panel) solid var(--ink);
-  outline-offset:3px}
-
+/* on a desktop the camera spans the page at the shape of the stream it
+   shows, so what is in the frame is what the decoder reads */
 @media(min-width:1024px){
-  .view--scan > .viewer,.view--scan > .scanline,.view--scan > .standing{
-    width:100%;max-width:min(100%,max(720px,48vw));align-self:flex-start}
-  .view--scan > .viewer{max-height:calc(100dvh - clamp(330px,34vh,360px));min-height:250px}
+  .view--scan > .viewer{height:auto;aspect-ratio:16/9;
+    max-height:calc(100dvh - 250px);min-height:320px}
+  .view--scan > .viewer--stalled{aspect-ratio:auto;min-height:240px}
 }
 
-.view--rewards{display:flex;flex-direction:column;gap:var(--s5)}
+.tiers{display:flex;flex-direction:column;gap:0}
 
-.ladder{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
-
-.ladder__fig{margin:0;padding-bottom:.1em;font-family:var(--f-display);
-  line-height:.78;font-size:clamp(64px,15vw,120px);color:var(--ink)}
-.ladder__of{margin:0;font-size:var(--t-caption);color:var(--ink-2);
-  line-height:1.2}
-
-.climb{display:grid;--rgap:clamp(16px,2.6vw,30px);
-  grid-template-columns:clamp(22px,3.4vw,40px) minmax(0,1fr);
-  column-gap:var(--rgap);margin-top:var(--s3)}
-.climb__rail{position:relative;border:var(--edge-panel) solid var(--ink);
-  background-image:var(--tone-dot-a);background-size:var(--tone-cell-a)}
-.climb__fill{position:absolute;left:0;right:0;top:0;height:var(--h,0%);
-  background:var(--ink)}
-.climb__plates{display:flex;flex-direction:column;
-  gap:clamp(20px,3.4vw,40px);padding-block:clamp(4px,1vw,12px);min-width:0}
-
-.tier{position:relative;display:flex;flex-direction:column;align-items:flex-start;
-  gap:var(--s2);min-width:0;
-  padding:clamp(16px,2.4vw,26px);
-  border:var(--edge-panel) solid var(--ink);background:var(--paper)}
-
-.tier::after{content:"";position:absolute;right:100%;top:clamp(22px,3.4vw,40px);
-  width:var(--rgap,20px);height:var(--edge-panel);background:var(--ink)}
-.tier__at{font-family:var(--f-head);line-height:.82;
-  font-size:clamp(46px,8.5vw,86px);color:var(--ink)}
-.tier__body{display:flex;flex-direction:column;gap:3px;min-width:0}
+.tier{position:relative;display:grid;min-width:0;max-width:700px;
+  grid-template-columns:auto minmax(0,1fr);
+  grid-template-areas:"at body" "at ticks" "at say";
+  column-gap:clamp(14px,2.4vw,26px);row-gap:var(--sp-tight);align-items:start;
+  padding:clamp(16px,2.4vw,24px) 0;
+  border:0;border-top:var(--edge-panel) solid var(--ink);background:none}
+.tier__at{grid-area:at;font-family:var(--f-head);line-height:.82;
+  font-size:clamp(32px,3.6vw,44px);color:var(--ink);min-width:2.2ch}
+.tier__body{grid-area:body;display:flex;flex-direction:column;gap:3px;min-width:0}
 .tier__name{font-family:var(--f-head);font-size:var(--t-sub);
   line-height:1.05;overflow-wrap:anywhere}
 .tier__desc{font-size:var(--t-caption);color:var(--ink-2);line-height:1.35}
+.tier__desc:empty{display:none}
 
-.tier__say{margin-top:auto;padding-top:var(--s3);
-  font-size:var(--t-caption);color:var(--ink-2)}
+.tier__ticks{grid-area:ticks;display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.tier__ticks i{display:block;width:clamp(12px,2.4vw,18px);aspect-ratio:1;
+  background:var(--tint)}
+.tier__ticks i.is-on{background:var(--ink)}
 
-.tier--sealed{position:relative;isolation:isolate;max-width:660px}
-.tier--sealed::before{content:"";position:absolute;inset:0;z-index:-1;
-  background-image:radial-gradient(var(--ink) .9px,transparent 1px);
-  background-size:7px 7px;
-  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 8%,transparent 22%);
-  mask-image:linear-gradient(to bottom,#000 0%,#000 8%,transparent 22%)}
-.tier--sealed .tier__at{color:var(--ink)}
-
-.tier--ready{background:var(--ink);color:var(--paper);
-  border-color:var(--ink);
-  margin-right:calc(var(--gutter) * -1);border-right:0;
-  padding-block:clamp(22px,3.4vw,38px)}
-.tier--ready .tier__at{
-  font-size:clamp(58px,10vw,110px);
-  color:var(--paper)}
-.tier--ready .tier__desc{color:var(--tint)}
-.tier__claim{margin-top:auto;padding:10px var(--s4);cursor:pointer;
+.tier__say{grid-area:say;margin:0;font-size:var(--t-body);color:var(--ink)}
+.tier--far .tier__say{color:var(--ink-2)}
+.tier__claim{grid-area:say;justify-self:start;
+  padding:10px var(--sp-pad);cursor:pointer;
   border:var(--edge-panel) solid var(--paper);
   background:var(--paper);color:var(--ink);
   font-family:var(--f-head);
@@ -2067,161 +1646,129 @@ button,input,select,textarea{font-family:inherit}
 .tier__claim:focus-visible{outline:var(--edge-panel) solid var(--paper);
   outline-offset:3px}
 
-.tier--claimed{background:var(--ink);color:var(--tint);border-color:var(--ink);
-  max-width:700px}
+.tier--ready{background:var(--ink);color:var(--paper);border-top-color:var(--ink);
+  max-width:none;margin-right:calc(var(--gutter) * -1);
+  padding:clamp(22px,3.4vw,38px) var(--gutter) clamp(22px,3.4vw,38px) clamp(16px,2.4vw,26px)}
+.tier--ready + .tier{border-top-width:0}
+.tier--ready .tier__at{color:var(--paper);font-size:clamp(36px,4.4vw,56px)}
+.tier--ready .tier__desc{color:var(--tint)}
 
-.tier__punch{position:absolute;right:clamp(10px,3vw,34px);top:50%;
-  transform:translateY(-50%) rotate(-12deg);
+.tier--claimed{color:var(--ink-2)}
+.tier--claimed .tier__at,.tier--claimed .tier__name{color:var(--ink-2)}
+.tier--claimed{grid-template-areas:"at body" "at say"}
+.tier__punch{grid-area:say;justify-self:start;
+  transform:rotate(-4deg);transform-origin:0 100%;
   font-family:var(--f-head);text-transform:uppercase;line-height:1;
-  font-size:clamp(24px,4.6vw,44px);color:var(--paper);
-  border:var(--edge-frame) solid var(--paper);padding:.18em .45em;
+  font-size:clamp(17px,2.6vw,24px);color:var(--ink);
+  border:var(--edge-panel) solid var(--ink);padding:.2em .5em;
   pointer-events:none}
-.tier--claimed .tier__at{color:var(--paper)}
-.tier--claimed .tier__name{color:var(--tint)}
-.tier--claimed .tier__desc{color:var(--ink-2)}
-.tier--claimed .tier__say{color:var(--tint)}
 
-@media(min-width:768px){
-  .tier{gap:var(--s4)}
-}
-
-.view--member{position:relative;display:flex;flex-direction:column;gap:var(--s5)}
-
-.sheet{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr);
-  align-items:start}
-.who{position:relative;display:grid;gap:var(--s4);
-  grid-template-rows:minmax(clamp(170px,22vw,260px),1fr) auto;
-  container-type:inline-size;
-  isolation:isolate;overflow:hidden;
-  background:var(--ink);color:var(--paper);
-  padding:clamp(18px,3vw,32px);
-  margin-left:calc(var(--gutter) * -1);
-  padding-left:max(var(--gutter),clamp(18px,3vw,32px))}
-
-.who__mark{grid-row:1;align-self:start;position:relative;z-index:1}
-.who__org{display:block;font:500 clamp(10px,2.4cqw,13px)/1.6 var(--f-mono);
-  text-transform:uppercase;letter-spacing:.2em;color:var(--paper);
-  opacity:.9}
-
-.who__emblem{position:absolute;right:-16%;top:46%;z-index:0;
-  transform:translateY(-50%);
-  width:clamp(250px,96cqw,470px);pointer-events:none}
-.who__emblem .brandseal{display:block;height:auto;width:100%;
-  opacity:.6;
-  --si:var(--tone);--sp:transparent;
-  -webkit-mask-image:linear-gradient(205deg,#000 52%,transparent 90%);
-  mask-image:linear-gradient(205deg,#000 52%,transparent 90%)}
-.who__id{grid-row:2;position:relative;z-index:1;align-self:end;
-  display:grid;gap:3px;
-  border-top:var(--edge-rule) solid var(--tint);
-  padding-top:clamp(10px,1.6vw,16px)}
-
-.who__name{margin:0;font-family:var(--f-head);text-transform:uppercase;
-  line-height:.95;font-size:clamp(24px,9cqw,44px);color:var(--paper);
-  overflow-wrap:anywhere;padding-bottom:.04em}
-.who__hand{margin:0;font-size:var(--t-caption);color:var(--tint);
-  line-height:1.3;overflow-wrap:anywhere;letter-spacing:.1em}
+.tier--far .tier__at,.tier--far .tier__name{color:var(--ink-2)}
 
 @media(min-width:900px){
-  .sheet{grid-template-columns:minmax(0,34fr) minmax(0,66fr);
-    gap:clamp(20px,2.8vw,44px);align-items:stretch}
+  .tier--ready{max-width:700px;margin-right:0;padding-right:var(--sp-pad)}
+}
+.tier--ready + .tier--ready{margin-top:3px}
 
-  .view--member .card__field{min-height:clamp(280px,32vw,430px)}
-
-  .who{margin-left:0;padding-left:clamp(18px,3vw,32px)}
+/* the member, set as type: name, standing, district, and the district's
+   own seal at the size of a signature, not a banner */
+.who{display:grid;grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:"name seal" "line seal";column-gap:var(--sp-pad);row-gap:6px;
+  align-items:end}
+.who__name{grid-area:name;margin:0;line-height:1;color:var(--ink);
+  font-size:clamp(26px,3vw,36px);overflow-wrap:anywhere}
+.who__line{grid-area:line;margin:0;font:500 clamp(11px,.5vw + 9.4px,13px)/1.4 var(--f-mono);
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.who__seal{grid-area:seal;width:clamp(56px,7vw,88px);align-self:center}
+.who__seal .brandseal{display:block;width:100%;height:auto}
+@media(min-width:760px){
+  .view--member .standing-band__rest{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 
-.standing-band{border-top:var(--edge) solid var(--ink);
-  padding-top:clamp(12px,1.8vw,20px);display:grid;gap:2px;
+/* the cards a member has filled, as a strip of their own impressions */
+.cards__list{list-style:none;margin:0;padding:0}
+.cards__row{display:grid;grid-template-columns:auto minmax(0,1fr);
+  grid-template-areas:"no when" "marks marks" "prize prize";gap:6px var(--sp-pad);
+  align-items:baseline;padding:var(--sp-row) 0;border-bottom:var(--edge-rule) solid var(--tint)}
+.cards__no{grid-area:no;font:400 clamp(15px,1.2vw,17px)/1.2 var(--f-mono);
+  letter-spacing:.04em;text-transform:uppercase}
+.cards__marks{grid-area:marks;display:flex;gap:clamp(4px,1vw,10px)}
+.cards__marks svg{width:clamp(20px,5.2vw,30px);height:auto}
+.cards__marks path{fill:var(--ink)}
+.cards__when,.cards__prize{font:500 clamp(11px,.5vw + 9.4px,13px)/1.4 var(--f-mono);
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.cards__when{grid-area:when;justify-self:end}
+.cards__prize{grid-area:prize}
+@media(min-width:900px){
+  .cards__row{grid-template-columns:8ch auto minmax(0,1fr) auto;
+    grid-template-areas:"no marks when prize";align-items:center}
+  .cards__when{justify-self:start}
+}
+
+
+.standing-band{display:grid;gap:2px;
   grid-template-columns:auto minmax(0,1fr);
-  grid-template-areas:"fig of" "rest rest";
-  align-items:end;
-  border-top:var(--edge-frame) solid var(--ink);padding-top:var(--s4)}
+  grid-template-areas:"fig of" "rest rest";align-items:end;
+  border-top:var(--edge-frame) solid var(--ink);padding-top:var(--sp-pad)}
 .standing-band__fig{grid-area:fig;margin:0;padding-bottom:.1em;
-  font-family:var(--f-display);line-height:.78;
-  font-size:clamp(64px,15vw,120px);color:var(--ink)}
-.standing-band__of{grid-area:of;margin:0 0 .55em var(--s2);
+  font-family:var(--f-head);line-height:.8;
+  font-size:clamp(48px,7vw,80px);color:var(--ink)}
+.standing-band__of{grid-area:of;margin:0 0 .55em var(--sp-tight);
   font-size:var(--t-caption);color:var(--ink-2);line-height:1.2}
 
-.standing-band__rest{grid-area:rest;display:grid;gap:0;margin:var(--s4) 0 0;
+.standing-band__rest{grid-area:rest;display:grid;gap:0;margin:var(--sp-pad) 0 0;
   grid-template-columns:minmax(0,1fr)}
 .standing-band__rest > div{display:grid;
   grid-template-columns:minmax(0,1fr) auto;align-items:baseline;
-  gap:var(--s3);padding:clamp(9px,1.4vw,13px) 0;
+  gap:var(--sp-row);padding:clamp(9px,1.4vw,13px) 0;
   border-bottom:var(--edge-rule) solid var(--tint)}
 .standing-band__rest dt{font-size:var(--t-caption);color:var(--ink-2)}
 
 .standing-band__rest dd{margin:0;justify-self:end;
-  font-family:var(--f-head);text-transform:uppercase;line-height:1;
-  font-size:clamp(19px,3.6vw,26px);color:var(--ink)}
+  font:400 clamp(15px,1.2vw,17px)/1.2 var(--f-mono);letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink)}
 
 @media(min-width:760px){
   .standing-band{grid-template-columns:auto auto minmax(0,1fr);
     grid-template-areas:"fig of rest";align-items:center;
-    column-gap:var(--s3)}
+    column-gap:var(--sp-row)}
   .standing-band__of{margin:0 clamp(24px,4vw,56px) 0 0;
     align-self:end;padding-bottom:.62em}
   .standing-band__rest{margin:0;
     grid-template-columns:repeat(3,minmax(0,1fr));
-    column-gap:clamp(16px,2.4vw,36px)}
+    column-gap:clamp(16px,2.4vw,36px);row-gap:var(--sp-pad)}
   .standing-band__rest > div{grid-template-columns:minmax(0,1fr);
     align-content:end;gap:2px;
     border-bottom:0;border-top:var(--edge-rule) solid var(--tint);
-    padding:var(--s2) 0 0}
+    padding:var(--sp-tight) 0 0}
   .standing-band__rest dd{justify-self:start}
 }
 
-.acct{display:grid;gap:var(--s3);justify-items:start;
-  border-top:var(--edge-panel) solid var(--ink);padding-top:var(--s4)}
+.acct{display:grid;gap:var(--sp-row);justify-items:start;
+  border-top:var(--edge-panel) solid var(--ink);padding-top:var(--sp-pad)}
 .acct__mark{margin:0;font-family:var(--f-head);text-transform:uppercase;
   font-size:var(--t-sub);line-height:1}
 .acct__row{justify-self:stretch;display:flex;align-items:center;
-  justify-content:space-between;gap:var(--s3);padding:var(--s2) 0;
+  justify-content:space-between;gap:var(--sp-row);padding:var(--sp-tight) 0;
   border-bottom:var(--edge-rule) solid var(--tint)}
 .acct__lab{font-size:var(--t-body)}
-.acct__out{padding:11px var(--s5);cursor:pointer;
+.acct__out{min-height:44px;padding:10px var(--sp-pad);cursor:pointer;
   border:var(--edge-panel) solid var(--ink);
   background:var(--paper);color:var(--ink);
-  font-family:var(--f-head);text-transform:uppercase;
-  font-size:clamp(15px,3vw,21px);line-height:1.2}
+  font:400 14px/1.1 var(--f-body);letter-spacing:.04em}
 .acct__out:hover{background:var(--ink);color:var(--paper)}
 .acct__out:focus-visible{outline:var(--edge-panel) solid var(--ink);
   outline-offset:3px}
 /* from 1024px up the rail's foot carries the account block */
 @media(min-width:1024px){ .view--member .acct,.view--board .acct{display:none} }
 
-.bover{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr);
-  grid-template-areas:"now" "ident" "band"}
-.bover > .bnow{grid-area:now}
-.bover > .bident{grid-area:ident}
-.bover > .standing-band{grid-area:band}
-@media(min-width:1000px){
-  .bover{grid-template-columns:minmax(0,62fr) minmax(0,38fr);
-    grid-template-areas:"now ident" "band band";align-items:stretch;
-    column-gap:clamp(16px,2.2vw,32px)}
-}
+.bover{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr)}
 
-.bident{position:relative;display:flex;align-items:center;
-  justify-content:space-between;gap:clamp(12px,1.6vw,22px);
-  background:var(--ink);color:var(--paper);
-  border:var(--edge-frame) solid var(--ink);
-  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone);
-  padding:clamp(16px,2.4vw,28px);min-height:clamp(140px,18vw,230px)}
-.bident__seal{display:block;flex:none;
-  width:clamp(116px,14vw,182px)}
-.bident__seal .brandseal{width:100%;height:auto;display:block;
-  --si:var(--paper);--sp:var(--ink)}
-.bident__line{margin:0;
-  font-family:var(--f-head);color:var(--paper);
-  font-size:clamp(16px,1.8vw,22px);letter-spacing:.04em;
-  max-width:10ch;line-height:1.12}
-
-.bnow{margin-right:calc(var(--gutter) * -1);border-right:0;
-  display:grid;gap:2px var(--s5);
+.bnow{display:grid;gap:2px var(--sp-pad);max-width:760px;
   grid-template-columns:minmax(0,1fr);
   grid-template-areas:"lab" "no" "at" "state" "go";
   align-items:start;justify-items:start;
-  padding:var(--s5);border:var(--edge-panel) solid var(--ink);
+  padding:var(--sp-pad);border:var(--edge-panel) solid var(--ink);
   background:var(--paper);color:var(--ink)}
 .bnow__lab{grid-area:lab} .bnow__no{grid-area:no}
 .bnow__at{grid-area:at}   .bnow__state{grid-area:state}
@@ -2231,32 +1778,34 @@ button,input,select,textarea{font-family:inherit}
   .bnow{grid-template-columns:minmax(0,1fr) auto;
     grid-template-areas:"lab go" "no go" "at go" "state go";
     align-items:start;align-content:center;
-    min-height:clamp(240px,32vh,400px);
-    padding-block:clamp(24px,4vw,44px)}
+    padding-block:clamp(24px,3vw,36px)}
   .bnow__go{align-self:center;margin-top:0}
 
   .bnow--none{grid-template-columns:minmax(0,1fr);
     grid-template-areas:"lab" "no" "at" "go";min-height:0}
-  .bnow--none .bnow__go{align-self:start;margin-top:var(--s4)}
+  .bnow--none .bnow__go{align-self:start;margin-top:var(--sp-pad)}
 }
 .bnow--live{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+@media(max-width:719px){
+  .bnow--live{max-width:none;margin-right:calc(var(--gutter) * -1);border-right:0}
+}
 
 .bnow__lab{margin:0;font:500 var(--t-caption)/1.3 var(--f-mono);
   letter-spacing:.24em;text-transform:uppercase;color:var(--ink-2)}
 .bnow--live .bnow__lab{color:var(--tint)}
 .bnow__no{margin:0;padding-bottom:.08em;
   font-family:var(--f-head);text-transform:uppercase;line-height:.9;
-  font-size:clamp(44px,10vw,96px)}
+  font-size:clamp(40px,7vw,72px)}
 .bnow__at{margin:0;font-size:var(--t-body);line-height:1.3}
 .bnow--live .bnow__at{color:var(--tint)}
-.bnow__state{margin:var(--s2) 0 0;font-size:var(--t-caption);
+.bnow__state{margin:var(--sp-tight) 0 0;font-size:var(--t-caption);
   color:var(--ink-2)}
 .bnow--live .bnow__state{color:var(--paper)}
-.bnow__go{margin-top:var(--s4);padding:11px var(--s5);cursor:pointer;
+.bnow__go{margin-top:var(--sp-pad);padding:11px var(--sp-pad);cursor:pointer;
   border:var(--edge-panel) solid currentColor;
   background:transparent;color:inherit;
   font-family:var(--f-head);text-transform:uppercase;
-  font-size:clamp(15px,3vw,21px);line-height:1.2}
+  font-size:clamp(17px,2vw,21px);line-height:1.2}
 .bnow--live .bnow__go{background:var(--paper);color:var(--ink);
   border-color:var(--paper)}
 .bnow__go:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
@@ -2267,9 +1816,6 @@ button,input,select,textarea{font-family:inherit}
 
 .bover .standing-band{border-top-width:var(--edge-panel)}
 
-.ink{background:var(--ink);color:var(--paper);
-  border:var(--edge-panel) solid var(--ink)}
-.ink .muted,.ink .tier__desc,.ink .lrow__when{color:var(--tint)}
 
 .crop{overflow:hidden;isolation:isolate}
 :where(.crop){position:relative}
@@ -2278,52 +1824,75 @@ button,input,select,textarea{font-family:inherit}
 :where(.crop) > :where(.crop__art){fill:var(--ink)}
 .crop > :not(.crop__art){position:relative;z-index:1}
 
-.gmtabs{display:flex;flex-wrap:wrap;gap:0;margin-top:var(--s4);
-  position:relative;z-index:1}
+.gmtabs{display:flex;flex-wrap:wrap;gap:0;position:relative;z-index:1}
 .gmtab{border:var(--edge-panel) solid var(--ink);border-bottom:0;
   background:var(--paper);color:var(--ink);cursor:pointer;
   padding:10px 15px;margin-bottom:calc(var(--edge-panel) * -1);
   font:500 clamp(11px,1.2vw,13px)/1 var(--f-mono);letter-spacing:.06em}
 .gmtab + .gmtab{border-left:0}
 .gmtab--on{background:var(--ink);color:var(--paper)}
+@media (pointer:coarse){ .gmtab{min-height:44px} .blist--meet .brow__day{padding-block:12px;margin-block:-12px} }
 .gmtab:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:2px}
 
 .proj{display:grid;margin-top:0;
   grid-template-columns:minmax(0,1fr);
   gap:clamp(14px,2vw,24px);
-  padding:clamp(16px,2.6vw,36px);
+  padding:clamp(16px,2.6vw,32px);
   background:var(--ink);color:var(--paper);
   border:var(--edge-panel) solid var(--ink)}
 
 .proj__meet{display:flex;flex-direction:column;gap:2px;min-width:0}
 .proj__no{margin:0;font-family:var(--f-head);
   text-transform:uppercase;line-height:.9;
-  font-size:clamp(34px,4.2vw,72px)}
+  font-size:clamp(34px,4vw,60px)}
 
-.proj__when{margin:0;color:var(--paper);
-  font-size:clamp(14px,1.6vw,23px);line-height:1.3}
+.proj__when{margin:0;color:var(--tint);
+  font-size:clamp(14px,1.4vw,20px);line-height:1.3}
 
 .proj__word{margin:0;font-family:var(--f-head);
   text-transform:uppercase;line-height:.86;
-  font-size:clamp(52px,7vw,132px);
+  font-size:clamp(40px,5vw,84px);
   transform:rotate(-1.6deg)}
+.proj:not(.proj--live){background:none;color:var(--ink);border:0;
+  padding-inline:0;margin-inline:0}
 .proj:not(.proj--live) .proj__word{color:var(--tone)}
+.proj:not(.proj--live) .proj__when{color:var(--ink-2)}
+.proj:not(.proj--live) .proj__ctl--go{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.proj:not(.proj--live) .proj__ctl--go:hover{background:var(--paper);color:var(--ink)}
+.proj:not(.proj--full) .proj__cap{display:none}
+/* below 900 the stage is one column: the meeting and its state on one
+   line, the code, then the count and the controls under it */
+@media(max-width:899px){
+  .proj{grid-template-columns:minmax(0,1fr) auto;align-items:center}
+  .proj__meet{grid-column:1;grid-row:1}
+  .proj__word{grid-column:2;grid-row:1;align-self:start;justify-self:end;
+    font-size:clamp(28px,6vw,48px)}
+  .proj__plate{grid-column:1/-1;grid-row:2}
+  .proj__count{grid-column:1/-1;grid-row:3;justify-self:start}
+  .proj__ctls{grid-column:1/-1;grid-row:3;justify-self:end}
+  .proj:not(.proj--live) .proj__ctls{grid-row:2;justify-self:start}
+}
+@media(max-width:559px){
+  .proj__ctls{grid-row:4;justify-self:stretch}
+  .proj__ctl{flex:1 1 auto}
+}
 
-.proj__count{display:flex;align-items:baseline;gap:var(--s3);margin:0}
+.proj__count{display:flex;align-items:baseline;gap:var(--sp-row);margin:0}
 .proj__count b{font-weight:400;font-family:var(--f-head);line-height:.9;
-  font-size:clamp(48px,5.4vw,96px)}
+  font-size:clamp(48px,5.4vw,84px)}
 .proj__count span{font-size:clamp(11px,1.2vw,15px);color:var(--tint)}
-.proj__shut{margin:0;align-self:center;
-  font-size:clamp(12px,1.3vw,16px);color:var(--tint);max-width:30ch}
 
-.proj__ctl{margin:0;padding:clamp(15px,1.8vw,22px) var(--s5);cursor:pointer;
+.proj__ctls{display:flex;flex-wrap:wrap;gap:var(--sp-row)}
+.proj__ctl{margin:0;padding:clamp(12px,1.4vw,18px) var(--sp-pad);cursor:pointer;
   border:var(--edge-panel) solid var(--paper);
   background:transparent;color:var(--paper);
   font-family:var(--f-head);line-height:1.2;
-  font-size:clamp(18px,2vw,28px)}
+  font-size:clamp(17px,1.8vw,24px);white-space:nowrap}
 .proj__ctl:hover{background:var(--paper);color:var(--ink)}
 .proj__ctl--go{background:var(--paper);color:var(--ink)}
 .proj__ctl--go:hover{background:transparent;color:var(--paper)}
+.proj__ctl--full{border-color:var(--tone);color:var(--tint);
+  font:400 clamp(14px,1.2vw,16px)/1.2 var(--f-body);letter-spacing:.04em}
 .proj__ctl:focus-visible{outline:var(--edge-panel) solid var(--paper);
   outline-offset:3px}
 
@@ -2331,37 +1900,82 @@ button,input,select,textarea{font-family:inherit}
   display:grid;place-items:center;justify-self:center;
   width:min(100%,max-content);
   grid-template-rows:minmax(0,1fr) auto;
-  padding:clamp(16px,3vw,32px);min-width:0}
+  padding:clamp(12px,2vw,24px);min-width:0}
 
-.proj__plate .qrpanel__code{width:min(78vw,58vh,700px);max-width:none;aspect-ratio:1;
-  box-sizing:border-box;border:var(--edge-frame) solid var(--ink);
+.proj__plate .qrpanel__code{width:min(78vw,calc(100dvh - 480px),640px);min-width:220px;
+  max-width:none;aspect-ratio:1;margin:0;
+  box-sizing:border-box;border:0;
   background:#fff;padding:clamp(10px,1.4vw,18px)}
 .proj__cap{margin:clamp(10px,1.6vw,16px) 0 0;justify-self:stretch;
   border-top:var(--edge-panel) solid var(--ink);
   padding-top:clamp(8px,1.2vw,12px);
   font:500 clamp(10px,1.2vw,12.5px)/1.3 var(--f-mono);letter-spacing:.18em;
   text-transform:uppercase;color:var(--ink);text-align:center}
-.proj__plate--empty{background:var(--tint);
-  background-image:radial-gradient(var(--ink) .9px,transparent 1px);
-  background-size:7px 7px;justify-self:stretch;
-  min-height:clamp(180px,34vh,420px)}
-.proj__seal{width:min(46%,220px);aspect-ratio:1;height:auto;
-  fill:var(--ink);opacity:.22}
 
 @media(min-width:900px){
-  .proj{grid-template-columns:minmax(0,1fr) auto;
-    grid-template-rows:auto auto auto;
-    align-items:start;
+  .proj{grid-template-columns:auto minmax(0,1fr);
+    grid-template-rows:auto minmax(0,1fr) auto;
+    column-gap:clamp(24px,3.4vw,56px);row-gap:clamp(14px,2vw,24px);
     margin-inline:calc(var(--gutter) * -1);border-inline:0;
-    min-height:min(74vh,860px)}
+    padding-inline:var(--gutter)}
   .proj__meet{grid-area:1/1}
-  .proj__word{grid-area:1/2;justify-self:end;align-self:start}
-  .proj__plate{grid-area:2/1/3/3;align-self:center}
-  .proj__count,.proj__shut{grid-area:3/1;align-self:end}
-  .proj__ctl{grid-area:3/2;align-self:end;justify-self:end;
-    min-width:min(38vw,440px)}
+  .proj__word{grid-area:1/2;justify-self:end;align-self:center}
+  .proj__plate{grid-area:2/1/4/2;justify-self:start;align-self:start}
+  .proj__count{grid-area:2/2;align-self:start;justify-self:end;
+    flex-direction:column;align-items:flex-end;gap:var(--sp-tight)}
+  .proj__count b{font-size:clamp(88px,10vw,168px)}
+  .proj__count span{font-size:clamp(14px,1.4vw,20px)}
+  .proj__ctls{grid-area:3/2;justify-self:end;align-self:end}
+  .proj__plate .qrpanel__code{width:min(50vw,calc(100dvh - 440px),640px)}
 }
 
+/* projector mode: the stage over the whole window, read from the back
+   of the room; landscape puts the count beside the code, portrait under it */
+.is-projecting,.is-projecting body{overflow:hidden}
+.is-projecting .topbar,.is-projecting .tabs,.is-projecting .rail{visibility:hidden}
+.is-projecting .rig{isolation:auto}
+.proj.proj--full{position:fixed;inset:0;z-index:400;display:grid;margin:0;
+  width:auto;height:auto;padding:3vh 4vw;border:0;background:var(--ink);
+  grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;
+  grid-template-areas:"meet word" "plate count" "plate ctls";
+  align-items:center;column-gap:5vw;row-gap:2vh}
+.proj--full .proj__meet{grid-area:meet;flex-direction:row;align-items:baseline;gap:2vw}
+.proj--full .proj__no{font-size:clamp(40px,8vh,110px)}
+.proj--full .proj__when{font-size:clamp(16px,2.8vh,32px)}
+.proj--full .proj__word{grid-area:word;font-size:clamp(40px,8vh,110px);justify-self:end;align-self:center}
+.proj--full .proj__plate{grid-area:plate;justify-self:start;align-self:center;padding:2vh}
+.proj--full .proj__plate .qrpanel__code{width:min(74vh,56vw);min-width:0;max-width:none}
+.proj--full .proj__cap{font-size:clamp(12px,1.8vh,20px)}
+.proj--full .proj__count{grid-area:count;flex-direction:column;align-items:flex-end;gap:0;
+  align-self:center;justify-self:end}
+.proj--full .proj__count b{font-size:clamp(120px,30vh,360px);line-height:.85}
+.proj--full .proj__count span{font-size:clamp(18px,3vh,34px)}
+.proj--full .proj__ctls{grid-area:ctls;justify-self:end;align-self:end}
+.proj--full .proj__ctl{font-size:clamp(14px,2vh,20px);padding:1.2vh 2vw}
+@media (max-aspect-ratio:1/1){
+  .proj.proj--full{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto minmax(0,1fr) auto;
+    grid-template-areas:"meet word" "count count" "plate plate" "ctls ctls";padding:3vh 5vw}
+  .proj--full .proj__meet{flex-direction:column;gap:0}
+  .proj--full .proj__count{flex-direction:row;align-items:baseline;gap:3vw;justify-self:start}
+  .proj--full .proj__count b{font-size:clamp(72px,14vh,160px)}
+  .proj--full .proj__plate{justify-self:center}
+  .proj--full .proj__plate .qrpanel__code{width:min(84vw,52vh)}
+  .proj--full .proj__ctls{justify-self:stretch;justify-content:space-between}
+}
+
+/* a panel that reports and offers one way on */
+.fail{display:flex;flex-direction:column;align-items:flex-start;gap:var(--sp-tight)}
+.fail > .btn{margin-top:var(--sp-tight)}
+.bback{align-self:flex-start;margin-bottom:var(--sp-pad)}
+
+/* one label: small caps of record, in the record face */
+.kicker,.figline,.blist__head,.meetband__n,.bnow__lab,.card__cardno,.who__line,
+.rail__role,.standing__lab,.standing-band__of,.standing-band__rest dt,.brow__nlab,
+.authp__lab,.cards__when,.cards__prize{
+  font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-2)}
+.card__cardno{color:var(--tint);opacity:1}
+.bnow--live .bnow__lab{color:var(--tint)}
 
 /* ══ behaviour carried from the four passes: identity data keeps its
    case, a refusal keeps its room, the camera is offered again in place,
@@ -2369,10 +1983,10 @@ button,input,select,textarea{font-family:inherit}
 :root{--f-mono:'Keystamp Mono',ui-monospace,'SF Mono',Menlo,monospace}
 .rail__name,.who__name,.brow--member .brow__mid b,.bdetail__name--id,.authp__in{
   font-family:var(--f-mono);font-weight:400;text-transform:none;letter-spacing:.01em}
-#authErr{display:none;margin-top:var(--s4)}
+#authErr{display:none;margin-top:var(--sp-pad)}
 #authErr.is-on{display:block}
 .viewer--stalled video,.viewer--stalled .reticle,.viewer--stalled .viewer__scrim{display:none}
-.stall__retry{align-self:flex-start;margin-top:var(--s3)}
+.stall__retry{align-self:flex-start;margin-top:var(--sp-row)}
 .btn[data-busy]{flex-direction:column;gap:0}
 [data-busy]::after{content:attr(data-busy);display:block;height:0;overflow:hidden;visibility:hidden}
 .btn[disabled],.proj__ctl[disabled],.authp__go[disabled],.tier__claim[disabled],.rail__out[disabled],.acct__out[disabled]{
@@ -2385,7 +1999,7 @@ select.input:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
    printed inside it would re-centre the box; there it hangs under the
    frame instead, where the district line gives way to it. */
 @media(min-width:820px){
-  .authp #authErr.is-on{position:absolute;top:calc(100% + var(--edge-frame) + var(--s3));left:0;right:0;margin:0}
+  .authp #authErr.is-on{position:absolute;top:calc(100% + var(--edge-frame) + var(--sp-row));left:0;right:0;margin:0}
   .spread:has(#authErr.is-on) .spread__side{visibility:hidden}
 }
 
@@ -2405,12 +2019,7 @@ select.input:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 </div>
 
 <div class="ground" aria-hidden="true">
-  <div class="ground__slash"></div>
   <div class="ground__bleed"></div>
-  <div class="ground__corner"></div>
-  <div class="ground__d1"></div>
-  <div class="ground__d2"></div>
-  <div class="ground__tone"></div>
 </div>
 
 <div class="shell" id="shell">
@@ -15134,7 +14743,7 @@ const Config = {
 const REWARD_TIERS = [
   { id:'r1', name:'Club Merch',    required:10, desc:'' },
   { id:'r2', name:'Free Blindbox', required:20, desc:'' },
-  { id:'r3', name:'???',           required:30, desc:'A surprise. You will find out.' },
+  { id:'r3', name:'???',           required:30, desc:'' },
 ];
 
 /* What one tier is to one member, read from the two facts that exist:
@@ -15345,24 +14954,34 @@ const SupabaseAdapter = {
     return data;
   },
 
+  /* the function answers 200 with {ok:false, code} for a refusal; that
+     is a failure to the caller, never a success */
   async startAttendance(meetingId){
     const { data, error } = await this.client.functions
       .invoke('attendance-session', { body:{ action:'start', meeting_id:meetingId } });
-    if (error) throw new Error('Could not start attendance.');
+    if (error) throw new Error(this.functionCode(error));
+    if (data && data.ok === false) throw new Error(data.code || 'SERVER_ERROR');
     return data;
   },
   async endAttendance(meetingId){
     const { data, error } = await this.client.functions
       .invoke('attendance-session', { body:{ action:'end', meeting_id:meetingId } });
-    if (error) throw new Error('Could not end attendance.');
+    if (error) throw new Error(this.functionCode(error));
+    if (data && data.ok === false) throw new Error(data.code || 'SERVER_ERROR');
     return data;
+  },
+  functionCode(error){
+    const status = (error && error.context && error.context.status) || (error && error.status);
+    if (status === 401) return 'NOT_AUTHENTICATED';
+    if (status === 403) return 'NOT_AUTHORIZED';
+    return 'SERVER_ERROR';
   },
   async issueToken(meetingId){
     const { data, error } = await this.client.functions
       .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId } });
-    if (error) throw new Error('Could not get a code.');
-
-    return { token: data && data.token };
+    if (error) throw new Error(this.functionCode(error));
+    if (!data || data.ok === false || !data.token) throw new Error((data && data.code) || 'NO_TOKEN');
+    return { token: data.token };
   },
   /* Board-only and held-only are enforced by the database function,
      not here. The legacy name is tried once for projects that have not
@@ -15892,29 +15511,37 @@ function stampShape(seed, grow = 0){
 const STAMP_FIT = .62;
 
 const C = {
-  tier(r, total){
-    /* one rule for a tier, read from the store (rewardState) */
+  tier(r, total, prev = 0){
+    /* one rule for a tier, read from the store (rewardState); the ticks
+       count only the stamps between the rung below and this one, so a
+       rung reads as reached exactly when it is */
     const at    = Store.tierState(r);
     const ready = at === 'unlocked';
     const state = at === 'claimed' ? 'claimed' : ready ? 'ready' : 'sealed';
-    const say   = at === 'claimed' ? 'Claimed'
-                : ready            ? 'Ready to claim'
-                : `${r.required - total} more ${r.required - total === 1 ? 'stamp' : 'stamps'}`;
+    const span  = Math.max(1, r.required - prev);
+    const got   = Math.max(0, Math.min(span, total - prev));
+    const left  = r.required - total;
+    const far   = state === 'sealed' && total < prev;
+    const say   = ready ? 'Ready to claim'
+                : state === 'sealed' ? `${left} more ${left === 1 ? 'stamp' : 'stamps'}` : '';
+    const ticks = Array.from({ length:span }, (_, i) =>
+      `<i class="${i < got ? 'is-on' : ''}"></i>`).join('');
 
-    return `<div class="tier tier--${state}" data-reward="${r.id}">
+    return `<div class="tier tier--${state}${far ? ' tier--far' : ''}" data-reward="${r.id}">
       <span class="tier__at">${pad(r.required)}</span>
       <span class="tier__body">
         <span class="tier__name">${esc(r.name)}</span>
         <span class="tier__desc">${esc(r.desc || '')}</span>
       </span>
-      ${at === 'claimed' ? `<span class="tier__punch" aria-hidden="true">Claimed</span>` : ''}
+      ${state === 'sealed' && !far ? `<span class="tier__ticks" role="img" aria-label="${got} of ${span} stamps toward ${esc(r.name)}">${ticks}</span>` : ''}
+      ${at === 'claimed' ? `<span class="tier__punch">Claimed</span>` : ''}
       ${ready
         ? `<button class="tier__claim" type="button" data-claim="${r.id}">Claim</button>`
-        : `<span class="tier__say">${say}</span>`}
+        : say ? `<span class="tier__say">${say}</span>` : ''}
     </div>`;
   },
 
-  sealGrid(){
+  sealGrid(live = false){
     const p = Rules.progress();
     const chrono = [...Store.scans]
       .sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
@@ -15924,7 +15551,8 @@ const C = {
     const full = p.filled >= p.span;
 
     const cells = Array.from({ length:p.span }, (_, i) => {
-      const state = i < p.filled ? 'set' : i === p.filled ? 'next' : '';
+      /* the next slot is ringed only while a check-in is open for it */
+      const state = i < p.filled ? 'set' : live && i === p.filled ? 'next' : '';
       const hero = state === 'set' && i === p.filled - 1 ? ' seal--hero' : '';
       const mile = i === p.span - 1 ? ' seal--mile' : '';
 
@@ -15941,14 +15569,13 @@ const C = {
         docket ? ` tabindex="0" aria-label="Stamp ${pad(p.floor + i + 1)}: general meeting ${
           mtg.no}, ${fmtDate(mtg.date)}, checked in at ${fmtTime(rec.at)}"` : ''}>
         <svg viewBox="0 0 64 64" aria-hidden="true">
-          <path class="sf-back" d="${stampShape(seed * 3 + 1, 3.4)}"/>
+          ${mile ? `<path class="sf-back" d="${stampShape(seed * 3 + 1, 3.4)}"/>` : ''}
           <g class="sf-press">
             <path class="sf-face" d="${stampShape(seed, 0)}"/>
             <g class="seal__mark" transform="translate(${(32 - 32 * fit).toFixed(1)} ${(32 - 32 * fit).toFixed(1)}) scale(${fit})">${stampMark(p.floor + i)}</g>
           </g>
         </svg>
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
-        ${mile && goal ? `<span class="seal__tag">${esc(goal.name)}</span>` : ''}
         ${docket}
       </li>`;
     }).join('');
@@ -15960,7 +15587,9 @@ const C = {
         <polyline points="16.0,8.6 46.0,13.3 74.0,21.1 81.0,40.6 58.0,50.0 31.0,54.7 11.0,72.7 34.0,81.3 58.0,71.9 83.0,83.6"/></svg>`;
 
     const say = full
-      ? (goal ? 'Card complete. Claim it in Rewards' : 'Card complete')
+      ? (goal && !goal.claimed ? `${goal.name} ready to claim`
+        : goal ? `${goal.name} claimed` : 'Card complete')
+      : p.total === 0 ? 'No stamps yet'
       : goal ? `${p.remaining} more until ${goal.name.toLowerCase()}`
              : `${p.remaining} more to finish this card`;
 
@@ -15975,12 +15604,16 @@ const C = {
         </div>
         <div class="card__field">
           ${route}
-          <ol class="seals" id="seals" aria-label="${p.filled} of ${p.span} stamps in this tier">${cells}</ol>
-          <span class="card__edge" aria-hidden="true">Keystamp · Key Club attendance<span class="card__edge-tail"> · Cali-Nev-Ha</span></span>
+          <ol class="seals" id="seals" aria-label="${p.filled} of ${p.span} stamps on this card">${cells}</ol>
         </div>
       </div>
       ${full ? '<span class="card__punch" aria-hidden="true">Card full</span>' : ''}
     </section>`;
+  },
+
+  /* a state that asks nothing of the member is a line of type */
+  line(lab, text){
+    return `<p class="nowline" data-enter><b class="nowline__lab">${esc(lab)}</b><span>${text}</span></p>`;
   },
 
   strike({ verb, sub, go, live = false }){
@@ -15993,28 +15626,15 @@ const C = {
   },
 
   sealMeta(rec, m){
+    const away = m.place && m.place !== Schedule.PLACE ? ` / ${esc(m.place)}` : '';
     return `<span class="sealmeta" data-layer aria-hidden="true">
       <b class="sealmeta__no">GM ${pad(m.no)}</b>
-      <span>${fmtDate(m.date)}</span>
-      <span>${fmtTime(rec.at)} / ${esc((rec.method || 'qr').toUpperCase())}</span>
-      <span>${esc(m.place)}</span>
+      <span>${fmtDate(m.date)} / ${fmtTime(rec.at)}${away}</span>
     </span>`;
   },
 
-  empty(title, body){
-    return `<section class="rig empty-reg" data-enter>
-      <div class="empty">
-        <span class="tone tone--coarse tone--fade-b empty__tone" aria-hidden="true"></span>
-        <div class="empty__seal" aria-hidden="true">
-          <svg viewBox="0 0 100 100">${sealArt()}</svg>
-          <span class="empty__void"></span>
-        </div>
-        <div class="empty__body">
-          <h3 class="empty__title">${esc(title)}</h3>
-          ${body ? `<p class="empty__note">${esc(body)}</p>` : ''}
-        </div>
-      </div>
-    </section>`;
+  empty(title){
+    return C.line(title, '');
   },
 
   ledgerRow(m){
@@ -16029,12 +15649,14 @@ const C = {
       ? `<svg class="lrow__mark" viewBox="0 0 64 64" aria-hidden="true">${stampMark(idx)}</svg>`
       : `<span class="lrow__slot" aria-hidden="true"></span>`;
 
+    /* the glyph already says stamped; the place is said only when it is
+       not the usual room */
+    const away = m.place && m.place !== Schedule.PLACE ? ` / ${esc(m.place)}` : '';
     const detail = {
-      set:  scan ? `Stamped ${fmtTime(scan.at)} / ${esc(m.place)}`
-                 : `Stamped / ${esc(m.place)}`,
-      open: `Open now / ${esc(m.place)}`,
-      miss: `Not stamped / ${esc(m.place)}`,
-      upcoming: `${esc(m.time)} / ${esc(m.place)}`,
+      set:  (scan ? fmtTime(scan.at) : 'Stamped') + away,
+      open: 'Open now' + away,
+      miss: 'Missed' + away,
+      upcoming: esc(m.time) + away,
     }[state];
 
     const el   = state === 'open' ? 'button' : 'div';
@@ -16064,8 +15686,6 @@ C.account = () => `<section class="acct" data-enter>
   <button class="acct__out" data-signout type="button">Sign out</button>
 </section>`;
 
-const MANUAL_ENTRY = false;
-
 const Views = {
   loadFailure(title){
     return `<div class="view">
@@ -16073,40 +15693,33 @@ const Views = {
         <h1 class="title rechead__title">${title}</h1>
       </header>
       <section class="rig" data-enter>
-        <div class="panel bpanel">
+        <div class="panel bpanel fail">
           <p class="kicker">Could not load</p>
-          <p style="margin-top:8px">Keystamp could not reach the club records, so your
-            attendance cannot be shown right now. Nothing has been lost.</p>
-          <p class="muted" style="margin-top:8px;font-size:12.5px">Check your connection
-            and try again.</p>
-          <button class="btn btn--go" type="button" data-reload data-busy="Retrying…" style="margin-top:var(--s4)">Try again</button>
+          <p>Your record did not load. Nothing is lost. Check your connection.</p>
+          <button class="btn btn--go" type="button" data-reload data-busy="Retrying">Try again</button>
         </div>
       </section>
     </div>`;
   },
 
   home(){
-    if (Store.failed) return this.loadFailure('Home');
+    if (Store.failed) return this.loadFailure('Your card');
     const open = Store.openMeeting();
     const next = Store.nextMeeting();
     const done = open && Store.attended(open.id);
     const live = Boolean(open && !done);
 
-    let action;
+    let action = '';
     if (open && !done)
       action = C.strike({ verb:'Check in',
-                          sub:`GM ${pad(open.no)} / ${fmtDay(open.date)} / ${esc(open.time)} / ${esc(open.place)}`,
+                          sub:[`GM ${pad(open.no)}`, open.today ? 'Today' : fmtDay(open.date), open.time, open.place].join('\u00a0/ '),
                           go:'scan', live:true });
-    else if (open && done)
-      action = C.strike({ verb:'Your record',
-                          sub:`GM ${pad(open.no)} is stamped`, go:'record' });
+    else if (open && done){
+      const scan = Store.scanFor(open.id);
+      action = C.line('Checked in', `GM ${pad(open.no)}${scan ? ` / ${fmtTime(scan.at)}` : ''}`);
+    }
     else if (next)
-      action = C.strike({ verb:'Nothing open',
-                          sub:`Check-in opens at GM ${pad(next.no)} / ${fmtDay(next.date)}`,
-                          go:'record' });
-    else
-      action = C.strike({ verb:'Nothing open',
-                          sub:'No meeting is taking check-ins right now', go:'record' });
+      action = C.line('Next', `GM ${pad(next.no)} / ${fmtDate(next.date)} / ${esc(next.time)} / ${esc(next.place)}`);
 
     const showing = open ? open.id : next ? next.id : null;
     const ahead = Store.meetings
@@ -16115,13 +15728,13 @@ const Views = {
       .slice(0, 3);
 
     return `<div class="view view--home">
-      <header class="rechead rechead--tight" data-enter>
+      <header class="rechead" data-enter>
         <h1 class="title rechead__title">Your card</h1>
       </header>
 
       <div class="deck${live ? ' deck--live' : ''}" data-enter>
-        ${C.sealGrid()}
-        <div class="deck__act">${action}</div>
+        ${C.sealGrid(live)}
+        ${action ? `<div class="deck__act">${action}</div>` : ''}
         ${ahead.length ? `<section class="ahead deck__ahead" data-enter>
             <h2 class="ahead__mark">Ahead</h2>
             <ul class="ahead__list">
@@ -16140,13 +15753,10 @@ const Views = {
     if (Store.failed) return this.loadFailure('Record');
 
     const newest = (a, b) => String(a.date) < String(b.date) ? 1 : -1;
-    const soonest = (a, b) => String(a.date) < String(b.date) ? -1 : 1;
     const held = [...Store.heldMeetings()].sort(newest);
-    const upcoming = Store.meetings.filter(m => m.upcoming).sort(soonest);
     const counted = Store.countedMeetings();
     const kept = counted.filter(m => Store.attended(m.id)).length;
     const gone = counted.length - kept;
-    const frac = counted.length ? kept / counted.length : 0;
 
     return `<div class="view view--record">
       <header class="rechead" data-enter>
@@ -16155,24 +15765,19 @@ const Views = {
 
       ${held.length ? `<div class="recbody">
         <aside class="tally" data-enter>
-          <p class="tally__fig">${kept}</p>
-          <p class="tally__of">stamped of ${counted.length} held</p>
-          <p class="tally__bar" style="--fill:${(frac*100).toFixed(1)}%" aria-hidden="true"></p>
-          <p class="tally__gone">${gone
-            ? `${gone} missed` : 'None missed'}</p>
+          <p class="figline">
+            <span><b>${kept}</b> stamped</span>
+            <span><b>${gone}</b> missed</span>
+            <span><b>${counted.length}</b> held</span>
+          </p>
         </aside>
 
         <section class="ledger" data-enter>
           ${held.map(m => C.ledgerRow(m)).join('')}
         </section>
       </div>`
-      : C.empty('No general meetings yet',
-                'Your first stamp will land here.')}
+      : C.empty('No meetings held yet')}
 
-      ${upcoming.length ? `<section class="ledger ledger--ahead" data-enter>
-        <h2 class="ledger__mark">Scheduled</h2>
-        ${upcoming.map(m => C.ledgerRow(m)).join('')}
-      </section>` : ''}
     </div>`;
   },
 
@@ -16180,30 +15785,18 @@ const Views = {
     if (Store.failed) return this.loadFailure('Rewards');
     const total = Store.totalStamps();
     const tiers = [...Store.rewards].sort((a, b) => a.required - b.required);
-    const top   = tiers[tiers.length - 1]?.required || 10;
-
-    const scale = Math.max(top * 1.06, total * 1.06, 1);
-    const next  = tiers.find(t => total < t.required) || null;
 
     return `<div class="view view--rewards">
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">Rewards</h1>
       </header>
 
-      <section class="ladder" data-enter>
-        <p class="ladder__fig">${total}</p>
-        <p class="ladder__of">${total === 1 ? 'stamp' : 'stamps'} so far${
-          next ? ` / ${next.required - total} to the next rung` : ' / every rung passed'}</p>
-      </section>
+      <p class="figline" data-enter>
+        <span><b>${total}</b> ${total === 1 ? 'stamp' : 'stamps'}</span>
+      </p>
 
-      <section class="climb" data-enter>
-        <div class="climb__rail" role="img"
-             aria-label="${total} stamps against rungs at ${tiers.map(t => t.required).join(', ')}">
-          <span class="climb__fill" style="--h:${Math.min(total / scale * 100, 100).toFixed(1)}%"></span>
-        </div>
-        <div class="climb__plates">
-          ${tiers.map(t => C.tier(t, total)).join('')}
-        </div>
+      <section class="tiers" data-enter>
+        ${tiers.map((t, i) => C.tier(t, total, i ? tiers[i - 1].required : 0)).join('')}
       </section>
     </div>`;
   },
@@ -16212,7 +15805,7 @@ const Views = {
     const standing = scanStanding();
 
     return `<div class="view view--scan">
-      <header class="rechead rechead--tight" data-enter>
+      <header class="rechead" data-enter>
         <h1 class="title rechead__title">Scan</h1>
       </header>
 
@@ -16236,15 +15829,6 @@ const Views = {
         <span class="standing__lab">${standing.lab}</span>
         <span class="standing__at">${standing.at}</span>
       </p>
-
-      ${MANUAL_ENTRY ? `<div class="manual" data-enter>
-        <label class="manual__lab" for="manualInput">Or enter the check-in code</label>
-        <div class="manual__f">
-          <input class="manual__in" id="manualInput" placeholder="Check-in code"
-                 autocomplete="off" spellcheck="false" enterkeyhint="go">
-          <button class="manual__go" id="manualGo" type="button">Verify</button>
-        </div>
-      </div>` : ''}
     </div>`;
   },
 
@@ -16263,7 +15847,7 @@ const Views = {
       <header class="rechead" data-enter>
         <h1 class="title rechead__title">${title}</h1>
       </header>
-      <section class="rig" data-enter style="margin-top:var(--gut)">
+      <section class="rig" data-enter>
         <div id="boardPane">${BoardUI.pane()}</div>
       </section>
       ${tail}
@@ -16274,47 +15858,55 @@ const Views = {
      does; from 1024px up the rail's foot carries it instead. */
   board(){     BoardUI.tab = 'club';     return this.boardSpread('Club Tools', C.account()); },
   bmeet(){     BoardUI.tab = 'meetings'; return this.boardSpread('Meetings'); },
-  bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Check-In'); },
+  bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Check-in'); },
   bmembers(){  BoardUI.tab = 'progress'; return this.boardSpread('Members'); },
 
   profile(){
     if (Store.failed) return this.loadFailure('Member');
     const held     = Store.countedMeetings();
-    const attended = held.filter(m => Store.attended(m.id)).length;
     const total    = Store.totalStamps();
     const name     = memberName();
     const handle   = (Store.user && Store.user.username) || name;
-    const role     = Store.isBoard ? 'Board' : 'Member';
+    const chrono   = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
+    const first    = chrono[0], last = chrono[chrono.length - 1];
+    const cards    = Math.floor(total / Rules.CARD);
 
     return `<div class="view view--member">
-      <header class="rechead rechead--tight" data-enter>
+      <header class="rechead" data-enter>
         <h1 class="title rechead__title">Member</h1>
       </header>
 
-      <div class="sheet" data-enter>
-        <section class="who">
-          <div class="who__mark" aria-hidden="true">
-            <span class="who__org">Cali-Nev-Ha District</span>
-          </div>
-          <span class="who__emblem" aria-hidden="true">${brandSeal('cnh')}</span>
-          <div class="who__id">
-            <p class="who__hand">Signed in${Store.isBoard ? ' / Board' : ''}${
-              handle !== name ? ` / ${esc(handle)}` : ''}</p>
-            <p class="who__name">${esc(name)}</p>
-          </div>
-        </section>
-        ${C.sealGrid()}
-      </div>
-
-      <section class="standing-band" data-enter>
-        <p class="standing-band__fig">${total}</p>
-        <p class="standing-band__of">${total === 1 ? 'stamp' : 'stamps'} collected</p>
-        <dl class="standing-band__rest">
-          <div><dt>Meetings attended</dt><dd>${attended} of ${held.length}</dd></div>
-          <div><dt>Attendance rate</dt><dd>${Store.attendanceRate()}%</dd></div>
-          <div><dt>Rewards unlocked</dt><dd>${Store.rewardsUnlocked()} of ${Store.rewards.length}</dd></div>
-        </dl>
+      <section class="who" data-enter>
+        <p class="who__name">${esc(name)}</p>
+        <p class="who__line">${Store.isBoard ? 'Board' : 'Member'} / Cali-Nev-Ha District${
+          handle.toLowerCase() !== name.toLowerCase() ? ` / ${esc(handle)}` : ''}</p>
+        <span class="who__seal" aria-hidden="true">${brandSeal('cnh')}</span>
       </section>
+
+      ${total ? `<section class="standing-band" data-enter>
+        <p class="standing-band__fig">${total}</p>
+        <p class="standing-band__of">${total === 1 ? 'stamp' : 'stamps'}</p>
+        <dl class="standing-band__rest">
+          <div><dt>Attendance</dt><dd>${held.length ? Store.attendanceRate() : 0}%</dd></div>
+          <div><dt>First stamp</dt><dd>${fmtDay(first.at)}</dd></div>
+          <div><dt>Latest stamp</dt><dd>${fmtDay(last.at)}</dd></div>
+        </dl>
+      </section>` : `<p class="nowline" data-enter><b class="nowline__lab">No attendance yet</b></p>`}
+
+      ${cards ? `<section class="cards" data-enter>
+        <h2 class="ledger__mark">Completed cards</h2>
+        <ol class="cards__list">${Array.from({ length:cards }, (_, k) => {
+          const run = chrono.slice(k * Rules.CARD, (k + 1) * Rules.CARD);
+          const prize = Store.rewards.find(r => r.required === (k + 1) * Rules.CARD);
+          return `<li class="cards__row">
+            <span class="cards__no">Card ${pad(k + 1)}</span>
+            <span class="cards__marks" aria-hidden="true">${run.map((_, i) =>
+              `<svg viewBox="0 0 64 64">${stampMark(k * Rules.CARD + i)}</svg>`).join('')}</span>
+            <span class="cards__when">${fmtDay(run[0].at)} – ${fmtDay(run[run.length - 1].at)}</span>
+            ${prize ? `<span class="cards__prize">${esc(prize.name)}${prize.claimed ? ' / claimed' : ''}</span>` : ''}
+          </li>`;
+        }).join('')}</ol>
+      </section>` : ''}
 
       ${C.account()}
     </div>`;
@@ -16370,7 +15962,7 @@ const Views = {
                                  autocomplete:'new-password' }) : ''}
 
           <div class="authp__act">
-            <button class="authp__go" type="submit" id="authGo" data-busy="${up ? 'Creating…' : 'Signing in…'}">
+            <button class="authp__go" type="submit" id="authGo" data-busy="${up ? 'Creating' : 'Signing in'}">
               ${up ? 'Create account' : 'Sign in'}
             </button>
             <button class="authp__swap" type="button" id="authSwap">
@@ -16407,13 +15999,33 @@ function nextMeetingNumber(list){
 
 const MEETING_DEFAULTS = { start:'12:40', end:'13:30' };
 
+/* minutes past midnight at the club */
+function clubMinutes(d = new Date()){
+  try {
+    const p = new Intl.DateTimeFormat('en-US', { timeZone:CLUB_TZ, hour:'2-digit', minute:'2-digit', hourCycle:'h23' })
+      .formatToParts(d);
+    const v = t => Number((p.find(x => x.type === t) || {}).value);
+    return v('hour') * 60 + v('minute');
+  } catch (_) { return d.getHours() * 60 + d.getMinutes(); }
+}
+
+/* The server calls every unopened meeting dated today ENDED. Until its
+   end time has passed it is today's meeting, not a held one. */
+function meetingPhase(m, today, now = clubMinutes()){
+  if (!m || m.state !== 'ENDED' || m.meeting_date !== today) return m && m.state;
+  const e = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(m.end_time || '').trim());
+  if (!e) return 'TODAY';
+  const end = (Number(e[1]) % 12 + (/pm/i.test(e[3]) ? 12 : 0)) * 60 + Number(e[2]);
+  return now < end ? 'TODAY' : 'ENDED';
+}
+
 function spanTime(start, end){
   const a = String(start || '').trim(), b = String(end || '').trim();
   if (!b) return knit(a);
   const ma = /^(.*?)\s*(AM|PM)$/i.exec(a), mb = /^(.*?)\s*(AM|PM)$/i.exec(b);
   if (ma && mb && ma[2].toUpperCase() === mb[2].toUpperCase())
-    return knit(`${ma[1]}–${mb[1]} ${mb[2].toUpperCase()}`);
-  return knit(`${a}–${b}`);
+    return knit(`${ma[1]}-${mb[1]} ${mb[2].toUpperCase()}`);
+  return knit(`${a}-${b}`);
 }
 
 const BoardUI = {
@@ -16434,6 +16046,7 @@ const BoardUI = {
   confirmDelete: null,
   deleteNote: null,
   form: null,
+  formOpen: false,
 
   formDefaults(){
     return { no:String(nextMeetingNumber(this.meetings && this.meetings.meetings)),
@@ -16457,7 +16070,8 @@ const BoardUI = {
       MEMBER_NOT_FOUND:  'That member no longer exists.',
       MEETING_NOT_FOUND: 'That meeting no longer exists.',
       DUPLICATE_NUMBER:  'A meeting with that number already exists.',
-      HAS_ATTENDANCE:    'Someone has checked in to this meeting. It can be deleted once the meeting is over.',
+      HAS_ATTENDANCE:    'Someone has checked in to this meeting, so it stays. It can be deleted once the meeting is over.',
+      ATTENDANCE_ALREADY_OPEN: 'Another meeting already has check-in open. Close that one first.',
       SERVER_ERROR:      'Keystamp could not reach the club records. Try again.',
     })[note] || (/^[A-Z_]+$/.test(String(note))
       ? 'Something went wrong. Try again.'
@@ -16482,15 +16096,20 @@ const BoardUI = {
   },
 
   failure(code){
-    return `<div class="panel bpanel">
+    return `<div class="panel bpanel fail">
       <p class="kicker">Could not load</p>
-      <p style="margin-top:8px">${esc(this.message(code))}</p>
-      <button class="btn btn--go" data-breload style="margin-top:var(--s4)">Try again</button>
+      <p>${esc(this.message(code))}</p>
+      <button class="btn btn--go" data-breload data-busy="Retrying">Try again</button>
     </div>`;
   },
 
   empty(text){
     return `<div class="bempty" role="note"><p>${esc(text)}</p></div>`;
+  },
+
+  /* a detail page returns to the list of the tab it was opened in */
+  backLabel(){
+    return this.tab === 'meetings' ? 'Back to meetings' : 'Back to members';
   },
 
   clubPane(){
@@ -16500,23 +16119,20 @@ const BoardUI = {
 
     const focus = active || next;
     const isLive = Boolean(active);
+    /* an open check-in from another day was left open, not started today */
+    const stale = isLive && o.server_date && active.meeting_date !== o.server_date;
 
     return `<div class="bover">
-      <aside class="bident" data-enter>
-        <span class="bident__seal" aria-hidden="true">${brandSeal('cnh')}</span>
-        <p class="bident__line">Cali-Nev-Ha District</p>
-      </aside>
       ${focus ? `
         <div class="bnow ${isLive ? 'bnow--live' : ''}">
-          <p class="bnow__lab">${isLive ? 'Happening now' : 'Next general meeting'}</p>
+          <p class="bnow__lab">${stale ? 'Check-in left open' : isLive ? 'Check-in open' : 'Next general meeting'}</p>
           <p class="bnow__no">GM ${pad(focus.meeting_number)}</p>
-          <p class="bnow__at">${esc(fmtDay(focus.meeting_date))} / ${esc(focus.start_time)}${
-            focus.end_time ? '-' + esc(focus.end_time) : ''} / ${esc(focus.location || Schedule.PLACE)}</p>
-          <p class="bnow__state">${isLive
-            ? `Check-in open / ${o.today_attendance} checked in so far`
-            : 'Check-in closed'}</p>
+          <p class="bnow__at">${esc(fmtDay(focus.meeting_date))} / ${esc(spanTime(focus.start_time, focus.end_time))} / ${esc(focus.location || Schedule.PLACE)}</p>
+          <p class="bnow__state">${stale
+            ? `Opened ${esc(fmtDay(active.meeting_date))} and never closed`
+            : isLive ? `${o.today_attendance} checked in` : 'Check-in closed'}</p>
           <button class="bnow__go" type="button" data-btab="session">${
-            isLive ? 'Show the code' : 'Open check-in'}</button>
+            stale ? 'Close it' : isLive ? 'Show the code' : 'Open check-in'}</button>
         </div>`
         : `<div class="bnow bnow--none">
              <p class="bnow__lab">Next general meeting</p>
@@ -16525,24 +16141,11 @@ const BoardUI = {
              <button class="bnow__go" type="button" data-btab="meetings">Schedule one</button>
            </div>`}
 
-      <section class="standing-band">
-        <p class="standing-band__fig">${o.meetings_held ?? 0}</p>
-        <p class="standing-band__of">general meetings held</p>
-        <dl class="standing-band__rest">
-          <div><dt>Stamps earned</dt><dd>${esc(String(o.total_seals ?? 0))}</dd></div>
-          <div><dt>Members checked in</dt><dd>${esc(String(o.participating_members ?? 0))}</dd></div>
-          <div><dt>Average per meeting</dt><dd>${
-            o.average_attendance === null || o.average_attendance === undefined
-              ? '-' : esc(String(o.average_attendance))}</dd></div>
-        </dl>
-      </section>
-    </div>`;
-  },
-
-  stat(value, label){
-    return `<div class="bstat">
-      <b>${value === null || value === undefined ? '-' : esc(String(value))}</b>
-      <span>${esc(label)}</span>
+      <p class="figline figline--club">
+        <span><b>${esc(String(o.meetings_held ?? 0))}</b> meetings held</span>
+        <span><b>${o.average_attendance === null || o.average_attendance === undefined
+          ? '0' : esc(String(o.average_attendance))}</b> per meeting</span>
+      </p>
     </div>`;
   },
 
@@ -16550,38 +16153,15 @@ const BoardUI = {
     const o = this.overview || {};
     const ms = o.milestones || {};
     const reached = REWARD_TIERS.map(r => ({ n:r.required, key:'m' + r.required, name:r.name }));
-    const participating = o.participating_members;
-
-    const total = (this.members && this.members.total);
     return `<div class="bpanel memgrid">
-      <section class="msummary" data-enter>
-        <div class="msummary__lead">
-          <p class="msummary__fig">${typeof total === 'number' ? total : '--'}</p>
-          <p class="msummary__of">members on the roster</p>
-        </div>
-        <ul class="mplates">
-          ${reached.map(r => {
-            const count = ms[r.key];
-            const known = typeof count === 'number' && typeof participating === 'number';
-            const pct = known && participating > 0
-              ? Math.round((count / participating) * 100) : 0;
-            return `<li class="mplate ${known && count > 0 ? 'mplate--lit' : ''}">
-              <span class="mplate__no">${r.n}</span>
-              <span class="mplate__name">${esc(r.name)}</span>
-              <span class="mplate__say">${known
-                ? (count === 1 ? '1 member has reached it'
-                               : `${count} members have reached it`)
-                : 'Not available'}</span>
-              <span class="bmile__bar" role="img"
-                aria-label="${known ? `${pct} percent of checked-in members` : 'unavailable'}">
-                <span class="bmile__fill" style="width:${pct}%"></span></span>
-            </li>`;
-          }).join('')}
-        </ul>
-      </section>
+      <p class="figline" data-enter>
+        ${reached.map(r => {
+          const count = ms[r.key];
+          return `<span><b>${typeof count === 'number' ? count : '0'}</b> reached ${esc(r.name)}</span>`;
+        }).join('')}
+      </p>
 
       <section class="rosterpanel" data-enter>
-        <h2 class="meetband">Roster</h2>
         ${this.rosterBody()}
       </section>
     </div>`;
@@ -16592,26 +16172,30 @@ const BoardUI = {
 
     const by = dir => (a, b) =>
       String(a.meeting_date) < String(b.meeting_date) ? -dir : dir;
-    const upcoming = list.filter(m => m.state === 'UPCOMING').sort(by(1));
-    const past = list.filter(m => m.state !== 'UPCOMING').sort(by(-1));
+    const today = (this.meetings && this.meetings.server_date) || Schedule.today();
+    const phased = list.map(m => ({ ...m, state:meetingPhase(m, today) }));
+    /* what is open or still ahead is the schedule; the rest is the record */
+    const ahead = s => s === 'OPEN' || s === 'TODAY' || s === 'UPCOMING';
+    const upcoming = phased.filter(m => ahead(m.state)).sort(by(1));
+    const past = phased.filter(m => !ahead(m.state)).sort(by(-1));
 
-    const band = (title, n) => `<h2 class="meetband"><span>${title}</span>
-      <span class="meetband__n">${n === 1 ? '1 meeting' : `${n} meetings`}</span></h2>`;
+    const band = (title, tail = '') => `<h2 class="meetband"><span>${title}</span>${tail}</h2>`;
+    const formOpen = this.formOpen || Boolean(this.form) || upcoming.length === 0;
 
-    return `<div class="bpanel meetgrid">
+    return `<div class="bpanel meetgrid${formOpen ? ' meetgrid--form' : ''}">
       ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
 
-      <section class="meetgrid__form" data-enter>${this.createForm()}</section>
+      ${formOpen ? `<section class="meetgrid__form" data-enter>${this.createForm()}</section>` : ''}
 
       <section class="meetgrid__up meetpanel" data-enter>
-        ${band('Coming up', upcoming.length)}
+        ${band('Scheduled', formOpen ? '' : '<button class="link meetband__act" type="button" data-mform aria-expanded="false">Schedule a meeting</button>')}
         ${upcoming.length
           ? `<ul class="blist blist--meet">${upcoming.map(m => this.meetingRow(m)).join('')}</ul>`
           : this.empty('No upcoming meetings.')}
       </section>
 
       <section class="meetgrid__held meetpanel meetpanel--held" data-enter>
-        ${band('Already held', past.length)}
+        ${band('Held', '<span class="meetband__n">Checked in</span>')}
         ${past.length
           ? `<ul class="blist blist--meet">${past.map(m => this.meetingRow(m)).join('')}</ul>`
           : this.empty('No meetings yet.')}
@@ -16620,28 +16204,23 @@ const BoardUI = {
   },
 
   meetingRow(m){
-    const armed = this.confirmDelete === m.id;
     const state = String(m.state || '').toLowerCase();
     const no = pad(m.meeting_number);
     const stamps = Number(m.attendance_count) || 0;
-    const deletable = stamps === 0 || m.state === 'PAST';
 
-    const action = armed
-      ? this.deleteConfirm(m, no, stamps)
-      : deletable
-        ? `<button class="brow__del" type="button" data-bconfirm="${esc(m.id)}"
-             aria-label="Delete GM ${no}">Delete</button>`
-        : '';
+    const word = { open:'Open', ended:'Ended', today:'Today' }[state] || '';
+    const upcoming = state === 'upcoming' || state === 'today';
+    /* the usual time and room are not repeated on every row; a meeting
+       that differs says so */
+    const span = spanTime(m.start_time, m.end_time), room = m.location || Schedule.PLACE;
+    const usual = span === spanTime('12:40 PM', '1:30 PM') && room === Schedule.PLACE;
 
-    const mark = armed ? ` brow--confirm${stamps ? ' brow--confirm-heavy' : ''}` : '';
-
-    return `<li class="brow brow--${state}${mark}">
+    return `<li class="brow brow--${state}">
       <span class="brow__no" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">GM ${no}</span>
       <span class="brow__day" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">${esc(fmtDay(m.meeting_date))}</span>
-      <span class="brow__when">${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || 'MPR')}</span>
-      <span class="bstate bstate--${state}">${esc(m.state)}</span>
-      <span class="brow__n"><b>${stamps}</b><span class="brow__nlab">checked in</span></span>
-      <span class="brow__act">${action}</span>
+      ${usual ? '' : `<span class="brow__when">${esc(span)} / ${esc(room)}</span>`}
+      ${word ? `<span class="bstate bstate--${state}">${word}</span>` : ''}
+      ${upcoming ? '' : `<span class="brow__n"><b>${stamps}</b><span class="brow__nlab">checked in</span></span>`}
     </li>`;
   },
 
@@ -16660,7 +16239,7 @@ const BoardUI = {
       ${why ? `<span class="bconfirm__why">${esc(why)}</span>` : ''}
       <button class="btn bconfirm__keep" type="button" data-bcancel>Keep</button>
       <button class="btn btn--go bconfirm__go" type="button"
-              data-bdelete="${esc(m.id)}" data-bstamps="${stamps}" data-busy="Deleting…">Delete</button>
+              data-bdelete="${esc(m.id)}" data-bstamps="${stamps}" data-busy="Deleting">Delete</button>
     </span>`;
   },
 
@@ -16668,8 +16247,7 @@ const BoardUI = {
     const f = this.formValues();
     const d = this.formDefaults();
     return `<form class="bform" id="meetingForm" novalidate>
-      <h2 class="h2 bsec bform__head" style="margin-top:0">Schedule a General Meeting
-        <span class="bform__seal" aria-hidden="true">${brandSeal('cnh')}</span></h2>
+      <h2 class="h2 bsec bform__head">Schedule a meeting</h2>
 
       <div class="bform__grid">
         <label class="field"><span class="kicker">Meeting number</span>
@@ -16685,8 +16263,9 @@ const BoardUI = {
 
       <p class="authp__err" id="mErr" role="alert" aria-live="assertive" hidden></p>
       <div class="bform__row">
-        <button class="btn btn--go" type="submit" id="mGo" data-busy="Scheduling…">Schedule meeting</button>
+        <button class="btn btn--go" type="submit" id="mGo" data-busy="Scheduling">Schedule meeting</button>
         <button class="link bform__reset" type="button" data-mreset>Reset</button>
+        <button class="link bform__reset" type="button" data-mform="close">Close</button>
       </div>
     </form>`;
   },
@@ -16698,7 +16277,7 @@ const BoardUI = {
       <div class="bfilters">
         <label class="field bfilters__q"><span class="kicker">Search username</span>
           <input class="input" id="bq" type="search" value="${esc(this.q)}"
-                 placeholder="type a username" autocapitalize="none" spellcheck="false"></label>
+                 autocapitalize="none" spellcheck="false"></label>
         <label class="field"><span class="kicker">Sort</span>
           <select class="input" id="bsort">
             ${[['username','Username'],['stamps_desc','Most stamps'],['stamps_asc','Fewest stamps'],
@@ -16708,20 +16287,19 @@ const BoardUI = {
       </div>
 
       ${rows.length ? `
+        <div class="blist__head" aria-hidden="true">
+          <span>Member</span><span>Last check-in</span><span>Stamps</span>
+        </div>
         <ul class="blist blist--members">
           ${rows.map(m => `<li class="brow brow--member" data-bmember="${esc(m.id)}" tabindex="0" role="button">
-            <span class="brow__mid">
-              <b>${esc(m.username)}</b>
-              <span class="muted">joined ${esc(fmtDay(m.created_at))}${
-                m.last_attendance ? ' / last seen ' + esc(fmtDay(m.last_attendance)) : ' / never checked in'}</span>
-            </span>
-            <span class="brow__n"><b>${m.stamps}</b><span class="brow__nlab">stamps</span></span>
-            <span class="brow__sub muted">${m.rewards_unlocked}/3 rewards</span>
+            <span class="brow__mid"><b>${esc(m.username)}</b></span>
+            <span class="brow__cell brow__cell--last">${m.last_attendance ? esc(fmtDay(m.last_attendance)) : '<span class="brow__none">none yet</span>'}</span>
+            <span class="brow__n"><b>${m.stamps}</b><span class="brow__nlab">${m.stamps === 1 ? 'stamp' : 'stamps'}</span></span>
           </li>`).join('')}
         </ul>
         <div class="bpage">
           <button class="btn" data-bpage="${Math.max(1, d.page - 1)}" ${d.page <= 1 ? 'disabled' : ''}>Back</button>
-          <span class="muted">Page ${d.page} of ${d.pages} / ${d.total} member${d.total === 1 ? '' : 's'}</span>
+          <span class="muted">Page ${d.page} of ${d.pages}</span>
           <button class="btn" data-bpage="${Math.min(d.pages, d.page + 1)}" ${d.page >= d.pages ? 'disabled' : ''}>Next</button>
         </div>`
         : this.empty(this.q ? 'No member matches that username.' : 'No member accounts yet.')}
@@ -16732,29 +16310,22 @@ const BoardUI = {
     const d = this.memberDetail;
     const m = d.member;
     return `<div class="panel bpanel">
-      <button class="link" data-bback style="margin-bottom:var(--s4)">← Roster</button>
+      <button class="link bback" data-bback>${this.backLabel()}</button>
 
-      <p class="kicker">Member</p>
       <h2 class="bdetail__name bdetail__name--id">${esc(m.username)}</h2>
+      <p class="muted">Joined ${esc(fmtDay(m.created_at))}</p>
 
-      <div class="bstats bstats--tight">
-        ${this.stat(m.stamps, 'Total stamps')}
-        ${this.stat(d.attendance.length, 'Meetings attended')}
-        ${this.stat(d.rewards.filter(r => r.state !== 'locked').length, 'Rewards unlocked')}
-        ${this.stat(fmtDay(m.created_at), 'Account created')}
-      </div>
-
-      <h2 class="h2 bsec">Milestones</h2>
+      ${d.rewards.some(r => r.state !== 'locked') ? `<h2 class="h2 bsec">Rewards</h2>
       <ul class="blist">
-        ${d.rewards.map(r => `<li class="brow brow--reward">
+        ${d.rewards.filter(r => r.state !== 'locked').map(r => `<li class="brow brow--reward">
           <span class="brow__mid"><b>${esc(r.name)}</b>
             <span class="muted">${r.required} stamps</span></span>
-          <span class="bstate bstate--${r.state === 'claimed' ? 'past' : r.state === 'unlocked' ? 'open' : 'upcoming'}">${
-            String(r.state || 'locked').toUpperCase()}</span>
+          <span class="bstate bstate--${r.state === 'claimed' ? 'ended' : 'open'}">${
+            r.state === 'claimed' ? 'Claimed' : 'Ready to claim'}</span>
         </li>`).join('')}
-      </ul>
+      </ul>` : ''}
 
-      <h2 class="h2 bsec">Attendance history</h2>
+      <h2 class="h2 bsec meetband"><span>Attendance</span><span class="meetband__n">${d.attendance.length} ${d.attendance.length === 1 ? 'stamp' : 'stamps'}</span></h2>
       ${d.attendance.length
         ? `<ul class="blist">${d.attendance.map(a => `
             <li class="brow" ${a.meeting_id ? `data-bmeeting="${esc(a.meeting_id)}" tabindex="0" role="button"` : ''}>
@@ -16770,20 +16341,13 @@ const BoardUI = {
     const d = this.meetingDetail;
     const m = d.meeting;
     return `<div class="panel bpanel">
-      <button class="link" data-bback style="margin-bottom:var(--s4)">← Back</button>
+      <button class="link bback" data-bback>${this.backLabel()}</button>
 
-      <p class="kicker">Meeting</p>
       <h2 class="bdetail__name">GM ${pad(m.meeting_number)}</h2>
-      <p class="muted">${esc(fmtDay(m.meeting_date))} / ${esc(m.start_time)}${
-        m.end_time ? '-' + esc(m.end_time) : ''} / ${esc(m.location || 'MPR')}</p>
+      <p class="muted">${esc(fmtDay(m.meeting_date))} / ${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || 'MPR')}${
+        m.check_in_open ? ' / check-in open' : ''}</p>
 
-      <div class="bstats bstats--tight" style="margin-top:var(--s5)">
-        ${this.stat(d.attendees.length, 'Checked in')}
-        ${this.stat(this.shareOfClub(d.attendees.length), 'Of members who attend')}
-        ${this.stat(m.check_in_open ? 'OPEN' : 'CLOSED', 'Check-in')}
-      </div>
-
-      <h2 class="h2 bsec">Attendees</h2>
+      <h2 class="h2 bsec meetband"><span>Attendees</span><span class="meetband__n">${d.attendees.length} checked in</span></h2>
       ${d.attendees.length
         ? `<ul class="blist">${d.attendees.map(a => `
             <li class="brow brow--member" data-bmember="${esc(a.user_id)}" tabindex="0" role="button">
@@ -16791,13 +16355,19 @@ const BoardUI = {
               <span class="muted">${esc(fmtTime(a.checked_in_at))}</span>
             </li>`).join('')}</ul>`
         : this.empty('No one has checked in yet.')}
+      ${this.deleteBlock(m, d.attendees.length)}
     </div>`;
   },
 
-  shareOfClub(n){
-    const base = this.overview && this.overview.participating_members;
-    if (typeof base !== 'number' || base <= 0) return '—';
-    return Math.round((n / base) * 100) + '%';
+  /* A meeting nobody attended can go at any time; one with stamps only
+     once it is over, and then with them, after a second word. */
+  deleteBlock(m, stamps){
+    const no = pad(m.meeting_number);
+    const over = !m.check_in_open && String(m.meeting_date) < Schedule.today();
+    if (m.check_in_open || (stamps > 0 && !over)) return '';
+    return `<div class="bdel">${this.confirmDelete === m.id
+      ? this.deleteConfirm(m, no, stamps)
+      : `<button class="link bdel__go" type="button" data-bconfirm="${esc(m.id)}">Delete GM ${no}</button>`}</div>`;
   },
 
   sessionPane(){
@@ -16807,9 +16377,9 @@ const BoardUI = {
     const sel = list.find(m => m.id === boardMeeting) || open || options[0] || null;
     boardMeeting = sel ? sel.id : null;
 
-    if (!sel) return `<div class="panel bpanel">
-      ${this.empty('No General Meeting to open yet.')}
-      <button class="btn btn--go" data-btab="meetings" style="margin-top:var(--s4)">Schedule one</button>
+    if (!sel) return `<div class="panel bpanel fail">
+      ${this.empty('No meeting to open yet.')}
+      <button class="btn btn--go" data-btab="meetings">Schedule one</button>
     </div>`;
 
     const isOpen = Boolean(sel.check_in_open);
@@ -16821,31 +16391,29 @@ const BoardUI = {
           data-bpick="${o.id}">GM ${pad(o.meeting_number)}</button>`).join('')}
       </div>
 
-      <section class="proj ${isOpen ? 'proj--live' : ''}">
+      <section class="proj ${isOpen ? 'proj--live' : ''}" id="proj">
         <div class="proj__meet">
           <p class="proj__no">GM ${pad(sel.meeting_number)}</p>
-          <p class="proj__when">${esc(fmtDay(sel.meeting_date))} / ${esc(sel.start_time)} / ${esc(sel.location || Schedule.PLACE)}</p>
+          <p class="proj__when">${esc(fmtDay(sel.meeting_date))} / ${esc(knit(sel.start_time))} / ${esc(sel.location || Schedule.PLACE)}</p>
         </div>
         <p class="proj__word">${isOpen ? 'Open' : 'Closed'}</p>
+
+        ${isOpen
+          ? `<p class="proj__count" aria-live="polite"><b id="attCount">${Number.isFinite(sel.attendance_count) ? sel.attendance_count : ''}</b><span>checked in</span></p>`
+          : ''}
+        <div class="proj__ctls">
+          ${isOpen ? `<button class="proj__ctl proj__ctl--full" type="button" data-bfull aria-pressed="false">Project</button>` : ''}
+          ${isOpen
+            ? `<button class="proj__ctl" type="button" data-bend="${esc(sel.id)}" data-busy="Closing">Close check-in</button>`
+            : `<button class="proj__ctl proj__ctl--go" type="button" data-bstart="${esc(sel.id)}" data-busy="Opening">Open check-in</button>`}
+        </div>
 
         ${isOpen ? `
           <div class="proj__plate">
             <div class="qrpanel__code" id="qrBox"></div>
             <p class="proj__cap">GM ${pad(sel.meeting_number)} / scan to check in</p>
           </div>
-        ` : `
-          <div class="proj__plate proj__plate--empty" aria-hidden="true">
-            <svg class="proj__seal" viewBox="0 0 100 100">${sealArt()}</svg>
-          </div>
-        `}
-
-        ${isOpen ? `
-          <p class="proj__count"><b id="attCount">-</b><span>checked in</span></p>
-          <button class="proj__ctl" type="button" data-bend="${esc(sel.id)}" data-busy="Ending…">Close check-in</button>
-        ` : `
-          <p class="proj__shut">Nobody can check in until this is open.</p>
-          <button class="proj__ctl proj__ctl--go" type="button" data-bstart="${esc(sel.id)}" data-busy="Starting…">Open check-in</button>
-        `}
+        ` : ''}
       </section>
     </div>`;
   },
@@ -16866,8 +16434,8 @@ const MECH = {
 
 const STEP = n => (typeof steps === 'function' ? steps(n) : undefined);
 
-const SLAM_SEL = '.title,.spread__wm,.tally__fig,'
-               + '.ladder__fig,.standing-band__fig,.who__name,'
+const SLAM_SEL = '.title,.spread__wm,'
+               + '.standing-band__fig,.who__name,'
                + '.proj__no,.bnow__no';
 
 const EASE = {
@@ -16940,10 +16508,9 @@ const FX = {
     const cells = list.querySelectorAll('.seal');
     if (!cells.length) return;
     aset(cells, { opacity:0 });
-    animate(cells, { opacity:[0, 1], scale:[.86, 1],
+    animate(cells, { opacity:[0, 1], scale:[.9, 1],
             rotate: el => (getComputedStyle(el).getPropertyValue('--lean') || '0deg').trim(),
-            delay:stagger(46, { start:120 }),
-            ease:spring({ mass:1, stiffness:94, damping:13, velocity:0 }),
+            delay:stagger(30, { start:60 }), duration:260, ease:'outCubic',
             onComplete(){ cells.forEach(c => { c.style.opacity = '';
 
               c.style.transform = ''; }); } });
@@ -16965,16 +16532,20 @@ const FX = {
   },
 
   stampAcquire(meeting){
+    /* the seal just earned, with the glyph it will carry on the card;
+       read before the record refreshes, so the count is its ordinal */
+    const n = Store.totalStamps();
+    const lift = (32 - 32 * STAMP_FIT).toFixed(1);
     const scene = document.createElement('div');
     scene.className = 'acq';
     scene.innerHTML = `
       <div class="acq__stack">
         <p class="acq__kick">Stamp acquired</p>
         <div class="acq__seal" aria-hidden="true">
-          <svg viewBox="0 0 64 64"><path d="${stampShape(7, 0)}"/></svg>
-          <b class="acq__plus">+1</b>
+          <svg viewBox="0 0 64 64"><path class="acq__face" d="${stampShape(n + 1, 0)}"/>
+            <g class="acq__mark" transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(n)}</g></svg>
         </div>
-        <p class="acq__meet">GM ${pad(meeting.no)} / ${fmtDate(meeting.date || Schedule.today())} / ${esc(meeting.place || Schedule.PLACE)}</p>
+        <p class="acq__meet">GM ${pad(meeting.no)} / ${fmtDate(meeting.date || Schedule.today())}</p>
       </div>`;
     document.body.appendChild(scene);
 
@@ -17167,7 +16738,7 @@ const Scenes = {
     el.innerHTML = SCENE_MARKUP('Until next meeting');
     document.body.appendChild(el);
     const p = this.parts(el);
-    p.word.textContent = 'Signed out';
+    p.word.textContent = 'Signing out';
     p.kick.textContent = 'Keystamp / Key Club attendance';
     [p.word, p.kick, p.tail, p.seal].forEach(x => { x.style.opacity = '0'; });
 
@@ -17179,7 +16750,9 @@ const Scenes = {
       this.busy = false;
     };
     const fuse = setTimeout(finish, 4000);
-    const swapNow = () => Promise.resolve().then(doSwap).catch(err => { oops(err); return 'failed'; });
+    const swapNow = () => Promise.resolve().then(doSwap).catch(err => { oops(err); return 'failed'; })
+      .then(res => { p.word.textContent = res === 'failed' ? 'Still signed in' : 'Signed out';
+                     if (res === 'failed') p.tail.textContent = ''; return res; });
 
     if (Motion.off){
       [p.word, p.kick, p.tail, p.seal].forEach(x => { x.style.opacity = '1'; });
@@ -17260,13 +16833,14 @@ const Transit = {
            board:0, bmeet:1, bcheckin:2, bmembers:3 },
 
   CHAR: {
-    home:    { in:170, hold:100, out:230, angle:9, par:26, tone:true },
-    record:  { in:200, hold:120, out:280, angle:4, par:16 },
-    scan:    { in:150, hold:80,  out:200, angle:0, par:10 },
-    rewards: { in:180, hold:120, out:260, angle:7, par:22, layered:true, flash:true },
-    profile: { in:220, hold:130, out:300, angle:6, par:14 },
-    board:   { in:160, hold:90,  out:210, angle:0, par:12, crisp:true },
-    auth:    { in:180, hold:90,  out:240, angle:3, par:0,  vertical:true },
+    /* a page turn is a quick cut, not a scene: about a quarter second */
+    home:    { in:100, hold:40, out:140, angle:9, par:12, tone:true },
+    record:  { in:110, hold:50, out:150, angle:4, par:8 },
+    scan:    { in:90,  hold:30, out:120, angle:0, par:6 },
+    rewards: { in:100, hold:50, out:140, angle:7, par:10 },
+    profile: { in:110, hold:50, out:160, angle:6, par:8 },
+    board:   { in:90,  hold:40, out:120, angle:0, par:6, crisp:true },
+    auth:    { in:100, hold:40, out:130, angle:3, par:0,  vertical:true },
   },
 
   profile(to){
@@ -17385,16 +16959,11 @@ const Transit = {
     this.running = true;
 
     if (Motion.reduced){
-      /* no cut to hide the change, so the old page is held as a copy and
-         faded over the new one */
-      const box = this.ghost(view, f);
-      return new Promise(res => {
-        let done = false;
-        const finish = () => { if (done) return; done = true; Transit.running = false; try { box.remove(); } catch (_) {} Motion.settle(view); res(); };
-        try { doSwap(); } catch (_) {}
-        animate(box, { opacity:[1, 0], duration:140, ease:'linear', onComplete:finish });
-        setTimeout(finish, 420);
-      });
+      /* no cut and no crossfade: the page changes, and that is the cue */
+      try { doSwap(); } catch (_) {}
+      this.running = false;
+      Motion.settle(view);
+      return Promise.resolve();
     }
 
     const c = this.profile(to);
@@ -17479,8 +17048,7 @@ function paintBoard(){
   Backend.issueToken(boardMeeting).then(({ token }) => {
     if (!document.body.contains(box)) return;
     const svg = qrSVG(token);
-    box.innerHTML = svg || `<p class="qrpanel__fail">The QR encoder did not load. Ask members
-      to check in at the door instead.</p>`;
+    box.innerHTML = svg || `<p class="qrpanel__fail">The code could not be drawn. Reload the page.</p>`;
   }).catch(() => {
     if (!document.body.contains(box)) return;
     box.innerHTML = `<p class="qrpanel__fail">Could not reach the attendance server.</p>`;
@@ -17493,16 +17061,19 @@ function paintAttendanceCount(meetingId){
   const el = () => document.querySelector('#attCount');
   const pull = async () => {
     if (!el()) return clearInterval(countTimer);
+    if (document.hidden) return;
 
+    /* a failed poll keeps the last count on the wall; the next poll
+       tries again */
     let text;
     try { text = String(await Backend.attendanceCount(meetingId)); }
-    catch (_) { text = '—'; }
+    catch (_) { return; }
     const node = el();
     if (!node) return clearInterval(countTimer);
     node.textContent = text;
   };
   pull();
-  countTimer = setInterval(pull, 6000);
+  countTimer = setInterval(pull, 3000);
 }
 
 /* The line printed under the viewer: which meeting a scan would stamp.
@@ -17511,11 +17082,12 @@ function paintAttendanceCount(meetingId){
 function scanStanding(){
   const open = Store.openMeeting();
   const done = open && Store.attended(open.id);
+  if (Store.failed) return { lab:'Record not loaded', at:'Could not reach the club records' };
   return !open
-    ? { lab:'Nothing open', at:'No check-in right now' }
+    ? { lab:'Check-in', at:'Closed' }
     : done
       ? { lab:'Already stamped', at:`GM ${pad(open.no)}` }
-      : { lab:'Checking in to', at:`GM ${pad(open.no)} / ${fmtDay(open.date)} / ${esc(open.place)}` };
+      : { lab:'Checking in to', at:`GM ${pad(open.no)}` };
 }
 function paintScanStanding(){
   const s = scanStanding();
@@ -17650,9 +17222,17 @@ const Decoder = {
 
 const Scanner = {
   stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0, zoom:null, run:0, armTimer:null,
+  /* the last code the server refused; while it stays in view it is not
+     sent again, so a refusal is said once, not every two seconds */
+  refused:null, forgive:null, lastBad:null,
+
+  stamped(){
+    const o = Store.openMeeting();
+    return Boolean(o && Store.attended(o.id));
+  },
 
   setState(state, msg){
-    const ret = $('#reticle'), el = $('#scanMsg'), line = $('#scanLine'), viewer = $('#viewer');
+    const ret = $('#reticle'), el = $('#scanMsg'), line = $('#scanLine');
     if (el) el.textContent = msg;
     if (line){
       const tone = state === 'hit' ? 'good' : state;
@@ -17660,18 +17240,8 @@ const Scanner = {
         line.classList.toggle('scanline--' + s, s === tone));
     }
     if (ret){
-      ret.classList.toggle('reticle--live', state === 'live');
-      ret.classList.toggle('reticle--good', state === 'good' || state === 'hit');
+      ret.classList.toggle('reticle--good', state === 'hit' || state === 'busy');
       ret.classList.toggle('reticle--bad',  state === 'bad');
-
-      ret.classList.toggle('reticle--busy', state === 'busy');
-    }
-
-    viewer?.classList.toggle('viewer--hit', state === 'good' || state === 'hit');
-
-    if (viewer){
-      viewer.classList.remove('viewer--bad');
-      if (state === 'bad'){ void viewer.offsetWidth; viewer.classList.add('viewer--bad'); }
     }
   },
 
@@ -17688,9 +17258,14 @@ const Scanner = {
     if (!video) return;
     const run = ++this.run;
     this.locked = false;
+    this.refused = null; this.lastBad = null; clearTimeout(this.forgive);
 
-    $('#viewer')?.classList.remove('viewer--stalled', 'viewer--feed');
+    $('#viewer')?.classList.remove('viewer--stalled');
     $('#viewer .stall')?.remove();
+
+    /* a member already stamped for the open meeting has nothing to scan */
+    if (this.stamped()) return this.stall('stamped');
+
     this.setState('boot', 'Starting camera');
     this.showLoader();
 
@@ -17698,13 +17273,24 @@ const Scanner = {
 
     Decoder.start();
 
+    /* a permission sheet left open, or a camera wedged by another app,
+       never answers; after ten seconds the page says so and offers the
+       camera again */
+    const slow = setTimeout(() => { if (run === this.run) this.stall('failed'); }, 10000);
     let stream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
         video:{ facingMode:{ ideal:'environment' }, width:{ ideal:1280 } }, audio:false });
     } catch (err) {
+      clearTimeout(slow);
       if (run !== this.run) return;
-      return this.stall(err && err.name === 'NotAllowedError' ? 'denied' : 'unavailable');
+      const name = err && err.name;
+      return this.stall(name === 'NotAllowedError' ? 'denied' : name === 'NotFoundError' ? 'unavailable' : 'failed');
+    }
+    clearTimeout(slow);
+    if (run === this.run && $('#viewer .stall')){
+      $('#viewer')?.classList.remove('viewer--stalled');
+      $('#viewer .stall')?.remove();
     }
 
     if (run !== this.run || !document.body.contains(video)){
@@ -17729,11 +17315,9 @@ const Scanner = {
     try { await video.play(); } catch (_) {}
     if (run !== this.run) return;
 
-    $('#viewer')?.classList.add('viewer--feed');
-
     this.cv = document.createElement('canvas');
     this.ctx = this.cv.getContext('2d', { willReadFrequently:true });
-    this.setState('live', 'Looking for the check-in code');
+    this.setState('live', 'Scanning');
     this.mountZoom();
     this.loop(video, run);
   },
@@ -17789,15 +17373,13 @@ const Scanner = {
     const l = document.createElement('div');
     l.className = 'loader'; l.id = 'camLoader';
 
-    ret.classList.add('reticle--wait');
-
     l.innerHTML = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor"
         stroke-width="3" aria-hidden="true">
       <circle cx="50" cy="50" r="42" stroke-dasharray="42 90"/>
       <circle cx="50" cy="50" r="30" stroke-dasharray="24 70" opacity=".5"/></svg>`;
     ret.appendChild(l);
   },
-  hideLoader(){ $('#camLoader')?.remove(); $('#reticle')?.classList.remove('reticle--wait'); },
+  hideLoader(){ $('#camLoader')?.remove(); },
 
   /* Reading a frame costs real time on a phone -- tens of milliseconds --
      and it is spent on the main thread, where it competes with whatever is
@@ -17857,32 +17439,39 @@ const Scanner = {
   /* A code was read -- off the worker or off the inline path, and on a
      camera run that is still the current one. */
   hit(text, run){
-    if (run !== this.run || this.locked) return;
+    if (run !== this.run || this.locked || text === this.refused) return;
     this.locked = true;
-    this.setState('hit', 'Locked');
+    /* the frame holds on the code that was read while it is checked */
+    try { $('#cam')?.pause(); } catch (_) {}
+    this.setState('hit', 'Code read');
     FX.scanLock();
-    setTimeout(() => submitSeal(text, true, run), 190);
+    submitSeal(text, run);
+  },
+
+  /* back to reading, on the same run, after a refusal */
+  resume(run){
+    if (run !== this.run) return;
+    this.locked = false;
+    try { $('#cam')?.play()?.catch(() => {}); } catch (_) {}
   },
 
   stall(kind){
     const viewer = $('#viewer');
     if (!viewer) return;
     this.hideLoader();
-    viewer.classList.remove('viewer--feed');
 
-    const more = MANUAL_ENTRY ? ' Or enter the check-in code below.' : '';
     const copy = {
       denied:{ title:'Camera permission is off', retry:true,
-        body:'Allow camera access for this page in your browser settings, then try again.' + more },
+        body:'Allow the camera in browser settings.' },
       ended:{ title:'Camera stopped', retry:true,
-        body:'The camera feed ended. Check that camera access is still allowed, then try again.' + more },
+        body:'Check camera access, then try again.' },
       unavailable:{ title:'No camera found', retry:true,
-        body:'This device has no camera.' + (MANUAL_ENTRY
-          ? ' Enter the check-in code below instead.'
-          : ' Sign in on a phone with a camera to scan the code.') },
+        body:'Scan the code from a phone.' },
       unsupported:{ title:'Scanning needs a secure page', retry:false,
-        body:'Camera access only works over https.' + more },
-    }[kind] || { title:'Camera off', retry:true, body:'The camera could not be started.' + more };
+        body:'Camera access needs https.' },
+      /* the line under the panel already names the meeting */
+      stamped:{ title:'You are checked in', retry:false, body:'' },
+    }[kind] || { title:'Camera unavailable', retry:true, body:'Close other apps using the camera, then try again.' };
 
     /* The note sits over the viewer; the video stays in place, so the
        camera can be offered again without a reload. */
@@ -17895,7 +17484,6 @@ const Scanner = {
 
     viewer.classList.add('viewer--stalled');
     this.setState('off', 'Camera off');
-    $('#manualInput')?.focus({ preventScroll:true });
   },
 
   stop(){
@@ -17905,7 +17493,7 @@ const Scanner = {
     if (this.zoom) this.zoom.drop();
     this.stream?.getTracks().forEach(t => t.stop());
     this.stream = null; this.locked = false;
-    $('#viewer')?.classList.remove('viewer--feed');
+    clearTimeout(this.forgive);
   },
 };
 
@@ -17932,7 +17520,8 @@ const Landing = {
     if (!this.active || !cell) return;
     this.armed = cell;
     if (!Motion.off) cell.style.opacity = '0';
-    try { cell.scrollIntoView({ block:'center', inline:'nearest', behavior:'instant' }); }
+    /* only as far as needed: a full card's figure and punch stay in view */
+    try { cell.scrollIntoView({ block:'nearest', inline:'nearest', behavior:'instant' }); }
     catch (_) { try { cell.scrollIntoView(); } catch (__) {} }
   },
 
@@ -17983,67 +17572,66 @@ const Landing = {
   },
 };
 
+/* [what happened, what to do]; the scan line under the camera prints
+   both, and nothing else repeats them */
 const SCAN_MESSAGES = {
-  INVALID_TOKEN:       ['Not a valid code',      'That code is not from Keystamp. Scan the one on the board screen.'],
-  EXPIRED_TOKEN:       ['Code expired',          'That code is no longer valid. Scan the code on the board screen, or ask a board member.'],
-  MEETING_NOT_FOUND:   ['No matching meeting',   'Keystamp has no meeting for that code. Ask a board member.'],
-  MEETING_NOT_ACTIVE:  ['Check-in not open',     'This meeting is not taking check-ins yet.'],
-  ATTENDANCE_CLOSED:   ['Check-in has ended',    'Attendance for this meeting is closed. A board member can add you.'],
-  WRONG_DAY:           ['Wrong day',             'That code is for a different meeting date.'],
-  ALREADY_CHECKED_IN:  ['Already checked in',    'Your stamp for this general meeting is already recorded.'],
-  PROFILE_NOT_READY:   ['Account still setting up','Your account was made seconds ago. Wait a moment and scan again.'],
-  NOT_AUTHENTICATED:   ['Sign in first',         'Sign in to record your attendance.'],
-  NOT_AUTHORIZED:      ['Not allowed',           'Your account cannot check in to this meeting.'],
-  NETWORK_ERROR:       ['No connection',         'Keystamp could not reach the server. Check your signal and try again.'],
-  VERIFIER_UNAVAILABLE:['Check-in unavailable',  'Attendance verification is not running. Tell a board member.'],
-  SERVER_ERROR:        ['Something went wrong',  'Keystamp could not check that code. Try again in a moment.'],
-  NO_BACKEND:          ['Not connected',         'This build has no backend configured, so check-in is unavailable.'],
+  INVALID_TOKEN:       ['Not a Keystamp code',     'Scan the code on the board screen'],
+  EXPIRED_TOKEN:       ['Code expired',            'Scan the code on the board screen'],
+  MEETING_NOT_FOUND:   ['No matching meeting',     'Ask a board member'],
+  MEETING_NOT_ACTIVE:  ['Check-in not open',       ''],
+  ATTENDANCE_CLOSED:   ['Check-in has ended',      ''],
+  WRONG_DAY:           ['Code is for another day', ''],
+  ALREADY_CHECKED_IN:  ['Already checked in',      ''],
+  PROFILE_NOT_READY:   ['Account still setting up','Try again in a moment'],
+  NOT_AUTHENTICATED:   ['Sign in first',           ''],
+  NOT_AUTHORIZED:      ['Not allowed',             'This account cannot check in'],
+  NETWORK_ERROR:       ['No connection',           'Check your signal'],
+  VERIFIER_UNAVAILABLE:['Check-in unavailable',    'Tell a board member'],
+  SERVER_ERROR:        ['Something went wrong',    'Try again in a moment'],
+  NO_BACKEND:          ['Not connected',           'This build has no backend'],
 };
 const scanMessage = code => SCAN_MESSAGES[code] || SCAN_MESSAGES.SERVER_ERROR;
+/* refusals that may pass on a second try; the same code is sent again,
+   quietly, after a short wait */
+const SCAN_TRANSIENT = new Set(['NETWORK_ERROR', 'SERVER_ERROR', 'VERIFIER_UNAVAILABLE', 'PROFILE_NOT_READY']);
+/* refusals that mean the record on this page is out of date */
+const SCAN_STALE = new Set(['ALREADY_CHECKED_IN', 'ATTENDANCE_CLOSED', 'MEETING_NOT_ACTIVE', 'WRONG_DAY']);
 
 /* `run` is the camera run that read the code; the refusal, if any, is
    shown on that run and no other. */
-async function submitSeal(raw, fromCamera, run = Scanner.run){
-  if (!QRFormat.looksLikeKeystamp(raw)){
-    const [t, d] = scanMessage('INVALID_TOKEN');
-    toast({ key:'scan', title:t, detail:d, bad:true });
-    if (fromCamera) rejectVisual('INVALID_TOKEN', run);
-    return;
-  }
+async function submitSeal(raw, run = Scanner.run){
+  if (!QRFormat.looksLikeKeystamp(raw)) return rejectVisual('INVALID_TOKEN', raw, run);
 
-  if (fromCamera) Scanner.setState('busy', 'Checking with the server');
-
+  Scanner.setState('busy', 'Checking');
   const result = await Backend.verifyCode(raw);
 
   if (!result || !result.ok){
     const code = (result && result.code) || 'SERVER_ERROR';
-    const [t, d] = scanMessage(code);
-
-    toast({ key:'scan', title:t, detail:d, bad:true });
-    if (fromCamera) rejectVisual(code, run);
-    return;
+    if (SCAN_STALE.has(code)) Store.hydrate();
+    return rejectVisual(code, raw, run);
   }
 
-  dropToast('scan');
-  Scanner.setState('good', 'Verified');
   Scanner.stop();
-
   const meeting = Store.meeting(result.meeting_id) ||
                   { id:result.meeting_id, no:result.meeting_number, place:Schedule.PLACE };
   await Landing.run(meeting);
 }
 
-/* The refusal is shown on the camera run that read the code; a run
-   that has since been stopped or restarted is left alone. */
-function rejectVisual(code, run = Scanner.run){
+/* The refusal is shown on the camera run that read the code and stays
+   on the line until another code is read; a run that has since been
+   stopped or restarted is left alone. */
+function rejectVisual(code, raw, run = Scanner.run){
   if (run !== Scanner.run) return;
-  Scanner.setState('bad', scanMessage(code)[0]);
-  FX.scanReject();
-  setTimeout(() => {
-    if (run !== Scanner.run || !$('#reticle')) return;
-    Scanner.locked = false;
-    Scanner.setState('live', 'Looking for the check-in code');
-  }, 1900);
+  const [what, todo] = scanMessage(code);
+  Scanner.setState('bad', todo ? `${what}. ${todo}` : what);
+  /* the same refusal again, after a quiet retry, is not shaken twice */
+  if (Scanner.lastBad !== code + raw) FX.scanReject();
+  Scanner.lastBad = code + raw;
+  Scanner.refused = raw;
+  clearTimeout(Scanner.forgive);
+  if (SCAN_TRANSIENT.has(code))
+    Scanner.forgive = setTimeout(() => { if (run === Scanner.run) Scanner.refused = null; }, 4000);
+  Scanner.resume(run);
 }
 
 </script>
@@ -18062,7 +17650,7 @@ const MEMBER_NAV = [
 const BOARD_NAV = [
   { id:'board',    label:'Club Tools', short:'Club' },
   { id:'bmeet',    label:'Meetings'   },
-  { id:'bcheckin', label:'Check-In'   },
+  { id:'bcheckin', label:'Check-in'   },
   { id:'bmembers', label:'Members'    },
 ];
 
@@ -18203,10 +17791,11 @@ async function go(id, opts = {}){
     document.documentElement.dataset.screen = id;
 
     view.innerHTML = Views[id]();
+    syncProjector();
     painted = Store.stamp();
     paintNav();
-    try { scrollTo(0, 0); } catch (_) {}
-    afterRender(id, nav, Boolean(opts.covered));
+    if (!opts.quiet){ try { scrollTo(0, 0); } catch (_) {} }
+    afterRender(id, nav, Boolean(opts.covered || opts.quiet));
     /* focus follows a page turn; the first paint has nowhere to move it
        from, and asking costs a whole layout of a page nobody has seen */
     if (booted) view.focus({ preventScroll:true });
@@ -18255,7 +17844,8 @@ function afterRender(id, nav = false, covered = false){
 
   if (id === 'auth') AuthUI.busy = false;
   paintMotion();
-  if (id === 'scan') Scanner.armStart();
+  /* the meeting line under the camera is re-read on arrival */
+  if (id === 'scan'){ Scanner.armStart(); if (Store.signedIn) Store.hydrate(); }
   if (PANE_ROUTES.includes(id)){ loadBoard(); }
   else { clearInterval(countTimer); }
 }
@@ -18278,9 +17868,9 @@ function authBusy(on, label){
 }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && e.target && e.target.id === 'manualInput'){
-    e.preventDefault();
-    $('#manualGo')?.click();
+  /* an open stamp closes on Escape, as any slip over the page should */
+  if (e.key === 'Escape' && e.target && e.target.matches && e.target.matches('.seal[tabindex]')){
+    e.target.blur();
     return;
   }
   if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.matches('[role="button"]')){
@@ -18355,10 +17945,10 @@ document.addEventListener('submit', async e => {
     if (!start || !end) return show('Start and end time are required.');
     if (start >= end)   return show('End time must be after the start time.');
 
-    show(''); hold(btn, 'Scheduling…');
+    show(''); hold(btn, 'Scheduling');
     try {
       await Backend.createMeeting({ no, date, startTime:to12h(start), endTime:to12h(end) });
-      BoardUI.form = null;
+      BoardUI.form = null; BoardUI.formOpen = false;
       toast({ key:'board', title:`GM ${pad(no)} scheduled`, detail:'It is now in the schedule.' });
       boardGoto({ tab:'meetings' });
     } catch (ex){
@@ -18379,7 +17969,7 @@ document.addEventListener('submit', async e => {
   const up = AuthUI.mode === 'up';
 
   authErr('');
-  authBusy(true, up ? 'Creating…' : 'Signing in…');
+  authBusy(true, up ? 'Creating' : 'Signing in');
   try {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
@@ -18430,11 +18020,25 @@ document.addEventListener('click', e => {
   }
   const bconfirm = e.target.closest('[data-bconfirm]');
   if (bconfirm){
-    boardGoto({ confirmDelete:bconfirm.dataset.bconfirm, deleteNote:null });
+    boardGoto({ confirmDelete:bconfirm.dataset.bconfirm, deleteNote:null, refocus:'[data-bcancel]' });
     return;
   }
   const bcancel = e.target.closest('[data-bcancel]');
-  if (bcancel){ boardGoto({ confirmDelete:null }); return; }
+  if (bcancel){ boardGoto({ confirmDelete:null, refocus:'[data-bconfirm]' }); return; }
+
+  const mform = e.target.closest('[data-mform]');
+  if (mform){
+    const open = mform.dataset.mform !== 'close';
+    BoardUI.formOpen = open;
+    if (!open) BoardUI.form = null;
+    const box = $('#boardPane');
+    if (box){ box.innerHTML = BoardUI.pane(); }
+    if (open) $('#mNo')?.focus({ preventScroll:true });
+    else $('[data-mform]')?.focus({ preventScroll:true });
+    return;
+  }
+  const bfull = e.target.closest('[data-bfull]');
+  if (bfull){ projector(!$('#proj')?.classList.contains('proj--full')); return; }
 
   const mreset = e.target.closest('[data-mreset]');
   if (mreset){
@@ -18450,7 +18054,7 @@ document.addEventListener('click', e => {
     if (bdelete.disabled) return;
     const id = bdelete.dataset.bdelete;
     const stamps = Number(bdelete.dataset.bstamps) || 0;
-    hold(bdelete, 'Deleting…');
+    hold(bdelete, 'Deleting');
 
     const clear = note => {
       if (boardMeeting === id) boardMeeting = null;
@@ -18479,7 +18083,7 @@ document.addEventListener('click', e => {
   if (bpage){ boardGoto({ page:Number(bpage.dataset.bpage) || 1 }); return; }
   const reload = e.target.closest('[data-reload]');
   if (reload){
-    hold(reload, 'Retrying…');
+    hold(reload, 'Retrying');
     Store.hydrate().then(() => go(current, { instant:true }));
     return;
   }
@@ -18493,22 +18097,22 @@ document.addEventListener('click', e => {
 
   const bstart = e.target.closest('[data-bstart]');
   if (bstart){
-    hold(bstart, 'Starting…');
+    hold(bstart, 'Opening');
     Backend.startAttendance(bstart.dataset.bstart)
       .then(() => { boardMeeting = bstart.dataset.bstart; boardStamp = true; loadBoard(); })
-      .catch(() => { release(bstart, 'Open check-in');
-        toast({ key:'board', bad:true, title:'Could not start',
-                detail:'Check-in did not open. Try again.' }); });
+      .catch(err => { release(bstart, 'Open check-in');
+        toast({ key:'board', bad:true, title:'Could not open check-in',
+                detail:BoardUI.message(err && err.message) }); });
     return;
   }
   const bend = e.target.closest('[data-bend]');
   if (bend){
-    hold(bend, 'Ending…');
+    hold(bend, 'Closing');
     Backend.endAttendance(bend.dataset.bend)
       .then(() => { clearInterval(countTimer); boardStamp = true; loadBoard(); })
-      .catch(() => { release(bend, 'Close check-in');
-        toast({ key:'board', bad:true, title:'Could not end',
-                detail:'Check-in is still open. Try again.' }); });
+      .catch(err => { release(bend, 'Close check-in');
+        toast({ key:'board', bad:true, title:'Could not close check-in',
+                detail:BoardUI.message(err && err.message) }); });
     return;
   }
 
@@ -18571,37 +18175,37 @@ document.addEventListener('click', e => {
   const claim = e.target.closest('[data-claim]');
   if (claim){
     if (claim.disabled) return;
+    /* a claim cannot be taken back, so it takes a second, deliberate tap */
+    if (!claim.dataset.armed){
+      claim.dataset.armed = '1';
+      claim.textContent = 'Confirm claim';
+      clearTimeout(claim._disarm);
+      claim._disarm = setTimeout(() => {
+        if (!document.body.contains(claim) || claim.disabled) return;
+        delete claim.dataset.armed;
+        claim.textContent = 'Claim';
+      }, 4000);
+      return;
+    }
+    clearTimeout(claim._disarm);
     claim.disabled = true;
     Store.claimReward(claim.dataset.claim).then(r => {
       go('rewards', { instant:true });
       FX.claimStamp($(`[data-reward="${claim.dataset.claim}"]`));
-      setTimeout(() => toast({ key:'claim', title:`${r.name} claimed`,
-        detail:'Show this screen to a board member to pick it up.' }), 260);
-    }).catch(() => {
+      setTimeout(() => toast({ key:'claim', title:`${r.name} claimed` }), 260);
+    }).catch(err => {
+      delete claim.dataset.armed;
+      claim.textContent = 'Claim';
       claim.disabled = false;
+      const code = String(err && err.message || '');
       toast({ key:'claim', bad:true, title:'Could not claim',
-        detail:'That reward was not saved. Check your connection and try again.' });
+        detail:/not earned/i.test(code) ? 'This reward is not earned yet.'
+             : /not signed/i.test(code) ? 'Sign in again to claim.'
+             : 'The claim was not saved. Check your connection and try again.' });
     });
     return;
   }
 
-  const go2 = e.target.closest('#manualGo');
-  if (go2){
-    if (go2.disabled) return;
-    const input = $('#manualInput');
-    const val = (input && input.value || '').trim();
-    if (!val){
-      toast({ key:'scan', bad:true, title:'Enter a code',
-              detail:'Type the code a board member gives you.' });
-      return;
-    }
-    go2.disabled = true;
-    submitSeal(val, false).finally(() => {
-      const btn = $('#manualGo');
-      if (btn) btn.disabled = false;
-    });
-    return;
-  }
 });
 
 let boardStamp = false;
@@ -18663,6 +18267,9 @@ async function loadBoard(){
     }
     const qb = shownQR && shownQR.svg && boardMeeting === shownQR.meeting ? $('#qrBox') : null;
     if (qb) qb.innerHTML = shownQR.svg;
+    syncProjector();
+    /* a confirmation takes the focus, and gives it back when dismissed */
+    if (BoardUI.refocus){ $(BoardUI.refocus)?.focus({ preventScroll:true }); BoardUI.refocus = null; }
   }
 
   if (BoardUI.tab === 'session' && !BoardUI.error && $('#qrBox')){
@@ -18698,6 +18305,41 @@ function paintMotion(){
    corrected so it never names a page that does not exist */
 addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); else syncHash(current); });
 
+/* Projector mode is the stage laid over the whole window. Full screen is
+   asked for as well where the browser allows it (not on an iPhone), on the
+   page rather than the stage, so a repaint of the stage does not drop it.
+   Leaving full screen, Escape or the button all end the mode. */
+function projector(on){
+  const stage = $('#proj');
+  if (!stage) return;
+  stage.classList.toggle('proj--full', on);
+  document.documentElement.classList.toggle('is-projecting', on);
+  const b = $('[data-bfull]');
+  if (b){ b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Leave projector' : 'Project'; }
+  try {
+    if (on && document.fullscreenEnabled && !document.fullscreenElement)
+      document.documentElement.requestFullscreen().catch(() => {});
+    if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  } catch (_) {}
+  if (on) b?.focus({ preventScroll:true });
+}
+/* a repaint of the pane keeps the mode while check-in is still open;
+   anything else (closed, another page) ends it */
+function syncProjector(){
+  if (!document.documentElement.classList.contains('is-projecting')) return;
+  if ($('#proj.proj--live')) projector(true);
+  else {
+    document.documentElement.classList.remove('is-projecting');
+    try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (_) {}
+  }
+}
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement && $('#proj')?.classList.contains('proj--full')) projector(false);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && $('#proj')?.classList.contains('proj--full')) projector(false);
+});
+
 addEventListener('pagehide', () => {
   Scanner.stop(); clearInterval(countTimer);
 });
@@ -18723,9 +18365,13 @@ try {
        would differ, and Scan only refreshes its meeting line, so the
        camera is never restarted under the reader. */
     Store.onChange(() => {
-      if (current === 'scan') paintScanStanding();
+      if (current === 'scan'){
+        paintScanStanding();
+        /* stamped from elsewhere while the camera is up: nothing to scan */
+        if (Scanner.stream && !Landing.active && Scanner.stamped()){ Scanner.stop(); Scanner.stall('stamped'); }
+      }
       else if (current && current !== 'auth' && Store.stamp() !== painted)
-        go(current, { instant:true, force:true });   /* force: not dropped if it lands mid-cut */
+        go(current, { instant:true, force:true, quiet:true });   /* force: not dropped if it lands mid-cut */
       paintIdentity();
     });
 

@@ -10,8 +10,8 @@ const MECH = {
 
 const STEP = n => (typeof steps === 'function' ? steps(n) : undefined);
 
-const SLAM_SEL = '.title,.spread__wm,.tally__fig,'
-               + '.ladder__fig,.standing-band__fig,.who__name,'
+const SLAM_SEL = '.title,.spread__wm,'
+               + '.standing-band__fig,.who__name,'
                + '.proj__no,.bnow__no';
 
 const EASE = {
@@ -84,10 +84,9 @@ const FX = {
     const cells = list.querySelectorAll('.seal');
     if (!cells.length) return;
     aset(cells, { opacity:0 });
-    animate(cells, { opacity:[0, 1], scale:[.86, 1],
+    animate(cells, { opacity:[0, 1], scale:[.9, 1],
             rotate: el => (getComputedStyle(el).getPropertyValue('--lean') || '0deg').trim(),
-            delay:stagger(46, { start:120 }),
-            ease:spring({ mass:1, stiffness:94, damping:13, velocity:0 }),
+            delay:stagger(30, { start:60 }), duration:260, ease:'outCubic',
             onComplete(){ cells.forEach(c => { c.style.opacity = '';
 
               c.style.transform = ''; }); } });
@@ -109,16 +108,20 @@ const FX = {
   },
 
   stampAcquire(meeting){
+    /* the seal just earned, with the glyph it will carry on the card;
+       read before the record refreshes, so the count is its ordinal */
+    const n = Store.totalStamps();
+    const lift = (32 - 32 * STAMP_FIT).toFixed(1);
     const scene = document.createElement('div');
     scene.className = 'acq';
     scene.innerHTML = `
       <div class="acq__stack">
         <p class="acq__kick">Stamp acquired</p>
         <div class="acq__seal" aria-hidden="true">
-          <svg viewBox="0 0 64 64"><path d="${stampShape(7, 0)}"/></svg>
-          <b class="acq__plus">+1</b>
+          <svg viewBox="0 0 64 64"><path class="acq__face" d="${stampShape(n + 1, 0)}"/>
+            <g class="acq__mark" transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(n)}</g></svg>
         </div>
-        <p class="acq__meet">GM ${pad(meeting.no)} / ${fmtDate(meeting.date || Schedule.today())} / ${esc(meeting.place || Schedule.PLACE)}</p>
+        <p class="acq__meet">GM ${pad(meeting.no)} / ${fmtDate(meeting.date || Schedule.today())}</p>
       </div>`;
     document.body.appendChild(scene);
 

@@ -11,7 +11,7 @@ const MEMBER_NAV = [
 const BOARD_NAV = [
   { id:'board',    label:'Club Tools', short:'Club' },
   { id:'bmeet',    label:'Meetings'   },
-  { id:'bcheckin', label:'Check-In'   },
+  { id:'bcheckin', label:'Check-in'   },
   { id:'bmembers', label:'Members'    },
 ];
 
@@ -152,10 +152,11 @@ async function go(id, opts = {}){
     document.documentElement.dataset.screen = id;
 
     view.innerHTML = Views[id]();
+    syncProjector();
     painted = Store.stamp();
     paintNav();
-    try { scrollTo(0, 0); } catch (_) {}
-    afterRender(id, nav, Boolean(opts.covered));
+    if (!opts.quiet){ try { scrollTo(0, 0); } catch (_) {} }
+    afterRender(id, nav, Boolean(opts.covered || opts.quiet));
     /* focus follows a page turn; the first paint has nowhere to move it
        from, and asking costs a whole layout of a page nobody has seen */
     if (booted) view.focus({ preventScroll:true });
@@ -204,7 +205,8 @@ function afterRender(id, nav = false, covered = false){
 
   if (id === 'auth') AuthUI.busy = false;
   paintMotion();
-  if (id === 'scan') Scanner.armStart();
+  /* the meeting line under the camera is re-read on arrival */
+  if (id === 'scan'){ Scanner.armStart(); if (Store.signedIn) Store.hydrate(); }
   if (PANE_ROUTES.includes(id)){ loadBoard(); }
   else { clearInterval(countTimer); }
 }
@@ -227,9 +229,9 @@ function authBusy(on, label){
 }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && e.target && e.target.id === 'manualInput'){
-    e.preventDefault();
-    $('#manualGo')?.click();
+  /* an open stamp closes on Escape, as any slip over the page should */
+  if (e.key === 'Escape' && e.target && e.target.matches && e.target.matches('.seal[tabindex]')){
+    e.target.blur();
     return;
   }
   if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.matches('[role="button"]')){
@@ -304,10 +306,10 @@ document.addEventListener('submit', async e => {
     if (!start || !end) return show('Start and end time are required.');
     if (start >= end)   return show('End time must be after the start time.');
 
-    show(''); hold(btn, 'Scheduling…');
+    show(''); hold(btn, 'Scheduling');
     try {
       await Backend.createMeeting({ no, date, startTime:to12h(start), endTime:to12h(end) });
-      BoardUI.form = null;
+      BoardUI.form = null; BoardUI.formOpen = false;
       toast({ key:'board', title:`GM ${pad(no)} scheduled`, detail:'It is now in the schedule.' });
       boardGoto({ tab:'meetings' });
     } catch (ex){
@@ -328,7 +330,7 @@ document.addEventListener('submit', async e => {
   const up = AuthUI.mode === 'up';
 
   authErr('');
-  authBusy(true, up ? 'Creating…' : 'Signing in…');
+  authBusy(true, up ? 'Creating' : 'Signing in');
   try {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
@@ -379,11 +381,25 @@ document.addEventListener('click', e => {
   }
   const bconfirm = e.target.closest('[data-bconfirm]');
   if (bconfirm){
-    boardGoto({ confirmDelete:bconfirm.dataset.bconfirm, deleteNote:null });
+    boardGoto({ confirmDelete:bconfirm.dataset.bconfirm, deleteNote:null, refocus:'[data-bcancel]' });
     return;
   }
   const bcancel = e.target.closest('[data-bcancel]');
-  if (bcancel){ boardGoto({ confirmDelete:null }); return; }
+  if (bcancel){ boardGoto({ confirmDelete:null, refocus:'[data-bconfirm]' }); return; }
+
+  const mform = e.target.closest('[data-mform]');
+  if (mform){
+    const open = mform.dataset.mform !== 'close';
+    BoardUI.formOpen = open;
+    if (!open) BoardUI.form = null;
+    const box = $('#boardPane');
+    if (box){ box.innerHTML = BoardUI.pane(); }
+    if (open) $('#mNo')?.focus({ preventScroll:true });
+    else $('[data-mform]')?.focus({ preventScroll:true });
+    return;
+  }
+  const bfull = e.target.closest('[data-bfull]');
+  if (bfull){ projector(!$('#proj')?.classList.contains('proj--full')); return; }
 
   const mreset = e.target.closest('[data-mreset]');
   if (mreset){
@@ -399,7 +415,7 @@ document.addEventListener('click', e => {
     if (bdelete.disabled) return;
     const id = bdelete.dataset.bdelete;
     const stamps = Number(bdelete.dataset.bstamps) || 0;
-    hold(bdelete, 'Deleting…');
+    hold(bdelete, 'Deleting');
 
     const clear = note => {
       if (boardMeeting === id) boardMeeting = null;
@@ -428,7 +444,7 @@ document.addEventListener('click', e => {
   if (bpage){ boardGoto({ page:Number(bpage.dataset.bpage) || 1 }); return; }
   const reload = e.target.closest('[data-reload]');
   if (reload){
-    hold(reload, 'Retrying…');
+    hold(reload, 'Retrying');
     Store.hydrate().then(() => go(current, { instant:true }));
     return;
   }
@@ -442,22 +458,22 @@ document.addEventListener('click', e => {
 
   const bstart = e.target.closest('[data-bstart]');
   if (bstart){
-    hold(bstart, 'Starting…');
+    hold(bstart, 'Opening');
     Backend.startAttendance(bstart.dataset.bstart)
       .then(() => { boardMeeting = bstart.dataset.bstart; boardStamp = true; loadBoard(); })
-      .catch(() => { release(bstart, 'Open check-in');
-        toast({ key:'board', bad:true, title:'Could not start',
-                detail:'Check-in did not open. Try again.' }); });
+      .catch(err => { release(bstart, 'Open check-in');
+        toast({ key:'board', bad:true, title:'Could not open check-in',
+                detail:BoardUI.message(err && err.message) }); });
     return;
   }
   const bend = e.target.closest('[data-bend]');
   if (bend){
-    hold(bend, 'Ending…');
+    hold(bend, 'Closing');
     Backend.endAttendance(bend.dataset.bend)
       .then(() => { clearInterval(countTimer); boardStamp = true; loadBoard(); })
-      .catch(() => { release(bend, 'Close check-in');
-        toast({ key:'board', bad:true, title:'Could not end',
-                detail:'Check-in is still open. Try again.' }); });
+      .catch(err => { release(bend, 'Close check-in');
+        toast({ key:'board', bad:true, title:'Could not close check-in',
+                detail:BoardUI.message(err && err.message) }); });
     return;
   }
 
@@ -520,37 +536,37 @@ document.addEventListener('click', e => {
   const claim = e.target.closest('[data-claim]');
   if (claim){
     if (claim.disabled) return;
+    /* a claim cannot be taken back, so it takes a second, deliberate tap */
+    if (!claim.dataset.armed){
+      claim.dataset.armed = '1';
+      claim.textContent = 'Confirm claim';
+      clearTimeout(claim._disarm);
+      claim._disarm = setTimeout(() => {
+        if (!document.body.contains(claim) || claim.disabled) return;
+        delete claim.dataset.armed;
+        claim.textContent = 'Claim';
+      }, 4000);
+      return;
+    }
+    clearTimeout(claim._disarm);
     claim.disabled = true;
     Store.claimReward(claim.dataset.claim).then(r => {
       go('rewards', { instant:true });
       FX.claimStamp($(`[data-reward="${claim.dataset.claim}"]`));
-      setTimeout(() => toast({ key:'claim', title:`${r.name} claimed`,
-        detail:'Show this screen to a board member to pick it up.' }), 260);
-    }).catch(() => {
+      setTimeout(() => toast({ key:'claim', title:`${r.name} claimed` }), 260);
+    }).catch(err => {
+      delete claim.dataset.armed;
+      claim.textContent = 'Claim';
       claim.disabled = false;
+      const code = String(err && err.message || '');
       toast({ key:'claim', bad:true, title:'Could not claim',
-        detail:'That reward was not saved. Check your connection and try again.' });
+        detail:/not earned/i.test(code) ? 'This reward is not earned yet.'
+             : /not signed/i.test(code) ? 'Sign in again to claim.'
+             : 'The claim was not saved. Check your connection and try again.' });
     });
     return;
   }
 
-  const go2 = e.target.closest('#manualGo');
-  if (go2){
-    if (go2.disabled) return;
-    const input = $('#manualInput');
-    const val = (input && input.value || '').trim();
-    if (!val){
-      toast({ key:'scan', bad:true, title:'Enter a code',
-              detail:'Type the code a board member gives you.' });
-      return;
-    }
-    go2.disabled = true;
-    submitSeal(val, false).finally(() => {
-      const btn = $('#manualGo');
-      if (btn) btn.disabled = false;
-    });
-    return;
-  }
 });
 
 let boardStamp = false;
@@ -612,6 +628,9 @@ async function loadBoard(){
     }
     const qb = shownQR && shownQR.svg && boardMeeting === shownQR.meeting ? $('#qrBox') : null;
     if (qb) qb.innerHTML = shownQR.svg;
+    syncProjector();
+    /* a confirmation takes the focus, and gives it back when dismissed */
+    if (BoardUI.refocus){ $(BoardUI.refocus)?.focus({ preventScroll:true }); BoardUI.refocus = null; }
   }
 
   if (BoardUI.tab === 'session' && !BoardUI.error && $('#qrBox')){
@@ -647,6 +666,41 @@ function paintMotion(){
    corrected so it never names a page that does not exist */
 addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); else syncHash(current); });
 
+/* Projector mode is the stage laid over the whole window. Full screen is
+   asked for as well where the browser allows it (not on an iPhone), on the
+   page rather than the stage, so a repaint of the stage does not drop it.
+   Leaving full screen, Escape or the button all end the mode. */
+function projector(on){
+  const stage = $('#proj');
+  if (!stage) return;
+  stage.classList.toggle('proj--full', on);
+  document.documentElement.classList.toggle('is-projecting', on);
+  const b = $('[data-bfull]');
+  if (b){ b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Leave projector' : 'Project'; }
+  try {
+    if (on && document.fullscreenEnabled && !document.fullscreenElement)
+      document.documentElement.requestFullscreen().catch(() => {});
+    if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  } catch (_) {}
+  if (on) b?.focus({ preventScroll:true });
+}
+/* a repaint of the pane keeps the mode while check-in is still open;
+   anything else (closed, another page) ends it */
+function syncProjector(){
+  if (!document.documentElement.classList.contains('is-projecting')) return;
+  if ($('#proj.proj--live')) projector(true);
+  else {
+    document.documentElement.classList.remove('is-projecting');
+    try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (_) {}
+  }
+}
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement && $('#proj')?.classList.contains('proj--full')) projector(false);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && $('#proj')?.classList.contains('proj--full')) projector(false);
+});
+
 addEventListener('pagehide', () => {
   Scanner.stop(); clearInterval(countTimer);
 });
@@ -672,9 +726,13 @@ try {
        would differ, and Scan only refreshes its meeting line, so the
        camera is never restarted under the reader. */
     Store.onChange(() => {
-      if (current === 'scan') paintScanStanding();
+      if (current === 'scan'){
+        paintScanStanding();
+        /* stamped from elsewhere while the camera is up: nothing to scan */
+        if (Scanner.stream && !Landing.active && Scanner.stamped()){ Scanner.stop(); Scanner.stall('stamped'); }
+      }
       else if (current && current !== 'auth' && Store.stamp() !== painted)
-        go(current, { instant:true, force:true });   /* force: not dropped if it lands mid-cut */
+        go(current, { instant:true, force:true, quiet:true });   /* force: not dropped if it lands mid-cut */
       paintIdentity();
     });
 

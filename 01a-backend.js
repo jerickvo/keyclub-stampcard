@@ -155,7 +155,7 @@ const Config = {
 const REWARD_TIERS = [
   { id:'r1', name:'Club Merch',    required:10, desc:'' },
   { id:'r2', name:'Free Blindbox', required:20, desc:'' },
-  { id:'r3', name:'???',           required:30, desc:'A surprise. You will find out.' },
+  { id:'r3', name:'???',           required:30, desc:'' },
 ];
 
 /* What one tier is to one member, read from the two facts that exist:
@@ -366,24 +366,34 @@ const SupabaseAdapter = {
     return data;
   },
 
+  /* the function answers 200 with {ok:false, code} for a refusal; that
+     is a failure to the caller, never a success */
   async startAttendance(meetingId){
     const { data, error } = await this.client.functions
       .invoke('attendance-session', { body:{ action:'start', meeting_id:meetingId } });
-    if (error) throw new Error('Could not start attendance.');
+    if (error) throw new Error(this.functionCode(error));
+    if (data && data.ok === false) throw new Error(data.code || 'SERVER_ERROR');
     return data;
   },
   async endAttendance(meetingId){
     const { data, error } = await this.client.functions
       .invoke('attendance-session', { body:{ action:'end', meeting_id:meetingId } });
-    if (error) throw new Error('Could not end attendance.');
+    if (error) throw new Error(this.functionCode(error));
+    if (data && data.ok === false) throw new Error(data.code || 'SERVER_ERROR');
     return data;
+  },
+  functionCode(error){
+    const status = (error && error.context && error.context.status) || (error && error.status);
+    if (status === 401) return 'NOT_AUTHENTICATED';
+    if (status === 403) return 'NOT_AUTHORIZED';
+    return 'SERVER_ERROR';
   },
   async issueToken(meetingId){
     const { data, error } = await this.client.functions
       .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId } });
-    if (error) throw new Error('Could not get a code.');
-
-    return { token: data && data.token };
+    if (error) throw new Error(this.functionCode(error));
+    if (!data || data.ok === false || !data.token) throw new Error((data && data.code) || 'NO_TOKEN');
+    return { token: data.token };
   },
   /* Board-only and held-only are enforced by the database function,
      not here. The legacy name is tried once for projects that have not

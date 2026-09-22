@@ -36,9 +36,10 @@ function load({ meetings = [], scans = [], claims = [] } = {}){
 test('the meeting line over the viewer follows the record', () => {
   const line = () => { const s = scanStanding(); return `${s.lab} | ${s.at}`; };
   load({ meetings:[...held(3), meeting(4, { upcoming:true })] });
-  assert.equal(line(), 'Nothing open | No check-in right now');
+  assert.equal(line(), 'Check-in | Closed');
   load({ meetings:[...held(3), meeting(4, { open:true, today:true })] });
-  assert.equal(line(), 'Checking in to | GM 04 / Sep 14 / MPR');
+  // today's meeting in the usual room: the number is all a member needs
+  assert.equal(line(), 'Checking in to | GM 04');
   load({ meetings:[...held(3), meeting(4, { open:true, today:true })], scans:[{ meetingId:'m4', at:'2026-09-14T19:50:00Z' }] });
   assert.equal(line(), 'Already stamped | GM 04');
   // the Scan page prints the same line it will later refresh in place
@@ -68,16 +69,21 @@ test('the Card sends a member to Scan only while a meeting is open and unstamped
   load({ meetings:[...held(3), meeting(4, { open:true, today:true })] });
   assert.equal(target(Views.home()), 'scan');
   assert.equal(Views.home().includes('act act--live'), true);
+  // stamped: a line of type, not a button
   load({ meetings:[...held(3), meeting(4, { open:true, today:true })], scans:[{ meetingId:'m4', at:'2026-09-14T19:50:00Z' }] });
-  assert.equal(target(Views.home()), 'record');
-  assert.equal(Views.home().includes('GM 04 is stamped'), true);
+  assert.equal(target(Views.home()), undefined);
+  assert.equal(Views.home().includes('Checked in'), true);
+  assert.equal(Views.home().includes('GM 04'), true);
+  // nothing open: the next meeting, with no verb
   load({ meetings:[...held(3), meeting(4, { upcoming:true })] });
-  assert.equal(target(Views.home()), 'record');
-  assert.equal(Views.home().includes('Nothing open'), true);
-  assert.equal(Views.home().includes('Check-in opens at GM 04'), true);
+  assert.equal(target(Views.home()), undefined);
+  assert.equal(Views.home().includes('>Next<'), true);
+  assert.equal(Views.home().includes('GM 04'), true);
+  assert.equal(Views.home().includes('Nothing open'), false);
+  // nothing scheduled: nothing is said
   load({ meetings:held(3) });
-  assert.equal(target(Views.home()), 'record');
-  assert.equal(Views.home().includes('No meeting is taking check-ins right now'), true);
+  assert.equal(target(Views.home()), undefined);
+  assert.equal(Views.home().includes('nowline'), false);
 });
 
 test('every refusal the verifier can send has its own words; an unknown one has the safe words', () => {
