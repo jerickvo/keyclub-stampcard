@@ -59,6 +59,7 @@ body{
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;animation-iteration-count:1!important}
 }
+:root[data-still] *{animation-duration:.01ms!important;animation-iteration-count:1!important}
 
 .brow--member .brow__mid b{font-family:var(--f-head);font-weight:400;
   font-size:var(--t-body);letter-spacing:.01em}
@@ -124,33 +125,20 @@ body{
     text-align:right;padding-top:0}
 }
 
-.bform{border:var(--edge-panel) solid var(--ink);background:var(--paper);
-  padding:var(--sp-pad)}
-.bform .bsec{margin:0 0 var(--sp-pad);padding:0 0 var(--sp-tight);
-  border-bottom:var(--edge-panel) solid var(--ink);
-  font-family:var(--f-head);font-weight:400;text-transform:uppercase;
-  font-size:clamp(17px,2.4vw,24px);line-height:1.2}
+/* the form opens in place, under the band that asked for it */
+.bform{padding:var(--sp-pad) 0;border-bottom:var(--edge-rule) solid var(--tint)}
+@media(min-width:640px){ .bform .bform__grid{grid-template-columns:repeat(4,minmax(0,1fr))} }
 
 .bform .input,.bfilters .input{font-family:var(--f-mono);
   color-scheme:light;accent-color:var(--ink)}
 
 .meetgrid{display:flex;flex-direction:column;gap:var(--sp-block)}
 .meetgrid > *{min-width:0}
-@media(min-width:1280px){
-  .meetgrid--form{display:grid;align-items:start;
-    grid-template-columns:minmax(0,58fr) minmax(0,42fr);column-gap:var(--sp-block);
-    grid-template-areas:"err err" "up form" "held form"}
-  .meetgrid--form .meetgrid__err{grid-area:err}
-  .meetgrid--form .meetgrid__form{grid-area:form}
-  .meetgrid--form .meetgrid__up{grid-area:up}
-  .meetgrid--form .meetgrid__held{grid-area:held}
-  .meetgrid--form .meetgrid__form .bform{position:sticky;top:var(--sp-pad)}
-}
 @media(min-width:1024px){
-  .meetgrid:not(.meetgrid--form) .blist--meet .brow{
+  .meetgrid .blist--meet .brow{
     grid-template-columns:7ch minmax(9ch,12ch) minmax(0,1fr) auto minmax(8ch,auto);
     grid-template-areas:"no day when state n";align-items:center;row-gap:0}
-  .meetgrid:not(.meetgrid--form) .blist--meet .brow__n{display:flex;align-items:baseline;gap:6px;justify-self:end}
+  .meetgrid .blist--meet .brow__n{display:flex;align-items:baseline;gap:6px;justify-self:end}
 }
 
 .meetband{display:flex;align-items:baseline;justify-content:space-between;
@@ -166,11 +154,12 @@ body{
 .meetband .meetband__act{min-height:44px;margin-block:-14px;padding:0;
   font-family:var(--f-body);text-transform:none;
   font-size:var(--t-body);letter-spacing:.02em;white-space:nowrap}
-/* the Held band names its count column once, where the column exists */
-.meetpanel--held .meetband__n{display:none}
-@media(min-width:640px){
-  .meetpanel--held .meetband__n{display:inline}
-  .meetpanel--held .brow__nlab{display:none}
+/* the Held band names its count column once; each row is one line */
+.meetpanel--held .brow__nlab{display:none}
+@media(max-width:1023px){
+  .meetpanel--held .blist--meet .brow{grid-template-columns:auto minmax(0,1fr) auto auto;
+    grid-template-areas:"no day state n" "no when when when";row-gap:2px}
+  .meetpanel--held .blist--meet .brow__n{justify-self:end;padding-top:0}
 }
 .meetpanel--held .brow__day{font:500 clamp(12px,.4vw + 10px,14px)/1.4 var(--f-mono);
   letter-spacing:.04em;text-transform:uppercase}
@@ -182,7 +171,7 @@ body{
 .meetpanel .blist{padding:0;margin:0}
 .meetpanel .bempty{border:0;box-shadow:none;padding:var(--sp-pad) 0}
 
-.bform__row{display:flex;align-items:center;justify-content:space-between;
+.bform__row{display:flex;align-items:center;justify-content:flex-start;
   gap:var(--sp-row);flex-wrap:wrap;margin-top:var(--sp-row)}
 .bform__reset{min-height:38px;padding-block:0;color:var(--ink-2);
   font-size:var(--t-caption)}
@@ -202,28 +191,22 @@ body{
 .rosterpanel .meetband{margin:0 0 var(--sp-row)}
 .rosterpanel > div{padding:0}
 
-/* the roster reads as columns from a tablet up, as two lines on a phone */
-.blist__head{display:none}
-.blist--members .brow{display:grid;column-gap:var(--sp-row);row-gap:2px;align-items:baseline;
-  grid-template-columns:minmax(0,1fr) auto;
-  grid-template-areas:"name n" "last n"}
+/* the roster names its columns once, at every width */
+.blist__head,.blist--members .brow{display:grid;column-gap:var(--sp-row);align-items:baseline;
+  grid-template-columns:minmax(0,1fr) 112px 48px;grid-template-areas:"name last n"}
+.blist__head{align-items:end;padding:0 0 var(--sp-tight);border-bottom:var(--edge-panel) solid var(--ink);
+  white-space:nowrap}
+.blist__head span:nth-child(3){text-align:right}
 .blist--members .brow__mid{grid-area:name}
-.blist--members .brow__cell{font:500 clamp(11px,.4vw + 9.7px,12.5px)/1.4 var(--f-mono);
+.blist--members .brow__cell{font:400 clamp(11px,.4vw + 9.7px,12.5px)/1.4 var(--f-mono);
   letter-spacing:.04em;color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
 .blist--members .brow__cell--last{grid-area:last}
-.blist--members .brow__cell--last::before{content:"Last check-in ";color:var(--tone);text-transform:uppercase}
-.blist--members .brow__n{grid-area:n;align-self:center}
+.blist--members .brow__n{grid-area:n;justify-self:end}
+.blist--members .brow__nlab{display:none}
 .brow__none{color:var(--tone)}
 @media(min-width:768px){
-  .blist__head,.blist--members .brow{display:grid;
-    grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(88px,auto);
-    grid-template-areas:"name last n";column-gap:var(--sp-pad)}
-  .blist__head{padding:0 0 var(--sp-tight);border-bottom:var(--edge-panel) solid var(--ink);
-    font:500 10px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
-  .blist__head span:nth-child(3){text-align:right}
-  .blist--members .brow__cell--last::before{content:none}
-  .blist--members .brow__n{justify-self:end}
-  .blist--members .brow__nlab{display:none}
+  .blist__head,.blist--members .brow{
+    grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(88px,auto);column-gap:var(--sp-pad)}
 }
 .bsec{border-bottom:var(--edge-thin) solid var(--ink);color:var(--ink)}
 
@@ -643,7 +626,6 @@ html{font-synthesis:none}
   letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .figline b{font-family:var(--f-head);font-weight:400;letter-spacing:0;
   font-size:clamp(24px,2.6vw,34px);line-height:1;color:var(--ink);margin-right:.3em}
-.figline--club{padding-top:var(--sp-pad);border-top:var(--edge-panel) solid var(--ink)}
 
 .tally{display:grid;gap:var(--sp-row)}
 
@@ -1003,6 +985,9 @@ html{font-synthesis:none}
   .bnow--none .bnow__go{align-self:start;margin-top:var(--sp-pad)}
 }
 .bnow--live{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+/* only a live check-in is a slab; anything else is type on the page */
+.bnow:not(.bnow--live){border:0;padding:0}
+.bnow--today .bnow__go{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 @media(max-width:719px){
   .bnow--live{max-width:none;margin-right:calc(var(--gutter) * -1);border-right:0}
 }
@@ -1025,9 +1010,10 @@ html{font-synthesis:none}
   font-size:clamp(17px,2vw,21px);line-height:1.2}
 .bnow--live .bnow__go{background:var(--paper);color:var(--ink);
   border-color:var(--paper)}
-.bnow__go:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.bnow--live .bnow__go:hover{background:transparent;color:var(--paper);
-  border-color:var(--paper)}
+@media (hover:hover){
+  .bnow__go:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .bnow--live .bnow__go:hover{background:transparent;color:var(--paper);border-color:var(--paper)}
+}
 .bnow__go:focus-visible{outline:var(--edge-panel) solid currentColor;
   outline-offset:3px}
 
@@ -1072,13 +1058,10 @@ html{font-synthesis:none}
   transform:rotate(-1.6deg)}
 .proj:not(.proj--live){background:none;color:var(--ink);border:0;
   padding-inline:0;margin-inline:0}
-.proj:not(.proj--live) .proj__word{color:var(--tone)}
 .proj:not(.proj--live) .proj__when{color:var(--ink-2)}
 .proj:not(.proj--live) .proj__ctl--go{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.proj:not(.proj--live) .proj__ctl--go:hover{background:var(--paper);color:var(--ink)}
-.proj:not(.proj--full) .proj__cap{display:none}
-/* below 900 the stage is one column: the meeting and its state on one
-   line, the code, then the count and the controls under it */
+/* below 900 the stage is one column: the meeting and OPEN on one line,
+   the code, then the count and Project, and Close on a line of its own */
 @media(max-width:899px){
   .proj{grid-template-columns:minmax(0,1fr) auto;align-items:center}
   .proj__meet{grid-column:1;grid-row:1}
@@ -1087,11 +1070,13 @@ html{font-synthesis:none}
   .proj__plate{grid-column:1/-1;grid-row:2}
   .proj__count{grid-column:1/-1;grid-row:3;justify-self:start}
   .proj__ctls{grid-column:1/-1;grid-row:3;justify-self:end}
+  .proj__end{grid-column:1/-1;grid-row:4;justify-self:end}
   .proj:not(.proj--live) .proj__ctls{grid-row:2;justify-self:start}
 }
 @media(max-width:559px){
   .proj__ctls{grid-row:4;justify-self:stretch}
   .proj__ctl{flex:1 1 auto}
+  .proj__end{grid-row:5}
 }
 
 .proj__count{display:flex;align-items:baseline;gap:var(--sp-row);margin:0}
@@ -1102,52 +1087,46 @@ html{font-synthesis:none}
 .proj__ctls{display:flex;flex-wrap:wrap;gap:var(--sp-row)}
 .proj__ctl{margin:0;padding:clamp(12px,1.4vw,18px) var(--sp-pad);cursor:pointer;
   border:var(--edge-panel) solid var(--paper);
-  background:transparent;color:var(--paper);
+  background:var(--paper);color:var(--ink);
   font-family:var(--f-head);line-height:1.2;
   font-size:clamp(17px,1.8vw,24px);white-space:nowrap}
-.proj__ctl:hover{background:var(--paper);color:var(--ink)}
-.proj__ctl--go{background:var(--paper);color:var(--ink)}
-.proj__ctl--go:hover{background:transparent;color:var(--paper)}
-.proj__ctl--full{border-color:var(--tone);color:var(--tint);
-  font:400 clamp(14px,1.2vw,16px)/1.2 var(--f-body);letter-spacing:.04em}
 .proj__ctl:focus-visible{outline:var(--edge-panel) solid var(--paper);
   outline-offset:3px}
+/* closing is the quiet control: it ends the meeting's check-in */
+.proj__end{color:var(--tint);font-size:var(--t-caption)}
+.proj__end:focus-visible{outline-color:var(--paper)}
 
-.proj__plate{background:var(--paper);color:var(--ink);
+/* the code on white, with its own quiet zone as the only margin */
+.proj__plate{background:#fff;color:var(--ink);
   display:grid;place-items:center;justify-self:center;
-  width:min(100%,max-content);
-  grid-template-rows:minmax(0,1fr) auto;
-  padding:clamp(12px,2vw,24px);min-width:0}
+  width:min(100%,max-content);padding:0;min-width:0}
 
 .proj__plate .qrpanel__code{width:min(78vw,calc(100dvh - 480px),640px);min-width:220px;
   max-width:none;aspect-ratio:1;margin:0;
-  box-sizing:border-box;border:0;
-  background:#fff;padding:clamp(10px,1.4vw,18px)}
-.proj__cap{margin:clamp(10px,1.6vw,16px) 0 0;justify-self:stretch;
-  border-top:var(--edge-panel) solid var(--ink);
-  padding-top:clamp(8px,1.2vw,12px);
-  font:500 clamp(10px,1.2vw,12.5px)/1.3 var(--f-mono);letter-spacing:.18em;
-  text-transform:uppercase;color:var(--ink);text-align:center}
+  box-sizing:border-box;border:0;background:#fff;padding:0}
 
 @media(min-width:900px){
   .proj{grid-template-columns:auto minmax(0,1fr);
-    grid-template-rows:auto minmax(0,1fr) auto;
+    grid-template-rows:auto minmax(0,1fr) auto auto;
     column-gap:clamp(24px,3.4vw,56px);row-gap:clamp(14px,2vw,24px);
     margin-inline:calc(var(--gutter) * -1);border-inline:0;
     padding-inline:var(--gutter)}
   .proj__meet{grid-area:1/1}
   .proj__word{grid-area:1/2;justify-self:end;align-self:center}
-  .proj__plate{grid-area:2/1/4/2;justify-self:start;align-self:start}
+  .proj__plate{grid-area:2/1/5/2;justify-self:start;align-self:start}
   .proj__count{grid-area:2/2;align-self:start;justify-self:end;
     flex-direction:column;align-items:flex-end;gap:var(--sp-tight)}
   .proj__count b{font-size:clamp(88px,10vw,168px)}
   .proj__count span{font-size:clamp(14px,1.4vw,20px)}
   .proj__ctls{grid-area:3/2;justify-self:end;align-self:end}
-  .proj__plate .qrpanel__code{width:min(50vw,calc(100dvh - 440px),640px)}
+  .proj__end{grid-area:4/2;justify-self:end}
+  .proj:not(.proj--live) .proj__ctls{grid-area:2/1;justify-self:start;align-self:start}
+  .proj__plate .qrpanel__code{width:min(50vw,calc(100dvh - 350px),640px)}
 }
 
 /* projector mode: the stage over the whole window, read from the back
-   of the room; landscape puts the count beside the code, portrait under it */
+   of the room: the meeting, OPEN, the code and the count, nothing else;
+   landscape puts the count beside the code, portrait under it */
 .is-projecting,.is-projecting body{overflow:hidden}
 .is-projecting .topbar,.is-projecting .tabs,.is-projecting .rail{visibility:hidden}
 .is-projecting .rig{isolation:auto}
@@ -1158,17 +1137,18 @@ html{font-synthesis:none}
   align-items:center;column-gap:5vw;row-gap:2vh}
 .proj--full .proj__meet{grid-area:meet;flex-direction:row;align-items:baseline;gap:2vw}
 .proj--full .proj__no{font-size:clamp(40px,8vh,110px)}
-.proj--full .proj__when{font-size:clamp(16px,2.8vh,32px)}
+.proj--full .proj__when,.proj--full .proj__end{display:none}
 .proj--full .proj__word{grid-area:word;font-size:clamp(40px,8vh,110px);justify-self:end;align-self:center}
-.proj--full .proj__plate{grid-area:plate;justify-self:start;align-self:center;padding:2vh}
-.proj--full .proj__plate .qrpanel__code{width:min(74vh,56vw);min-width:0;max-width:none}
-.proj--full .proj__cap{font-size:clamp(12px,1.8vh,20px)}
+.proj--full .proj__plate{grid-area:plate;justify-self:start;align-self:center}
+.proj--full .proj__plate .qrpanel__code{width:min(80vh,56vw);min-width:0;max-width:none}
 .proj--full .proj__count{grid-area:count;flex-direction:column;align-items:flex-end;gap:0;
   align-self:center;justify-self:end}
 .proj--full .proj__count b{font-size:clamp(120px,30vh,360px);line-height:.85}
 .proj--full .proj__count span{font-size:clamp(18px,3vh,34px)}
 .proj--full .proj__ctls{grid-area:ctls;justify-self:end;align-self:end}
-.proj--full .proj__ctl{font-size:clamp(14px,2vh,20px);padding:1.2vh 2vw}
+/* on the wall the one control is small and quiet */
+.proj--full .proj__ctl{font:400 clamp(13px,1.6vh,16px)/1.2 var(--f-body);letter-spacing:.04em;
+  padding:1vh 1.4vw;background:transparent;color:var(--tint);border-color:var(--tone)}
 @media (max-aspect-ratio:1/1){
   .proj.proj--full{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto minmax(0,1fr) auto;
     grid-template-areas:"meet word" "count count" "plate plate" "ctls ctls";padding:3vh 5vw}
@@ -1176,8 +1156,16 @@ html{font-synthesis:none}
   .proj--full .proj__count{flex-direction:row;align-items:baseline;gap:3vw;justify-self:start}
   .proj--full .proj__count b{font-size:clamp(72px,14vh,160px)}
   .proj--full .proj__plate{justify-self:center}
-  .proj--full .proj__plate .qrpanel__code{width:min(84vw,52vh)}
-  .proj--full .proj__ctls{justify-self:stretch;justify-content:space-between}
+  .proj--full .proj__plate .qrpanel__code{width:min(88vw,56vh)}
+  .proj--full .proj__ctls{justify-self:end}
+}
+
+/* hover inverts a control only where there is a pointer to hover with;
+   on a phone a tap would otherwise leave the next control inverted */
+@media (hover:hover){
+  .proj__ctl:hover{background:transparent;color:var(--paper)}
+  .proj:not(.proj--live) .proj__ctl--go:hover{background:var(--paper);color:var(--ink)}
+  .proj--full .proj__ctl:hover{color:var(--paper);border-color:var(--paper)}
 }
 
 /* a panel that reports and offers one way on */

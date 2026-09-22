@@ -414,6 +414,15 @@ const SupabaseAdapter = {
     if (error) throw error;
     return count || 0;
   },
+
+  /* whether check-in is still open, so a wall left projecting learns
+     that another officer closed it */
+  async meetingOpen(meetingId){
+    const { data, error } = await this.client
+      .from('meetings').select('check_in_open').eq('id', meetingId).maybeSingle();
+    if (error) throw error;
+    return Boolean(data && data.check_in_open);
+  },
 };
 
 const PreviewAdapter = {
@@ -434,6 +443,7 @@ const PreviewAdapter = {
   async endAttendance(){ throw new Error('No backend is configured.'); },
   async issueToken(){ throw new Error('No backend is configured.'); },
   async attendanceCount(){ return 0; },
+  async meetingOpen(){ return false; },
   async board(){ throw new Error('No backend is configured.'); },
   async deleteMeetingAndStamps(){ throw new Error('No backend is configured.'); },
 };
@@ -446,7 +456,7 @@ const UnavailableAdapter = {
 };
 ['signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','claimReward','startAttendance',
- 'endAttendance','issueToken','attendanceCount','board',
+ 'endAttendance','issueToken','attendanceCount','meetingOpen','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   UnavailableAdapter[fn] = async () => { throw new Error('BACKEND_UNAVAILABLE'); };
 });
@@ -496,7 +506,7 @@ const Backend = {
 
 ['currentSession','signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','claimReward','verifyCode',
- 'startAttendance','endAttendance','issueToken','attendanceCount','board',
+ 'startAttendance','endAttendance','issueToken','attendanceCount','meetingOpen','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   Backend[fn] = function(...a){ return this.adapter[fn](...a); };
 });

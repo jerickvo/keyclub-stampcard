@@ -5,7 +5,7 @@ function qrSVG(text){
   let qr;
   try { qr = qrcode(0, 'M'); qr.addData(text); qr.make(); }
   catch (_) { return null; }
-  const n = qr.getModuleCount(), q = 3, size = n + q * 2;
+  const n = qr.getModuleCount(), q = 4, size = n + q * 2;   /* the spec's quiet zone */
   let d = '';
   for (let r = 0; r < n; r++)
     for (let c = 0; c < n; c++)
@@ -40,13 +40,19 @@ function paintAttendanceCount(meetingId){
     if (document.hidden) return;
 
     /* a failed poll keeps the last count on the wall; the next poll
-       tries again */
-    let text;
-    try { text = String(await Backend.attendanceCount(meetingId)); }
+       tries again. Check-in closed from another device takes the stage
+       back to Closed, and the wall with it. */
+    let text, open;
+    try {
+      [text, open] = await Promise.all([
+        Backend.attendanceCount(meetingId).then(String),
+        Backend.meetingOpen(meetingId)]);
+    }
     catch (_) { return; }
     const node = el();
     if (!node) return clearInterval(countTimer);
     node.textContent = text;
+    if (open === false){ clearInterval(countTimer); boardStamp = true; loadBoard(); }
   };
   pull();
   countTimer = setInterval(pull, 3000);

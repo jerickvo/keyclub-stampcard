@@ -239,6 +239,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 @keyframes loaderTurn{from{transform:translate(-50%,-50%) rotate(0deg)}
                       to  {transform:translate(-50%,-50%) rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){ .loader{animation:none} }
+:root[data-still] .loader{animation:none}
 
 .field{
   display:flex;
@@ -272,7 +273,6 @@ select.input{padding-right:var(--sp-pad)}
 
 .fx{position:fixed;inset:0;z-index:125;pointer-events:none;overflow:hidden;
   contain:layout paint}
-.flash{position:absolute;inset:0;background:var(--paper);opacity:0}
 
 .fxdefs{position:absolute;width:0;height:0}
 
@@ -349,16 +349,11 @@ select.input{padding-right:var(--sp-pad)}
   transform-origin:65% 65%}
 .scene__seal .brandseal{display:block;width:100%;height:auto;
   --si:var(--ink);--sp:var(--paper)}
-.ghost{position:fixed;z-index:50;overflow:hidden;background:var(--paper);
-  pointer-events:none;will-change:transform,opacity}
 .cutbox{position:fixed;z-index:56;overflow:hidden;pointer-events:none;
   contain:layout paint}
 .slab{position:absolute;background:var(--ink);will-change:transform}
-.slab--tone,.slab__tone{background:var(--paper) radial-gradient(circle at 50% 50%,
-  var(--ink) 0 1.4px,transparent 1.6px) 0 0/7px 7px}
-.slab__tone{position:absolute;top:0;bottom:0}
-.slab__word{position:absolute;margin:0;color:var(--paper);white-space:nowrap;
-  opacity:0;transform-origin:0 50%}
+/* while signing out, a tap never lands on the page under the scene */
+.scene--exit{pointer-events:auto}
 
 .scene--play .scene__panel--a .scene__ink{animation:sceneInk 110ms steps(3,end) calc(var(--lead,0ms) + 90ms) both}
 .scene--play .scene__panel--b .scene__ink{animation:sceneInk 100ms steps(3,end) calc(var(--lead,0ms) + 210ms) both}
@@ -368,13 +363,11 @@ select.input{padding-right:var(--sp-pad)}
 .scene--play .scene__word{animation:sceneStamp 120ms steps(3,end) calc(var(--lead,0ms) + 420ms) forwards}
 .scene--play .scene__kick{animation:sceneCut 1ms linear calc(var(--lead,0ms) + 480ms) forwards}
 .scene--play .scene__tail:not(:empty){animation:sceneCut 1ms linear calc(var(--lead,0ms) + 560ms) forwards}
-.scene--welcome.scene--play{animation:sceneSheet 170ms cubic-bezier(.6,0,.2,1) both}
 @keyframes sceneInk{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 @keyframes sceneSeal{from{opacity:1;transform:scale(1.1)}to{opacity:1;transform:scale(1)}}
 @keyframes sceneStamp{from{opacity:1;transform:scale(1.3)}to{opacity:1;transform:scale(1)}}
 @keyframes sceneCut{from{opacity:0}to{opacity:1}}
 @keyframes sceneBreathe{from{opacity:1}to{opacity:.55}}
-@keyframes sceneSheet{from{transform:translateY(-104%)}to{transform:translateY(0)}}
 .scene--set,.scene--set *{animation:none}
 .scene--set .scene__ink{transform:scaleX(1)}
 .scene--set .scene__word,.scene--set .scene__kick,.scene--set .scene__seal,
@@ -656,7 +649,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .bform .field{display:block;min-width:0}
 .bform .kicker{display:block;margin-bottom:5px}
 .bform .input{width:100%;box-sizing:border-box;min-width:0}
-.bform .btn{margin-top:var(--sp-pad)}
 
 .bpanel{padding:var(--sp-pad)}
 
@@ -842,6 +834,7 @@ body{
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;animation-iteration-count:1!important}
 }
+:root[data-still] *{animation-duration:.01ms!important;animation-iteration-count:1!important}
 
 .brow--member .brow__mid b{font-family:var(--f-head);font-weight:400;
   font-size:var(--t-body);letter-spacing:.01em}
@@ -907,33 +900,20 @@ body{
     text-align:right;padding-top:0}
 }
 
-.bform{border:var(--edge-panel) solid var(--ink);background:var(--paper);
-  padding:var(--sp-pad)}
-.bform .bsec{margin:0 0 var(--sp-pad);padding:0 0 var(--sp-tight);
-  border-bottom:var(--edge-panel) solid var(--ink);
-  font-family:var(--f-head);font-weight:400;text-transform:uppercase;
-  font-size:clamp(17px,2.4vw,24px);line-height:1.2}
+/* the form opens in place, under the band that asked for it */
+.bform{padding:var(--sp-pad) 0;border-bottom:var(--edge-rule) solid var(--tint)}
+@media(min-width:640px){ .bform .bform__grid{grid-template-columns:repeat(4,minmax(0,1fr))} }
 
 .bform .input,.bfilters .input{font-family:var(--f-mono);
   color-scheme:light;accent-color:var(--ink)}
 
 .meetgrid{display:flex;flex-direction:column;gap:var(--sp-block)}
 .meetgrid > *{min-width:0}
-@media(min-width:1280px){
-  .meetgrid--form{display:grid;align-items:start;
-    grid-template-columns:minmax(0,58fr) minmax(0,42fr);column-gap:var(--sp-block);
-    grid-template-areas:"err err" "up form" "held form"}
-  .meetgrid--form .meetgrid__err{grid-area:err}
-  .meetgrid--form .meetgrid__form{grid-area:form}
-  .meetgrid--form .meetgrid__up{grid-area:up}
-  .meetgrid--form .meetgrid__held{grid-area:held}
-  .meetgrid--form .meetgrid__form .bform{position:sticky;top:var(--sp-pad)}
-}
 @media(min-width:1024px){
-  .meetgrid:not(.meetgrid--form) .blist--meet .brow{
+  .meetgrid .blist--meet .brow{
     grid-template-columns:7ch minmax(9ch,12ch) minmax(0,1fr) auto minmax(8ch,auto);
     grid-template-areas:"no day when state n";align-items:center;row-gap:0}
-  .meetgrid:not(.meetgrid--form) .blist--meet .brow__n{display:flex;align-items:baseline;gap:6px;justify-self:end}
+  .meetgrid .blist--meet .brow__n{display:flex;align-items:baseline;gap:6px;justify-self:end}
 }
 
 .meetband{display:flex;align-items:baseline;justify-content:space-between;
@@ -949,11 +929,12 @@ body{
 .meetband .meetband__act{min-height:44px;margin-block:-14px;padding:0;
   font-family:var(--f-body);text-transform:none;
   font-size:var(--t-body);letter-spacing:.02em;white-space:nowrap}
-/* the Held band names its count column once, where the column exists */
-.meetpanel--held .meetband__n{display:none}
-@media(min-width:640px){
-  .meetpanel--held .meetband__n{display:inline}
-  .meetpanel--held .brow__nlab{display:none}
+/* the Held band names its count column once; each row is one line */
+.meetpanel--held .brow__nlab{display:none}
+@media(max-width:1023px){
+  .meetpanel--held .blist--meet .brow{grid-template-columns:auto minmax(0,1fr) auto auto;
+    grid-template-areas:"no day state n" "no when when when";row-gap:2px}
+  .meetpanel--held .blist--meet .brow__n{justify-self:end;padding-top:0}
 }
 .meetpanel--held .brow__day{font:500 clamp(12px,.4vw + 10px,14px)/1.4 var(--f-mono);
   letter-spacing:.04em;text-transform:uppercase}
@@ -965,7 +946,7 @@ body{
 .meetpanel .blist{padding:0;margin:0}
 .meetpanel .bempty{border:0;box-shadow:none;padding:var(--sp-pad) 0}
 
-.bform__row{display:flex;align-items:center;justify-content:space-between;
+.bform__row{display:flex;align-items:center;justify-content:flex-start;
   gap:var(--sp-row);flex-wrap:wrap;margin-top:var(--sp-row)}
 .bform__reset{min-height:38px;padding-block:0;color:var(--ink-2);
   font-size:var(--t-caption)}
@@ -985,28 +966,22 @@ body{
 .rosterpanel .meetband{margin:0 0 var(--sp-row)}
 .rosterpanel > div{padding:0}
 
-/* the roster reads as columns from a tablet up, as two lines on a phone */
-.blist__head{display:none}
-.blist--members .brow{display:grid;column-gap:var(--sp-row);row-gap:2px;align-items:baseline;
-  grid-template-columns:minmax(0,1fr) auto;
-  grid-template-areas:"name n" "last n"}
+/* the roster names its columns once, at every width */
+.blist__head,.blist--members .brow{display:grid;column-gap:var(--sp-row);align-items:baseline;
+  grid-template-columns:minmax(0,1fr) 112px 48px;grid-template-areas:"name last n"}
+.blist__head{align-items:end;padding:0 0 var(--sp-tight);border-bottom:var(--edge-panel) solid var(--ink);
+  white-space:nowrap}
+.blist__head span:nth-child(3){text-align:right}
 .blist--members .brow__mid{grid-area:name}
-.blist--members .brow__cell{font:500 clamp(11px,.4vw + 9.7px,12.5px)/1.4 var(--f-mono);
+.blist--members .brow__cell{font:400 clamp(11px,.4vw + 9.7px,12.5px)/1.4 var(--f-mono);
   letter-spacing:.04em;color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
 .blist--members .brow__cell--last{grid-area:last}
-.blist--members .brow__cell--last::before{content:"Last check-in ";color:var(--tone);text-transform:uppercase}
-.blist--members .brow__n{grid-area:n;align-self:center}
+.blist--members .brow__n{grid-area:n;justify-self:end}
+.blist--members .brow__nlab{display:none}
 .brow__none{color:var(--tone)}
 @media(min-width:768px){
-  .blist__head,.blist--members .brow{display:grid;
-    grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(88px,auto);
-    grid-template-areas:"name last n";column-gap:var(--sp-pad)}
-  .blist__head{padding:0 0 var(--sp-tight);border-bottom:var(--edge-panel) solid var(--ink);
-    font:500 10px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
-  .blist__head span:nth-child(3){text-align:right}
-  .blist--members .brow__cell--last::before{content:none}
-  .blist--members .brow__n{justify-self:end}
-  .blist--members .brow__nlab{display:none}
+  .blist__head,.blist--members .brow{
+    grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(88px,auto);column-gap:var(--sp-pad)}
 }
 .bsec{border-bottom:var(--edge-thin) solid var(--ink);color:var(--ink)}
 
@@ -1426,7 +1401,6 @@ html{font-synthesis:none}
   letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .figline b{font-family:var(--f-head);font-weight:400;letter-spacing:0;
   font-size:clamp(24px,2.6vw,34px);line-height:1;color:var(--ink);margin-right:.3em}
-.figline--club{padding-top:var(--sp-pad);border-top:var(--edge-panel) solid var(--ink)}
 
 .tally{display:grid;gap:var(--sp-row)}
 
@@ -1786,6 +1760,9 @@ html{font-synthesis:none}
   .bnow--none .bnow__go{align-self:start;margin-top:var(--sp-pad)}
 }
 .bnow--live{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+/* only a live check-in is a slab; anything else is type on the page */
+.bnow:not(.bnow--live){border:0;padding:0}
+.bnow--today .bnow__go{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 @media(max-width:719px){
   .bnow--live{max-width:none;margin-right:calc(var(--gutter) * -1);border-right:0}
 }
@@ -1808,9 +1785,10 @@ html{font-synthesis:none}
   font-size:clamp(17px,2vw,21px);line-height:1.2}
 .bnow--live .bnow__go{background:var(--paper);color:var(--ink);
   border-color:var(--paper)}
-.bnow__go:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.bnow--live .bnow__go:hover{background:transparent;color:var(--paper);
-  border-color:var(--paper)}
+@media (hover:hover){
+  .bnow__go:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .bnow--live .bnow__go:hover{background:transparent;color:var(--paper);border-color:var(--paper)}
+}
 .bnow__go:focus-visible{outline:var(--edge-panel) solid currentColor;
   outline-offset:3px}
 
@@ -1855,13 +1833,10 @@ html{font-synthesis:none}
   transform:rotate(-1.6deg)}
 .proj:not(.proj--live){background:none;color:var(--ink);border:0;
   padding-inline:0;margin-inline:0}
-.proj:not(.proj--live) .proj__word{color:var(--tone)}
 .proj:not(.proj--live) .proj__when{color:var(--ink-2)}
 .proj:not(.proj--live) .proj__ctl--go{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.proj:not(.proj--live) .proj__ctl--go:hover{background:var(--paper);color:var(--ink)}
-.proj:not(.proj--full) .proj__cap{display:none}
-/* below 900 the stage is one column: the meeting and its state on one
-   line, the code, then the count and the controls under it */
+/* below 900 the stage is one column: the meeting and OPEN on one line,
+   the code, then the count and Project, and Close on a line of its own */
 @media(max-width:899px){
   .proj{grid-template-columns:minmax(0,1fr) auto;align-items:center}
   .proj__meet{grid-column:1;grid-row:1}
@@ -1870,11 +1845,13 @@ html{font-synthesis:none}
   .proj__plate{grid-column:1/-1;grid-row:2}
   .proj__count{grid-column:1/-1;grid-row:3;justify-self:start}
   .proj__ctls{grid-column:1/-1;grid-row:3;justify-self:end}
+  .proj__end{grid-column:1/-1;grid-row:4;justify-self:end}
   .proj:not(.proj--live) .proj__ctls{grid-row:2;justify-self:start}
 }
 @media(max-width:559px){
   .proj__ctls{grid-row:4;justify-self:stretch}
   .proj__ctl{flex:1 1 auto}
+  .proj__end{grid-row:5}
 }
 
 .proj__count{display:flex;align-items:baseline;gap:var(--sp-row);margin:0}
@@ -1885,52 +1862,46 @@ html{font-synthesis:none}
 .proj__ctls{display:flex;flex-wrap:wrap;gap:var(--sp-row)}
 .proj__ctl{margin:0;padding:clamp(12px,1.4vw,18px) var(--sp-pad);cursor:pointer;
   border:var(--edge-panel) solid var(--paper);
-  background:transparent;color:var(--paper);
+  background:var(--paper);color:var(--ink);
   font-family:var(--f-head);line-height:1.2;
   font-size:clamp(17px,1.8vw,24px);white-space:nowrap}
-.proj__ctl:hover{background:var(--paper);color:var(--ink)}
-.proj__ctl--go{background:var(--paper);color:var(--ink)}
-.proj__ctl--go:hover{background:transparent;color:var(--paper)}
-.proj__ctl--full{border-color:var(--tone);color:var(--tint);
-  font:400 clamp(14px,1.2vw,16px)/1.2 var(--f-body);letter-spacing:.04em}
 .proj__ctl:focus-visible{outline:var(--edge-panel) solid var(--paper);
   outline-offset:3px}
+/* closing is the quiet control: it ends the meeting's check-in */
+.proj__end{color:var(--tint);font-size:var(--t-caption)}
+.proj__end:focus-visible{outline-color:var(--paper)}
 
-.proj__plate{background:var(--paper);color:var(--ink);
+/* the code on white, with its own quiet zone as the only margin */
+.proj__plate{background:#fff;color:var(--ink);
   display:grid;place-items:center;justify-self:center;
-  width:min(100%,max-content);
-  grid-template-rows:minmax(0,1fr) auto;
-  padding:clamp(12px,2vw,24px);min-width:0}
+  width:min(100%,max-content);padding:0;min-width:0}
 
 .proj__plate .qrpanel__code{width:min(78vw,calc(100dvh - 480px),640px);min-width:220px;
   max-width:none;aspect-ratio:1;margin:0;
-  box-sizing:border-box;border:0;
-  background:#fff;padding:clamp(10px,1.4vw,18px)}
-.proj__cap{margin:clamp(10px,1.6vw,16px) 0 0;justify-self:stretch;
-  border-top:var(--edge-panel) solid var(--ink);
-  padding-top:clamp(8px,1.2vw,12px);
-  font:500 clamp(10px,1.2vw,12.5px)/1.3 var(--f-mono);letter-spacing:.18em;
-  text-transform:uppercase;color:var(--ink);text-align:center}
+  box-sizing:border-box;border:0;background:#fff;padding:0}
 
 @media(min-width:900px){
   .proj{grid-template-columns:auto minmax(0,1fr);
-    grid-template-rows:auto minmax(0,1fr) auto;
+    grid-template-rows:auto minmax(0,1fr) auto auto;
     column-gap:clamp(24px,3.4vw,56px);row-gap:clamp(14px,2vw,24px);
     margin-inline:calc(var(--gutter) * -1);border-inline:0;
     padding-inline:var(--gutter)}
   .proj__meet{grid-area:1/1}
   .proj__word{grid-area:1/2;justify-self:end;align-self:center}
-  .proj__plate{grid-area:2/1/4/2;justify-self:start;align-self:start}
+  .proj__plate{grid-area:2/1/5/2;justify-self:start;align-self:start}
   .proj__count{grid-area:2/2;align-self:start;justify-self:end;
     flex-direction:column;align-items:flex-end;gap:var(--sp-tight)}
   .proj__count b{font-size:clamp(88px,10vw,168px)}
   .proj__count span{font-size:clamp(14px,1.4vw,20px)}
   .proj__ctls{grid-area:3/2;justify-self:end;align-self:end}
-  .proj__plate .qrpanel__code{width:min(50vw,calc(100dvh - 440px),640px)}
+  .proj__end{grid-area:4/2;justify-self:end}
+  .proj:not(.proj--live) .proj__ctls{grid-area:2/1;justify-self:start;align-self:start}
+  .proj__plate .qrpanel__code{width:min(50vw,calc(100dvh - 350px),640px)}
 }
 
 /* projector mode: the stage over the whole window, read from the back
-   of the room; landscape puts the count beside the code, portrait under it */
+   of the room: the meeting, OPEN, the code and the count, nothing else;
+   landscape puts the count beside the code, portrait under it */
 .is-projecting,.is-projecting body{overflow:hidden}
 .is-projecting .topbar,.is-projecting .tabs,.is-projecting .rail{visibility:hidden}
 .is-projecting .rig{isolation:auto}
@@ -1941,17 +1912,18 @@ html{font-synthesis:none}
   align-items:center;column-gap:5vw;row-gap:2vh}
 .proj--full .proj__meet{grid-area:meet;flex-direction:row;align-items:baseline;gap:2vw}
 .proj--full .proj__no{font-size:clamp(40px,8vh,110px)}
-.proj--full .proj__when{font-size:clamp(16px,2.8vh,32px)}
+.proj--full .proj__when,.proj--full .proj__end{display:none}
 .proj--full .proj__word{grid-area:word;font-size:clamp(40px,8vh,110px);justify-self:end;align-self:center}
-.proj--full .proj__plate{grid-area:plate;justify-self:start;align-self:center;padding:2vh}
-.proj--full .proj__plate .qrpanel__code{width:min(74vh,56vw);min-width:0;max-width:none}
-.proj--full .proj__cap{font-size:clamp(12px,1.8vh,20px)}
+.proj--full .proj__plate{grid-area:plate;justify-self:start;align-self:center}
+.proj--full .proj__plate .qrpanel__code{width:min(80vh,56vw);min-width:0;max-width:none}
 .proj--full .proj__count{grid-area:count;flex-direction:column;align-items:flex-end;gap:0;
   align-self:center;justify-self:end}
 .proj--full .proj__count b{font-size:clamp(120px,30vh,360px);line-height:.85}
 .proj--full .proj__count span{font-size:clamp(18px,3vh,34px)}
 .proj--full .proj__ctls{grid-area:ctls;justify-self:end;align-self:end}
-.proj--full .proj__ctl{font-size:clamp(14px,2vh,20px);padding:1.2vh 2vw}
+/* on the wall the one control is small and quiet */
+.proj--full .proj__ctl{font:400 clamp(13px,1.6vh,16px)/1.2 var(--f-body);letter-spacing:.04em;
+  padding:1vh 1.4vw;background:transparent;color:var(--tint);border-color:var(--tone)}
 @media (max-aspect-ratio:1/1){
   .proj.proj--full{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto minmax(0,1fr) auto;
     grid-template-areas:"meet word" "count count" "plate plate" "ctls ctls";padding:3vh 5vw}
@@ -1959,8 +1931,16 @@ html{font-synthesis:none}
   .proj--full .proj__count{flex-direction:row;align-items:baseline;gap:3vw;justify-self:start}
   .proj--full .proj__count b{font-size:clamp(72px,14vh,160px)}
   .proj--full .proj__plate{justify-self:center}
-  .proj--full .proj__plate .qrpanel__code{width:min(84vw,52vh)}
-  .proj--full .proj__ctls{justify-self:stretch;justify-content:space-between}
+  .proj--full .proj__plate .qrpanel__code{width:min(88vw,56vh)}
+  .proj--full .proj__ctls{justify-self:end}
+}
+
+/* hover inverts a control only where there is a pointer to hover with;
+   on a phone a tap would otherwise leave the next control inverted */
+@media (hover:hover){
+  .proj__ctl:hover{background:transparent;color:var(--paper)}
+  .proj:not(.proj--live) .proj__ctl--go:hover{background:var(--paper);color:var(--ink)}
+  .proj--full .proj__ctl:hover{color:var(--paper);border-color:var(--paper)}
 }
 
 /* a panel that reports and offers one way on */
@@ -2042,7 +2022,6 @@ select.input:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 </nav>
 
 <div class="fx" id="fx" aria-hidden="true">
-  <span class="flash" id="flash"></span>
 </div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
@@ -15002,6 +14981,15 @@ const SupabaseAdapter = {
     if (error) throw error;
     return count || 0;
   },
+
+  /* whether check-in is still open, so a wall left projecting learns
+     that another officer closed it */
+  async meetingOpen(meetingId){
+    const { data, error } = await this.client
+      .from('meetings').select('check_in_open').eq('id', meetingId).maybeSingle();
+    if (error) throw error;
+    return Boolean(data && data.check_in_open);
+  },
 };
 
 const PreviewAdapter = {
@@ -15022,6 +15010,7 @@ const PreviewAdapter = {
   async endAttendance(){ throw new Error('No backend is configured.'); },
   async issueToken(){ throw new Error('No backend is configured.'); },
   async attendanceCount(){ return 0; },
+  async meetingOpen(){ return false; },
   async board(){ throw new Error('No backend is configured.'); },
   async deleteMeetingAndStamps(){ throw new Error('No backend is configured.'); },
 };
@@ -15034,7 +15023,7 @@ const UnavailableAdapter = {
 };
 ['signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','claimReward','startAttendance',
- 'endAttendance','issueToken','attendanceCount','board',
+ 'endAttendance','issueToken','attendanceCount','meetingOpen','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   UnavailableAdapter[fn] = async () => { throw new Error('BACKEND_UNAVAILABLE'); };
 });
@@ -15084,7 +15073,7 @@ const Backend = {
 
 ['currentSession','signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','claimReward','verifyCode',
- 'startAttendance','endAttendance','issueToken','attendanceCount','board',
+ 'startAttendance','endAttendance','issueToken','attendanceCount','meetingOpen','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   Backend[fn] = function(...a){ return this.adapter[fn](...a); };
 });
@@ -15352,7 +15341,11 @@ const Motion = {
   setForced(v){
     this.forced = Boolean(v);
     try { localStorage.setItem(MOTION_KEY, v ? 'off' : 'on'); } catch (_) {}
+    this.mark();
   },
+  /* the in-app setting reaches the CSS too, so a spinner stops for it
+     the way it does for the system setting */
+  mark(){ try { document.documentElement.toggleAttribute('data-still', this.forced); } catch (_) {} },
   get off(){ return this.forced || !window.animate || systemReducedMotion(); },
   get reduced(){ return this.forced || systemReducedMotion(); },
 
@@ -15368,52 +15361,7 @@ const Motion = {
   },
 };
 
-const releaseTransform = els => {
-  (Array.isArray(els) ? els : [els]).forEach(el => {
-    if (el && el.style) el.style.transform = '';
-  });
-};
-
-const Reveal = {
-  io: null,
-  fuses: new Set(),
-
-  enter(el){
-    clearTimeout(el._revealFuse);
-    if (el.dataset.revealed) return;
-    el.dataset.revealed = '1';
-    animate(el, { opacity:[0, 1], duration:MECH.CUT, ease:STEP(1) });
-    FX.slamType(el, MECH.BEAT);
-  },
-
-  watch(el){
-    if (Motion.off || !('IntersectionObserver' in window)){
-      el.style.opacity = '';
-      return;
-    }
-    if (!this.io){
-      this.io = new IntersectionObserver(entries => {
-        entries.forEach(en => {
-          if (!en.isIntersecting) return;
-          this.io.unobserve(en.target);
-          this.enter(en.target);
-        });
-      }, { rootMargin:'0px 0px -6% 0px', threshold:.04 });
-    }
-    this.io.observe(el);
-    el._revealFuse = setTimeout(() => {
-      this.fuses.delete(el._revealFuse);
-      this.io?.unobserve(el);
-      this.enter(el);
-    }, 6000);
-    this.fuses.add(el._revealFuse);
-  },
-
-  clear(){
-    this.io?.disconnect(); this.io = null;
-    this.fuses.forEach(t => clearTimeout(t)); this.fuses.clear();
-  },
-};
+Motion.mark();
 
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -15593,7 +15541,7 @@ const C = {
       : goal ? `${p.remaining} more until ${goal.name.toLowerCase()}`
              : `${p.remaining} more to finish this card`;
 
-    return `<section class="card${full ? ' card--full' : ''}" data-enter>
+    return `<section class="card${full ? ' card--full' : ''}">
       <div class="card__face">
         <div class="card__id">
           <span class="card__cardno">Card ${pad(cardNo)}</span>
@@ -15613,11 +15561,11 @@ const C = {
 
   /* a state that asks nothing of the member is a line of type */
   line(lab, text){
-    return `<p class="nowline" data-enter><b class="nowline__lab">${esc(lab)}</b><span>${text}</span></p>`;
+    return `<p class="nowline"><b class="nowline__lab">${esc(lab)}</b><span>${text}</span></p>`;
   },
 
   strike({ verb, sub, go, live = false }){
-    return `<div class="act ${live ? 'act--live' : ''}" data-enter>
+    return `<div class="act ${live ? 'act--live' : ''}">
       <button class="act__btn" data-go="${go}">
         <span class="act__verb">${esc(verb)}</span>
         <span class="act__sub">${esc(sub)}</span>
@@ -15677,7 +15625,7 @@ const C = {
   },
 };
 
-C.account = () => `<section class="acct" data-enter>
+C.account = () => `<section class="acct">
   <h2 class="acct__mark">Account</h2>
   <div class="acct__row">
     <span class="acct__lab">Reduced motion</span>
@@ -15689,10 +15637,10 @@ C.account = () => `<section class="acct" data-enter>
 const Views = {
   loadFailure(title){
     return `<div class="view">
-      <header class="rechead" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">${title}</h1>
       </header>
-      <section class="rig" data-enter>
+      <section class="rig">
         <div class="panel bpanel fail">
           <p class="kicker">Could not load</p>
           <p>Your record did not load. Nothing is lost. Check your connection.</p>
@@ -15728,14 +15676,14 @@ const Views = {
       .slice(0, 3);
 
     return `<div class="view view--home">
-      <header class="rechead" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">Your card</h1>
       </header>
 
-      <div class="deck${live ? ' deck--live' : ''}" data-enter>
+      <div class="deck${live ? ' deck--live' : ''}">
         ${C.sealGrid(live)}
         ${action ? `<div class="deck__act">${action}</div>` : ''}
-        ${ahead.length ? `<section class="ahead deck__ahead" data-enter>
+        ${ahead.length ? `<section class="ahead deck__ahead">
             <h2 class="ahead__mark">Ahead</h2>
             <ul class="ahead__list">
               ${ahead.map(m => `<li class="ahead__row">
@@ -15759,12 +15707,12 @@ const Views = {
     const gone = counted.length - kept;
 
     return `<div class="view view--record">
-      <header class="rechead" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">Record</h1>
       </header>
 
       ${held.length ? `<div class="recbody">
-        <aside class="tally" data-enter>
+        <aside class="tally">
           <p class="figline">
             <span><b>${kept}</b> stamped</span>
             <span><b>${gone}</b> missed</span>
@@ -15772,7 +15720,7 @@ const Views = {
           </p>
         </aside>
 
-        <section class="ledger" data-enter>
+        <section class="ledger">
           ${held.map(m => C.ledgerRow(m)).join('')}
         </section>
       </div>`
@@ -15787,15 +15735,15 @@ const Views = {
     const tiers = [...Store.rewards].sort((a, b) => a.required - b.required);
 
     return `<div class="view view--rewards">
-      <header class="rechead" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">Rewards</h1>
       </header>
 
-      <p class="figline" data-enter>
+      <p class="figline">
         <span><b>${total}</b> ${total === 1 ? 'stamp' : 'stamps'}</span>
       </p>
 
-      <section class="tiers" data-enter>
+      <section class="tiers">
         ${tiers.map((t, i) => C.tier(t, total, i ? tiers[i - 1].required : 0)).join('')}
       </section>
     </div>`;
@@ -15805,11 +15753,11 @@ const Views = {
     const standing = scanStanding();
 
     return `<div class="view view--scan">
-      <header class="rechead" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">Scan</h1>
       </header>
 
-      <div class="viewer" id="viewer" data-enter>
+      <div class="viewer" id="viewer">
         <video id="cam" playsinline muted autoplay></video>
         <div class="viewer__scrim" aria-hidden="true"></div>
         <div class="reticle" id="reticle" aria-hidden="true">
@@ -15820,12 +15768,12 @@ const Views = {
         </div>
       </div>
 
-      <p class="scanline scanline--boot" id="scanLine" data-enter aria-live="polite">
+      <p class="scanline scanline--boot" id="scanLine" aria-live="polite">
         <i class="scanline__dot" aria-hidden="true"></i>
         <span class="scanline__msg" id="scanMsg">Starting camera</span>
       </p>
 
-      <p class="standing" data-enter>
+      <p class="standing">
         <span class="standing__lab">${standing.lab}</span>
         <span class="standing__at">${standing.at}</span>
       </p>
@@ -15844,10 +15792,10 @@ const Views = {
     BoardUI.loading = true;
     BoardUI.shown = null;
     return `<div class="view view--board">
-      <header class="rechead" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">${title}</h1>
       </header>
-      <section class="rig" data-enter>
+      <section class="rig">
         <div id="boardPane">${BoardUI.pane()}</div>
       </section>
       ${tail}
@@ -15872,18 +15820,18 @@ const Views = {
     const cards    = Math.floor(total / Rules.CARD);
 
     return `<div class="view view--member">
-      <header class="rechead" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">Member</h1>
       </header>
 
-      <section class="who" data-enter>
+      <section class="who">
         <p class="who__name">${esc(name)}</p>
         <p class="who__line">${Store.isBoard ? 'Board' : 'Member'} / Cali-Nev-Ha District${
           handle.toLowerCase() !== name.toLowerCase() ? ` / ${esc(handle)}` : ''}</p>
         <span class="who__seal" aria-hidden="true">${brandSeal('cnh')}</span>
       </section>
 
-      ${total ? `<section class="standing-band" data-enter>
+      ${total ? `<section class="standing-band">
         <p class="standing-band__fig">${total}</p>
         <p class="standing-band__of">${total === 1 ? 'stamp' : 'stamps'}</p>
         <dl class="standing-band__rest">
@@ -15891,9 +15839,9 @@ const Views = {
           <div><dt>First stamp</dt><dd>${fmtDay(first.at)}</dd></div>
           <div><dt>Latest stamp</dt><dd>${fmtDay(last.at)}</dd></div>
         </dl>
-      </section>` : `<p class="nowline" data-enter><b class="nowline__lab">No attendance yet</b></p>`}
+      </section>` : `<p class="nowline"><b class="nowline__lab">No attendance yet</b></p>`}
 
-      ${cards ? `<section class="cards" data-enter>
+      ${cards ? `<section class="cards">
         <h2 class="ledger__mark">Completed cards</h2>
         <ol class="cards__list">${Array.from({ length:cards }, (_, k) => {
           const run = chrono.slice(k * Rules.CARD, (k + 1) * Rules.CARD);
@@ -15931,7 +15879,7 @@ const Views = {
 
     return `<div class="view view--auth">
 
-      <div class="spread" data-enter>
+      <div class="spread">
 
         <div class="spread__field crop" aria-hidden="true">
           <svg class="spread__seal crop__art" viewBox="0 0 100 100">${sealArt()}</svg>
@@ -16119,33 +16067,31 @@ const BoardUI = {
 
     const focus = active || next;
     const isLive = Boolean(active);
+    const today = o.server_date || Schedule.today();
     /* an open check-in from another day was left open, not started today */
-    const stale = isLive && o.server_date && active.meeting_date !== o.server_date;
+    const stale = isLive && active.meeting_date !== today;
+    const isToday = !isLive && focus && focus.meeting_date === today;
+    const at = m => `${esc(fmtDay(m.meeting_date))} / ${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || Schedule.PLACE)}`;
+
+    /* each button does what it says, here: close, open, or show the code */
+    if (!focus) return `<div class="bover"><div class="bnow bnow--none">
+        <p class="bnow__lab">Next general meeting</p>
+        <p class="bnow__no">None yet</p>
+        <button class="bnow__go" type="button" data-btab="meetings" data-mnew>Schedule one</button>
+      </div></div>`;
 
     return `<div class="bover">
-      ${focus ? `
-        <div class="bnow ${isLive ? 'bnow--live' : ''}">
-          <p class="bnow__lab">${stale ? 'Check-in left open' : isLive ? 'Check-in open' : 'Next general meeting'}</p>
-          <p class="bnow__no">GM ${pad(focus.meeting_number)}</p>
-          <p class="bnow__at">${esc(fmtDay(focus.meeting_date))} / ${esc(spanTime(focus.start_time, focus.end_time))} / ${esc(focus.location || Schedule.PLACE)}</p>
-          <p class="bnow__state">${stale
-            ? `Opened ${esc(fmtDay(active.meeting_date))} and never closed`
-            : isLive ? `${o.today_attendance} checked in` : 'Check-in closed'}</p>
-          <button class="bnow__go" type="button" data-btab="session">${
-            stale ? 'Close it' : isLive ? 'Show the code' : 'Open check-in'}</button>
-        </div>`
-        : `<div class="bnow bnow--none">
-             <p class="bnow__lab">Next general meeting</p>
-             <p class="bnow__no">None yet</p>
-             <p class="bnow__at">Schedule one to open check-in.</p>
-             <button class="bnow__go" type="button" data-btab="meetings">Schedule one</button>
-           </div>`}
-
-      <p class="figline figline--club">
-        <span><b>${esc(String(o.meetings_held ?? 0))}</b> meetings held</span>
-        <span><b>${o.average_attendance === null || o.average_attendance === undefined
-          ? '0' : esc(String(o.average_attendance))}</b> per meeting</span>
-      </p>
+      <div class="bnow${isLive ? ' bnow--live' : ''}${isToday ? ' bnow--today' : ''}">
+        <p class="bnow__lab">${stale ? 'Check-in left open' : isLive ? 'Check-in open' : isToday ? 'Today' : 'Next general meeting'}</p>
+        <p class="bnow__no">GM ${pad(focus.meeting_number)}</p>
+        <p class="bnow__at">${at(focus)}</p>
+        ${stale ? '<p class="bnow__state">Never closed</p>'
+          : isLive ? `<p class="bnow__state">${o.today_attendance} checked in</p>` : ''}
+        ${stale ? `<button class="bnow__go" type="button" data-bend="${esc(active.id)}" data-busy="Closing">Close check-in</button>`
+          : isLive ? '<button class="bnow__go" type="button" data-btab="session">Show the code</button>'
+          : isToday ? `<button class="bnow__go" type="button" data-bstart="${esc(focus.id)}" data-busy="Opening">Open check-in</button>`
+          : ''}
+      </div>
     </div>`;
   },
 
@@ -16154,14 +16100,14 @@ const BoardUI = {
     const ms = o.milestones || {};
     const reached = REWARD_TIERS.map(r => ({ n:r.required, key:'m' + r.required, name:r.name }));
     return `<div class="bpanel memgrid">
-      <p class="figline" data-enter>
-        ${reached.map(r => {
-          const count = ms[r.key];
-          return `<span><b>${typeof count === 'number' ? count : '0'}</b> reached ${esc(r.name)}</span>`;
-        }).join('')}
-      </p>
+      ${(() => {
+        /* how many prizes to have ready: only rungs someone has reached */
+        const got = reached.map(r => ({ ...r, count:ms[r.key] })).filter(r => typeof r.count === 'number' && r.count > 0);
+        return got.length ? `<p class="figline">${got.map(r =>
+          `<span><b>${r.count}</b> reached ${esc(r.name)}</span>`).join('')}</p>` : '';
+      })()}
 
-      <section class="rosterpanel" data-enter>
+      <section class="rosterpanel">
         ${this.rosterBody()}
       </section>
     </div>`;
@@ -16180,21 +16126,20 @@ const BoardUI = {
     const past = phased.filter(m => !ahead(m.state)).sort(by(-1));
 
     const band = (title, tail = '') => `<h2 class="meetband"><span>${title}</span>${tail}</h2>`;
-    const formOpen = this.formOpen || Boolean(this.form) || upcoming.length === 0;
+    const formOpen = this.formOpen || Boolean(this.form);
 
-    return `<div class="bpanel meetgrid${formOpen ? ' meetgrid--form' : ''}">
+    return `<div class="bpanel meetgrid">
       ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
 
-      ${formOpen ? `<section class="meetgrid__form" data-enter>${this.createForm()}</section>` : ''}
-
-      <section class="meetgrid__up meetpanel" data-enter>
+      <section class="meetgrid__up meetpanel">
         ${band('Scheduled', formOpen ? '' : '<button class="link meetband__act" type="button" data-mform aria-expanded="false">Schedule a meeting</button>')}
+        ${formOpen ? this.createForm() : ''}
         ${upcoming.length
           ? `<ul class="blist blist--meet">${upcoming.map(m => this.meetingRow(m)).join('')}</ul>`
           : this.empty('No upcoming meetings.')}
       </section>
 
-      <section class="meetgrid__held meetpanel meetpanel--held" data-enter>
+      <section class="meetgrid__held meetpanel meetpanel--held">
         ${band('Held', '<span class="meetband__n">Checked in</span>')}
         ${past.length
           ? `<ul class="blist blist--meet">${past.map(m => this.meetingRow(m)).join('')}</ul>`
@@ -16209,7 +16154,8 @@ const BoardUI = {
     const stamps = Number(m.attendance_count) || 0;
 
     const word = { open:'Open', ended:'Ended', today:'Today' }[state] || '';
-    const upcoming = state === 'upcoming' || state === 'today';
+    /* today's meeting shows its count once anyone has checked in */
+    const upcoming = state === 'upcoming' || (state === 'today' && !stamps);
     /* the usual time and room are not repeated on every row; a meeting
        that differs says so */
     const span = spanTime(m.start_time, m.end_time), room = m.location || Schedule.PLACE;
@@ -16246,9 +16192,7 @@ const BoardUI = {
   createForm(){
     const f = this.formValues();
     const d = this.formDefaults();
-    return `<form class="bform" id="meetingForm" novalidate>
-      <h2 class="h2 bsec bform__head">Schedule a meeting</h2>
-
+    return `<form class="bform" id="meetingForm" novalidate aria-label="Schedule a meeting">
       <div class="bform__grid">
         <label class="field"><span class="kicker">Meeting number</span>
           <input class="input" id="mNo" type="number" min="1" step="1" inputmode="numeric"
@@ -16264,8 +16208,7 @@ const BoardUI = {
       <p class="authp__err" id="mErr" role="alert" aria-live="assertive" hidden></p>
       <div class="bform__row">
         <button class="btn btn--go" type="submit" id="mGo" data-busy="Scheduling">Schedule meeting</button>
-        <button class="link bform__reset" type="button" data-mreset>Reset</button>
-        <button class="link bform__reset" type="button" data-mform="close">Close</button>
+        <button class="link bform__reset" type="button" data-mform="close">Cancel</button>
       </div>
     </form>`;
   },
@@ -16280,8 +16223,7 @@ const BoardUI = {
                  autocapitalize="none" spellcheck="false"></label>
         <label class="field"><span class="kicker">Sort</span>
           <select class="input" id="bsort">
-            ${[['username','Username'],['stamps_desc','Most stamps'],['stamps_asc','Fewest stamps'],
-               ['recent','Most recent attendance'],['newest','Newest account']]
+            ${[['username','Username'],['stamps_desc','Most stamps'],['recent','Most recent attendance']]
               .map(([v,l]) => `<option value="${v}" ${this.sort === v ? 'selected' : ''}>${l}</option>`).join('')}
           </select></label>
       </div>
@@ -16297,11 +16239,11 @@ const BoardUI = {
             <span class="brow__n"><b>${m.stamps}</b><span class="brow__nlab">${m.stamps === 1 ? 'stamp' : 'stamps'}</span></span>
           </li>`).join('')}
         </ul>
-        <div class="bpage">
+        ${d.pages > 1 ? `<div class="bpage">
           <button class="btn" data-bpage="${Math.max(1, d.page - 1)}" ${d.page <= 1 ? 'disabled' : ''}>Back</button>
           <span class="muted">Page ${d.page} of ${d.pages}</span>
           <button class="btn" data-bpage="${Math.min(d.pages, d.page + 1)}" ${d.page >= d.pages ? 'disabled' : ''}>Next</button>
-        </div>`
+        </div>` : ''}`
         : this.empty(this.q ? 'No member matches that username.' : 'No member accounts yet.')}
     </div>`;
   },
@@ -16325,7 +16267,8 @@ const BoardUI = {
         </li>`).join('')}
       </ul>` : ''}
 
-      <h2 class="h2 bsec meetband"><span>Attendance</span><span class="meetband__n">${d.attendance.length} ${d.attendance.length === 1 ? 'stamp' : 'stamps'}</span></h2>
+      <h2 class="h2 bsec meetband"><span>Attendance</span>${d.attendance.length
+        ? `<span class="meetband__n">${d.attendance.length} ${d.attendance.length === 1 ? 'stamp' : 'stamps'}</span>` : ''}</h2>
       ${d.attendance.length
         ? `<ul class="blist">${d.attendance.map(a => `
             <li class="brow" ${a.meeting_id ? `data-bmeeting="${esc(a.meeting_id)}" tabindex="0" role="button"` : ''}>
@@ -16347,14 +16290,15 @@ const BoardUI = {
       <p class="muted">${esc(fmtDay(m.meeting_date))} / ${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || 'MPR')}${
         m.check_in_open ? ' / check-in open' : ''}</p>
 
-      <h2 class="h2 bsec meetband"><span>Attendees</span><span class="meetband__n">${d.attendees.length} checked in</span></h2>
+      ${String(m.meeting_date) > Schedule.today() ? '' : `<h2 class="h2 bsec meetband"><span>Attendees</span>${d.attendees.length
+        ? `<span class="meetband__n">${d.attendees.length} checked in</span>` : ''}</h2>
       ${d.attendees.length
         ? `<ul class="blist">${d.attendees.map(a => `
             <li class="brow brow--member" data-bmember="${esc(a.user_id)}" tabindex="0" role="button">
               <span class="brow__mid"><b>${esc(a.username)}</b></span>
               <span class="muted">${esc(fmtTime(a.checked_in_at))}</span>
             </li>`).join('')}</ul>`
-        : this.empty('No one has checked in yet.')}
+        : this.empty('No one has checked in yet.')}`}
       ${this.deleteBlock(m, d.attendees.length)}
     </div>`;
   },
@@ -16372,48 +16316,50 @@ const BoardUI = {
 
   sessionPane(){
     const list = (this.meetings && this.meetings.meetings) || [];
-    const open = list.find(m => m.state === 'OPEN');
-    const options = list.filter(m => m.state === 'UPCOMING' || m.state === 'ENDED' || m.state === 'OPEN');
-    const sel = list.find(m => m.id === boardMeeting) || open || options[0] || null;
+    const today = (this.meetings && this.meetings.server_date) || Schedule.today();
+    /* Check-in is opened only for today's meeting: opening a future one
+       would record attendance that never happened. An open check-in is
+       shown whatever its date, so one left open can be closed. */
+    const open = list.find(m => m.state === 'OPEN') || null;
+    const todays = list.filter(m => m.meeting_date === today && m.state !== 'OPEN')
+      .sort((a, b) => a.meeting_number - b.meeting_number);
+    const sel = open || todays.find(m => m.id === boardMeeting) || todays[0] || null;
     boardMeeting = sel ? sel.id : null;
 
-    if (!sel) return `<div class="panel bpanel fail">
-      ${this.empty('No meeting to open yet.')}
-      <button class="btn btn--go" data-btab="meetings">Schedule one</button>
-    </div>`;
+    if (!sel){
+      const next = list.filter(m => String(m.meeting_date) > today)
+        .sort((a, b) => String(a.meeting_date) < String(b.meeting_date) ? -1 : 1)[0];
+      return `<div class="bpanel fail">
+        <p class="nowline"><b class="nowline__lab">No meeting today</b>${next
+          ? `<span>Next / GM ${pad(next.meeting_number)} / ${esc(fmtDay(next.meeting_date))}</span>` : ''}</p>
+        <button class="link" type="button" data-btab="meetings" data-mnew>Schedule a meeting</button>
+      </div>`;
+    }
 
     const isOpen = Boolean(sel.check_in_open);
+    const id = esc(sel.id);
 
     return `<div class="bpanel">
-      <div class="gmtabs" role="tablist">
-        ${options.map(o => `<button class="gmtab ${o.id === sel.id ? 'gmtab--on' : ''}"
+      ${!open && todays.length > 1 ? `<div class="gmtabs" role="tablist" aria-label="Today's meetings">
+        ${todays.map(o => `<button class="gmtab ${o.id === sel.id ? 'gmtab--on' : ''}"
           role="tab" aria-selected="${o.id === sel.id}"
-          data-bpick="${o.id}">GM ${pad(o.meeting_number)}</button>`).join('')}
-      </div>
+          data-bpick="${esc(o.id)}">GM ${pad(o.meeting_number)}</button>`).join('')}
+      </div>` : ''}
 
       <section class="proj ${isOpen ? 'proj--live' : ''}" id="proj">
         <div class="proj__meet">
           <p class="proj__no">GM ${pad(sel.meeting_number)}</p>
-          <p class="proj__when">${esc(fmtDay(sel.meeting_date))} / ${esc(knit(sel.start_time))} / ${esc(sel.location || Schedule.PLACE)}</p>
+          <p class="proj__when">${esc(fmtDay(sel.meeting_date))} / ${esc(spanTime(sel.start_time, sel.end_time))} / ${esc(sel.location || Schedule.PLACE)}</p>
         </div>
-        <p class="proj__word">${isOpen ? 'Open' : 'Closed'}</p>
-
-        ${isOpen
-          ? `<p class="proj__count" aria-live="polite"><b id="attCount">${Number.isFinite(sel.attendance_count) ? sel.attendance_count : ''}</b><span>checked in</span></p>`
-          : ''}
+        ${isOpen ? `<p class="proj__word">Open</p>
+        <p class="proj__count" aria-live="polite"><b id="attCount">${Number.isFinite(sel.attendance_count) ? sel.attendance_count : ''}</b><span>checked in</span></p>` : ''}
         <div class="proj__ctls">
-          ${isOpen ? `<button class="proj__ctl proj__ctl--full" type="button" data-bfull aria-pressed="false">Project</button>` : ''}
           ${isOpen
-            ? `<button class="proj__ctl" type="button" data-bend="${esc(sel.id)}" data-busy="Closing">Close check-in</button>`
-            : `<button class="proj__ctl proj__ctl--go" type="button" data-bstart="${esc(sel.id)}" data-busy="Opening">Open check-in</button>`}
+            ? `<button class="proj__ctl proj__ctl--go" type="button" data-bfull aria-pressed="false">Project</button>`
+            : `<button class="proj__ctl proj__ctl--go" type="button" data-bstart="${id}" data-busy="Opening">Open check-in</button>`}
         </div>
-
-        ${isOpen ? `
-          <div class="proj__plate">
-            <div class="qrpanel__code" id="qrBox"></div>
-            <p class="proj__cap">GM ${pad(sel.meeting_number)} / scan to check in</p>
-          </div>
-        ` : ''}
+        ${isOpen ? `<button class="link proj__end" type="button" data-bend="${id}" data-busy="Closing">Close check-in</button>
+          <div class="proj__plate"><div class="qrpanel__code" id="qrBox"></div></div>` : ''}
       </section>
     </div>`;
   },
@@ -16424,42 +16370,15 @@ const BoardUI = {
 /* ── js/04-fx.js ── */
 "use strict";
 
-const MECH = {
-  CUT:  1,
-  LEAD: 40,
-  GAP:  46,
-  BEAT: 90,
-  SLAM: 130,
-};
-
 const STEP = n => (typeof steps === 'function' ? steps(n) : undefined);
-
-const SLAM_SEL = '.title,.spread__wm,'
-               + '.standing-band__fig,.who__name,'
-               + '.proj__no,.bnow__no';
 
 const EASE = {
   CUT:    cubicBezier(.03,.9,.1,1),
-  IMPACT: cubicBezier(.34,1.56,.5,1),
   CALM:   cubicBezier(.22,.61,.36,1),
 };
 
+/* one shake, and it means no: a refused code */
 const Impact = {
-  flash(peak = .3, { delay = 0, host = null, dur = 52 } = {}){
-    if (Motion.off) return;
-    const el = host ? this.plate(host, 'flash') : $('#flash');
-    if (!el) return;
-    animate(el, { opacity:[0, peak, 0], duration:dur, delay, ease:'linear',
-            onComplete:() => { if (host) el.remove(); } });
-  },
-
-  plate(host, cls){
-    const el = document.createElement('span');
-    el.className = cls;
-    host.appendChild(el);
-    return el;
-  },
-
   shake(el, px = 5, dur = 110){
     if (!el || Motion.off) return;
     animate(el, { translateX:[0, -px, px * .7, -px * .35, 0],
@@ -16469,51 +16388,12 @@ const Impact = {
 };
 
 const FX = {
+  /* the CLAIMED punch is pressed onto the rung, the way a stamp lands */
   claimStamp(row){
-    if (!row || Motion.off) return;
-    aset(row, { scale:1.04 });
-    animate(row, { scale:[1.04, 1], duration:120, ease:STEP(3),
-                   onComplete(){ Motion.settle(row); } });
-    Impact.flash(.22, { host:row, delay:40, dur:60 });
-    setTimeout(() => Impact.shake(row, 3, 90), 100);
-  },
-
-  pageEntrance(scope){
-    const els = [...scope.querySelectorAll('[data-enter]')];
-    if (Motion.off || !els.length) return;
-
-    const fold = innerHeight + 40;
-    const near = els.filter(el => el.getBoundingClientRect().top < fold);
-    const far  = els.filter(el => !near.includes(el));
-
-    aset(els, { opacity:0 });
-    animate(near, { opacity:[0, 1], duration:MECH.CUT,
-            delay:stagger(MECH.GAP, { start:MECH.LEAD }), ease:STEP(1) });
-    near.forEach((el, i) => FX.slamType(el, MECH.LEAD + i * MECH.GAP + MECH.BEAT));
-    far.forEach(el => Reveal.watch(el));
-  },
-
-  slamType(panel, at){
-    if (!panel || Motion.off) return;
-    const marks = [...panel.querySelectorAll(SLAM_SEL)];
-    if (!marks.length) return;
-    aset(marks, { opacity:0, translateY:-14 });
-    animate(marks, { opacity:[0, 1], translateY:[-14, 0],
-            duration:MECH.SLAM, delay:stagger(MECH.BEAT / 3, { start:at }),
-            ease:STEP(3), onComplete:() => releaseTransform(marks) });
-  },
-
-  sealGrid(list){
-    if (!list || Motion.off) return;
-    const cells = list.querySelectorAll('.seal');
-    if (!cells.length) return;
-    aset(cells, { opacity:0 });
-    animate(cells, { opacity:[0, 1], scale:[.9, 1],
-            rotate: el => (getComputedStyle(el).getPropertyValue('--lean') || '0deg').trim(),
-            delay:stagger(30, { start:60 }), duration:260, ease:'outCubic',
-            onComplete(){ cells.forEach(c => { c.style.opacity = '';
-
-              c.style.transform = ''; }); } });
+    const p = row && row.querySelector('.tier__punch');
+    if (!p || Motion.off) return;
+    animate(p, { scale:[1.3, 1], duration:120, ease:STEP(3),
+                 onComplete(){ Motion.settle(p); } });
   },
 
   scanLock(){
@@ -16521,7 +16401,6 @@ const FX = {
     const dirs = [[1,1],[-1,1],[1,-1],[-1,-1]];
     $$('#reticle .reticle__c').forEach((c, i) => animate(c, { translateX:dirs[i][0] * 11, translateY:dirs[i][1] * 11,
       duration:180, ease:EASE.CUT }));
-    Impact.flash(.24, { host:$('#viewer'), delay:110, dur:50 });
   },
 
   scanReject(){
@@ -16558,7 +16437,6 @@ const FX = {
       aset(sealEl, { scale:1.16, rotate:-4 });
       animate(sealEl, { scale:[1.16, 1], rotate:[-4, -1.5],
         duration:110, delay:80, ease:STEP(2) });
-      setTimeout(() => Impact.shake(scene, 3, 80), 170);
     }
 
     return {
@@ -16585,24 +16463,11 @@ const FX = {
 
     const lean = getComputedStyle(cell).getPropertyValue('--lean').trim() || '0deg';
     const deg = parseFloat(lean) || 0;
-    const face = cell.closest('.card__face') || cell.closest('.card') || $('#shell');
 
     aset(cell, { opacity:1, scale:1.55, rotate:`${deg - 9}deg` });
     animate(cell, { scale:[1.55, 1], rotate:[`${deg - 9}deg`, `${deg}deg`],
       duration:180, delay:70, ease:STEP(4),
       onComplete(){ Motion.settle(cell); } });
-    setTimeout(() => Impact.shake(face, 3, 90), 230);
-  },
-
-  rewardUnlock(row){
-    if (Motion.off || !row) return;
-    const claim = row.querySelector('.tier__claim');
-    Impact.flash(.18, { host:row, dur:60 });
-    Impact.shake(row, 3, 90);
-    if (claim){
-      animate(claim, { scale:[.86, 1.06, 1], duration:420, delay:120,
-                       ease:EASE.IMPACT });
-    }
   },
 
   boardSeal(){
@@ -16613,11 +16478,10 @@ const FX = {
       const m = new DOMMatrixReadOnly(getComputedStyle(word).transform);
       deg = Math.atan2(m.b, m.a) * 180 / Math.PI;
     } catch (_) {}
-    aset(word, { scale:1.45, rotate:deg, opacity:0 });
+    aset(word, { scale:1.2, rotate:deg, opacity:0 });
     animate(word, { opacity:[0, 1], duration:1, delay:60, ease:STEP(1) });
-    animate(word, { scale:[1.45, 1], rotate:deg, duration:120, delay:60, ease:STEP(3) });
-    setTimeout(() => Impact.shake(word, 3, 80), 190);
-    setTimeout(() => Motion.settle(word), 420);
+    animate(word, { scale:[1.2, 1], rotate:deg, duration:120, delay:60, ease:STEP(3) });
+    setTimeout(() => Motion.settle(word), 300);
   }
 };
 
@@ -16672,7 +16536,6 @@ const Scenes = {
       el = document.createElement('div');
       el.className = 'scene scene--welcome';
       el.setAttribute('aria-hidden', 'true');
-      el.style.setProperty('--lead', '170ms');
       el.innerHTML = SCENE_MARKUP(tail);
       document.body.appendChild(el);
     } else {
@@ -16680,7 +16543,8 @@ const Scenes = {
       if (t) t.textContent = tail;
     }
     const p = this.parts(el);
-    const lead = boot ? 0 : 170;
+    /* the scene is opaque on its first frame, so the page renders under
+       cover; it holds only until it has finished building */
     const t0 = boot ? 0 : performance.now();
     let done = false, released = false, revealed = false;
 
@@ -16697,15 +16561,13 @@ const Scenes = {
       el.classList.add('scene--set');
       return { release(){
         if (released) return; released = true;
-        setTimeout(() => { revealOnce(); fadeAway(el, 150, finish); }, 450);
+        revealOnce(); fadeAway(el, 150, finish);
       } };
     }
 
     if (!boot) el.classList.add('scene--play');
-    const hit = lead + 500 - (performance.now() - t0);
-    if (hit > -80) setTimeout(() => Impact.shake(p.grid, 4, 90), Math.max(0, hit));
 
-    const MIN = lead + 1000;
+    const MIN = 600;
     const open = () => {
       if (done) return;
       el.classList.add('scene--set');
@@ -16735,7 +16597,7 @@ const Scenes = {
     const el = document.createElement('div');
     el.className = 'scene scene--exit scene--set';
     el.setAttribute('aria-hidden', 'true');
-    el.innerHTML = SCENE_MARKUP('Until next meeting');
+    el.innerHTML = SCENE_MARKUP('');
     document.body.appendChild(el);
     const p = this.parts(el);
     p.word.textContent = 'Signing out';
@@ -16758,7 +16620,7 @@ const Scenes = {
       [p.word, p.kick, p.tail, p.seal].forEach(x => { x.style.opacity = '1'; });
       setTimeout(async () => {
         await swapNow();
-        setTimeout(() => fadeAway(el, 150, finish), 520);
+        setTimeout(() => fadeAway(el, 150, finish), 300);
       }, 120);
       return;
     }
@@ -16780,7 +16642,6 @@ const Scenes = {
     });
     aset(p.base, { opacity:0 });
     animate(p.base, { opacity:[0, 1], duration:200, delay:110, ease:'linear' });
-    setTimeout(() => Impact.shake(p.grid, 3, 80), 300);
 
     let swapped = null;
     setTimeout(() => { swapped = swapNow(); }, 340);
@@ -16810,7 +16671,7 @@ const Scenes = {
       }
       setTimeout(finish, 560);
     };
-    setTimeout(drop, 940);
+    setTimeout(drop, 640);
   },
 };
 
@@ -16832,21 +16693,9 @@ const Transit = {
   ORDER: { home:0, record:1, scan:2, rewards:3, profile:4,
            board:0, bmeet:1, bcheckin:2, bmembers:3 },
 
-  CHAR: {
-    /* a page turn is a quick cut, not a scene: about a quarter second */
-    home:    { in:100, hold:40, out:140, angle:9, par:12, tone:true },
-    record:  { in:110, hold:50, out:150, angle:4, par:8 },
-    scan:    { in:90,  hold:30, out:120, angle:0, par:6 },
-    rewards: { in:100, hold:50, out:140, angle:7, par:10 },
-    profile: { in:110, hold:50, out:160, angle:6, par:8 },
-    board:   { in:90,  hold:40, out:120, angle:0, par:6, crisp:true },
-    auth:    { in:100, hold:40, out:130, angle:3, par:0,  vertical:true },
-  },
-
-  profile(to){
-    if (this.CHAR[to]) return this.CHAR[to];
-    return to && to[0] === 'b' ? this.CHAR.board : this.CHAR.home;
-  },
+  /* one cut for every page turn: an ink slab crosses the column in tab
+     order; only its direction says anything, so nothing rides on it */
+  CUT: { in:90, out:120, angle:6 },
 
   direction(from, to){
     const a = this.ORDER[from], b = this.ORDER[to];
@@ -16860,119 +16709,42 @@ const Transit = {
     const bar = $('.topbar'), tabs = $('.tabs');
     const top = shown(bar) ? Math.max(0, bar.getBoundingClientRect().bottom) : 0;
     const floor = shown(tabs) ? tabs.getBoundingClientRect().top : innerHeight;
-    return { left:r.left, width:r.width, top, height:Math.max(0, floor - top), viewTop:r.top };
+    return { left:r.left, width:r.width, top, height:Math.max(0, floor - top) };
   },
 
-  ghost(view, f){
-    const box = document.createElement('div');
-    box.className = 'ghost';
-    box.style.cssText = `left:${f.left}px;top:${f.top}px;width:${f.width}px;height:${f.height}px`;
-    const clone = view.cloneNode(true);
-    clone.removeAttribute('id');
-    clone.removeAttribute('tabindex');
-    clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
-    const cs = getComputedStyle(view);
-    clone.style.cssText = `position:absolute;left:0;top:${f.viewTop - f.top}px;width:${f.width}px;` +
-      `box-sizing:${cs.boxSizing};padding:${cs.padding};margin:0;max-width:none`;
-    const src = view.querySelectorAll('canvas'), dst = clone.querySelectorAll('canvas');
-    src.forEach((cv, i) => { try { dst[i].getContext('2d').drawImage(cv, 0, 0); } catch (_) {} });
-    box.appendChild(clone);
-    document.body.appendChild(box);
-    return box;
-  },
-
-  slab(f, dir, c){
+  slab(f, dir){
     const box = document.createElement('div');
     box.className = 'cutbox';
     box.style.cssText = `left:${f.left}px;top:${f.top}px;width:${f.width}px;height:${f.height}px`;
-    const W = f.width, H = f.height, rad = c.angle * Math.PI / 180;
-    const vertical = Boolean(c.vertical) || dir === 0;
-    const make = cls => {
-      const el = document.createElement('div');
-      el.className = 'slab' + (cls ? ' ' + cls : '');
-      return el;
-    };
-    let off, enter, axis, shape;
-    if (!vertical){
-      off = Math.round(Math.tan(rad) * H);
-      shape = el => {
-        el.style.cssText += `;left:${-off}px;top:0;width:${W + 2 * off}px;height:${H}px`;
-        el.style.clipPath = dir > 0
-          ? `polygon(${off}px 0, 100% 0, calc(100% - ${off}px) 100%, 0 100%)`
-          : `polygon(0 0, calc(100% - ${off}px) 0, 100% 100%, ${off}px 100%)`;
-      };
-      axis = 'translateX';
-      enter = dir > 0 ? W + off : -(W + off);
-    } else {
-      off = Math.round(Math.tan(rad) * W);
-      shape = el => {
-        el.style.cssText += `;left:0;top:${-off}px;width:${W}px;height:${H + 2 * off}px`;
-        el.style.clipPath = `polygon(0 ${off}px, 100% 0, 100% calc(100% - ${off}px), 0 100%)`;
-      };
-      axis = 'translateY';
-      enter = -(H + off);
-    }
-    const under = c.layered ? make('slab--tone') : null;
-    if (under){ shape(under); box.appendChild(under); }
-    const el = make('');
-    shape(el);
-    if (c.tone && !vertical){
-      const t = document.createElement('i');
-      t.className = 'slab__tone';
-      const S = Math.round(W * .12) + off;
-      t.style.cssText = (dir > 0 ? 'left:0;' : 'right:0;') + `width:${S}px`;
-      t.style.clipPath = dir > 0
-        ? `polygon(${off}px 0, 100% 0, calc(100% - ${off}px) 100%, 0 100%)`
-        : `polygon(0 0, calc(100% - ${off}px) 0, 100% 100%, ${off}px 100%)`;
-      el.appendChild(t);
-    }
+    const W = f.width, H = f.height;
+    const off = Math.round(Math.tan(this.CUT.angle * Math.PI / 180) * H);
+    const el = document.createElement('div');
+    el.className = 'slab';
+    el.style.cssText = `left:${-off}px;top:0;width:${W + 2 * off}px;height:${H}px`;
+    el.style.clipPath = dir > 0
+      ? `polygon(${off}px 0, 100% 0, calc(100% - ${off}px) 100%, 0 100%)`
+      : `polygon(0 0, calc(100% - ${off}px) 0, 100% 100%, ${off}px 100%)`;
     box.appendChild(el);
     document.body.appendChild(box);
-    return { box, el, under, off, enter, exit:-enter, axis, vertical };
-  },
-
-  word(view, f, cut){
-    const title = view.querySelector('.rechead__title');
-    if (!title) return null;
-    const r = title.getBoundingClientRect();
-    if (r.width < 4 || r.top < f.top - 4 || r.bottom > f.top + f.height + 4) return null;
-    const cs = getComputedStyle(title);
-    const w = document.createElement('p');
-    w.className = 'slab__word';
-    w.textContent = title.textContent;
-    const x = r.left - f.left + (cut.vertical ? 0 : cut.off);
-    const y = r.top - f.top + (cut.vertical ? cut.off : 0);
-    w.style.cssText = `left:${x}px;top:${y}px;width:${Math.ceil(r.width) + 6}px;` +
-      `font-family:${cs.fontFamily};font-size:${cs.fontSize};font-weight:${cs.fontWeight};` +
-      `font-style:${cs.fontStyle};letter-spacing:${cs.letterSpacing};text-transform:${cs.textTransform};` +
-      `line-height:${cs.lineHeight};padding:${cs.padding}`;
-    cut.el.appendChild(w);
-    return w;
+    const enter = dir > 0 ? W + off : -(W + off);
+    return { box, el, enter, exit:-enter };
   },
 
   run(from, to, swap){
     const view = $('#view');
     const doSwap = typeof swap === 'function' ? swap : () => {};
-    if (!window.animate || !view){ doSwap(); return Promise.resolve(); }
-
-    const f = this.frame(view);
-    this.running = true;
-
-    if (Motion.reduced){
+    const dir = this.direction(from, to);
+    if (!window.animate || !view || Motion.reduced || !dir){
       /* no cut and no crossfade: the page changes, and that is the cue */
       try { doSwap(); } catch (_) {}
-      this.running = false;
-      Motion.settle(view);
+      if (view) Motion.settle(view);
       return Promise.resolve();
     }
 
-    const c = this.profile(to);
-    const dir = this.direction(from, to);
-    const cut = this.slab(f, dir, c);
-    const IN  = c.crisp ? cubicBezier(.85, 0, .1, 1) : cubicBezier(.7, 0, .2, 1);
-    const OUT = c.crisp ? cubicBezier(.85, 0, .1, 1) : cubicBezier(.55, 0, .12, 1);
-    const par = dir * c.par;
-    const LAG = 50;
+    this.running = true;
+    const c = this.CUT;
+    const cut = this.slab(this.frame(view), dir);
+    const IN = cubicBezier(.7, 0, .2, 1), OUT = cubicBezier(.55, 0, .12, 1);
 
     return new Promise(res => {
       let settled = false;
@@ -16983,38 +16755,13 @@ const Transit = {
         Motion.settle(view);
         res();
       };
-
-      if (cut.under){
-        aset(cut.under, { [cut.axis]:cut.enter });
-        animate(cut.under, { [cut.axis]:[cut.enter, 0], duration:c.in, ease:IN });
-      }
-      aset(cut.el, { [cut.axis]:cut.enter });
-      animate(cut.el, { [cut.axis]:[cut.enter, 0], duration:c.in, delay:cut.under ? LAG : 0, ease:IN });
-      /* the slab covers the page before it is repainted, so the page
-         itself carries the parallax; a copy of it would only be paid for */
-      if (par) animate(view, { translateX:[0, -par], duration:c.in, ease:'outQuad' });
-
-      const covered = c.in + (cut.under ? LAG : 0);
+      aset(cut.el, { translateX:cut.enter });
+      animate(cut.el, { translateX:[cut.enter, 0], duration:c.in, ease:IN });
       setTimeout(() => {
         try { doSwap(); } catch (_) {}
-        aset(view, { translateX:par * .6 });
-        const w = this.word(view, f, cut);
-        if (w){
-          aset(w, { opacity:0, scale:1.18 });
-          animate(w, { opacity:[0, 1], duration:1, delay:20 });
-          animate(w, { scale:[1.18, 1], duration:90, delay:20, ease:STEP(2) });
-        }
-      }, covered);
-
-      const leave = covered + c.hold;
-      setTimeout(() => {
-        animate(cut.el, { [cut.axis]:[0, cut.exit], duration:c.out, ease:OUT });
-        if (cut.under) animate(cut.under, { [cut.axis]:[0, cut.exit], duration:c.out, delay:LAG, ease:OUT });
-        if (c.flash) Impact.flash(.14, { dur:70, delay:30 });
-        animate(view, { translateX:[par * .6, 0], duration:c.out, ease:'outCubic', onComplete:finish });
-      }, leave);
-
-      setTimeout(finish, leave + c.out + (cut.under ? LAG : 0) + 200);
+        animate(cut.el, { translateX:[0, cut.exit], duration:c.out, ease:OUT, onComplete:finish });
+      }, c.in);
+      setTimeout(finish, c.in + c.out + 200);
     });
   },
 };
@@ -17029,7 +16776,7 @@ function qrSVG(text){
   let qr;
   try { qr = qrcode(0, 'M'); qr.addData(text); qr.make(); }
   catch (_) { return null; }
-  const n = qr.getModuleCount(), q = 3, size = n + q * 2;
+  const n = qr.getModuleCount(), q = 4, size = n + q * 2;   /* the spec's quiet zone */
   let d = '';
   for (let r = 0; r < n; r++)
     for (let c = 0; c < n; c++)
@@ -17064,13 +16811,19 @@ function paintAttendanceCount(meetingId){
     if (document.hidden) return;
 
     /* a failed poll keeps the last count on the wall; the next poll
-       tries again */
-    let text;
-    try { text = String(await Backend.attendanceCount(meetingId)); }
+       tries again. Check-in closed from another device takes the stage
+       back to Closed, and the wall with it. */
+    let text, open;
+    try {
+      [text, open] = await Promise.all([
+        Backend.attendanceCount(meetingId).then(String),
+        Backend.meetingOpen(meetingId)]);
+    }
     catch (_) { return; }
     const node = el();
     if (!node) return clearInterval(countTimer);
     node.textContent = text;
+    if (open === false){ clearInterval(countTimer); boardStamp = true; loadBoard(); }
   };
   pull();
   countTimer = setInterval(pull, 3000);
@@ -17787,7 +17540,6 @@ async function go(id, opts = {}){
     current = id;
     syncHash(id);
     Motion.settle(view);
-    Reveal.clear();
     document.documentElement.dataset.screen = id;
 
     view.innerHTML = Views[id]();
@@ -17802,7 +17554,9 @@ async function go(id, opts = {}){
   };
 
   const same = from === id && !opts.force;
-  if (view.firstChild && booted && !opts.instant && !same && window.animate){
+  /* Scan is never cut into: the camera image is the page change, and
+     the camera is asked for at once */
+  if (view.firstChild && booted && !opts.instant && !same && id !== 'scan' && window.animate){
     navigating = true;
     await Transit.run(from, id, () => render(true));
     navigating = false;
@@ -17815,27 +17569,12 @@ async function go(id, opts = {}){
   }
 }
 
-const seenUnlocked = new Set();
-
-function playViewIntro(id, nav = false){
-  if (id === 'home'){
-    if (pendingStamp){
-      const cell = Landing.cellFor(pendingStamp.meetingId);
-      pendingStamp = null;
-      Landing.prime(cell);
-    } else if (!nav){
-      FX.sealGrid($('#seals'));
-    }
-  }
-
-  if (id === 'rewards'){
-    $$('[data-reward]').forEach(row => {
-      if (!row.classList.contains('tier--ready')) return;
-      const rid = row.dataset.reward;
-      if (seenUnlocked.has(rid)) return;
-      seenUnlocked.add(rid);
-      setTimeout(() => FX.rewardUnlock(row), 420);
-    });
+/* the one intro a page has: a stamp just earned is primed to land */
+function playViewIntro(id){
+  if (id === 'home' && pendingStamp){
+    const cell = Landing.cellFor(pendingStamp.meetingId);
+    pendingStamp = null;
+    Landing.prime(cell);
   }
 }
 
@@ -17949,7 +17688,7 @@ document.addEventListener('submit', async e => {
     try {
       await Backend.createMeeting({ no, date, startTime:to12h(start), endTime:to12h(end) });
       BoardUI.form = null; BoardUI.formOpen = false;
-      toast({ key:'board', title:`GM ${pad(no)} scheduled`, detail:'It is now in the schedule.' });
+      toast({ key:'board', title:`GM ${pad(no)} scheduled` });
       boardGoto({ tab:'meetings' });
     } catch (ex){
       show(WriteFailure.explain(ex, 'create meeting'));
@@ -17974,8 +17713,7 @@ document.addEventListener('submit', async e => {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
 
-    const scene = Scenes.opening({ tail: up ? 'Member joined' : 'Welcome back',
-      reveal(){ FX.pageEntrance($('#view')); playViewIntro(current); } });
+    const scene = Scenes.opening({ reveal(){ playViewIntro(current); } });
     requestAnimationFrame(() => requestAnimationFrame(() => {
       go('home', { instant:true, covered:true });
       scene.release();
@@ -18005,6 +17743,7 @@ document.addEventListener('click', e => {
   if (btab){
     const toRoute = { club:'board', meetings:'bmeet', session:'bcheckin', progress:'bmembers' };
     Object.assign(BoardUI, { memberDetail:null, meetingDetail:null, page:1 });
+    if (btab.hasAttribute('data-mnew')) BoardUI.formOpen = true;
     go(toRoute[btab.dataset.btab] || 'board');
     return;
   }
@@ -18039,15 +17778,6 @@ document.addEventListener('click', e => {
   }
   const bfull = e.target.closest('[data-bfull]');
   if (bfull){ projector(!$('#proj')?.classList.contains('proj--full')); return; }
-
-  const mreset = e.target.closest('[data-mreset]');
-  if (mreset){
-    BoardUI.form = null;
-    const mf = $('#meetingForm');
-    if (mf) mf.outerHTML = BoardUI.createForm();
-    $('#mNo')?.focus({ preventScroll:true });
-    return;
-  }
 
   const bdelete = e.target.closest('[data-bdelete]');
   if (bdelete){
@@ -18099,7 +17829,9 @@ document.addEventListener('click', e => {
   if (bstart){
     hold(bstart, 'Opening');
     Backend.startAttendance(bstart.dataset.bstart)
-      .then(() => { boardMeeting = bstart.dataset.bstart; boardStamp = true; loadBoard(); })
+      /* opened from Club Tools, the next thing wanted is the code */
+      .then(() => { boardMeeting = bstart.dataset.bstart; boardStamp = true;
+                    if (current === 'board') go('bcheckin'); else loadBoard(); })
       .catch(err => { release(bstart, 'Open check-in');
         toast({ key:'board', bad:true, title:'Could not open check-in',
                 detail:BoardUI.message(err && err.message) }); });
@@ -18141,7 +17873,7 @@ document.addEventListener('click', e => {
   const swap = e.target.closest('#authSwap');
   if (swap){
     AuthUI.mode = AuthUI.mode === 'up' ? 'in' : 'up';
-    go('auth', { force:true });
+    go('auth', { force:true, instant:true });
     return;
   }
 
@@ -18163,9 +17895,6 @@ document.addEventListener('click', e => {
   if (motion){
     Motion.setForced(!Motion.forced);
     paintMotion();
-    toast({ key:'motion',
-            title:Motion.forced ? 'Reduced motion on' : 'Reduced motion off',
-            detail:Motion.forced ? 'Animations are off.' : 'Animations are back on.' });
     return;
   }
 
@@ -18348,7 +18077,6 @@ let opening = null;
 try {
   opening = Scenes.opening({ root:$('#boot'), reveal(){
     booted = true;
-    FX.pageEntrance($('#view'));
     playViewIntro(current);
   } });
 } catch (_) {

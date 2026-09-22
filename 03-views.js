@@ -98,7 +98,7 @@ const C = {
       : goal ? `${p.remaining} more until ${goal.name.toLowerCase()}`
              : `${p.remaining} more to finish this card`;
 
-    return `<section class="card${full ? ' card--full' : ''}" data-enter>
+    return `<section class="card${full ? ' card--full' : ''}">
       <div class="card__face">
         <div class="card__id">
           <span class="card__cardno">Card ${pad(cardNo)}</span>
@@ -118,11 +118,11 @@ const C = {
 
   /* a state that asks nothing of the member is a line of type */
   line(lab, text){
-    return `<p class="nowline" data-enter><b class="nowline__lab">${esc(lab)}</b><span>${text}</span></p>`;
+    return `<p class="nowline"><b class="nowline__lab">${esc(lab)}</b><span>${text}</span></p>`;
   },
 
   strike({ verb, sub, go, live = false }){
-    return `<div class="act ${live ? 'act--live' : ''}" data-enter>
+    return `<div class="act ${live ? 'act--live' : ''}">
       <button class="act__btn" data-go="${go}">
         <span class="act__verb">${esc(verb)}</span>
         <span class="act__sub">${esc(sub)}</span>
@@ -182,7 +182,7 @@ const C = {
   },
 };
 
-C.account = () => `<section class="acct" data-enter>
+C.account = () => `<section class="acct">
   <h2 class="acct__mark">Account</h2>
   <div class="acct__row">
     <span class="acct__lab">Reduced motion</span>
@@ -194,10 +194,10 @@ C.account = () => `<section class="acct" data-enter>
 const Views = {
   loadFailure(title){
     return `<div class="view">
-      <header class="rechead" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">${title}</h1>
       </header>
-      <section class="rig" data-enter>
+      <section class="rig">
         <div class="panel bpanel fail">
           <p class="kicker">Could not load</p>
           <p>Your record did not load. Nothing is lost. Check your connection.</p>
@@ -233,14 +233,14 @@ const Views = {
       .slice(0, 3);
 
     return `<div class="view view--home">
-      <header class="rechead" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">Your card</h1>
       </header>
 
-      <div class="deck${live ? ' deck--live' : ''}" data-enter>
+      <div class="deck${live ? ' deck--live' : ''}">
         ${C.sealGrid(live)}
         ${action ? `<div class="deck__act">${action}</div>` : ''}
-        ${ahead.length ? `<section class="ahead deck__ahead" data-enter>
+        ${ahead.length ? `<section class="ahead deck__ahead">
             <h2 class="ahead__mark">Ahead</h2>
             <ul class="ahead__list">
               ${ahead.map(m => `<li class="ahead__row">
@@ -264,12 +264,12 @@ const Views = {
     const gone = counted.length - kept;
 
     return `<div class="view view--record">
-      <header class="rechead" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">Record</h1>
       </header>
 
       ${held.length ? `<div class="recbody">
-        <aside class="tally" data-enter>
+        <aside class="tally">
           <p class="figline">
             <span><b>${kept}</b> stamped</span>
             <span><b>${gone}</b> missed</span>
@@ -277,7 +277,7 @@ const Views = {
           </p>
         </aside>
 
-        <section class="ledger" data-enter>
+        <section class="ledger">
           ${held.map(m => C.ledgerRow(m)).join('')}
         </section>
       </div>`
@@ -292,15 +292,15 @@ const Views = {
     const tiers = [...Store.rewards].sort((a, b) => a.required - b.required);
 
     return `<div class="view view--rewards">
-      <header class="rechead" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">Rewards</h1>
       </header>
 
-      <p class="figline" data-enter>
+      <p class="figline">
         <span><b>${total}</b> ${total === 1 ? 'stamp' : 'stamps'}</span>
       </p>
 
-      <section class="tiers" data-enter>
+      <section class="tiers">
         ${tiers.map((t, i) => C.tier(t, total, i ? tiers[i - 1].required : 0)).join('')}
       </section>
     </div>`;
@@ -310,11 +310,11 @@ const Views = {
     const standing = scanStanding();
 
     return `<div class="view view--scan">
-      <header class="rechead" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">Scan</h1>
       </header>
 
-      <div class="viewer" id="viewer" data-enter>
+      <div class="viewer" id="viewer">
         <video id="cam" playsinline muted autoplay></video>
         <div class="viewer__scrim" aria-hidden="true"></div>
         <div class="reticle" id="reticle" aria-hidden="true">
@@ -325,12 +325,12 @@ const Views = {
         </div>
       </div>
 
-      <p class="scanline scanline--boot" id="scanLine" data-enter aria-live="polite">
+      <p class="scanline scanline--boot" id="scanLine" aria-live="polite">
         <i class="scanline__dot" aria-hidden="true"></i>
         <span class="scanline__msg" id="scanMsg">Starting camera</span>
       </p>
 
-      <p class="standing" data-enter>
+      <p class="standing">
         <span class="standing__lab">${standing.lab}</span>
         <span class="standing__at">${standing.at}</span>
       </p>
@@ -349,10 +349,10 @@ const Views = {
     BoardUI.loading = true;
     BoardUI.shown = null;
     return `<div class="view view--board">
-      <header class="rechead" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">${title}</h1>
       </header>
-      <section class="rig" data-enter>
+      <section class="rig">
         <div id="boardPane">${BoardUI.pane()}</div>
       </section>
       ${tail}
@@ -377,18 +377,18 @@ const Views = {
     const cards    = Math.floor(total / Rules.CARD);
 
     return `<div class="view view--member">
-      <header class="rechead" data-enter>
+      <header class="rechead">
         <h1 class="title rechead__title">Member</h1>
       </header>
 
-      <section class="who" data-enter>
+      <section class="who">
         <p class="who__name">${esc(name)}</p>
         <p class="who__line">${Store.isBoard ? 'Board' : 'Member'} / Cali-Nev-Ha District${
           handle.toLowerCase() !== name.toLowerCase() ? ` / ${esc(handle)}` : ''}</p>
         <span class="who__seal" aria-hidden="true">${brandSeal('cnh')}</span>
       </section>
 
-      ${total ? `<section class="standing-band" data-enter>
+      ${total ? `<section class="standing-band">
         <p class="standing-band__fig">${total}</p>
         <p class="standing-band__of">${total === 1 ? 'stamp' : 'stamps'}</p>
         <dl class="standing-band__rest">
@@ -396,9 +396,9 @@ const Views = {
           <div><dt>First stamp</dt><dd>${fmtDay(first.at)}</dd></div>
           <div><dt>Latest stamp</dt><dd>${fmtDay(last.at)}</dd></div>
         </dl>
-      </section>` : `<p class="nowline" data-enter><b class="nowline__lab">No attendance yet</b></p>`}
+      </section>` : `<p class="nowline"><b class="nowline__lab">No attendance yet</b></p>`}
 
-      ${cards ? `<section class="cards" data-enter>
+      ${cards ? `<section class="cards">
         <h2 class="ledger__mark">Completed cards</h2>
         <ol class="cards__list">${Array.from({ length:cards }, (_, k) => {
           const run = chrono.slice(k * Rules.CARD, (k + 1) * Rules.CARD);
@@ -436,7 +436,7 @@ const Views = {
 
     return `<div class="view view--auth">
 
-      <div class="spread" data-enter>
+      <div class="spread">
 
         <div class="spread__field crop" aria-hidden="true">
           <svg class="spread__seal crop__art" viewBox="0 0 100 100">${sealArt()}</svg>

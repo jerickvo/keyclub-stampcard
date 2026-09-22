@@ -131,33 +131,31 @@ const BoardUI = {
 
     const focus = active || next;
     const isLive = Boolean(active);
+    const today = o.server_date || Schedule.today();
     /* an open check-in from another day was left open, not started today */
-    const stale = isLive && o.server_date && active.meeting_date !== o.server_date;
+    const stale = isLive && active.meeting_date !== today;
+    const isToday = !isLive && focus && focus.meeting_date === today;
+    const at = m => `${esc(fmtDay(m.meeting_date))} / ${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || Schedule.PLACE)}`;
+
+    /* each button does what it says, here: close, open, or show the code */
+    if (!focus) return `<div class="bover"><div class="bnow bnow--none">
+        <p class="bnow__lab">Next general meeting</p>
+        <p class="bnow__no">None yet</p>
+        <button class="bnow__go" type="button" data-btab="meetings" data-mnew>Schedule one</button>
+      </div></div>`;
 
     return `<div class="bover">
-      ${focus ? `
-        <div class="bnow ${isLive ? 'bnow--live' : ''}">
-          <p class="bnow__lab">${stale ? 'Check-in left open' : isLive ? 'Check-in open' : 'Next general meeting'}</p>
-          <p class="bnow__no">GM ${pad(focus.meeting_number)}</p>
-          <p class="bnow__at">${esc(fmtDay(focus.meeting_date))} / ${esc(spanTime(focus.start_time, focus.end_time))} / ${esc(focus.location || Schedule.PLACE)}</p>
-          <p class="bnow__state">${stale
-            ? `Opened ${esc(fmtDay(active.meeting_date))} and never closed`
-            : isLive ? `${o.today_attendance} checked in` : 'Check-in closed'}</p>
-          <button class="bnow__go" type="button" data-btab="session">${
-            stale ? 'Close it' : isLive ? 'Show the code' : 'Open check-in'}</button>
-        </div>`
-        : `<div class="bnow bnow--none">
-             <p class="bnow__lab">Next general meeting</p>
-             <p class="bnow__no">None yet</p>
-             <p class="bnow__at">Schedule one to open check-in.</p>
-             <button class="bnow__go" type="button" data-btab="meetings">Schedule one</button>
-           </div>`}
-
-      <p class="figline figline--club">
-        <span><b>${esc(String(o.meetings_held ?? 0))}</b> meetings held</span>
-        <span><b>${o.average_attendance === null || o.average_attendance === undefined
-          ? '0' : esc(String(o.average_attendance))}</b> per meeting</span>
-      </p>
+      <div class="bnow${isLive ? ' bnow--live' : ''}${isToday ? ' bnow--today' : ''}">
+        <p class="bnow__lab">${stale ? 'Check-in left open' : isLive ? 'Check-in open' : isToday ? 'Today' : 'Next general meeting'}</p>
+        <p class="bnow__no">GM ${pad(focus.meeting_number)}</p>
+        <p class="bnow__at">${at(focus)}</p>
+        ${stale ? '<p class="bnow__state">Never closed</p>'
+          : isLive ? `<p class="bnow__state">${o.today_attendance} checked in</p>` : ''}
+        ${stale ? `<button class="bnow__go" type="button" data-bend="${esc(active.id)}" data-busy="Closing">Close check-in</button>`
+          : isLive ? '<button class="bnow__go" type="button" data-btab="session">Show the code</button>'
+          : isToday ? `<button class="bnow__go" type="button" data-bstart="${esc(focus.id)}" data-busy="Opening">Open check-in</button>`
+          : ''}
+      </div>
     </div>`;
   },
 
@@ -166,14 +164,14 @@ const BoardUI = {
     const ms = o.milestones || {};
     const reached = REWARD_TIERS.map(r => ({ n:r.required, key:'m' + r.required, name:r.name }));
     return `<div class="bpanel memgrid">
-      <p class="figline" data-enter>
-        ${reached.map(r => {
-          const count = ms[r.key];
-          return `<span><b>${typeof count === 'number' ? count : '0'}</b> reached ${esc(r.name)}</span>`;
-        }).join('')}
-      </p>
+      ${(() => {
+        /* how many prizes to have ready: only rungs someone has reached */
+        const got = reached.map(r => ({ ...r, count:ms[r.key] })).filter(r => typeof r.count === 'number' && r.count > 0);
+        return got.length ? `<p class="figline">${got.map(r =>
+          `<span><b>${r.count}</b> reached ${esc(r.name)}</span>`).join('')}</p>` : '';
+      })()}
 
-      <section class="rosterpanel" data-enter>
+      <section class="rosterpanel">
         ${this.rosterBody()}
       </section>
     </div>`;
@@ -192,21 +190,20 @@ const BoardUI = {
     const past = phased.filter(m => !ahead(m.state)).sort(by(-1));
 
     const band = (title, tail = '') => `<h2 class="meetband"><span>${title}</span>${tail}</h2>`;
-    const formOpen = this.formOpen || Boolean(this.form) || upcoming.length === 0;
+    const formOpen = this.formOpen || Boolean(this.form);
 
-    return `<div class="bpanel meetgrid${formOpen ? ' meetgrid--form' : ''}">
+    return `<div class="bpanel meetgrid">
       ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
 
-      ${formOpen ? `<section class="meetgrid__form" data-enter>${this.createForm()}</section>` : ''}
-
-      <section class="meetgrid__up meetpanel" data-enter>
+      <section class="meetgrid__up meetpanel">
         ${band('Scheduled', formOpen ? '' : '<button class="link meetband__act" type="button" data-mform aria-expanded="false">Schedule a meeting</button>')}
+        ${formOpen ? this.createForm() : ''}
         ${upcoming.length
           ? `<ul class="blist blist--meet">${upcoming.map(m => this.meetingRow(m)).join('')}</ul>`
           : this.empty('No upcoming meetings.')}
       </section>
 
-      <section class="meetgrid__held meetpanel meetpanel--held" data-enter>
+      <section class="meetgrid__held meetpanel meetpanel--held">
         ${band('Held', '<span class="meetband__n">Checked in</span>')}
         ${past.length
           ? `<ul class="blist blist--meet">${past.map(m => this.meetingRow(m)).join('')}</ul>`
@@ -221,7 +218,8 @@ const BoardUI = {
     const stamps = Number(m.attendance_count) || 0;
 
     const word = { open:'Open', ended:'Ended', today:'Today' }[state] || '';
-    const upcoming = state === 'upcoming' || state === 'today';
+    /* today's meeting shows its count once anyone has checked in */
+    const upcoming = state === 'upcoming' || (state === 'today' && !stamps);
     /* the usual time and room are not repeated on every row; a meeting
        that differs says so */
     const span = spanTime(m.start_time, m.end_time), room = m.location || Schedule.PLACE;
@@ -258,9 +256,7 @@ const BoardUI = {
   createForm(){
     const f = this.formValues();
     const d = this.formDefaults();
-    return `<form class="bform" id="meetingForm" novalidate>
-      <h2 class="h2 bsec bform__head">Schedule a meeting</h2>
-
+    return `<form class="bform" id="meetingForm" novalidate aria-label="Schedule a meeting">
       <div class="bform__grid">
         <label class="field"><span class="kicker">Meeting number</span>
           <input class="input" id="mNo" type="number" min="1" step="1" inputmode="numeric"
@@ -276,8 +272,7 @@ const BoardUI = {
       <p class="authp__err" id="mErr" role="alert" aria-live="assertive" hidden></p>
       <div class="bform__row">
         <button class="btn btn--go" type="submit" id="mGo" data-busy="Scheduling">Schedule meeting</button>
-        <button class="link bform__reset" type="button" data-mreset>Reset</button>
-        <button class="link bform__reset" type="button" data-mform="close">Close</button>
+        <button class="link bform__reset" type="button" data-mform="close">Cancel</button>
       </div>
     </form>`;
   },
@@ -292,8 +287,7 @@ const BoardUI = {
                  autocapitalize="none" spellcheck="false"></label>
         <label class="field"><span class="kicker">Sort</span>
           <select class="input" id="bsort">
-            ${[['username','Username'],['stamps_desc','Most stamps'],['stamps_asc','Fewest stamps'],
-               ['recent','Most recent attendance'],['newest','Newest account']]
+            ${[['username','Username'],['stamps_desc','Most stamps'],['recent','Most recent attendance']]
               .map(([v,l]) => `<option value="${v}" ${this.sort === v ? 'selected' : ''}>${l}</option>`).join('')}
           </select></label>
       </div>
@@ -309,11 +303,11 @@ const BoardUI = {
             <span class="brow__n"><b>${m.stamps}</b><span class="brow__nlab">${m.stamps === 1 ? 'stamp' : 'stamps'}</span></span>
           </li>`).join('')}
         </ul>
-        <div class="bpage">
+        ${d.pages > 1 ? `<div class="bpage">
           <button class="btn" data-bpage="${Math.max(1, d.page - 1)}" ${d.page <= 1 ? 'disabled' : ''}>Back</button>
           <span class="muted">Page ${d.page} of ${d.pages}</span>
           <button class="btn" data-bpage="${Math.min(d.pages, d.page + 1)}" ${d.page >= d.pages ? 'disabled' : ''}>Next</button>
-        </div>`
+        </div>` : ''}`
         : this.empty(this.q ? 'No member matches that username.' : 'No member accounts yet.')}
     </div>`;
   },
@@ -337,7 +331,8 @@ const BoardUI = {
         </li>`).join('')}
       </ul>` : ''}
 
-      <h2 class="h2 bsec meetband"><span>Attendance</span><span class="meetband__n">${d.attendance.length} ${d.attendance.length === 1 ? 'stamp' : 'stamps'}</span></h2>
+      <h2 class="h2 bsec meetband"><span>Attendance</span>${d.attendance.length
+        ? `<span class="meetband__n">${d.attendance.length} ${d.attendance.length === 1 ? 'stamp' : 'stamps'}</span>` : ''}</h2>
       ${d.attendance.length
         ? `<ul class="blist">${d.attendance.map(a => `
             <li class="brow" ${a.meeting_id ? `data-bmeeting="${esc(a.meeting_id)}" tabindex="0" role="button"` : ''}>
@@ -359,14 +354,15 @@ const BoardUI = {
       <p class="muted">${esc(fmtDay(m.meeting_date))} / ${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || 'MPR')}${
         m.check_in_open ? ' / check-in open' : ''}</p>
 
-      <h2 class="h2 bsec meetband"><span>Attendees</span><span class="meetband__n">${d.attendees.length} checked in</span></h2>
+      ${String(m.meeting_date) > Schedule.today() ? '' : `<h2 class="h2 bsec meetband"><span>Attendees</span>${d.attendees.length
+        ? `<span class="meetband__n">${d.attendees.length} checked in</span>` : ''}</h2>
       ${d.attendees.length
         ? `<ul class="blist">${d.attendees.map(a => `
             <li class="brow brow--member" data-bmember="${esc(a.user_id)}" tabindex="0" role="button">
               <span class="brow__mid"><b>${esc(a.username)}</b></span>
               <span class="muted">${esc(fmtTime(a.checked_in_at))}</span>
             </li>`).join('')}</ul>`
-        : this.empty('No one has checked in yet.')}
+        : this.empty('No one has checked in yet.')}`}
       ${this.deleteBlock(m, d.attendees.length)}
     </div>`;
   },
@@ -384,48 +380,50 @@ const BoardUI = {
 
   sessionPane(){
     const list = (this.meetings && this.meetings.meetings) || [];
-    const open = list.find(m => m.state === 'OPEN');
-    const options = list.filter(m => m.state === 'UPCOMING' || m.state === 'ENDED' || m.state === 'OPEN');
-    const sel = list.find(m => m.id === boardMeeting) || open || options[0] || null;
+    const today = (this.meetings && this.meetings.server_date) || Schedule.today();
+    /* Check-in is opened only for today's meeting: opening a future one
+       would record attendance that never happened. An open check-in is
+       shown whatever its date, so one left open can be closed. */
+    const open = list.find(m => m.state === 'OPEN') || null;
+    const todays = list.filter(m => m.meeting_date === today && m.state !== 'OPEN')
+      .sort((a, b) => a.meeting_number - b.meeting_number);
+    const sel = open || todays.find(m => m.id === boardMeeting) || todays[0] || null;
     boardMeeting = sel ? sel.id : null;
 
-    if (!sel) return `<div class="panel bpanel fail">
-      ${this.empty('No meeting to open yet.')}
-      <button class="btn btn--go" data-btab="meetings">Schedule one</button>
-    </div>`;
+    if (!sel){
+      const next = list.filter(m => String(m.meeting_date) > today)
+        .sort((a, b) => String(a.meeting_date) < String(b.meeting_date) ? -1 : 1)[0];
+      return `<div class="bpanel fail">
+        <p class="nowline"><b class="nowline__lab">No meeting today</b>${next
+          ? `<span>Next / GM ${pad(next.meeting_number)} / ${esc(fmtDay(next.meeting_date))}</span>` : ''}</p>
+        <button class="link" type="button" data-btab="meetings" data-mnew>Schedule a meeting</button>
+      </div>`;
+    }
 
     const isOpen = Boolean(sel.check_in_open);
+    const id = esc(sel.id);
 
     return `<div class="bpanel">
-      <div class="gmtabs" role="tablist">
-        ${options.map(o => `<button class="gmtab ${o.id === sel.id ? 'gmtab--on' : ''}"
+      ${!open && todays.length > 1 ? `<div class="gmtabs" role="tablist" aria-label="Today's meetings">
+        ${todays.map(o => `<button class="gmtab ${o.id === sel.id ? 'gmtab--on' : ''}"
           role="tab" aria-selected="${o.id === sel.id}"
-          data-bpick="${o.id}">GM ${pad(o.meeting_number)}</button>`).join('')}
-      </div>
+          data-bpick="${esc(o.id)}">GM ${pad(o.meeting_number)}</button>`).join('')}
+      </div>` : ''}
 
       <section class="proj ${isOpen ? 'proj--live' : ''}" id="proj">
         <div class="proj__meet">
           <p class="proj__no">GM ${pad(sel.meeting_number)}</p>
-          <p class="proj__when">${esc(fmtDay(sel.meeting_date))} / ${esc(knit(sel.start_time))} / ${esc(sel.location || Schedule.PLACE)}</p>
+          <p class="proj__when">${esc(fmtDay(sel.meeting_date))} / ${esc(spanTime(sel.start_time, sel.end_time))} / ${esc(sel.location || Schedule.PLACE)}</p>
         </div>
-        <p class="proj__word">${isOpen ? 'Open' : 'Closed'}</p>
-
-        ${isOpen
-          ? `<p class="proj__count" aria-live="polite"><b id="attCount">${Number.isFinite(sel.attendance_count) ? sel.attendance_count : ''}</b><span>checked in</span></p>`
-          : ''}
+        ${isOpen ? `<p class="proj__word">Open</p>
+        <p class="proj__count" aria-live="polite"><b id="attCount">${Number.isFinite(sel.attendance_count) ? sel.attendance_count : ''}</b><span>checked in</span></p>` : ''}
         <div class="proj__ctls">
-          ${isOpen ? `<button class="proj__ctl proj__ctl--full" type="button" data-bfull aria-pressed="false">Project</button>` : ''}
           ${isOpen
-            ? `<button class="proj__ctl" type="button" data-bend="${esc(sel.id)}" data-busy="Closing">Close check-in</button>`
-            : `<button class="proj__ctl proj__ctl--go" type="button" data-bstart="${esc(sel.id)}" data-busy="Opening">Open check-in</button>`}
+            ? `<button class="proj__ctl proj__ctl--go" type="button" data-bfull aria-pressed="false">Project</button>`
+            : `<button class="proj__ctl proj__ctl--go" type="button" data-bstart="${id}" data-busy="Opening">Open check-in</button>`}
         </div>
-
-        ${isOpen ? `
-          <div class="proj__plate">
-            <div class="qrpanel__code" id="qrBox"></div>
-            <p class="proj__cap">GM ${pad(sel.meeting_number)} / scan to check in</p>
-          </div>
-        ` : ''}
+        ${isOpen ? `<button class="link proj__end" type="button" data-bend="${id}" data-busy="Closing">Close check-in</button>
+          <div class="proj__plate"><div class="qrpanel__code" id="qrBox"></div></div>` : ''}
       </section>
     </div>`;
   },

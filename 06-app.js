@@ -148,7 +148,6 @@ async function go(id, opts = {}){
     current = id;
     syncHash(id);
     Motion.settle(view);
-    Reveal.clear();
     document.documentElement.dataset.screen = id;
 
     view.innerHTML = Views[id]();
@@ -163,7 +162,9 @@ async function go(id, opts = {}){
   };
 
   const same = from === id && !opts.force;
-  if (view.firstChild && booted && !opts.instant && !same && window.animate){
+  /* Scan is never cut into: the camera image is the page change, and
+     the camera is asked for at once */
+  if (view.firstChild && booted && !opts.instant && !same && id !== 'scan' && window.animate){
     navigating = true;
     await Transit.run(from, id, () => render(true));
     navigating = false;
@@ -176,27 +177,12 @@ async function go(id, opts = {}){
   }
 }
 
-const seenUnlocked = new Set();
-
-function playViewIntro(id, nav = false){
-  if (id === 'home'){
-    if (pendingStamp){
-      const cell = Landing.cellFor(pendingStamp.meetingId);
-      pendingStamp = null;
-      Landing.prime(cell);
-    } else if (!nav){
-      FX.sealGrid($('#seals'));
-    }
-  }
-
-  if (id === 'rewards'){
-    $$('[data-reward]').forEach(row => {
-      if (!row.classList.contains('tier--ready')) return;
-      const rid = row.dataset.reward;
-      if (seenUnlocked.has(rid)) return;
-      seenUnlocked.add(rid);
-      setTimeout(() => FX.rewardUnlock(row), 420);
-    });
+/* the one intro a page has: a stamp just earned is primed to land */
+function playViewIntro(id){
+  if (id === 'home' && pendingStamp){
+    const cell = Landing.cellFor(pendingStamp.meetingId);
+    pendingStamp = null;
+    Landing.prime(cell);
   }
 }
 
@@ -310,7 +296,7 @@ document.addEventListener('submit', async e => {
     try {
       await Backend.createMeeting({ no, date, startTime:to12h(start), endTime:to12h(end) });
       BoardUI.form = null; BoardUI.formOpen = false;
-      toast({ key:'board', title:`GM ${pad(no)} scheduled`, detail:'It is now in the schedule.' });
+      toast({ key:'board', title:`GM ${pad(no)} scheduled` });
       boardGoto({ tab:'meetings' });
     } catch (ex){
       show(WriteFailure.explain(ex, 'create meeting'));
@@ -335,8 +321,7 @@ document.addEventListener('submit', async e => {
     if (up) await Store.signUp(username, password, confirm);
     else    await Store.signIn(username, password);
 
-    const scene = Scenes.opening({ tail: up ? 'Member joined' : 'Welcome back',
-      reveal(){ FX.pageEntrance($('#view')); playViewIntro(current); } });
+    const scene = Scenes.opening({ reveal(){ playViewIntro(current); } });
     requestAnimationFrame(() => requestAnimationFrame(() => {
       go('home', { instant:true, covered:true });
       scene.release();
@@ -366,6 +351,7 @@ document.addEventListener('click', e => {
   if (btab){
     const toRoute = { club:'board', meetings:'bmeet', session:'bcheckin', progress:'bmembers' };
     Object.assign(BoardUI, { memberDetail:null, meetingDetail:null, page:1 });
+    if (btab.hasAttribute('data-mnew')) BoardUI.formOpen = true;
     go(toRoute[btab.dataset.btab] || 'board');
     return;
   }
@@ -400,15 +386,6 @@ document.addEventListener('click', e => {
   }
   const bfull = e.target.closest('[data-bfull]');
   if (bfull){ projector(!$('#proj')?.classList.contains('proj--full')); return; }
-
-  const mreset = e.target.closest('[data-mreset]');
-  if (mreset){
-    BoardUI.form = null;
-    const mf = $('#meetingForm');
-    if (mf) mf.outerHTML = BoardUI.createForm();
-    $('#mNo')?.focus({ preventScroll:true });
-    return;
-  }
 
   const bdelete = e.target.closest('[data-bdelete]');
   if (bdelete){
@@ -460,7 +437,9 @@ document.addEventListener('click', e => {
   if (bstart){
     hold(bstart, 'Opening');
     Backend.startAttendance(bstart.dataset.bstart)
-      .then(() => { boardMeeting = bstart.dataset.bstart; boardStamp = true; loadBoard(); })
+      /* opened from Club Tools, the next thing wanted is the code */
+      .then(() => { boardMeeting = bstart.dataset.bstart; boardStamp = true;
+                    if (current === 'board') go('bcheckin'); else loadBoard(); })
       .catch(err => { release(bstart, 'Open check-in');
         toast({ key:'board', bad:true, title:'Could not open check-in',
                 detail:BoardUI.message(err && err.message) }); });
@@ -502,7 +481,7 @@ document.addEventListener('click', e => {
   const swap = e.target.closest('#authSwap');
   if (swap){
     AuthUI.mode = AuthUI.mode === 'up' ? 'in' : 'up';
-    go('auth', { force:true });
+    go('auth', { force:true, instant:true });
     return;
   }
 
@@ -524,9 +503,6 @@ document.addEventListener('click', e => {
   if (motion){
     Motion.setForced(!Motion.forced);
     paintMotion();
-    toast({ key:'motion',
-            title:Motion.forced ? 'Reduced motion on' : 'Reduced motion off',
-            detail:Motion.forced ? 'Animations are off.' : 'Animations are back on.' });
     return;
   }
 
@@ -709,7 +685,6 @@ let opening = null;
 try {
   opening = Scenes.opening({ root:$('#boot'), reveal(){
     booted = true;
-    FX.pageEntrance($('#view'));
     playViewIntro(current);
   } });
 } catch (_) {

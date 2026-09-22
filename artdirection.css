@@ -97,7 +97,6 @@
 .bform .field{display:block;min-width:0}
 .bform .kicker{display:block;margin-bottom:5px}
 .bform .input{width:100%;box-sizing:border-box;min-width:0}
-.bform .btn{margin-top:var(--sp-pad)}
 
 .bpanel{padding:var(--sp-pad)}
 

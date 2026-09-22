@@ -11,7 +11,11 @@ const Motion = {
   setForced(v){
     this.forced = Boolean(v);
     try { localStorage.setItem(MOTION_KEY, v ? 'off' : 'on'); } catch (_) {}
+    this.mark();
   },
+  /* the in-app setting reaches the CSS too, so a spinner stops for it
+     the way it does for the system setting */
+  mark(){ try { document.documentElement.toggleAttribute('data-still', this.forced); } catch (_) {} },
   get off(){ return this.forced || !window.animate || systemReducedMotion(); },
   get reduced(){ return this.forced || systemReducedMotion(); },
 
@@ -27,52 +31,7 @@ const Motion = {
   },
 };
 
-const releaseTransform = els => {
-  (Array.isArray(els) ? els : [els]).forEach(el => {
-    if (el && el.style) el.style.transform = '';
-  });
-};
-
-const Reveal = {
-  io: null,
-  fuses: new Set(),
-
-  enter(el){
-    clearTimeout(el._revealFuse);
-    if (el.dataset.revealed) return;
-    el.dataset.revealed = '1';
-    animate(el, { opacity:[0, 1], duration:MECH.CUT, ease:STEP(1) });
-    FX.slamType(el, MECH.BEAT);
-  },
-
-  watch(el){
-    if (Motion.off || !('IntersectionObserver' in window)){
-      el.style.opacity = '';
-      return;
-    }
-    if (!this.io){
-      this.io = new IntersectionObserver(entries => {
-        entries.forEach(en => {
-          if (!en.isIntersecting) return;
-          this.io.unobserve(en.target);
-          this.enter(en.target);
-        });
-      }, { rootMargin:'0px 0px -6% 0px', threshold:.04 });
-    }
-    this.io.observe(el);
-    el._revealFuse = setTimeout(() => {
-      this.fuses.delete(el._revealFuse);
-      this.io?.unobserve(el);
-      this.enter(el);
-    }, 6000);
-    this.fuses.add(el._revealFuse);
-  },
-
-  clear(){
-    this.io?.disconnect(); this.io = null;
-    this.fuses.forEach(t => clearTimeout(t)); this.fuses.clear();
-  },
-};
+Motion.mark();
 
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
