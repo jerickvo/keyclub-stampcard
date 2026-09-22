@@ -56,7 +56,8 @@
 }
 .brow--reward{cursor:default}
 .brow:last-child{border-bottom:0}
-.brow:hover,.brow:focus-visible{background:var(--paper);outline:0}
+.brow:focus-visible{background:var(--paper);outline:0}
+@media (hover:hover){.brow:hover{background:var(--paper);outline:0}}
 .brow__no{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;
   color:var(--tone);white-space:nowrap}
 .brow__mid{min-width:0}
@@ -68,7 +69,7 @@
   padding:5px 8px;white-space:nowrap;border:1.5px solid var(--ink)}
 .bstate--open{background:var(--ink);color:var(--paper)}
 .bstate--upcoming{background:none;color:var(--ink)}
-.bstate--ended,.bstate--past{background:none;color:var(--tone);border-color:var(--tone)}
+.bstate--ended,.bstate--past{background:none;color:var(--ink-2);border-color:var(--tone)}
 
 .bdetail__name{font-family:var(--f-head);font-size:clamp(26px,3.4vw,42px);
   line-height:1;margin:4px 0 var(--sp-pad);text-transform:uppercase;letter-spacing:-.03em}
@@ -77,7 +78,7 @@
   display:grid;
   gap:var(--sp-row);
   margin-bottom:var(--sp-pad);
-  grid-template-columns:1fr}
+  grid-template-columns:minmax(0,1fr) 7.5rem}
 .bfilters .input{width:100%;box-sizing:border-box;min-width:0}
 .bpage{
   display:flex;
@@ -102,7 +103,6 @@
 
 @media(min-width:768px){
   .bpanel{padding:var(--sp-pad)}
-  .bfilters{grid-template-columns:2fr 1fr}
   .bpage{justify-content:space-between}
 }
 
@@ -126,10 +126,7 @@
   flex-wrap:wrap;
   flex:1 1 100%;
   margin-top:var(--sp-row)}
-.bconfirm .btn{
-  padding:8px 14px;
-  font-size:11px;
-  flex:1 1 auto}
+.bconfirm .btn{flex:1 1 auto}
 @media(min-width:768px){
   .bconfirm{flex:0 1 auto;margin-top:0}
   .bconfirm .btn{flex:0 0 auto}
@@ -175,14 +172,14 @@ select.input:focus-visible{outline:none}
   .sealmeta{font-size:11px;padding:10px 12px}
 }
 
-.seal:hover .sealmeta,
 .seal:focus .sealmeta{display:block}
+@media (hover:hover){.seal:hover .sealmeta{display:block}}
 
-.seal:hover,
 .seal:focus{z-index:30}
+@media (hover:hover){.seal:hover{z-index:30}}
 
-.seals:focus-within,
-.seals:has(.seal:hover){z-index:4}
+.seals:focus-within{z-index:4}
+@media (hover:hover){.seals:has(.seal:hover){z-index:4}}
 
 .seal:nth-child(3) .sealmeta,
 .seal:nth-child(4) .sealmeta,
@@ -208,7 +205,7 @@ select.input:focus-visible{outline:none}
 }
 
 .btn--go{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.btn--go:hover{background:var(--ink-2);border-color:var(--ink-2)}
+@media (hover:hover){.btn--go:hover{background:var(--ink-2);border-color:var(--ink-2)}}
 
 .btn:active{transform:translate(0,0)}
 .btn--go:active{background:var(--ink);border-color:var(--ink)}

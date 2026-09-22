@@ -40,12 +40,16 @@ test('the meeting line over the viewer follows the record', () => {
   load({ meetings:[...held(3), meeting(4, { open:true, today:true })] });
   // today's meeting in the usual room: the number is all a member needs
   assert.equal(line(), 'Checking in to | GM 04');
-  load({ meetings:[...held(3), meeting(4, { open:true, today:true })], scans:[{ meetingId:'m4', at:'2026-09-14T19:50:00Z' }] });
-  assert.equal(line(), 'Already stamped | GM 04');
   // the Scan page prints the same line it will later refresh in place
   const page = Views.scan();
-  assert.equal(page.includes('<span class="standing__lab">Already stamped</span>'), true);
+  assert.equal(page.includes('<span class="standing__lab">Checking in to</span>'), true);
   assert.equal(page.includes('<span class="standing__at">GM 04</span>'), true);
+  // already stamped: no camera, one line, the way Home says it
+  load({ meetings:[...held(3), meeting(4, { open:true, today:true })], scans:[{ meetingId:'m4', at:'2026-09-14T19:50:00Z' }] });
+  const done = Views.scan();
+  assert.equal(done.includes('id="cam"'), false);
+  assert.equal(done.includes('Checked in'), true);
+  assert.equal(done.includes('GM 04'), true);
 });
 
 test('the store fingerprint changes only when a page would', () => {

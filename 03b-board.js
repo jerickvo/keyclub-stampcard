@@ -11,6 +11,14 @@ function nextMeetingNumber(list){
 
 const MEETING_DEFAULTS = { start:'12:40', end:'13:30' };
 
+/* The usual time and room are said once, by the club, not on every
+   line; a meeting that differs says how. */
+function meetingAway(m){
+  const span = spanTime(m.start_time, m.end_time), room = m.location || Schedule.PLACE;
+  const usual = span === spanTime('12:40 PM', '1:30 PM') && room === Schedule.PLACE;
+  return usual ? '' : ` / ${esc(span)} / ${esc(room)}`;
+}
+
 /* minutes past midnight at the club */
 function clubMinutes(d = new Date()){
   try {
@@ -41,7 +49,7 @@ function spanTime(start, end){
 }
 
 const BoardUI = {
-  tab: 'club',
+  tab: 'session',
   loading: false,
   shown: null,          /* the tab whose loaded content the pane holds */
   error: null,
@@ -95,7 +103,6 @@ const BoardUI = {
     if (this.error)   return this.failure(this.error);
     if (this.memberDetail)  return this.memberPane();
     if (this.meetingDetail) return this.meetingPane();
-    if (this.tab === 'club')     return this.clubPane();
     if (this.tab === 'meetings') return this.meetingsPane();
     if (this.tab === 'progress') return this.progressPane();
     return this.sessionPane();
@@ -120,44 +127,7 @@ const BoardUI = {
   },
 
   /* a detail page returns to the list of the tab it was opened in */
-  backLabel(){
-    return this.tab === 'meetings' ? 'Back to meetings' : 'Back to members';
-  },
-
-  clubPane(){
-    const o = this.overview || {};
-    const active = o.active_meeting;
-    const next = o.next_meeting;
-
-    const focus = active || next;
-    const isLive = Boolean(active);
-    const today = o.server_date || Schedule.today();
-    /* an open check-in from another day was left open, not started today */
-    const stale = isLive && active.meeting_date !== today;
-    const isToday = !isLive && focus && focus.meeting_date === today;
-    const at = m => `${esc(fmtDay(m.meeting_date))} / ${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || Schedule.PLACE)}`;
-
-    /* each button does what it says, here: close, open, or show the code */
-    if (!focus) return `<div class="bover"><div class="bnow bnow--none">
-        <p class="bnow__lab">Next general meeting</p>
-        <p class="bnow__no">None yet</p>
-        <button class="bnow__go" type="button" data-btab="meetings" data-mnew>Schedule one</button>
-      </div></div>`;
-
-    return `<div class="bover">
-      <div class="bnow${isLive ? ' bnow--live' : ''}${isToday ? ' bnow--today' : ''}">
-        <p class="bnow__lab">${stale ? 'Check-in left open' : isLive ? 'Check-in open' : isToday ? 'Today' : 'Next general meeting'}</p>
-        <p class="bnow__no">GM ${pad(focus.meeting_number)}</p>
-        <p class="bnow__at">${at(focus)}</p>
-        ${stale ? '<p class="bnow__state">Never closed</p>'
-          : isLive ? `<p class="bnow__state">${o.today_attendance} checked in</p>` : ''}
-        ${stale ? `<button class="bnow__go" type="button" data-bend="${esc(active.id)}" data-busy="Closing">Close check-in</button>`
-          : isLive ? '<button class="bnow__go" type="button" data-btab="session">Show the code</button>'
-          : isToday ? `<button class="bnow__go" type="button" data-bstart="${esc(focus.id)}" data-busy="Opening">Open check-in</button>`
-          : ''}
-      </div>
-    </div>`;
-  },
+  backLabel(){ return 'Back'; },
 
   progressPane(){
     const o = this.overview || {};
@@ -225,9 +195,9 @@ const BoardUI = {
     const span = spanTime(m.start_time, m.end_time), room = m.location || Schedule.PLACE;
     const usual = span === spanTime('12:40 PM', '1:30 PM') && room === Schedule.PLACE;
 
-    return `<li class="brow brow--${state}">
-      <span class="brow__no" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">GM ${no}</span>
-      <span class="brow__day" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">${esc(fmtDay(m.meeting_date))}</span>
+    return `<li class="brow brow--${state}" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">
+      <span class="brow__no">GM ${no}</span>
+      <span class="brow__day">${esc(fmtDay(m.meeting_date))}</span>
       ${usual ? '' : `<span class="brow__when">${esc(span)} / ${esc(room)}</span>`}
       ${word ? `<span class="bstate bstate--${state}">${word}</span>` : ''}
       ${upcoming ? '' : `<span class="brow__n"><b>${stamps}</b><span class="brow__nlab">checked in</span></span>`}
@@ -282,12 +252,12 @@ const BoardUI = {
     const rows = d.members || [];
     return `<div>
       <div class="bfilters">
-        <label class="field bfilters__q"><span class="kicker">Search username</span>
-          <input class="input" id="bq" type="search" value="${esc(this.q)}"
+        <label class="field bfilters__q"><span class="sr-only">Search username</span>
+          <input class="input" id="bq" type="search" value="${esc(this.q)}" placeholder="Search username"
                  autocapitalize="none" spellcheck="false"></label>
-        <label class="field"><span class="kicker">Sort</span>
+        <label class="field"><span class="sr-only">Sort by</span>
           <select class="input" id="bsort">
-            ${[['username','Username'],['stamps_desc','Most stamps'],['recent','Most recent attendance']]
+            ${[['username','Name'],['stamps_desc','Stamps'],['recent','Recent']]
               .map(([v,l]) => `<option value="${v}" ${this.sort === v ? 'selected' : ''}>${l}</option>`).join('')}
           </select></label>
       </div>
@@ -335,10 +305,10 @@ const BoardUI = {
         ? `<span class="meetband__n">${d.attendance.length} ${d.attendance.length === 1 ? 'stamp' : 'stamps'}</span>` : ''}</h2>
       ${d.attendance.length
         ? `<ul class="blist">${d.attendance.map(a => `
-            <li class="brow" ${a.meeting_id ? `data-bmeeting="${esc(a.meeting_id)}" tabindex="0" role="button"` : ''}>
+            <li class="brow brow--att" ${a.meeting_id ? `data-bmeeting="${esc(a.meeting_id)}" tabindex="0" role="button"` : ''}>
               <span class="brow__no">GM ${a.meeting_number ? pad(a.meeting_number) : '-'}</span>
-              <span class="brow__mid"><b>${esc(fmtDay(a.meeting_date))}</b>
-                <span class="muted">${esc(a.location || 'MPR')} / checked in ${esc(fmtTime(a.checked_in_at))}</span></span>
+              <span class="brow__mid"><b>${esc(fmtDay(a.meeting_date))}</b></span>
+              <span class="brow__cell">${esc(fmtTime(a.checked_in_at))}${a.location && a.location !== Schedule.PLACE ? ` / ${esc(a.location)}` : ''}</span>
             </li>`).join('')}</ul>`
         : this.empty('No attendance yet.')}
     </div>`;
@@ -402,6 +372,8 @@ const BoardUI = {
 
     const isOpen = Boolean(sel.check_in_open);
     const id = esc(sel.id);
+    /* a check-in left open on another day says so */
+    const stale = isOpen && sel.meeting_date !== today;
 
     return `<div class="bpanel">
       ${!open && todays.length > 1 ? `<div class="gmtabs" role="tablist" aria-label="Today's meetings">
@@ -413,7 +385,7 @@ const BoardUI = {
       <section class="proj ${isOpen ? 'proj--live' : ''}" id="proj">
         <div class="proj__meet">
           <p class="proj__no">GM ${pad(sel.meeting_number)}</p>
-          <p class="proj__when">${esc(fmtDay(sel.meeting_date))} / ${esc(spanTime(sel.start_time, sel.end_time))} / ${esc(sel.location || Schedule.PLACE)}</p>
+          <p class="proj__when">${esc(fmtDay(sel.meeting_date))}${meetingAway(sel)}${stale ? ' / never closed' : ''}</p>
         </div>
         ${isOpen ? `<p class="proj__word">Open</p>
         <p class="proj__count" aria-live="polite"><b id="attCount">${Number.isFinite(sel.attendance_count) ? sel.attendance_count : ''}</b><span>checked in</span></p>` : ''}
@@ -422,7 +394,7 @@ const BoardUI = {
             ? `<button class="proj__ctl proj__ctl--go" type="button" data-bfull aria-pressed="false">Project</button>`
             : `<button class="proj__ctl proj__ctl--go" type="button" data-bstart="${id}" data-busy="Opening">Open check-in</button>`}
         </div>
-        ${isOpen ? `<button class="link proj__end" type="button" data-bend="${id}" data-busy="Closing">Close check-in</button>
+        ${isOpen ? `<button class="link proj__end" type="button" data-bend="${id}">Close check-in</button>
           <div class="proj__plate"><div class="qrpanel__code" id="qrBox"></div></div>` : ''}
       </section>
     </div>`;

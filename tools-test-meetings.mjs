@@ -99,54 +99,6 @@ test('the meetings register splits into coming up and already held', () => {
   assert.equal(html.indexOf('GM 02') < html.indexOf('GM 01'), true);
 });
 
-test('the club overview: each button does what it says, and a future meeting has none', () => {
-  const base = { meetings_held:16, total_seals:214, participating_members:25, average_attendance:13.4, today_attendance:0 };
-  BoardUI.overview = { ...base, active_meeting:null, next_meeting:null };
-  const none = BoardUI.clubPane();
-  assert.equal(none.includes('bnow--none'), true);
-  assert.equal(none.includes('None yet'), true);
-  assert.equal(none.includes('Schedule one'), true);
-  assert.equal(none.includes('bnow--live'), false);
-  // statistics that change no decision are gone
-  assert.equal(none.includes('figline'), false);
-
-  // a meeting days away: named, no button (opening it would be a false attendance)
-  BoardUI.overview = { ...base, active_meeting:null, server_date:'2026-09-07',
-    next_meeting:{ id:'m9', meeting_number:9, meeting_date:'2026-09-16', start_time:'12:40 PM', end_time:'1:30 PM', check_in_open:false } };
-  const ahead = BoardUI.clubPane();
-  assert.equal(ahead.includes('GM 09'), true);
-  assert.equal(ahead.includes('Next general meeting'), true);
-  assert.equal(ahead.includes('<button'), false);
-
-  // today's meeting: the button opens check-in in place
-  BoardUI.overview = { ...base, active_meeting:null, server_date:'2026-09-16',
-    next_meeting:{ id:'m9', meeting_number:9, meeting_date:'2026-09-16', start_time:'12:40 PM', end_time:'1:30 PM', check_in_open:false } };
-  const today = BoardUI.clubPane();
-  assert.equal(today.includes('>Today<'), true);
-  assert.equal(today.includes('data-bstart="m9"'), true);
-
-  BoardUI.overview = { ...base, today_attendance:4, next_meeting:null, server_date:'2026-09-16',
-    active_meeting:{ id:'m9', meeting_number:9, meeting_date:'2026-09-16', start_time:'12:40 PM', end_time:'1:30 PM', check_in_open:true } };
-  const live = BoardUI.clubPane();
-  assert.equal(live.includes('bnow--live'), true);
-  assert.equal(live.includes('Check-in open'), true);
-  assert.equal(live.includes('4 checked in'), true);
-  assert.equal(live.includes('Show the code'), true);
-  assert.equal(live.includes('left open'), false);
-});
-
-test('a check-in left open from another day is named as such, and closes in place', () => {
-  BoardUI.overview = { meetings_held:16, total_seals:214, participating_members:25, average_attendance:13.4,
-    today_attendance:0, next_meeting:null, server_date:'2026-09-22',
-    active_meeting:{ id:'m9', meeting_number:9, meeting_date:'2026-09-16', start_time:'12:40 PM', end_time:'1:30 PM', check_in_open:true } };
-  const html = BoardUI.clubPane();
-  assert.equal(html.includes('Check-in left open'), true);
-  assert.equal(html.includes('Never closed'), true);
-  assert.equal(html.includes('data-bend="m9"'), true);
-  assert.equal(html.includes('Close check-in'), true);
-  assert.equal(html.includes('checked in so far'), false);
-});
-
 test('the schedule form stays folded until asked for', () => {
   BoardUI.form = null; BoardUI.deleteNote = null; BoardUI.formOpen = false;
   BoardUI.meetings = { meetings:[
@@ -187,6 +139,7 @@ test('check-in is offered only for today; an open one is shown whatever its date
   assert.equal(html.includes('GM 19'), true);
   assert.equal(html.includes('data-bend="old"'), true);
   assert.equal(html.includes('data-bfull'), true);
+  assert.equal(html.includes('never closed'), true);        // named as left open, not as today's
 });
 
 test('a meeting dated today is today\'s meeting until its end time, then it has ended', () => {

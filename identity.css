@@ -47,7 +47,7 @@ body{
 .btn--go{
   background:var(--ink);border-color:var(--ink);color:var(--paper);
 }
-.btn--go:hover{background:var(--ink);border-color:var(--ink)}
+@media (hover:hover){.btn--go:hover{background:var(--ink);border-color:var(--ink)}}
 .btn--go:active{transform:translate(1px,1px)}
 
 .rail__link[aria-current],
@@ -65,7 +65,8 @@ body{
   font-size:var(--t-body);letter-spacing:.01em}
 
 .brow{border-bottom:var(--edge-hair) solid var(--tone)}
-.brow:hover,.brow:focus-visible{background:var(--tint)}
+.brow:focus-visible{background:var(--tint)}
+@media (hover:hover){.brow:hover{background:var(--tint)}}
 .brow:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:-2px}
 .brow__no{color:var(--ink-2)}
 .brow__n{font-family:var(--f-head)}
@@ -73,15 +74,10 @@ body{
 .blist--meet .brow{display:grid;column-gap:var(--sp-row);row-gap:4px;align-items:center;
   grid-template-columns:auto minmax(0,1fr) auto;
   grid-template-areas:"no day state" "no when when" "no n n";
-  padding:var(--sp-row) 0;cursor:default}
-.blist--meet .brow:hover{background:none}
-.blist--meet .brow__day:hover,.blist--meet .brow__no:hover + .brow__day{text-decoration-color:var(--ink)}
-.blist--meet .brow__no{grid-area:no;flex:none;align-self:start;
-  padding:10px 4px 6px;margin:-6px -4px;
-  cursor:pointer;min-height:0}
-.blist--meet .brow__day{grid-area:day;cursor:pointer;
-  padding-block:6px;margin-block:-6px;
-  text-decoration:underline;text-decoration-color:var(--tint);text-underline-offset:4px;
+  padding:var(--sp-row) 0;cursor:pointer;min-height:44px}
+/* the whole row opens the meeting */
+.blist--meet .brow__no{grid-area:no;flex:none;align-self:start;min-height:0;padding-top:2px}
+.blist--meet .brow__day{grid-area:day;
   font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);line-height:1.05;
   letter-spacing:.01em;color:var(--ink);min-width:0;overflow-wrap:anywhere}
 .blist--meet .brow__when{grid-area:when;min-width:0;overflow-wrap:anywhere;
@@ -108,8 +104,10 @@ body{
 .bconfirm--heavy .bconfirm__q{white-space:normal;color:var(--seal)}
 .bconfirm--heavy .btn{order:2}
 .bconfirm--heavy .btn--go{background:var(--seal);border-color:var(--seal)}
-.bconfirm--heavy .btn--go:hover,.bconfirm--heavy .btn--go:focus-visible{
+.bconfirm--heavy .btn--go:focus-visible{
   background:var(--ink);border-color:var(--ink)}
+@media (hover:hover){.bconfirm--heavy .btn--go:hover{
+  background:var(--ink);border-color:var(--ink)}}
 .bform .field{display:flex;flex-direction:column;justify-content:flex-end;min-width:0}
 .bform .bform__grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media(max-width:339px){ .bform .bform__grid{grid-template-columns:minmax(0,1fr)} }
@@ -119,7 +117,7 @@ body{
 @media(min-width:640px){
   .blist--meet .brow{grid-template-columns:auto minmax(0,1fr) auto auto;
     grid-template-areas:"no day state n" "no when state n";row-gap:2px}
-  .blist--meet .brow__no{align-self:center;padding-block:6px}
+  .blist--meet .brow__no{align-self:center;padding-top:0}
   .blist--meet .bstate{align-self:center}
   .blist--meet .brow__n{display:grid;justify-items:end;gap:1px;
     text-align:right;padding-top:0}
@@ -151,7 +149,7 @@ body{
 .bdel{margin-top:var(--sp-block);padding-top:var(--sp-row);border-top:var(--edge-rule) solid var(--tint)}
 .bdel__go{color:var(--ink-2);font-size:var(--t-caption)}
 .bdel .bconfirm{justify-content:flex-start}
-.meetband .meetband__act{min-height:44px;margin-block:-14px;padding:0;
+.meetband .meetband__act{min-height:44px;margin:-14px 0 -6px;padding:0;
   font-family:var(--f-body);text-transform:none;
   font-size:var(--t-body);letter-spacing:.02em;white-space:nowrap}
 /* the Held band names its count column once; each row is one line */
@@ -191,6 +189,14 @@ body{
 .rosterpanel .meetband{margin:0 0 var(--sp-row)}
 .rosterpanel > div{padding:0}
 
+/* a row is one line; the row itself is the tap target */
+.brow--att{flex-wrap:nowrap}
+.brow--att .brow__no{flex:none}
+.brow--att .brow__mid{flex:1 1 auto}
+.brow--att .brow__cell{font:400 12.5px/1.3 var(--f-mono);letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.blist--members .brow__mid,.bpanel .blist .brow__mid{min-height:0}
+
 /* the roster names its columns once, at every width */
 .blist__head,.blist--members .brow{display:grid;column-gap:var(--sp-row);align-items:baseline;
   grid-template-columns:minmax(0,1fr) 112px 48px;grid-template-areas:"name last n"}
@@ -203,7 +209,7 @@ body{
 .blist--members .brow__cell--last{grid-area:last}
 .blist--members .brow__n{grid-area:n;justify-self:end}
 .blist--members .brow__nlab{display:none}
-.brow__none{color:var(--tone)}
+.brow__none{color:var(--ink-2)}
 @media(min-width:768px){
   .blist__head,.blist--members .brow{
     grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(88px,auto);column-gap:var(--sp-pad)}
@@ -248,18 +254,16 @@ body{
 
 .bsec{margin-top:var(--sp-block)}
 
-.btn:hover{
-  background:var(--ink);color:var(--paper);border-color:var(--ink)}
+@media (hover:hover){.btn:hover{
+  background:var(--ink);color:var(--paper);border-color:var(--ink)}}
 .btn:active{transform:translate(2px,2px)}
-.motion-btn:hover .motion-btn__opt{color:var(--ink)}
-.motion-btn[aria-pressed="true"]:hover .motion-btn__opt:first-child,
-.motion-btn[aria-pressed="false"]:hover .motion-btn__opt:last-child{color:var(--paper)}
-.link:hover{text-decoration-thickness:2px}
+@media (hover:hover){.motion-btn:hover .motion-btn__opt{color:var(--ink)}}
+@media (hover:hover){.motion-btn[aria-pressed="true"]:hover .motion-btn__opt:first-child,.motion-btn[aria-pressed="false"]:hover .motion-btn__opt:last-child{color:var(--paper)}}
+@media (hover:hover){.link:hover{text-decoration-thickness:2px}}
 :focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px}
 
 main#view:focus,main#view:focus-visible{outline:none}
 
-[data-screen="auth"] .topbar{display:none}
 @media(min-width:1024px){
   [data-screen="auth"] .rail{display:none}
   [data-screen="auth"] .shell{grid-template-columns:1fr}
@@ -295,6 +299,8 @@ main#view:focus,main#view:focus-visible{outline:none}
   clip-path:polygon(0 40%,14% 6%,58% 0,90% 26%,100% 60%,55% 100%,8% 72%)}
 .card__goal{margin:0;font-size:var(--t-body);opacity:.85;
   max-width:22ch}
+.card__goal--go{align-self:flex-start;color:var(--paper);opacity:1;text-align:left;
+  font-family:var(--f-body);text-transform:uppercase}
 
 .card__kci{display:block;margin-top:auto;padding-top:clamp(8px,2cqw,16px)}
 @container (max-width:479px){
@@ -420,12 +426,12 @@ main#view:focus,main#view:focus-visible{outline:none}
   border-top:var(--edge-panel) solid var(--ink);background:none}
 .act:not(.act--live) .act__verb{font-size:var(--t-sub)}
 .act:not(.act--live) .act__sub{font-size:var(--t-caption);opacity:1;color:var(--ink-2)}
-.act:not(.act--live) .act__btn:hover{background:none;color:var(--ink)}
-.act:not(.act--live) .act__btn:hover .act__verb{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+@media (hover:hover){.act:not(.act--live) .act__btn:hover{background:none;color:var(--ink)}}
+@media (hover:hover){.act:not(.act--live) .act__btn:hover .act__verb{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}}
 .act__verb{font-family:var(--f-head);text-transform:uppercase;
   font-size:var(--t-verb);line-height:1;letter-spacing:.01em}
 .act__sub{font-size:var(--t-body);line-height:1.3;opacity:.7;text-wrap:pretty}
-.act__btn:hover{background:var(--ink);color:var(--paper)}
+@media (hover:hover){.act__btn:hover{background:var(--ink);color:var(--paper)}}
 
 .deck{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr);
   grid-template-areas:"act" "card" "ahead"}
@@ -446,6 +452,10 @@ main#view:focus,main#view:focus-visible{outline:none}
     grid-template-rows:auto auto minmax(0,1fr);align-items:start}
   .deck .act--live{margin-right:0}
   .deck .act--live .act__btn{border-right:var(--edge-panel) solid var(--ink)}
+  /* nothing open and nothing ahead: the card alone is the page */
+  .deck:not(:has(.deck__act,.deck__ahead)){grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"card";grid-template-rows:auto}
+  .deck:not(:has(.deck__act,.deck__ahead)) > .card{max-width:min(100%,1080px)}
 }
 
 .ahead{position:relative;display:flex;flex-direction:column}
@@ -491,12 +501,6 @@ html{font-synthesis:none}
   top:0;height:var(--band);
   background:var(--ink);z-index:0}
 
-.spread__side{position:relative;z-index:1;
-  justify-self:center;align-self:end;text-align:center;
-  margin:var(--sp-pad) var(--gutter) clamp(14px,2.5dvh,26px);
-  font:500 clamp(10px,1vw,11px)/1.6 var(--f-mono);
-  text-transform:uppercase;letter-spacing:.32em;color:var(--tone)}
-
 .spread__seal{position:absolute;--swirl:min(86vw,430px,calc(var(--band) * .95));
   left:calc(var(--swirl) * -.3);top:auto;bottom:calc(var(--swirl) * -.42);
   width:var(--swirl);aspect-ratio:1;height:auto;
@@ -524,7 +528,7 @@ html{font-synthesis:none}
 .bform__head{display:flex;align-items:center;
   justify-content:space-between;gap:12px}
 .spread__wm{font-family:var(--f-display);text-transform:uppercase;
-  font-size:clamp(52px,15vw,124px);line-height:.9;letter-spacing:.01em;
+  font-size:clamp(46px,15vw,124px);line-height:.9;letter-spacing:.01em;
   margin:0;padding-bottom:.06em}
 
 .authp{grid-row:2;position:relative;z-index:2;
@@ -555,7 +559,8 @@ html{font-synthesis:none}
   margin:0;padding:0;border:0;border-radius:0;background:none;
   color:var(--ink-2);cursor:pointer;-webkit-tap-highlight-color:transparent}
 .authp__eye svg{width:22px;height:22px;display:block}
-.authp__eye:hover,.authp__eye[aria-pressed="true"]{color:var(--ink)}
+.authp__eye[aria-pressed="true"]{color:var(--ink)}
+@media (hover:hover){.authp__eye:hover{color:var(--ink)}}
 .authp__eye:focus-visible{outline:var(--edge-panel) solid var(--ink);
   outline-offset:-5px}
 
@@ -567,7 +572,7 @@ html{font-synthesis:none}
   background:var(--ink);color:var(--paper);
   font-family:var(--f-head);text-transform:none;
   font-size:var(--t-verb);line-height:1;letter-spacing:.01em}
-.authp__go:hover{background:var(--ink-2)}
+@media (hover:hover){.authp__go:hover{background:var(--ink-2)}}
 .authp__go[disabled]{opacity:.55;cursor:progress}
 .authp__swap{display:block;width:100%;min-height:var(--tap);
   background:none;border:0;cursor:pointer;padding:0;
@@ -601,8 +606,6 @@ html{font-synthesis:none}
   .authp{grid-row:1;grid-column:2;margin:0 var(--gutter) 0 0;
     justify-self:start;width:100%;max-width:460px}
 
-  .spread__side{grid-row:2;grid-column:2;align-self:start;justify-self:start;
-    text-align:left;margin:var(--sp-pad) var(--gutter) 0 0}
 }
 
 .mark__word b{font-weight:inherit}
@@ -669,19 +672,16 @@ html{font-synthesis:none}
 .lrow--upcoming .lrow__date{color:var(--ink-2)}
 .lrow--upcoming .lrow__when{color:var(--ink-2)}
 
-.lrow--open{background:var(--ink);color:var(--paper);cursor:pointer;
-  padding:var(--sp-pad);margin:var(--sp-row) 0;border-bottom:0;
-  width:auto;margin-right:calc(var(--gutter) * -1);
-  padding-right:calc(var(--sp-pad) + var(--gutter))}
-.lrow--open .lrow__no{color:var(--paper)}
-.lrow--open .lrow__slot{border-color:var(--paper)}
-.lrow--open .lrow__date{font-family:var(--f-head);
-  text-transform:uppercase;font-size:clamp(21px,4.6vw,30px);line-height:1}
-.lrow--open .lrow__when{color:var(--tint)}
+/* the open meeting is a ledger row like the others, in full ink, with
+   its way to Scan; the black call to action belongs to Home */
+.lrow--open{cursor:pointer}
+.lrow--open .lrow__no{color:var(--ink)}
+.lrow--open .lrow__slot{border-color:var(--ink)}
+.lrow--open .lrow__when{color:var(--ink)}
 .lrow__go{font:400 12.5px/1 var(--f-mono);letter-spacing:.12em;
-  text-transform:uppercase;color:var(--paper);white-space:nowrap;
+  text-transform:uppercase;color:var(--ink);white-space:nowrap;
   text-decoration:underline;text-underline-offset:4px}
-.lrow--open:hover{background:var(--ink-2)}
+@media (hover:hover){ .lrow--open:hover .lrow__go{text-decoration-thickness:2px} }
 .lrow--open:focus-visible{outline:var(--edge-panel) solid var(--ink);
   outline-offset:3px}
 
@@ -690,11 +690,9 @@ html{font-synthesis:none}
 }
 
 @media(min-width:900px){
-  .recbody{max-width:700px}
   .lrow{grid-template-columns:auto 32px minmax(7rem,auto)
       minmax(0,1fr) auto;padding-block:var(--sp-tight);
     align-items:baseline;column-gap:var(--sp-pad)}
-  .lrow--open{margin-right:0;padding-right:var(--sp-pad);padding-block:var(--sp-pad)}
   .lrow__body{display:contents}
   .lrow__stamp{align-self:center}
   .lrow__date{grid-column:3}
@@ -749,13 +747,13 @@ html{font-synthesis:none}
 .scanline--bad .scanline__dot{background:var(--paper)}
 .scanline--bad .scanline__msg{text-decoration:underline 2px;text-underline-offset:4px}
 
-.standing{display:flex;align-items:baseline;justify-content:space-between;
+.standing{display:flex;align-items:baseline;justify-content:flex-start;
   gap:var(--sp-tight) var(--sp-pad);flex-wrap:wrap;margin:0;
   padding-top:var(--sp-row);border-top:var(--edge-panel) solid var(--ink)}
 .standing__lab{font-size:var(--t-caption);color:var(--ink-2);
   letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
 .standing__at{font-family:var(--f-head);font-size:var(--t-sub);line-height:1.05;
-  color:var(--ink);text-align:right;min-width:0;overflow-wrap:anywhere}
+  color:var(--ink);text-align:left;min-width:0;overflow-wrap:anywhere}
 
 
 .zoom{position:relative;z-index:4;align-self:end;justify-self:stretch;
@@ -780,8 +778,8 @@ html{font-synthesis:none}
 .zoom__range:focus-visible{outline:var(--edge-thin) solid var(--paper);outline-offset:2px}
 .viewer--zoom .reticle{width:min(56cqw,62cqh,290px);margin-bottom:44px}
 
-.viewer--stalled{aspect-ratio:auto;height:auto;min-height:clamp(160px,30vw,240px);
-  container-type:normal;place-items:stretch;background:var(--paper)}
+.viewer--stalled{aspect-ratio:auto;height:auto;min-height:0;border:0;
+  container-type:normal;place-items:stretch;background:none}
 
 @media(max-height:520px) and (min-aspect-ratio:4/3){
   .view--scan{display:grid;
@@ -796,7 +794,7 @@ html{font-synthesis:none}
 }
 
 .stall{display:flex;flex-direction:column;justify-content:center;
-  gap:var(--sp-tight);padding:var(--sp-pad);text-align:left}
+  gap:var(--sp-tight);padding:0;text-align:left}
 .stall__title{margin:0;font-family:var(--f-head);
   text-transform:uppercase;line-height:1;
   font-size:clamp(19px,3.6vw,28px)}
@@ -808,14 +806,14 @@ html{font-synthesis:none}
    shows, so what is in the frame is what the decoder reads */
 @media(min-width:1024px){
   .view--scan > .viewer{height:auto;aspect-ratio:16/9;
-    max-height:calc(100dvh - 250px);min-height:320px}
-  .view--scan > .viewer--stalled{aspect-ratio:auto;min-height:240px}
+    max-height:calc(100dvh - 300px);min-height:320px}
+  .view--scan > .viewer--stalled{aspect-ratio:auto;min-height:0}
 }
 
 .tiers{display:flex;flex-direction:column;gap:0}
 
-.tier{position:relative;display:grid;min-width:0;max-width:700px;
-  grid-template-columns:auto minmax(0,1fr);
+.tier{position:relative;display:grid;min-width:0;
+  grid-template-columns:clamp(56px,5.2vw,80px) minmax(0,1fr);
   grid-template-areas:"at body" "at ticks" "at say";
   column-gap:clamp(14px,2.4vw,26px);row-gap:var(--sp-tight);align-items:start;
   padding:clamp(16px,2.4vw,24px) 0;
@@ -841,7 +839,7 @@ html{font-synthesis:none}
   background:var(--paper);color:var(--ink);
   font-family:var(--f-head);
   font-size:var(--t-sub);line-height:1.15;white-space:nowrap}
-.tier__claim:hover{background:transparent;color:var(--paper)}
+@media (hover:hover){.tier__claim:hover{background:transparent;color:var(--paper)}}
 .tier__claim:focus-visible{outline:var(--edge-panel) solid var(--paper);
   outline-offset:3px}
 
@@ -865,14 +863,23 @@ html{font-synthesis:none}
 .tier--far .tier__at,.tier--far .tier__name{color:var(--ink-2)}
 
 @media(min-width:900px){
-  .tier--ready{max-width:700px;margin-right:0;padding-right:var(--sp-pad)}
+  /* the slab hangs into the gutter by its own padding, so its name
+     lines up with the other rungs */
+  .tier--ready{margin-right:0;padding-right:var(--sp-pad);
+    margin-left:calc(-1 * clamp(16px,2.4vw,26px))}
+}
+/* the list pages are sheets: one measure, and the title's rule ends
+   where the content ends; Home, Scan and Check-in are stages */
+@media(min-width:1024px){
+  .view--record,.view--rewards,.view--member,
+  [data-screen="bmeet"] .view--board,[data-screen="bmembers"] .view--board{max-width:760px}
 }
 .tier--ready + .tier--ready{margin-top:3px}
 
 /* the member, set as type: name, standing, district, and the district's
    own seal at the size of a signature, not a banner */
-.who{display:grid;grid-template-columns:minmax(0,1fr) auto;
-  grid-template-areas:"name seal" "line seal";column-gap:var(--sp-pad);row-gap:6px;
+.who{display:grid;grid-template-columns:auto auto;justify-content:start;
+  grid-template-areas:"name seal" "line seal";column-gap:var(--sp-block);row-gap:6px;
   align-items:end}
 .who__name{grid-area:name;margin:0;line-height:1;color:var(--ink);
   font-size:clamp(26px,3vw,36px);overflow-wrap:anywhere}
@@ -899,9 +906,9 @@ html{font-synthesis:none}
 .cards__when{grid-area:when;justify-self:end}
 .cards__prize{grid-area:prize}
 @media(min-width:900px){
-  .cards__row{grid-template-columns:8ch auto minmax(0,1fr) auto;
-    grid-template-areas:"no marks when prize";align-items:center}
-  .cards__when{justify-self:start}
+  .cards__row{grid-template-columns:8ch auto minmax(0,1fr);
+    grid-template-areas:"no marks when" "no marks prize";align-items:center}
+  .cards__when{justify-self:start;white-space:nowrap}
 }
 
 
@@ -955,69 +962,12 @@ html{font-synthesis:none}
   border:var(--edge-panel) solid var(--ink);
   background:var(--paper);color:var(--ink);
   font:400 14px/1.1 var(--f-body);letter-spacing:.04em}
-.acct__out:hover{background:var(--ink);color:var(--paper)}
+@media (hover:hover){.acct__out:hover{background:var(--ink);color:var(--paper)}}
 .acct__out:focus-visible{outline:var(--edge-panel) solid var(--ink);
   outline-offset:3px}
 /* from 1024px up the rail's foot carries the account block */
 @media(min-width:1024px){ .view--member .acct,.view--board .acct{display:none} }
 
-.bover{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr)}
-
-.bnow{display:grid;gap:2px var(--sp-pad);max-width:760px;
-  grid-template-columns:minmax(0,1fr);
-  grid-template-areas:"lab" "no" "at" "state" "go";
-  align-items:start;justify-items:start;
-  padding:var(--sp-pad);border:var(--edge-panel) solid var(--ink);
-  background:var(--paper);color:var(--ink)}
-.bnow__lab{grid-area:lab} .bnow__no{grid-area:no}
-.bnow__at{grid-area:at}   .bnow__state{grid-area:state}
-.bnow__go{grid-area:go}
-
-@media(min-width:720px){
-  .bnow{grid-template-columns:minmax(0,1fr) auto;
-    grid-template-areas:"lab go" "no go" "at go" "state go";
-    align-items:start;align-content:center;
-    padding-block:clamp(24px,3vw,36px)}
-  .bnow__go{align-self:center;margin-top:0}
-
-  .bnow--none{grid-template-columns:minmax(0,1fr);
-    grid-template-areas:"lab" "no" "at" "go";min-height:0}
-  .bnow--none .bnow__go{align-self:start;margin-top:var(--sp-pad)}
-}
-.bnow--live{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-/* only a live check-in is a slab; anything else is type on the page */
-.bnow:not(.bnow--live){border:0;padding:0}
-.bnow--today .bnow__go{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-@media(max-width:719px){
-  .bnow--live{max-width:none;margin-right:calc(var(--gutter) * -1);border-right:0}
-}
-
-.bnow__lab{margin:0;font:500 var(--t-caption)/1.3 var(--f-mono);
-  letter-spacing:.24em;text-transform:uppercase;color:var(--ink-2)}
-.bnow--live .bnow__lab{color:var(--tint)}
-.bnow__no{margin:0;padding-bottom:.08em;
-  font-family:var(--f-head);text-transform:uppercase;line-height:.9;
-  font-size:clamp(40px,7vw,72px)}
-.bnow__at{margin:0;font-size:var(--t-body);line-height:1.3}
-.bnow--live .bnow__at{color:var(--tint)}
-.bnow__state{margin:var(--sp-tight) 0 0;font-size:var(--t-caption);
-  color:var(--ink-2)}
-.bnow--live .bnow__state{color:var(--paper)}
-.bnow__go{margin-top:var(--sp-pad);padding:11px var(--sp-pad);cursor:pointer;
-  border:var(--edge-panel) solid currentColor;
-  background:transparent;color:inherit;
-  font-family:var(--f-head);text-transform:uppercase;
-  font-size:clamp(17px,2vw,21px);line-height:1.2}
-.bnow--live .bnow__go{background:var(--paper);color:var(--ink);
-  border-color:var(--paper)}
-@media (hover:hover){
-  .bnow__go:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-  .bnow--live .bnow__go:hover{background:transparent;color:var(--paper);border-color:var(--paper)}
-}
-.bnow__go:focus-visible{outline:var(--edge-panel) solid currentColor;
-  outline-offset:3px}
-
-.bover .standing-band{border-top-width:var(--edge-panel)}
 
 
 .crop{overflow:hidden;isolation:isolate}
@@ -1034,7 +984,7 @@ html{font-synthesis:none}
   font:500 clamp(11px,1.2vw,13px)/1 var(--f-mono);letter-spacing:.06em}
 .gmtab + .gmtab{border-left:0}
 .gmtab--on{background:var(--ink);color:var(--paper)}
-@media (pointer:coarse){ .gmtab{min-height:44px} .blist--meet .brow__day{padding-block:12px;margin-block:-12px} }
+@media (pointer:coarse){ .gmtab{min-height:44px} }
 .gmtab:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:2px}
 
 .proj{display:grid;margin-top:0;
@@ -1106,7 +1056,7 @@ html{font-synthesis:none}
   box-sizing:border-box;border:0;background:#fff;padding:0}
 
 @media(min-width:900px){
-  .proj{grid-template-columns:auto minmax(0,1fr);
+  .proj{grid-template-columns:auto minmax(16rem,30rem);justify-content:start;
     grid-template-rows:auto minmax(0,1fr) auto auto;
     column-gap:clamp(24px,3.4vw,56px);row-gap:clamp(14px,2vw,24px);
     margin-inline:calc(var(--gutter) * -1);border-inline:0;
@@ -1128,7 +1078,7 @@ html{font-synthesis:none}
    of the room: the meeting, OPEN, the code and the count, nothing else;
    landscape puts the count beside the code, portrait under it */
 .is-projecting,.is-projecting body{overflow:hidden}
-.is-projecting .topbar,.is-projecting .tabs,.is-projecting .rail{visibility:hidden}
+.is-projecting .tabs,.is-projecting .rail{visibility:hidden}
 .is-projecting .rig{isolation:auto}
 .proj.proj--full{position:fixed;inset:0;z-index:400;display:grid;margin:0;
   width:auto;height:auto;padding:3vh 4vw;border:0;background:var(--ink);
@@ -1174,13 +1124,12 @@ html{font-synthesis:none}
 .bback{align-self:flex-start;margin-bottom:var(--sp-pad)}
 
 /* one label: small caps of record, in the record face */
-.kicker,.figline,.blist__head,.meetband__n,.bnow__lab,.card__cardno,.who__line,
+.kicker,.figline,.blist__head,.meetband__n,.card__cardno,.who__line,
 .rail__role,.standing__lab,.standing-band__of,.standing-band__rest dt,.brow__nlab,
 .authp__lab,.cards__when,.cards__prize{
   font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;
   color:var(--ink-2)}
 .card__cardno{color:var(--tint);opacity:1}
-.bnow--live .bnow__lab{color:var(--tint)}
 
 /* ══ behaviour carried from the four passes: identity data keeps its
    case, a refusal keeps its room, the camera is offered again in place,
@@ -1192,7 +1141,7 @@ html{font-synthesis:none}
 #authErr.is-on{display:block}
 .viewer--stalled video,.viewer--stalled .reticle,.viewer--stalled .viewer__scrim{display:none}
 .stall__retry{align-self:flex-start;margin-top:var(--sp-row)}
-.btn[data-busy]{flex-direction:column;gap:0}
+.btn[data-busy],.link[data-busy]{flex-direction:column;gap:0}
 [data-busy]::after{content:attr(data-busy);display:block;height:0;overflow:hidden;visibility:hidden}
 .btn[disabled],.proj__ctl[disabled],.authp__go[disabled],.tier__claim[disabled],.rail__out[disabled],.acct__out[disabled]{
   opacity:.55;pointer-events:none}
@@ -1202,8 +1151,7 @@ html{font-synthesis:none}
 select.input:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 /* On the wide spread the box is centred in its column, so a refusal
    printed inside it would re-centre the box; there it hangs under the
-   frame instead, where the district line gives way to it. */
+   frame instead. */
 @media(min-width:820px){
   .authp #authErr.is-on{position:absolute;top:calc(100% + var(--edge-frame) + var(--sp-row));left:0;right:0;margin:0}
-  .spread:has(#authErr.is-on) .spread__side{visibility:hidden}
 }

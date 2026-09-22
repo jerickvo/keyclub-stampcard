@@ -15,6 +15,11 @@ function stampShape(seed, grow = 0){
 
 const STAMP_FIT = .62;
 
+/* the usual time and room are not repeated; a meeting that differs
+   says how (the same rule the ledger and the board lists follow) */
+const unusual = m => (m.time && m.time !== '12:40 PM') || (m.place && m.place !== Schedule.PLACE)
+  ? [m.time, m.place].filter(Boolean) : [];
+
 const C = {
   tier(r, total, prev = 0){
     /* one rule for a tier, read from the store (rewardState); the ticks
@@ -104,7 +109,9 @@ const C = {
           <span class="card__cardno">Card ${pad(cardNo)}</span>
           <p class="card__num"><b>${p.filled}</b><span>/ ${p.span}</span></p>
           <span class="card__idrule" aria-hidden="true"></span>
-          <p class="card__goal">${esc(say)}</p>
+          ${full && goal && !goal.claimed
+            ? `<button class="card__goal card__goal--go link" type="button" data-go="rewards">${esc(say)}</button>`
+            : `<p class="card__goal">${esc(say)}</p>`}
           <span class="card__kci" aria-hidden="true">${brandSeal('kci')}</span>
         </div>
         <div class="card__field">
@@ -217,14 +224,14 @@ const Views = {
     let action = '';
     if (open && !done)
       action = C.strike({ verb:'Check in',
-                          sub:[`GM ${pad(open.no)}`, open.today ? 'Today' : fmtDay(open.date), open.time, open.place].join('\u00a0/ '),
+                          sub:[`GM ${pad(open.no)}`, ...(open.today ? [] : [fmtDay(open.date)]), ...unusual(open)].join('\u00a0/ '),
                           go:'scan', live:true });
     else if (open && done){
       const scan = Store.scanFor(open.id);
       action = C.line('Checked in', `GM ${pad(open.no)}${scan ? ` / ${fmtTime(scan.at)}` : ''}`);
     }
     else if (next)
-      action = C.line('Next', `GM ${pad(next.no)} / ${fmtDate(next.date)} / ${esc(next.time)} / ${esc(next.place)}`);
+      action = C.line('Next', [`GM ${pad(next.no)}`, fmtDate(next.date), ...unusual(next).map(esc)].join(' / '));
 
     const showing = open ? open.id : next ? next.id : null;
     const ahead = Store.meetings
@@ -246,7 +253,7 @@ const Views = {
               ${ahead.map(m => `<li class="ahead__row">
                 <span class="ahead__no">${pad(m.no)}</span>
                 <span class="ahead__day">${fmtDate(m.date)}</span>
-                <span class="ahead__at">${esc(m.time)} / ${esc(m.place)}</span>
+                ${unusual(m).length ? `<span class="ahead__at">${unusual(m).map(esc).join(' / ')}</span>` : ''}
               </li>`).join('')}
             </ul>
           </section>` : ''}
@@ -273,7 +280,6 @@ const Views = {
           <p class="figline">
             <span><b>${kept}</b> stamped</span>
             <span><b>${gone}</b> missed</span>
-            <span><b>${counted.length}</b> held</span>
           </p>
         </aside>
 
@@ -307,6 +313,17 @@ const Views = {
   },
 
   scan(){
+    /* already stamped for the open meeting: nothing to scan, and the page
+       says so the way Home does */
+    const open = Store.openMeeting();
+    const stamp = open && Store.scanFor(open.id);
+    if (stamp) return `<div class="view view--scan">
+      <header class="rechead">
+        <h1 class="title rechead__title">Scan</h1>
+      </header>
+      ${C.line('Checked in', `GM ${pad(open.no)} / ${fmtTime(stamp.at)}`)}
+    </div>`;
+
     const standing = scanStanding();
 
     return `<div class="view view--scan">
@@ -359,11 +376,10 @@ const Views = {
     </div>`;
   },
 
-  /* Club Tools ends with the account block on phones, the way Member
+  /* Check-in ends with the account block on phones, the way Member
      does; from 1024px up the rail's foot carries it instead. */
-  board(){     BoardUI.tab = 'club';     return this.boardSpread('Club Tools', C.account()); },
+  bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Check-in', C.account()); },
   bmeet(){     BoardUI.tab = 'meetings'; return this.boardSpread('Meetings'); },
-  bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Check-in'); },
   bmembers(){  BoardUI.tab = 'progress'; return this.boardSpread('Members'); },
 
   profile(){
@@ -383,8 +399,11 @@ const Views = {
 
       <section class="who">
         <p class="who__name">${esc(name)}</p>
-        <p class="who__line">${Store.isBoard ? 'Board' : 'Member'} / Cali-Nev-Ha District${
-          handle.toLowerCase() !== name.toLowerCase() ? ` / ${esc(handle)}` : ''}</p>
+        ${(() => {
+          /* the title already says Member, and the seal the district */
+          const bits = [Store.isBoard ? 'Board' : '', handle.toLowerCase() !== name.toLowerCase() ? esc(handle) : ''].filter(Boolean);
+          return bits.length ? `<p class="who__line">${bits.join(' / ')}</p>` : '';
+        })()}
         <span class="who__seal" aria-hidden="true">${brandSeal('cnh')}</span>
       </section>
 
@@ -456,12 +475,12 @@ const Views = {
             <input class="authp__in" id="authUser" name="username" type="text"
                    autocomplete="username" autocapitalize="none" spellcheck="false"
                    inputmode="latin" maxlength="${Config.USERNAME_MAX}"
-                   placeholder="${up ? 'letters, numbers, _ and .' : 'your username'}">
+                   placeholder="${up ? 'a–z 0–9 _ .' : 'your username'}">
           </div>
 
           ${passwordField({ id:'authPass', name:'password', label:'Password',
                             autocomplete: up ? 'new-password' : 'current-password',
-                            placeholder: up ? 'at least 8 characters' : '' })}
+                            placeholder: up ? '8+ characters' : '' })}
 
           ${up ? passwordField({ id:'authPass2', name:'confirm', label:'Confirm password',
                                  autocomplete:'new-password' }) : ''}
@@ -482,7 +501,6 @@ const Views = {
           ${AuthUI.setupNotice()}
         </form>
 
-        <span class="spread__side" aria-hidden="true">Key Club International · Cali-Nev-Ha District</span>
       </div>
     </div>`;
   },

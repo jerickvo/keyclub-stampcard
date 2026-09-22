@@ -65,11 +65,9 @@ function scanStanding(){
   const open = Store.openMeeting();
   const done = open && Store.attended(open.id);
   if (Store.failed) return { lab:'Record not loaded', at:'Could not reach the club records' };
-  return !open
-    ? { lab:'Check-in', at:'Closed' }
-    : done
-      ? { lab:'Already stamped', at:`GM ${pad(open.no)}` }
-      : { lab:'Checking in to', at:`GM ${pad(open.no)}` };
+  return !open || done
+    ? { lab:'Check-in', at:open ? `GM ${pad(open.no)} stamped` : 'Closed' }
+    : { lab:'Checking in to', at:`GM ${pad(open.no)}` };
 }
 function paintScanStanding(){
   const s = scanStanding();
@@ -244,9 +242,6 @@ const Scanner = {
 
     $('#viewer')?.classList.remove('viewer--stalled');
     $('#viewer .stall')?.remove();
-
-    /* a member already stamped for the open meeting has nothing to scan */
-    if (this.stamped()) return this.stall('stamped');
 
     this.setState('boot', 'Starting camera');
     this.showLoader();
@@ -451,8 +446,6 @@ const Scanner = {
         body:'Scan the code from a phone.' },
       unsupported:{ title:'Scanning needs a secure page', retry:false,
         body:'Camera access needs https.' },
-      /* the line under the panel already names the meeting */
-      stamped:{ title:'You are checked in', retry:false, body:'' },
     }[kind] || { title:'Camera unavailable', retry:true, body:'Close other apps using the camera, then try again.' };
 
     /* The note sits over the viewer; the video stays in place, so the

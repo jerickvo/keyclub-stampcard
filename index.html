@@ -101,7 +101,7 @@
   --sp-block:clamp(24px,2.4vw,32px); /* between blocks, on every page */
   --sp-page:clamp(40px,5vw,64px);    /* the page foot */
 
-  --rail:clamp(208px,20vw,340px);
+  --rail:clamp(208px,15vw,248px);
   }
 
 *{box-sizing:border-box;margin:0;padding:0}
@@ -147,16 +147,6 @@ body{
 .rail__link svg{width:17px;height:17px;stroke-width:1.9}
 .rail__foot{padding-top:var(--sp-pad);border-top:var(--rule-hair) solid var(--ink)}
 
-.topbar{
-  align-items:center;
-  justify-content:space-between;
-  border-bottom:var(--rule) solid var(--ink);
-  background:var(--paper);
-  position:sticky;
-  top:0;
-  z-index:60;
-  --safe-x:max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
-  padding:var(--sp-row) calc(var(--gutter) + var(--safe-x))}
 .motion-btn{display:inline-grid;grid-auto-flow:column;padding:0;
   background:var(--paper);border:var(--rule-hair) solid var(--ink);
   color:var(--ink);cursor:pointer;font:500 11px/1 var(--f-mono);
@@ -168,7 +158,7 @@ body{
 
 main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   --safe-x:max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
-  padding:var(--sp-pad) calc(var(--gutter) + var(--safe-x))
+  padding:calc(var(--sp-pad) + env(safe-area-inset-top, 0px)) calc(var(--gutter) + var(--safe-x))
           calc(var(--sp-page) + var(--tabs-h) + env(safe-area-inset-bottom, 0px))}
 
 /* one rhythm for every page: blocks sit one step apart */
@@ -203,7 +193,7 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   border:var(--rule-hair) solid var(--ink);background:var(--paper);color:var(--ink);
   cursor:pointer;border-radius:0;font:400 14px/1.1 var(--f-body);
   letter-spacing:.04em;position:relative;overflow:hidden}
-.btn:hover{transform:translate(-1px,-1px)}
+@media (hover:hover){.btn:hover{transform:translate(-1px,-1px)}}
 
 .link{background:none;border:0;cursor:pointer;
   color:var(--ink);font:500 var(--t-body)/1.2 var(--f-body);letter-spacing:0;
@@ -307,6 +297,8 @@ select.input{padding-right:var(--sp-pad)}
   overflow:hidden}
 .tabs button[aria-current="page"]::after{content:"";position:absolute;
   left:22%;right:22%;bottom:7px;height:3px;background:var(--ink)}
+.tabs .tab--live,.tabs .tab--live[aria-current="page"]{background:var(--ink);color:var(--paper)}
+.tabs .tab--live[aria-current="page"]::after{background:var(--paper)}
 .tabs button:active span{transform:translateY(1px)}
 .tabs button svg{width:19px;height:19px;stroke-width:1.9}
 
@@ -390,14 +382,12 @@ select.input{padding-right:var(--sp-pad)}
 
 .shell{grid-template-columns:1fr}
 .rail{display:none}
-.topbar{display:flex}
 .tabs{display:flex}
 
 @media(min-width:1024px){
   :root{--tabs-h:0px;--rule:3px}
   .shell{grid-template-columns:var(--rail) 1fr}
   .rail{display:flex}
-  .topbar{display:none}
   .tabs{display:none}
 }
 
@@ -409,9 +399,8 @@ select.input{padding-right:var(--sp-pad)}
   background:var(--ink);color:var(--paper);font-family:var(--f-mono);font-size:12px;
   line-height:1.5;border-top:var(--rule) solid var(--ink);word-break:break-word}
 
-.rail__brand,.topbar #barBrand{font-family:var(--f-head);font-size:18px;
+.rail__brand{font-family:var(--f-head);font-size:18px;
   text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
-#barBrand svg{width:26px;height:26px}
 
 .toasts{left:var(--gutter);right:var(--gutter);max-width:none;
   bottom:calc(var(--tabs-h) + var(--sp-row) + env(safe-area-inset-bottom, 0px))}
@@ -441,9 +430,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
   width:var(--edge-frame);background:var(--ink)}
 
 .rail__brand{position:relative;padding:2px 0 var(--sp-row)}
-.rail__brand::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;
-  background:var(--ink);
-  clip-path:polygon(0 38%,10% 12%,52% 0,86% 18%,100% 46%,99% 60%,55% 100%,12% 78%,0 64%)}
 .rail__brand .mark{display:block;font-family:var(--f-head);
   font-size:clamp(24px,2vw,30px);line-height:1;letter-spacing:.01em}
 
@@ -456,9 +442,8 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .rail__lab{font-family:var(--f-head);font-weight:400;text-transform:uppercase;
   font-size:clamp(18px,1.4vw,21px);line-height:1;letter-spacing:.02em;
   color:var(--ink);min-width:0;overflow-wrap:anywhere}
-.rail__link:hover .rail__lab{text-decoration:underline;text-decoration-thickness:2px;
-  text-underline-offset:4px}
-.rail__link[aria-current="page"] .rail__idx{color:var(--seal)}
+@media (hover:hover){.rail__link:hover .rail__lab{text-decoration:underline;text-decoration-thickness:2px;
+  text-underline-offset:4px}}
 .rail__link[aria-current="page"]::before{content:"";position:absolute;left:1px;top:50%;
   width:8px;height:8px;background:var(--seal);
   transform:translateY(-60%) rotate(-8deg)}
@@ -480,13 +465,15 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
   color:var(--ink-2)}
 .rail__motion i{width:8px;height:8px;border:1.5px solid var(--ink);background:var(--ink)}
 .rail__motion[aria-pressed="true"] i{background:transparent}
-.rail__motion:hover{color:var(--ink)}
+@media (hover:hover){.rail__motion:hover{color:var(--ink)}}
 .rail__out{min-height:44px;padding:8px 12px;cursor:pointer;white-space:nowrap;
   border:var(--rule-hair) solid var(--tone);background:none;color:var(--ink-2);
   font:400 clamp(11px,1vw,12.5px)/1 var(--f-body);letter-spacing:.08em;
   text-transform:uppercase}
-.rail__out:hover,.rail__out:focus-visible{background:var(--ink);color:var(--paper);
+.rail__out:focus-visible{background:var(--ink);color:var(--paper);
   border-color:var(--ink)}
+@media (hover:hover){.rail__out:hover{background:var(--ink);color:var(--paper);
+  border-color:var(--ink)}}
 .rail__note{margin-top:6px;font-size:12.5px}
 
 .tabs{border-top:0;background:var(--paper);padding-top:0}
@@ -608,7 +595,8 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 }
 .brow--reward{cursor:default}
 .brow:last-child{border-bottom:0}
-.brow:hover,.brow:focus-visible{background:var(--paper);outline:0}
+.brow:focus-visible{background:var(--paper);outline:0}
+@media (hover:hover){.brow:hover{background:var(--paper);outline:0}}
 .brow__no{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;
   color:var(--tone);white-space:nowrap}
 .brow__mid{min-width:0}
@@ -620,7 +608,7 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
   padding:5px 8px;white-space:nowrap;border:1.5px solid var(--ink)}
 .bstate--open{background:var(--ink);color:var(--paper)}
 .bstate--upcoming{background:none;color:var(--ink)}
-.bstate--ended,.bstate--past{background:none;color:var(--tone);border-color:var(--tone)}
+.bstate--ended,.bstate--past{background:none;color:var(--ink-2);border-color:var(--tone)}
 
 .bdetail__name{font-family:var(--f-head);font-size:clamp(26px,3.4vw,42px);
   line-height:1;margin:4px 0 var(--sp-pad);text-transform:uppercase;letter-spacing:-.03em}
@@ -629,7 +617,7 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
   display:grid;
   gap:var(--sp-row);
   margin-bottom:var(--sp-pad);
-  grid-template-columns:1fr}
+  grid-template-columns:minmax(0,1fr) 7.5rem}
 .bfilters .input{width:100%;box-sizing:border-box;min-width:0}
 .bpage{
   display:flex;
@@ -654,7 +642,6 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 
 @media(min-width:768px){
   .bpanel{padding:var(--sp-pad)}
-  .bfilters{grid-template-columns:2fr 1fr}
   .bpage{justify-content:space-between}
 }
 
@@ -678,10 +665,7 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
   flex-wrap:wrap;
   flex:1 1 100%;
   margin-top:var(--sp-row)}
-.bconfirm .btn{
-  padding:8px 14px;
-  font-size:11px;
-  flex:1 1 auto}
+.bconfirm .btn{flex:1 1 auto}
 @media(min-width:768px){
   .bconfirm{flex:0 1 auto;margin-top:0}
   .bconfirm .btn{flex:0 0 auto}
@@ -727,14 +711,14 @@ select.input:focus-visible{outline:none}
   .sealmeta{font-size:11px;padding:10px 12px}
 }
 
-.seal:hover .sealmeta,
 .seal:focus .sealmeta{display:block}
+@media (hover:hover){.seal:hover .sealmeta{display:block}}
 
-.seal:hover,
 .seal:focus{z-index:30}
+@media (hover:hover){.seal:hover{z-index:30}}
 
-.seals:focus-within,
-.seals:has(.seal:hover){z-index:4}
+.seals:focus-within{z-index:4}
+@media (hover:hover){.seals:has(.seal:hover){z-index:4}}
 
 .seal:nth-child(3) .sealmeta,
 .seal:nth-child(4) .sealmeta,
@@ -760,7 +744,7 @@ select.input:focus-visible{outline:none}
 }
 
 .btn--go{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.btn--go:hover{background:var(--ink-2);border-color:var(--ink-2)}
+@media (hover:hover){.btn--go:hover{background:var(--ink-2);border-color:var(--ink-2)}}
 
 .btn:active{transform:translate(0,0)}
 .btn--go:active{background:var(--ink);border-color:var(--ink)}
@@ -822,7 +806,7 @@ body{
 .btn--go{
   background:var(--ink);border-color:var(--ink);color:var(--paper);
 }
-.btn--go:hover{background:var(--ink);border-color:var(--ink)}
+@media (hover:hover){.btn--go:hover{background:var(--ink);border-color:var(--ink)}}
 .btn--go:active{transform:translate(1px,1px)}
 
 .rail__link[aria-current],
@@ -840,7 +824,8 @@ body{
   font-size:var(--t-body);letter-spacing:.01em}
 
 .brow{border-bottom:var(--edge-hair) solid var(--tone)}
-.brow:hover,.brow:focus-visible{background:var(--tint)}
+.brow:focus-visible{background:var(--tint)}
+@media (hover:hover){.brow:hover{background:var(--tint)}}
 .brow:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:-2px}
 .brow__no{color:var(--ink-2)}
 .brow__n{font-family:var(--f-head)}
@@ -848,15 +833,10 @@ body{
 .blist--meet .brow{display:grid;column-gap:var(--sp-row);row-gap:4px;align-items:center;
   grid-template-columns:auto minmax(0,1fr) auto;
   grid-template-areas:"no day state" "no when when" "no n n";
-  padding:var(--sp-row) 0;cursor:default}
-.blist--meet .brow:hover{background:none}
-.blist--meet .brow__day:hover,.blist--meet .brow__no:hover + .brow__day{text-decoration-color:var(--ink)}
-.blist--meet .brow__no{grid-area:no;flex:none;align-self:start;
-  padding:10px 4px 6px;margin:-6px -4px;
-  cursor:pointer;min-height:0}
-.blist--meet .brow__day{grid-area:day;cursor:pointer;
-  padding-block:6px;margin-block:-6px;
-  text-decoration:underline;text-decoration-color:var(--tint);text-underline-offset:4px;
+  padding:var(--sp-row) 0;cursor:pointer;min-height:44px}
+/* the whole row opens the meeting */
+.blist--meet .brow__no{grid-area:no;flex:none;align-self:start;min-height:0;padding-top:2px}
+.blist--meet .brow__day{grid-area:day;
   font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);line-height:1.05;
   letter-spacing:.01em;color:var(--ink);min-width:0;overflow-wrap:anywhere}
 .blist--meet .brow__when{grid-area:when;min-width:0;overflow-wrap:anywhere;
@@ -883,8 +863,10 @@ body{
 .bconfirm--heavy .bconfirm__q{white-space:normal;color:var(--seal)}
 .bconfirm--heavy .btn{order:2}
 .bconfirm--heavy .btn--go{background:var(--seal);border-color:var(--seal)}
-.bconfirm--heavy .btn--go:hover,.bconfirm--heavy .btn--go:focus-visible{
+.bconfirm--heavy .btn--go:focus-visible{
   background:var(--ink);border-color:var(--ink)}
+@media (hover:hover){.bconfirm--heavy .btn--go:hover{
+  background:var(--ink);border-color:var(--ink)}}
 .bform .field{display:flex;flex-direction:column;justify-content:flex-end;min-width:0}
 .bform .bform__grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media(max-width:339px){ .bform .bform__grid{grid-template-columns:minmax(0,1fr)} }
@@ -894,7 +876,7 @@ body{
 @media(min-width:640px){
   .blist--meet .brow{grid-template-columns:auto minmax(0,1fr) auto auto;
     grid-template-areas:"no day state n" "no when state n";row-gap:2px}
-  .blist--meet .brow__no{align-self:center;padding-block:6px}
+  .blist--meet .brow__no{align-self:center;padding-top:0}
   .blist--meet .bstate{align-self:center}
   .blist--meet .brow__n{display:grid;justify-items:end;gap:1px;
     text-align:right;padding-top:0}
@@ -926,7 +908,7 @@ body{
 .bdel{margin-top:var(--sp-block);padding-top:var(--sp-row);border-top:var(--edge-rule) solid var(--tint)}
 .bdel__go{color:var(--ink-2);font-size:var(--t-caption)}
 .bdel .bconfirm{justify-content:flex-start}
-.meetband .meetband__act{min-height:44px;margin-block:-14px;padding:0;
+.meetband .meetband__act{min-height:44px;margin:-14px 0 -6px;padding:0;
   font-family:var(--f-body);text-transform:none;
   font-size:var(--t-body);letter-spacing:.02em;white-space:nowrap}
 /* the Held band names its count column once; each row is one line */
@@ -966,6 +948,14 @@ body{
 .rosterpanel .meetband{margin:0 0 var(--sp-row)}
 .rosterpanel > div{padding:0}
 
+/* a row is one line; the row itself is the tap target */
+.brow--att{flex-wrap:nowrap}
+.brow--att .brow__no{flex:none}
+.brow--att .brow__mid{flex:1 1 auto}
+.brow--att .brow__cell{font:400 12.5px/1.3 var(--f-mono);letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.blist--members .brow__mid,.bpanel .blist .brow__mid{min-height:0}
+
 /* the roster names its columns once, at every width */
 .blist__head,.blist--members .brow{display:grid;column-gap:var(--sp-row);align-items:baseline;
   grid-template-columns:minmax(0,1fr) 112px 48px;grid-template-areas:"name last n"}
@@ -978,7 +968,7 @@ body{
 .blist--members .brow__cell--last{grid-area:last}
 .blist--members .brow__n{grid-area:n;justify-self:end}
 .blist--members .brow__nlab{display:none}
-.brow__none{color:var(--tone)}
+.brow__none{color:var(--ink-2)}
 @media(min-width:768px){
   .blist__head,.blist--members .brow{
     grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(88px,auto);column-gap:var(--sp-pad)}
@@ -1023,18 +1013,16 @@ body{
 
 .bsec{margin-top:var(--sp-block)}
 
-.btn:hover{
-  background:var(--ink);color:var(--paper);border-color:var(--ink)}
+@media (hover:hover){.btn:hover{
+  background:var(--ink);color:var(--paper);border-color:var(--ink)}}
 .btn:active{transform:translate(2px,2px)}
-.motion-btn:hover .motion-btn__opt{color:var(--ink)}
-.motion-btn[aria-pressed="true"]:hover .motion-btn__opt:first-child,
-.motion-btn[aria-pressed="false"]:hover .motion-btn__opt:last-child{color:var(--paper)}
-.link:hover{text-decoration-thickness:2px}
+@media (hover:hover){.motion-btn:hover .motion-btn__opt{color:var(--ink)}}
+@media (hover:hover){.motion-btn[aria-pressed="true"]:hover .motion-btn__opt:first-child,.motion-btn[aria-pressed="false"]:hover .motion-btn__opt:last-child{color:var(--paper)}}
+@media (hover:hover){.link:hover{text-decoration-thickness:2px}}
 :focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px}
 
 main#view:focus,main#view:focus-visible{outline:none}
 
-[data-screen="auth"] .topbar{display:none}
 @media(min-width:1024px){
   [data-screen="auth"] .rail{display:none}
   [data-screen="auth"] .shell{grid-template-columns:1fr}
@@ -1070,6 +1058,8 @@ main#view:focus,main#view:focus-visible{outline:none}
   clip-path:polygon(0 40%,14% 6%,58% 0,90% 26%,100% 60%,55% 100%,8% 72%)}
 .card__goal{margin:0;font-size:var(--t-body);opacity:.85;
   max-width:22ch}
+.card__goal--go{align-self:flex-start;color:var(--paper);opacity:1;text-align:left;
+  font-family:var(--f-body);text-transform:uppercase}
 
 .card__kci{display:block;margin-top:auto;padding-top:clamp(8px,2cqw,16px)}
 @container (max-width:479px){
@@ -1195,12 +1185,12 @@ main#view:focus,main#view:focus-visible{outline:none}
   border-top:var(--edge-panel) solid var(--ink);background:none}
 .act:not(.act--live) .act__verb{font-size:var(--t-sub)}
 .act:not(.act--live) .act__sub{font-size:var(--t-caption);opacity:1;color:var(--ink-2)}
-.act:not(.act--live) .act__btn:hover{background:none;color:var(--ink)}
-.act:not(.act--live) .act__btn:hover .act__verb{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+@media (hover:hover){.act:not(.act--live) .act__btn:hover{background:none;color:var(--ink)}}
+@media (hover:hover){.act:not(.act--live) .act__btn:hover .act__verb{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}}
 .act__verb{font-family:var(--f-head);text-transform:uppercase;
   font-size:var(--t-verb);line-height:1;letter-spacing:.01em}
 .act__sub{font-size:var(--t-body);line-height:1.3;opacity:.7;text-wrap:pretty}
-.act__btn:hover{background:var(--ink);color:var(--paper)}
+@media (hover:hover){.act__btn:hover{background:var(--ink);color:var(--paper)}}
 
 .deck{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr);
   grid-template-areas:"act" "card" "ahead"}
@@ -1221,6 +1211,10 @@ main#view:focus,main#view:focus-visible{outline:none}
     grid-template-rows:auto auto minmax(0,1fr);align-items:start}
   .deck .act--live{margin-right:0}
   .deck .act--live .act__btn{border-right:var(--edge-panel) solid var(--ink)}
+  /* nothing open and nothing ahead: the card alone is the page */
+  .deck:not(:has(.deck__act,.deck__ahead)){grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"card";grid-template-rows:auto}
+  .deck:not(:has(.deck__act,.deck__ahead)) > .card{max-width:min(100%,1080px)}
 }
 
 .ahead{position:relative;display:flex;flex-direction:column}
@@ -1266,12 +1260,6 @@ html{font-synthesis:none}
   top:0;height:var(--band);
   background:var(--ink);z-index:0}
 
-.spread__side{position:relative;z-index:1;
-  justify-self:center;align-self:end;text-align:center;
-  margin:var(--sp-pad) var(--gutter) clamp(14px,2.5dvh,26px);
-  font:500 clamp(10px,1vw,11px)/1.6 var(--f-mono);
-  text-transform:uppercase;letter-spacing:.32em;color:var(--tone)}
-
 .spread__seal{position:absolute;--swirl:min(86vw,430px,calc(var(--band) * .95));
   left:calc(var(--swirl) * -.3);top:auto;bottom:calc(var(--swirl) * -.42);
   width:var(--swirl);aspect-ratio:1;height:auto;
@@ -1299,7 +1287,7 @@ html{font-synthesis:none}
 .bform__head{display:flex;align-items:center;
   justify-content:space-between;gap:12px}
 .spread__wm{font-family:var(--f-display);text-transform:uppercase;
-  font-size:clamp(52px,15vw,124px);line-height:.9;letter-spacing:.01em;
+  font-size:clamp(46px,15vw,124px);line-height:.9;letter-spacing:.01em;
   margin:0;padding-bottom:.06em}
 
 .authp{grid-row:2;position:relative;z-index:2;
@@ -1330,7 +1318,8 @@ html{font-synthesis:none}
   margin:0;padding:0;border:0;border-radius:0;background:none;
   color:var(--ink-2);cursor:pointer;-webkit-tap-highlight-color:transparent}
 .authp__eye svg{width:22px;height:22px;display:block}
-.authp__eye:hover,.authp__eye[aria-pressed="true"]{color:var(--ink)}
+.authp__eye[aria-pressed="true"]{color:var(--ink)}
+@media (hover:hover){.authp__eye:hover{color:var(--ink)}}
 .authp__eye:focus-visible{outline:var(--edge-panel) solid var(--ink);
   outline-offset:-5px}
 
@@ -1342,7 +1331,7 @@ html{font-synthesis:none}
   background:var(--ink);color:var(--paper);
   font-family:var(--f-head);text-transform:none;
   font-size:var(--t-verb);line-height:1;letter-spacing:.01em}
-.authp__go:hover{background:var(--ink-2)}
+@media (hover:hover){.authp__go:hover{background:var(--ink-2)}}
 .authp__go[disabled]{opacity:.55;cursor:progress}
 .authp__swap{display:block;width:100%;min-height:var(--tap);
   background:none;border:0;cursor:pointer;padding:0;
@@ -1376,8 +1365,6 @@ html{font-synthesis:none}
   .authp{grid-row:1;grid-column:2;margin:0 var(--gutter) 0 0;
     justify-self:start;width:100%;max-width:460px}
 
-  .spread__side{grid-row:2;grid-column:2;align-self:start;justify-self:start;
-    text-align:left;margin:var(--sp-pad) var(--gutter) 0 0}
 }
 
 .mark__word b{font-weight:inherit}
@@ -1444,19 +1431,16 @@ html{font-synthesis:none}
 .lrow--upcoming .lrow__date{color:var(--ink-2)}
 .lrow--upcoming .lrow__when{color:var(--ink-2)}
 
-.lrow--open{background:var(--ink);color:var(--paper);cursor:pointer;
-  padding:var(--sp-pad);margin:var(--sp-row) 0;border-bottom:0;
-  width:auto;margin-right:calc(var(--gutter) * -1);
-  padding-right:calc(var(--sp-pad) + var(--gutter))}
-.lrow--open .lrow__no{color:var(--paper)}
-.lrow--open .lrow__slot{border-color:var(--paper)}
-.lrow--open .lrow__date{font-family:var(--f-head);
-  text-transform:uppercase;font-size:clamp(21px,4.6vw,30px);line-height:1}
-.lrow--open .lrow__when{color:var(--tint)}
+/* the open meeting is a ledger row like the others, in full ink, with
+   its way to Scan; the black call to action belongs to Home */
+.lrow--open{cursor:pointer}
+.lrow--open .lrow__no{color:var(--ink)}
+.lrow--open .lrow__slot{border-color:var(--ink)}
+.lrow--open .lrow__when{color:var(--ink)}
 .lrow__go{font:400 12.5px/1 var(--f-mono);letter-spacing:.12em;
-  text-transform:uppercase;color:var(--paper);white-space:nowrap;
+  text-transform:uppercase;color:var(--ink);white-space:nowrap;
   text-decoration:underline;text-underline-offset:4px}
-.lrow--open:hover{background:var(--ink-2)}
+@media (hover:hover){ .lrow--open:hover .lrow__go{text-decoration-thickness:2px} }
 .lrow--open:focus-visible{outline:var(--edge-panel) solid var(--ink);
   outline-offset:3px}
 
@@ -1465,11 +1449,9 @@ html{font-synthesis:none}
 }
 
 @media(min-width:900px){
-  .recbody{max-width:700px}
   .lrow{grid-template-columns:auto 32px minmax(7rem,auto)
       minmax(0,1fr) auto;padding-block:var(--sp-tight);
     align-items:baseline;column-gap:var(--sp-pad)}
-  .lrow--open{margin-right:0;padding-right:var(--sp-pad);padding-block:var(--sp-pad)}
   .lrow__body{display:contents}
   .lrow__stamp{align-self:center}
   .lrow__date{grid-column:3}
@@ -1524,13 +1506,13 @@ html{font-synthesis:none}
 .scanline--bad .scanline__dot{background:var(--paper)}
 .scanline--bad .scanline__msg{text-decoration:underline 2px;text-underline-offset:4px}
 
-.standing{display:flex;align-items:baseline;justify-content:space-between;
+.standing{display:flex;align-items:baseline;justify-content:flex-start;
   gap:var(--sp-tight) var(--sp-pad);flex-wrap:wrap;margin:0;
   padding-top:var(--sp-row);border-top:var(--edge-panel) solid var(--ink)}
 .standing__lab{font-size:var(--t-caption);color:var(--ink-2);
   letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
 .standing__at{font-family:var(--f-head);font-size:var(--t-sub);line-height:1.05;
-  color:var(--ink);text-align:right;min-width:0;overflow-wrap:anywhere}
+  color:var(--ink);text-align:left;min-width:0;overflow-wrap:anywhere}
 
 
 .zoom{position:relative;z-index:4;align-self:end;justify-self:stretch;
@@ -1555,8 +1537,8 @@ html{font-synthesis:none}
 .zoom__range:focus-visible{outline:var(--edge-thin) solid var(--paper);outline-offset:2px}
 .viewer--zoom .reticle{width:min(56cqw,62cqh,290px);margin-bottom:44px}
 
-.viewer--stalled{aspect-ratio:auto;height:auto;min-height:clamp(160px,30vw,240px);
-  container-type:normal;place-items:stretch;background:var(--paper)}
+.viewer--stalled{aspect-ratio:auto;height:auto;min-height:0;border:0;
+  container-type:normal;place-items:stretch;background:none}
 
 @media(max-height:520px) and (min-aspect-ratio:4/3){
   .view--scan{display:grid;
@@ -1571,7 +1553,7 @@ html{font-synthesis:none}
 }
 
 .stall{display:flex;flex-direction:column;justify-content:center;
-  gap:var(--sp-tight);padding:var(--sp-pad);text-align:left}
+  gap:var(--sp-tight);padding:0;text-align:left}
 .stall__title{margin:0;font-family:var(--f-head);
   text-transform:uppercase;line-height:1;
   font-size:clamp(19px,3.6vw,28px)}
@@ -1583,14 +1565,14 @@ html{font-synthesis:none}
    shows, so what is in the frame is what the decoder reads */
 @media(min-width:1024px){
   .view--scan > .viewer{height:auto;aspect-ratio:16/9;
-    max-height:calc(100dvh - 250px);min-height:320px}
-  .view--scan > .viewer--stalled{aspect-ratio:auto;min-height:240px}
+    max-height:calc(100dvh - 300px);min-height:320px}
+  .view--scan > .viewer--stalled{aspect-ratio:auto;min-height:0}
 }
 
 .tiers{display:flex;flex-direction:column;gap:0}
 
-.tier{position:relative;display:grid;min-width:0;max-width:700px;
-  grid-template-columns:auto minmax(0,1fr);
+.tier{position:relative;display:grid;min-width:0;
+  grid-template-columns:clamp(56px,5.2vw,80px) minmax(0,1fr);
   grid-template-areas:"at body" "at ticks" "at say";
   column-gap:clamp(14px,2.4vw,26px);row-gap:var(--sp-tight);align-items:start;
   padding:clamp(16px,2.4vw,24px) 0;
@@ -1616,7 +1598,7 @@ html{font-synthesis:none}
   background:var(--paper);color:var(--ink);
   font-family:var(--f-head);
   font-size:var(--t-sub);line-height:1.15;white-space:nowrap}
-.tier__claim:hover{background:transparent;color:var(--paper)}
+@media (hover:hover){.tier__claim:hover{background:transparent;color:var(--paper)}}
 .tier__claim:focus-visible{outline:var(--edge-panel) solid var(--paper);
   outline-offset:3px}
 
@@ -1640,14 +1622,23 @@ html{font-synthesis:none}
 .tier--far .tier__at,.tier--far .tier__name{color:var(--ink-2)}
 
 @media(min-width:900px){
-  .tier--ready{max-width:700px;margin-right:0;padding-right:var(--sp-pad)}
+  /* the slab hangs into the gutter by its own padding, so its name
+     lines up with the other rungs */
+  .tier--ready{margin-right:0;padding-right:var(--sp-pad);
+    margin-left:calc(-1 * clamp(16px,2.4vw,26px))}
+}
+/* the list pages are sheets: one measure, and the title's rule ends
+   where the content ends; Home, Scan and Check-in are stages */
+@media(min-width:1024px){
+  .view--record,.view--rewards,.view--member,
+  [data-screen="bmeet"] .view--board,[data-screen="bmembers"] .view--board{max-width:760px}
 }
 .tier--ready + .tier--ready{margin-top:3px}
 
 /* the member, set as type: name, standing, district, and the district's
    own seal at the size of a signature, not a banner */
-.who{display:grid;grid-template-columns:minmax(0,1fr) auto;
-  grid-template-areas:"name seal" "line seal";column-gap:var(--sp-pad);row-gap:6px;
+.who{display:grid;grid-template-columns:auto auto;justify-content:start;
+  grid-template-areas:"name seal" "line seal";column-gap:var(--sp-block);row-gap:6px;
   align-items:end}
 .who__name{grid-area:name;margin:0;line-height:1;color:var(--ink);
   font-size:clamp(26px,3vw,36px);overflow-wrap:anywhere}
@@ -1674,9 +1665,9 @@ html{font-synthesis:none}
 .cards__when{grid-area:when;justify-self:end}
 .cards__prize{grid-area:prize}
 @media(min-width:900px){
-  .cards__row{grid-template-columns:8ch auto minmax(0,1fr) auto;
-    grid-template-areas:"no marks when prize";align-items:center}
-  .cards__when{justify-self:start}
+  .cards__row{grid-template-columns:8ch auto minmax(0,1fr);
+    grid-template-areas:"no marks when" "no marks prize";align-items:center}
+  .cards__when{justify-self:start;white-space:nowrap}
 }
 
 
@@ -1730,69 +1721,12 @@ html{font-synthesis:none}
   border:var(--edge-panel) solid var(--ink);
   background:var(--paper);color:var(--ink);
   font:400 14px/1.1 var(--f-body);letter-spacing:.04em}
-.acct__out:hover{background:var(--ink);color:var(--paper)}
+@media (hover:hover){.acct__out:hover{background:var(--ink);color:var(--paper)}}
 .acct__out:focus-visible{outline:var(--edge-panel) solid var(--ink);
   outline-offset:3px}
 /* from 1024px up the rail's foot carries the account block */
 @media(min-width:1024px){ .view--member .acct,.view--board .acct{display:none} }
 
-.bover{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr)}
-
-.bnow{display:grid;gap:2px var(--sp-pad);max-width:760px;
-  grid-template-columns:minmax(0,1fr);
-  grid-template-areas:"lab" "no" "at" "state" "go";
-  align-items:start;justify-items:start;
-  padding:var(--sp-pad);border:var(--edge-panel) solid var(--ink);
-  background:var(--paper);color:var(--ink)}
-.bnow__lab{grid-area:lab} .bnow__no{grid-area:no}
-.bnow__at{grid-area:at}   .bnow__state{grid-area:state}
-.bnow__go{grid-area:go}
-
-@media(min-width:720px){
-  .bnow{grid-template-columns:minmax(0,1fr) auto;
-    grid-template-areas:"lab go" "no go" "at go" "state go";
-    align-items:start;align-content:center;
-    padding-block:clamp(24px,3vw,36px)}
-  .bnow__go{align-self:center;margin-top:0}
-
-  .bnow--none{grid-template-columns:minmax(0,1fr);
-    grid-template-areas:"lab" "no" "at" "go";min-height:0}
-  .bnow--none .bnow__go{align-self:start;margin-top:var(--sp-pad)}
-}
-.bnow--live{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-/* only a live check-in is a slab; anything else is type on the page */
-.bnow:not(.bnow--live){border:0;padding:0}
-.bnow--today .bnow__go{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-@media(max-width:719px){
-  .bnow--live{max-width:none;margin-right:calc(var(--gutter) * -1);border-right:0}
-}
-
-.bnow__lab{margin:0;font:500 var(--t-caption)/1.3 var(--f-mono);
-  letter-spacing:.24em;text-transform:uppercase;color:var(--ink-2)}
-.bnow--live .bnow__lab{color:var(--tint)}
-.bnow__no{margin:0;padding-bottom:.08em;
-  font-family:var(--f-head);text-transform:uppercase;line-height:.9;
-  font-size:clamp(40px,7vw,72px)}
-.bnow__at{margin:0;font-size:var(--t-body);line-height:1.3}
-.bnow--live .bnow__at{color:var(--tint)}
-.bnow__state{margin:var(--sp-tight) 0 0;font-size:var(--t-caption);
-  color:var(--ink-2)}
-.bnow--live .bnow__state{color:var(--paper)}
-.bnow__go{margin-top:var(--sp-pad);padding:11px var(--sp-pad);cursor:pointer;
-  border:var(--edge-panel) solid currentColor;
-  background:transparent;color:inherit;
-  font-family:var(--f-head);text-transform:uppercase;
-  font-size:clamp(17px,2vw,21px);line-height:1.2}
-.bnow--live .bnow__go{background:var(--paper);color:var(--ink);
-  border-color:var(--paper)}
-@media (hover:hover){
-  .bnow__go:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-  .bnow--live .bnow__go:hover{background:transparent;color:var(--paper);border-color:var(--paper)}
-}
-.bnow__go:focus-visible{outline:var(--edge-panel) solid currentColor;
-  outline-offset:3px}
-
-.bover .standing-band{border-top-width:var(--edge-panel)}
 
 
 .crop{overflow:hidden;isolation:isolate}
@@ -1809,7 +1743,7 @@ html{font-synthesis:none}
   font:500 clamp(11px,1.2vw,13px)/1 var(--f-mono);letter-spacing:.06em}
 .gmtab + .gmtab{border-left:0}
 .gmtab--on{background:var(--ink);color:var(--paper)}
-@media (pointer:coarse){ .gmtab{min-height:44px} .blist--meet .brow__day{padding-block:12px;margin-block:-12px} }
+@media (pointer:coarse){ .gmtab{min-height:44px} }
 .gmtab:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:2px}
 
 .proj{display:grid;margin-top:0;
@@ -1881,7 +1815,7 @@ html{font-synthesis:none}
   box-sizing:border-box;border:0;background:#fff;padding:0}
 
 @media(min-width:900px){
-  .proj{grid-template-columns:auto minmax(0,1fr);
+  .proj{grid-template-columns:auto minmax(16rem,30rem);justify-content:start;
     grid-template-rows:auto minmax(0,1fr) auto auto;
     column-gap:clamp(24px,3.4vw,56px);row-gap:clamp(14px,2vw,24px);
     margin-inline:calc(var(--gutter) * -1);border-inline:0;
@@ -1903,7 +1837,7 @@ html{font-synthesis:none}
    of the room: the meeting, OPEN, the code and the count, nothing else;
    landscape puts the count beside the code, portrait under it */
 .is-projecting,.is-projecting body{overflow:hidden}
-.is-projecting .topbar,.is-projecting .tabs,.is-projecting .rail{visibility:hidden}
+.is-projecting .tabs,.is-projecting .rail{visibility:hidden}
 .is-projecting .rig{isolation:auto}
 .proj.proj--full{position:fixed;inset:0;z-index:400;display:grid;margin:0;
   width:auto;height:auto;padding:3vh 4vw;border:0;background:var(--ink);
@@ -1949,13 +1883,12 @@ html{font-synthesis:none}
 .bback{align-self:flex-start;margin-bottom:var(--sp-pad)}
 
 /* one label: small caps of record, in the record face */
-.kicker,.figline,.blist__head,.meetband__n,.bnow__lab,.card__cardno,.who__line,
+.kicker,.figline,.blist__head,.meetband__n,.card__cardno,.who__line,
 .rail__role,.standing__lab,.standing-band__of,.standing-band__rest dt,.brow__nlab,
 .authp__lab,.cards__when,.cards__prize{
   font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;
   color:var(--ink-2)}
 .card__cardno{color:var(--tint);opacity:1}
-.bnow--live .bnow__lab{color:var(--tint)}
 
 /* ══ behaviour carried from the four passes: identity data keeps its
    case, a refusal keeps its room, the camera is offered again in place,
@@ -1967,7 +1900,7 @@ html{font-synthesis:none}
 #authErr.is-on{display:block}
 .viewer--stalled video,.viewer--stalled .reticle,.viewer--stalled .viewer__scrim{display:none}
 .stall__retry{align-self:flex-start;margin-top:var(--sp-row)}
-.btn[data-busy]{flex-direction:column;gap:0}
+.btn[data-busy],.link[data-busy]{flex-direction:column;gap:0}
 [data-busy]::after{content:attr(data-busy);display:block;height:0;overflow:hidden;visibility:hidden}
 .btn[disabled],.proj__ctl[disabled],.authp__go[disabled],.tier__claim[disabled],.rail__out[disabled],.acct__out[disabled]{
   opacity:.55;pointer-events:none}
@@ -1977,10 +1910,9 @@ html{font-synthesis:none}
 select.input:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 /* On the wide spread the box is centred in its column, so a refusal
    printed inside it would re-centre the box; there it hangs under the
-   frame instead, where the district line gives way to it. */
+   frame instead. */
 @media(min-width:820px){
   .authp #authErr.is-on{position:absolute;top:calc(100% + var(--edge-frame) + var(--sp-row));left:0;right:0;margin:0}
-  .spread:has(#authErr.is-on) .spread__side{visibility:hidden}
 }
 
 </style>
@@ -2011,9 +1943,6 @@ select.input:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
   </aside>
 
   <div>
-    <header class="topbar">
-      <div id="barBrand"></div>
-    </header>
     <main id="view" tabindex="-1"></main>
   </div>
 </div>
@@ -15458,6 +15387,11 @@ function stampShape(seed, grow = 0){
 
 const STAMP_FIT = .62;
 
+/* the usual time and room are not repeated; a meeting that differs
+   says how (the same rule the ledger and the board lists follow) */
+const unusual = m => (m.time && m.time !== '12:40 PM') || (m.place && m.place !== Schedule.PLACE)
+  ? [m.time, m.place].filter(Boolean) : [];
+
 const C = {
   tier(r, total, prev = 0){
     /* one rule for a tier, read from the store (rewardState); the ticks
@@ -15547,7 +15481,9 @@ const C = {
           <span class="card__cardno">Card ${pad(cardNo)}</span>
           <p class="card__num"><b>${p.filled}</b><span>/ ${p.span}</span></p>
           <span class="card__idrule" aria-hidden="true"></span>
-          <p class="card__goal">${esc(say)}</p>
+          ${full && goal && !goal.claimed
+            ? `<button class="card__goal card__goal--go link" type="button" data-go="rewards">${esc(say)}</button>`
+            : `<p class="card__goal">${esc(say)}</p>`}
           <span class="card__kci" aria-hidden="true">${brandSeal('kci')}</span>
         </div>
         <div class="card__field">
@@ -15660,14 +15596,14 @@ const Views = {
     let action = '';
     if (open && !done)
       action = C.strike({ verb:'Check in',
-                          sub:[`GM ${pad(open.no)}`, open.today ? 'Today' : fmtDay(open.date), open.time, open.place].join('\u00a0/ '),
+                          sub:[`GM ${pad(open.no)}`, ...(open.today ? [] : [fmtDay(open.date)]), ...unusual(open)].join('\u00a0/ '),
                           go:'scan', live:true });
     else if (open && done){
       const scan = Store.scanFor(open.id);
       action = C.line('Checked in', `GM ${pad(open.no)}${scan ? ` / ${fmtTime(scan.at)}` : ''}`);
     }
     else if (next)
-      action = C.line('Next', `GM ${pad(next.no)} / ${fmtDate(next.date)} / ${esc(next.time)} / ${esc(next.place)}`);
+      action = C.line('Next', [`GM ${pad(next.no)}`, fmtDate(next.date), ...unusual(next).map(esc)].join(' / '));
 
     const showing = open ? open.id : next ? next.id : null;
     const ahead = Store.meetings
@@ -15689,7 +15625,7 @@ const Views = {
               ${ahead.map(m => `<li class="ahead__row">
                 <span class="ahead__no">${pad(m.no)}</span>
                 <span class="ahead__day">${fmtDate(m.date)}</span>
-                <span class="ahead__at">${esc(m.time)} / ${esc(m.place)}</span>
+                ${unusual(m).length ? `<span class="ahead__at">${unusual(m).map(esc).join(' / ')}</span>` : ''}
               </li>`).join('')}
             </ul>
           </section>` : ''}
@@ -15716,7 +15652,6 @@ const Views = {
           <p class="figline">
             <span><b>${kept}</b> stamped</span>
             <span><b>${gone}</b> missed</span>
-            <span><b>${counted.length}</b> held</span>
           </p>
         </aside>
 
@@ -15750,6 +15685,17 @@ const Views = {
   },
 
   scan(){
+    /* already stamped for the open meeting: nothing to scan, and the page
+       says so the way Home does */
+    const open = Store.openMeeting();
+    const stamp = open && Store.scanFor(open.id);
+    if (stamp) return `<div class="view view--scan">
+      <header class="rechead">
+        <h1 class="title rechead__title">Scan</h1>
+      </header>
+      ${C.line('Checked in', `GM ${pad(open.no)} / ${fmtTime(stamp.at)}`)}
+    </div>`;
+
     const standing = scanStanding();
 
     return `<div class="view view--scan">
@@ -15802,11 +15748,10 @@ const Views = {
     </div>`;
   },
 
-  /* Club Tools ends with the account block on phones, the way Member
+  /* Check-in ends with the account block on phones, the way Member
      does; from 1024px up the rail's foot carries it instead. */
-  board(){     BoardUI.tab = 'club';     return this.boardSpread('Club Tools', C.account()); },
+  bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Check-in', C.account()); },
   bmeet(){     BoardUI.tab = 'meetings'; return this.boardSpread('Meetings'); },
-  bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Check-in'); },
   bmembers(){  BoardUI.tab = 'progress'; return this.boardSpread('Members'); },
 
   profile(){
@@ -15826,8 +15771,11 @@ const Views = {
 
       <section class="who">
         <p class="who__name">${esc(name)}</p>
-        <p class="who__line">${Store.isBoard ? 'Board' : 'Member'} / Cali-Nev-Ha District${
-          handle.toLowerCase() !== name.toLowerCase() ? ` / ${esc(handle)}` : ''}</p>
+        ${(() => {
+          /* the title already says Member, and the seal the district */
+          const bits = [Store.isBoard ? 'Board' : '', handle.toLowerCase() !== name.toLowerCase() ? esc(handle) : ''].filter(Boolean);
+          return bits.length ? `<p class="who__line">${bits.join(' / ')}</p>` : '';
+        })()}
         <span class="who__seal" aria-hidden="true">${brandSeal('cnh')}</span>
       </section>
 
@@ -15899,12 +15847,12 @@ const Views = {
             <input class="authp__in" id="authUser" name="username" type="text"
                    autocomplete="username" autocapitalize="none" spellcheck="false"
                    inputmode="latin" maxlength="${Config.USERNAME_MAX}"
-                   placeholder="${up ? 'letters, numbers, _ and .' : 'your username'}">
+                   placeholder="${up ? 'a–z 0–9 _ .' : 'your username'}">
           </div>
 
           ${passwordField({ id:'authPass', name:'password', label:'Password',
                             autocomplete: up ? 'new-password' : 'current-password',
-                            placeholder: up ? 'at least 8 characters' : '' })}
+                            placeholder: up ? '8+ characters' : '' })}
 
           ${up ? passwordField({ id:'authPass2', name:'confirm', label:'Confirm password',
                                  autocomplete:'new-password' }) : ''}
@@ -15925,7 +15873,6 @@ const Views = {
           ${AuthUI.setupNotice()}
         </form>
 
-        <span class="spread__side" aria-hidden="true">Key Club International · Cali-Nev-Ha District</span>
       </div>
     </div>`;
   },
@@ -15946,6 +15893,14 @@ function nextMeetingNumber(list){
 }
 
 const MEETING_DEFAULTS = { start:'12:40', end:'13:30' };
+
+/* The usual time and room are said once, by the club, not on every
+   line; a meeting that differs says how. */
+function meetingAway(m){
+  const span = spanTime(m.start_time, m.end_time), room = m.location || Schedule.PLACE;
+  const usual = span === spanTime('12:40 PM', '1:30 PM') && room === Schedule.PLACE;
+  return usual ? '' : ` / ${esc(span)} / ${esc(room)}`;
+}
 
 /* minutes past midnight at the club */
 function clubMinutes(d = new Date()){
@@ -15977,7 +15932,7 @@ function spanTime(start, end){
 }
 
 const BoardUI = {
-  tab: 'club',
+  tab: 'session',
   loading: false,
   shown: null,          /* the tab whose loaded content the pane holds */
   error: null,
@@ -16031,7 +15986,6 @@ const BoardUI = {
     if (this.error)   return this.failure(this.error);
     if (this.memberDetail)  return this.memberPane();
     if (this.meetingDetail) return this.meetingPane();
-    if (this.tab === 'club')     return this.clubPane();
     if (this.tab === 'meetings') return this.meetingsPane();
     if (this.tab === 'progress') return this.progressPane();
     return this.sessionPane();
@@ -16056,44 +16010,7 @@ const BoardUI = {
   },
 
   /* a detail page returns to the list of the tab it was opened in */
-  backLabel(){
-    return this.tab === 'meetings' ? 'Back to meetings' : 'Back to members';
-  },
-
-  clubPane(){
-    const o = this.overview || {};
-    const active = o.active_meeting;
-    const next = o.next_meeting;
-
-    const focus = active || next;
-    const isLive = Boolean(active);
-    const today = o.server_date || Schedule.today();
-    /* an open check-in from another day was left open, not started today */
-    const stale = isLive && active.meeting_date !== today;
-    const isToday = !isLive && focus && focus.meeting_date === today;
-    const at = m => `${esc(fmtDay(m.meeting_date))} / ${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || Schedule.PLACE)}`;
-
-    /* each button does what it says, here: close, open, or show the code */
-    if (!focus) return `<div class="bover"><div class="bnow bnow--none">
-        <p class="bnow__lab">Next general meeting</p>
-        <p class="bnow__no">None yet</p>
-        <button class="bnow__go" type="button" data-btab="meetings" data-mnew>Schedule one</button>
-      </div></div>`;
-
-    return `<div class="bover">
-      <div class="bnow${isLive ? ' bnow--live' : ''}${isToday ? ' bnow--today' : ''}">
-        <p class="bnow__lab">${stale ? 'Check-in left open' : isLive ? 'Check-in open' : isToday ? 'Today' : 'Next general meeting'}</p>
-        <p class="bnow__no">GM ${pad(focus.meeting_number)}</p>
-        <p class="bnow__at">${at(focus)}</p>
-        ${stale ? '<p class="bnow__state">Never closed</p>'
-          : isLive ? `<p class="bnow__state">${o.today_attendance} checked in</p>` : ''}
-        ${stale ? `<button class="bnow__go" type="button" data-bend="${esc(active.id)}" data-busy="Closing">Close check-in</button>`
-          : isLive ? '<button class="bnow__go" type="button" data-btab="session">Show the code</button>'
-          : isToday ? `<button class="bnow__go" type="button" data-bstart="${esc(focus.id)}" data-busy="Opening">Open check-in</button>`
-          : ''}
-      </div>
-    </div>`;
-  },
+  backLabel(){ return 'Back'; },
 
   progressPane(){
     const o = this.overview || {};
@@ -16161,9 +16078,9 @@ const BoardUI = {
     const span = spanTime(m.start_time, m.end_time), room = m.location || Schedule.PLACE;
     const usual = span === spanTime('12:40 PM', '1:30 PM') && room === Schedule.PLACE;
 
-    return `<li class="brow brow--${state}">
-      <span class="brow__no" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">GM ${no}</span>
-      <span class="brow__day" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">${esc(fmtDay(m.meeting_date))}</span>
+    return `<li class="brow brow--${state}" data-bmeeting="${esc(m.id)}" role="button" tabindex="0">
+      <span class="brow__no">GM ${no}</span>
+      <span class="brow__day">${esc(fmtDay(m.meeting_date))}</span>
       ${usual ? '' : `<span class="brow__when">${esc(span)} / ${esc(room)}</span>`}
       ${word ? `<span class="bstate bstate--${state}">${word}</span>` : ''}
       ${upcoming ? '' : `<span class="brow__n"><b>${stamps}</b><span class="brow__nlab">checked in</span></span>`}
@@ -16218,12 +16135,12 @@ const BoardUI = {
     const rows = d.members || [];
     return `<div>
       <div class="bfilters">
-        <label class="field bfilters__q"><span class="kicker">Search username</span>
-          <input class="input" id="bq" type="search" value="${esc(this.q)}"
+        <label class="field bfilters__q"><span class="sr-only">Search username</span>
+          <input class="input" id="bq" type="search" value="${esc(this.q)}" placeholder="Search username"
                  autocapitalize="none" spellcheck="false"></label>
-        <label class="field"><span class="kicker">Sort</span>
+        <label class="field"><span class="sr-only">Sort by</span>
           <select class="input" id="bsort">
-            ${[['username','Username'],['stamps_desc','Most stamps'],['recent','Most recent attendance']]
+            ${[['username','Name'],['stamps_desc','Stamps'],['recent','Recent']]
               .map(([v,l]) => `<option value="${v}" ${this.sort === v ? 'selected' : ''}>${l}</option>`).join('')}
           </select></label>
       </div>
@@ -16271,10 +16188,10 @@ const BoardUI = {
         ? `<span class="meetband__n">${d.attendance.length} ${d.attendance.length === 1 ? 'stamp' : 'stamps'}</span>` : ''}</h2>
       ${d.attendance.length
         ? `<ul class="blist">${d.attendance.map(a => `
-            <li class="brow" ${a.meeting_id ? `data-bmeeting="${esc(a.meeting_id)}" tabindex="0" role="button"` : ''}>
+            <li class="brow brow--att" ${a.meeting_id ? `data-bmeeting="${esc(a.meeting_id)}" tabindex="0" role="button"` : ''}>
               <span class="brow__no">GM ${a.meeting_number ? pad(a.meeting_number) : '-'}</span>
-              <span class="brow__mid"><b>${esc(fmtDay(a.meeting_date))}</b>
-                <span class="muted">${esc(a.location || 'MPR')} / checked in ${esc(fmtTime(a.checked_in_at))}</span></span>
+              <span class="brow__mid"><b>${esc(fmtDay(a.meeting_date))}</b></span>
+              <span class="brow__cell">${esc(fmtTime(a.checked_in_at))}${a.location && a.location !== Schedule.PLACE ? ` / ${esc(a.location)}` : ''}</span>
             </li>`).join('')}</ul>`
         : this.empty('No attendance yet.')}
     </div>`;
@@ -16338,6 +16255,8 @@ const BoardUI = {
 
     const isOpen = Boolean(sel.check_in_open);
     const id = esc(sel.id);
+    /* a check-in left open on another day says so */
+    const stale = isOpen && sel.meeting_date !== today;
 
     return `<div class="bpanel">
       ${!open && todays.length > 1 ? `<div class="gmtabs" role="tablist" aria-label="Today's meetings">
@@ -16349,7 +16268,7 @@ const BoardUI = {
       <section class="proj ${isOpen ? 'proj--live' : ''}" id="proj">
         <div class="proj__meet">
           <p class="proj__no">GM ${pad(sel.meeting_number)}</p>
-          <p class="proj__when">${esc(fmtDay(sel.meeting_date))} / ${esc(spanTime(sel.start_time, sel.end_time))} / ${esc(sel.location || Schedule.PLACE)}</p>
+          <p class="proj__when">${esc(fmtDay(sel.meeting_date))}${meetingAway(sel)}${stale ? ' / never closed' : ''}</p>
         </div>
         ${isOpen ? `<p class="proj__word">Open</p>
         <p class="proj__count" aria-live="polite"><b id="attCount">${Number.isFinite(sel.attendance_count) ? sel.attendance_count : ''}</b><span>checked in</span></p>` : ''}
@@ -16358,7 +16277,7 @@ const BoardUI = {
             ? `<button class="proj__ctl proj__ctl--go" type="button" data-bfull aria-pressed="false">Project</button>`
             : `<button class="proj__ctl proj__ctl--go" type="button" data-bstart="${id}" data-busy="Opening">Open check-in</button>`}
         </div>
-        ${isOpen ? `<button class="link proj__end" type="button" data-bend="${id}" data-busy="Closing">Close check-in</button>
+        ${isOpen ? `<button class="link proj__end" type="button" data-bend="${id}">Close check-in</button>
           <div class="proj__plate"><div class="qrpanel__code" id="qrBox"></div></div>` : ''}
       </section>
     </div>`;
@@ -16691,7 +16610,7 @@ const Transit = {
   },
 
   ORDER: { home:0, record:1, scan:2, rewards:3, profile:4,
-           board:0, bmeet:1, bcheckin:2, bmembers:3 },
+           bcheckin:0, bmeet:1, bmembers:2 },
 
   /* one cut for every page turn: an ink slab crosses the column in tab
      order; only its direction says anything, so nothing rides on it */
@@ -16706,8 +16625,8 @@ const Transit = {
   frame(view){
     const r = view.getBoundingClientRect();
     const shown = el => el && getComputedStyle(el).display !== 'none';
-    const bar = $('.topbar'), tabs = $('.tabs');
-    const top = shown(bar) ? Math.max(0, bar.getBoundingClientRect().bottom) : 0;
+    const tabs = $('.tabs');
+    const top = 0;
     const floor = shown(tabs) ? tabs.getBoundingClientRect().top : innerHeight;
     return { left:r.left, width:r.width, top, height:Math.max(0, floor - top) };
   },
@@ -16836,11 +16755,9 @@ function scanStanding(){
   const open = Store.openMeeting();
   const done = open && Store.attended(open.id);
   if (Store.failed) return { lab:'Record not loaded', at:'Could not reach the club records' };
-  return !open
-    ? { lab:'Check-in', at:'Closed' }
-    : done
-      ? { lab:'Already stamped', at:`GM ${pad(open.no)}` }
-      : { lab:'Checking in to', at:`GM ${pad(open.no)}` };
+  return !open || done
+    ? { lab:'Check-in', at:open ? `GM ${pad(open.no)} stamped` : 'Closed' }
+    : { lab:'Checking in to', at:`GM ${pad(open.no)}` };
 }
 function paintScanStanding(){
   const s = scanStanding();
@@ -17015,9 +16932,6 @@ const Scanner = {
 
     $('#viewer')?.classList.remove('viewer--stalled');
     $('#viewer .stall')?.remove();
-
-    /* a member already stamped for the open meeting has nothing to scan */
-    if (this.stamped()) return this.stall('stamped');
 
     this.setState('boot', 'Starting camera');
     this.showLoader();
@@ -17222,8 +17136,6 @@ const Scanner = {
         body:'Scan the code from a phone.' },
       unsupported:{ title:'Scanning needs a secure page', retry:false,
         body:'Camera access needs https.' },
-      /* the line under the panel already names the meeting */
-      stamped:{ title:'You are checked in', retry:false, body:'' },
     }[kind] || { title:'Camera unavailable', retry:true, body:'Close other apps using the camera, then try again.' };
 
     /* The note sits over the viewer; the video stays in place, so the
@@ -17400,10 +17312,11 @@ const MEMBER_NAV = [
   { id:'profile', label:'Member'  },
 ];
 
+/* an officer lands on Check-in: at a meeting it is the page they need,
+   and between meetings it names the next one */
 const BOARD_NAV = [
-  { id:'board',    label:'Club Tools', short:'Club' },
-  { id:'bmeet',    label:'Meetings'   },
   { id:'bcheckin', label:'Check-in'   },
+  { id:'bmeet',    label:'Meetings'   },
   { id:'bmembers', label:'Members'    },
 ];
 
@@ -17442,7 +17355,7 @@ const AuthUI = {
 };
 
 const BOARD_ROUTES = BOARD_NAV.map(n => n.id);
-const PANE_ROUTES = ['board', 'bmeet', 'bcheckin', 'bmembers'];
+const PANE_ROUTES = ['bmeet', 'bcheckin', 'bmembers'];
 
 function gate(id){
   if (!Store.ready) return id;
@@ -17453,7 +17366,7 @@ function gate(id){
     return id;
   }
 
-  if (!BOARD_ROUTES.includes(id)) return 'board';
+  if (!BOARD_ROUTES.includes(id)) return 'bcheckin';
   return id;
 }
 
@@ -17519,12 +17432,17 @@ function paintNav(){
   $$('.tab', tabs).forEach(el => el.remove());
   $$('.rail__link', rail).forEach(el => el.remove());
 
+  /* while a check-in is open and not yet stamped, the Scan tab is the
+     way in, under the thumb, so it is set in ink */
+  const open = !Store.isBoard && Store.openMeeting();
+  const live = Boolean(open && !Store.attended(open.id));
   navFor().forEach((n, i) => {
     const cur = current === n.id ? ' aria-current="page"' : '';
+    const hot = live && n.id === 'scan' ? ' tab--live' : '';
     tabs.insertAdjacentHTML('beforeend',
-      `<button class="tab" data-go="${n.id}"${cur}><span>${n.short || n.label}</span></button>`);
+      `<button class="tab${hot}" data-go="${n.id}"${cur}><span>${n.short || n.label}</span></button>`);
     rail.insertAdjacentHTML('beforeend',
-      `<button class="rail__link" data-go="${n.id}"${cur}><span class="rail__idx">${pad(i + 1)}</span><span class="rail__lab">${n.label}</span></button>`);
+      `<button class="rail__link" data-go="${n.id}"${cur}><span class="rail__idx" aria-hidden="true">${pad(i + 1)}</span><span class="rail__lab">${n.label}</span></button>`);
   });
 }
 
@@ -17741,10 +17659,10 @@ document.addEventListener('submit', async e => {
 document.addEventListener('click', e => {
   const btab = e.target.closest('[data-btab]');
   if (btab){
-    const toRoute = { club:'board', meetings:'bmeet', session:'bcheckin', progress:'bmembers' };
+    const toRoute = { meetings:'bmeet', session:'bcheckin', progress:'bmembers' };
     Object.assign(BoardUI, { memberDetail:null, meetingDetail:null, page:1 });
     if (btab.hasAttribute('data-mnew')) BoardUI.formOpen = true;
-    go(toRoute[btab.dataset.btab] || 'board');
+    go(toRoute[btab.dataset.btab] || 'bcheckin');
     return;
   }
   const bmember = e.target.closest('[data-bmember]');
@@ -17829,9 +17747,7 @@ document.addEventListener('click', e => {
   if (bstart){
     hold(bstart, 'Opening');
     Backend.startAttendance(bstart.dataset.bstart)
-      /* opened from Club Tools, the next thing wanted is the code */
-      .then(() => { boardMeeting = bstart.dataset.bstart; boardStamp = true;
-                    if (current === 'board') go('bcheckin'); else loadBoard(); })
+      .then(() => { boardMeeting = bstart.dataset.bstart; boardStamp = true; loadBoard(); })
       .catch(err => { release(bstart, 'Open check-in');
         toast({ key:'board', bad:true, title:'Could not open check-in',
                 detail:BoardUI.message(err && err.message) }); });
@@ -17968,8 +17884,6 @@ async function loadBoard(){
       BoardUI.memberDetail = await Backend.board('member', { id:BoardUI.pendingId });
     } else if (BoardUI.meetingDetail === 'pending'){
       BoardUI.meetingDetail = await Backend.board('meeting', { id:BoardUI.pendingId });
-    } else if (BoardUI.tab === 'club'){
-      BoardUI.overview = await Backend.board('overview');
     } else if (BoardUI.tab === 'progress'){
       const [ov, mem] = await Promise.all([
         Backend.board('overview'),
@@ -18096,7 +18010,9 @@ try {
       if (current === 'scan'){
         paintScanStanding();
         /* stamped from elsewhere while the camera is up: nothing to scan */
-        if (Scanner.stream && !Landing.active && Scanner.stamped()){ Scanner.stop(); Scanner.stall('stamped'); }
+        if (Scanner.stream && !Landing.active && Scanner.stamped()){
+          Scanner.stop(); go('scan', { instant:true, force:true, quiet:true });
+        }
       }
       else if (current && current !== 'auth' && Store.stamp() !== painted)
         go(current, { instant:true, force:true, quiet:true });   /* force: not dropped if it lands mid-cut */
@@ -18117,7 +18033,6 @@ try {
     });
 
     paintBrand();
-    $('#barBrand').innerHTML  = wordmark();
     paintIdentity();
     paintMotion();
     go(hashRoute());

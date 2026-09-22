@@ -8,10 +8,11 @@ const MEMBER_NAV = [
   { id:'profile', label:'Member'  },
 ];
 
+/* an officer lands on Check-in: at a meeting it is the page they need,
+   and between meetings it names the next one */
 const BOARD_NAV = [
-  { id:'board',    label:'Club Tools', short:'Club' },
-  { id:'bmeet',    label:'Meetings'   },
   { id:'bcheckin', label:'Check-in'   },
+  { id:'bmeet',    label:'Meetings'   },
   { id:'bmembers', label:'Members'    },
 ];
 
@@ -50,7 +51,7 @@ const AuthUI = {
 };
 
 const BOARD_ROUTES = BOARD_NAV.map(n => n.id);
-const PANE_ROUTES = ['board', 'bmeet', 'bcheckin', 'bmembers'];
+const PANE_ROUTES = ['bmeet', 'bcheckin', 'bmembers'];
 
 function gate(id){
   if (!Store.ready) return id;
@@ -61,7 +62,7 @@ function gate(id){
     return id;
   }
 
-  if (!BOARD_ROUTES.includes(id)) return 'board';
+  if (!BOARD_ROUTES.includes(id)) return 'bcheckin';
   return id;
 }
 
@@ -127,12 +128,17 @@ function paintNav(){
   $$('.tab', tabs).forEach(el => el.remove());
   $$('.rail__link', rail).forEach(el => el.remove());
 
+  /* while a check-in is open and not yet stamped, the Scan tab is the
+     way in, under the thumb, so it is set in ink */
+  const open = !Store.isBoard && Store.openMeeting();
+  const live = Boolean(open && !Store.attended(open.id));
   navFor().forEach((n, i) => {
     const cur = current === n.id ? ' aria-current="page"' : '';
+    const hot = live && n.id === 'scan' ? ' tab--live' : '';
     tabs.insertAdjacentHTML('beforeend',
-      `<button class="tab" data-go="${n.id}"${cur}><span>${n.short || n.label}</span></button>`);
+      `<button class="tab${hot}" data-go="${n.id}"${cur}><span>${n.short || n.label}</span></button>`);
     rail.insertAdjacentHTML('beforeend',
-      `<button class="rail__link" data-go="${n.id}"${cur}><span class="rail__idx">${pad(i + 1)}</span><span class="rail__lab">${n.label}</span></button>`);
+      `<button class="rail__link" data-go="${n.id}"${cur}><span class="rail__idx" aria-hidden="true">${pad(i + 1)}</span><span class="rail__lab">${n.label}</span></button>`);
   });
 }
 
@@ -349,10 +355,10 @@ document.addEventListener('submit', async e => {
 document.addEventListener('click', e => {
   const btab = e.target.closest('[data-btab]');
   if (btab){
-    const toRoute = { club:'board', meetings:'bmeet', session:'bcheckin', progress:'bmembers' };
+    const toRoute = { meetings:'bmeet', session:'bcheckin', progress:'bmembers' };
     Object.assign(BoardUI, { memberDetail:null, meetingDetail:null, page:1 });
     if (btab.hasAttribute('data-mnew')) BoardUI.formOpen = true;
-    go(toRoute[btab.dataset.btab] || 'board');
+    go(toRoute[btab.dataset.btab] || 'bcheckin');
     return;
   }
   const bmember = e.target.closest('[data-bmember]');
@@ -437,9 +443,7 @@ document.addEventListener('click', e => {
   if (bstart){
     hold(bstart, 'Opening');
     Backend.startAttendance(bstart.dataset.bstart)
-      /* opened from Club Tools, the next thing wanted is the code */
-      .then(() => { boardMeeting = bstart.dataset.bstart; boardStamp = true;
-                    if (current === 'board') go('bcheckin'); else loadBoard(); })
+      .then(() => { boardMeeting = bstart.dataset.bstart; boardStamp = true; loadBoard(); })
       .catch(err => { release(bstart, 'Open check-in');
         toast({ key:'board', bad:true, title:'Could not open check-in',
                 detail:BoardUI.message(err && err.message) }); });
@@ -576,8 +580,6 @@ async function loadBoard(){
       BoardUI.memberDetail = await Backend.board('member', { id:BoardUI.pendingId });
     } else if (BoardUI.meetingDetail === 'pending'){
       BoardUI.meetingDetail = await Backend.board('meeting', { id:BoardUI.pendingId });
-    } else if (BoardUI.tab === 'club'){
-      BoardUI.overview = await Backend.board('overview');
     } else if (BoardUI.tab === 'progress'){
       const [ov, mem] = await Promise.all([
         Backend.board('overview'),
@@ -704,7 +706,9 @@ try {
       if (current === 'scan'){
         paintScanStanding();
         /* stamped from elsewhere while the camera is up: nothing to scan */
-        if (Scanner.stream && !Landing.active && Scanner.stamped()){ Scanner.stop(); Scanner.stall('stamped'); }
+        if (Scanner.stream && !Landing.active && Scanner.stamped()){
+          Scanner.stop(); go('scan', { instant:true, force:true, quiet:true });
+        }
       }
       else if (current && current !== 'auth' && Store.stamp() !== painted)
         go(current, { instant:true, force:true, quiet:true });   /* force: not dropped if it lands mid-cut */
@@ -725,7 +729,6 @@ try {
     });
 
     paintBrand();
-    $('#barBrand').innerHTML  = wordmark();
     paintIdentity();
     paintMotion();
     go(hashRoute());

@@ -201,7 +201,7 @@ const Transit = {
   },
 
   ORDER: { home:0, record:1, scan:2, rewards:3, profile:4,
-           board:0, bmeet:1, bcheckin:2, bmembers:3 },
+           bcheckin:0, bmeet:1, bmembers:2 },
 
   /* one cut for every page turn: an ink slab crosses the column in tab
      order; only its direction says anything, so nothing rides on it */
@@ -216,8 +216,8 @@ const Transit = {
   frame(view){
     const r = view.getBoundingClientRect();
     const shown = el => el && getComputedStyle(el).display !== 'none';
-    const bar = $('.topbar'), tabs = $('.tabs');
-    const top = shown(bar) ? Math.max(0, bar.getBoundingClientRect().bottom) : 0;
+    const tabs = $('.tabs');
+    const top = 0;
     const floor = shown(tabs) ? tabs.getBoundingClientRect().top : innerHeight;
     return { left:r.left, width:r.width, top, height:Math.max(0, floor - top) };
   },
