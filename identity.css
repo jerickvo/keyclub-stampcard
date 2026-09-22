@@ -213,8 +213,9 @@ div.brow__go{cursor:default}
 .roster thead th{padding:0 0 var(--sp-tight);border-bottom:var(--edge-panel) solid var(--ink);
   font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;
   color:var(--ink-2);white-space:nowrap;vertical-align:bottom}
-.roster th:nth-child(2),.roster td:nth-child(2){width:9.5rem;padding-left:var(--sp-row)}
-.roster th:nth-child(3),.roster td:nth-child(3){width:4.5rem;text-align:right}
+/* the date and count columns take only what they need; the name takes the rest */
+.roster th:nth-child(n+2),.roster td:nth-child(n+2){width:1%;white-space:nowrap;padding-left:var(--sp-row)}
+.roster th:nth-child(3),.roster td:nth-child(3){text-align:right}
 .roster td{font:400 clamp(11px,.4vw + 9.7px,12.5px)/1.4 var(--f-mono);letter-spacing:.04em;color:var(--ink-2)}
 .roster td:nth-child(3){font-size:15px;color:var(--ink)}
 .roster tbody tr{cursor:pointer}
@@ -226,6 +227,7 @@ div.brow__go{cursor:default}
 .brow__none{color:var(--ink-2)}
 @media(min-width:768px){
   .roster th:nth-child(2),.roster td:nth-child(2){width:14rem}
+  .roster th:nth-child(3),.roster td:nth-child(3){width:6rem}
 }
 .bsec{border-bottom:var(--edge-thin) solid var(--ink);color:var(--ink)}
 

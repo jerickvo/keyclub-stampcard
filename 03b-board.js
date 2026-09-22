@@ -245,7 +245,7 @@ const BoardUI = {
     return `<div>
       <div class="bfilters">
         <label class="field bfilters__q"><span class="sr-only">Search username</span>
-          <input class="input" id="bq" type="search" value="${esc(this.q)}" placeholder="Search username"
+          <input class="input" id="bq" type="search" value="${esc(this.q)}" placeholder="Search"
                  autocapitalize="none" spellcheck="false"></label>
         <label class="field"><span class="sr-only">Sort by</span>
           <select class="input" id="bsort">
