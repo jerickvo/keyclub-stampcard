@@ -58,7 +58,7 @@ const C = {
       ${at === 'claimed' ? `<span class="tier__punch">${took ? 'Collected' : 'Claimed'}</span>` : ''}
       ${note ? `<span class="tier__note">${esc(note)}</span>` : ''}
       ${ready
-        ? `<button class="tier__claim" type="button" data-claim="${r.id}">Claim</button>`
+        ? `<button class="tier__claim" type="button" data-claim="${r.id}" aria-label="${esc(`Claim ${r.name}`)}">Claim</button>`
         : say ? `<span class="tier__say">${say}</span>` : ''}
     </div>`;
   },
@@ -111,7 +111,9 @@ const C = {
     const say = full
       ? (goal && !goal.claimed ? `${goal.name} ready to claim`
          : goal ? `${goal.name} ${goal.handedAt ? 'collected' : 'claimed'}` : '')
-      : goal ? `${pad(p.remaining)} to ${goal.name}` : `${pad(p.remaining)} to a full card`;
+      /* a prize already claimed (stamps taken away after the claim) is
+         not held out as the thing to reach */
+      : goal && !goal.claimed ? `${pad(p.remaining)} to ${goal.name}` : `${pad(p.remaining)} to a full card`;
 
     return `<section class="card${full ? ' card--full' : ''}">
       <div class="card__face">
@@ -290,7 +292,9 @@ const Views = {
   record(){
     if (Store.failed) return this.loadFailure('Record');
 
-    const newest = (a, b) => String(a.date) < String(b.date) ? 1 : -1;
+    /* newest first, within a day too: by start time, then number */
+    const at = m => { const v = clockMinutes(m.time); return Number.isNaN(v) ? 0 : v; };
+    const newest = (a, b) => String(b.date).localeCompare(String(a.date)) || at(b) - at(a) || b.no - a.no;
     const held = [...Store.heldMeetings()].sort(newest);
     const counted = Store.countedMeetings();
     const kept = counted.filter(m => Store.attended(m.id)).length;

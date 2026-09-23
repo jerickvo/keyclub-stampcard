@@ -713,35 +713,57 @@ document.addEventListener('click', e => {
   const claim = e.target.closest('[data-claim]');
   if (claim){
     if (claim.disabled) return;
+    const rid = claim.dataset.claim;
+    const prize = (Store.rewards.find(r => r.id === rid) || {}).name || 'reward';
+    const name = armed => claim.setAttribute('aria-label', armed ? `Confirm: claim ${prize}` : `Claim ${prize}`);
     /* a claim cannot be taken back, so it takes a second, deliberate tap */
     if (!claim.dataset.armed){
-      claim.dataset.armed = '1';
+      claim.dataset.armed = String(Date.now());
       claim.textContent = 'Confirm claim';
+      name(true);
       /* it stays armed until the reader moves on, not on a timer */
       claim.addEventListener('blur', () => {
         if (claim.disabled) return;
         delete claim.dataset.armed;
         claim.textContent = 'Claim';
+        name(false);
       }, { once:true });
       return;
     }
+    /* a double-tap is one touch, not two: a confirm this soon after the
+       arming is not taken */
+    if (Date.now() - Number(claim.dataset.armed) < 400) return;
     claim.disabled = true;
-    Store.claimReward(claim.dataset.claim).then(r => {
-      go('rewards', { instant:true });
-      FX.claimStamp($(`[data-reward="${claim.dataset.claim}"]`));
+    const landed = r => {
+      /* a reader who has moved on is not pulled back to Rewards */
+      if (current === 'rewards'){
+        go('rewards', { instant:true });
+        FX.claimStamp($(`[data-reward="${rid}"]`));
+      }
       setTimeout(() => toast({ key:'claim', title:`${r.name} claimed`,
         detail:Store.handovers ? 'Collect it from an officer at a meeting.' : '' }), 260);
-    }).catch(async err => {
+    };
+    Store.claimReward(rid).then(landed).catch(async err => {
       delete claim.dataset.armed;
       claim.textContent = 'Claim';
+      name(false);
       claim.disabled = false;
-      const code = String(err && err.message || '');
-      const earned = !/not earned/i.test(code);
-      const gone = earned && (/not signed/i.test(code) || await sessionGone());
+      const msg = String((err && err.message) || '');
+      /* refused on this page, which counts fewer stamps: nothing was sent */
+      if (/not earned/i.test(msg))
+        return toast({ key:'claim', bad:true, title:'Could not claim', detail:'This reward is not earned yet.' });
       /* a session that ended says so once, on the key Sign in uses */
-      toast({ key:gone ? 'auth' : 'claim', bad:true, title:'Could not claim',
-        detail:!earned ? 'This reward is not earned yet.'
-             : gone ? 'You are no longer signed in here. Sign in again to claim.'
+      if (/not signed/i.test(msg) || await sessionGone())
+        return toast({ key:'auth', bad:true, title:'Could not claim',
+                       detail:'You are no longer signed in here. Sign in again to claim.' });
+      /* the record as it is now: the claim may have landed with its
+         answer lost, or the stamps may have changed since the page loaded */
+      await Store.hydrate({ keep:true });
+      const now = Store.rewards.find(r => r.id === rid);
+      if (now && now.claimed) return landed(now);
+      const refused = (err && err.code === '42501') || /row-level security/i.test(msg);
+      toast({ key:'claim', bad:true, title:'Could not claim',
+        detail:refused ? 'This reward is not earned. Your stamp count has changed.'
              : 'The claim was not saved. Check your connection and try again.' });
     });
     return;

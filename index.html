@@ -15082,8 +15082,11 @@ const SupabaseAdapter = {
   },
 
   async claimReward(userId, rewardId){
+    /* a claim already on file (another tab, a retry after a lost answer)
+       is the same outcome, so it is asked for as one: no conflict */
     const { error } = await this.client.from('reward_claims')
-      .insert({ user_id:userId, reward_id:rewardId });
+      .upsert({ user_id:userId, reward_id:rewardId },
+              { onConflict:'user_id,reward_id', ignoreDuplicates:true });
     if (error && error.code !== '23505') throw error;
     return rewardId;
   },
@@ -15605,7 +15608,10 @@ const Store = {
       .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)[0] || null;
   },
   heldMeetings(){ return this.meetings.filter(m => !m.upcoming && !m.before); },
-  countedMeetings(){ return this.heldMeetings().filter(m => !m.open || this.attended(m.id)); },
+  /* what the tally and the attendance rate count: a meeting today with
+     no stamp is not missed yet (it is open, or an officer can still add
+     a stamp by hand), as its Record row says */
+  countedMeetings(){ return this.heldMeetings().filter(m => this.attended(m.id) || (!m.open && !m.today)); },
   tierState(r){ return rewardState(r, this.totalStamps(), r.claimed); },
   rewardsUnlocked(){ return this.rewards.filter(r => this.tierState(r) !== 'locked').length; },
   attendanceRate(){
@@ -15845,7 +15851,7 @@ const C = {
       ${at === 'claimed' ? `<span class="tier__punch">${took ? 'Collected' : 'Claimed'}</span>` : ''}
       ${note ? `<span class="tier__note">${esc(note)}</span>` : ''}
       ${ready
-        ? `<button class="tier__claim" type="button" data-claim="${r.id}">Claim</button>`
+        ? `<button class="tier__claim" type="button" data-claim="${r.id}" aria-label="${esc(`Claim ${r.name}`)}">Claim</button>`
         : say ? `<span class="tier__say">${say}</span>` : ''}
     </div>`;
   },
@@ -15898,7 +15904,9 @@ const C = {
     const say = full
       ? (goal && !goal.claimed ? `${goal.name} ready to claim`
          : goal ? `${goal.name} ${goal.handedAt ? 'collected' : 'claimed'}` : '')
-      : goal ? `${pad(p.remaining)} to ${goal.name}` : `${pad(p.remaining)} to a full card`;
+      /* a prize already claimed (stamps taken away after the claim) is
+         not held out as the thing to reach */
+      : goal && !goal.claimed ? `${pad(p.remaining)} to ${goal.name}` : `${pad(p.remaining)} to a full card`;
 
     return `<section class="card${full ? ' card--full' : ''}">
       <div class="card__face">
@@ -16077,7 +16085,9 @@ const Views = {
   record(){
     if (Store.failed) return this.loadFailure('Record');
 
-    const newest = (a, b) => String(a.date) < String(b.date) ? 1 : -1;
+    /* newest first, within a day too: by start time, then number */
+    const at = m => { const v = clockMinutes(m.time); return Number.isNaN(v) ? 0 : v; };
+    const newest = (a, b) => String(b.date).localeCompare(String(a.date)) || at(b) - at(a) || b.no - a.no;
     const held = [...Store.heldMeetings()].sort(newest);
     const counted = Store.countedMeetings();
     const kept = counted.filter(m => Store.attended(m.id)).length;
@@ -18641,35 +18651,57 @@ document.addEventListener('click', e => {
   const claim = e.target.closest('[data-claim]');
   if (claim){
     if (claim.disabled) return;
+    const rid = claim.dataset.claim;
+    const prize = (Store.rewards.find(r => r.id === rid) || {}).name || 'reward';
+    const name = armed => claim.setAttribute('aria-label', armed ? `Confirm: claim ${prize}` : `Claim ${prize}`);
     /* a claim cannot be taken back, so it takes a second, deliberate tap */
     if (!claim.dataset.armed){
-      claim.dataset.armed = '1';
+      claim.dataset.armed = String(Date.now());
       claim.textContent = 'Confirm claim';
+      name(true);
       /* it stays armed until the reader moves on, not on a timer */
       claim.addEventListener('blur', () => {
         if (claim.disabled) return;
         delete claim.dataset.armed;
         claim.textContent = 'Claim';
+        name(false);
       }, { once:true });
       return;
     }
+    /* a double-tap is one touch, not two: a confirm this soon after the
+       arming is not taken */
+    if (Date.now() - Number(claim.dataset.armed) < 400) return;
     claim.disabled = true;
-    Store.claimReward(claim.dataset.claim).then(r => {
-      go('rewards', { instant:true });
-      FX.claimStamp($(`[data-reward="${claim.dataset.claim}"]`));
+    const landed = r => {
+      /* a reader who has moved on is not pulled back to Rewards */
+      if (current === 'rewards'){
+        go('rewards', { instant:true });
+        FX.claimStamp($(`[data-reward="${rid}"]`));
+      }
       setTimeout(() => toast({ key:'claim', title:`${r.name} claimed`,
         detail:Store.handovers ? 'Collect it from an officer at a meeting.' : '' }), 260);
-    }).catch(async err => {
+    };
+    Store.claimReward(rid).then(landed).catch(async err => {
       delete claim.dataset.armed;
       claim.textContent = 'Claim';
+      name(false);
       claim.disabled = false;
-      const code = String(err && err.message || '');
-      const earned = !/not earned/i.test(code);
-      const gone = earned && (/not signed/i.test(code) || await sessionGone());
+      const msg = String((err && err.message) || '');
+      /* refused on this page, which counts fewer stamps: nothing was sent */
+      if (/not earned/i.test(msg))
+        return toast({ key:'claim', bad:true, title:'Could not claim', detail:'This reward is not earned yet.' });
       /* a session that ended says so once, on the key Sign in uses */
-      toast({ key:gone ? 'auth' : 'claim', bad:true, title:'Could not claim',
-        detail:!earned ? 'This reward is not earned yet.'
-             : gone ? 'You are no longer signed in here. Sign in again to claim.'
+      if (/not signed/i.test(msg) || await sessionGone())
+        return toast({ key:'auth', bad:true, title:'Could not claim',
+                       detail:'You are no longer signed in here. Sign in again to claim.' });
+      /* the record as it is now: the claim may have landed with its
+         answer lost, or the stamps may have changed since the page loaded */
+      await Store.hydrate({ keep:true });
+      const now = Store.rewards.find(r => r.id === rid);
+      if (now && now.claimed) return landed(now);
+      const refused = (err && err.code === '42501') || /row-level security/i.test(msg);
+      toast({ key:'claim', bad:true, title:'Could not claim',
+        detail:refused ? 'This reward is not earned. Your stamp count has changed.'
              : 'The claim was not saved. Check your connection and try again.' });
     });
     return;

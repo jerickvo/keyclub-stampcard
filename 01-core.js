@@ -304,7 +304,10 @@ const Store = {
       .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)[0] || null;
   },
   heldMeetings(){ return this.meetings.filter(m => !m.upcoming && !m.before); },
-  countedMeetings(){ return this.heldMeetings().filter(m => !m.open || this.attended(m.id)); },
+  /* what the tally and the attendance rate count: a meeting today with
+     no stamp is not missed yet (it is open, or an officer can still add
+     a stamp by hand), as its Record row says */
+  countedMeetings(){ return this.heldMeetings().filter(m => this.attended(m.id) || (!m.open && !m.today)); },
   tierState(r){ return rewardState(r, this.totalStamps(), r.claimed); },
   rewardsUnlocked(){ return this.rewards.filter(r => this.tierState(r) !== 'locked').length; },
   attendanceRate(){

@@ -541,8 +541,11 @@ const SupabaseAdapter = {
   },
 
   async claimReward(userId, rewardId){
+    /* a claim already on file (another tab, a retry after a lost answer)
+       is the same outcome, so it is asked for as one: no conflict */
     const { error } = await this.client.from('reward_claims')
-      .insert({ user_id:userId, reward_id:rewardId });
+      .upsert({ user_id:userId, reward_id:rewardId },
+              { onConflict:'user_id,reward_id', ignoreDuplicates:true });
     if (error && error.code !== '23505') throw error;
     return rewardId;
   },
