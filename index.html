@@ -406,6 +406,11 @@ select.input{padding-right:var(--sp-pad)}
   .toasts{left:auto;right:var(--sp-pad);bottom:var(--sp-pad);max-width:min(330px,32vw)}
 }
 html,body{overflow-x:clip;max-width:100%}
+/* a control reached by Tab is scrolled clear of the fixed tab bar (the
+   bar is 0 tall where it is hidden) */
+html{scroll-padding-bottom:calc(var(--tabs-h) + env(safe-area-inset-bottom, 0px) + 8px)}
+/* a board page being read again says so under the reader's tap */
+#boardPane[aria-busy="true"] > *{opacity:.55;cursor:progress}
 
 .rig{isolation:isolate}
 
@@ -16257,6 +16262,7 @@ const Views = {
     BoardUI.memberDetail = null;
     BoardUI.meetingDetail = null;
     BoardUI.confirmDelete = null;
+    BoardUI.deleteNote = null;
     /* a chapter opened afresh reads its prize list afresh */
     BoardUI.prizesStale = true;
     /* a fresh chapter opens on the wait panel, never on another
@@ -18220,6 +18226,8 @@ async function go(id, opts = {}){
   const view = $('#view');
   const from = current;
   const render = (nav = false) => {
+    /* a background repaint puts the reader's focus back where it was */
+    const back = opts.quiet && from === id ? focusKey(view, document.activeElement) : null;
     current = id;
     syncHash(id);
     Motion.settle(view);
@@ -18231,6 +18239,7 @@ async function go(id, opts = {}){
     paintNav();
     if (!opts.quiet){ try { scrollTo(0, 0); } catch (_) {} }
     afterRender(id, nav, Boolean(opts.covered || opts.quiet));
+    if (back) refocusKey(view, back);
     /* focus follows a page turn; the first paint has nowhere to move it
        from, and asking costs a whole layout of a page nobody has seen */
     /* the page is named in the tab title and read from its heading */
@@ -18258,6 +18267,23 @@ async function go(id, opts = {}){
   } else {
     render();
   }
+}
+
+/* A stable name for a focused control, to find its twin after the page
+   is drawn again: its id, or its first data-* attribute, or (a seal) its
+   place among the seals. */
+function focusKey(view, el){
+  if (!el || el === view || !view.contains(el)) return null;
+  if (el.id) return { q:'#' + CSS.escape(el.id) };
+  for (const a of el.attributes)
+    if (/^data-/.test(a.name) && !/^data-(armed|busy|rest)$/.test(a.name))
+      return { q:`[${a.name}="${CSS.escape(a.value)}"]` };
+  if (el.matches('.seal[tabindex]')) return { seal:[...view.querySelectorAll('.seal[tabindex]')].indexOf(el) };
+  return null;
+}
+function refocusKey(view, key){
+  const el = key.q ? view.querySelector(key.q) : view.querySelectorAll('.seal[tabindex]')[key.seal];
+  if (el && typeof el.focus === 'function') el.focus({ preventScroll:true });
 }
 
 /* the one intro a page has: a stamp just earned is primed to land */
@@ -18529,14 +18555,17 @@ document.addEventListener('click', e => {
   }
   const bmember = e.target.closest('[data-bmember]');
   if (bmember){
-    boardGoto({ memberDetail:'pending', meetingDetail:null, pendingId:bmember.dataset.bmember, refocus:'[data-bback]',
+    /* a second tap while the same detail is still being read does not read it again */
+    if (BoardUI.memberDetail === 'pending' && BoardUI.pendingId === bmember.dataset.bmember) return;
+    boardGoto({ memberDetail:'pending', meetingDetail:null, pendingId:bmember.dataset.bmember, refocus:'[data-bback]', deleteNote:null,
                 leftFrom:`button[data-bmember="${bmember.dataset.bmember}"]`, toTop:true });
     return;
   }
   const bmeeting = e.target.closest('[data-bmeeting]');
   if (bmeeting){
+    if (BoardUI.meetingDetail === 'pending' && BoardUI.pendingId === bmeeting.dataset.bmeeting) return;
     BoardUI.handQ = ''; BoardUI.handFound = null;
-    boardGoto({ meetingDetail:'pending', memberDetail:null, pendingId:bmeeting.dataset.bmeeting,
+    boardGoto({ meetingDetail:'pending', memberDetail:null, pendingId:bmeeting.dataset.bmeeting, deleteNote:null,
                 refocus:bmeeting.hasAttribute('data-bhandfocus') ? '#bhq' : '[data-bback]',
                 leftFrom:`button[data-bmeeting="${bmeeting.dataset.bmeeting}"]`, toTop:true });
     return;
@@ -18570,8 +18599,11 @@ document.addEventListener('click', e => {
       mark();
       toast({ key:'board', title:`${who} checked in to GM ${no}`, detail:'Added by hand.' });
       reloadBoardHere('#bhq');
-    }).catch(err => {
+    }).catch(async err => {
       const code = String((err && err.message) || '');
+      /* the database answers a missing session as "not allowed": a
+         session that ended says so, and the page goes to Sign in */
+      if ((code === 'NOT_AUTHORIZED' || code === 'NOT_AUTHENTICATED') && await sessionGone()) return;
       if (code === 'ALREADY_CHECKED_IN'){
         mark();
         toast({ key:'board', title:'Already checked in', detail:`${who} has a stamp for GM ${no}.` });
@@ -18615,7 +18647,7 @@ document.addEventListener('click', e => {
     const clear = note => {
       if (boardMeeting === id) boardMeeting = null;
       boardGoto({ confirmDelete:null, deleteNote:note || null,
-                  meetings:null, meetingDetail:null });
+                  meetings:null, meetingDetail:null, refocus:'[data-mform]' });
     };
     /* refused or unanswered: the meeting's page is read again, and says why */
     const stay = note => boardGoto({ confirmDelete:null, deleteNote:note, meetings:null,
@@ -18629,7 +18661,7 @@ document.addEventListener('click', e => {
           clear(null);
         })
       : Backend.deleteMeeting(id).then(res =>
-          res && res.ok ? clear(null)
+          res && res.ok ? (toast({ key:'board', title:`${gm} deleted` }), clear(null))
           : res && res.code === 'MEETING_NOT_FOUND' ? clear(res.code)
           : stay((res && res.code) || 'SERVER_ERROR'))
     ).catch(ex => stay(WriteFailure.explain(ex, 'delete meeting')));
@@ -18659,7 +18691,7 @@ document.addEventListener('click', e => {
   if (bstart){
     const id = bstart.dataset.bstart;
     const openNow = list => ((list && list.meetings) || []).filter(m => m.state === 'OPEN');
-    const opened = () => { boardMeeting = id; boardStamp = true;
+    const opened = () => { dropToast('board', true); boardMeeting = id; boardStamp = true;
                            BoardUI.refocus = '[data-bfull]'; loadBoard(); };
     hold(bstart, 'Opening');
     (async () => {
@@ -18684,7 +18716,7 @@ document.addEventListener('click', e => {
   if (bend){
     hold(bend, 'Closing');
     Backend.endAttendance(bend.dataset.bend)
-      .then(() => { clearInterval(countTimer); boardStamp = true;
+      .then(() => { dropToast('board', true); clearInterval(countTimer); boardStamp = true;
                     BoardUI.refocus = '[data-bstart]'; loadBoard(); })
       .catch(err => {
         toast({ key:'board', bad:true, title:'Could not close check-in',
@@ -18726,6 +18758,7 @@ document.addEventListener('click', e => {
 
   const out = e.target.closest('[data-signout]');
   if (out){
+    if (Store.signingOut) return;
     Scenes.exit({
       btn: out,
       swap: () => Store.signOut().then(() => {
@@ -18781,8 +18814,9 @@ document.addEventListener('click', e => {
                                              username:who, prize };
       toast({ key:'board', title:`${prize} handed to ${who}` });
       reloadBoardHere(`[data-bundo="${hand.dataset.bhand}"]`);
-    }).catch(err => {
+    }).catch(async err => {
       const code = String((err && err.message) || '');
+      if ((code === 'NOT_AUTHORIZED' || code === 'NOT_AUTHENTICATED') && await sessionGone()) return;
       /* two officers at one table: the other got there first. That is
          the record working, not a failure to retry */
       /* the first try may have landed with its answer lost on the way
@@ -18859,13 +18893,16 @@ document.addEventListener('click', e => {
     /* a double-tap is one touch, not two: a confirm this soon after the
        arming is not taken */
     if (Date.now() - Number(claim.dataset.armed) < 400) return;
-    claim.disabled = true;
+    hold(claim, 'Claiming');
+    claim.setAttribute('aria-label', `Claiming ${prize}`);
     const who = Store.user && Store.user.id;
     const landed = r => {
       /* signed out (or someone else) since: not this page's news */
       if (!Store.user || Store.user.id !== who) return;
-      /* a reader who has moved on is not pulled back to Rewards */
-      if (current === 'rewards'){
+      /* a reader who has moved on (or is moving on, mid-cut) is not
+         pulled back to Rewards */
+      const here = navigating && heading ? heading : current;
+      if (here === 'rewards'){
         go('rewards', { instant:true });
         FX.claimStamp($(`[data-reward="${rid}"]`));
       }
@@ -18874,9 +18911,9 @@ document.addEventListener('click', e => {
     };
     Store.claimReward(rid).then(landed).catch(async err => {
       delete claim.dataset.armed;
-      claim.textContent = 'Claim';
+      release(claim, 'Claim');
       name(false);
-      claim.disabled = false;
+      claim.focus({ preventScroll:true });
       const msg = String((err && err.message) || '');
       /* refused on this page, which counts fewer stamps: nothing was sent */
       if (/not earned/i.test(msg))
@@ -18887,12 +18924,17 @@ document.addEventListener('click', e => {
                        detail:'You are no longer signed in here. Sign in again to claim.' });
       /* the record as it is now: the claim may have landed with its
          answer lost, or the stamps may have changed since the page loaded */
+      const before = Store.applied;
       await Store.hydrate({ keep:true });
       const now = Store.rewards.find(r => r.id === rid);
       if (now && now.claimed) return landed(now);
       const refused = (err && err.code === '42501') || /row-level security/i.test(msg);
+      /* the re-read itself may not have got through: then nobody knows
+         whether the claim landed, and the page does not say it did not */
+      const read = Store.applied > before;
       toast({ key:'claim', bad:true, title:'Could not claim',
         detail:refused ? 'This reward is not earned. Your stamp count has changed.'
+             : !read ? 'The claim could not be confirmed. Check your connection and try again.'
              : 'The claim was not saved. Check your connection and try again.' });
     });
     return;
@@ -18954,7 +18996,10 @@ async function loadBoard(){
       /* the prize list is read when the chapter opens and after a
          hand-over, not again for each search keystroke or page turn */
       got = await Promise.all([
-        BoardUI.prizes && !BoardUI.prizes.code && !BoardUI.prizesStale ? BoardUI.prizes
+        /* a list the server does not offer (an older board-data) is as
+           settled as one it does: asked once per chapter, not per keystroke */
+        BoardUI.prizes && (!BoardUI.prizes.code || /^(INVALID_REQUEST|NOT_READY|NOT_INSTALLED)$/.test(BoardUI.prizes.code))
+          && !BoardUI.prizesStale ? BoardUI.prizes
           : Backend.board('prizes').catch(e => ({ code:String((e && e.message) || 'SERVER_ERROR') })),
         Backend.board('members', { q:BoardUI.q, sort:BoardUI.sort, page:BoardUI.page }),
       ]);
@@ -19162,7 +19207,13 @@ try {
     Store.onChange(() => {
       const uid = Store.user ? Store.user.id : null;
       const switched = Boolean(shownUser && uid && uid !== shownUser);
-      if (uid !== shownUser){ if (shownUser) BoardUI.reset(); shownUser = uid; }
+      if (uid !== shownUser){
+        if (shownUser) BoardUI.reset();
+        /* what one account was told is not the next one's news (the
+           "signed out" note stays until someone signs in) */
+        [...liveToasts.keys()].filter(k => uid || k !== 'auth').forEach(k => dropToast(k, true));
+        shownUser = uid;
+      }
       /* no signed-in page stays up without a session (the page's own
          sign-out takes itself to Sign in, after its scene) */
       if (!Store.signedIn && current !== 'auth' && !Store.signingOut){
@@ -19191,8 +19242,15 @@ try {
           Scanner.stop(); go('scan', { instant:true, force:true, quiet:true });
         }
       }
-      else if (here && here !== 'auth' && Store.stamp() !== painted)
-        go(here, { instant:true, force:true, quiet:true });   /* force: not dropped if it lands mid-cut */
+      else if (here && here !== 'auth' && Store.stamp() !== painted){
+        /* a control armed for its second tap is not swept away under
+           the finger: the repaint waits until it lets go */
+        const armed = !navigating && $('#view [data-armed]');
+        if (armed) armed.addEventListener('blur', () => setTimeout(() => {
+          if (Store.stamp() !== painted) go(current, { instant:true, force:true, quiet:true });
+        }, 0), { once:true });
+        else go(here, { instant:true, force:true, quiet:true });   /* force: not dropped if it lands mid-cut */
+      }
       paintIdentity();
       TodayWatch.sync();
     });

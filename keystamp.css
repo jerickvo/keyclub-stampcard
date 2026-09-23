@@ -330,6 +330,11 @@ select.input{padding-right:var(--sp-pad)}
   .toasts{left:auto;right:var(--sp-pad);bottom:var(--sp-pad);max-width:min(330px,32vw)}
 }
 html,body{overflow-x:clip;max-width:100%}
+/* a control reached by Tab is scrolled clear of the fixed tab bar (the
+   bar is 0 tall where it is hidden) */
+html{scroll-padding-bottom:calc(var(--tabs-h) + env(safe-area-inset-bottom, 0px) + 8px)}
+/* a board page being read again says so under the reader's tap */
+#boardPane[aria-busy="true"] > *{opacity:.55;cursor:progress}
 
 .rig{isolation:isolate}
 
