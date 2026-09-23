@@ -62,6 +62,18 @@ async function readAll<T = any>(page: (from: number, to: number) => PromiseLike<
   }
 }
 
+// The name the board sees. A display name is the username as it was
+// typed at sign-up (its case kept); one that says anything else (a
+// member can rewrite their own row) is not shown in place of the
+// username, so no account can pass itself off as another on the board.
+const shown = (p: { username: string; display_name?: string | null }) =>
+  p.display_name && p.display_name.toLowerCase() === String(p.username).toLowerCase()
+    ? p.display_name : p.username;
+
+// A search term as a LIKE pattern: % and _ are literal (usernames may
+// hold _), and * (PostgREST's other wildcard) cannot be in a username.
+const likeTerm = (q: string) => q.replace(/[\\%_]/g, c => '\\' + c).replace(/\*/g, '');
+
 const PAGE_SIZE = 25;
 const TIERS = [
   { id: 'r1', name: 'Club Merch',    required: 10 },
@@ -242,7 +254,11 @@ Deno.serve(async (req) => {
       let query = admin.from('profiles')
         .select('id, username, display_name, role, created_at', { count: 'exact' })
         .eq('role', 'member');
-      if (q) query = query.ilike('username', `%${q}%`);
+      // a username holds only letters, digits, _ and .: a term with anything
+      // else matches no one (rather than being loosened into "everyone")
+      if (q && !/^[a-z0-9_.]+$/.test(q))
+        return json({ ok: true, members: [], page: 1, page_size: PAGE_SIZE, total: 0, pages: 1 });
+      if (q) query = query.ilike('username', `%${likeTerm(q)}%`);
 
       // Stamp-ordered sorts need the counts first, so they are resolved
       // after aggregation below; the database orders the rest.
@@ -265,22 +281,24 @@ Deno.serve(async (req) => {
         // one read, aggregated here, rather than a query per member.
         // Unchecked, a failure here showed every member on the page with
         // 0 stamps — a whole club apparently reset overnight.
-        const att = must(await admin.from('attendance')
-          .select('user_id, checked_in_at').in('user_id', ids));
-        for (const a of att ?? []) {
+        // paged: a page of up to 500 members has more rows than one
+        // response carries once the club passes 1000 stamps
+        const att = await readAll((a, b) => admin.from('attendance')
+          .select('user_id, checked_in_at').in('user_id', ids).order('id').range(a, b));
+        for (const a of att) {
           totals.set(a.user_id, (totals.get(a.user_id) ?? 0) + 1);
           const prev = lastAt.get(a.user_id);
           if (!prev || a.checked_in_at > prev) lastAt.set(a.user_id, a.checked_in_at);
         }
-        claimed = claimsByMember(must(await admin.from('reward_claims')
-          .select('user_id, reward_id').in('user_id', ids)));
+        claimed = claimsByMember(await readAll((a, b) => admin.from('reward_claims')
+          .select('user_id, reward_id').in('user_id', ids).order('id').range(a, b)));
       }
 
       let members = (rows ?? []).map(r => {
         const stamps = totals.get(r.id) ?? 0;
         return {
           id: r.id,
-          username: r.display_name || r.username,
+          username: shown(r),
           stamps,
           rewards_unlocked: reached(stamps, claimed.get(r.id)),
           created_at: r.created_at,
@@ -333,12 +351,14 @@ Deno.serve(async (req) => {
       const claimedAt = new Map((claims ?? []).map(c => [c.reward_id, c.claimed_at]));
       const handed = await handoversOf([id]);
 
-      const stamps = (att ?? []).length;
+      // the total is counted, not the length of the (newest 200) list
+      const stamps = mustCount(await admin.from('attendance')
+        .select('id', { count: 'exact', head: true }).eq('user_id', id));
       return json({
         ok: true,
         member: {
           id: p.id,
-          username: p.display_name || p.username,
+          username: shown(p),
           role: p.role,
           created_at: p.created_at,
           stamps,
@@ -423,7 +443,7 @@ Deno.serve(async (req) => {
       if (ids.length) {
         const ps = must(await admin.from('profiles')
           .select('id, username, display_name').in('id', ids));
-        for (const p of ps ?? []) names.set(p.id, p.display_name || p.username);
+        for (const p of ps ?? []) names.set(p.id, shown(p));
       }
 
       const tier = new Map(TIERS.map(t => [t.id, t]));
@@ -487,7 +507,7 @@ Deno.serve(async (req) => {
       }
       return json({ ok: true, people: people.map(p => ({
         id: p.id,
-        name: p.display_name || p.username,
+        name: shown(p),
         username: p.username,
         board: p.role === 'board',
         checked_in: stamped.has(p.id),
@@ -499,10 +519,9 @@ Deno.serve(async (req) => {
       // Ordered by date, not by meeting number: the number is a label
       // the board chooses, the date is when the meeting actually is,
       // and meetings may fall on any day in any order.
-      const { data: ms, error } = await admin.from('meetings')
+      const ms = await readAll((a, b) => admin.from('meetings')
         .select('id, meeting_number, meeting_date, start_time, end_time, location, check_in_open')
-        .order('meeting_date', { ascending: false }).limit(200);
-      if (error) throw error;
+        .order('meeting_date', { ascending: false }).order('id').range(a, b));
 
       const counts = new Map<string, number>();
       const att = await readAll((a, b) => admin.from('attendance').select('meeting_id').order('id').range(a, b));
@@ -540,7 +559,7 @@ Deno.serve(async (req) => {
       if (ids.length) {
         const ps = must(await admin.from('profiles')
           .select('id, username, display_name').in('id', ids));
-        for (const p of ps ?? []) names.set(p.id, p.display_name || p.username);
+        for (const p of ps ?? []) names.set(p.id, shown(p));
       }
 
       return json({

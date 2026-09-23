@@ -366,6 +366,9 @@ const BoardUI = {
   memberPane(){
     const d = this.memberDetail;
     const m = d.member;
+    /* the member's total, as the server counts it; the list below is
+       their most recent check-ins only */
+    const total = Number(m.stamps) || d.attendance.length;
     return `<div class="panel bpanel">
       <button class="link bback" data-bback>${this.backLabel()}</button>
 
@@ -376,8 +379,8 @@ const BoardUI = {
         ${d.rewards.filter(r => r.state !== 'locked').map(r => this.rewardRow(m, r, d.handovers)).join('')}
       </ul>` : ''}
 
-      <h2 class="h2 bsec meetband"><span>Attendance</span>${d.attendance.length
-        ? `<span class="meetband__n">${d.attendance.length} ${d.attendance.length === 1 ? 'stamp' : 'stamps'}</span>` : ''}</h2>
+      <h2 class="h2 bsec meetband"><span>Attendance</span>${total
+        ? `<span class="meetband__n">${total} ${total === 1 ? 'stamp' : 'stamps'}</span>` : ''}</h2>
       ${d.attendance.length
         ? `<ul class="blist">${d.attendance.map(a => `
             <li class="brow brow--att"><${a.meeting_id ? `button class="brow__go" type="button" data-bmeeting="${esc(a.meeting_id)}"` : 'div class="brow__go"'}>
