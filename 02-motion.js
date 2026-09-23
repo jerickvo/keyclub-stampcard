@@ -45,6 +45,11 @@ const esc = s => String(s).replace(/[&<>"']/g, c =>
 const onClock = (iso, opts) => {
   const s = String(iso);
   const day = s.length === 10;
+  /* a date in another year than the club's current one says its year */
+  if (opts.month){
+    const year = day ? s.slice(0, 4) : clubDay(new Date(s)).slice(0, 4);
+    if (year !== clubDay().slice(0, 4)) opts = { ...opts, year:'numeric' };
+  }
   try {
     return new Date(s + (day ? 'T12:00:00' : ''))
       .toLocaleString('en-US', day ? opts : { ...opts, timeZone:CLUB_TZ });

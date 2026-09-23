@@ -235,8 +235,10 @@ const Views = {
     const day  = Store.todayMeeting();
     const scan = day && Store.scanFor(day.id);
     const live = Boolean(day && day.open && !scan);
-    const next = Store.meetings.filter(m => m.upcoming && (!day || m.id !== day.id))
-      .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)[0] || null;
+    /* soonest first, within a day by start time, then number */
+    const at = m => { const v = clockMinutes(m.time); return Number.isNaN(v) ? 0 : v; };
+    const soonest = (a, b) => String(a.date).localeCompare(String(b.date)) || at(a) - at(b) || a.no - b.no;
+    const next = Store.meetings.filter(m => m.upcoming && (!day || m.id !== day.id)).sort(soonest)[0] || null;
 
     let action = '';
     if (live)
@@ -264,7 +266,7 @@ const Views = {
     const showing = day ? day.id : next ? next.id : null;
     const ahead = Store.meetings
       .filter(m => m.upcoming && m.id !== showing)
-      .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)
+      .sort(soonest)
       .slice(0, 3);
 
     return `<div class="view view--home">

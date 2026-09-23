@@ -441,19 +441,30 @@ const SupabaseAdapter = {
        officer who opened check-in does on its session */
     const { data:auth } = await this.client.auth.getSession();
     const by = auth && auth.session && auth.session.user ? auth.session.user.id : null;
-    const { data, error } = await this.client.from('meetings').insert({
-      meeting_number:m.no, meeting_date:m.date, start_time:m.startTime,
-      end_time:m.endTime, location:'MPR', ...(by ? { created_by:by } : {}) }).select().single();
-    if (error) throw error;
-    return this.toMeeting(data);
+    /* a write that never answers is given up on, as unreachable */
+    const stop = new AbortController(), fuse = setTimeout(() => stop.abort(), this.WRITE_WAIT);
+    try {
+      const { data, error } = await this.client.from('meetings').insert({
+        meeting_number:m.no, meeting_date:m.date, start_time:m.startTime,
+        end_time:m.endTime, location:'MPR', ...(by ? { created_by:by } : {}) })
+        .select().abortSignal(stop.signal).single();
+      if (error) throw stop.signal.aborted ? new Error('BACKEND_UNAVAILABLE') : error;
+      return this.toMeeting(data);
+    } finally { clearTimeout(fuse); }
   },
+  WRITE_WAIT: 15000,
 
+  /* A meeting whose check-in is open is not deleted, whatever a page
+     that read it earlier offers; a delete that removes nothing says why. */
   async deleteMeeting(id){
     const { data, error } = await this.client.from('meetings')
-      .delete().eq('id', id).select('id');
+      .delete().eq('id', id).eq('check_in_open', false).select('id');
     if (error) throw error;
-    if (!data || data.length === 0) return { ok:false, code:'HAS_ATTENDANCE' };
-    return { ok:true };
+    if (data && data.length) return { ok:true };
+    const { data:still } = await this.client.from('meetings')
+      .select('id, check_in_open').eq('id', id).maybeSingle();
+    if (!still) return { ok:false, code:'MEETING_NOT_FOUND' };
+    return { ok:false, code:still.check_in_open ? 'CHECK_IN_OPEN' : 'HAS_ATTENDANCE' };
   },
 
   toMeeting(row){

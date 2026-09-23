@@ -14982,19 +14982,30 @@ const SupabaseAdapter = {
        officer who opened check-in does on its session */
     const { data:auth } = await this.client.auth.getSession();
     const by = auth && auth.session && auth.session.user ? auth.session.user.id : null;
-    const { data, error } = await this.client.from('meetings').insert({
-      meeting_number:m.no, meeting_date:m.date, start_time:m.startTime,
-      end_time:m.endTime, location:'MPR', ...(by ? { created_by:by } : {}) }).select().single();
-    if (error) throw error;
-    return this.toMeeting(data);
+    /* a write that never answers is given up on, as unreachable */
+    const stop = new AbortController(), fuse = setTimeout(() => stop.abort(), this.WRITE_WAIT);
+    try {
+      const { data, error } = await this.client.from('meetings').insert({
+        meeting_number:m.no, meeting_date:m.date, start_time:m.startTime,
+        end_time:m.endTime, location:'MPR', ...(by ? { created_by:by } : {}) })
+        .select().abortSignal(stop.signal).single();
+      if (error) throw stop.signal.aborted ? new Error('BACKEND_UNAVAILABLE') : error;
+      return this.toMeeting(data);
+    } finally { clearTimeout(fuse); }
   },
+  WRITE_WAIT: 15000,
 
+  /* A meeting whose check-in is open is not deleted, whatever a page
+     that read it earlier offers; a delete that removes nothing says why. */
   async deleteMeeting(id){
     const { data, error } = await this.client.from('meetings')
-      .delete().eq('id', id).select('id');
+      .delete().eq('id', id).eq('check_in_open', false).select('id');
     if (error) throw error;
-    if (!data || data.length === 0) return { ok:false, code:'HAS_ATTENDANCE' };
-    return { ok:true };
+    if (data && data.length) return { ok:true };
+    const { data:still } = await this.client.from('meetings')
+      .select('id, check_in_open').eq('id', id).maybeSingle();
+    if (!still) return { ok:false, code:'MEETING_NOT_FOUND' };
+    return { ok:false, code:still.check_in_open ? 'CHECK_IN_OPEN' : 'HAS_ATTENDANCE' };
   },
 
   toMeeting(row){
@@ -15712,6 +15723,11 @@ const esc = s => String(s).replace(/[&<>"']/g, c =>
 const onClock = (iso, opts) => {
   const s = String(iso);
   const day = s.length === 10;
+  /* a date in another year than the club's current one says its year */
+  if (opts.month){
+    const year = day ? s.slice(0, 4) : clubDay(new Date(s)).slice(0, 4);
+    if (year !== clubDay().slice(0, 4)) opts = { ...opts, year:'numeric' };
+  }
   try {
     return new Date(s + (day ? 'T12:00:00' : ''))
       .toLocaleString('en-US', day ? opts : { ...opts, timeZone:CLUB_TZ });
@@ -16028,8 +16044,10 @@ const Views = {
     const day  = Store.todayMeeting();
     const scan = day && Store.scanFor(day.id);
     const live = Boolean(day && day.open && !scan);
-    const next = Store.meetings.filter(m => m.upcoming && (!day || m.id !== day.id))
-      .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)[0] || null;
+    /* soonest first, within a day by start time, then number */
+    const at = m => { const v = clockMinutes(m.time); return Number.isNaN(v) ? 0 : v; };
+    const soonest = (a, b) => String(a.date).localeCompare(String(b.date)) || at(a) - at(b) || a.no - b.no;
+    const next = Store.meetings.filter(m => m.upcoming && (!day || m.id !== day.id)).sort(soonest)[0] || null;
 
     let action = '';
     if (live)
@@ -16057,7 +16075,7 @@ const Views = {
     const showing = day ? day.id : next ? next.id : null;
     const ahead = Store.meetings
       .filter(m => m.upcoming && m.id !== showing)
-      .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)
+      .sort(soonest)
       .slice(0, 3);
 
     return `<div class="view view--home">
@@ -16349,6 +16367,13 @@ function nextMeetingNumber(list){
 }
 
 const MEETING_DEFAULTS = { start:'12:40', end:'13:30' };
+/* a meeting is scheduled within a year either side of today: a slip in
+   the year (20266) is caught, not stored */
+const MEETING_NO_MAX = 9999;
+function meetingDateBounds(today = Schedule.today()){
+  const shift = n => { const d = new Date(today + 'T12:00:00Z'); d.setUTCFullYear(d.getUTCFullYear() + n); return d.toISOString().slice(0, 10); };
+  return { min:shift(-1), max:shift(1) };
+}
 
 /* the officer who recorded a hand-over may take it back this long
    (undo_hand_over holds the same line in the database) */
@@ -16445,6 +16470,7 @@ const BoardUI = {
       DUPLICATE_NUMBER:  'A meeting with that number already exists.',
       HAS_ATTENDANCE:    'Someone has checked in to this meeting, so it stays. It can be deleted once the meeting is over.',
       ATTENDANCE_ALREADY_OPEN: 'Another meeting already has check-in open. Close that one first.',
+      CHECK_IN_OPEN:     'Check-in is open for this meeting. Close it before deleting.',
       SERVER_ERROR:      'Could not reach the club records.',
     })[note] || (/^[A-Z_]+$/.test(String(note))
       ? 'Could not complete that. Try again.'
@@ -16561,14 +16587,18 @@ const BoardUI = {
   meetingsPane(){
     const list = (this.meetings && this.meetings.meetings) || [];
 
-    const by = dir => (a, b) =>
-      String(a.meeting_date) < String(b.meeting_date) ? -dir : dir;
+    /* by date, and within a day by start time, then number */
+    const at = m => { const v = clockMinutes(m.start_time); return Number.isNaN(v) ? 0 : v; };
+    const by = dir => (a, b) => dir * (String(a.meeting_date).localeCompare(String(b.meeting_date))
+      || at(a) - at(b) || a.meeting_number - b.meeting_number);
     const today = (this.meetings && this.meetings.server_date) || Schedule.today();
-    const phased = list.map(m => ({ ...m, state:meetingPhase(m, today) }));
-    /* what is open or still ahead is the schedule; the rest is the record */
-    const ahead = s => s === 'OPEN' || s === 'TODAY' || s === 'UPCOMING';
-    const upcoming = phased.filter(m => ahead(m.state)).sort(by(1));
-    const past = phased.filter(m => !ahead(m.state)).sort(by(-1));
+    const phased = list.map(m => ({ ...m, state:meetingPhase(m, today),
+                                    left:m.state === 'OPEN' && String(m.meeting_date) < today }));
+    /* what is open or still ahead is the schedule; the rest is the record
+       (a check-in left open on an earlier day included) */
+    const ahead = m => !m.left && (m.state === 'OPEN' || m.state === 'TODAY' || m.state === 'UPCOMING');
+    const upcoming = phased.filter(ahead).sort(by(1));
+    const past = phased.filter(m => !ahead(m)).sort(by(-1));
 
     const band = (title, tail = '') => `<div class="meetband"><h2 class="meetband__t">${title}</h2>${tail}</div>`;
     const formOpen = this.formOpen || Boolean(this.form);
@@ -16598,7 +16628,7 @@ const BoardUI = {
     const no = pad(m.meeting_number);
     const stamps = Number(m.attendance_count) || 0;
 
-    const word = { open:'Open', ended:'Ended', today:'Today' }[state] || '';
+    const word = m.left ? 'Left open' : ({ open:'Open', ended:'Ended', today:'Today' }[state] || '');
     /* today's meeting shows its count once anyone has checked in */
     const upcoming = state === 'upcoming' || (state === 'today' && !stamps);
     /* the usual time and room are not repeated on every row; a meeting
@@ -16641,7 +16671,8 @@ const BoardUI = {
           <input class="input" id="mNo" type="number" min="1" step="1" inputmode="numeric"
                  value="${esc(f.no)}" placeholder="${esc(d.no)}"></label>
         <label class="field"><span class="kicker">Date</span>
-          <input class="input" id="mDate" type="date" value="${esc(f.date)}"></label>
+          <input class="input" id="mDate" type="date" value="${esc(f.date)}"
+                 min="${meetingDateBounds().min}" max="${meetingDateBounds().max}"></label>
         <label class="field"><span class="kicker">Start</span>
           <input class="input" id="mStart" type="time" value="${esc(f.start)}"></label>
         <label class="field"><span class="kicker">End</span>
@@ -16761,6 +16792,7 @@ const BoardUI = {
                 a.method === 'board' || a.method === 'manual' ? ' / by hand' : ''}</span>
             </button></li>`).join('')}</ul>`
         : this.empty('No check-ins yet')}`}
+      ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
       ${this.deleteBlock(m, d.attendees.length)}
     </div>`;
   },
@@ -18270,8 +18302,7 @@ document.addEventListener('submit', async e => {
   const mf = e.target.closest('#meetingForm');
   if (mf){
     e.preventDefault();
-    const err = $('#mErr');
-    const show = msg => { if (err){ err.hidden = !msg; err.textContent = msg || ''; } };
+    const show = msg => { const err = $('#mErr'); if (err){ err.hidden = !msg; err.textContent = msg || ''; } };
     const btn = $('#mGo');
     if (btn && btn.disabled) return;
 
@@ -18283,25 +18314,41 @@ document.addEventListener('submit', async e => {
 
     BoardUI.form = { no:noRaw, date, start, end };
 
-    if (!noRaw || !Number.isInteger(no) || no < 1)
-      return show('Meeting number must be a whole number, 1 or higher.');
+    if (!/^\d+$/.test(noRaw) || no < 1 || no > MEETING_NO_MAX)
+      return show(`Meeting number must be a whole number from 1 to ${MEETING_NO_MAX}.`);
     if (BoardUI.hasMeetingNumber(no))
       return show(`GM ${pad(no)} already exists. Use a different number.`);
     if (!date)          return show('Meeting date is required.');
+    const span = meetingDateBounds();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < span.min || date > span.max)
+      return show('Pick a date within a year of today.');
     if (!start || !end) return show('Start and end time are required.');
     if (start >= end)   return show('End time must be after the start time.');
 
     show(''); hold(btn, 'Scheduling');
-    try {
-      await Backend.createMeeting({ no, date, startTime:to12h(start), endTime:to12h(end) });
+    const scheduled = () => {
       BoardUI.form = null; BoardUI.formOpen = false;
       toast({ key:'board', title:`GM ${pad(no)} scheduled` });
-      boardGoto({ tab:'meetings' });
+      boardGoto({ tab:'meetings', refocus:'[data-mform]' });
+    };
+    try {
+      await Backend.createMeeting({ no, date, startTime:to12h(start), endTime:to12h(end) });
+      scheduled();
     } catch (ex){
       const kind = WriteFailure.classify(ex).kind;
       const gone = (kind === 'permission' || kind === 'auth') && await sessionGone();
-      show(gone ? 'You are no longer signed in here. Sign in again.' : WriteFailure.explain(ex, 'create meeting'));
-      release(btn, 'Schedule meeting');
+      if (gone){ show('You are no longer signed in here. Sign in again.'); release($('#mGo'), 'Schedule meeting'); return; }
+      /* the list is read again: a meeting whose answer was lost is there
+         (said as scheduled), and a number another officer took shows */
+      const now = await Backend.board('meetings').catch(() => null);
+      const asked = { start:to12h(start), end:to12h(end) };
+      if (now && (now.meetings || []).some(m => Number(m.meeting_number) === no && m.meeting_date === date &&
+                                               m.start_time === asked.start && m.end_time === asked.end))
+        return scheduled();
+      const msg = WriteFailure.explain(ex, 'create meeting');
+      if (now){ BoardUI.meetings = now; const box = $('#boardPane'); if (box) box.innerHTML = BoardUI.pane(); }
+      show(msg);
+      release($('#mGo'), 'Schedule meeting');
     }
     return;
   }
@@ -18359,8 +18406,9 @@ document.addEventListener('click', e => {
   const btab = e.target.closest('[data-btab]');
   if (btab){
     const toRoute = { meetings:'bmeet', session:'bcheckin', progress:'bmembers' };
-    Object.assign(BoardUI, { memberDetail:null, meetingDetail:null, page:1 });
-    if (btab.hasAttribute('data-mnew')) BoardUI.formOpen = true;
+    Object.assign(BoardUI, { memberDetail:null, meetingDetail:null, page:1, deleteNote:null, confirmDelete:null });
+    /* the stage's "Schedule a meeting" opens the form, ready to type in */
+    if (btab.hasAttribute('data-mnew')){ BoardUI.formOpen = true; BoardUI.refocus = '#mNo'; }
     go(toRoute[btab.dataset.btab] || 'bcheckin');
     return;
   }
@@ -18446,11 +18494,16 @@ document.addEventListener('click', e => {
     const gm = bdelete.dataset.bno ? `GM ${bdelete.dataset.bno}` : 'Meeting';
     hold(bdelete, 'Deleting');
 
+    /* gone (deleted here, or by another officer): back to the list */
     const clear = note => {
       if (boardMeeting === id) boardMeeting = null;
       boardGoto({ confirmDelete:null, deleteNote:note || null,
                   meetings:null, meetingDetail:null });
     };
+    /* refused or unanswered: the meeting's page is read again, and says why */
+    const stay = note => boardGoto({ confirmDelete:null, deleteNote:note, meetings:null,
+                                     meetingDetail:'pending', pendingId:id,
+                                     refocus:'.bdel [data-bconfirm] || [data-bback]' });
 
     (stamps
       ? Backend.deleteMeetingAndStamps(id).then(res => {
@@ -18459,16 +18512,16 @@ document.addEventListener('click', e => {
           clear(null);
         })
       : Backend.deleteMeeting(id).then(res =>
-          clear(res && res.ok ? null : (res && res.code) || 'SERVER_ERROR'))
-    ).catch(ex => {
-      boardGoto({ confirmDelete:null,
-                  deleteNote:WriteFailure.explain(ex, 'delete meeting') });
-    });
+          res && res.ok ? clear(null)
+          : res && res.code === 'MEETING_NOT_FOUND' ? clear(res.code)
+          : stay((res && res.code) || 'SERVER_ERROR'))
+    ).catch(ex => stay(WriteFailure.explain(ex, 'delete meeting')));
     return;
   }
 
   const bback = e.target.closest('[data-bback]');
-  if (bback){ boardGoto({ memberDetail:null, meetingDetail:null, refocus:BoardUI.leftFrom || null, leftFrom:null }); return; }
+  if (bback){ boardGoto({ memberDetail:null, meetingDetail:null, deleteNote:null, confirmDelete:null,
+                          refocus:BoardUI.leftFrom || null, leftFrom:null }); return; }
   const bpage = e.target.closest('[data-bpage]');
   if (bpage){ boardGoto({ page:Number(bpage.dataset.bpage) || 1, refocus:'[data-bpage]:not([disabled])' }); return; }
   const reload = e.target.closest('[data-reload]');
@@ -18487,13 +18540,27 @@ document.addEventListener('click', e => {
 
   const bstart = e.target.closest('[data-bstart]');
   if (bstart){
+    const id = bstart.dataset.bstart;
+    const openNow = list => ((list && list.meetings) || []).filter(m => m.state === 'OPEN');
+    const opened = () => { boardMeeting = id; boardStamp = true;
+                           BoardUI.refocus = '[data-bfull]'; loadBoard(); };
     hold(bstart, 'Opening');
-    Backend.startAttendance(bstart.dataset.bstart)
-      .then(() => { boardMeeting = bstart.dataset.bstart; boardStamp = true;
-                    BoardUI.refocus = '[data-bfull]'; loadBoard(); })
-      .catch(err => { release(bstart, 'Open check-in');
-        toast({ key:'board', bad:true, title:'Could not open check-in',
-                detail:BoardUI.message(err && err.message) }); });
+    (async () => {
+      /* another officer may have opened a meeting since this stage was
+         read; opening this one would end theirs without a word */
+      const now = await Backend.board('meetings').catch(() => null);
+      if (openNow(now).some(m => m.id !== id)) throw new Error('ATTENDANCE_ALREADY_OPEN');
+      await Backend.startAttendance(id);
+    })().then(opened).catch(async err => {
+      /* the stage is read again: opened at the same moment by another
+         officer is open, which is what was asked */
+      const now = await Backend.board('meetings').catch(() => null);
+      if (openNow(now).some(m => m.id === id)) return opened();
+      toast({ key:'board', bad:true, title:'Could not open check-in',
+              detail:BoardUI.message(err && err.message) });
+      BoardUI.refocus = '[data-bstart]';
+      loadBoard();
+    });
     return;
   }
   const bend = e.target.closest('[data-bend]');
@@ -18502,9 +18569,12 @@ document.addEventListener('click', e => {
     Backend.endAttendance(bend.dataset.bend)
       .then(() => { clearInterval(countTimer); boardStamp = true;
                     BoardUI.refocus = '[data-bstart]'; loadBoard(); })
-      .catch(err => { release(bend, 'Close check-in');
+      .catch(err => {
         toast({ key:'board', bad:true, title:'Could not close check-in',
-                detail:BoardUI.message(err && err.message) }); });
+                detail:BoardUI.message(err && err.message) });
+        /* read again: closed elsewhere, or deleted, the stage says so */
+        BoardUI.refocus = '[data-bend]';
+        loadBoard(); });
     return;
   }
 
@@ -18772,6 +18842,12 @@ async function loadBoard(){
 
   if (seq !== loadSeq) return;
   if (BoardUI.error === 'NOT_AUTHENTICATED') Store.hydrate();
+  /* a meeting that no longer exists (deleted by another officer) is not
+     retried: back to the list, which says so */
+  if (BoardUI.error === 'MEETING_NOT_FOUND' && BoardUI.meetingDetail === 'pending'){
+    BoardUI.loading = false;
+    return boardGoto({ error:null, meetingDetail:null, confirmDelete:null, deleteNote:'MEETING_NOT_FOUND' });
+  }
   BoardUI.loading = false;
   BoardUI.shown = BoardUI.error ? null : BoardUI.tab;
   if (pane()){
@@ -18786,7 +18862,11 @@ async function loadBoard(){
     if (qb) qb.innerHTML = shownQR.svg;
     syncProjector();
     /* a confirmation takes the focus, and gives it back when dismissed */
-    if (BoardUI.refocus){ $(BoardUI.refocus)?.focus({ preventScroll:true }); BoardUI.refocus = null; }
+    /* "a || b": the first of these the page now has */
+    if (BoardUI.refocus){
+      BoardUI.refocus.split('||').map(q => $(q.trim())).find(Boolean)?.focus({ preventScroll:true });
+      BoardUI.refocus = null;
+    }
   }
 
   if (BoardUI.tab === 'session' && !BoardUI.error && $('#qrBox')){

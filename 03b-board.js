@@ -10,6 +10,13 @@ function nextMeetingNumber(list){
 }
 
 const MEETING_DEFAULTS = { start:'12:40', end:'13:30' };
+/* a meeting is scheduled within a year either side of today: a slip in
+   the year (20266) is caught, not stored */
+const MEETING_NO_MAX = 9999;
+function meetingDateBounds(today = Schedule.today()){
+  const shift = n => { const d = new Date(today + 'T12:00:00Z'); d.setUTCFullYear(d.getUTCFullYear() + n); return d.toISOString().slice(0, 10); };
+  return { min:shift(-1), max:shift(1) };
+}
 
 /* the officer who recorded a hand-over may take it back this long
    (undo_hand_over holds the same line in the database) */
@@ -106,6 +113,7 @@ const BoardUI = {
       DUPLICATE_NUMBER:  'A meeting with that number already exists.',
       HAS_ATTENDANCE:    'Someone has checked in to this meeting, so it stays. It can be deleted once the meeting is over.',
       ATTENDANCE_ALREADY_OPEN: 'Another meeting already has check-in open. Close that one first.',
+      CHECK_IN_OPEN:     'Check-in is open for this meeting. Close it before deleting.',
       SERVER_ERROR:      'Could not reach the club records.',
     })[note] || (/^[A-Z_]+$/.test(String(note))
       ? 'Could not complete that. Try again.'
@@ -222,14 +230,18 @@ const BoardUI = {
   meetingsPane(){
     const list = (this.meetings && this.meetings.meetings) || [];
 
-    const by = dir => (a, b) =>
-      String(a.meeting_date) < String(b.meeting_date) ? -dir : dir;
+    /* by date, and within a day by start time, then number */
+    const at = m => { const v = clockMinutes(m.start_time); return Number.isNaN(v) ? 0 : v; };
+    const by = dir => (a, b) => dir * (String(a.meeting_date).localeCompare(String(b.meeting_date))
+      || at(a) - at(b) || a.meeting_number - b.meeting_number);
     const today = (this.meetings && this.meetings.server_date) || Schedule.today();
-    const phased = list.map(m => ({ ...m, state:meetingPhase(m, today) }));
-    /* what is open or still ahead is the schedule; the rest is the record */
-    const ahead = s => s === 'OPEN' || s === 'TODAY' || s === 'UPCOMING';
-    const upcoming = phased.filter(m => ahead(m.state)).sort(by(1));
-    const past = phased.filter(m => !ahead(m.state)).sort(by(-1));
+    const phased = list.map(m => ({ ...m, state:meetingPhase(m, today),
+                                    left:m.state === 'OPEN' && String(m.meeting_date) < today }));
+    /* what is open or still ahead is the schedule; the rest is the record
+       (a check-in left open on an earlier day included) */
+    const ahead = m => !m.left && (m.state === 'OPEN' || m.state === 'TODAY' || m.state === 'UPCOMING');
+    const upcoming = phased.filter(ahead).sort(by(1));
+    const past = phased.filter(m => !ahead(m)).sort(by(-1));
 
     const band = (title, tail = '') => `<div class="meetband"><h2 class="meetband__t">${title}</h2>${tail}</div>`;
     const formOpen = this.formOpen || Boolean(this.form);
@@ -259,7 +271,7 @@ const BoardUI = {
     const no = pad(m.meeting_number);
     const stamps = Number(m.attendance_count) || 0;
 
-    const word = { open:'Open', ended:'Ended', today:'Today' }[state] || '';
+    const word = m.left ? 'Left open' : ({ open:'Open', ended:'Ended', today:'Today' }[state] || '');
     /* today's meeting shows its count once anyone has checked in */
     const upcoming = state === 'upcoming' || (state === 'today' && !stamps);
     /* the usual time and room are not repeated on every row; a meeting
@@ -302,7 +314,8 @@ const BoardUI = {
           <input class="input" id="mNo" type="number" min="1" step="1" inputmode="numeric"
                  value="${esc(f.no)}" placeholder="${esc(d.no)}"></label>
         <label class="field"><span class="kicker">Date</span>
-          <input class="input" id="mDate" type="date" value="${esc(f.date)}"></label>
+          <input class="input" id="mDate" type="date" value="${esc(f.date)}"
+                 min="${meetingDateBounds().min}" max="${meetingDateBounds().max}"></label>
         <label class="field"><span class="kicker">Start</span>
           <input class="input" id="mStart" type="time" value="${esc(f.start)}"></label>
         <label class="field"><span class="kicker">End</span>
@@ -422,6 +435,7 @@ const BoardUI = {
                 a.method === 'board' || a.method === 'manual' ? ' / by hand' : ''}</span>
             </button></li>`).join('')}</ul>`
         : this.empty('No check-ins yet')}`}
+      ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
       ${this.deleteBlock(m, d.attendees.length)}
     </div>`;
   },
