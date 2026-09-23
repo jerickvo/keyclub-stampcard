@@ -345,14 +345,16 @@ const TodayWatch = {
     if (this.pace() !== this.every) return this.sync();
     const live = this.every === this.EVERY;
     const was = Store.openMeeting(), had = Store.scans.length;
-    let open, count;
+    const day = Schedule.today();
+    const knew = Store.meetings.filter(m => m.date === day).map(m => m.id).sort().join(',');
+    let now, count;
     try {
-      /* a quiet day asks only whether check-in is open */
-      [open, count] = await Promise.all([Backend.openToday(),
+      /* a quiet day asks only what is on today and whether it is open */
+      [now, count] = await Promise.all([Backend.openToday(),
         live ? Backend.myStampCount(Store.user.id) : had]);
     } catch (_) { return; }
-    if (this.busy()) return;
-    if (open !== (was ? was.id : null) || count !== had) Store.hydrate({ keep:true });
+    if (this.busy() || !now) return;
+    if (now.open !== (was ? was.id : null) || now.today !== knew || count !== had) Store.hydrate({ keep:true });
   },
 };
 

@@ -64,6 +64,15 @@ const BOARD_FRESH = () => ({
   q:'', sort:'username', page:1, confirmDelete:null, deleteNote:null, form:null, formOpen:false,
 });
 
+/* Meetings in calendar order: by date, and within a day by start
+   time, then number (the Meetings list, the check-in stage and "Next"
+   all agree). dir -1 is newest first. */
+const meetingOrder = dir => {
+  const at = m => { const v = clockMinutes(m.start_time); return Number.isNaN(v) ? 0 : v; };
+  return (a, b) => dir * (String(a.meeting_date).localeCompare(String(b.meeting_date))
+    || at(a) - at(b) || a.meeting_number - b.meeting_number);
+};
+
 const BoardUI = {
   reset(){ Object.assign(this, BOARD_FRESH()); },
   tab: 'session',
@@ -233,10 +242,7 @@ const BoardUI = {
   meetingsPane(){
     const list = (this.meetings && this.meetings.meetings) || [];
 
-    /* by date, and within a day by start time, then number */
-    const at = m => { const v = clockMinutes(m.start_time); return Number.isNaN(v) ? 0 : v; };
-    const by = dir => (a, b) => dir * (String(a.meeting_date).localeCompare(String(b.meeting_date))
-      || at(a) - at(b) || a.meeting_number - b.meeting_number);
+    const by = meetingOrder;
     const today = (this.meetings && this.meetings.server_date) || Schedule.today();
     const phased = list.map(m => ({ ...m, state:meetingPhase(m, today),
                                     left:m.state === 'OPEN' && String(m.meeting_date) < today }));
@@ -505,13 +511,12 @@ const BoardUI = {
        shown whatever its date, so one left open can be closed. */
     const open = list.find(m => m.state === 'OPEN') || null;
     const todays = list.filter(m => m.meeting_date === today && m.state !== 'OPEN')
-      .sort((a, b) => a.meeting_number - b.meeting_number);
+      .sort(meetingOrder(1));
     const sel = open || todays.find(m => m.id === boardMeeting) || todays[0] || null;
     boardMeeting = sel ? sel.id : null;
 
     if (!sel){
-      const next = list.filter(m => String(m.meeting_date) > today)
-        .sort((a, b) => String(a.meeting_date) < String(b.meeting_date) ? -1 : 1)[0];
+      const next = list.filter(m => String(m.meeting_date) > today).sort(meetingOrder(1))[0];
       return `<div class="bpanel fail">
         <p class="nowline"><b class="nowline__lab">No meeting today</b>${next
           ? `<span>Next GM ${pad(next.meeting_number)} / ${esc(fmtDay(next.meeting_date))}</span>` : ''}</p>
@@ -527,7 +532,8 @@ const BoardUI = {
     /* a check-in left open on another day says so */
     const stale = isOpen && sel.meeting_date !== today;
 
-    return `<div class="bpanel">
+    /* a live code stays at full strength while the stage is read again */
+    return `<div class="bpanel${isOpen && !stale ? ' bpanel--live' : ''}">
       ${!open && todays.length > 1 ? `<div class="gmtabs" role="group" aria-label="Today's meetings">
         ${todays.map(o => `<button class="gmtab ${o.id === sel.id ? 'gmtab--on' : ''}" type="button"
           aria-pressed="${o.id === sel.id}"

@@ -759,14 +759,19 @@ const SupabaseAdapter = {
     return count || 0;
   },
 
-  /* the meeting whose check-in is open today, if any: one row at most
-     (the database allows one open meeting) */
+  /* today at a glance, in one small read: the meeting whose check-in is
+     open today, if any, and which meetings are on today (a list, so a
+     meeting scheduled for today after the page loaded is noticed) */
   async openToday(){
+    const day = clubDay();
     const { data, error } = await this.client
-      .from('meetings').select('id, meeting_date').eq('check_in_open', true);
+      .from('meetings').select('id, meeting_date, check_in_open')
+      .or(`check_in_open.eq.true,meeting_date.eq.${day}`);
     if (error) throw error;
-    const row = (data || []).find(m => m.meeting_date === clubDay());
-    return row ? row.id : null;
+    const rows = data || [];
+    const open = rows.find(m => m.check_in_open && m.meeting_date === day);
+    return { open:open ? open.id : null,
+             today:rows.filter(m => m.meeting_date === day).map(m => m.id).sort().join(',') };
   },
 
   /* how many stamps this member has: a count, no rows */

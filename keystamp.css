@@ -335,6 +335,8 @@ html,body{overflow-x:clip;max-width:100%}
 html{scroll-padding-bottom:calc(var(--tabs-h) + env(safe-area-inset-bottom, 0px) + 8px)}
 /* a board page being read again says so under the reader's tap */
 #boardPane[aria-busy="true"] > *{opacity:.55;cursor:progress}
+/* but not a live check-in code, which members are scanning */
+#boardPane[aria-busy="true"] > .bpanel--live{opacity:1}
 
 .rig{isolation:isolate}
 

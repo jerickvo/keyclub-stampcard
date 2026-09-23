@@ -411,6 +411,8 @@ html,body{overflow-x:clip;max-width:100%}
 html{scroll-padding-bottom:calc(var(--tabs-h) + env(safe-area-inset-bottom, 0px) + 8px)}
 /* a board page being read again says so under the reader's tap */
 #boardPane[aria-busy="true"] > *{opacity:.55;cursor:progress}
+/* but not a live check-in code, which members are scanning */
+#boardPane[aria-busy="true"] > .bpanel--live{opacity:1}
 
 .rig{isolation:isolate}
 
@@ -15335,14 +15337,19 @@ const SupabaseAdapter = {
     return count || 0;
   },
 
-  /* the meeting whose check-in is open today, if any: one row at most
-     (the database allows one open meeting) */
+  /* today at a glance, in one small read: the meeting whose check-in is
+     open today, if any, and which meetings are on today (a list, so a
+     meeting scheduled for today after the page loaded is noticed) */
   async openToday(){
+    const day = clubDay();
     const { data, error } = await this.client
-      .from('meetings').select('id, meeting_date').eq('check_in_open', true);
+      .from('meetings').select('id, meeting_date, check_in_open')
+      .or(`check_in_open.eq.true,meeting_date.eq.${day}`);
     if (error) throw error;
-    const row = (data || []).find(m => m.meeting_date === clubDay());
-    return row ? row.id : null;
+    const rows = data || [];
+    const open = rows.find(m => m.check_in_open && m.meeting_date === day);
+    return { open:open ? open.id : null,
+             today:rows.filter(m => m.meeting_date === day).map(m => m.id).sort().join(',') };
   },
 
   /* how many stamps this member has: a count, no rows */
@@ -16591,6 +16598,15 @@ const BOARD_FRESH = () => ({
   q:'', sort:'username', page:1, confirmDelete:null, deleteNote:null, form:null, formOpen:false,
 });
 
+/* Meetings in calendar order: by date, and within a day by start
+   time, then number (the Meetings list, the check-in stage and "Next"
+   all agree). dir -1 is newest first. */
+const meetingOrder = dir => {
+  const at = m => { const v = clockMinutes(m.start_time); return Number.isNaN(v) ? 0 : v; };
+  return (a, b) => dir * (String(a.meeting_date).localeCompare(String(b.meeting_date))
+    || at(a) - at(b) || a.meeting_number - b.meeting_number);
+};
+
 const BoardUI = {
   reset(){ Object.assign(this, BOARD_FRESH()); },
   tab: 'session',
@@ -16760,10 +16776,7 @@ const BoardUI = {
   meetingsPane(){
     const list = (this.meetings && this.meetings.meetings) || [];
 
-    /* by date, and within a day by start time, then number */
-    const at = m => { const v = clockMinutes(m.start_time); return Number.isNaN(v) ? 0 : v; };
-    const by = dir => (a, b) => dir * (String(a.meeting_date).localeCompare(String(b.meeting_date))
-      || at(a) - at(b) || a.meeting_number - b.meeting_number);
+    const by = meetingOrder;
     const today = (this.meetings && this.meetings.server_date) || Schedule.today();
     const phased = list.map(m => ({ ...m, state:meetingPhase(m, today),
                                     left:m.state === 'OPEN' && String(m.meeting_date) < today }));
@@ -17032,13 +17045,12 @@ const BoardUI = {
        shown whatever its date, so one left open can be closed. */
     const open = list.find(m => m.state === 'OPEN') || null;
     const todays = list.filter(m => m.meeting_date === today && m.state !== 'OPEN')
-      .sort((a, b) => a.meeting_number - b.meeting_number);
+      .sort(meetingOrder(1));
     const sel = open || todays.find(m => m.id === boardMeeting) || todays[0] || null;
     boardMeeting = sel ? sel.id : null;
 
     if (!sel){
-      const next = list.filter(m => String(m.meeting_date) > today)
-        .sort((a, b) => String(a.meeting_date) < String(b.meeting_date) ? -1 : 1)[0];
+      const next = list.filter(m => String(m.meeting_date) > today).sort(meetingOrder(1))[0];
       return `<div class="bpanel fail">
         <p class="nowline"><b class="nowline__lab">No meeting today</b>${next
           ? `<span>Next GM ${pad(next.meeting_number)} / ${esc(fmtDay(next.meeting_date))}</span>` : ''}</p>
@@ -17054,7 +17066,8 @@ const BoardUI = {
     /* a check-in left open on another day says so */
     const stale = isOpen && sel.meeting_date !== today;
 
-    return `<div class="bpanel">
+    /* a live code stays at full strength while the stage is read again */
+    return `<div class="bpanel${isOpen && !stale ? ' bpanel--live' : ''}">
       ${!open && todays.length > 1 ? `<div class="gmtabs" role="group" aria-label="Today's meetings">
         ${todays.map(o => `<button class="gmtab ${o.id === sel.id ? 'gmtab--on' : ''}" type="button"
           aria-pressed="${o.id === sel.id}"
@@ -18554,14 +18567,16 @@ const TodayWatch = {
     if (this.pace() !== this.every) return this.sync();
     const live = this.every === this.EVERY;
     const was = Store.openMeeting(), had = Store.scans.length;
-    let open, count;
+    const day = Schedule.today();
+    const knew = Store.meetings.filter(m => m.date === day).map(m => m.id).sort().join(',');
+    let now, count;
     try {
-      /* a quiet day asks only whether check-in is open */
-      [open, count] = await Promise.all([Backend.openToday(),
+      /* a quiet day asks only what is on today and whether it is open */
+      [now, count] = await Promise.all([Backend.openToday(),
         live ? Backend.myStampCount(Store.user.id) : had]);
     } catch (_) { return; }
-    if (this.busy()) return;
-    if (open !== (was ? was.id : null) || count !== had) Store.hydrate({ keep:true });
+    if (this.busy() || !now) return;
+    if (now.open !== (was ? was.id : null) || now.today !== knew || count !== had) Store.hydrate({ keep:true });
   },
 };
 
