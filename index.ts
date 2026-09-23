@@ -49,18 +49,27 @@ function mustCount(res: { count: number | null; error: unknown | null }): number
 
 // Supabase caps every PostgREST response at db-max-rows (1000 by
 // default), whatever .limit() asks for, and says nothing when it does. A
-// read of a whole table is therefore paged to the end, in a fixed order,
-// so a club past its thousandth stamp is not quietly counted short.
+// read of a whole table is therefore paged to the end, so a club past
+// its thousandth stamp is not quietly counted short. Each page starts
+// after the last row of the one before, in the table's key order: a row
+// written while the pages are read neither shifts a later page (and is
+// counted twice) nor pushes a row out of one.
 const ROWS = 1000;
-async function readAll<T = any>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>): Promise<T[]> {
+async function readAll<T = any>(page: (last: T | null) => PromiseLike<{ data: T[] | null; error: unknown }>,
+                                 start: T | null = null): Promise<T[]> {
   const out: T[] = [];
-  for (let from = 0; ; from += ROWS) {
-    const rows = must(await page(from, from + ROWS - 1)) ?? [];
+  let last = start;
+  for (let n = 0; ; n++) {
+    const rows = must(await page(last)) ?? [];
     out.push(...rows);
     if (rows.length < ROWS) return out;
-    if (from >= 500 * ROWS) throw new Error('QUERY_FAILED');   // a runaway, not a club
+    last = rows[rows.length - 1];
+    if (n >= 500) throw new Error('QUERY_FAILED');   // a runaway, not a club
   }
 }
+// a page of a table keyed on id, after the last row read
+const byId = (b: any, last: { id: string } | null) =>
+  (last ? b.gt('id', last.id) : b).order('id').limit(ROWS);
 
 // The name the board sees. A display name is the username as it was
 // typed at sign-up (its case kept); one that says anything else (a
@@ -138,21 +147,24 @@ Deno.serve(async (req) => {
   // prize has been handed over" and "this club does not record hand-overs"
   // are different facts. Any other failure is a failure.
   const handoversOf = async (ids: string[] | null) => {
-    const q = (from: number, to: number) => {
-      let b = admin.from('reward_handovers').select('user_id, reward_id, handed_at, handed_by')
-        .order('user_id').order('reward_id').range(from, to);
+    type H = { user_id: string; reward_id: string; handed_at: string; handed_by: string | null };
+    // keyed on (user_id, reward_id)
+    const q = (last: H | null) => {
+      let b = admin.from('reward_handovers').select('user_id, reward_id, handed_at, handed_by');
       if (ids) b = b.in('user_id', ids);
-      return b;
+      if (last) b = b.or(`user_id.gt.${last.user_id},and(user_id.eq.${last.user_id},reward_id.gt.${last.reward_id})`);
+      return b.order('user_id').order('reward_id').limit(ROWS);
     };
     // the first page tells a missing table from an empty one
-    const first = await q(0, ROWS - 1);
+    const first = await q(null);
     if (first.error) {
       const code = String((first.error as { code?: string }).code ?? '');
       if (code === '42P01' || code === 'PGRST205') return null;
       throw new Error('QUERY_FAILED');
     }
-    const rows = (first.data ?? []).length < ROWS ? (first.data ?? [])
-      : [...(first.data ?? []), ...await readAll((a, b) => q(a + ROWS, b + ROWS))];
+    const head = (first.data ?? []) as H[];
+    const rows = head.length < ROWS ? head
+      : [...head, ...await readAll<H>(q, head[head.length - 1])];
     const by = new Map<string, { handed_at: string; handed_by: string | null }>();
     for (const h of rows) by.set(h.user_id + ':' + h.reward_id, h);
     return by;
@@ -193,11 +205,11 @@ Deno.serve(async (req) => {
         // milestone tier. No counter is stored: these are recomputed from
         // the same rows the member's own stamp total comes from, so the
         // board and the member can never disagree.
-        readAll((a, b) => admin.from('attendance').select('user_id').order('id').range(a, b))
+        readAll(l => byId(admin.from('attendance').select('id, user_id'), l))
           .then(data => ({ data, error: null })),
         // and one pass over claims: a milestone counts a member who
         // reached the tier or who holds its prize.
-        readAll((a, b) => admin.from('reward_claims').select('user_id, reward_id').order('id').range(a, b))
+        readAll(l => byId(admin.from('reward_claims').select('id, user_id, reward_id'), l))
           .then(data => ({ data, error: null })),
       ]);
 
@@ -283,15 +295,15 @@ Deno.serve(async (req) => {
         // 0 stamps — a whole club apparently reset overnight.
         // paged: a page of up to 500 members has more rows than one
         // response carries once the club passes 1000 stamps
-        const att = await readAll((a, b) => admin.from('attendance')
-          .select('user_id, checked_in_at').in('user_id', ids).order('id').range(a, b));
+        const att = await readAll(l => byId(admin.from('attendance')
+          .select('id, user_id, checked_in_at').in('user_id', ids), l));
         for (const a of att) {
           totals.set(a.user_id, (totals.get(a.user_id) ?? 0) + 1);
           const prev = lastAt.get(a.user_id);
           if (!prev || a.checked_in_at > prev) lastAt.set(a.user_id, a.checked_in_at);
         }
-        claimed = claimsByMember(await readAll((a, b) => admin.from('reward_claims')
-          .select('user_id, reward_id').in('user_id', ids).order('id').range(a, b)));
+        claimed = claimsByMember(await readAll(l => byId(admin.from('reward_claims')
+          .select('id, user_id, reward_id').in('user_id', ids), l)));
       }
 
       let members = (rows ?? []).map(r => {
@@ -406,8 +418,8 @@ Deno.serve(async (req) => {
     // carries nothing else.
     if (action === 'prizes') {
       const [roll, claimRows] = await Promise.all([
-        readAll((a, b) => admin.from('attendance').select('user_id').order('id').range(a, b)),
-        readAll((a, b) => admin.from('reward_claims').select('user_id, reward_id, claimed_at').order('id').range(a, b)),
+        readAll(l => byId(admin.from('attendance').select('id, user_id'), l)),
+        readAll(l => byId(admin.from('reward_claims').select('id, user_id, reward_id, claimed_at'), l)),
       ]);
       const perMember = new Map<string, number>();
       for (const a of roll) perMember.set(a.user_id, (perMember.get(a.user_id) ?? 0) + 1);
@@ -479,9 +491,11 @@ Deno.serve(async (req) => {
     if (action === 'find') {
       const q = String(body.q ?? '').trim().toLowerCase().slice(0, 40);
       const meetingId = String(body.meeting_id ?? '');
-      if (!q) return json({ ok: true, people: [] });
+      // a name holds only letters, digits, _ and .: any other term (a *,
+      // which would be dropped into "everyone") finds no one
+      if (!q || !/^[a-z0-9_.]+$/.test(q)) return json({ ok: true, people: [] });
       // % and _ are LIKE wildcards; a search for "_" is not everyone
-      const like = '%' + q.replace(/[\\%_]/g, c => '\\' + c).replace(/\*/g, '') + '%';
+      const like = '%' + likeTerm(q) + '%';
       // the whole name typed exactly is always among the results, however
       // many other names contain it
       const exact = like.slice(1, -1);
@@ -519,12 +533,12 @@ Deno.serve(async (req) => {
       // Ordered by date, not by meeting number: the number is a label
       // the board chooses, the date is when the meeting actually is,
       // and meetings may fall on any day in any order.
-      const ms = await readAll((a, b) => admin.from('meetings')
-        .select('id, meeting_number, meeting_date, start_time, end_time, location, check_in_open')
-        .order('meeting_date', { ascending: false }).order('id').range(a, b));
+      const ms = (await readAll(l => byId(admin.from('meetings')
+        .select('id, meeting_number, meeting_date, start_time, end_time, location, check_in_open'), l)))
+        .sort((a, b) => String(b.meeting_date).localeCompare(String(a.meeting_date)) || (a.id < b.id ? -1 : 1));
 
       const counts = new Map<string, number>();
-      const att = await readAll((a, b) => admin.from('attendance').select('meeting_id').order('id').range(a, b));
+      const att = await readAll(l => byId(admin.from('attendance').select('id, meeting_id'), l));
       for (const a of att) counts.set(a.meeting_id, (counts.get(a.meeting_id) ?? 0) + 1);
 
       const today = clubDay();

@@ -16930,7 +16930,8 @@ const BoardUI = {
               <span class="brow__no">GM ${a.meeting_number ? pad(a.meeting_number) : '-'}</span>
               <span class="brow__mid"><b>${esc(fmtDay(a.meeting_date))}</b></span>
               <span class="brow__cell">${esc(fmtTime(a.checked_in_at))}${a.location && a.location !== Schedule.PLACE ? ` / ${esc(a.location)}` : ''}</span>
-            </${a.meeting_id ? 'button' : 'div'}></li>`).join('')}</ul>`
+            </${a.meeting_id ? 'button' : 'div'}></li>`).join('')}</ul>${total > d.attendance.length
+            ? `<p class="muted bempty">The newest ${d.attendance.length} check-ins are shown.</p>` : ''}`
         : this.empty('No attendance yet')}
     </div>`;
   },
