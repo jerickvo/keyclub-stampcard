@@ -638,7 +638,9 @@ html{font-synthesis:none}
   .spread__seal{--swirl:min(64vw,720px,74dvh);
     left:calc(var(--swirl) * -.3);bottom:calc(var(--swirl) * -.36)}
 
-  .spread__wm{font-size:clamp(44px,7.4vw,104px)}
+  /* the notch inset pushes the wordmark right, toward the seal: it is
+     set smaller by as much, so the two stay apart */
+  .spread__wm{font-size:clamp(44px,calc(7.4vw - env(safe-area-inset-left,0px) * .26),104px)}
   /* the card fills its column less its right margin (width:100% ran it
      past the margin to the window's edge), up to its measure */
   .authp{grid-row:1;grid-column:2;margin:0 calc(var(--gutter) + env(safe-area-inset-right,0px)) 0 0;
