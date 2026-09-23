@@ -71,6 +71,7 @@ const Scenes = {
       el.classList.add('scene--set');
       return { release(){
         if (released) return; released = true;
+        el.style.pointerEvents = 'none';
         revealOnce(); fadeAway(el, 150, finish);
       } };
     }
@@ -80,6 +81,7 @@ const Scenes = {
     const MIN = 600;
     const open = () => {
       if (done) return;
+      el.style.pointerEvents = 'none';
       el.classList.add('scene--set');
       const W = innerWidth;
       const vec = this.exitVector(p, W, innerHeight);
@@ -121,7 +123,10 @@ const Scenes = {
       try { el.remove(); } catch (_) {}
       this.busy = false;
     };
-    const fuse = setTimeout(finish, 4000);
+    /* held as long as a sign-out can take (its start delay, the 5 s wait
+       for the server, the re-read), so it never lifts onto a page that
+       is still signed in */
+    const fuse = setTimeout(finish, 8000);
     const swapNow = () => Promise.resolve().then(doSwap).catch(err => { oops(err); return 'failed'; })
       .then(res => { p.word.textContent = res === 'failed' ? 'Still signed in' : 'Signed out';
                      if (res === 'failed') p.tail.textContent = ''; return res; });

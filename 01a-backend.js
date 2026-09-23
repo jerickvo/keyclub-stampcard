@@ -285,9 +285,19 @@ const SupabaseAdapter = {
     await SupabaseAdapter.awaitLibrary();
     if (!window.supabase || !window.supabase.createClient)
       throw new Error('supabase-js did not load');
+    /* No request waits forever: one with no deadline of its own (a
+       record read, a profile read at sign-in) is given up after 25 s, and
+       the page's error paths take over, instead of "Signing in" or an
+       empty page holding until the browser gives up. */
+    const WAIT = 25000;
+    const capped = (input, init = {}) => {
+      if (init.signal) return fetch(input, init);
+      const stop = new AbortController(), fuse = setTimeout(() => stop.abort(), WAIT);
+      return fetch(input, { ...init, signal:stop.signal }).finally(() => clearTimeout(fuse));
+    };
     this.client = window.supabase.createClient(
       Config.supabaseUrl, Config.supabaseAnonKey,
-      { auth:{ persistSession:true, autoRefreshToken:true } });
+      { auth:{ persistSession:true, autoRefreshToken:true }, global:{ fetch:capped } });
     return this.client;
   },
 
@@ -597,9 +607,12 @@ const SupabaseAdapter = {
     return res.data || { ok:false, code:'SERVER_ERROR' };
   },
 
+  /* a board read that never answers is given up on, and the pane says
+     it could not load, with its Try again */
+  READ_WAIT: 15000,
   async board(action, params){
     const { data, error } = await this.client.functions
-      .invoke('board-data', { body:{ action, ...(params || {}) } });
+      .invoke('board-data', { body:{ action, ...(params || {}) }, timeout:this.READ_WAIT });
     if (error){
       const status = (error.context && error.context.status) || error.status;
       if (status === 401) throw new Error('NOT_AUTHENTICATED');

@@ -265,6 +265,9 @@ select.input{padding-right:var(--sp-pad)}
 .slab{position:absolute;background:var(--ink);will-change:transform}
 /* while signing out, a tap never lands on the page under the scene */
 .scene--exit{pointer-events:auto}
+/* nor under the opening scene while it holds: it lets taps through only
+   once its panels start to leave */
+.scene--welcome,.scene--open{pointer-events:auto}
 
 .scene--play .scene__panel--a .scene__ink{animation:sceneInk 110ms steps(3,end) calc(var(--lead,0ms) + 90ms) both}
 .scene--play .scene__panel--b .scene__ink{animation:sceneInk 100ms steps(3,end) calc(var(--lead,0ms) + 210ms) both}

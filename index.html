@@ -341,6 +341,9 @@ select.input{padding-right:var(--sp-pad)}
 .slab{position:absolute;background:var(--ink);will-change:transform}
 /* while signing out, a tap never lands on the page under the scene */
 .scene--exit{pointer-events:auto}
+/* nor under the opening scene while it holds: it lets taps through only
+   once its panels start to leave */
+.scene--welcome,.scene--open{pointer-events:auto}
 
 .scene--play .scene__panel--a .scene__ink{animation:sceneInk 110ms steps(3,end) calc(var(--lead,0ms) + 90ms) both}
 .scene--play .scene__panel--b .scene__ink{animation:sceneInk 100ms steps(3,end) calc(var(--lead,0ms) + 210ms) both}
@@ -2074,13 +2077,15 @@ window.Guard = (function(){
     report(String((r && r.message) || r));
   });
 
+  /* the opening scene lifts itself (its own fuse is 7 s, whether or not
+     the record has loaded); this is only for a scene that never ran */
   watchdog = setTimeout(function(){
     var b = document.getElementById('boot');
-    if (b && !b.classList.contains('is-done')){
-      console.warn('[keystamp] boot animation never finished; watchdog lifted the curtain.');
+    if (b && b.isConnected && !b.classList.contains('is-done')){
+      console.warn('[keystamp] the opening scene did not lift; the watchdog lifted it.');
       lift();
     }
-  }, 4000);
+  }, 9000);
 
   return { lift: lift, report: report };
 })();
@@ -14844,9 +14849,19 @@ const SupabaseAdapter = {
     await SupabaseAdapter.awaitLibrary();
     if (!window.supabase || !window.supabase.createClient)
       throw new Error('supabase-js did not load');
+    /* No request waits forever: one with no deadline of its own (a
+       record read, a profile read at sign-in) is given up after 25 s, and
+       the page's error paths take over, instead of "Signing in" or an
+       empty page holding until the browser gives up. */
+    const WAIT = 25000;
+    const capped = (input, init = {}) => {
+      if (init.signal) return fetch(input, init);
+      const stop = new AbortController(), fuse = setTimeout(() => stop.abort(), WAIT);
+      return fetch(input, { ...init, signal:stop.signal }).finally(() => clearTimeout(fuse));
+    };
     this.client = window.supabase.createClient(
       Config.supabaseUrl, Config.supabaseAnonKey,
-      { auth:{ persistSession:true, autoRefreshToken:true } });
+      { auth:{ persistSession:true, autoRefreshToken:true }, global:{ fetch:capped } });
     return this.client;
   },
 
@@ -15156,9 +15171,12 @@ const SupabaseAdapter = {
     return res.data || { ok:false, code:'SERVER_ERROR' };
   },
 
+  /* a board read that never answers is given up on, and the pane says
+     it could not load, with its Try again */
+  READ_WAIT: 15000,
   async board(action, params){
     const { data, error } = await this.client.functions
-      .invoke('board-data', { body:{ action, ...(params || {}) } });
+      .invoke('board-data', { body:{ action, ...(params || {}) }, timeout:this.READ_WAIT });
     if (error){
       const status = (error.context && error.context.status) || error.status;
       if (status === 401) throw new Error('NOT_AUTHENTICATED');
@@ -17153,6 +17171,7 @@ const Scenes = {
       el.classList.add('scene--set');
       return { release(){
         if (released) return; released = true;
+        el.style.pointerEvents = 'none';
         revealOnce(); fadeAway(el, 150, finish);
       } };
     }
@@ -17162,6 +17181,7 @@ const Scenes = {
     const MIN = 600;
     const open = () => {
       if (done) return;
+      el.style.pointerEvents = 'none';
       el.classList.add('scene--set');
       const W = innerWidth;
       const vec = this.exitVector(p, W, innerHeight);
@@ -17203,7 +17223,10 @@ const Scenes = {
       try { el.remove(); } catch (_) {}
       this.busy = false;
     };
-    const fuse = setTimeout(finish, 4000);
+    /* held as long as a sign-out can take (its start delay, the 5 s wait
+       for the server, the re-read), so it never lifts onto a page that
+       is still signed in */
+    const fuse = setTimeout(finish, 8000);
     const swapNow = () => Promise.resolve().then(doSwap).catch(err => { oops(err); return 'failed'; })
       .then(res => { p.word.textContent = res === 'failed' ? 'Still signed in' : 'Signed out';
                      if (res === 'failed') p.tail.textContent = ''; return res; });
@@ -17380,17 +17403,26 @@ function qrSVG(text){
 
 let boardMeeting = null;
 
-function paintBoard(){
+let qrRetry = null;
+function paintBoard(attempt = 0){
   const box = $('#qrBox');
+  clearTimeout(qrRetry);
   if (!box) return;
 
-  Backend.issueToken(boardMeeting).then(({ token }) => {
+  const meeting = boardMeeting;
+  Backend.issueToken(meeting).then(({ token }) => {
     if (!document.body.contains(box)) return;
     const svg = qrSVG(token);
     box.innerHTML = svg || `<p class="qrpanel__fail">The code could not be drawn. Reload the page.</p>`;
   }).catch(() => {
     if (!document.body.contains(box)) return;
-    box.innerHTML = `<p class="qrpanel__fail">Could not load the code. Reload the page.</p>`;
+    /* a code already on the wall stays up; otherwise the wall says it is
+       trying again, and does, while it is showing this meeting */
+    if (!box.querySelector('svg'))
+      box.innerHTML = `<p class="qrpanel__fail" role="status">Could not load the code. Trying again.</p>`;
+    qrRetry = setTimeout(() => {
+      if (document.body.contains(box) && boardMeeting === meeting) paintBoard(attempt + 1);
+    }, Math.min(30000, 3000 * 2 ** attempt));
   });
 }
 
@@ -17663,11 +17695,12 @@ const Scanner = {
        The page says so and offers the camera again, instead of holding
        a dead feed under a live reticle. */
     const track = stream.getVideoTracks()[0];
+    this.trackOff = new AbortController();
     if (track) track.addEventListener('ended', () => {
       if (run !== this.run || this.stream !== stream) return;
       this.stop();
       this.stall('ended');
-    }, { once:true });
+    }, { once:true, signal:this.trackOff.signal });
 
     this.hideLoader();
     video.srcObject = this.stream;
@@ -17850,6 +17883,11 @@ const Scanner = {
     this.stream?.getTracks().forEach(t => t.stop());
     this.stream = null; this.locked = false;
     clearTimeout(this.forgive);
+    /* nothing of the run is kept: its listener, the frame canvas, the
+       video's hold on the stream */
+    this.trackOff?.abort(); this.trackOff = null;
+    this.cv = null; this.ctx = null;
+    const cam = $('#cam'); if (cam) cam.srcObject = null;
   },
 };
 
@@ -17899,8 +17937,13 @@ const Landing = {
     const scene = FX.stampAcquire(meeting);
     this.scene = scene;
     const held = new Promise(r => setTimeout(r, Motion.off ? 750 : 900));
-    const [fresh] = await Promise.all([this.refresh(3), held]);
+    /* the record is waited for a bounded time, well inside the cover's
+       own fuse; the stamp is on file either way */
+    const read = Promise.race([this.refresh(3), new Promise(r => setTimeout(() => r(false), 5000))]);
+    const [fresh] = await Promise.all([read, held]);
     if (seq !== this.seq) return;
+    if (!fresh) toast({ key:'stamp', title:`Checked in to GM ${pad(meeting.no)}`,
+                        detail:'Your card will update when the connection returns.' });
 
     /* The reader may have left Scan during the hold. The record is
        fresh either way; the page they chose is not taken from them. */
@@ -19095,6 +19138,11 @@ try {
 
 (async () => {
   try {
+    /* the record may take a while: whatever lifts the cover finds this,
+       never an empty page */
+    const view = $('#view');
+    if (view && !view.firstChild)
+      view.innerHTML = '<div class="view"><p class="kicker" role="status">Loading the club records</p></div>';
     await Backend.init();
     await Store.hydrate();
 
@@ -19165,7 +19213,7 @@ try {
     paintBrand();
     paintIdentity();
     paintMotion();
-    go(hashRoute());
+    go(hashRoute(), { instant:true });
   } finally {
     if (opening) opening.release();
   }

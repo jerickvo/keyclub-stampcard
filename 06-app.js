@@ -1068,6 +1068,11 @@ try {
 
 (async () => {
   try {
+    /* the record may take a while: whatever lifts the cover finds this,
+       never an empty page */
+    const view = $('#view');
+    if (view && !view.firstChild)
+      view.innerHTML = '<div class="view"><p class="kicker" role="status">Loading the club records</p></div>';
     await Backend.init();
     await Store.hydrate();
 
@@ -1138,7 +1143,7 @@ try {
     paintBrand();
     paintIdentity();
     paintMotion();
-    go(hashRoute());
+    go(hashRoute(), { instant:true });
   } finally {
     if (opening) opening.release();
   }

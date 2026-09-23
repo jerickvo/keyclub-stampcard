@@ -17,17 +17,26 @@ function qrSVG(text){
 
 let boardMeeting = null;
 
-function paintBoard(){
+let qrRetry = null;
+function paintBoard(attempt = 0){
   const box = $('#qrBox');
+  clearTimeout(qrRetry);
   if (!box) return;
 
-  Backend.issueToken(boardMeeting).then(({ token }) => {
+  const meeting = boardMeeting;
+  Backend.issueToken(meeting).then(({ token }) => {
     if (!document.body.contains(box)) return;
     const svg = qrSVG(token);
     box.innerHTML = svg || `<p class="qrpanel__fail">The code could not be drawn. Reload the page.</p>`;
   }).catch(() => {
     if (!document.body.contains(box)) return;
-    box.innerHTML = `<p class="qrpanel__fail">Could not load the code. Reload the page.</p>`;
+    /* a code already on the wall stays up; otherwise the wall says it is
+       trying again, and does, while it is showing this meeting */
+    if (!box.querySelector('svg'))
+      box.innerHTML = `<p class="qrpanel__fail" role="status">Could not load the code. Trying again.</p>`;
+    qrRetry = setTimeout(() => {
+      if (document.body.contains(box) && boardMeeting === meeting) paintBoard(attempt + 1);
+    }, Math.min(30000, 3000 * 2 ** attempt));
   });
 }
 
@@ -300,11 +309,12 @@ const Scanner = {
        The page says so and offers the camera again, instead of holding
        a dead feed under a live reticle. */
     const track = stream.getVideoTracks()[0];
+    this.trackOff = new AbortController();
     if (track) track.addEventListener('ended', () => {
       if (run !== this.run || this.stream !== stream) return;
       this.stop();
       this.stall('ended');
-    }, { once:true });
+    }, { once:true, signal:this.trackOff.signal });
 
     this.hideLoader();
     video.srcObject = this.stream;
@@ -487,6 +497,11 @@ const Scanner = {
     this.stream?.getTracks().forEach(t => t.stop());
     this.stream = null; this.locked = false;
     clearTimeout(this.forgive);
+    /* nothing of the run is kept: its listener, the frame canvas, the
+       video's hold on the stream */
+    this.trackOff?.abort(); this.trackOff = null;
+    this.cv = null; this.ctx = null;
+    const cam = $('#cam'); if (cam) cam.srcObject = null;
   },
 };
 
@@ -536,8 +551,13 @@ const Landing = {
     const scene = FX.stampAcquire(meeting);
     this.scene = scene;
     const held = new Promise(r => setTimeout(r, Motion.off ? 750 : 900));
-    const [fresh] = await Promise.all([this.refresh(3), held]);
+    /* the record is waited for a bounded time, well inside the cover's
+       own fuse; the stamp is on file either way */
+    const read = Promise.race([this.refresh(3), new Promise(r => setTimeout(() => r(false), 5000))]);
+    const [fresh] = await Promise.all([read, held]);
     if (seq !== this.seq) return;
+    if (!fresh) toast({ key:'stamp', title:`Checked in to GM ${pad(meeting.no)}`,
+                        detail:'Your card will update when the connection returns.' });
 
     /* The reader may have left Scan during the hold. The record is
        fresh either way; the page they chose is not taken from them. */
