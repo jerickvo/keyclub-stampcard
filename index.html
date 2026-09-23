@@ -14903,9 +14903,13 @@ const SupabaseAdapter = {
   },
 
   async createMeeting(m){
+    /* who scheduled it goes on the record (meetings.created_by), as the
+       officer who opened check-in does on its session */
+    const { data:auth } = await this.client.auth.getSession();
+    const by = auth && auth.session && auth.session.user ? auth.session.user.id : null;
     const { data, error } = await this.client.from('meetings').insert({
       meeting_number:m.no, meeting_date:m.date, start_time:m.startTime,
-      end_time:m.endTime, location:'MPR' }).select().single();
+      end_time:m.endTime, location:'MPR', ...(by ? { created_by:by } : {}) }).select().single();
     if (error) throw error;
     return this.toMeeting(data);
   },
