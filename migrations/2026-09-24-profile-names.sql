@@ -5,7 +5,16 @@
 -- display name may now only change case, and a sign-up that asks for
 -- another name gets its username. Existing rows are untouched
 -- (production had none that differ from their username in more than
--- case). Safe to run twice: create or replace.
+-- case).
+--
+-- Usernames also get the sign-up form's shape rule in the database: a
+-- letter or digit, and no leading, trailing or doubled period (production
+-- had none that break it; NOT VALID leaves earlier rows unchecked).
+-- Safe to run twice.
+
+alter table public.profiles drop constraint if exists username_shape;
+alter table public.profiles add constraint username_shape
+  check (username ~ '[a-z0-9]' and username !~ '^\.|\.$|\.\.') not valid;
 
 create or replace function public.freeze_identity_fields()
 returns trigger language plpgsql security definer

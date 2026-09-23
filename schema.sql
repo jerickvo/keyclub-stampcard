@@ -27,6 +27,15 @@ create table if not exists public.profiles (
 -- Jvo / jvo / JVO cannot become three identities. Enforced here, not
 -- only in JavaScript, because JavaScript is editable by the person it
 -- is meant to constrain.
+-- The sign-up form also asks for a letter or digit and no leading,
+-- trailing or doubled period (a name of dots reads as a placeholder, and
+-- the name makes the sign-in address). Held here too, since the form is
+-- editable by the person it constrains. NOT VALID: rows made before the
+-- rule are not re-checked.
+alter table public.profiles drop constraint if exists username_shape;
+alter table public.profiles add constraint username_shape
+  check (username ~ '[a-z0-9]' and username !~ '^\.|\.$|\.\.') not valid;
+
 create unique index if not exists profiles_username_unique
   on public.profiles (lower(username));
 
@@ -325,6 +334,14 @@ create policy meetings_board_delete on public.meetings
     public.is_board()
     and not exists (
       select 1 from public.attendance a where a.meeting_id = meetings.id
+    )
+    -- nor while its check-in is open, or a session for it is live (the
+    -- moment between the start and the open): a page read before the
+    -- open cannot take the meeting out from under the wall
+    and not meetings.check_in_open
+    and not exists (
+      select 1 from public.attendance_sessions s
+      where s.meeting_id = meetings.id and s.ended_at is null
     )
   );
 
