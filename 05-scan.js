@@ -558,6 +558,7 @@ const SCAN_MESSAGES = {
   MEETING_NOT_FOUND:   ['No matching meeting',     'Ask a board member'],
   MEETING_NOT_ACTIVE:  ['Check-in not open',       ''],
   ATTENDANCE_CLOSED:   ['Check-in has ended',      ''],
+  STALE_CODE:          ['Old code',                'Scan the code on screen now'],
   WRONG_DAY:           ['Code is for another day', ''],
   ALREADY_CHECKED_IN:  ['Already checked in',      ''],
   PROFILE_NOT_READY:   ['Account not ready',       'Hold the code in view'],
@@ -575,21 +576,48 @@ const SCAN_TRANSIENT = new Set(['NETWORK_ERROR', 'SERVER_ERROR', 'VERIFIER_UNAVA
 /* refusals that mean the record on this page is out of date */
 const SCAN_STALE = new Set(['ALREADY_CHECKED_IN', 'ATTENDANCE_CLOSED', 'MEETING_NOT_ACTIVE', 'WRONG_DAY']);
 
+/* A code whose check is still on its way is not sent again: a second
+   read of it (the member left Scan and came back, or a repeat call)
+   waits for that answer, and only the call that asked lands the stamp. */
+const sealsAsked = new Map();
+/* codes whose last check got no answer: the server may have stamped
+   them before the answer was lost */
+const sealsUnanswered = new Set();
+
 /* `run` is the camera run that read the code; the refusal, if any, is
    shown on that run and no other. */
 async function submitSeal(raw, run = Scanner.run){
   if (!QRFormat.looksLikeKeystamp(raw)) return rejectVisual('INVALID_TOKEN', raw, run);
 
   Scanner.setState('busy', 'Checking');
-  const result = await Backend.verifyCode(raw);
+  let asked = sealsAsked.get(raw);
+  const first = !asked;
+  if (first){ asked = Backend.verifyCode(raw); sealsAsked.set(raw, asked); }
+  const result = await asked;
+  if (first) sealsAsked.delete(raw);
 
-  if (!result || !result.ok){
-    const code = (result && result.code) || 'SERVER_ERROR';
+  let code = result && result.ok ? null : ((result && result.code) || 'SERVER_ERROR');
+  /* "already checked in", right after a check that got no answer, to a
+     meeting this page has no stamp for: the lost answer was this stamp */
+  if (code === 'ALREADY_CHECKED_IN' && sealsUnanswered.has(raw) &&
+      result.meeting_id && !Store.attended(result.meeting_id)) code = null;
+  if (first){
+    if (code === 'NETWORK_ERROR' || code === 'SERVER_ERROR') sealsUnanswered.add(raw);
+    else sealsUnanswered.delete(raw);
+  }
+
+  if (code){
     /* refused as signed out: the record is read again, and the page
        goes to Sign in if the session is over */
-    if (SCAN_STALE.has(code) || code === 'NOT_AUTHENTICATED') Store.hydrate();
+    if (SCAN_STALE.has(code) || code === 'NOT_AUTHENTICATED'){
+      const read = Store.hydrate();
+      /* an ended session's code while check-in is open again (closed
+         and reopened): it is the code that is old, not the check-in */
+      if (code === 'ATTENDANCE_CLOSED'){ await read; if (Store.openMeeting()) code = 'STALE_CODE'; }
+    }
     return rejectVisual(code, raw, run);
   }
+  if (!first) return;
 
   const meeting = Store.meeting(result.meeting_id) ||
                   { id:result.meeting_id, no:result.meeting_number, place:Schedule.PLACE };

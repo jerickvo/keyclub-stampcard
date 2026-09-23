@@ -547,10 +547,13 @@ const SupabaseAdapter = {
     return rewardId;
   },
 
+  /* a check that never answers is given up on, as no connection */
+  VERIFY_WAIT: 12000,
   async verifyCode(rawCode){
     let res;
     try {
-      res = await this.client.functions.invoke('verify-attendance', { body:{ code:rawCode } });
+      res = await this.client.functions.invoke('verify-attendance',
+        { body:{ code:rawCode }, timeout:this.VERIFY_WAIT });
     } catch (err){
       return { ok:false, code:'NETWORK_ERROR' };
     }
@@ -559,6 +562,9 @@ const SupabaseAdapter = {
       if (status === 401) return { ok:false, code:'NOT_AUTHENTICATED' };
       if (status === 403) return { ok:false, code:'NOT_AUTHORIZED' };
       if (status === 404) return { ok:false, code:'VERIFIER_UNAVAILABLE' };
+      /* no answer at all: a dropped connection, or the wait ran out
+         (supabase-js returns these as FunctionsFetchError, never throws) */
+      if (!status) return { ok:false, code:'NETWORK_ERROR' };
 
       return { ok:false, code:'SERVER_ERROR' };
     }
