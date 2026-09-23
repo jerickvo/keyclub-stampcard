@@ -1092,7 +1092,10 @@ html{font-synthesis:none}
 @media(min-width:900px){ .proj--live .proj__hand{display:none} }
 .proj:not(.proj--live) .proj__hand{color:var(--ink-2)}
 .proj:not(.proj--live) .proj__hand:focus-visible{outline-color:var(--ink)}
-.proj__count--held b{font-size:clamp(40px,5vw,64px)}
+/* the count a closed meeting has is a result on the page, not the wall's
+   figure: one line, at the size of the meeting number */
+.proj:not(.proj--live) .proj__count{flex-direction:row;align-items:baseline;gap:var(--sp-row)}
+.proj:not(.proj--live) .proj__count b{font-size:clamp(40px,5vw,64px)}
 .proj:not(.proj--live) .proj__count span{color:var(--ink-2)}
 .proj:not(.proj--live) .proj__ctl:not(.proj__ctl--go){border-color:var(--ink);background:none;color:var(--ink)}
 
