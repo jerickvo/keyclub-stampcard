@@ -272,6 +272,13 @@ begin
   if new.username is distinct from old.username then
     raise exception 'username cannot be changed';
   end if;
+  -- The display name is the username as it was typed at sign-up; only
+  -- its case may change. Anything else would let a member rename
+  -- themselves as another member on the board's roster and lists.
+  if new.display_name is distinct from old.display_name
+     and lower(coalesce(new.display_name, '')) <> lower(new.username) then
+    raise exception 'display name is the username';
+  end if;
   return new;
 end $$;
 
@@ -374,6 +381,14 @@ create policy claims_self_insert on public.reward_claims
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer
 set search_path = pg_catalog, public as $$
+declare
+  uname text := case
+    when lower(coalesce(new.raw_user_meta_data->>'username',''))
+         = lower(split_part(new.email, '@', 1))
+    then lower(new.raw_user_meta_data->>'username')
+    else lower(split_part(new.email, '@', 1))
+  end;
+  typed text := new.raw_user_meta_data->>'display_name';
 begin
   -- role is deliberately NOT read from raw_user_meta_data. Anything the
   -- browser sends at sign-up is ignored; every new account is a member.
@@ -382,19 +397,13 @@ begin
   -- call auth.signUp directly with email x@... and username 'y': an
   -- account the board roster shows as "y" but which actually signs in
   -- as x. On any mismatch the address wins, because the address is what
-  -- authenticates. display_name is bounded because it is the one
-  -- member-controlled string other members see.
+  -- authenticates. display_name is the one member-controlled string
+  -- other members see: it is the username as it was typed (its case
+  -- kept), and one that says anything else (another member's name) is
+  -- not taken; the username stands in.
   insert into public.profiles (id, username, display_name, role)
-  values (new.id,
-          case
-            when lower(coalesce(new.raw_user_meta_data->>'username',''))
-                 = lower(split_part(new.email, '@', 1))
-            then lower(new.raw_user_meta_data->>'username')
-            else lower(split_part(new.email, '@', 1))
-          end,
-          left(coalesce(new.raw_user_meta_data->>'display_name',
-                        new.raw_user_meta_data->>'username',
-                        split_part(new.email, '@', 1)), 48),
+  values (new.id, uname,
+          case when lower(coalesce(typed, '')) = uname then typed else uname end,
           'member');
   return new;
 end $$;
