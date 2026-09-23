@@ -107,10 +107,12 @@ member → verify-attendance  (Edge Function) → attendance row in Postgres
 ```
 
 A token is `keystamp://a/<base64url(session.meeting.expiry)>.<HMAC-SHA256>`,
-signed with `ATTENDANCE_TOKEN_SECRET`, valid for **20 seconds**. The
-board fetches a replacement at T-5s, so the projected QR rotates on its
-own and is never briefly invalid. The token text is never displayed —
-printing it would hand every member in the room something to forward.
+signed with `ATTENDANCE_TOKEN_SECRET`. The deployed `attendance-session`
+function issues one code per check-in session that stays valid until
+the end of the meeting's day (its expiry is the day's 23:59:59), so the
+projected QR does not rotate: a photo of it works for as long as that
+check-in stays open. Closing check-in is what ends it (below). The token
+text is never displayed on the page.
 
 The browser cannot forge a token: the secret exists only in the
 functions' environment. There is no client-side verifier.

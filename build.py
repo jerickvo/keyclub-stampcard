@@ -185,7 +185,8 @@ def main():
         print(f"         {f}")
     # only the page's own tags: text inside the inlined scripts and styles
     # (qrcode.js builds an <img src=...> string) is not a request
-    tags = re.sub(r'<(script|style)\b[^>]*>.*?</\1>', '', html, flags=re.S)
+    # (a <script src> the inliner skipped keeps its opening tag)
+    tags = re.sub(r'(<(script|style)\b[^>]*>).*?</\2>', r'\1', html, flags=re.S)
     left = re.findall(r'(?:src|href)="(?!http|data:|#)([^"]+)"', tags)
     print(f"build: remaining same-origin requests: {left or 'none'}")
 
