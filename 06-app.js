@@ -393,17 +393,25 @@ document.addEventListener('submit', async e => {
     authBusy(false);
     /* Focus lands on the first field at fault, in form order. A password
        that was refused is cleared so it can be retyped; a username that
-       was refused stays, so it can be corrected. */
-    const at = Config.validateUsername(username) ? '#authUser'
+       was refused stays, so it can be corrected. A refusal that is not
+       about the password (the network, a limit on attempts) keeps it. */
+    const nameBad = up ? Config.validateUsername(username) : Config.checkSignInName(username);
+    const at = nameBad                           ? '#authUser'
              : Config.validatePassword(password) ? '#authPass'
              : (up && password !== confirm)      ? '#authPass2'
-             : /^username/i.test(msg)             ? '#authUser'   /* "Username is already taken." */
+             : /^username|^that username cannot/i.test(msg) ? '#authUser'   /* "Username is already taken." */
              : '#authPass';                                      /* a refused pair: retype the password */
+    const keep = /^could not reach|^too many/i.test(msg);
     const field = $(at);
     if (field){
-      if (at !== '#authUser') field.value = '';
+      if (at !== '#authUser' && !keep) field.value = '';
       field.focus();
     }
+    /* on a short screen the refusal sits below the fold, under the
+       actions: the page scrolls to it (the layout itself never shifts) */
+    const box = $('#authErr');
+    if (box && box.getBoundingClientRect().bottom > innerHeight)
+      box.scrollIntoView({ block:'nearest' });
   }
 });
 

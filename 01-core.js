@@ -202,7 +202,7 @@ const Store = {
 
   async signIn(username, password){
     this.authGuard();
-    const bad = Config.validateUsername(username) || Config.validatePassword(password);
+    const bad = Config.checkSignInName(username) || Config.validatePassword(password);
     if (bad) throw new Error(bad);
     await Backend.signIn(username, password);
     await this.hydrate();

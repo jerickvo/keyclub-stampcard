@@ -159,7 +159,22 @@ const Config = {
     if (u.length < this.USERNAME_MIN) return `Username must be at least ${this.USERNAME_MIN} characters.`;
     if (u.length > this.USERNAME_MAX) return `Username must be ${this.USERNAME_MAX} characters or fewer.`;
     if (!this.USERNAME_RE.test(u)) return 'Username can only use letters, numbers, underscores and periods.';
+    /* a name of only dots or underscores reads as a placeholder on the
+       roster, and the dots have to make a valid sign-in address */
+    if (!/[a-z0-9]/i.test(u)) return 'Username needs at least one letter or number.';
+    if (/^\.|\.$|\.\./.test(u)) return 'Username cannot start or end with a period, or have two in a row.';
     if (this.USERNAME_BLOCKED.includes(this.canonUsername(u))) return 'That username is reserved. Pick another.';
+    return null;
+  },
+  /* signing in asks only whether it could be a username at all; whether
+     the account exists is the server's answer, said the same way for
+     every name (a reserved one included) */
+  checkSignInName(raw){
+    const u = String(raw || '').trim();
+    if (!u) return 'Username is required.';
+    if (u.length < this.USERNAME_MIN) return `Username must be at least ${this.USERNAME_MIN} characters.`;
+    if (u.length > this.USERNAME_MAX) return `Username must be ${this.USERNAME_MAX} characters or fewer.`;
+    if (!this.USERNAME_RE.test(u)) return 'Username can only use letters, numbers, underscores and periods.';
     return null;
   },
   validatePassword(pw){
@@ -311,16 +326,30 @@ const SupabaseAdapter = {
       /fetch|network|load failed|connect/i.test(String(error.message || ''));
   },
 
+  SIGN_IN_WAIT: 20000,
   async signIn(username, password){
-    const { data, error } = await this.client.auth.signInWithPassword({
+    const UNREACHABLE = 'Could not reach the club records. Try again.';
+    /* a sign-in that never answers is given up on; if it answers after
+       the page has said so, that session is not kept */
+    let gaveUp = false;
+    const asked = this.client.auth.signInWithPassword({
       email: Config.emailForUsername(username), password });
+    asked.then(r => { if (gaveUp && r && r.data && r.data.session) this.signOut(); }, () => {});
+    const { data, error } = await Promise.race([asked,
+      new Promise(r => setTimeout(() => { gaveUp = true; r({ error:{ name:'AuthRetryableFetchError', status:0 } }); }, this.SIGN_IN_WAIT))]);
     if (error){
-      if (this.authUnreachable(error))
-        throw new Error('Could not reach the club records. Try again.');
+      if (this.authUnreachable(error)) throw new Error(UNREACHABLE);
+      /* a limit on attempts from this network, not a refusal of the password */
+      if (Number(error.status) === 429 || /rate.?limit/i.test(String(error.code || error.message || '')))
+        throw new Error('Too many sign-in attempts from this network. Wait a minute and try again.');
 
       throw new Error('That username and password do not match.');
     }
-    const profile = await this.profileFor(data.user, { waitMs:1500 });
+    /* the password was accepted but the account could not be read: the
+       half-made session is not left behind to sign in on the next load */
+    let profile;
+    try { profile = await this.profileFor(data.user, { waitMs:1500 }); }
+    catch (_){ await this.signOut(); throw new Error(UNREACHABLE); }
     if (!profile) throw new Error('That account has no profile yet. Ask a board member.');
     return profile;
   },
@@ -334,10 +363,17 @@ const SupabaseAdapter = {
       options:{ data:{ username: Config.canonUsername(display), display_name: display } },
     });
     if (error){
-      const m = String(error.message || '').toLowerCase();
-      if (m.includes('already registered') || m.includes('already exists') || error.status === 422)
+      const m = String(error.message || '').toLowerCase(), code = String(error.code || '');
+      /* the auth server answers 422 for several refusals; each says which */
+      if (code === 'weak_password' || (!code && m.includes('password')))
+        throw new Error('Password is too weak. Pick a longer or less common one.');
+      if (code === 'user_already_exists' || code === 'email_exists' ||
+          m.includes('already registered') || m.includes('already exists'))
         throw new Error('Username is already taken.');
-      if (m.includes('password')) throw new Error('Password is too weak. Use at least 8 characters.');
+      if (code === 'email_address_invalid' || code === 'validation_failed')
+        throw new Error('That username cannot be used. Pick another.');
+      if (Number(error.status) === 429 || /rate.?limit/i.test(code))
+        throw new Error('Too many accounts made from this network. Wait a minute and try again.');
       throw new Error('Could not create that account. Try again.');
     }
     if (!data.session){
