@@ -24,9 +24,10 @@ failed fetch took the whole application down.
 Chasing the path was the wrong fix, and it is why three previous
 attempts did not hold. The defect is the dependency on subresource
 fetches at all. This script removes them: CSS, every script, and the
-animation library are inlined, so the built index.html issues zero
-same-origin requests. Nothing left to 404, from a server, from a
-folder, from a zip mount, from anywhere.
+animation library are inlined, so the built index.html makes no
+same-origin request the page depends on (only the manifest and the
+touch icon, both harmless if missing). Nothing left to 404 that
+matters, from a server, a folder, a zip mount, anywhere.
 
 USAGE
     python3 build.py
@@ -166,10 +167,11 @@ def main():
     banner = (
         "<!-- ══════════════════════════════════════════════════════════\n"
         "     GENERATED FILE — do not edit.\n"
-        "     Built from dev.html by build.py. Everything is inlined so\n"
-        "     this page makes no same-origin requests and therefore\n"
-        "     cannot fail on a missing subresource, wherever it is\n"
-        "     opened from. Edit dev.html / css / js, then rerun build.py.\n"
+        "     Built from dev.html by build.py. Everything is inlined, so\n"
+        "     its only same-origin requests are the manifest and the\n"
+        "     touch icon, both harmless if missing: no missing file can\n"
+        "     stop the page, wherever it is opened from.\n"
+        "     Edit dev.html / css / js, then rerun build.py.\n"
         "     ══════════════════════════════════════════════════════════ -->\n"
     )
     html = html.replace("<!DOCTYPE html>", "<!DOCTYPE html>\n" + banner, 1)
@@ -181,7 +183,10 @@ def main():
     print(f"build: inlined {len(inlined)} files")
     for f in inlined:
         print(f"         {f}")
-    left = re.findall(r'(?:src|href)="(?!http|data:|#)([^"]+)"', html)
+    # only the page's own tags: text inside the inlined scripts and styles
+    # (qrcode.js builds an <img src=...> string) is not a request
+    tags = re.sub(r'<(script|style)\b[^>]*>.*?</\1>', '', html, flags=re.S)
+    left = re.findall(r'(?:src|href)="(?!http|data:|#)([^"]+)"', tags)
     print(f"build: remaining same-origin requests: {left or 'none'}")
 
 

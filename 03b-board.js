@@ -6,7 +6,9 @@ function nextMeetingNumber(list){
     const n = Number(m && m.meeting_number);
     if (Number.isInteger(n) && n > top) top = n;
   });
-  return top + 1;
+  /* past the form's own limit, it proposes nothing rather than a number
+     it would refuse */
+  return top + 1 <= MEETING_NO_MAX ? top + 1 : '';
 }
 
 const MEETING_DEFAULTS = { start:'12:40', end:'13:30' };
@@ -311,7 +313,7 @@ const BoardUI = {
     return `<form class="bform" id="meetingForm" novalidate aria-label="Schedule a meeting">
       <div class="bform__grid">
         <label class="field"><span class="kicker">Meeting number</span>
-          <input class="input" id="mNo" type="number" min="1" step="1" inputmode="numeric"
+          <input class="input" id="mNo" type="number" min="1" max="${MEETING_NO_MAX}" step="1" inputmode="numeric"
                  value="${esc(f.no)}" placeholder="${esc(d.no)}"></label>
         <label class="field"><span class="kicker">Date</span>
           <input class="input" id="mDate" type="date" value="${esc(f.date)}"

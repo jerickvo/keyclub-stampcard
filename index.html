@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <!-- ══════════════════════════════════════════════════════════
      GENERATED FILE — do not edit.
-     Built from dev.html by build.py. Everything is inlined so
-     this page makes no same-origin requests and therefore
-     cannot fail on a missing subresource, wherever it is
-     opened from. Edit dev.html / css / js, then rerun build.py.
+     Built from dev.html by build.py. Everything is inlined, so
+     its only same-origin requests are the manifest and the
+     touch icon, both harmless if missing: no missing file can
+     stop the page, wherever it is opened from.
+     Edit dev.html / css / js, then rerun build.py.
      ══════════════════════════════════════════════════════════ -->
 
 <html lang="en">
@@ -242,7 +243,8 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   border:0;border-bottom:var(--edge-thin) solid var(--ink);border-radius:0;
   font:500 clamp(13px,.4vw + 11.7px,14.5px)/1.2 var(--f-mono);
   letter-spacing:.08em;transition:none}
-.input::placeholder{color:var(--tone);letter-spacing:.06em}
+/* a placeholder is the visible label of the search fields: it keeps text contrast */
+.input::placeholder{color:var(--ink-2);letter-spacing:.06em}
 
 .input:focus{outline:0;border-bottom-color:var(--ink);
   border-bottom-width:var(--edge-heavy)}
@@ -1310,10 +1312,10 @@ html{font-synthesis:none}
 
 .bform__head{display:flex;align-items:center;
   justify-content:space-between;gap:12px}
-/* on a short landscape phone the wordmark is sized by the height too, so
-   the card below never covers it */
+/* on a short landscape phone the wordmark is sized by the band it sits
+   in too, so the card below never covers it */
 .spread__wm{font-family:var(--f-display);text-transform:uppercase;
-  font-size:clamp(46px,min(15vw,18svh),124px);line-height:.9;letter-spacing:.01em;
+  font-size:clamp(46px,min(15vw,calc(var(--band) * .3)),124px);line-height:.9;letter-spacing:.01em;
   margin:0;padding-bottom:.06em}
 
 .authp{grid-row:2;position:relative;z-index:2;
@@ -14633,7 +14635,10 @@ const WriteFailure = {
                        .replace(/^\w/, ch => ch.toUpperCase()) + '.' };
     if (/failed to fetch|networkerror|load failed/i.test(msg))
       return { kind:'network', say:'Could not reach the club records. Check your connection.' };
-    return { kind:'unknown', say:'Could not save that. Check the details and try again.' };
+    /* a value the database cannot hold is about the details; anything
+       else unrecognised is the records not answering, not the input */
+    if (/^22/.test(code)) return { kind:'data', say:'The database refused those details. Check them and try again.' };
+    return { kind:'unknown', say:'Not saved. The club records did not answer. Try again.' };
   },
 
   explain(ex, what){
@@ -14645,6 +14650,8 @@ const WriteFailure = {
         details:(ex && ex.details) || null,
         hint:(ex && ex.hint) || null,
         constraint:c });
+    /* a delete has no details to check and saves nothing */
+    if (v.kind === 'unknown' && /^delete/.test(what)) return 'Not deleted. The club records did not answer. Try again.';
     return v.say;
   },
 };
@@ -16393,7 +16400,9 @@ function nextMeetingNumber(list){
     const n = Number(m && m.meeting_number);
     if (Number.isInteger(n) && n > top) top = n;
   });
-  return top + 1;
+  /* past the form's own limit, it proposes nothing rather than a number
+     it would refuse */
+  return top + 1 <= MEETING_NO_MAX ? top + 1 : '';
 }
 
 const MEETING_DEFAULTS = { start:'12:40', end:'13:30' };
@@ -16698,7 +16707,7 @@ const BoardUI = {
     return `<form class="bform" id="meetingForm" novalidate aria-label="Schedule a meeting">
       <div class="bform__grid">
         <label class="field"><span class="kicker">Meeting number</span>
-          <input class="input" id="mNo" type="number" min="1" step="1" inputmode="numeric"
+          <input class="input" id="mNo" type="number" min="1" max="${MEETING_NO_MAX}" step="1" inputmode="numeric"
                  value="${esc(f.no)}" placeholder="${esc(d.no)}"></label>
         <label class="field"><span class="kicker">Date</span>
           <input class="input" id="mDate" type="date" value="${esc(f.date)}"

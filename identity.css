@@ -558,10 +558,10 @@ html{font-synthesis:none}
 
 .bform__head{display:flex;align-items:center;
   justify-content:space-between;gap:12px}
-/* on a short landscape phone the wordmark is sized by the height too, so
-   the card below never covers it */
+/* on a short landscape phone the wordmark is sized by the band it sits
+   in too, so the card below never covers it */
 .spread__wm{font-family:var(--f-display);text-transform:uppercase;
-  font-size:clamp(46px,min(15vw,18svh),124px);line-height:.9;letter-spacing:.01em;
+  font-size:clamp(46px,min(15vw,calc(var(--band) * .3)),124px);line-height:.9;letter-spacing:.01em;
   margin:0;padding-bottom:.06em}
 
 .authp{grid-row:2;position:relative;z-index:2;

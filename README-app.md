@@ -66,8 +66,9 @@ python3 build.py
 Split across a dozen subresources, one failed fetch took the whole app down —
 and subdirectory reads are unreliable from an archive mount (a `.zip` browsed in
 place). `build.py` inlines the stylesheets, every script and the three libraries,
-so the built `index.html` issues **zero same-origin requests**. Nothing left to
-404 — from a server, a folder, or a zip mount.
+so the built `index.html` makes **no same-origin request the page depends on**:
+only the web manifest and the touch icon, both harmless if missing. Nothing left
+to 404 that matters, from a server, a folder, or a zip mount.
 
 ---
 

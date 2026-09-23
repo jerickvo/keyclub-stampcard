@@ -76,7 +76,10 @@ const WriteFailure = {
                        .replace(/^\w/, ch => ch.toUpperCase()) + '.' };
     if (/failed to fetch|networkerror|load failed/i.test(msg))
       return { kind:'network', say:'Could not reach the club records. Check your connection.' };
-    return { kind:'unknown', say:'Could not save that. Check the details and try again.' };
+    /* a value the database cannot hold is about the details; anything
+       else unrecognised is the records not answering, not the input */
+    if (/^22/.test(code)) return { kind:'data', say:'The database refused those details. Check them and try again.' };
+    return { kind:'unknown', say:'Not saved. The club records did not answer. Try again.' };
   },
 
   explain(ex, what){
@@ -88,6 +91,8 @@ const WriteFailure = {
         details:(ex && ex.details) || null,
         hint:(ex && ex.hint) || null,
         constraint:c });
+    /* a delete has no details to check and saves nothing */
+    if (v.kind === 'unknown' && /^delete/.test(what)) return 'Not deleted. The club records did not answer. Try again.';
     return v.say;
   },
 };

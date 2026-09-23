@@ -167,7 +167,8 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   border:0;border-bottom:var(--edge-thin) solid var(--ink);border-radius:0;
   font:500 clamp(13px,.4vw + 11.7px,14.5px)/1.2 var(--f-mono);
   letter-spacing:.08em;transition:none}
-.input::placeholder{color:var(--tone);letter-spacing:.06em}
+/* a placeholder is the visible label of the search fields: it keeps text contrast */
+.input::placeholder{color:var(--ink-2);letter-spacing:.06em}
 
 .input:focus{outline:0;border-bottom-color:var(--ink);
   border-bottom-width:var(--edge-heavy)}
