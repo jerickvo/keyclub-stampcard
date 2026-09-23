@@ -92,53 +92,84 @@ test('a rung\'s ticks count only the stamps since the rung below, so it reads re
 });
 
 // ── the member's day, and the join date ────────────────────────────────
+// times are minutes past midnight on the club's clock
+const T = (h, m = 0) => h * 60 + m;
 const day = (over = {}) => ({ id:'m', no:19, date:'2026-09-23', time:'12:40 PM', endTime:'1:30 PM',
-  place:'MPR', open:false, today:true, ended:false, upcoming:true, ...over });
-const withDay = (meetings, stamps = [], joined = null) => {
+  place:'MPR', open:false, today:true, upcoming:true, ...over });
+const withDay = (meetings, stamps = [], user = {}, now = T(12)) => {
   Schedule.today = () => '2026-09-23';
-  Store.user = { id:'u', joined };
+  Store.user = { id:'u', joined:null, joinedAt:null, ...user };
   Store.meetings = meetings.map(m => ({ ...m }));
   Store.scans = stamps.map(id => ({ meetingId:id, at:'2026-09-23T19:45:00Z', method:'qr' }));
-  Store.settle();
+  Store.settle(now);
   return Store;
 };
 
-test('today\'s meeting is ahead until it opens, the member is stamped, or it ends', () => {
-  assert.equal(withDay([day()]).meetings[0].upcoming, true);
-  assert.equal(withDay([day({ open:true })]).meetings[0].upcoming, false);
-  assert.equal(withDay([day()], ['m']).meetings[0].upcoming, false);
-  assert.equal(withDay([day({ ended:true })]).meetings[0].upcoming, false);
+test('today\'s meeting: ahead before its start, in progress until its end, then over', () => {
+  let s = withDay([day()], [], {}, T(12));
+  assert.equal(s.meetings[0].upcoming, true);
+  s = withDay([day()], [], {}, T(12, 50));                       // started, not open: closed early or late to open
+  assert.equal(s.meetings[0].upcoming, false);
+  assert.equal(s.state(s.meetings[0]), 'miss');                 // Record says "Not checked in" for today
+  assert.equal(s.todayMeeting().id, 'm');
+  s = withDay([day()], [], {}, T(13, 30));
+  assert.equal(s.meetings[0].ended, true);
+  assert.equal(withDay([day({ open:true })], [], {}, T(12)).meetings[0].upcoming, false);
+  // open beats over: a board running past its end time
+  s = withDay([day({ open:true })], [], {}, T(14));
+  assert.equal(s.todayMeeting().open, true);
   // closed again after the member was stamped: held, and on the record today
-  const s = withDay([day({ open:false })], ['m']);
+  s = withDay([day()], ['m'], {}, T(12, 50));
   assert.equal(s.state(s.meetings[0]), 'set');
   assert.equal(s.heldMeetings().length, 1);
+  // a meeting with no end time is not over until the day is
+  assert.equal(withDay([day({ endTime:null })], [], {}, T(23, 50)).meetings[0].ended, false);
   // a future meeting is ahead, a past one is held
   assert.equal(withDay([day({ id:'f', date:'2026-09-30', today:false })]).meetings[0].upcoming, true);
-  assert.equal(withDay([day({ id:'p', date:'2026-09-16', today:false, ended:true })]).meetings[0].upcoming, false);
+  assert.equal(withDay([day({ id:'p', date:'2026-09-16', today:false })]).meetings[0].upcoming, false);
 });
 
-test('the day\'s meeting: open, else next today by time, else stamped, else over', () => {
-  const a = day({ id:'a', no:19, time:'12:40 PM' }), b = day({ id:'b', no:20, time:'3:15 PM' });
-  assert.equal(withDay([b, a]).todayMeeting().id, 'a');
-  assert.equal(withDay([a, { ...b, open:true }]).todayMeeting().id, 'b');
-  assert.equal(withDay([a, b], ['a']).todayMeeting().id, 'b');
-  assert.equal(withDay([a, { ...b, ended:true }], ['a']).todayMeeting().id, 'a');
-  assert.equal(withDay([{ ...a, ended:true }]).todayMeeting().id, 'a');
+test('the day\'s meeting: open, in progress, next by time, stamped, over', () => {
+  const a = day({ id:'a', no:19, time:'12:40 PM', endTime:'1:30 PM' }), b = day({ id:'b', no:20, time:'3:15 PM', endTime:'4:00 PM' });
+  assert.equal(withDay([b, a], [], {}, T(12)).todayMeeting().id, 'a');
+  assert.equal(withDay([a, { ...b, open:true }], [], {}, T(12)).todayMeeting().id, 'b');
+  assert.equal(withDay([a, b], ['a'], {}, T(12)).todayMeeting().id, 'b');
+  assert.equal(withDay([a, b], ['a'], {}, T(16, 30)).todayMeeting().id, 'a');   // both over: the stamped one
+  assert.equal(withDay([a], [], {}, T(14)).todayMeeting().id, 'a');             // over, no stamp
+  assert.equal(withDay([b, a], [], {}, T(13)).todayMeeting().id, 'a');          // in progress beats next
+  // same start time: the lower number, as the board's stage picks it
+  const c = day({ id:'c', no:41 }), d = day({ id:'d', no:40 });
+  assert.equal(withDay([c, d], [], {}, T(12)).todayMeeting().id, 'd');
   assert.equal(withDay([day({ id:'f', date:'2026-09-30', today:false })]).todayMeeting(), null);
 });
 
+test('the day stays watched until an hour after its last meeting with no stamp', () => {
+  assert.equal(withDay([day()], [], {}, T(12)).dayLive(T(12)), true);
+  assert.equal(withDay([day()], [], {}, T(14)).dayLive(T(14)), true);        // 30 min after the end
+  assert.equal(withDay([day()], [], {}, T(14, 31)).dayLive(T(14, 31)), false);
+  assert.equal(withDay([day()], ['m'], {}, T(12, 50)).dayLive(T(12, 50)), false);
+  const a = day({ id:'a' }), b = day({ id:'b', no:20, time:'3:15 PM', endTime:'4:00 PM' });
+  assert.equal(withDay([a, b], ['a'], {}, T(13)).dayLive(T(13)), true);       // stamped at one, another to come
+  assert.equal(withDay([day({ id:'f', date:'2026-09-30', today:false })]).dayLive(), false);
+});
+
 test('a meeting before the account existed is not one they missed', () => {
-  const past = (id, date) => day({ id, date, today:false, ended:true });
+  const past = (id, date) => day({ id, date, today:false });
   const ms = [past('m1', '2026-09-02'), past('m2', '2026-09-09'), past('m3', '2026-09-16')];
-  let s = withDay(ms, [], '2026-09-09');
-  assert.deepEqual(s.heldMeetings().map(m => m.id), ['m2', 'm3']);   // the join day itself counts
+  let s = withDay(ms, [], { joined:'2026-09-09', joinedAt:T(9) });
+  assert.deepEqual(s.heldMeetings().map(m => m.id), ['m2', 'm3']);     // joined that morning: it counts
   assert.equal(s.attendanceRate(), 0);
-  s = withDay(ms, ['m1', 'm3'], '2026-09-10');                        // stamped always counts
+  s = withDay(ms, [], { joined:'2026-09-09', joinedAt:T(15) });         // joined after it ended that day
+  assert.deepEqual(s.heldMeetings().map(m => m.id), ['m3']);
+  s = withDay(ms, ['m1', 'm3'], { joined:'2026-09-10', joinedAt:T(9) }); // stamped always counts
   assert.deepEqual(s.heldMeetings().map(m => m.id), ['m1', 'm3']);
   assert.equal(s.attendanceRate(), 100);
-  s = withDay(ms, ['m3'], null);                                      // no join date: everything counts
+  s = withDay(ms, ['m3'], {});                                          // no join date: everything counts
   assert.equal(s.heldMeetings().length, 3);
   assert.equal(s.attendanceRate(), 33);
+  // joined today after today's meeting: Home does not say "Not checked in"
+  s = withDay([day()], [], { joined:'2026-09-23', joinedAt:T(15) }, T(15, 5));
+  assert.equal(s.todayMeeting(), null);
 });
 
 test('refusals from the database are named, not printed raw', () => {

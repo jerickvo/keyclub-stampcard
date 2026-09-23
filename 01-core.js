@@ -182,7 +182,7 @@ const Store = {
   stamp(){
     return JSON.stringify([
       this.user ? this.user.id : null, this.loadError,
-      this.meetings.map(m => [m.id, m.no, m.date, m.time, m.open, m.upcoming, m.ended, m.before]),
+      this.meetings.map(m => [m.id, m.no, m.date, m.time, m.open, m.upcoming, m.ended, m.started, m.before]),
       this.scans.map(s => [s.meetingId, s.at, s.method]),
       this.rewards.map(r => [r.id, r.claimed, r.handedAt]), this.handovers,
     ]);
@@ -226,33 +226,65 @@ const Store = {
     await this.hydrate();
   },
 
-  /* Today's meeting is still ahead of the member until it opens, they
-     are stamped, or its end time passes. Before this, a meeting whose
+  /* Where each meeting stands for this member, on the club's clock
+     (`now`, minutes past midnight there). Today's meeting is ahead until
+     its start time; after that, until its end, it is in progress; then
+     over. Open beats all of these (a board may run over), and a stamp
+     makes it held whatever the time. Before this, a meeting whose
      check-in had closed went back to being "next" for the rest of the
      day, and the stamp just earned at it was missing from Record. */
-  settle(){
-    const joined = this.user && this.user.joined;
+  settle(now = clubMinutes()){
+    const today = Schedule.today();
+    const u = this.user || {};
     this.meetings.forEach(m => {
+      const start = clockMinutes(m.time), end = clockMinutes(m.endTime);
+      const mine = this.attended(m.id);
+      m.ended = String(m.date) < today || (m.today && now >= end);
+      m.started = m.today && now >= start;
       m.upcoming = !m.open && (m.today
-        ? !m.ended && !this.attended(m.id)
-        : String(m.date) > Schedule.today());
-      /* held before the account existed: not a meeting they missed */
-      m.before = Boolean(joined) && String(m.date) < joined && !this.attended(m.id);
+        ? !m.ended && !m.started && !mine
+        : String(m.date) > today);
+      /* held before the account existed: not a meeting they missed. On
+         the day they joined, a meeting already over when the account was
+         made is one of those too */
+      const last = Number.isNaN(end) ? start : end;
+      m.before = Boolean(u.joined) && !mine && (String(m.date) < u.joined ||
+        (String(m.date) === u.joined && Number.isFinite(u.joinedAt) && u.joinedAt >= last));
     });
   },
 
-  /* The meeting a member's day is about: the one open now, else the
-     next one today not yet over, else one today they were stamped at.
-     The board may hold two in a day. */
+  /* the clock moved (a start or end time passed): re-sort, and repaint
+     only if that changed what a page shows */
+  resettle(){
+    const was = this.stamp();
+    this.settle();
+    if (this.stamp() !== was) this.emit();
+  },
+
+  /* The meeting a member's day is about: the one open now, else one in
+     progress they have no stamp for, else the next one today, else one
+     today they were stamped at, else one today that is over. The board
+     may hold two in a day. */
   todayMeeting(){
-    const t = this.meetings.filter(m => m.today);
+    const t = this.meetings.filter(m => m.today && !m.before);
     const at = m => { const v = clockMinutes(m.time); return Number.isNaN(v) ? 0 : v; };
     /* same start time: the lower number, as the board's stage picks it */
+    const first = (a, b) => at(a) - at(b) || a.no - b.no;
     return t.find(m => m.open)
-        || t.filter(m => m.upcoming).sort((a, b) => at(a) - at(b) || a.no - b.no)[0]
+        || t.filter(m => m.started && !m.ended && !this.attended(m.id)).sort(first)[0]
+        || t.filter(m => m.upcoming).sort(first)[0]
         || t.filter(m => this.attended(m.id)).sort((a, b) => at(b) - at(a))[0]
-        || t.filter(m => m.ended && !m.before).sort((a, b) => at(b) - at(a))[0]
+        || t.filter(m => m.ended).sort((a, b) => at(b) - at(a))[0]
         || null;
+  },
+
+  /* Whether today still has something to learn about: a meeting today
+     this member has no stamp for, open, still to come or in progress,
+     or over by less than an hour (an officer may add a stamp by hand
+     after the end; a board may run over). */
+  dayLive(now = clubMinutes()){
+    return this.meetings.some(m => m.today && !m.before && !this.attended(m.id) &&
+      (m.open || !m.ended || now < clockMinutes(m.endTime) + 60));
   },
 
   meeting(id){ return this.meetings.find(m => m.id === id) || null; },

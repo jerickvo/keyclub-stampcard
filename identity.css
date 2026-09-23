@@ -1085,6 +1085,11 @@ html{font-synthesis:none}
 /* today's meeting, not open: a column, the count it already has first */
 .proj:not(.proj--live){display:flex;flex-direction:column;align-items:flex-start}
 .proj:not(.proj--live) .proj__side{justify-content:flex-start}
+/* a live stage wide enough to be the one on the projector does not
+   offer the name search: following it would take the code off the
+   wall. Meetings > today's meeting carries it there; a phone at the
+   door keeps the link */
+@media(min-width:900px){ .proj--live .proj__hand{display:none} }
 .proj:not(.proj--live) .proj__hand{color:var(--ink-2)}
 .proj:not(.proj--live) .proj__hand:focus-visible{outline-color:var(--ink)}
 .proj__count--held b{font-size:clamp(40px,5vw,64px)}

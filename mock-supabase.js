@@ -397,14 +397,19 @@ function mkClient(){
             const near = {};
             for (const t of TIERS) near[t.id] = [...per.entries()].filter(([uid, n]) =>
               n === t.required - 1 && !C.some(c => c.user_id === uid && c.reward_id === t.id)).length;
-            return { data:{ ok:true, owed, near }, error:null };
+            const recent = H.filter(h => h.handed_by === me.id && Date.now() - Date.parse(h.handed_at) < 15 * 60 * 1000)
+              .map(h => { const p = P.find(x => x.id === h.user_id) || {}; const t = TIERS.find(x => x.id === h.reward_id);
+                return { user_id:h.user_id, reward_id:h.reward_id, handed_at:h.handed_at,
+                         username:p.display_name || p.username, name:t.name, required:t.required }; });
+            return { data:{ ok:true, owed, near, recent }, error:null };
           }
           if (body.action === 'find' && !window.__oldBoardData){
             const q = String(body.q || '').trim().toLowerCase();
             if (!q) return { data:{ ok:true, people:[] }, error:null };
+            const exact = p => p.username.toLowerCase() === q || String(p.display_name || '').toLowerCase() === q;
             const people = P.filter(p => p.username.toLowerCase().includes(q) ||
                                          String(p.display_name || '').toLowerCase().includes(q))
-              .sort((a, b) => a.username.localeCompare(b.username)).slice(0, 8)
+              .sort((a, b) => Number(exact(b)) - Number(exact(a)) || a.username.localeCompare(b.username)).slice(0, 8)
               .map(p => ({ id:p.id, name:p.display_name || p.username, username:p.username,
                            board:p.role === 'board',
                            checked_in:A.some(a => a.user_id === p.id && a.meeting_id === body.meeting_id) }));

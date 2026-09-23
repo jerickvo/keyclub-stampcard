@@ -1836,6 +1836,11 @@ html{font-synthesis:none}
 /* today's meeting, not open: a column, the count it already has first */
 .proj:not(.proj--live){display:flex;flex-direction:column;align-items:flex-start}
 .proj:not(.proj--live) .proj__side{justify-content:flex-start}
+/* a live stage wide enough to be the one on the projector does not
+   offer the name search: following it would take the code off the
+   wall. Meetings > today's meeting carries it there; a phone at the
+   door keeps the link */
+@media(min-width:900px){ .proj--live .proj__hand{display:none} }
 .proj:not(.proj--live) .proj__hand{color:var(--ink-2)}
 .proj:not(.proj--live) .proj__hand:focus-visible{outline-color:var(--ink)}
 .proj__count--held b{font-size:clamp(40px,5vw,64px)}
@@ -14831,7 +14836,8 @@ const SupabaseAdapter = {
              isBoard:data.role === 'board',
              /* the club day the account was made; a meeting before it
                 is not one the member could have checked in to */
-             joined: made && !Number.isNaN(made.getTime()) ? clubDay(made) : null };
+             joined: made && !Number.isNaN(made.getTime()) ? clubDay(made) : null,
+             joinedAt: made && !Number.isNaN(made.getTime()) ? clubMinutes(made) : null };
   },
 
   authUnreachable(error){
@@ -14922,12 +14928,8 @@ const SupabaseAdapter = {
          codes have expired), so for a member it is a held meeting */
       open: Boolean(row.check_in_open) && row.meeting_date === today,
       today: row.meeting_date === today,
-      /* today's meeting is over once its end time has passed on the
-         club's clock; one without an end time is not over until the
-         day is */
-      ended: row.meeting_date < today ||
-        (row.meeting_date === today && clubMinutes() >= clockMinutes(row.end_time)),
-      /* ahead of the member, until Store.settle() has the stamps */
+      /* ahead of the member, until Store.settle() has the stamps and
+         the club's clock (started, ended) */
       upcoming: row.meeting_date >= today && !row.check_in_open,
     };
   },
@@ -15093,13 +15095,12 @@ const SupabaseAdapter = {
     return row ? row.id : null;
   },
 
-  /* whether this member has a stamp for this meeting: one row at most */
-  async attendedMeeting(userId, meetingId){
+  /* how many stamps this member has: a count, no rows */
+  async myStampCount(userId){
     const { count, error } = await this.client
-      .from('attendance').select('id', { count:'exact', head:true })
-      .eq('user_id', userId).eq('meeting_id', meetingId);
+      .from('attendance').select('id', { count:'exact', head:true }).eq('user_id', userId);
     if (error) throw error;
-    return (count || 0) > 0;
+    return count || 0;
   },
 
   /* whether check-in is still open, so a wall left projecting learns
@@ -15135,7 +15136,7 @@ const PreviewAdapter = {
   async issueToken(){ throw new Error('No backend is configured.'); },
   async attendanceCount(){ return 0; },
   async meetingOpen(){ return false; },
-  async attendedMeeting(){ return false; },
+  async myStampCount(){ return 0; },
   async openToday(){ return null; },
   async board(){ throw new Error('No backend is configured.'); },
   async deleteMeetingAndStamps(){ throw new Error('No backend is configured.'); },
@@ -15149,7 +15150,7 @@ const UnavailableAdapter = {
 };
 ['signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','startAttendance',
- 'endAttendance','issueToken','attendanceCount','meetingOpen','attendedMeeting','openToday','board',
+ 'endAttendance','issueToken','attendanceCount','meetingOpen','myStampCount','openToday','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   UnavailableAdapter[fn] = async () => { throw new Error('BACKEND_UNAVAILABLE'); };
 });
@@ -15199,7 +15200,7 @@ const Backend = {
 
 ['currentSession','signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','verifyCode',
- 'startAttendance','endAttendance','issueToken','attendanceCount','meetingOpen','attendedMeeting','openToday','board',
+ 'startAttendance','endAttendance','issueToken','attendanceCount','meetingOpen','myStampCount','openToday','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   Backend[fn] = function(...a){ return this.adapter[fn](...a); };
 });
@@ -15391,7 +15392,7 @@ const Store = {
   stamp(){
     return JSON.stringify([
       this.user ? this.user.id : null, this.loadError,
-      this.meetings.map(m => [m.id, m.no, m.date, m.time, m.open, m.upcoming, m.ended, m.before]),
+      this.meetings.map(m => [m.id, m.no, m.date, m.time, m.open, m.upcoming, m.ended, m.started, m.before]),
       this.scans.map(s => [s.meetingId, s.at, s.method]),
       this.rewards.map(r => [r.id, r.claimed, r.handedAt]), this.handovers,
     ]);
@@ -15435,33 +15436,65 @@ const Store = {
     await this.hydrate();
   },
 
-  /* Today's meeting is still ahead of the member until it opens, they
-     are stamped, or its end time passes. Before this, a meeting whose
+  /* Where each meeting stands for this member, on the club's clock
+     (`now`, minutes past midnight there). Today's meeting is ahead until
+     its start time; after that, until its end, it is in progress; then
+     over. Open beats all of these (a board may run over), and a stamp
+     makes it held whatever the time. Before this, a meeting whose
      check-in had closed went back to being "next" for the rest of the
      day, and the stamp just earned at it was missing from Record. */
-  settle(){
-    const joined = this.user && this.user.joined;
+  settle(now = clubMinutes()){
+    const today = Schedule.today();
+    const u = this.user || {};
     this.meetings.forEach(m => {
+      const start = clockMinutes(m.time), end = clockMinutes(m.endTime);
+      const mine = this.attended(m.id);
+      m.ended = String(m.date) < today || (m.today && now >= end);
+      m.started = m.today && now >= start;
       m.upcoming = !m.open && (m.today
-        ? !m.ended && !this.attended(m.id)
-        : String(m.date) > Schedule.today());
-      /* held before the account existed: not a meeting they missed */
-      m.before = Boolean(joined) && String(m.date) < joined && !this.attended(m.id);
+        ? !m.ended && !m.started && !mine
+        : String(m.date) > today);
+      /* held before the account existed: not a meeting they missed. On
+         the day they joined, a meeting already over when the account was
+         made is one of those too */
+      const last = Number.isNaN(end) ? start : end;
+      m.before = Boolean(u.joined) && !mine && (String(m.date) < u.joined ||
+        (String(m.date) === u.joined && Number.isFinite(u.joinedAt) && u.joinedAt >= last));
     });
   },
 
-  /* The meeting a member's day is about: the one open now, else the
-     next one today not yet over, else one today they were stamped at.
-     The board may hold two in a day. */
+  /* the clock moved (a start or end time passed): re-sort, and repaint
+     only if that changed what a page shows */
+  resettle(){
+    const was = this.stamp();
+    this.settle();
+    if (this.stamp() !== was) this.emit();
+  },
+
+  /* The meeting a member's day is about: the one open now, else one in
+     progress they have no stamp for, else the next one today, else one
+     today they were stamped at, else one today that is over. The board
+     may hold two in a day. */
   todayMeeting(){
-    const t = this.meetings.filter(m => m.today);
+    const t = this.meetings.filter(m => m.today && !m.before);
     const at = m => { const v = clockMinutes(m.time); return Number.isNaN(v) ? 0 : v; };
     /* same start time: the lower number, as the board's stage picks it */
+    const first = (a, b) => at(a) - at(b) || a.no - b.no;
     return t.find(m => m.open)
-        || t.filter(m => m.upcoming).sort((a, b) => at(a) - at(b) || a.no - b.no)[0]
+        || t.filter(m => m.started && !m.ended && !this.attended(m.id)).sort(first)[0]
+        || t.filter(m => m.upcoming).sort(first)[0]
         || t.filter(m => this.attended(m.id)).sort((a, b) => at(b) - at(a))[0]
-        || t.filter(m => m.ended && !m.before).sort((a, b) => at(b) - at(a))[0]
+        || t.filter(m => m.ended).sort((a, b) => at(b) - at(a))[0]
         || null;
+  },
+
+  /* Whether today still has something to learn about: a meeting today
+     this member has no stamp for, open, still to come or in progress,
+     or over by less than an hour (an officer may add a stamp by hand
+     after the end; a board may run over). */
+  dayLive(now = clubMinutes()){
+    return this.meetings.some(m => m.today && !m.before && !this.attended(m.id) &&
+      (m.open || !m.ended || now < clockMinutes(m.endTime) + 60));
   },
 
   meeting(id){ return this.meetings.find(m => m.id === id) || null; },
@@ -15904,6 +15937,10 @@ const Views = {
        since an officer can still add a stamp by hand */
     else if (day && day.ended && !day.open)
       action = C.line('Not checked in', `GM ${pad(day.no)}`);
+    /* under way and not open: before opening or after an early close,
+       which a member cannot tell apart, so only what is true now */
+    else if (day && day.started && !day.open)
+      action = C.line('Today', `GM ${pad(day.no)} / check-in not open`);
     /* the day's own meeting gives its time even when it is the usual
        one: today, that is the thing to know */
     else if (day)
@@ -16346,10 +16383,17 @@ const BoardUI = {
         ${this.empty('The prize list could not be read. Try again in a moment.')}
       </section>`;
 
+    /* hand-overs this officer made in the last fifteen minutes: from this
+       page's memory, and from the server, so a refresh keeps the Undo */
     const now = Date.now();
-    const just = Object.entries(this.handed)
+    const mem = Object.entries(this.handed)
       .filter(([, h]) => now - h.when < HANDOVER_UNDO_MS)
       .map(([key, h]) => ({ key, ...h }));
+    const fromServer = (pz.recent || [])
+      .map(r => ({ key:r.user_id + ':' + r.reward_id, at:r.handed_at, when:Date.parse(r.handed_at),
+                   username:r.username, prize:prizeName(r) }))
+      .filter(r => !this.handed[r.key] && now - r.when < HANDOVER_UNDO_MS);
+    const just = [...mem, ...fromServer];
     const owed = (pz.owed || []).filter(o => !this.handed[o.user_id + ':' + o.reward_id]);
 
     /* how many of each prize to bring: owed now, and how many more the
@@ -16368,13 +16412,15 @@ const BoardUI = {
         ${o.user_id === (Store.user && Store.user.id)
           ? '<span class="muted owed__self">Another officer hands this over</span>'
           : `<button class="btn owed__go" type="button" data-bhand="${esc(key)}"
-          data-who="${esc(o.username)}" data-prize="${esc(prizeName(o))}">Hand over</button>`}
+          data-who="${esc(o.username)}" data-prize="${esc(prizeName(o))}"
+          aria-label="${esc(`Hand ${prizeName(o)} to ${o.username}`)}">Hand over</button>`}
       </li>`;
     };
     const done = h => `<li class="brow brow--owed brow--handed">
         <span class="brow__mid"><b>${esc(h.username)}</b>
           <span class="muted">${esc(h.prize)} / handed over ${esc(fmtTime(h.at))}</span></span>
-        <button class="link owed__undo" type="button" data-bundo="${esc(h.key)}" data-busy="Undoing">Undo</button>
+        <button class="link owed__undo" type="button" data-bundo="${esc(h.key)}" data-busy="Undoing"
+          aria-label="${esc(`Undo: ${h.prize} to ${h.username}`)}">Undo</button>
       </li>`;
 
     /* a long list folds after a few rows, so the roster below it is not
@@ -16382,7 +16428,7 @@ const BoardUI = {
     const FOLD = 6;
     const shown = this.owedAll ? owed : owed.slice(0, FOLD);
     return `<section class="owed" aria-label="Prizes to hand over">
-      <div class="meetband"><h2 class="meetband__t">To hand over</h2>${tally ? `<span class="meetband__n">${tally}</span>` : ''}</div>
+      <div class="meetband"><h2 class="meetband__t" tabindex="-1">To hand over</h2>${tally ? `<span class="meetband__n">${tally}</span>` : ''}</div>
       ${owed.length || just.length
         ? `<ul class="blist" id="owedList">${just.map(done).join('')}${shown.map(row).join('')}</ul>
            ${owed.length > FOLD ? `<button class="link owed__more" type="button" data-bowed aria-controls="owedList"
@@ -16567,7 +16613,8 @@ const BoardUI = {
         : handed ? ''
         : m.id === (Store.user && Store.user.id) ? '<span class="muted owed__self">Another officer hands this over</span>'
         : `<button class="btn owed__go" type="button" data-bhand="${esc(key)}"
-            data-who="${esc(m.username)}" data-prize="${esc(prizeName(r))}">Hand over</button>`}
+            data-who="${esc(m.username)}" data-prize="${esc(prizeName(r))}"
+            aria-label="${esc(`Hand ${prizeName(r)} to ${m.username}`)}">Hand over</button>`}
     </li>`;
   },
 
@@ -16632,7 +16679,8 @@ const BoardUI = {
             ? '<span class="bstate bstate--ended">Checked in</span>'
             : p.self ? '<span class="muted">Another officer adds you</span>'
             : `<button class="btn owed__go" type="button" data-bstamp="${esc(p.id)}" data-who="${esc(p.name)}"
-                 data-meeting="${esc(m.id)}" data-no="${pad(m.meeting_number)}">Add</button>`}
+                 data-meeting="${esc(m.id)}" data-no="${pad(m.meeting_number)}"
+                 aria-label="${esc(`Add ${p.name} to GM ${pad(m.meeting_number)}`)}">Add</button>`}
         </li>`).join('')}</ul>`;
   },
 
@@ -17946,27 +17994,26 @@ function afterRender(id, nav = false, covered = false){
 
 /* On a meeting day, a member's Home and Scan learn without a reload
    that check-in has opened or closed, or that a board member has
-   stamped them by hand. Two one-row reads every fifteen seconds, and
-   only while today's meeting is still to be stamped, one of those two
-   pages is showing, and the tab is in view; anything that changed
-   re-reads the record, and the page repaints through Store.onChange. */
+   stamped them by hand. Two tiny reads every fifteen seconds (which
+   meeting is open today; how many stamps this member has), and only
+   while today still has a meeting they have no stamp for (up to an hour
+   after it ends), one of those two pages is showing, and the tab is in
+   view. Anything that changed re-reads the record, and the page
+   repaints through Store.onChange; a start or end time passing only
+   re-sorts what is already known. */
 const TodayWatch = {
   timer: null,
-  id: null,
   EVERY: 15000,
 
   sync(){
-    const day = Store.ready && Store.signedIn && !Store.isBoard && !Store.failed ? Store.todayMeeting() : null;
-    const want = day && !Store.attended(day.id) && (day.open || day.upcoming)
-      && (current === 'home' || current === 'scan');
+    const want = Store.ready && Store.signedIn && !Store.isBoard && !Store.failed
+      && (current === 'home' || current === 'scan') && Store.dayLive();
     if (!want){ this.stop(); return; }
-    if (this.timer && this.id === day.id) return;
-    this.stop();
-    this.id = day.id;
+    if (this.timer) return;
     /* a room of phones does not ask in step */
     this.timer = setInterval(() => this.tick(), this.EVERY + Math.round(Math.random() * 3000));
   },
-  stop(){ clearInterval(this.timer); this.timer = null; this.id = null; },
+  stop(){ clearInterval(this.timer); this.timer = null; },
 
   /* nothing is asked while a code is being checked or a stamp is
      landing: that read is the one that matters */
@@ -17974,20 +18021,15 @@ const TodayWatch = {
 
   async tick(){
     if (this.busy()) return;
-    const day = Store.meeting(this.id);
-    if (!day) return this.sync();
-    /* the end time passing needs no read, only a re-sort */
-    if (!day.ended && clubMinutes() >= clockMinutes(day.endTime)){ Store.hydrate({ keep:true }); return; }
-    /* which meeting is open today, not only whether this one is: with
-       two meetings in a day the board may open the other */
-    const was = Store.openMeeting();
-    let open, mine;
+    Store.resettle();
+    if (!Store.dayLive()) return this.sync();
+    const was = Store.openMeeting(), had = Store.scans.length;
+    let open, count;
     try {
-      [open, mine] = await Promise.all([Backend.openToday(),
-                                        Backend.attendedMeeting(Store.user.id, day.id)]);
+      [open, count] = await Promise.all([Backend.openToday(), Backend.myStampCount(Store.user.id)]);
     } catch (_) { return; }
     if (this.busy()) return;
-    if (open !== (was ? was.id : null) || mine !== Store.attended(day.id)) Store.hydrate({ keep:true });
+    if (open !== (was ? was.id : null) || count !== had) Store.hydrate({ keep:true });
   },
 };
 
@@ -18186,7 +18228,7 @@ document.addEventListener('click', e => {
         if (stamp.disabled) return;
         delete stamp.dataset.armed;
         stamp.textContent = 'Add';
-        stamp.removeAttribute('aria-label');
+        stamp.setAttribute('aria-label', `Add ${who} to GM ${no}`);
         stamp.closest('.brow')?.classList.remove('brow--armed');
       }, { once:true });
       return;
@@ -18375,7 +18417,7 @@ document.addEventListener('click', e => {
         if (hand.disabled) return;
         delete hand.dataset.armed;
         hand.textContent = 'Hand over';
-        hand.removeAttribute('aria-label');
+        hand.setAttribute('aria-label', `Hand ${prize} to ${who}`);
         hand.closest('.brow')?.classList.remove('brow--armed');
       }, { once:true });
       return;
@@ -18408,8 +18450,9 @@ document.addEventListener('click', e => {
          row stays as it was, ready to try again, rather than re-reading
          a list over a dead connection */
       if (Handover.OFFLINE.includes(code)){ BoardUI.lost.add(key); return unarm(hand, 'Hand over'); }
-      /* otherwise the list on screen is out of date: re-read it */
-      reloadBoardHere();
+      /* otherwise the list on screen is out of date: re-read it, and the
+         reader's place is the next thing to hand over */
+      reloadBoardHere(AFTER_REFUSAL);
     });
     return;
   }
@@ -18428,13 +18471,15 @@ document.addEventListener('click', e => {
     Backend.undoHandOver(uid, rid).then(() => {
       delete BoardUI.handed[undo.dataset.bundo];
       toast({ key:'board', title:'Hand-over taken back' });
+      /* the row comes back where it sorts, which may be past the fold */
+      BoardUI.owedAll = true;
       reloadBoardHere(`[data-bhand="${undo.dataset.bundo}"]`);
     }).catch(err => {
       const code = String((err && err.message) || '');
       if (code === 'UNDO_EXPIRED') delete BoardUI.handed[undo.dataset.bundo];
       toast({ key:'board', bad:true, title:'Not taken back', detail:Handover.message(code) });
       if (Handover.OFFLINE.includes(code)) return release(undo, 'Undo');
-      reloadBoardHere();
+      reloadBoardHere(AFTER_REFUSAL);
     });
     return;
   }
@@ -18581,11 +18626,16 @@ function paintHandList(){
   if (box && d && d.meeting) box.innerHTML = BoardUI.handList(d.meeting);
 }
 
+/* after a refusal re-reads the list: the next thing to hand over, or
+   the member page's way back */
+const AFTER_REFUSAL = '.owed [data-bhand], .brow--reward [data-bhand], [data-bback], .owed .meetband__t';
+
 /* a two-tap button back at rest after a request that never landed */
 function unarm(btn, label){
   release(btn, label);
   delete btn.dataset.armed;
-  btn.removeAttribute('aria-label');
+  btn.setAttribute('aria-label', btn.dataset.bstamp
+    ? `Add ${btn.dataset.who} to GM ${btn.dataset.no}` : `Hand ${btn.dataset.prize} to ${btn.dataset.who}`);
   btn.closest('.brow')?.classList.remove('brow--armed');
   btn.focus({ preventScroll:true });
 }

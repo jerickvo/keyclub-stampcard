@@ -78,7 +78,7 @@ member set.
 
 | Member | | Board | |
 |---|---|---|---|
-| Home | today's meeting line + the stamp card | Check-in | today's meeting: open, the projector QR and live count, close; add someone by hand |
+| Home | today's meeting line + the stamp card | Check-in | today's meeting: open, the projector QR and live count, close; add someone by hand (on a phone, or from Meetings on a laptop, so the projected stage never shows names) |
 | Record | every meeting since the account was made, stamped or missed | Meetings | schedule, open and delete meetings; attendees |
 | Scan | the camera | Members | prizes to hand over, the roster, per-member detail |
 | Rewards | 10 / 20 / 30 tiers, claimed and collected | | |
@@ -130,7 +130,10 @@ prize, the ones who have claimed first, with how many of each prize that
 is and how many more members are one stamp short, so officers bring enough
 to the table. **Hand over** takes two taps, the second naming who and what.
 The officer who recorded it can **Undo** for fifteen minutes (a wrong name
-at a busy table); after that it is part of the record. Two officers tapping
+at a busy table), from the list or the member's page, and after a refresh
+too; after that it is part of the record. Undo takes back a claim the
+hand-over wrote for a member who never pressed Claim; a claim the member
+made stays. Two officers tapping
 the same prize get one hand-over and one "Already handed over". A member who
 never pressed Claim can still be handed their prize (the claim is written
 with it); an officer cannot hand themselves one. Member detail carries the
@@ -265,24 +268,33 @@ decides this after every read, and Home's top line follows it:
 - **Check in / GM 19**: check-in is open and they have no stamp;
 - **Checked in / GM 19 / 12:43 PM**: stamped, for the rest of the day, open or
   closed; "added by an officer" in place of the time for a stamp added by hand;
-- **Today / GM 19 / 12:40 PM**: today's meeting, not open. Members cannot see
-  attendance sessions, so "not opened yet" and "closed early" look the same;
-  the line claims neither, and never says when check-in will open;
+- **Today / GM 19 / 12:40 PM**: today's meeting, before its start time;
+- **Today / GM 19 / check-in not open**: under way and not open. Members
+  cannot see attendance sessions, so "not opened yet" and "closed early" look
+  the same; the line claims neither, and never says when check-in will open.
+  Record keeps the row, as "Not checked in";
 - **Not checked in / GM 19**: over, no stamp (an officer can still add one
   today); Record says the same for today's row and "Missed" after;
 - **Next / GM 20 / Wed, Sep 30**: no meeting today.
 
-While Home or Scan shows today's meeting still to be stamped and the tab is
-in view, `TodayWatch` in `06-app.js` asks two one-row questions every 15
-seconds (with jitter): is check-in open, and do I have a stamp. Anything
-changed re-reads the record, so the Check in line appears when an officer
-opens check-in, and a stamp added by hand arrives, without a reload. A failed
-background read leaves the page as it was; it never turns a loaded page into
-"Could not load", and an older read arriving late is dropped.
+While Home or Scan is showing, the tab is in view, and today still has a
+meeting the member has no stamp for (until an hour after it ends: a board
+may run over, or add a stamp by hand afterwards), `TodayWatch` in
+`06-app.js` asks two tiny questions every 15 seconds, with jitter: which
+meeting is open today, and how many stamps do I have. Anything changed
+re-reads the record, so the Check in line appears when an officer opens
+check-in (either of two meetings that day), and a stamp added by hand
+arrives, without a reload. A start or end time passing only re-sorts what
+is already known. It asks nothing while a code is being checked or a stamp
+is landing. A failed background read leaves the page as it was; it never
+turns a loaded page into "Could not load", and a read that finishes after
+a newer one is dropped, so a stamp that just landed is never painted over.
 
-A meeting held before the member's account existed (`profiles.created_at`,
-as a club day) and not attended is not on their Record and not in their
-attendance rate: they could not have checked in to it.
+A meeting held before the member's account existed, or on the day they
+joined but over before the account was made, and not attended, is not on
+their Record and not in their attendance rate.
+
+
 
 ---
 

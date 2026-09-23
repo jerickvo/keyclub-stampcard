@@ -211,27 +211,26 @@ function afterRender(id, nav = false, covered = false){
 
 /* On a meeting day, a member's Home and Scan learn without a reload
    that check-in has opened or closed, or that a board member has
-   stamped them by hand. Two one-row reads every fifteen seconds, and
-   only while today's meeting is still to be stamped, one of those two
-   pages is showing, and the tab is in view; anything that changed
-   re-reads the record, and the page repaints through Store.onChange. */
+   stamped them by hand. Two tiny reads every fifteen seconds (which
+   meeting is open today; how many stamps this member has), and only
+   while today still has a meeting they have no stamp for (up to an hour
+   after it ends), one of those two pages is showing, and the tab is in
+   view. Anything that changed re-reads the record, and the page
+   repaints through Store.onChange; a start or end time passing only
+   re-sorts what is already known. */
 const TodayWatch = {
   timer: null,
-  id: null,
   EVERY: 15000,
 
   sync(){
-    const day = Store.ready && Store.signedIn && !Store.isBoard && !Store.failed ? Store.todayMeeting() : null;
-    const want = day && !Store.attended(day.id) && (day.open || day.upcoming)
-      && (current === 'home' || current === 'scan');
+    const want = Store.ready && Store.signedIn && !Store.isBoard && !Store.failed
+      && (current === 'home' || current === 'scan') && Store.dayLive();
     if (!want){ this.stop(); return; }
-    if (this.timer && this.id === day.id) return;
-    this.stop();
-    this.id = day.id;
+    if (this.timer) return;
     /* a room of phones does not ask in step */
     this.timer = setInterval(() => this.tick(), this.EVERY + Math.round(Math.random() * 3000));
   },
-  stop(){ clearInterval(this.timer); this.timer = null; this.id = null; },
+  stop(){ clearInterval(this.timer); this.timer = null; },
 
   /* nothing is asked while a code is being checked or a stamp is
      landing: that read is the one that matters */
@@ -239,20 +238,15 @@ const TodayWatch = {
 
   async tick(){
     if (this.busy()) return;
-    const day = Store.meeting(this.id);
-    if (!day) return this.sync();
-    /* the end time passing needs no read, only a re-sort */
-    if (!day.ended && clubMinutes() >= clockMinutes(day.endTime)){ Store.hydrate({ keep:true }); return; }
-    /* which meeting is open today, not only whether this one is: with
-       two meetings in a day the board may open the other */
-    const was = Store.openMeeting();
-    let open, mine;
+    Store.resettle();
+    if (!Store.dayLive()) return this.sync();
+    const was = Store.openMeeting(), had = Store.scans.length;
+    let open, count;
     try {
-      [open, mine] = await Promise.all([Backend.openToday(),
-                                        Backend.attendedMeeting(Store.user.id, day.id)]);
+      [open, count] = await Promise.all([Backend.openToday(), Backend.myStampCount(Store.user.id)]);
     } catch (_) { return; }
     if (this.busy()) return;
-    if (open !== (was ? was.id : null) || mine !== Store.attended(day.id)) Store.hydrate({ keep:true });
+    if (open !== (was ? was.id : null) || count !== had) Store.hydrate({ keep:true });
   },
 };
 
@@ -451,7 +445,7 @@ document.addEventListener('click', e => {
         if (stamp.disabled) return;
         delete stamp.dataset.armed;
         stamp.textContent = 'Add';
-        stamp.removeAttribute('aria-label');
+        stamp.setAttribute('aria-label', `Add ${who} to GM ${no}`);
         stamp.closest('.brow')?.classList.remove('brow--armed');
       }, { once:true });
       return;
@@ -640,7 +634,7 @@ document.addEventListener('click', e => {
         if (hand.disabled) return;
         delete hand.dataset.armed;
         hand.textContent = 'Hand over';
-        hand.removeAttribute('aria-label');
+        hand.setAttribute('aria-label', `Hand ${prize} to ${who}`);
         hand.closest('.brow')?.classList.remove('brow--armed');
       }, { once:true });
       return;
@@ -673,8 +667,9 @@ document.addEventListener('click', e => {
          row stays as it was, ready to try again, rather than re-reading
          a list over a dead connection */
       if (Handover.OFFLINE.includes(code)){ BoardUI.lost.add(key); return unarm(hand, 'Hand over'); }
-      /* otherwise the list on screen is out of date: re-read it */
-      reloadBoardHere();
+      /* otherwise the list on screen is out of date: re-read it, and the
+         reader's place is the next thing to hand over */
+      reloadBoardHere(AFTER_REFUSAL);
     });
     return;
   }
@@ -693,13 +688,15 @@ document.addEventListener('click', e => {
     Backend.undoHandOver(uid, rid).then(() => {
       delete BoardUI.handed[undo.dataset.bundo];
       toast({ key:'board', title:'Hand-over taken back' });
+      /* the row comes back where it sorts, which may be past the fold */
+      BoardUI.owedAll = true;
       reloadBoardHere(`[data-bhand="${undo.dataset.bundo}"]`);
     }).catch(err => {
       const code = String((err && err.message) || '');
       if (code === 'UNDO_EXPIRED') delete BoardUI.handed[undo.dataset.bundo];
       toast({ key:'board', bad:true, title:'Not taken back', detail:Handover.message(code) });
       if (Handover.OFFLINE.includes(code)) return release(undo, 'Undo');
-      reloadBoardHere();
+      reloadBoardHere(AFTER_REFUSAL);
     });
     return;
   }
@@ -846,11 +843,16 @@ function paintHandList(){
   if (box && d && d.meeting) box.innerHTML = BoardUI.handList(d.meeting);
 }
 
+/* after a refusal re-reads the list: the next thing to hand over, or
+   the member page's way back */
+const AFTER_REFUSAL = '.owed [data-bhand], .brow--reward [data-bhand], [data-bback], .owed .meetband__t';
+
 /* a two-tap button back at rest after a request that never landed */
 function unarm(btn, label){
   release(btn, label);
   delete btn.dataset.armed;
-  btn.removeAttribute('aria-label');
+  btn.setAttribute('aria-label', btn.dataset.bstamp
+    ? `Add ${btn.dataset.who} to GM ${btn.dataset.no}` : `Hand ${btn.dataset.prize} to ${btn.dataset.who}`);
   btn.closest('.brow')?.classList.remove('brow--armed');
   btn.focus({ preventScroll:true });
 }

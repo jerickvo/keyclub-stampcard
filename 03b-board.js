@@ -154,10 +154,17 @@ const BoardUI = {
         ${this.empty('The prize list could not be read. Try again in a moment.')}
       </section>`;
 
+    /* hand-overs this officer made in the last fifteen minutes: from this
+       page's memory, and from the server, so a refresh keeps the Undo */
     const now = Date.now();
-    const just = Object.entries(this.handed)
+    const mem = Object.entries(this.handed)
       .filter(([, h]) => now - h.when < HANDOVER_UNDO_MS)
       .map(([key, h]) => ({ key, ...h }));
+    const fromServer = (pz.recent || [])
+      .map(r => ({ key:r.user_id + ':' + r.reward_id, at:r.handed_at, when:Date.parse(r.handed_at),
+                   username:r.username, prize:prizeName(r) }))
+      .filter(r => !this.handed[r.key] && now - r.when < HANDOVER_UNDO_MS);
+    const just = [...mem, ...fromServer];
     const owed = (pz.owed || []).filter(o => !this.handed[o.user_id + ':' + o.reward_id]);
 
     /* how many of each prize to bring: owed now, and how many more the
@@ -176,13 +183,15 @@ const BoardUI = {
         ${o.user_id === (Store.user && Store.user.id)
           ? '<span class="muted owed__self">Another officer hands this over</span>'
           : `<button class="btn owed__go" type="button" data-bhand="${esc(key)}"
-          data-who="${esc(o.username)}" data-prize="${esc(prizeName(o))}">Hand over</button>`}
+          data-who="${esc(o.username)}" data-prize="${esc(prizeName(o))}"
+          aria-label="${esc(`Hand ${prizeName(o)} to ${o.username}`)}">Hand over</button>`}
       </li>`;
     };
     const done = h => `<li class="brow brow--owed brow--handed">
         <span class="brow__mid"><b>${esc(h.username)}</b>
           <span class="muted">${esc(h.prize)} / handed over ${esc(fmtTime(h.at))}</span></span>
-        <button class="link owed__undo" type="button" data-bundo="${esc(h.key)}" data-busy="Undoing">Undo</button>
+        <button class="link owed__undo" type="button" data-bundo="${esc(h.key)}" data-busy="Undoing"
+          aria-label="${esc(`Undo: ${h.prize} to ${h.username}`)}">Undo</button>
       </li>`;
 
     /* a long list folds after a few rows, so the roster below it is not
@@ -190,7 +199,7 @@ const BoardUI = {
     const FOLD = 6;
     const shown = this.owedAll ? owed : owed.slice(0, FOLD);
     return `<section class="owed" aria-label="Prizes to hand over">
-      <div class="meetband"><h2 class="meetband__t">To hand over</h2>${tally ? `<span class="meetband__n">${tally}</span>` : ''}</div>
+      <div class="meetband"><h2 class="meetband__t" tabindex="-1">To hand over</h2>${tally ? `<span class="meetband__n">${tally}</span>` : ''}</div>
       ${owed.length || just.length
         ? `<ul class="blist" id="owedList">${just.map(done).join('')}${shown.map(row).join('')}</ul>
            ${owed.length > FOLD ? `<button class="link owed__more" type="button" data-bowed aria-controls="owedList"
@@ -375,7 +384,8 @@ const BoardUI = {
         : handed ? ''
         : m.id === (Store.user && Store.user.id) ? '<span class="muted owed__self">Another officer hands this over</span>'
         : `<button class="btn owed__go" type="button" data-bhand="${esc(key)}"
-            data-who="${esc(m.username)}" data-prize="${esc(prizeName(r))}">Hand over</button>`}
+            data-who="${esc(m.username)}" data-prize="${esc(prizeName(r))}"
+            aria-label="${esc(`Hand ${prizeName(r)} to ${m.username}`)}">Hand over</button>`}
     </li>`;
   },
 
@@ -440,7 +450,8 @@ const BoardUI = {
             ? '<span class="bstate bstate--ended">Checked in</span>'
             : p.self ? '<span class="muted">Another officer adds you</span>'
             : `<button class="btn owed__go" type="button" data-bstamp="${esc(p.id)}" data-who="${esc(p.name)}"
-                 data-meeting="${esc(m.id)}" data-no="${pad(m.meeting_number)}">Add</button>`}
+                 data-meeting="${esc(m.id)}" data-no="${pad(m.meeting_number)}"
+                 aria-label="${esc(`Add ${p.name} to GM ${pad(m.meeting_number)}`)}">Add</button>`}
         </li>`).join('')}</ul>`;
   },
 

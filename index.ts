@@ -409,9 +409,16 @@ Deno.serve(async (req) => {
         }
       }
 
+      // this officer's own hand-overs still inside the undo window, so a
+      // refreshed page still offers the Undo for a wrong name
+      const now = Date.now();
+      const recent = [...handed.entries()]
+        .filter(([, h]) => h.handed_by === user.id && now - Date.parse(h.handed_at) < UNDO_MS)
+        .map(([key, h]) => ({ user_id: key.split(':')[0], reward_id: key.split(':')[1], handed_at: h.handed_at }));
+
       // board accounts included: an officer who earns a prize is owed it
       // like anyone, and hand_over_reward refuses the officer themselves
-      const ids = [...new Set(owed.map(o => o.user_id))];
+      const ids = [...new Set([...owed, ...recent].map(o => o.user_id))];
       const names = new Map<string, string>();
       if (ids.length) {
         const ps = must(await admin.from('profiles')
@@ -438,7 +445,10 @@ Deno.serve(async (req) => {
           n === t.required - 1 && !claimedAt.has(uid + ':' + t.id)).length;
       }
 
-      return json({ ok: true, owed: list, near });
+      const mine = recent.filter(r => names.has(r.user_id)).map(r => ({ ...r,
+        username: names.get(r.user_id)!, name: tier.get(r.reward_id)!.name, required: tier.get(r.reward_id)!.required }));
+
+      return json({ ok: true, owed: list, near, recent: mine });
     }
 
     // ── FIND SOMEONE TO STAMP BY HAND ──────────────────────────────
@@ -452,14 +462,22 @@ Deno.serve(async (req) => {
       if (!q) return json({ ok: true, people: [] });
       // % and _ are LIKE wildcards; a search for "_" is not everyone
       const like = '%' + q.replace(/[\\%_]/g, c => '\\' + c).replace(/\*/g, '') + '%';
-      const [byUser, byName] = await Promise.all([
-        admin.from('profiles').select('id, username, display_name, role').ilike('username', like).limit(8),
-        admin.from('profiles').select('id, username, display_name, role').ilike('display_name', like).limit(8),
+      // the whole name typed exactly is always among the results, however
+      // many other names contain it
+      const exact = like.slice(1, -1);
+      const cols = 'id, username, display_name, role';
+      const [isUser, isName, byUser, byName] = await Promise.all([
+        admin.from('profiles').select(cols).ilike('username', exact).limit(8),
+        admin.from('profiles').select(cols).ilike('display_name', exact).limit(8),
+        admin.from('profiles').select(cols).ilike('username', like).order('username').limit(8),
+        admin.from('profiles').select(cols).ilike('display_name', like).order('username').limit(8),
       ]);
-      const seen = new Map<string, { id: string; username: string; display_name: string | null; role: string }>();
-      for (const p of [...(must(byUser) ?? []), ...(must(byName) ?? [])]) seen.set(p.id, p);
-      const people = [...seen.values()]
-        .sort((a, b) => a.username.localeCompare(b.username)).slice(0, 8);
+      type P = { id: string; username: string; display_name: string | null; role: string };
+      const hits = (rows: P[] | null) => (rows ?? []).sort((a, b) => a.username.localeCompare(b.username));
+      const seen = new Map<string, P>();
+      for (const p of [...hits(must(isUser)), ...hits(must(isName)), ...hits(must(byUser)), ...hits(must(byName))])
+        if (!seen.has(p.id)) seen.set(p.id, p);
+      const people = [...seen.values()].slice(0, 8);
 
       const stamped = new Set<string>();
       if (meetingId && people.length) {

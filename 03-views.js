@@ -247,6 +247,10 @@ const Views = {
        since an officer can still add a stamp by hand */
     else if (day && day.ended && !day.open)
       action = C.line('Not checked in', `GM ${pad(day.no)}`);
+    /* under way and not open: before opening or after an early close,
+       which a member cannot tell apart, so only what is true now */
+    else if (day && day.started && !day.open)
+      action = C.line('Today', `GM ${pad(day.no)} / check-in not open`);
     /* the day's own meeting gives its time even when it is the usual
        one: today, that is the thing to know */
     else if (day)

@@ -298,7 +298,8 @@ const SupabaseAdapter = {
              isBoard:data.role === 'board',
              /* the club day the account was made; a meeting before it
                 is not one the member could have checked in to */
-             joined: made && !Number.isNaN(made.getTime()) ? clubDay(made) : null };
+             joined: made && !Number.isNaN(made.getTime()) ? clubDay(made) : null,
+             joinedAt: made && !Number.isNaN(made.getTime()) ? clubMinutes(made) : null };
   },
 
   authUnreachable(error){
@@ -389,12 +390,8 @@ const SupabaseAdapter = {
          codes have expired), so for a member it is a held meeting */
       open: Boolean(row.check_in_open) && row.meeting_date === today,
       today: row.meeting_date === today,
-      /* today's meeting is over once its end time has passed on the
-         club's clock; one without an end time is not over until the
-         day is */
-      ended: row.meeting_date < today ||
-        (row.meeting_date === today && clubMinutes() >= clockMinutes(row.end_time)),
-      /* ahead of the member, until Store.settle() has the stamps */
+      /* ahead of the member, until Store.settle() has the stamps and
+         the club's clock (started, ended) */
       upcoming: row.meeting_date >= today && !row.check_in_open,
     };
   },
@@ -560,13 +557,12 @@ const SupabaseAdapter = {
     return row ? row.id : null;
   },
 
-  /* whether this member has a stamp for this meeting: one row at most */
-  async attendedMeeting(userId, meetingId){
+  /* how many stamps this member has: a count, no rows */
+  async myStampCount(userId){
     const { count, error } = await this.client
-      .from('attendance').select('id', { count:'exact', head:true })
-      .eq('user_id', userId).eq('meeting_id', meetingId);
+      .from('attendance').select('id', { count:'exact', head:true }).eq('user_id', userId);
     if (error) throw error;
-    return (count || 0) > 0;
+    return count || 0;
   },
 
   /* whether check-in is still open, so a wall left projecting learns
@@ -602,7 +598,7 @@ const PreviewAdapter = {
   async issueToken(){ throw new Error('No backend is configured.'); },
   async attendanceCount(){ return 0; },
   async meetingOpen(){ return false; },
-  async attendedMeeting(){ return false; },
+  async myStampCount(){ return 0; },
   async openToday(){ return null; },
   async board(){ throw new Error('No backend is configured.'); },
   async deleteMeetingAndStamps(){ throw new Error('No backend is configured.'); },
@@ -616,7 +612,7 @@ const UnavailableAdapter = {
 };
 ['signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','startAttendance',
- 'endAttendance','issueToken','attendanceCount','meetingOpen','attendedMeeting','openToday','board',
+ 'endAttendance','issueToken','attendanceCount','meetingOpen','myStampCount','openToday','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   UnavailableAdapter[fn] = async () => { throw new Error('BACKEND_UNAVAILABLE'); };
 });
@@ -666,7 +662,7 @@ const Backend = {
 
 ['currentSession','signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','verifyCode',
- 'startAttendance','endAttendance','issueToken','attendanceCount','meetingOpen','attendedMeeting','openToday','board',
+ 'startAttendance','endAttendance','issueToken','attendanceCount','meetingOpen','myStampCount','openToday','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   Backend[fn] = function(...a){ return this.adapter[fn](...a); };
 });
