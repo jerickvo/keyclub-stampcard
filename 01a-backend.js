@@ -479,16 +479,17 @@ const SupabaseAdapter = {
   SIGN_OUT_WAIT: 5000,
   /* The device lets go at the tap, before the sign-out scene plays: a
      reload or a new tab from then on is signed out. signOut() finishes
-     the job (this tab's listeners, the other tabs, the server). */
-  leaving: null,
+     the job (this tab's listeners and the other tabs). */
   letGo(){
-    this.leaving = this.storedSession() || this.leaving;
+    const kept = this.storedSession();
     this.forgetSession();
+    /* and the server is told now, so a tab closed during the scene
+       still ends the session there */
+    if (kept) this.revoke(kept);
   },
   async signOut(){
     const auth = this.client.auth;
-    const kept = this.storedSession() || this.leaving;
-    this.leaving = null;
+    const kept = this.storedSession();
     try {
       if (typeof auth._removeSession === 'function'){
         this.forgetSession();
@@ -662,10 +663,15 @@ const SupabaseAdapter = {
      migrations/2026-09-23-prizes-and-hand-stamps.sql has no function
      but still has the older insert policy, so the same row is written
      directly there, and the page holds it to today's meeting. */
-  async addAttendance(userId, meetingId){
+  /* the account the stored session belongs to now */
+  sessionUser(){ const kept = this.storedSession(); return kept && kept.user ? kept.user.id : null; },
+
+  async addAttendance(userId, meetingId, officer = null){
     const { error } = await this.client.rpc('stamp_by_hand', { p_user_id:userId, p_meeting_id:meetingId });
     if (!error) return true;
     if (!Handover.absent(error)) throw new Error(HandStamp.code(error));
+    /* the older way, as a second request: only for the officer who asked */
+    if (officer && this.sessionUser() !== officer) throw new Error('NOT_AUTHENTICATED');
     const { error:e2 } = await this.client.from('attendance')
       .insert({ user_id:userId, meeting_id:meetingId, verification_method:'board' });
     if (!e2) return true;
@@ -763,11 +769,13 @@ const SupabaseAdapter = {
   /* Board-only and held-only are enforced by the database function,
      not here. The legacy name is tried once for projects that have not
      run migrations/2026-09-10-delete-meeting.sql yet. */
-  async deleteMeetingAndStamps(meetingId){
+  async deleteMeetingAndStamps(meetingId, officer = null){
     const call = name => this.client.rpc(name, { p_meeting_id:meetingId });
     let { data, error } = await call('delete_meeting_and_stamps');
-    if (error && /^PGRST2/.test(String(error.code || '')))
+    if (error && /^PGRST2/.test(String(error.code || ''))){
+      if (officer && this.sessionUser() !== officer) throw new Error('NOT_AUTHENTICATED');
       ({ data, error } = await call('tmp_test_purge_meeting'));
+    }
     if (error) throw error;
     return { removed: Number(data) || 0 };
   },

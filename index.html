@@ -15059,16 +15059,17 @@ const SupabaseAdapter = {
   SIGN_OUT_WAIT: 5000,
   /* The device lets go at the tap, before the sign-out scene plays: a
      reload or a new tab from then on is signed out. signOut() finishes
-     the job (this tab's listeners, the other tabs, the server). */
-  leaving: null,
+     the job (this tab's listeners and the other tabs). */
   letGo(){
-    this.leaving = this.storedSession() || this.leaving;
+    const kept = this.storedSession();
     this.forgetSession();
+    /* and the server is told now, so a tab closed during the scene
+       still ends the session there */
+    if (kept) this.revoke(kept);
   },
   async signOut(){
     const auth = this.client.auth;
-    const kept = this.storedSession() || this.leaving;
-    this.leaving = null;
+    const kept = this.storedSession();
     try {
       if (typeof auth._removeSession === 'function'){
         this.forgetSession();
@@ -15242,10 +15243,15 @@ const SupabaseAdapter = {
      migrations/2026-09-23-prizes-and-hand-stamps.sql has no function
      but still has the older insert policy, so the same row is written
      directly there, and the page holds it to today's meeting. */
-  async addAttendance(userId, meetingId){
+  /* the account the stored session belongs to now */
+  sessionUser(){ const kept = this.storedSession(); return kept && kept.user ? kept.user.id : null; },
+
+  async addAttendance(userId, meetingId, officer = null){
     const { error } = await this.client.rpc('stamp_by_hand', { p_user_id:userId, p_meeting_id:meetingId });
     if (!error) return true;
     if (!Handover.absent(error)) throw new Error(HandStamp.code(error));
+    /* the older way, as a second request: only for the officer who asked */
+    if (officer && this.sessionUser() !== officer) throw new Error('NOT_AUTHENTICATED');
     const { error:e2 } = await this.client.from('attendance')
       .insert({ user_id:userId, meeting_id:meetingId, verification_method:'board' });
     if (!e2) return true;
@@ -15343,11 +15349,13 @@ const SupabaseAdapter = {
   /* Board-only and held-only are enforced by the database function,
      not here. The legacy name is tried once for projects that have not
      run migrations/2026-09-10-delete-meeting.sql yet. */
-  async deleteMeetingAndStamps(meetingId){
+  async deleteMeetingAndStamps(meetingId, officer = null){
     const call = name => this.client.rpc(name, { p_meeting_id:meetingId });
     let { data, error } = await call('delete_meeting_and_stamps');
-    if (error && /^PGRST2/.test(String(error.code || '')))
+    if (error && /^PGRST2/.test(String(error.code || ''))){
+      if (officer && this.sessionUser() !== officer) throw new Error('NOT_AUTHENTICATED');
       ({ data, error } = await call('tmp_test_purge_meeting'));
+    }
     if (error) throw error;
     return { removed: Number(data) || 0 };
   },
@@ -15964,9 +15972,9 @@ const liveToasts = new Map();
 
 /* a toast the page has since contradicted goes (`about`: the thing it
    was about, such as a meeting) */
-function dropToastIf(key, title, about){
+function dropToastWhen(key, test){
   const rec = liveToasts.get(key);
-  if (rec && rec.title === title && rec.about === about) dropToast(key, true);
+  if (rec && test(rec)) dropToast(key, true);
 }
 
 function dropToast(key, immediate){
@@ -16656,7 +16664,7 @@ const meetingOrder = dir => {
 };
 
 const BoardUI = {
-  reset(){ Object.assign(this, BOARD_FRESH()); },
+  reset(){ Object.assign(this, BOARD_FRESH()); boardMeeting = null; boardPicked = null; },
   tab: 'session',
   loading: false,
   shown: null,          /* the tab whose loaded content the pane holds */
@@ -17097,7 +17105,7 @@ const BoardUI = {
       .sort(meetingOrder(1));
     /* by default the first of today's meetings not yet over, as Home
        and the Meetings list point at */
-    const sel = open || todays.find(m => m.id === boardMeeting)
+    const sel = open || todays.find(m => m.id === boardPicked)
       || todays.find(m => meetingPhase(m, today) !== 'ENDED') || todays[todays.length - 1] || null;
     boardMeeting = sel ? sel.id : null;
 
@@ -17584,6 +17592,9 @@ function qrSVG(text){
 }
 
 let boardMeeting = null;
+/* the meeting an officer picked (or just closed) on the stage; the
+   default is chosen again on every read */
+let boardPicked = null;
 
 let qrRetry = null;
 function paintBoard(attempt = 0){
@@ -18776,7 +18787,8 @@ document.addEventListener('submit', async e => {
       toast({ key:'board', title:`GM ${pad(no)} scheduled` });
       /* an attempt the form has moved on from is still said, but the
          form is not touched */
-      if (!mine()) return BoardUI.tab === 'meetings' && !BoardUI.meetingDetail && !BoardUI.memberDetail ? loadBoard() : null;
+      if (!mine()) return BoardUI.tab === 'meetings' && !BoardUI.formOpen && !BoardUI.form
+        && !BoardUI.meetingDetail && !BoardUI.memberDetail ? loadBoard() : null;
       BoardUI.form = null; BoardUI.formOpen = false;
       boardGoto({ tab:'meetings', refocus:'[data-mform]' });
     };
@@ -18918,7 +18930,7 @@ document.addEventListener('click', e => {
     const officer = Store.user && Store.user.id;
     const still = () => Boolean(Store.user) && Store.user.id === officer;
     const mark = () => { const p = ((BoardUI.handFound || {}).people || []).find(x => x.id === uid); if (p) p.checked_in = true; };
-    Backend.addAttendance(uid, stamp.dataset.meeting).then(() => {
+    Backend.addAttendance(uid, stamp.dataset.meeting, officer).then(() => {
       if (!still()) return;
       mark();
       toast({ key:'board', title:`${who} checked in to GM ${no}`, detail:'Added by hand.' });
@@ -18984,7 +18996,7 @@ document.addEventListener('click', e => {
                                      refocus:'.bdel [data-bconfirm] || [data-bback]' });
 
     (stamps
-      ? Backend.deleteMeetingAndStamps(id).then(res => {
+      ? Backend.deleteMeetingAndStamps(id, officer).then(res => {
           if (!still()) return;
           toast({ key:'board', title:`${gm} deleted`,
                   detail:`${res.removed} stamp${res.removed === 1 ? '' : 's'} removed` });
@@ -19016,7 +19028,7 @@ document.addEventListener('click', e => {
   const breload = e.target.closest('[data-breload]');
   if (breload){ loadBoard(); return; }
   const bpick = e.target.closest('[data-bpick]');
-  if (bpick){ boardMeeting = bpick.dataset.bpick; loadBoard(); return; }
+  if (bpick){ boardMeeting = boardPicked = bpick.dataset.bpick; loadBoard(); return; }
 
   const bstart = e.target.closest('[data-bstart]');
   if (bstart){
@@ -19046,7 +19058,7 @@ document.addEventListener('click', e => {
       const why = openNow(now).length ? 'ATTENDANCE_ALREADY_OPEN' : err && err.message;
       toast({ key:'board', bad:true, title:'Could not open check-in', about:id,
               detail:BoardUI.message(why) });
-      BoardUI.refocus = '[data-bstart]';
+      BoardUI.refocus = '[data-bstart] || [data-bfull]';
       loadBoard();
     });
     return;
@@ -19056,7 +19068,7 @@ document.addEventListener('click', e => {
     const id = bend.dataset.bend;
     const who = Store.user && Store.user.id;
     const still = () => Store.user && Store.user.id === who;
-    const closed = () => { dropToast('board', true); clearInterval(countTimer); boardStamp = true;
+    const closed = () => { dropToast('board', true); clearInterval(countTimer); boardStamp = true; boardPicked = id;
                            BoardUI.refocus = '[data-bstart]'; loadBoard(); };
     hold(bend, 'Closing');
     Backend.endAttendance(id)
@@ -19071,7 +19083,7 @@ document.addEventListener('click', e => {
         if (m && m.state !== 'OPEN') return closed();
         toast({ key:'board', bad:true, title:'Could not close check-in', about:id,
                 detail:BoardUI.message(err && err.message) });
-        BoardUI.refocus = '[data-bend]';
+        BoardUI.refocus = '[data-bend] || [data-bstart]';
         loadBoard(); });
     return;
   }
@@ -19423,8 +19435,10 @@ async function loadBoard(){
      it could not be opened (or closed): opened elsewhere, closed
      elsewhere, or an answer lost on the way back */
   if (BoardUI.tab === 'session' && !BoardUI.error){
-    if ($('#proj.proj--live')) dropToastIf('board', 'Could not open check-in', boardMeeting);
-    else if ($('[data-bstart]')) dropToastIf('board', 'Could not close check-in', boardMeeting);
+    const list = (BoardUI.meetings && BoardUI.meetings.meetings) || [];
+    const open = id => (list.find(m => m.id === id) || {}).state === 'OPEN';
+    dropToastWhen('board', t => t.about && (t.title === 'Could not open check-in' ? open(t.about)
+                                          : t.title === 'Could not close check-in' && !open(t.about)));
   }
   if (BoardUI.tab === 'session' && !BoardUI.error && $('#qrBox')){
     paintBoard();

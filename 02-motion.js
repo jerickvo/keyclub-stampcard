@@ -74,9 +74,9 @@ const liveToasts = new Map();
 
 /* a toast the page has since contradicted goes (`about`: the thing it
    was about, such as a meeting) */
-function dropToastIf(key, title, about){
+function dropToastWhen(key, test){
   const rec = liveToasts.get(key);
-  if (rec && rec.title === title && rec.about === about) dropToast(key, true);
+  if (rec && test(rec)) dropToast(key, true);
 }
 
 function dropToast(key, immediate){

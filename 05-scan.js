@@ -16,6 +16,9 @@ function qrSVG(text){
 }
 
 let boardMeeting = null;
+/* the meeting an officer picked (or just closed) on the stage; the
+   default is chosen again on every read */
+let boardPicked = null;
 
 let qrRetry = null;
 function paintBoard(attempt = 0){

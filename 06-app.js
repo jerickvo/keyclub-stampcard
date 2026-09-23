@@ -486,7 +486,8 @@ document.addEventListener('submit', async e => {
       toast({ key:'board', title:`GM ${pad(no)} scheduled` });
       /* an attempt the form has moved on from is still said, but the
          form is not touched */
-      if (!mine()) return BoardUI.tab === 'meetings' && !BoardUI.meetingDetail && !BoardUI.memberDetail ? loadBoard() : null;
+      if (!mine()) return BoardUI.tab === 'meetings' && !BoardUI.formOpen && !BoardUI.form
+        && !BoardUI.meetingDetail && !BoardUI.memberDetail ? loadBoard() : null;
       BoardUI.form = null; BoardUI.formOpen = false;
       boardGoto({ tab:'meetings', refocus:'[data-mform]' });
     };
@@ -628,7 +629,7 @@ document.addEventListener('click', e => {
     const officer = Store.user && Store.user.id;
     const still = () => Boolean(Store.user) && Store.user.id === officer;
     const mark = () => { const p = ((BoardUI.handFound || {}).people || []).find(x => x.id === uid); if (p) p.checked_in = true; };
-    Backend.addAttendance(uid, stamp.dataset.meeting).then(() => {
+    Backend.addAttendance(uid, stamp.dataset.meeting, officer).then(() => {
       if (!still()) return;
       mark();
       toast({ key:'board', title:`${who} checked in to GM ${no}`, detail:'Added by hand.' });
@@ -694,7 +695,7 @@ document.addEventListener('click', e => {
                                      refocus:'.bdel [data-bconfirm] || [data-bback]' });
 
     (stamps
-      ? Backend.deleteMeetingAndStamps(id).then(res => {
+      ? Backend.deleteMeetingAndStamps(id, officer).then(res => {
           if (!still()) return;
           toast({ key:'board', title:`${gm} deleted`,
                   detail:`${res.removed} stamp${res.removed === 1 ? '' : 's'} removed` });
@@ -726,7 +727,7 @@ document.addEventListener('click', e => {
   const breload = e.target.closest('[data-breload]');
   if (breload){ loadBoard(); return; }
   const bpick = e.target.closest('[data-bpick]');
-  if (bpick){ boardMeeting = bpick.dataset.bpick; loadBoard(); return; }
+  if (bpick){ boardMeeting = boardPicked = bpick.dataset.bpick; loadBoard(); return; }
 
   const bstart = e.target.closest('[data-bstart]');
   if (bstart){
@@ -756,7 +757,7 @@ document.addEventListener('click', e => {
       const why = openNow(now).length ? 'ATTENDANCE_ALREADY_OPEN' : err && err.message;
       toast({ key:'board', bad:true, title:'Could not open check-in', about:id,
               detail:BoardUI.message(why) });
-      BoardUI.refocus = '[data-bstart]';
+      BoardUI.refocus = '[data-bstart] || [data-bfull]';
       loadBoard();
     });
     return;
@@ -766,7 +767,7 @@ document.addEventListener('click', e => {
     const id = bend.dataset.bend;
     const who = Store.user && Store.user.id;
     const still = () => Store.user && Store.user.id === who;
-    const closed = () => { dropToast('board', true); clearInterval(countTimer); boardStamp = true;
+    const closed = () => { dropToast('board', true); clearInterval(countTimer); boardStamp = true; boardPicked = id;
                            BoardUI.refocus = '[data-bstart]'; loadBoard(); };
     hold(bend, 'Closing');
     Backend.endAttendance(id)
@@ -781,7 +782,7 @@ document.addEventListener('click', e => {
         if (m && m.state !== 'OPEN') return closed();
         toast({ key:'board', bad:true, title:'Could not close check-in', about:id,
                 detail:BoardUI.message(err && err.message) });
-        BoardUI.refocus = '[data-bend]';
+        BoardUI.refocus = '[data-bend] || [data-bstart]';
         loadBoard(); });
     return;
   }
@@ -1133,8 +1134,10 @@ async function loadBoard(){
      it could not be opened (or closed): opened elsewhere, closed
      elsewhere, or an answer lost on the way back */
   if (BoardUI.tab === 'session' && !BoardUI.error){
-    if ($('#proj.proj--live')) dropToastIf('board', 'Could not open check-in', boardMeeting);
-    else if ($('[data-bstart]')) dropToastIf('board', 'Could not close check-in', boardMeeting);
+    const list = (BoardUI.meetings && BoardUI.meetings.meetings) || [];
+    const open = id => (list.find(m => m.id === id) || {}).state === 'OPEN';
+    dropToastWhen('board', t => t.about && (t.title === 'Could not open check-in' ? open(t.about)
+                                          : t.title === 'Could not close check-in' && !open(t.about)));
   }
   if (BoardUI.tab === 'session' && !BoardUI.error && $('#qrBox')){
     paintBoard();

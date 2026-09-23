@@ -74,7 +74,7 @@ const meetingOrder = dir => {
 };
 
 const BoardUI = {
-  reset(){ Object.assign(this, BOARD_FRESH()); },
+  reset(){ Object.assign(this, BOARD_FRESH()); boardMeeting = null; boardPicked = null; },
   tab: 'session',
   loading: false,
   shown: null,          /* the tab whose loaded content the pane holds */
@@ -515,7 +515,7 @@ const BoardUI = {
       .sort(meetingOrder(1));
     /* by default the first of today's meetings not yet over, as Home
        and the Meetings list point at */
-    const sel = open || todays.find(m => m.id === boardMeeting)
+    const sel = open || todays.find(m => m.id === boardPicked)
       || todays.find(m => meetingPhase(m, today) !== 'ENDED') || todays[todays.length - 1] || null;
     boardMeeting = sel ? sel.id : null;
 
