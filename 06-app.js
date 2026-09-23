@@ -220,17 +220,27 @@ function afterRender(id, nav = false, covered = false){
    re-sorts what is already known. */
 const TodayWatch = {
   timer: null,
+  every: 0,
   EVERY: 15000,
+  /* a page with nothing known for today still asks, slowly, whether a
+     check-in has opened: a meeting may be scheduled after it loaded */
+  IDLE: 60000,
 
-  sync(){
-    const want = Store.ready && Store.signedIn && !Store.isBoard && !Store.failed
-      && (current === 'home' || current === 'scan') && Store.dayLive();
-    if (!want){ this.stop(); return; }
-    if (this.timer) return;
-    /* a room of phones does not ask in step */
-    this.timer = setInterval(() => this.tick(), this.EVERY + Math.round(Math.random() * 3000));
+  pace(){
+    const on = Store.ready && Store.signedIn && !Store.isBoard && !Store.failed
+      && (current === 'home' || current === 'scan');
+    return !on ? 0 : Store.dayLive() ? this.EVERY : this.IDLE;
   },
-  stop(){ clearInterval(this.timer); this.timer = null; },
+  sync(){
+    const every = this.pace();
+    if (!every){ this.stop(); return; }
+    if (this.timer && this.every === every) return;
+    this.stop();
+    this.every = every;
+    /* a room of phones does not ask in step */
+    this.timer = setInterval(() => this.tick(), every + Math.round(Math.random() * 3000));
+  },
+  stop(){ clearInterval(this.timer); this.timer = null; this.every = 0; },
 
   /* nothing is asked while a code is being checked or a stamp is
      landing: that read is the one that matters */
@@ -239,11 +249,14 @@ const TodayWatch = {
   async tick(){
     if (this.busy()) return;
     Store.resettle();
-    if (!Store.dayLive()) return this.sync();
+    if (this.pace() !== this.every) return this.sync();
+    const live = this.every === this.EVERY;
     const was = Store.openMeeting(), had = Store.scans.length;
     let open, count;
     try {
-      [open, count] = await Promise.all([Backend.openToday(), Backend.myStampCount(Store.user.id)]);
+      /* a quiet day asks only whether check-in is open */
+      [open, count] = await Promise.all([Backend.openToday(),
+        live ? Backend.myStampCount(Store.user.id) : had]);
     } catch (_) { return; }
     if (this.busy()) return;
     if (open !== (was ? was.id : null) || count !== had) Store.hydrate({ keep:true });
