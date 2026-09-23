@@ -303,6 +303,13 @@ const Store = {
   meeting(id){ return this.meetings.find(m => m.id === id) || null; },
   totalStamps(){ return this.scans.length; },
   attended(id){ return this.scans.some(s => s.meetingId === id); },
+  /* a stamp the verifier accepted, shown before the record can be read
+     again (the next read that gets through replaces it with the row) */
+  noteStamp(meetingId){
+    if (!this.user || this.attended(meetingId)) return;
+    this.scans = [{ id:null, meetingId, at:new Date().toISOString(), method:'qr' }, ...this.scans];
+    this.settle();
+  },
   scanFor(id){ return this.scans.find(s => s.meetingId === id) || null; },
   openMeeting(){ return this.meetings.find(m => m.open) || null; },
 

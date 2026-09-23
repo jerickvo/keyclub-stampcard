@@ -15754,6 +15754,13 @@ const Store = {
   meeting(id){ return this.meetings.find(m => m.id === id) || null; },
   totalStamps(){ return this.scans.length; },
   attended(id){ return this.scans.some(s => s.meetingId === id); },
+  /* a stamp the verifier accepted, shown before the record can be read
+     again (the next read that gets through replaces it with the row) */
+  noteStamp(meetingId){
+    if (!this.user || this.attended(meetingId)) return;
+    this.scans = [{ id:null, meetingId, at:new Date().toISOString(), method:'qr' }, ...this.scans];
+    this.settle();
+  },
   scanFor(id){ return this.scans.find(s => s.meetingId === id) || null; },
   openMeeting(){ return this.meetings.find(m => m.open) || null; },
 
@@ -18008,10 +18015,12 @@ const Landing = {
     catch (_) { try { cell.scrollIntoView(); } catch (__) {} }
   },
 
+  /* a read that fails keeps the card on screen (the stamp is on file) */
   async refresh(tries){
     for (let i = 0; i < tries; i++){
-      await Store.hydrate();
-      if (!Store.failed) return true;
+      const before = Store.applied;
+      await Store.hydrate({ keep:true });
+      if (Store.applied > before && !Store.failed) return true;
       await new Promise(r => setTimeout(r, 400 * (i + 1)));
     }
     return false;
@@ -18031,19 +18040,27 @@ const Landing = {
     const read = Promise.race([this.refresh(3), new Promise(r => setTimeout(() => r(false), 5000))]);
     const [fresh] = await Promise.all([read, held]);
     if (seq !== this.seq) return;
-    if (!fresh) toast({ key:'stamp', title:`Checked in to GM ${pad(meeting.no)}`,
-                        detail:'Your card will update when the connection returns.' });
+    /* the record did not come back in time: the page shows the stamp
+       the verifier accepted, not a "Check in" for a meeting already done */
+    if (!fresh){
+      Store.noteStamp(meeting.id);
+      toast({ key:'stamp', title:`Checked in to GM ${pad(meeting.no)}`,
+              detail:'Your card will update when the connection returns.' });
+    }
 
     /* The reader may have left Scan during the hold. The record is
        fresh either way; the page they chose is not taken from them. */
     if (current !== 'scan'){
       scene.clear();
       this.armed = null; this.active = false; this.scene = null;
-      if (!fresh) Store.hydrate();
+      if (!fresh && Store.signedIn){
+        if (current !== 'auth') go(current, { instant:true, force:true, quiet:true });
+        Store.hydrate({ keep:true });
+      }
       return;
     }
 
-    pendingStamp = fresh ? { meetingId:meeting.id } : null;
+    pendingStamp = { meetingId:meeting.id };
     go('home', { instant:true });
     pendingStamp = null;
 
@@ -18055,7 +18072,7 @@ const Landing = {
     scene.lift(() => {
       if (seq !== this.seq) return;
       if (cell && document.body.contains(cell)) FX.stampLand(cell);
-      if (!fresh) Store.hydrate();
+      if (!fresh) Store.hydrate({ keep:true });
     });
   },
 };
@@ -18086,9 +18103,10 @@ const SCAN_TRANSIENT = new Set(['NETWORK_ERROR', 'SERVER_ERROR', 'VERIFIER_UNAVA
 /* refusals that mean the record on this page is out of date */
 const SCAN_STALE = new Set(['ALREADY_CHECKED_IN', 'ATTENDANCE_CLOSED', 'MEETING_NOT_ACTIVE', 'WRONG_DAY']);
 
-/* A code whose check is still on its way is not sent again: a second
-   read of it (the member left Scan and came back, or a repeat call)
-   waits for that answer, and only the call that asked lands the stamp. */
+/* A code whose check is still on its way is not sent again for the
+   same account: a second read of it (the member left Scan and came
+   back, or a repeat call) waits for that answer, and only the call that
+   asked lands the stamp. Keyed by account and code. */
 const sealsAsked = new Map();
 /* codes whose last check got no answer: the server may have stamped
    them before the answer was lost */
@@ -18100,30 +18118,41 @@ async function submitSeal(raw, run = Scanner.run){
   if (!QRFormat.looksLikeKeystamp(raw)) return rejectVisual('INVALID_TOKEN', raw, run);
 
   Scanner.setState('busy', 'Checking');
-  let asked = sealsAsked.get(raw);
+  const uid = Store.user && Store.user.id;
+  const key = `${uid}|${raw}`;
+  let asked = sealsAsked.get(key);
   const first = !asked;
-  if (first){ asked = Backend.verifyCode(raw, Store.user && Store.user.id); sealsAsked.set(raw, asked); }
+  if (first){ asked = Backend.verifyCode(raw, uid); sealsAsked.set(key, asked); }
   const result = await asked;
-  if (first) sealsAsked.delete(raw);
+  if (first) sealsAsked.delete(key);
+  /* another account is signed in now: this answer was the last one's,
+     and the page has moved to the new account's Scan */
+  if (!Store.user || Store.user.id !== uid) return;
 
   let code = result && result.ok ? null : ((result && result.code) || 'SERVER_ERROR');
   /* "already checked in", right after a check that got no answer, to a
      meeting this page has no stamp for: the lost answer was this stamp */
-  if (code === 'ALREADY_CHECKED_IN' && sealsUnanswered.has(raw) &&
+  if (code === 'ALREADY_CHECKED_IN' && sealsUnanswered.has(key) &&
       result.meeting_id && !Store.attended(result.meeting_id)) code = null;
   if (first){
-    if (code === 'NETWORK_ERROR' || code === 'SERVER_ERROR') sealsUnanswered.add(raw);
-    else sealsUnanswered.delete(raw);
+    if (code === 'NETWORK_ERROR' || code === 'SERVER_ERROR') sealsUnanswered.add(key);
+    else sealsUnanswered.delete(key);
   }
 
   if (code){
     /* refused as signed out: the record is read again, and the page
        goes to Sign in if the session is over */
     if (SCAN_STALE.has(code) || code === 'NOT_AUTHENTICATED'){
-      const read = Store.hydrate();
+      const before = Store.applied;
+      const read = Store.hydrate({ keep:true });
       /* an ended session's code while check-in is open again (closed
-         and reopened): it is the code that is old, not the check-in */
-      if (code === 'ATTENDANCE_CLOSED'){ await read; if (Store.openMeeting()) code = 'STALE_CODE'; }
+         and reopened): it is the code that is old, not the check-in.
+         Only a record read just now says so, and the refusal is not
+         held for long waiting for it. */
+      if (code === 'ATTENDANCE_CLOSED'){
+        await Promise.race([read, new Promise(r => setTimeout(r, 4000))]);
+        if (Store.applied > before && Store.openMeeting()) code = 'STALE_CODE';
+      }
     }
     return rejectVisual(code, raw, run);
   }
