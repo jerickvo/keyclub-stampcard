@@ -417,10 +417,13 @@ const SupabaseAdapter = {
      migrations/2026-09-23-prizes-and-hand-stamps.sql: there, a claim is all
      the club records, and the page says only that. */
   async listHandovers(userId){
+    /* asked once per page: a project without the table answers 404 to
+       every read, and a browser logs each one as an error */
+    if (this.noHandovers) return false;
     const { data, error } = await this.client
       .from('reward_handovers').select('reward_id, handed_at').eq('user_id', userId);
     if (error){
-      if (Handover.absent(error)) return false;
+      if (Handover.absent(error)){ this.noHandovers = true; return false; }
       throw error;
     }
     return (data || []).map(r => ({ id:r.reward_id, at:r.handed_at }));
