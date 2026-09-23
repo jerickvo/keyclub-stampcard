@@ -477,9 +477,18 @@ const SupabaseAdapter = {
      bring the session back or take another one away, and a reload during
      the sign-out never signs the last person back in. */
   SIGN_OUT_WAIT: 5000,
+  /* The device lets go at the tap, before the sign-out scene plays: a
+     reload or a new tab from then on is signed out. signOut() finishes
+     the job (this tab's listeners, the other tabs, the server). */
+  leaving: null,
+  letGo(){
+    this.leaving = this.storedSession() || this.leaving;
+    this.forgetSession();
+  },
   async signOut(){
     const auth = this.client.auth;
-    const token = this.storedToken();
+    const kept = this.storedSession() || this.leaving;
+    this.leaving = null;
     try {
       if (typeof auth._removeSession === 'function'){
         this.forgetSession();
@@ -492,7 +501,7 @@ const SupabaseAdapter = {
       }
     } catch (_) {}
     this.forgetSession();
-    if (token) this.revoke(token);
+    if (kept) this.revoke(kept);
   },
 
   /* a session that answered after the page gave up on it goes, unless
@@ -502,22 +511,34 @@ const SupabaseAdapter = {
     await this.signOut();
   },
 
-  storedToken(){
+  storedSession(){
     try {
       const kept = JSON.parse(localStorage.getItem(this.client.auth.storageKey) || 'null');
-      return kept && kept.access_token || null;
+      return kept && kept.access_token ? kept : null;
     } catch (_){ return null; }
   },
+  storedToken(){ const kept = this.storedSession(); return kept ? kept.access_token : null; },
 
-  /* the server ends that session's refresh token; its answer changes
-     nothing on this device */
-  revoke(token){
-    const stop = new AbortController();
-    setTimeout(() => stop.abort(), 10000);
-    fetch(`${Config.supabaseUrl}/auth/v1/logout?scope=local`, {
-      method:'POST', keepalive:true, signal:stop.signal,
-      headers:{ apikey:Config.supabaseAnonKey, Authorization:`Bearer ${token}` },
-    }).catch(() => {});
+  /* The server ends that session's refresh token; its answer changes
+     nothing on this device. The server takes a logout only with a live
+     access token, so an expired one is first exchanged for a fresh one
+     with the session's own refresh token. */
+  async revoke(kept){
+    const call = (path, init) => {
+      const stop = new AbortController();
+      setTimeout(() => stop.abort(), 10000);
+      return fetch(`${Config.supabaseUrl}/auth/v1/${path}`, { method:'POST', keepalive:true, signal:stop.signal,
+        ...init, headers:{ apikey:Config.supabaseAnonKey, 'Content-Type':'application/json', ...(init.headers || {}) } });
+    };
+    try {
+      let token = kept.access_token;
+      if (Number(kept.expires_at) * 1000 < Date.now() + 30000 && kept.refresh_token){
+        const res = await call('token?grant_type=refresh_token', { body:JSON.stringify({ refresh_token:kept.refresh_token }) });
+        const fresh = res.ok ? await res.json() : null;
+        if (fresh && fresh.access_token) token = fresh.access_token;
+      }
+      await call('logout?scope=local', { headers:{ Authorization:`Bearer ${token}` } });
+    } catch (_) {}
   },
 
   async listMeetings(){
@@ -799,6 +820,7 @@ const PreviewAdapter = {
   async signIn(){ throw new Error('No backend is configured, so sign-in is unavailable.'); },
   async signUp(){ throw new Error('No backend is configured, so accounts cannot be created.'); },
   async signOut(){},
+  letGo(){},
   async listMeetings(){ return []; },
   async createMeeting(){ throw new Error('No backend is configured.'); },
   async deleteMeeting(){ throw new Error('No backend is configured.'); },
@@ -826,6 +848,7 @@ const UnavailableAdapter = {
   detail: null,
   async init(){ return this; },
   async currentSession(){ return null; },
+  letGo(){},
 };
 ['signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','startAttendance',
@@ -877,7 +900,7 @@ const Backend = {
   },
 };
 
-['currentSession','signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
+['currentSession','signIn','signUp','signOut','letGo','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','verifyCode',
  'startAttendance','endAttendance','issueToken','attendanceCount','meetingOpen','myStampCount','openToday','board',
  'deleteMeetingAndStamps'].forEach(fn => {

@@ -794,7 +794,11 @@ document.addEventListener('click', e => {
 
   const out = e.target.closest('[data-signout]');
   if (out){
-    if (Store.signingOut) return;
+    if (Store.signingOut || Scenes.busy) return;
+    /* the device lets go of the session at the tap: a reload or a new
+       tab from here on is signed out, whatever the scene is doing */
+    Store.signingOut = true;
+    Backend.letGo();
     Scenes.exit({
       btn: out,
       swap: () => Store.signOut().then(() => {
