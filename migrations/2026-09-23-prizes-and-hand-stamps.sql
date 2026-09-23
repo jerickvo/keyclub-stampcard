@@ -82,6 +82,7 @@ declare
   need integer;
   have integer;
   claimed boolean;
+  made boolean := false;
   at timestamptz;
 begin
   if not public.is_board() then
@@ -112,13 +113,17 @@ begin
     if have < need then
       raise exception 'NOT_EARNED' using errcode = 'P0001';
     end if;
+    -- the member's own claim can land between the check above and this
+    -- insert (their insert does not take the lock); the hand-over made
+    -- the claim only if this insert is the one that wrote it
     insert into public.reward_claims (user_id, reward_id)
     values (p_user_id, p_reward_id)
     on conflict (user_id, reward_id) do nothing;
+    made := found;
   end if;
 
   insert into public.reward_handovers (user_id, reward_id, handed_by, made_claim)
-  values (p_user_id, p_reward_id, auth.uid(), not claimed)
+  values (p_user_id, p_reward_id, auth.uid(), made)
   returning handed_at into at;
   return at;
 end $$;
