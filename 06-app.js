@@ -358,7 +358,9 @@ const TodayWatch = {
         live ? Backend.myStampCount(Store.user.id) : had]);
     } catch (_) { return; }
     if (this.busy() || !now) return;
-    if (now.open !== (was ? was.id : null) || now.today !== knew || count !== had) Store.hydrate({ keep:true });
+    /* ...or when the page said its record was not loaded */
+    if (now.open !== (was ? was.id : null) || now.today !== knew || count !== had
+        || Scanner.unsure === Store.applied) Store.hydrate({ keep:true });
   },
 };
 
@@ -1003,8 +1005,7 @@ document.addEventListener('click', e => {
       if (!mine()) return;
       /* the record as it is now: the claim may have landed with its
          answer lost, or the stamps may have changed since the page loaded */
-      const before = Store.applied;
-      await Store.hydrate({ keep:true });
+      const read = await Store.reread({ keep:true });
       if (!mine()) return;
       const now = Store.rewards.find(r => r.id === rid);
       if (now && now.claimed) return landed(now);
@@ -1012,7 +1013,6 @@ document.addEventListener('click', e => {
       const refused = (err && err.code === '42501') || /row-level security/i.test(msg);
       /* the re-read itself may not have got through: then nobody knows
          whether the claim landed, and the page does not say it did not */
-      const read = Store.applied > before;
       toast({ key:'claim', bad:true, title:'Could not claim',
         detail:refused ? 'This reward is not earned. Your stamp count has changed.'
              : !read ? 'The claim could not be confirmed. Check your connection and try again.'

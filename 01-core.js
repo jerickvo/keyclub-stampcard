@@ -176,6 +176,15 @@ const Store = {
 
   get failed(){ return this.loadError !== null; },
 
+  /* A read of the record, and whether it (or one begun after it) was
+     applied: a read begun earlier that lands meanwhile holds the record
+     as it was before, and does not count as this one getting through. */
+  async reread(opts){
+    const mine = this.seq + 1;
+    await this.hydrate(opts);
+    return this.applied >= mine;
+  },
+
   /* One line that changes whenever a page would: who is signed in, what
      loaded, which meetings are open or ahead, the stamps, the claims.
      A re-read that finds nothing new repaints nothing. */
@@ -348,10 +357,9 @@ const Store = {
     await Backend.claimReward(this.user.id, id);
     /* the claim is on file: a re-read that fails keeps the card, and
        the reward shows as claimed until one gets through */
-    const before = this.applied;
-    await this.hydrate({ keep:true });
+    const got = await this.reread({ keep:true });
     const now = this.rewards.find(x => x.id === id) || null;
-    if (now && this.applied === before && !now.claimed && this.user && this.user.id === who){
+    if (now && !got && !now.claimed && this.user && this.user.id === who){
       now.claimed = true; now.claimedAt = new Date().toISOString();
     }
     return now;

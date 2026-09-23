@@ -539,9 +539,7 @@ const Landing = {
   /* a read that fails keeps the card on screen (the stamp is on file) */
   async refresh(tries){
     for (let i = 0; i < tries; i++){
-      const before = Store.applied;
-      await Store.hydrate({ keep:true });
-      if (Store.applied > before && !Store.failed) return true;
+      if (await Store.reread({ keep:true }) && !Store.failed) return true;
       await new Promise(r => setTimeout(r, 400 * (i + 1)));
     }
     return false;
@@ -672,15 +670,13 @@ async function submitSeal(raw, run = Scanner.run){
     /* refused as signed out: the record is read again, and the page
        goes to Sign in if the session is over */
     if (SCAN_STALE.has(code) || code === 'NOT_AUTHENTICATED'){
-      const before = Store.applied;
-      const read = Store.hydrate({ keep:true });
+      const read = Store.reread({ keep:true });
       /* if the record could not be read again, the line under the
-         camera no longer vouches for it: the stamp this refusal proves
-         is shown, or the line says the record is not loaded */
-      read.then(() => {
-        if (Store.applied !== before || !Store.user || Store.user.id !== uid) return;
-        if (code === 'ALREADY_CHECKED_IN' && result.meeting_id) Store.noteStamp(result.meeting_id);
-        else Scanner.unsure = Store.applied;
+         camera no longer vouches for it: it says the record is not
+         loaded until a read gets through */
+      read.then(got => {
+        if (got || !Store.user || Store.user.id !== uid) return;
+        Scanner.unsure = Store.applied;
         paintScanStanding();
       });
       /* an ended session's code while check-in is open again (closed
@@ -688,8 +684,8 @@ async function submitSeal(raw, run = Scanner.run){
          Only a record read just now says so, and the refusal is not
          held for long waiting for it. */
       if (code === 'ATTENDANCE_CLOSED'){
-        await Promise.race([read, new Promise(r => setTimeout(r, 4000))]);
-        if (Store.applied > before && Store.openMeeting()) code = 'STALE_CODE';
+        const got = await Promise.race([read, new Promise(r => setTimeout(() => r(false), 4000))]);
+        if (got && Store.openMeeting()) code = 'STALE_CODE';
       }
     }
     return rejectVisual(code, raw, run);
