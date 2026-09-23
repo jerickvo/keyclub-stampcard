@@ -17213,8 +17213,12 @@ let countTimer = null;
 function paintAttendanceCount(meetingId){
   clearInterval(countTimer);
   const el = () => document.querySelector('#attCount');
+  /* the club's midnight ends the day's code (the verifier refuses it
+     as another day's), so the stage is read again and says Left open */
+  const day = Schedule.today();
   const pull = async () => {
     if (!el()) return clearInterval(countTimer);
+    if (Schedule.today() !== day){ clearInterval(countTimer); loadBoard(); return; }
     if (document.hidden) return;
 
     /* a failed poll keeps the last count on the wall; the next poll
