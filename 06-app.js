@@ -185,12 +185,13 @@ async function go(id, opts = {}){
   id = gate(id);
   if (navigating){
     /* The next page turn waits for this one. A background repaint never
-       replaces the reader's own turn (it only makes sure the page is
-       drawn again), and a turn to the page a repaint was owed for keeps
-       the repaint. */
+       replaces the reader's own turn to another page (that page is drawn
+       from the record anyway); a tap on the page being turned to adds
+       nothing to a repaint of it that is already owed. */
     const was = pendingNav;
-    if (was && opts.quiet && !was.opts.quiet) was.opts = { ...was.opts, force:true };
-    else pendingNav = { id, opts:was && was.id === id && was.opts.force ? { ...opts, force:true } : opts };
+    if (was && was.id === id && was.opts.force && !opts.force) return;
+    if (was && opts.quiet && !was.opts.quiet && was.id !== heading) return;
+    pendingNav = { id, opts };
     return;
   }
   if (current === 'scan' && id !== 'scan') Scanner.stop();
@@ -277,8 +278,11 @@ function focusKey(root, el){
 function refocusKey(root, key){
   const all = root.querySelectorAll(key.q);
   const el = all[key.i] || all[0];
-  if (el && typeof el.focus === 'function'){ el.focus({ preventScroll:true }); return el; }
-  return null;
+  if (!el || typeof el.focus !== 'function') return null;
+  /* a heading a page turn had focused is focusable again */
+  if (!el.hasAttribute('tabindex') && el.matches('h1, h2, .rechead__title')) el.setAttribute('tabindex', '-1');
+  el.focus({ preventScroll:true });
+  return el;
 }
 
 /* the one intro a page has: a stamp just earned is primed to land */
@@ -1282,7 +1286,13 @@ try {
     if (Backend.live) SupabaseAdapter.onAuthChange((event, uid) => {
       if (!Store.ready || Store.signingOut || Store.signingIn) return;
       const was = Store.user ? Store.user.id : null;
-      if (event === 'SIGNED_OUT' ? was !== null : uid !== null && uid !== was) Store.hydrate();
+      if (event === 'SIGNED_OUT' ? was !== null : uid !== null && uid !== was){
+        /* another tab's session can reach this tab's storage a moment
+           after its message: read once more if it was not there yet */
+        Store.hydrate().then(() => {
+          if (uid && (!Store.user || Store.user.id !== uid)) setTimeout(() => Store.hydrate(), 600);
+        });
+      }
     });
 
     let shownUser = Store.user ? Store.user.id : null;
@@ -1362,6 +1372,11 @@ try {
 function paintIdentity(){
   const foot = $('#railFoot');
   if (!foot) return;
+  /* drawn again only when who is signed in changes: a repaint keeps
+     the focus on Motion or Sign out */
+  const who = Store.signedIn ? `${Store.user.id}:${Store.user.name}:${Store.user.role}` : '';
+  if (foot.dataset.who === who && foot.firstChild){ paintMotion(); return; }
+  foot.dataset.who = who;
   foot.innerHTML = Store.signedIn
     ? `<p class="rail__who"><span class="rail__name">${esc(Store.user.name)}</span>
          <span class="rail__role">${Store.isBoard ? 'Board' : 'Member'}</span></p>
