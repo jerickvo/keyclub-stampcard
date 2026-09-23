@@ -116,6 +116,7 @@ const BoardUI = {
       HAS_ATTENDANCE:    'Someone has checked in to this meeting, so it stays. It can be deleted once the meeting is over.',
       ATTENDANCE_ALREADY_OPEN: 'Another meeting already has check-in open. Close that one first.',
       CHECK_IN_OPEN:     'Check-in is open for this meeting. Close it before deleting.',
+      NOT_DELETED:       'Not deleted. Try again.',
       SERVER_ERROR:      'Could not reach the club records.',
     })[note] || (/^[A-Z_]+$/.test(String(note))
       ? 'Could not complete that. Try again.'

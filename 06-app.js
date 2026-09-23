@@ -391,6 +391,11 @@ document.addEventListener('submit', async e => {
     if (start >= end)   return show('End time must be after the start time.');
 
     show(''); hold(btn, 'Scheduling');
+    /* the newest attempt owns the form: an older one that gave up and
+       answers late does not re-enable Schedule or speak over it */
+    const ticket = BoardUI.formTicket = (BoardUI.formTicket || 0) + 1;
+    const who = Store.user && Store.user.id;
+    const mine = () => BoardUI.formTicket === ticket && Boolean(Store.user) && Store.user.id === who;
     const scheduled = () => {
       BoardUI.form = null; BoardUI.formOpen = false;
       toast({ key:'board', title:`GM ${pad(no)} scheduled` });
@@ -398,14 +403,15 @@ document.addEventListener('submit', async e => {
     };
     try {
       await Backend.createMeeting({ no, date, startTime:to12h(start), endTime:to12h(end) });
-      scheduled();
+      if (mine()) scheduled();
     } catch (ex){
       const kind = WriteFailure.classify(ex).kind;
       const gone = (kind === 'permission' || kind === 'auth') && await sessionGone();
-      if (gone){ show('You are no longer signed in here. Sign in again.'); release($('#mGo'), 'Schedule meeting'); return; }
+      if (gone){ if (mine()){ show('You are no longer signed in here. Sign in again.'); release($('#mGo'), 'Schedule meeting'); } return; }
       /* the list is read again: a meeting whose answer was lost is there
          (said as scheduled), and a number another officer took shows */
       const now = await Backend.board('meetings').catch(() => null);
+      if (!mine()) return;
       const asked = { start:to12h(start), end:to12h(end) };
       if (now && (now.meetings || []).some(m => Number(m.meeting_number) === no && m.meeting_date === date &&
                                                m.start_time === asked.start && m.end_time === asked.end))
@@ -413,7 +419,10 @@ document.addEventListener('submit', async e => {
       const msg = WriteFailure.explain(ex, 'create meeting');
       if (now){ BoardUI.meetings = now; const box = $('#boardPane'); if (box) box.innerHTML = BoardUI.pane(); }
       show(msg);
-      release($('#mGo'), 'Schedule meeting');
+      /* focus goes back to the button, under the message that says why */
+      const again = $('#mGo');
+      release(again, 'Schedule meeting');
+      again?.focus({ preventScroll:true });
     }
     return;
   }
@@ -628,19 +637,26 @@ document.addEventListener('click', e => {
     const opened = () => { dropToast('board', true); boardMeeting = id; boardStamp = true;
                            BoardUI.refocus = '[data-bfull]'; loadBoard(); };
     hold(bstart, 'Opening');
+    const who = Store.user && Store.user.id;
+    const still = () => Store.user && Store.user.id === who;
     (async () => {
       /* another officer may have opened a meeting since this stage was
-         read; opening this one would end theirs without a word */
-      const now = await Backend.board('meetings').catch(() => null);
+         read; opening this one would end theirs without a word. If that
+         cannot be read, nothing is opened. */
+      const now = await Backend.board('meetings');
       if (openNow(now).some(m => m.id !== id)) throw new Error('ATTENDANCE_ALREADY_OPEN');
       await Backend.startAttendance(id);
-    })().then(opened).catch(async err => {
+    })().then(() => { if (still()) opened(); }).catch(async err => {
+      if (!still()) return;
       /* the stage is read again: opened at the same moment by another
          officer is open, which is what was asked */
       const now = await Backend.board('meetings').catch(() => null);
+      if (!still()) return;
       if (openNow(now).some(m => m.id === id)) return opened();
+      /* another meeting opened at the same moment: that is the reason */
+      const why = openNow(now).length ? 'ATTENDANCE_ALREADY_OPEN' : err && err.message;
       toast({ key:'board', bad:true, title:'Could not open check-in',
-              detail:BoardUI.message(err && err.message) });
+              detail:BoardUI.message(why) });
       BoardUI.refocus = '[data-bstart]';
       loadBoard();
     });
@@ -648,14 +664,24 @@ document.addEventListener('click', e => {
   }
   const bend = e.target.closest('[data-bend]');
   if (bend){
+    const id = bend.dataset.bend;
+    const who = Store.user && Store.user.id;
+    const still = () => Store.user && Store.user.id === who;
+    const closed = () => { dropToast('board', true); clearInterval(countTimer); boardStamp = true;
+                           BoardUI.refocus = '[data-bstart]'; loadBoard(); };
     hold(bend, 'Closing');
-    Backend.endAttendance(bend.dataset.bend)
-      .then(() => { dropToast('board', true); clearInterval(countTimer); boardStamp = true;
-                    BoardUI.refocus = '[data-bstart]'; loadBoard(); })
-      .catch(err => {
+    Backend.endAttendance(id)
+      .then(() => { if (still()) closed(); })
+      .catch(async err => {
+        if (!still()) return;
+        /* read again: closed (its answer lost, or closed elsewhere) is
+           what was asked; deleted, the stage says so */
+        const now = await Backend.board('meetings').catch(() => null);
+        if (!still()) return;
+        const m = now && (now.meetings || []).find(x => x.id === id);
+        if (m && m.state !== 'OPEN') return closed();
         toast({ key:'board', bad:true, title:'Could not close check-in',
                 detail:BoardUI.message(err && err.message) });
-        /* read again: closed elsewhere, or deleted, the stage says so */
         BoardUI.refocus = '[data-bend]';
         loadBoard(); });
     return;
@@ -831,38 +857,51 @@ document.addEventListener('click', e => {
     hold(claim, 'Claiming');
     claim.setAttribute('aria-label', `Claiming ${prize}`);
     const who = Store.user && Store.user.id;
+    /* signed out (or someone else) since: not this page's news */
+    const mine = () => Boolean(Store.user) && Store.user.id === who;
     const landed = r => {
-      /* signed out (or someone else) since: not this page's news */
-      if (!Store.user || Store.user.id !== who) return;
+      if (!mine()) return;
       /* a reader who has moved on (or is moving on, mid-cut) is not
-         pulled back to Rewards */
+         pulled back to Rewards; one who is there sees it claimed */
       const here = navigating && heading ? heading : current;
       if (here === 'rewards'){
-        go('rewards', { instant:true });
+        go('rewards', { instant:true, force:true });
         FX.claimStamp($(`[data-reward="${rid}"]`));
       }
       setTimeout(() => toast({ key:'claim', title:`${r.name} claimed`,
-        detail:Store.handovers ? 'Collect it from an officer at a meeting.' : '' }), 260);
+        detail:r.handedAt ? 'An officer has already handed it to you.'
+             : Store.handovers ? 'Collect it from an officer at a meeting.' : '' }), 260);
+    };
+    /* "Claiming" holds until the page knows what happened; then the
+       button on screen now (a repaint may have drawn it again) is let go */
+    const settle = () => {
+      const btn = $(`[data-claim="${rid}"]`) || claim;
+      delete btn.dataset.armed;
+      release(btn, 'Claim');
+      btn.setAttribute('aria-label', `Claim ${prize}`);
+      btn.focus({ preventScroll:true });
     };
     Store.claimReward(rid).then(landed).catch(async err => {
-      delete claim.dataset.armed;
-      release(claim, 'Claim');
-      name(false);
-      claim.focus({ preventScroll:true });
+      if (!mine()) return;
       const msg = String((err && err.message) || '');
       /* refused on this page, which counts fewer stamps: nothing was sent */
-      if (/not earned/i.test(msg))
+      if (/not earned/i.test(msg)){
+        settle();
         return toast({ key:'claim', bad:true, title:'Could not claim', detail:'This reward is not earned yet.' });
+      }
       /* a session that ended says so once, on the key Sign in uses */
       if (/not signed/i.test(msg) || await sessionGone())
         return toast({ key:'auth', bad:true, title:'Could not claim',
                        detail:'You are no longer signed in here. Sign in again to claim.' });
+      if (!mine()) return;
       /* the record as it is now: the claim may have landed with its
          answer lost, or the stamps may have changed since the page loaded */
       const before = Store.applied;
       await Store.hydrate({ keep:true });
+      if (!mine()) return;
       const now = Store.rewards.find(r => r.id === rid);
       if (now && now.claimed) return landed(now);
+      settle();
       const refused = (err && err.code === '42501') || /row-level security/i.test(msg);
       /* the re-read itself may not have got through: then nobody knows
          whether the claim landed, and the page does not say it did not */

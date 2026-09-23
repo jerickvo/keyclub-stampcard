@@ -554,10 +554,17 @@ const SupabaseAdapter = {
       .delete().eq('id', id).eq('check_in_open', false).select('id');
     if (error) throw error;
     if (data && data.length) return { ok:true };
-    const { data:still } = await this.client.from('meetings')
-      .select('id, check_in_open').eq('id', id).maybeSingle();
+    /* nothing was deleted: why, read now (a read that fails says so,
+       rather than "gone") */
+    const [{ data:still, error:e1 }, { count, error:e2 }] = await Promise.all([
+      this.client.from('meetings').select('id, check_in_open').eq('id', id).maybeSingle(),
+      this.client.from('attendance').select('id', { count:'exact', head:true }).eq('meeting_id', id),
+    ]);
+    if (e1) throw e1;
     if (!still) return { ok:false, code:'MEETING_NOT_FOUND' };
-    return { ok:false, code:still.check_in_open ? 'CHECK_IN_OPEN' : 'HAS_ATTENDANCE' };
+    if (still.check_in_open) return { ok:false, code:'CHECK_IN_OPEN' };
+    if (!e2 && count > 0) return { ok:false, code:'HAS_ATTENDANCE' };
+    return { ok:false, code:'NOT_DELETED' };
   },
 
   toMeeting(row){

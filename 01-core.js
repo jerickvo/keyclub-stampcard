@@ -340,8 +340,15 @@ const Store = {
     const r = this.rewards.find(x => x.id === id);
     if (r && this.totalStamps() < r.required) throw new Error('Not earned yet.');
     await Backend.claimReward(this.user.id, id);
-    await this.hydrate();
-    return this.rewards.find(x => x.id === id) || null;
+    /* the claim is on file: a re-read that fails keeps the card, and
+       the reward shows as claimed until one gets through */
+    const before = this.applied;
+    await this.hydrate({ keep:true });
+    const now = this.rewards.find(x => x.id === id) || null;
+    if (now && this.applied === before && !now.claimed){
+      now.claimed = true; now.claimedAt = new Date().toISOString();
+    }
+    return now;
   },
 };
 
