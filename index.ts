@@ -47,6 +47,21 @@ function mustCount(res: { count: number | null; error: unknown | null }): number
   return res.count;
 }
 
+// Supabase caps every PostgREST response at db-max-rows (1000 by
+// default), whatever .limit() asks for, and says nothing when it does. A
+// read of a whole table is therefore paged to the end, in a fixed order,
+// so a club past its thousandth stamp is not quietly counted short.
+const ROWS = 1000;
+async function readAll<T = any>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; ; from += ROWS) {
+    const rows = must(await page(from, from + ROWS - 1)) ?? [];
+    out.push(...rows);
+    if (rows.length < ROWS) return out;
+    if (from >= 500 * ROWS) throw new Error('QUERY_FAILED');   // a runaway, not a club
+  }
+}
+
 const PAGE_SIZE = 25;
 const TIERS = [
   { id: 'r1', name: 'Club Merch',    required: 10 },
@@ -107,20 +122,27 @@ Deno.serve(async (req) => {
 
   // Hand-overs keyed "user:reward", for the given members or everyone.
   // null, not an empty map, when the project has no reward_handovers
-  // table yet (migrations/2026-09-23-reward-handover.sql not run): "no
+  // table yet (migrations/2026-09-23-prizes-and-hand-stamps.sql not run): "no
   // prize has been handed over" and "this club does not record hand-overs"
   // are different facts. Any other failure is a failure.
   const handoversOf = async (ids: string[] | null) => {
-    let q = admin.from('reward_handovers').select('user_id, reward_id, handed_at, handed_by').limit(20000);
-    if (ids) q = q.in('user_id', ids);
-    const { data, error } = await q;
-    if (error) {
-      const code = String((error as { code?: string }).code ?? '');
+    const q = (from: number, to: number) => {
+      let b = admin.from('reward_handovers').select('user_id, reward_id, handed_at, handed_by')
+        .order('user_id').order('reward_id').range(from, to);
+      if (ids) b = b.in('user_id', ids);
+      return b;
+    };
+    // the first page tells a missing table from an empty one
+    const first = await q(0, ROWS - 1);
+    if (first.error) {
+      const code = String((first.error as { code?: string }).code ?? '');
       if (code === '42P01' || code === 'PGRST205') return null;
       throw new Error('QUERY_FAILED');
     }
+    const rows = (first.data ?? []).length < ROWS ? (first.data ?? [])
+      : [...(first.data ?? []), ...await readAll((a, b) => q(a + ROWS, b + ROWS))];
     const by = new Map<string, { handed_at: string; handed_by: string | null }>();
-    for (const h of data ?? []) by.set(h.user_id + ':' + h.reward_id, h);
+    for (const h of rows) by.set(h.user_id + ':' + h.reward_id, h);
     return by;
   };
 
@@ -159,10 +181,12 @@ Deno.serve(async (req) => {
         // milestone tier. No counter is stored: these are recomputed from
         // the same rows the member's own stamp total comes from, so the
         // board and the member can never disagree.
-        admin.from('attendance').select('user_id').limit(20000),
+        readAll((a, b) => admin.from('attendance').select('user_id').order('id').range(a, b))
+          .then(data => ({ data, error: null })),
         // and one pass over claims: a milestone counts a member who
         // reached the tier or who holds its prize.
-        admin.from('reward_claims').select('user_id, reward_id').limit(20000),
+        readAll((a, b) => admin.from('reward_claims').select('user_id, reward_id').order('id').range(a, b))
+          .then(data => ({ data, error: null })),
       ]);
 
       // Each of these four was previously `?? 0`. Every one of those was
@@ -362,13 +386,13 @@ Deno.serve(async (req) => {
     // carries nothing else.
     if (action === 'prizes') {
       const [roll, claimRows] = await Promise.all([
-        admin.from('attendance').select('user_id').limit(20000),
-        admin.from('reward_claims').select('user_id, reward_id, claimed_at').limit(20000),
+        readAll((a, b) => admin.from('attendance').select('user_id').order('id').range(a, b)),
+        readAll((a, b) => admin.from('reward_claims').select('user_id, reward_id, claimed_at').order('id').range(a, b)),
       ]);
       const perMember = new Map<string, number>();
-      for (const a of must(roll) ?? []) perMember.set(a.user_id, (perMember.get(a.user_id) ?? 0) + 1);
+      for (const a of roll) perMember.set(a.user_id, (perMember.get(a.user_id) ?? 0) + 1);
       const claimedAt = new Map<string, string>();
-      for (const c of must(claimRows) ?? []) claimedAt.set(c.user_id + ':' + c.reward_id, c.claimed_at);
+      for (const c of claimRows) claimedAt.set(c.user_id + ':' + c.reward_id, c.claimed_at);
 
       const handed = await handoversOf(null);
       if (handed === null) return json({ ok: false, code: 'NOT_READY' });
@@ -463,8 +487,8 @@ Deno.serve(async (req) => {
       if (error) throw error;
 
       const counts = new Map<string, number>();
-      const att = must(await admin.from('attendance').select('meeting_id').limit(20000));
-      for (const a of att ?? []) counts.set(a.meeting_id, (counts.get(a.meeting_id) ?? 0) + 1);
+      const att = await readAll((a, b) => admin.from('attendance').select('meeting_id').order('id').range(a, b));
+      for (const a of att) counts.set(a.meeting_id, (counts.get(a.meeting_id) ?? 0) + 1);
 
       const today = clubDay();
       return json({

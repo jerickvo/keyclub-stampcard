@@ -88,31 +88,44 @@ const Store = {
   emit(){ this.listeners.forEach(fn => { try { fn(); } catch (_) {} }); },
 
   loadError: null,
-  seq: 0,
+  seq: 0,        /* reads begun */
+  applied: 0,    /* the newest read shown */
   /* whether this club records prize hand-overs (the migration has run) */
   handovers: false,
 
   /* `keep`: a re-read in the background (a poll, the tab coming back)
      that fails leaves what is on screen as it was, rather than turning
-     a page that loaded into "Could not load" on one dropped request */
+     a page that loaded into "Could not load" on one dropped request.
+
+     Reads can overlap (a poll and the read after a scan). Whichever
+     finishes first is shown; one that finishes after a read that began
+     later is dropped, so an answer from before a stamp landed is never
+     painted over one from after it, and a read that fails never throws
+     away one that worked. Nothing is written to the store until a read
+     is applied, so a slow read cannot sign an account back in after a
+     sign-out either. */
   async hydrate({ keep = false } = {}){
     const held = keep && this.ready && !this.loadError && this.user;
     const before = this.ready && !this.loadError && this.user ? this.user.id : null;
-    /* the newest read wins: an older answer arriving late (a poll sent
-       before a scan landed) is dropped, never painted over a newer one */
     const seq = ++this.seq;
+    const stale = () => seq < this.applied;
+    const apply = () => { this.applied = seq; };
+
     let session = null;
     try {
       session = await Backend.currentSession();
     } catch (_){
-      if (held) return this;
+      if (held || stale()) return this;
+      apply();
       this.loadError = 'SESSION';
       this.ready = true; this.emit();
       return this;
     }
+    if (stale()) return this;
 
-    this.user = session;
     if (!session){
+      apply();
+      this.user = null;
       this.meetings = []; this.scans = [];
       this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:false })); this.handovers = false;
       this.loadError = null; this.ready = true; this.emit();
@@ -125,7 +138,16 @@ const Store = {
       Backend.listRewardClaims(session.id).then(v => v, () => null),
       Backend.listHandovers(session.id).then(v => v, () => null),
     ]);
-    if (seq !== this.seq) return this;
+    if (stale()) return this;
+
+    if (scans === null || meetings === null || claims === null){
+      if (held && session.id === before) return this;
+      apply();
+      this.user = session;
+      this.loadError = 'DATA';
+      this.ready = true; this.emit();
+      return this;
+    }
 
     /* Hand-overs are a line of detail on Rewards, never a reason the
        app will not load: a failed read keeps what the page already knew
@@ -136,13 +158,8 @@ const Store = {
       : same && this.handovers ? this.rewards.filter(r => r.handedAt).map(r => ({ id:r.id, at:r.handedAt }))
       : false;
 
-    if (scans === null || meetings === null || claims === null){
-      if (held && session.id === before) return this;
-      this.loadError = 'DATA';
-      this.ready = true; this.emit();
-      return this;
-    }
-
+    apply();
+    this.user = session;
     this.meetings = meetings;
     this.scans = scans;
     this.settle();
@@ -230,8 +247,9 @@ const Store = {
   todayMeeting(){
     const t = this.meetings.filter(m => m.today);
     const at = m => { const v = clockMinutes(m.time); return Number.isNaN(v) ? 0 : v; };
+    /* same start time: the lower number, as the board's stage picks it */
     return t.find(m => m.open)
-        || t.filter(m => m.upcoming).sort((a, b) => at(a) - at(b))[0]
+        || t.filter(m => m.upcoming).sort((a, b) => at(a) - at(b) || a.no - b.no)[0]
         || t.filter(m => this.attended(m.id)).sort((a, b) => at(b) - at(a))[0]
         || t.filter(m => m.ended && !m.before).sort((a, b) => at(b) - at(a))[0]
         || null;

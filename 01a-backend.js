@@ -417,7 +417,7 @@ const SupabaseAdapter = {
 
   /* The prizes an officer has handed this member. `false`, not an
      empty list, on a project that has not run
-     migrations/2026-09-23-reward-handover.sql: there, a claim is all
+     migrations/2026-09-23-prizes-and-hand-stamps.sql: there, a claim is all
      the club records, and the page says only that. */
   async listHandovers(userId){
     const { data, error } = await this.client
@@ -550,6 +550,16 @@ const SupabaseAdapter = {
     return count || 0;
   },
 
+  /* the meeting whose check-in is open today, if any: one row at most
+     (the database allows one open meeting) */
+  async openToday(){
+    const { data, error } = await this.client
+      .from('meetings').select('id, meeting_date').eq('check_in_open', true);
+    if (error) throw error;
+    const row = (data || []).find(m => m.meeting_date === clubDay());
+    return row ? row.id : null;
+  },
+
   /* whether this member has a stamp for this meeting: one row at most */
   async attendedMeeting(userId, meetingId){
     const { count, error } = await this.client
@@ -593,6 +603,7 @@ const PreviewAdapter = {
   async attendanceCount(){ return 0; },
   async meetingOpen(){ return false; },
   async attendedMeeting(){ return false; },
+  async openToday(){ return null; },
   async board(){ throw new Error('No backend is configured.'); },
   async deleteMeetingAndStamps(){ throw new Error('No backend is configured.'); },
 };
@@ -605,7 +616,7 @@ const UnavailableAdapter = {
 };
 ['signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','startAttendance',
- 'endAttendance','issueToken','attendanceCount','meetingOpen','attendedMeeting','board',
+ 'endAttendance','issueToken','attendanceCount','meetingOpen','attendedMeeting','openToday','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   UnavailableAdapter[fn] = async () => { throw new Error('BACKEND_UNAVAILABLE'); };
 });
@@ -655,7 +666,7 @@ const Backend = {
 
 ['currentSession','signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','verifyCode',
- 'startAttendance','endAttendance','issueToken','attendanceCount','meetingOpen','attendedMeeting','board',
+ 'startAttendance','endAttendance','issueToken','attendanceCount','meetingOpen','attendedMeeting','openToday','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   Backend[fn] = function(...a){ return this.adapter[fn](...a); };
 });

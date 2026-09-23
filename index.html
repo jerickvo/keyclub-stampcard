@@ -14950,7 +14950,7 @@ const SupabaseAdapter = {
 
   /* The prizes an officer has handed this member. `false`, not an
      empty list, on a project that has not run
-     migrations/2026-09-23-reward-handover.sql: there, a claim is all
+     migrations/2026-09-23-prizes-and-hand-stamps.sql: there, a claim is all
      the club records, and the page says only that. */
   async listHandovers(userId){
     const { data, error } = await this.client
@@ -15083,6 +15083,16 @@ const SupabaseAdapter = {
     return count || 0;
   },
 
+  /* the meeting whose check-in is open today, if any: one row at most
+     (the database allows one open meeting) */
+  async openToday(){
+    const { data, error } = await this.client
+      .from('meetings').select('id, meeting_date').eq('check_in_open', true);
+    if (error) throw error;
+    const row = (data || []).find(m => m.meeting_date === clubDay());
+    return row ? row.id : null;
+  },
+
   /* whether this member has a stamp for this meeting: one row at most */
   async attendedMeeting(userId, meetingId){
     const { count, error } = await this.client
@@ -15126,6 +15136,7 @@ const PreviewAdapter = {
   async attendanceCount(){ return 0; },
   async meetingOpen(){ return false; },
   async attendedMeeting(){ return false; },
+  async openToday(){ return null; },
   async board(){ throw new Error('No backend is configured.'); },
   async deleteMeetingAndStamps(){ throw new Error('No backend is configured.'); },
 };
@@ -15138,7 +15149,7 @@ const UnavailableAdapter = {
 };
 ['signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','startAttendance',
- 'endAttendance','issueToken','attendanceCount','meetingOpen','attendedMeeting','board',
+ 'endAttendance','issueToken','attendanceCount','meetingOpen','attendedMeeting','openToday','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   UnavailableAdapter[fn] = async () => { throw new Error('BACKEND_UNAVAILABLE'); };
 });
@@ -15188,7 +15199,7 @@ const Backend = {
 
 ['currentSession','signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
  'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','verifyCode',
- 'startAttendance','endAttendance','issueToken','attendanceCount','meetingOpen','attendedMeeting','board',
+ 'startAttendance','endAttendance','issueToken','attendanceCount','meetingOpen','attendedMeeting','openToday','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   Backend[fn] = function(...a){ return this.adapter[fn](...a); };
 });
@@ -15286,31 +15297,44 @@ const Store = {
   emit(){ this.listeners.forEach(fn => { try { fn(); } catch (_) {} }); },
 
   loadError: null,
-  seq: 0,
+  seq: 0,        /* reads begun */
+  applied: 0,    /* the newest read shown */
   /* whether this club records prize hand-overs (the migration has run) */
   handovers: false,
 
   /* `keep`: a re-read in the background (a poll, the tab coming back)
      that fails leaves what is on screen as it was, rather than turning
-     a page that loaded into "Could not load" on one dropped request */
+     a page that loaded into "Could not load" on one dropped request.
+
+     Reads can overlap (a poll and the read after a scan). Whichever
+     finishes first is shown; one that finishes after a read that began
+     later is dropped, so an answer from before a stamp landed is never
+     painted over one from after it, and a read that fails never throws
+     away one that worked. Nothing is written to the store until a read
+     is applied, so a slow read cannot sign an account back in after a
+     sign-out either. */
   async hydrate({ keep = false } = {}){
     const held = keep && this.ready && !this.loadError && this.user;
     const before = this.ready && !this.loadError && this.user ? this.user.id : null;
-    /* the newest read wins: an older answer arriving late (a poll sent
-       before a scan landed) is dropped, never painted over a newer one */
     const seq = ++this.seq;
+    const stale = () => seq < this.applied;
+    const apply = () => { this.applied = seq; };
+
     let session = null;
     try {
       session = await Backend.currentSession();
     } catch (_){
-      if (held) return this;
+      if (held || stale()) return this;
+      apply();
       this.loadError = 'SESSION';
       this.ready = true; this.emit();
       return this;
     }
+    if (stale()) return this;
 
-    this.user = session;
     if (!session){
+      apply();
+      this.user = null;
       this.meetings = []; this.scans = [];
       this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:false })); this.handovers = false;
       this.loadError = null; this.ready = true; this.emit();
@@ -15323,7 +15347,16 @@ const Store = {
       Backend.listRewardClaims(session.id).then(v => v, () => null),
       Backend.listHandovers(session.id).then(v => v, () => null),
     ]);
-    if (seq !== this.seq) return this;
+    if (stale()) return this;
+
+    if (scans === null || meetings === null || claims === null){
+      if (held && session.id === before) return this;
+      apply();
+      this.user = session;
+      this.loadError = 'DATA';
+      this.ready = true; this.emit();
+      return this;
+    }
 
     /* Hand-overs are a line of detail on Rewards, never a reason the
        app will not load: a failed read keeps what the page already knew
@@ -15334,13 +15367,8 @@ const Store = {
       : same && this.handovers ? this.rewards.filter(r => r.handedAt).map(r => ({ id:r.id, at:r.handedAt }))
       : false;
 
-    if (scans === null || meetings === null || claims === null){
-      if (held && session.id === before) return this;
-      this.loadError = 'DATA';
-      this.ready = true; this.emit();
-      return this;
-    }
-
+    apply();
+    this.user = session;
     this.meetings = meetings;
     this.scans = scans;
     this.settle();
@@ -15428,8 +15456,9 @@ const Store = {
   todayMeeting(){
     const t = this.meetings.filter(m => m.today);
     const at = m => { const v = clockMinutes(m.time); return Number.isNaN(v) ? 0 : v; };
+    /* same start time: the lower number, as the board's stage picks it */
     return t.find(m => m.open)
-        || t.filter(m => m.upcoming).sort((a, b) => at(a) - at(b))[0]
+        || t.filter(m => m.upcoming).sort((a, b) => at(a) - at(b) || a.no - b.no)[0]
         || t.filter(m => this.attended(m.id)).sort((a, b) => at(b) - at(a))[0]
         || t.filter(m => m.ended && !m.before).sort((a, b) => at(b) - at(a))[0]
         || null;
@@ -16011,6 +16040,8 @@ const Views = {
     BoardUI.memberDetail = null;
     BoardUI.meetingDetail = null;
     BoardUI.confirmDelete = null;
+    /* a chapter opened afresh reads its prize list afresh */
+    BoardUI.prizesStale = true;
     /* a fresh chapter opens on the wait panel, never on another
        chapter's data */
     BoardUI.loading = true;
@@ -16214,6 +16245,8 @@ const BoardUI = {
 
   prizes: null,         /* {owed} | {code} when it could not be read | null */
   owedAll: false,       /* the prize list unfolded past its first rows */
+  prizesStale: false,   /* re-read the prize list on the next load */
+  lost: new Set(),      /* hand-overs whose answer never came back */
   handQ: '',            /* the name typed to stamp someone by hand */
   handFound: null,      /* {people} | {code} | null before any search */
   handed: {},           /* "user:reward" -> what this officer just handed over */
@@ -17935,18 +17968,26 @@ const TodayWatch = {
   },
   stop(){ clearInterval(this.timer); this.timer = null; this.id = null; },
 
+  /* nothing is asked while a code is being checked or a stamp is
+     landing: that read is the one that matters */
+  busy(){ return document.hidden || navigating || Landing.active || Scenes.busy || Scanner.locked || !Store.user; },
+
   async tick(){
-    if (document.hidden || navigating || Landing.active || Scenes.busy || !Store.user) return;
+    if (this.busy()) return;
     const day = Store.meeting(this.id);
     if (!day) return this.sync();
     /* the end time passing needs no read, only a re-sort */
     if (!day.ended && clubMinutes() >= clockMinutes(day.endTime)){ Store.hydrate({ keep:true }); return; }
+    /* which meeting is open today, not only whether this one is: with
+       two meetings in a day the board may open the other */
+    const was = Store.openMeeting();
     let open, mine;
     try {
-      [open, mine] = await Promise.all([Backend.meetingOpen(day.id),
+      [open, mine] = await Promise.all([Backend.openToday(),
                                         Backend.attendedMeeting(Store.user.id, day.id)]);
     } catch (_) { return; }
-    if (open !== day.open || mine !== Store.attended(day.id)) Store.hydrate({ keep:true });
+    if (this.busy()) return;
+    if (open !== (was ? was.id : null) || mine !== Store.attended(day.id)) Store.hydrate({ keep:true });
   },
 };
 
@@ -18294,6 +18335,10 @@ document.addEventListener('click', e => {
     Scenes.exit({
       btn: out,
       swap: () => Store.signOut().then(() => {
+        /* what one officer did at the table is not the next one's */
+        Object.assign(BoardUI, { handed:{}, handQ:'', handFound:null, owedAll:false,
+                                 prizes:null, members:null, meetings:null, q:'', page:1 });
+        TodayWatch.stop();
         AuthUI.mode = 'in';
         go('auth', { instant:true });
       }),
@@ -18336,6 +18381,7 @@ document.addEventListener('click', e => {
       return;
     }
     hold(hand, 'Saving');
+    const key = hand.dataset.bhand;
     Backend.handOverReward(uid, rid).then(at => {
       BoardUI.handed[hand.dataset.bhand] = { at:at || new Date().toISOString(), when:Date.now(),
                                              username:who, prize };
@@ -18345,12 +18391,23 @@ document.addEventListener('click', e => {
       const code = String((err && err.message) || '');
       /* two officers at one table: the other got there first. That is
          the record working, not a failure to retry */
+      /* the first try may have landed with its answer lost on the way
+         back; a second try then finds it on file, and it is this
+         officer's, with its Undo */
+      const retried = BoardUI.lost.has(key);
+      if (code === 'ALREADY_HANDED_OVER' && retried){
+        BoardUI.lost.delete(key);
+        BoardUI.handed[key] = { at:new Date().toISOString(), when:Date.now(), username:who, prize };
+        toast({ key:'board', title:`${prize} handed to ${who}`, detail:'The first try had gone through.' });
+        return reloadBoardHere(`[data-bundo="${key}"]`);
+      }
       if (code === 'ALREADY_HANDED_OVER')
-        toast({ key:'board', title:'Already handed over', detail:`${prize} for ${who} was recorded by another officer.` });
+        toast({ key:'board', title:'Already handed over', detail:`${prize} for ${who} is already on the record.` });
       else toast({ key:'board', bad:true, title:'Not handed over', detail:Handover.message(code) });
-      /* nothing reached the database: the row stays as it was, ready to
-         try again, rather than re-reading a list over a dead connection */
-      if (Handover.OFFLINE.includes(code)) return unarm(hand, 'Hand over');
+      /* nothing reached the database, or its answer never came back: the
+         row stays as it was, ready to try again, rather than re-reading
+         a list over a dead connection */
+      if (Handover.OFFLINE.includes(code)){ BoardUI.lost.add(key); return unarm(hand, 'Hand over'); }
       /* otherwise the list on screen is out of date: re-read it */
       reloadBoardHere();
     });
@@ -18451,11 +18508,14 @@ async function loadBoard(){
       BoardUI.meetingDetail = await Backend.board('meeting', { id:BoardUI.pendingId });
     } else if (BoardUI.tab === 'progress'){
       /* the prize list failing never takes the roster down with it */
+      /* the prize list is read when the chapter opens and after a
+         hand-over, not again for each search keystroke or page turn */
       const [pz, mem] = await Promise.all([
-        Backend.board('prizes').catch(e => ({ code:String((e && e.message) || 'SERVER_ERROR') })),
+        BoardUI.prizes && !BoardUI.prizes.code && !BoardUI.prizesStale ? BoardUI.prizes
+          : Backend.board('prizes').catch(e => ({ code:String((e && e.message) || 'SERVER_ERROR') })),
         Backend.board('members', { q:BoardUI.q, sort:BoardUI.sort, page:BoardUI.page }),
       ]);
-      BoardUI.prizes = pz; BoardUI.members = mem;
+      BoardUI.prizes = pz; BoardUI.prizesStale = false; BoardUI.members = mem;
     } else {
       BoardUI.meetings = await Backend.board('meetings');
     }
@@ -18533,6 +18593,7 @@ function unarm(btn, label){
 /* re-read what the pane shows, in place: the member open in it, or
    the chapter's list */
 function reloadBoardHere(refocus = null){
+  BoardUI.prizesStale = true;
   const m = BoardUI.memberDetail && BoardUI.memberDetail.member;
   const g = BoardUI.meetingDetail && BoardUI.meetingDetail.meeting;
   boardGoto(m ? { memberDetail:'pending', pendingId:m.id, refocus }

@@ -17,3 +17,7 @@ $$;
 grant usage on schema public, auth to anon, authenticated, service_role;
 alter default privileges in schema public
   grant select, insert, update, delete on tables to anon, authenticated;
+-- as Supabase does: every new function is executable by anon directly,
+-- so a test that anon is refused proves the revoke, not the default
+alter default privileges in schema public
+  grant execute on functions to anon, authenticated, service_role;

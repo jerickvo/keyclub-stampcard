@@ -23,7 +23,7 @@ function mkClient(){
   const uuid = () => 'u_' + Math.random().toString(36).slice(2, 10);
 
   /* Stands in for hand_over_reward and undo_hand_over
-     (migrations/2026-09-23-reward-handover.sql), in the same order of
+     (migrations/2026-09-23-prizes-and-hand-stamps.sql), in the same order of
      checks. As with the rest of this file, it is not evidence the real
      functions behave this way; 03-handover_test.sql is. */
   const NEED = { r1:10, r2:20, r3:30 };
@@ -58,7 +58,10 @@ function mkClient(){
     if (name === 'undo_hand_over'){
       if (!has || has.handed_by !== me.id || Date.now() - Date.parse(has.handed_at) >= 15 * 60 * 1000)
         return raise('UNDO_EXPIRED');
-      db.reward_handovers = db.reward_handovers.filter(h => h !== has); saveDB();
+      db.reward_handovers = db.reward_handovers.filter(h => h !== has);
+      /* a claim the hand-over wrote goes with it */
+      if (has.made_claim) db.reward_claims = db.reward_claims.filter(c => !(c.user_id === uid && c.reward_id === rid));
+      saveDB();
       return { data:true, error:null };
     }
     if (!NEED[rid]) return raise('INVALID_REWARD');
@@ -71,7 +74,7 @@ function mkClient(){
                               reward_id:rid, claimed_at:new Date().toISOString() });
     }
     const at = new Date().toISOString();
-    db.reward_handovers.push({ user_id:uid, reward_id:rid, handed_at:at, handed_by:me.id });
+    db.reward_handovers.push({ user_id:uid, reward_id:rid, handed_at:at, handed_by:me.id, made_claim:!claimed });
     saveDB();
     return { data:at, error:null };
   }

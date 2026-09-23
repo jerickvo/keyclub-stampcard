@@ -35,12 +35,18 @@ create table if not exists public.reward_handovers (
   reward_id  text not null check (reward_id in ('r1','r2','r3')),
   handed_at  timestamptz not null default now(),
   handed_by  uuid references public.profiles(id) on delete set null,
+  -- the hand-over wrote the claim too (the member never pressed Claim),
+  -- so taking the hand-over back takes that claim back with it
+  made_claim boolean not null default false,
   primary key (user_id, reward_id),
   -- a prize is only ever handed over against a claim on file; the
   -- claim goes (with the member) and the hand-over goes with it
   constraint reward_handovers_claim_fkey foreign key (user_id, reward_id)
     references public.reward_claims (user_id, reward_id) on delete cascade
 );
+
+-- a table created by an earlier run of this file gains the column
+alter table public.reward_handovers add column if not exists made_claim boolean not null default false;
 
 alter table public.reward_handovers enable row level security;
 
@@ -111,19 +117,23 @@ begin
     on conflict (user_id, reward_id) do nothing;
   end if;
 
-  insert into public.reward_handovers (user_id, reward_id, handed_by)
-  values (p_user_id, p_reward_id, auth.uid())
+  insert into public.reward_handovers (user_id, reward_id, handed_by, made_claim)
+  values (p_user_id, p_reward_id, auth.uid(), not claimed)
   returning handed_at into at;
   return at;
 end $$;
 
-revoke all on function public.hand_over_reward(uuid, text) from public;
+-- Supabase's default privileges grant every new function to anon
+-- directly, which `from public` does not take away
+revoke all on function public.hand_over_reward(uuid, text) from public, anon;
 grant execute on function public.hand_over_reward(uuid, text) to authenticated;
 
 -- ── take back a mistaken hand-over ────────────────────────────────
 -- For the wrong name tapped at a busy table: the officer who recorded a
 -- hand-over may withdraw it within fifteen minutes. After that it is
--- part of the record. The claim stays; it was the member's.
+-- part of the record. A claim the member made stays; it was theirs. A
+-- claim the hand-over wrote for them goes with it, so the wrong name is
+-- not left holding a claim they never made.
 create or replace function public.undo_hand_over(p_user_id uuid, p_reward_id text)
 returns boolean
 language plpgsql
@@ -131,7 +141,7 @@ security definer
 set search_path = pg_catalog, public
 as $$
 declare
-  n integer;
+  made boolean;
 begin
   if not public.is_board() then
     raise exception 'NOT_AUTHORIZED' using errcode = 'P0001';
@@ -140,15 +150,21 @@ begin
   delete from public.reward_handovers
   where user_id = p_user_id and reward_id = p_reward_id
     and handed_by = auth.uid()
-    and handed_at > now() - interval '15 minutes';
-  get diagnostics n = row_count;
-  if n = 0 then
+    and handed_at > now() - interval '15 minutes'
+  returning made_claim into made;
+  if not found then
     raise exception 'UNDO_EXPIRED' using errcode = 'P0001';
+  end if;
+  if made then
+    delete from public.reward_claims
+    where user_id = p_user_id and reward_id = p_reward_id;
   end if;
   return true;
 end $$;
 
-revoke all on function public.undo_hand_over(uuid, text) from public;
+-- Supabase's default privileges grant every new function to anon
+-- directly, which `from public` does not take away
+revoke all on function public.undo_hand_over(uuid, text) from public, anon;
 grant execute on function public.undo_hand_over(uuid, text) to authenticated;
 
 -- ═══════════════════════════════════════════════════════════════════
@@ -203,5 +219,7 @@ begin
   return at;
 end $$;
 
-revoke all on function public.stamp_by_hand(uuid, uuid) from public;
+-- Supabase's default privileges grant every new function to anon
+-- directly, which `from public` does not take away
+revoke all on function public.stamp_by_hand(uuid, uuid) from public, anon;
 grant execute on function public.stamp_by_hand(uuid, uuid) to authenticated;

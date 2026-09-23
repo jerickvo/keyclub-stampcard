@@ -48,8 +48,9 @@ select test.ck('member cannot insert a hand-over',
 select test.ck('board cannot insert a hand-over directly either',
   test.try('authenticated','33333333-3333-3333-3333-333333333333',
     $$insert into public.reward_handovers(user_id, reward_id, handed_by) values ('11111111-1111-1111-1111-111111111111','r1','33333333-3333-3333-3333-333333333333')$$), '42501');
-select test.ck('anon cannot read hand-overs',
-  test.try('anon', null, $$select 1 from public.reward_handovers$$), '42501');
+select test.ck('anon reads no hand-overs',
+  case when test.val('anon', null, $$select count(*)::text from public.reward_handovers$$)
+            in ('0', '42501') then 'none' else 'LEAK' end, 'none');
 select test.ck('member cannot hand a prize to themselves',
   test.msg('authenticated','11111111-1111-1111-1111-111111111111',
     $$select public.hand_over_reward('11111111-1111-1111-1111-111111111111','r1')$$), 'P0001 NOT_AUTHORIZED');
@@ -146,8 +147,8 @@ select test.ck('the officer who recorded it can, within fifteen minutes',
     $$select public.undo_hand_over('22222222-2222-2222-2222-222222222222','r1')$$), 'OK');
 select test.ck('the hand-over is gone',
   (select count(*)::text from public.reward_handovers where user_id='22222222-2222-2222-2222-222222222222'), '0');
-select test.ck('the claim stays',
-  (select count(*)::text from public.reward_claims where user_id='22222222-2222-2222-2222-222222222222'), '1');
+select test.ck('and so is the claim it wrote: bob never pressed Claim',
+  (select count(*)::text from public.reward_claims where user_id='22222222-2222-2222-2222-222222222222'), '0');
 select test.ck('and it can be handed over again, properly',
   test.try('authenticated','55555555-5555-5555-5555-555555555555',
     $$select public.hand_over_reward('22222222-2222-2222-2222-222222222222','r1')$$), 'OK');
@@ -161,6 +162,14 @@ select test.ck('after fifteen minutes it is part of the record',
 select test.ck('a member still claims at the threshold',
   test.try('authenticated','66666666-6666-6666-6666-666666666666',
     $$insert into public.reward_claims(user_id, reward_id) values ('66666666-6666-6666-6666-666666666666','r1')$$), 'OK');
+select test.ck('an officer hands carol the prize she claimed',
+  test.try('authenticated','33333333-3333-3333-3333-333333333333',
+    $$select public.hand_over_reward('66666666-6666-6666-6666-666666666666','r1')$$), 'OK');
+select test.ck('and takes it back (wrong name)',
+  test.try('authenticated','33333333-3333-3333-3333-333333333333',
+    $$select public.undo_hand_over('66666666-6666-6666-6666-666666666666','r1')$$), 'OK');
+select test.ck('her own claim stays: she made it',
+  (select count(*)::text from public.reward_claims where user_id='66666666-6666-6666-6666-666666666666'), '1');
 select test.ck('and still cannot claim early',
   test.try('authenticated','66666666-6666-6666-6666-666666666666',
     $$insert into public.reward_claims(user_id, reward_id) values ('66666666-6666-6666-6666-666666666666','r2')$$), '42501');
@@ -178,6 +187,9 @@ select test.ck('a member cannot stamp anyone by hand',
 select test.ck('anon cannot call it at all',
   test.try('anon', null,
     $$select public.stamp_by_hand('22222222-2222-2222-2222-222222222222','cccccccc-0000-0000-0000-000000000001')$$), '42501');
+select test.ck('anon holds no execute grant on any of the three, whatever the defaults',
+  (select count(*)::text from information_schema.routine_privileges
+    where grantee = 'anon' and routine_name in ('hand_over_reward','undo_hand_over','stamp_by_hand')), '0');
 select test.ck('an officer cannot stamp themselves',
   test.msg('authenticated','33333333-3333-3333-3333-333333333333',
     $$select public.stamp_by_hand('33333333-3333-3333-3333-333333333333','cccccccc-0000-0000-0000-000000000001')$$), 'P0001 SELF_STAMP');

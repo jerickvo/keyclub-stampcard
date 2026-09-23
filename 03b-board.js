@@ -53,6 +53,8 @@ const BoardUI = {
 
   prizes: null,         /* {owed} | {code} when it could not be read | null */
   owedAll: false,       /* the prize list unfolded past its first rows */
+  prizesStale: false,   /* re-read the prize list on the next load */
+  lost: new Set(),      /* hand-overs whose answer never came back */
   handQ: '',            /* the name typed to stamp someone by hand */
   handFound: null,      /* {people} | {code} | null before any search */
   handed: {},           /* "user:reward" -> what this officer just handed over */

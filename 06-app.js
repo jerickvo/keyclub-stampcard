@@ -233,18 +233,26 @@ const TodayWatch = {
   },
   stop(){ clearInterval(this.timer); this.timer = null; this.id = null; },
 
+  /* nothing is asked while a code is being checked or a stamp is
+     landing: that read is the one that matters */
+  busy(){ return document.hidden || navigating || Landing.active || Scenes.busy || Scanner.locked || !Store.user; },
+
   async tick(){
-    if (document.hidden || navigating || Landing.active || Scenes.busy || !Store.user) return;
+    if (this.busy()) return;
     const day = Store.meeting(this.id);
     if (!day) return this.sync();
     /* the end time passing needs no read, only a re-sort */
     if (!day.ended && clubMinutes() >= clockMinutes(day.endTime)){ Store.hydrate({ keep:true }); return; }
+    /* which meeting is open today, not only whether this one is: with
+       two meetings in a day the board may open the other */
+    const was = Store.openMeeting();
     let open, mine;
     try {
-      [open, mine] = await Promise.all([Backend.meetingOpen(day.id),
+      [open, mine] = await Promise.all([Backend.openToday(),
                                         Backend.attendedMeeting(Store.user.id, day.id)]);
     } catch (_) { return; }
-    if (open !== day.open || mine !== Store.attended(day.id)) Store.hydrate({ keep:true });
+    if (this.busy()) return;
+    if (open !== (was ? was.id : null) || mine !== Store.attended(day.id)) Store.hydrate({ keep:true });
   },
 };
 
@@ -592,6 +600,10 @@ document.addEventListener('click', e => {
     Scenes.exit({
       btn: out,
       swap: () => Store.signOut().then(() => {
+        /* what one officer did at the table is not the next one's */
+        Object.assign(BoardUI, { handed:{}, handQ:'', handFound:null, owedAll:false,
+                                 prizes:null, members:null, meetings:null, q:'', page:1 });
+        TodayWatch.stop();
         AuthUI.mode = 'in';
         go('auth', { instant:true });
       }),
@@ -634,6 +646,7 @@ document.addEventListener('click', e => {
       return;
     }
     hold(hand, 'Saving');
+    const key = hand.dataset.bhand;
     Backend.handOverReward(uid, rid).then(at => {
       BoardUI.handed[hand.dataset.bhand] = { at:at || new Date().toISOString(), when:Date.now(),
                                              username:who, prize };
@@ -643,12 +656,23 @@ document.addEventListener('click', e => {
       const code = String((err && err.message) || '');
       /* two officers at one table: the other got there first. That is
          the record working, not a failure to retry */
+      /* the first try may have landed with its answer lost on the way
+         back; a second try then finds it on file, and it is this
+         officer's, with its Undo */
+      const retried = BoardUI.lost.has(key);
+      if (code === 'ALREADY_HANDED_OVER' && retried){
+        BoardUI.lost.delete(key);
+        BoardUI.handed[key] = { at:new Date().toISOString(), when:Date.now(), username:who, prize };
+        toast({ key:'board', title:`${prize} handed to ${who}`, detail:'The first try had gone through.' });
+        return reloadBoardHere(`[data-bundo="${key}"]`);
+      }
       if (code === 'ALREADY_HANDED_OVER')
-        toast({ key:'board', title:'Already handed over', detail:`${prize} for ${who} was recorded by another officer.` });
+        toast({ key:'board', title:'Already handed over', detail:`${prize} for ${who} is already on the record.` });
       else toast({ key:'board', bad:true, title:'Not handed over', detail:Handover.message(code) });
-      /* nothing reached the database: the row stays as it was, ready to
-         try again, rather than re-reading a list over a dead connection */
-      if (Handover.OFFLINE.includes(code)) return unarm(hand, 'Hand over');
+      /* nothing reached the database, or its answer never came back: the
+         row stays as it was, ready to try again, rather than re-reading
+         a list over a dead connection */
+      if (Handover.OFFLINE.includes(code)){ BoardUI.lost.add(key); return unarm(hand, 'Hand over'); }
       /* otherwise the list on screen is out of date: re-read it */
       reloadBoardHere();
     });
@@ -749,11 +773,14 @@ async function loadBoard(){
       BoardUI.meetingDetail = await Backend.board('meeting', { id:BoardUI.pendingId });
     } else if (BoardUI.tab === 'progress'){
       /* the prize list failing never takes the roster down with it */
+      /* the prize list is read when the chapter opens and after a
+         hand-over, not again for each search keystroke or page turn */
       const [pz, mem] = await Promise.all([
-        Backend.board('prizes').catch(e => ({ code:String((e && e.message) || 'SERVER_ERROR') })),
+        BoardUI.prizes && !BoardUI.prizes.code && !BoardUI.prizesStale ? BoardUI.prizes
+          : Backend.board('prizes').catch(e => ({ code:String((e && e.message) || 'SERVER_ERROR') })),
         Backend.board('members', { q:BoardUI.q, sort:BoardUI.sort, page:BoardUI.page }),
       ]);
-      BoardUI.prizes = pz; BoardUI.members = mem;
+      BoardUI.prizes = pz; BoardUI.prizesStale = false; BoardUI.members = mem;
     } else {
       BoardUI.meetings = await Backend.board('meetings');
     }
@@ -831,6 +858,7 @@ function unarm(btn, label){
 /* re-read what the pane shows, in place: the member open in it, or
    the chapter's list */
 function reloadBoardHere(refocus = null){
+  BoardUI.prizesStale = true;
   const m = BoardUI.memberDetail && BoardUI.memberDetail.member;
   const g = BoardUI.meetingDetail && BoardUI.meetingDetail.meeting;
   boardGoto(m ? { memberDetail:'pending', pendingId:m.id, refocus }
