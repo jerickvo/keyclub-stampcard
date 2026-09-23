@@ -218,12 +218,18 @@ const Store = {
     await this.hydrate();
     return this.user;
   },
+  /* while the page signs out, the auth client's own "signed out" is
+     the page's doing, not news */
+  signingOut: false,
   async signOut(){
-    await Backend.signOut();
+    this.signingOut = true;
+    try {
+      await Backend.signOut();
 
-    this.user = null; this.meetings = []; this.scans = []; this.handovers = false;
-    this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:false }));
-    await this.hydrate();
+      this.user = null; this.meetings = []; this.scans = []; this.handovers = false;
+      this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:false }));
+      await this.hydrate();
+    } finally { this.signingOut = false; }
   },
 
   /* Where each meeting stands for this member, on the club's clock

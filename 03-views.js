@@ -466,6 +466,9 @@ const Views = {
   },
 
   auth(){
+    /* a session is stored but could not be read (offline at load): the
+       member is asked to retry, not to type the password again */
+    if (Store.loadError === 'SESSION') return this.loadFailure('Keystamp');
     const mode = AuthUI.mode;
     const passwordField = ({ id, name, label, autocomplete, rule = '' }) => `
           <div class="authp__f">

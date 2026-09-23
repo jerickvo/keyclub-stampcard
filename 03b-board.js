@@ -45,7 +45,18 @@ function spanTime(start, end){
   return knit(`${a}-${b}`);
 }
 
+/* everything an officer leaves in the board's pages: none of it is the
+   next account's */
+const BOARD_FRESH = () => ({
+  tab:'session', loading:false, shown:null, error:null,
+  prizes:null, owedAll:false, prizesStale:false, lost:new Set(),
+  handQ:'', handFound:null, handed:{}, meetings:null, members:null,
+  memberDetail:null, meetingDetail:null, pendingId:null, refocus:null, leftFrom:null,
+  q:'', sort:'username', page:1, confirmDelete:null, deleteNote:null, form:null, formOpen:false,
+});
+
 const BoardUI = {
+  reset(){ Object.assign(this, BOARD_FRESH()); },
   tab: 'session',
   loading: false,
   shown: null,          /* the tab whose loaded content the pane holds */

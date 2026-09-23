@@ -585,7 +585,9 @@ async function submitSeal(raw, run = Scanner.run){
 
   if (!result || !result.ok){
     const code = (result && result.code) || 'SERVER_ERROR';
-    if (SCAN_STALE.has(code)) Store.hydrate();
+    /* refused as signed out: the record is read again, and the page
+       goes to Sign in if the session is over */
+    if (SCAN_STALE.has(code) || code === 'NOT_AUTHENTICATED') Store.hydrate();
     return rejectVisual(code, raw, run);
   }
 

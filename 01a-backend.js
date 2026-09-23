@@ -287,9 +287,34 @@ const SupabaseAdapter = {
   },
 
   async currentSession(){
-    const { data } = await this.client.auth.getSession();
+    const { data, error } = await this.client.auth.getSession();
+    /* a stored session whose refresh could not reach the server is not
+       a signed-out one: the page says it could not load, and keeps it */
+    if (error && this.authUnreachable(error)) throw error;
     if (!data || !data.session) return null;
     return this.profileFor(data.session.user);
+  },
+
+  /* Session changes the page did not make: a refresh the server refused
+     (signed out on another device, or revoked), or another tab signing
+     out or in as someone else. */
+  onAuthChange(fn){
+    const { data } = this.client.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') return;
+      /* outside supabase-js's lock: the listener reads the record again */
+      setTimeout(() => fn(event, session ? session.user.id : null), 0);
+    });
+    return data && data.subscription;
+  },
+
+  /* this device forgets the session, whether or not the server heard */
+  forgetSession(){
+    const key = this.client && this.client.auth && this.client.auth.storageKey;
+    if (!key) return;
+    try {
+      Object.keys(localStorage).filter(k => k === key || k.startsWith(key + '-'))
+        .forEach(k => localStorage.removeItem(k));
+    } catch (_) {}
   },
 
   async profileFor(authUser, { waitMs = 0 } = {}){
@@ -386,7 +411,21 @@ const SupabaseAdapter = {
     return profile;
   },
 
-  async signOut(){ await this.client.auth.signOut(); },
+  /* Signing out ends this device's session; another phone or the
+     projector laptop signed in to the same account stays signed in.
+     The device forgets its session even when the server cannot be told
+     (offline, or a token that cannot refresh), so a reload never signs
+     the last person back in. */
+  SIGN_OUT_WAIT: 5000,
+  async signOut(){
+    let error = null;
+    try {
+      ({ error } = await Promise.race([
+        this.client.auth.signOut({ scope:'local' }),
+        new Promise(r => setTimeout(() => r({ error:new Error('SIGN_OUT_TIMEOUT') }), this.SIGN_OUT_WAIT))]));
+    } catch (ex){ error = ex; }
+    if (error) this.forgetSession();
+  },
 
   async listMeetings(){
     const { data, error } = await this.client

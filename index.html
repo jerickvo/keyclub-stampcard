@@ -14828,9 +14828,34 @@ const SupabaseAdapter = {
   },
 
   async currentSession(){
-    const { data } = await this.client.auth.getSession();
+    const { data, error } = await this.client.auth.getSession();
+    /* a stored session whose refresh could not reach the server is not
+       a signed-out one: the page says it could not load, and keeps it */
+    if (error && this.authUnreachable(error)) throw error;
     if (!data || !data.session) return null;
     return this.profileFor(data.session.user);
+  },
+
+  /* Session changes the page did not make: a refresh the server refused
+     (signed out on another device, or revoked), or another tab signing
+     out or in as someone else. */
+  onAuthChange(fn){
+    const { data } = this.client.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') return;
+      /* outside supabase-js's lock: the listener reads the record again */
+      setTimeout(() => fn(event, session ? session.user.id : null), 0);
+    });
+    return data && data.subscription;
+  },
+
+  /* this device forgets the session, whether or not the server heard */
+  forgetSession(){
+    const key = this.client && this.client.auth && this.client.auth.storageKey;
+    if (!key) return;
+    try {
+      Object.keys(localStorage).filter(k => k === key || k.startsWith(key + '-'))
+        .forEach(k => localStorage.removeItem(k));
+    } catch (_) {}
   },
 
   async profileFor(authUser, { waitMs = 0 } = {}){
@@ -14927,7 +14952,21 @@ const SupabaseAdapter = {
     return profile;
   },
 
-  async signOut(){ await this.client.auth.signOut(); },
+  /* Signing out ends this device's session; another phone or the
+     projector laptop signed in to the same account stays signed in.
+     The device forgets its session even when the server cannot be told
+     (offline, or a token that cannot refresh), so a reload never signs
+     the last person back in. */
+  SIGN_OUT_WAIT: 5000,
+  async signOut(){
+    let error = null;
+    try {
+      ({ error } = await Promise.race([
+        this.client.auth.signOut({ scope:'local' }),
+        new Promise(r => setTimeout(() => r({ error:new Error('SIGN_OUT_TIMEOUT') }), this.SIGN_OUT_WAIT))]));
+    } catch (ex){ error = ex; }
+    if (error) this.forgetSession();
+  },
 
   async listMeetings(){
     const { data, error } = await this.client
@@ -15474,12 +15513,18 @@ const Store = {
     await this.hydrate();
     return this.user;
   },
+  /* while the page signs out, the auth client's own "signed out" is
+     the page's doing, not news */
+  signingOut: false,
   async signOut(){
-    await Backend.signOut();
+    this.signingOut = true;
+    try {
+      await Backend.signOut();
 
-    this.user = null; this.meetings = []; this.scans = []; this.handovers = false;
-    this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:false }));
-    await this.hydrate();
+      this.user = null; this.meetings = []; this.scans = []; this.handovers = false;
+      this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:false }));
+      await this.hydrate();
+    } finally { this.signingOut = false; }
   },
 
   /* Where each meeting stands for this member, on the club's clock
@@ -16202,6 +16247,9 @@ const Views = {
   },
 
   auth(){
+    /* a session is stored but could not be read (offline at load): the
+       member is asked to retry, not to type the password again */
+    if (Store.loadError === 'SESSION') return this.loadFailure('Keystamp');
     const mode = AuthUI.mode;
     const passwordField = ({ id, name, label, autocomplete, rule = '' }) => `
           <div class="authp__f">
@@ -16320,7 +16368,18 @@ function spanTime(start, end){
   return knit(`${a}-${b}`);
 }
 
+/* everything an officer leaves in the board's pages: none of it is the
+   next account's */
+const BOARD_FRESH = () => ({
+  tab:'session', loading:false, shown:null, error:null,
+  prizes:null, owedAll:false, prizesStale:false, lost:new Set(),
+  handQ:'', handFound:null, handed:{}, meetings:null, members:null,
+  memberDetail:null, meetingDetail:null, pendingId:null, refocus:null, leftFrom:null,
+  q:'', sort:'username', page:1, confirmDelete:null, deleteNote:null, form:null, formOpen:false,
+});
+
 const BoardUI = {
+  reset(){ Object.assign(this, BOARD_FRESH()); },
   tab: 'session',
   loading: false,
   shown: null,          /* the tab whose loaded content the pane holds */
@@ -17799,7 +17858,9 @@ async function submitSeal(raw, run = Scanner.run){
 
   if (!result || !result.ok){
     const code = (result && result.code) || 'SERVER_ERROR';
-    if (SCAN_STALE.has(code)) Store.hydrate();
+    /* refused as signed out: the record is read again, and the page
+       goes to Sign in if the session is over */
+    if (SCAN_STALE.has(code) || code === 'NOT_AUTHENTICATED') Store.hydrate();
     return rejectVisual(code, raw, run);
   }
 
@@ -18193,7 +18254,9 @@ document.addEventListener('submit', async e => {
       toast({ key:'board', title:`GM ${pad(no)} scheduled` });
       boardGoto({ tab:'meetings' });
     } catch (ex){
-      show(WriteFailure.explain(ex, 'create meeting'));
+      const kind = WriteFailure.classify(ex).kind;
+      const gone = (kind === 'permission' || kind === 'auth') && await sessionGone();
+      show(gone ? 'You are no longer signed in here. Sign in again.' : WriteFailure.explain(ex, 'create meeting'));
       release(btn, 'Schedule meeting');
     }
     return;
@@ -18436,8 +18499,7 @@ document.addEventListener('click', e => {
       btn: out,
       swap: () => Store.signOut().then(() => {
         /* what one officer did at the table is not the next one's */
-        Object.assign(BoardUI, { handed:{}, handQ:'', handFound:null, owedAll:false,
-                                 prizes:null, members:null, meetings:null, q:'', page:1 });
+        BoardUI.reset();
         TodayWatch.stop();
         AuthUI.mode = 'in';
         go('auth', { instant:true });
@@ -18563,14 +18625,17 @@ document.addEventListener('click', e => {
       FX.claimStamp($(`[data-reward="${claim.dataset.claim}"]`));
       setTimeout(() => toast({ key:'claim', title:`${r.name} claimed`,
         detail:Store.handovers ? 'Collect it from an officer at a meeting.' : '' }), 260);
-    }).catch(err => {
+    }).catch(async err => {
       delete claim.dataset.armed;
       claim.textContent = 'Claim';
       claim.disabled = false;
       const code = String(err && err.message || '');
-      toast({ key:'claim', bad:true, title:'Could not claim',
-        detail:/not earned/i.test(code) ? 'This reward is not earned yet.'
-             : /not signed/i.test(code) ? 'Sign in again to claim.'
+      const earned = !/not earned/i.test(code);
+      const gone = earned && (/not signed/i.test(code) || await sessionGone());
+      /* a session that ended says so once, on the key Sign in uses */
+      toast({ key:gone ? 'auth' : 'claim', bad:true, title:'Could not claim',
+        detail:!earned ? 'This reward is not earned yet.'
+             : gone ? 'You are no longer signed in here. Sign in again to claim.'
              : 'The claim was not saved. Check your connection and try again.' });
     });
     return;
@@ -18579,6 +18644,19 @@ document.addEventListener('click', e => {
 });
 
 let boardStamp = false;
+
+/* A write refused because the session is gone (signed out on another
+   device, a refresh the server refused, another account in another
+   tab): the record is read again, which takes the page to Sign in, or
+   to the account now signed in. False when this account is still here
+   or the check itself could not be made. */
+async function sessionGone(){
+  let now;
+  try { now = await Backend.currentSession(); } catch (_) { return false; }
+  if (now && Store.user && now.id === Store.user.id) return false;
+  Store.hydrate();
+  return true;
+}
 
 async function loadBoard(){
   if (!Store.isBoard) return;
@@ -18627,6 +18705,7 @@ async function loadBoard(){
   }
 
   if (seq !== loadSeq) return;
+  if (BoardUI.error === 'NOT_AUTHENTICATED') Store.hydrate();
   BoardUI.loading = false;
   BoardUI.shown = BoardUI.error ? null : BoardUI.tab;
   if (pane()){
@@ -18781,10 +18860,37 @@ try {
     await Backend.init();
     await Store.hydrate();
 
+    /* A session that ends or changes under the page (signed out on
+       another device, a refresh the server refused, another account
+       signed in in another tab) is read again; the page follows. */
+    if (Backend.live) SupabaseAdapter.onAuthChange((event, uid) => {
+      if (!Store.ready || Store.signingOut || AuthUI.busy) return;
+      const was = Store.user ? Store.user.id : null;
+      if (event === 'SIGNED_OUT' ? was !== null : uid !== null && uid !== was) Store.hydrate();
+    });
+
+    let shownUser = Store.user ? Store.user.id : null;
     /* The record changed: the page is repainted only if what it shows
        would differ, and Scan only refreshes its meeting line, so the
        camera is never restarted under the reader. */
     Store.onChange(() => {
+      const uid = Store.user ? Store.user.id : null;
+      if (uid !== shownUser){ if (shownUser) BoardUI.reset(); shownUser = uid; }
+      /* no signed-in page stays up without a session (the page's own
+         sign-out takes itself to Sign in, after its scene) */
+      if (!Store.signedIn && current !== 'auth' && !Store.signingOut){
+        Scanner.stop(); clearInterval(countTimer); TodayWatch.stop();
+        go('auth', { instant:true, force:true });
+        paintIdentity();
+        if (!Store.failed && !liveToasts.has('auth')) toast({ key:'auth', title:'Signed out', detail:'Sign in again to continue.' });
+        return;
+      }
+      /* signed in from another tab while this one showed the form */
+      if (Store.signedIn && current === 'auth' && !AuthUI.busy){
+        go('home', { instant:true, force:true });
+        paintIdentity();
+        return;
+      }
       if (current === 'scan'){
         paintScanStanding();
         /* stamped from elsewhere while the camera is up: nothing to scan */

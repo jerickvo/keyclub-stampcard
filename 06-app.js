@@ -360,7 +360,9 @@ document.addEventListener('submit', async e => {
       toast({ key:'board', title:`GM ${pad(no)} scheduled` });
       boardGoto({ tab:'meetings' });
     } catch (ex){
-      show(WriteFailure.explain(ex, 'create meeting'));
+      const kind = WriteFailure.classify(ex).kind;
+      const gone = (kind === 'permission' || kind === 'auth') && await sessionGone();
+      show(gone ? 'You are no longer signed in here. Sign in again.' : WriteFailure.explain(ex, 'create meeting'));
       release(btn, 'Schedule meeting');
     }
     return;
@@ -603,8 +605,7 @@ document.addEventListener('click', e => {
       btn: out,
       swap: () => Store.signOut().then(() => {
         /* what one officer did at the table is not the next one's */
-        Object.assign(BoardUI, { handed:{}, handQ:'', handFound:null, owedAll:false,
-                                 prizes:null, members:null, meetings:null, q:'', page:1 });
+        BoardUI.reset();
         TodayWatch.stop();
         AuthUI.mode = 'in';
         go('auth', { instant:true });
@@ -730,14 +731,17 @@ document.addEventListener('click', e => {
       FX.claimStamp($(`[data-reward="${claim.dataset.claim}"]`));
       setTimeout(() => toast({ key:'claim', title:`${r.name} claimed`,
         detail:Store.handovers ? 'Collect it from an officer at a meeting.' : '' }), 260);
-    }).catch(err => {
+    }).catch(async err => {
       delete claim.dataset.armed;
       claim.textContent = 'Claim';
       claim.disabled = false;
       const code = String(err && err.message || '');
-      toast({ key:'claim', bad:true, title:'Could not claim',
-        detail:/not earned/i.test(code) ? 'This reward is not earned yet.'
-             : /not signed/i.test(code) ? 'Sign in again to claim.'
+      const earned = !/not earned/i.test(code);
+      const gone = earned && (/not signed/i.test(code) || await sessionGone());
+      /* a session that ended says so once, on the key Sign in uses */
+      toast({ key:gone ? 'auth' : 'claim', bad:true, title:'Could not claim',
+        detail:!earned ? 'This reward is not earned yet.'
+             : gone ? 'You are no longer signed in here. Sign in again to claim.'
              : 'The claim was not saved. Check your connection and try again.' });
     });
     return;
@@ -746,6 +750,19 @@ document.addEventListener('click', e => {
 });
 
 let boardStamp = false;
+
+/* A write refused because the session is gone (signed out on another
+   device, a refresh the server refused, another account in another
+   tab): the record is read again, which takes the page to Sign in, or
+   to the account now signed in. False when this account is still here
+   or the check itself could not be made. */
+async function sessionGone(){
+  let now;
+  try { now = await Backend.currentSession(); } catch (_) { return false; }
+  if (now && Store.user && now.id === Store.user.id) return false;
+  Store.hydrate();
+  return true;
+}
 
 async function loadBoard(){
   if (!Store.isBoard) return;
@@ -794,6 +811,7 @@ async function loadBoard(){
   }
 
   if (seq !== loadSeq) return;
+  if (BoardUI.error === 'NOT_AUTHENTICATED') Store.hydrate();
   BoardUI.loading = false;
   BoardUI.shown = BoardUI.error ? null : BoardUI.tab;
   if (pane()){
@@ -948,10 +966,37 @@ try {
     await Backend.init();
     await Store.hydrate();
 
+    /* A session that ends or changes under the page (signed out on
+       another device, a refresh the server refused, another account
+       signed in in another tab) is read again; the page follows. */
+    if (Backend.live) SupabaseAdapter.onAuthChange((event, uid) => {
+      if (!Store.ready || Store.signingOut || AuthUI.busy) return;
+      const was = Store.user ? Store.user.id : null;
+      if (event === 'SIGNED_OUT' ? was !== null : uid !== null && uid !== was) Store.hydrate();
+    });
+
+    let shownUser = Store.user ? Store.user.id : null;
     /* The record changed: the page is repainted only if what it shows
        would differ, and Scan only refreshes its meeting line, so the
        camera is never restarted under the reader. */
     Store.onChange(() => {
+      const uid = Store.user ? Store.user.id : null;
+      if (uid !== shownUser){ if (shownUser) BoardUI.reset(); shownUser = uid; }
+      /* no signed-in page stays up without a session (the page's own
+         sign-out takes itself to Sign in, after its scene) */
+      if (!Store.signedIn && current !== 'auth' && !Store.signingOut){
+        Scanner.stop(); clearInterval(countTimer); TodayWatch.stop();
+        go('auth', { instant:true, force:true });
+        paintIdentity();
+        if (!Store.failed && !liveToasts.has('auth')) toast({ key:'auth', title:'Signed out', detail:'Sign in again to continue.' });
+        return;
+      }
+      /* signed in from another tab while this one showed the form */
+      if (Store.signedIn && current === 'auth' && !AuthUI.busy){
+        go('home', { instant:true, force:true });
+        paintIdentity();
+        return;
+      }
       if (current === 'scan'){
         paintScanStanding();
         /* stamped from elsewhere while the camera is up: nothing to scan */
