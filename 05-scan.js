@@ -32,6 +32,21 @@ function paintBoard(){
 }
 
 let countTimer = null;
+/* A closed stage for today's meeting learns, slowly, that check-in was
+   opened from another tab or device, as an open one learns of a close. */
+function watchClosedStage(meetingId){
+  clearInterval(countTimer);
+  const day = Schedule.today();
+  const here = () => document.querySelector(`[data-bstart="${meetingId}"]`);
+  countTimer = setInterval(async () => {
+    if (!here()) return clearInterval(countTimer);
+    if (document.hidden) return;
+    if (Schedule.today() !== day){ clearInterval(countTimer); loadBoard(); return; }
+    let open;
+    try { open = await Backend.meetingOpen(meetingId); } catch (_) { return; }
+    if (open === true && here() && !here().disabled){ clearInterval(countTimer); loadBoard(); }
+  }, 10000);
+}
 function paintAttendanceCount(meetingId){
   clearInterval(countTimer);
   const el = () => document.querySelector('#attCount');
@@ -592,7 +607,7 @@ async function submitSeal(raw, run = Scanner.run){
   Scanner.setState('busy', 'Checking');
   let asked = sealsAsked.get(raw);
   const first = !asked;
-  if (first){ asked = Backend.verifyCode(raw); sealsAsked.set(raw, asked); }
+  if (first){ asked = Backend.verifyCode(raw, Store.user && Store.user.id); sealsAsked.set(raw, asked); }
   const result = await asked;
   if (first) sealsAsked.delete(raw);
 

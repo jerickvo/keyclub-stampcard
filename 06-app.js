@@ -65,6 +65,8 @@ function gate(id){
 
 let current = 'home';
 let navigating = false;
+/* where a page cut in progress is going */
+let heading = null;
 
 let pendingNav = null;
 let booted = false;
@@ -176,9 +178,9 @@ async function go(id, opts = {}){
   /* Scan is never cut into: the camera image is the page change, and
      the camera is asked for at once */
   if (view.firstChild && booted && !opts.instant && !same && id !== 'scan' && window.animate){
-    navigating = true;
+    navigating = true; heading = id;
     await Transit.run(from, id, () => render(true));
-    navigating = false;
+    navigating = false; heading = null;
     if (pendingNav !== null){
       const next = pendingNav; pendingNav = null;
       if (next.id !== current || next.opts.force) go(next.id, next.opts);
@@ -203,7 +205,7 @@ function afterRender(id, nav = false, covered = false){
   if (id === 'auth') AuthUI.busy = false;
   paintMotion();
   /* the meeting line under the camera is re-read on arrival */
-  if (id === 'scan'){ Scanner.armStart(); if (Store.signedIn) Store.hydrate(); }
+  if (id === 'scan'){ Scanner.armStart(); if (Store.signedIn) Store.hydrate({ keep:true }); }
   if (PANE_ROUTES.includes(id)){ loadBoard(); }
   else { clearInterval(countTimer); }
   TodayWatch.sync();
@@ -476,7 +478,7 @@ document.addEventListener('click', e => {
     if (stamp.disabled) return;
     const who = stamp.dataset.who, no = stamp.dataset.no;
     if (!stamp.dataset.armed){
-      stamp.dataset.armed = '1';
+      stamp.dataset.armed = String(Date.now());
       stamp.textContent = 'Confirm';
       stamp.setAttribute('aria-label', `Confirm: check ${who} in to GM ${no}`);
       stamp.closest('.brow')?.classList.add('brow--armed');
@@ -489,6 +491,8 @@ document.addEventListener('click', e => {
       }, { once:true });
       return;
     }
+    /* a double-tap is one touch: a confirm this soon after arming is not taken */
+    if (Date.now() - Number(stamp.dataset.armed) < 400) return;
     hold(stamp, 'Adding');
     const uid = stamp.dataset.bstamp;
     const mark = () => { const p = ((BoardUI.handFound || {}).people || []).find(x => x.id === uid); if (p) p.checked_in = true; };
@@ -686,7 +690,7 @@ document.addEventListener('click', e => {
     const [uid, rid] = hand.dataset.bhand.split(':');
     const who = hand.dataset.who, prize = hand.dataset.prize;
     if (!hand.dataset.armed){
-      hand.dataset.armed = '1';
+      hand.dataset.armed = String(Date.now());
       hand.textContent = 'Confirm';
       hand.setAttribute('aria-label', `Confirm: hand ${prize} to ${who}`);
       hand.closest('.brow')?.classList.add('brow--armed');
@@ -699,6 +703,7 @@ document.addEventListener('click', e => {
       }, { once:true });
       return;
     }
+    if (Date.now() - Number(hand.dataset.armed) < 400) return;
     hold(hand, 'Saving');
     const key = hand.dataset.bhand;
     Backend.handOverReward(uid, rid).then(at => {
@@ -785,7 +790,10 @@ document.addEventListener('click', e => {
        arming is not taken */
     if (Date.now() - Number(claim.dataset.armed) < 400) return;
     claim.disabled = true;
+    const who = Store.user && Store.user.id;
     const landed = r => {
+      /* signed out (or someone else) since: not this page's news */
+      if (!Store.user || Store.user.id !== who) return;
       /* a reader who has moved on is not pulled back to Rewards */
       if (current === 'rewards'){
         go('rewards', { instant:true });
@@ -861,29 +869,38 @@ async function loadBoard(){
     if (box) box.innerHTML = BoardUI.pane();
   }
 
+  /* what this read is for is decided now, and its answer is written
+     only if no later read has begun: a slow detail that lands after the
+     officer changed page is dropped, not shown on the new page */
+  const kind = BoardUI.memberDetail === 'pending' ? 'member'
+             : BoardUI.meetingDetail === 'pending' ? 'meeting'
+             : BoardUI.tab === 'progress' ? 'progress' : 'meetings';
+  let got = null, error = null;
   try {
-    if (BoardUI.memberDetail === 'pending'){
-      BoardUI.memberDetail = await Backend.board('member', { id:BoardUI.pendingId });
-    } else if (BoardUI.meetingDetail === 'pending'){
-      BoardUI.meetingDetail = await Backend.board('meeting', { id:BoardUI.pendingId });
-    } else if (BoardUI.tab === 'progress'){
+    if (kind === 'member') got = await Backend.board('member', { id:BoardUI.pendingId });
+    else if (kind === 'meeting') got = await Backend.board('meeting', { id:BoardUI.pendingId });
+    else if (kind === 'progress'){
       /* the prize list failing never takes the roster down with it */
       /* the prize list is read when the chapter opens and after a
          hand-over, not again for each search keystroke or page turn */
-      const [pz, mem] = await Promise.all([
+      got = await Promise.all([
         BoardUI.prizes && !BoardUI.prizes.code && !BoardUI.prizesStale ? BoardUI.prizes
           : Backend.board('prizes').catch(e => ({ code:String((e && e.message) || 'SERVER_ERROR') })),
         Backend.board('members', { q:BoardUI.q, sort:BoardUI.sort, page:BoardUI.page }),
       ]);
-      BoardUI.prizes = pz; BoardUI.prizesStale = false; BoardUI.members = mem;
-    } else {
-      BoardUI.meetings = await Backend.board('meetings');
-    }
+    } else got = await Backend.board('meetings');
   } catch (err){
-    BoardUI.error = String(err.message || 'SERVER_ERROR');
+    error = String(err.message || 'SERVER_ERROR');
   }
 
   if (seq !== loadSeq) return;
+  BoardUI.error = error;
+  if (!error){
+    if (kind === 'member') BoardUI.memberDetail = got;
+    else if (kind === 'meeting') BoardUI.meetingDetail = got;
+    else if (kind === 'progress'){ [BoardUI.prizes, BoardUI.members] = got; BoardUI.prizesStale = false; }
+    else BoardUI.meetings = got;
+  }
   if (BoardUI.error === 'NOT_AUTHENTICATED') Store.hydrate();
   /* a meeting that no longer exists (deleted by another officer) is not
      retried: back to the list, which says so */
@@ -915,6 +932,8 @@ async function loadBoard(){
   if (BoardUI.tab === 'session' && !BoardUI.error && $('#qrBox')){
     paintBoard();
     paintAttendanceCount(boardMeeting);
+  } else if (BoardUI.tab === 'session' && !BoardUI.error && boardMeeting && $('[data-bstart]')){
+    watchClosedStage(boardMeeting);
   } else {
     clearInterval(countTimer);
   }
@@ -1053,7 +1072,7 @@ try {
        another device, a refresh the server refused, another account
        signed in in another tab) is read again; the page follows. */
     if (Backend.live) SupabaseAdapter.onAuthChange((event, uid) => {
-      if (!Store.ready || Store.signingOut || AuthUI.busy) return;
+      if (!Store.ready || Store.signingOut || Store.signingIn) return;
       const was = Store.user ? Store.user.id : null;
       if (event === 'SIGNED_OUT' ? was !== null : uid !== null && uid !== was) Store.hydrate();
     });
@@ -1064,6 +1083,7 @@ try {
        camera is never restarted under the reader. */
     Store.onChange(() => {
       const uid = Store.user ? Store.user.id : null;
+      const switched = Boolean(shownUser && uid && uid !== shownUser);
       if (uid !== shownUser){ if (shownUser) BoardUI.reset(); shownUser = uid; }
       /* no signed-in page stays up without a session (the page's own
          sign-out takes itself to Sign in, after its scene) */
@@ -1074,21 +1094,27 @@ try {
         if (!Store.failed && !liveToasts.has('auth')) toast({ key:'auth', title:'Signed out', detail:'Sign in again to continue.' });
         return;
       }
-      /* signed in from another tab while this one showed the form */
-      if (Store.signedIn && current === 'auth' && !AuthUI.busy){
-        go('home', { instant:true, force:true });
+      /* signed in from another tab while this one showed the form, or
+         another account signed in here: the page is that account's (a
+         Scan left up would otherwise check in whoever is signed in now) */
+      if ((Store.signedIn && current === 'auth' && !Store.signingIn) || switched){
+        if (switched){ Scanner.stop(); clearInterval(countTimer); }
+        go(switched ? current : 'home', { instant:true, force:true });
         paintIdentity();
         return;
       }
-      if (current === 'scan'){
+      /* during a page cut, the page it is going to: repainting the one
+         being left would send the reader back to it */
+      const here = navigating && heading ? heading : current;
+      if (here === 'scan'){
         paintScanStanding();
         /* stamped from elsewhere while the camera is up: nothing to scan */
         if (Scanner.stream && !Landing.active && Scanner.stamped()){
           Scanner.stop(); go('scan', { instant:true, force:true, quiet:true });
         }
       }
-      else if (current && current !== 'auth' && Store.stamp() !== painted)
-        go(current, { instant:true, force:true, quiet:true });   /* force: not dropped if it lands mid-cut */
+      else if (here && here !== 'auth' && Store.stamp() !== painted)
+        go(here, { instant:true, force:true, quiet:true });   /* force: not dropped if it lands mid-cut */
       paintIdentity();
       TodayWatch.sync();
     });

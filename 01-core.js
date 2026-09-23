@@ -204,8 +204,11 @@ const Store = {
     this.authGuard();
     const bad = Config.checkSignInName(username) || Config.validatePassword(password);
     if (bad) throw new Error(bad);
-    await Backend.signIn(username, password);
-    await this.hydrate();
+    this.signingIn = true;
+    try {
+      await Backend.signIn(username, password);
+      await this.hydrate();
+    } finally { this.signingIn = false; }
     return this.user;
   },
   async signUp(username, password, confirm){
@@ -214,12 +217,16 @@ const Store = {
              || Config.validatePassword(password)
              || (password !== confirm ? 'Passwords do not match.' : null);
     if (bad) throw new Error(bad);
-    await Backend.signUp(username, password);
-    await this.hydrate();
+    this.signingIn = true;
+    try {
+      await Backend.signUp(username, password);
+      await this.hydrate();
+    } finally { this.signingIn = false; }
     return this.user;
   },
-  /* while the page signs out, the auth client's own "signed out" is
-     the page's doing, not news */
+  /* while the page signs in or out, the auth client's own "signed in"
+     or "signed out" is the page's doing, not news */
+  signingIn: false,
   signingOut: false,
   async signOut(){
     this.signingOut = true;

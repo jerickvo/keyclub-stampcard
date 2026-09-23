@@ -563,7 +563,14 @@ const SupabaseAdapter = {
 
   /* a check that never answers is given up on, as no connection */
   VERIFY_WAIT: 12000,
-  async verifyCode(rawCode){
+  async verifyCode(rawCode, expect = null){
+    /* the stamp goes to the session's account, which must be the one
+       the page shows: another tab may have signed in as someone else */
+    if (expect){
+      const { data } = await this.client.auth.getSession();
+      const who = data && data.session && data.session.user && data.session.user.id;
+      if (who !== expect) return { ok:false, code:'NOT_AUTHENTICATED' };
+    }
     let res;
     try {
       res = await this.client.functions.invoke('verify-attendance',
