@@ -99,6 +99,13 @@ alter table public.meetings drop constraint if exists meeting_time_order;
 alter table public.meetings add constraint meeting_time_order
   check (end_time is null or start_time::time < end_time::time);
 
+-- A four-digit year: a slip in the date control (20266) is refused
+-- rather than stored and shown as some other day. NOT VALID: it holds
+-- every row written from now on and does not re-check old ones.
+alter table public.meetings drop constraint if exists meeting_date_range;
+alter table public.meetings add constraint meeting_date_range
+  check (meeting_date between date '2000-01-01' and date '2999-12-31') not valid;
+
 -- Only one meeting may take check-ins at a time.
 create unique index if not exists one_open_meeting
   on public.meetings ((check_in_open)) where check_in_open;
@@ -335,14 +342,11 @@ create policy meetings_board_delete on public.meetings
     and not exists (
       select 1 from public.attendance a where a.meeting_id = meetings.id
     )
-    -- nor while its check-in is open, or a session for it is live (the
-    -- moment between the start and the open): a page read before the
-    -- open cannot take the meeting out from under the wall
+    -- nor while its check-in is open: a page read before the open
+    -- cannot take the meeting out from under the wall. (A session left
+    -- live on a closed meeting takes no scans, since the verifier needs
+    -- the meeting open, and goes with the meeting.)
     and not meetings.check_in_open
-    and not exists (
-      select 1 from public.attendance_sessions s
-      where s.meeting_id = meetings.id and s.ended_at is null
-    )
   );
 
 grant delete on public.meetings to authenticated;

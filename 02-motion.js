@@ -44,17 +44,20 @@ const esc = s => String(s).replace(/[&<>"']/g, c =>
    laptop, says the same day and time the room did. */
 const onClock = (iso, opts) => {
   const s = String(iso);
-  const day = s.length === 10;
+  /* any number of year digits: a slip like 20266 is shown as it is,
+     not read as some other moment */
+  const cal = /^(\d{4,})-(\d{2})-(\d{2})$/.exec(s);
+  const at = cal ? new Date(2000, 0, 1, 12) : new Date(s);
+  if (cal) at.setFullYear(Number(cal[1]), Number(cal[2]) - 1, Number(cal[3]));
   /* a date in another year than the club's current one says its year */
   if (opts.month){
-    const year = day ? s.slice(0, 4) : clubDay(new Date(s)).slice(0, 4);
+    const year = cal ? cal[1] : clubDay(at).slice(0, 4);
     if (year !== clubDay().slice(0, 4)) opts = { ...opts, year:'numeric' };
   }
   try {
-    return new Date(s + (day ? 'T12:00:00' : ''))
-      .toLocaleString('en-US', day ? opts : { ...opts, timeZone:CLUB_TZ });
+    return at.toLocaleString('en-US', cal ? opts : { ...opts, timeZone:CLUB_TZ });
   } catch (_) {
-    return new Date(s + (day ? 'T12:00:00' : '')).toLocaleString('en-US', opts);
+    return at.toLocaleString('en-US', opts);
   }
 };
 const fmtDate = iso => onClock(iso, { weekday:'short', month:'short', day:'numeric' });
