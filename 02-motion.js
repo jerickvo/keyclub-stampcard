@@ -72,6 +72,13 @@ const TOAST_LIMIT = 3;
 const TOAST_LIFE = 2600;
 const liveToasts = new Map();
 
+/* a toast the page has since contradicted goes (`about`: the thing it
+   was about, such as a meeting) */
+function dropToastIf(key, title, about){
+  const rec = liveToasts.get(key);
+  if (rec && rec.title === title && rec.about === about) dropToast(key, true);
+}
+
 function dropToast(key, immediate){
   const rec = liveToasts.get(key);
   if (!rec) return;
@@ -83,7 +90,7 @@ function dropToast(key, immediate){
                 onComplete:() => el.remove() });
 }
 
-function toast({ title, detail, bad = false, key }){
+function toast({ title, detail, bad = false, key, about }){
   const host = $('#toasts');
   if (!host) return;
 
@@ -109,7 +116,7 @@ function toast({ title, detail, bad = false, key }){
 
   /* A message waits while it is hovered or focused, and a tap, Enter or
      Escape dismisses it, so a reader is never racing the timer. */
-  const rec = { el, timer:null, held:prev ? prev.held : false };
+  const rec = { el, timer:null, held:prev ? prev.held : false, title, about };
   const cur = () => liveToasts.get(k);
   const arm = r => { clearTimeout(r.timer); r.timer = setTimeout(() => dropToast(k), TOAST_LIFE); };
   if (!prev){

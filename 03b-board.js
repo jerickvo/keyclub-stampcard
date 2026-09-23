@@ -513,7 +513,10 @@ const BoardUI = {
     const open = list.find(m => m.state === 'OPEN') || null;
     const todays = list.filter(m => m.meeting_date === today && m.state !== 'OPEN')
       .sort(meetingOrder(1));
-    const sel = open || todays.find(m => m.id === boardMeeting) || todays[0] || null;
+    /* by default the first of today's meetings not yet over, as Home
+       and the Meetings list point at */
+    const sel = open || todays.find(m => m.id === boardMeeting)
+      || todays.find(m => meetingPhase(m, today) !== 'ENDED') || todays[todays.length - 1] || null;
     boardMeeting = sel ? sel.id : null;
 
     if (!sel){

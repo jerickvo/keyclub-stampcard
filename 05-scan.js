@@ -92,7 +92,7 @@ function paintAttendanceCount(meetingId){
 function scanStanding(){
   const open = Store.openMeeting();
   const done = open && Store.attended(open.id);
-  if (Store.failed) return { lab:'Record not loaded', at:'Check your connection' };
+  if (Store.failed || Scanner.unsure === Store.applied) return { lab:'Record not loaded', at:'Check your connection' };
   return !open || done
     ? { lab:'Check-in', at:open ? `GM ${pad(open.no)} stamped` : 'Not open' }
     : { lab:'Checking in to', at:`GM ${pad(open.no)}` };
@@ -233,6 +233,9 @@ const Scanner = {
   /* the last code the server refused; while it stays in view it is not
      sent again, so a refusal is said once, not every two seconds */
   refused:null, forgive:null, lastBad:null,
+  /* Store.applied when a re-read the scan needed failed: until a read
+     gets through, the line under the camera says the record is not loaded */
+  unsure:null,
 
   stamped(){
     const o = Store.openMeeting();
@@ -546,6 +549,7 @@ const Landing = {
 
   async run(meeting){
     const seq = ++this.seq;
+    const who = Store.user && Store.user.id;
     this.active = true;
     this.armed = null;
     if (this.scene) this.scene.clear();
@@ -558,6 +562,13 @@ const Landing = {
     const read = Promise.race([this.refresh(3), new Promise(r => setTimeout(() => r(false), 5000))]);
     const [fresh] = await Promise.all([read, held]);
     if (seq !== this.seq) return;
+    /* another account signed in during the hold: the stamp was the last
+       one's, and is not put on this card or announced to this person */
+    if (!Store.user || Store.user.id !== who){
+      scene.clear();
+      this.armed = null; this.active = false; this.scene = null;
+      return;
+    }
     /* the record did not come back in time: the page shows the stamp
        the verifier accepted, not a "Check in" for a meeting already done */
     if (!fresh){
@@ -663,6 +674,15 @@ async function submitSeal(raw, run = Scanner.run){
     if (SCAN_STALE.has(code) || code === 'NOT_AUTHENTICATED'){
       const before = Store.applied;
       const read = Store.hydrate({ keep:true });
+      /* if the record could not be read again, the line under the
+         camera no longer vouches for it: the stamp this refusal proves
+         is shown, or the line says the record is not loaded */
+      read.then(() => {
+        if (Store.applied !== before || !Store.user || Store.user.id !== uid) return;
+        if (code === 'ALREADY_CHECKED_IN' && result.meeting_id) Store.noteStamp(result.meeting_id);
+        else Scanner.unsure = Store.applied;
+        paintScanStanding();
+      });
       /* an ended session's code while check-in is open again (closed
          and reopened): it is the code that is old, not the check-in.
          Only a record read just now says so, and the refusal is not

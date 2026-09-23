@@ -309,6 +309,8 @@ const Store = {
     if (!this.user || this.attended(meetingId)) return;
     this.scans = [{ id:null, meetingId, at:new Date().toISOString(), method:'qr' }, ...this.scans];
     this.settle();
+    /* a read that began before the stamp does not take it away */
+    this.applied = ++this.seq;
   },
   scanFor(id){ return this.scans.find(s => s.meetingId === id) || null; },
   openMeeting(){ return this.meetings.find(m => m.open) || null; },

@@ -748,7 +748,7 @@ document.addEventListener('click', e => {
       if (openNow(now).some(m => m.id === id)) return opened();
       /* another meeting opened at the same moment: that is the reason */
       const why = openNow(now).length ? 'ATTENDANCE_ALREADY_OPEN' : err && err.message;
-      toast({ key:'board', bad:true, title:'Could not open check-in',
+      toast({ key:'board', bad:true, title:'Could not open check-in', about:id,
               detail:BoardUI.message(why) });
       BoardUI.refocus = '[data-bstart]';
       loadBoard();
@@ -773,7 +773,7 @@ document.addEventListener('click', e => {
         if (!still()) return;
         const m = now && (now.meetings || []).find(x => x.id === id);
         if (m && m.state !== 'OPEN') return closed();
-        toast({ key:'board', bad:true, title:'Could not close check-in',
+        toast({ key:'board', bad:true, title:'Could not close check-in', about:id,
                 detail:BoardUI.message(err && err.message) });
         BoardUI.refocus = '[data-bend]';
         loadBoard(); });
@@ -1125,6 +1125,13 @@ async function loadBoard(){
     }
   }
 
+  /* a stage that shows open (or closed) withdraws a failure that says
+     it could not be opened (or closed): opened elsewhere, closed
+     elsewhere, or an answer lost on the way back */
+  if (BoardUI.tab === 'session' && !BoardUI.error){
+    if ($('#proj.proj--live')) dropToastIf('board', 'Could not open check-in', boardMeeting);
+    else if ($('[data-bstart]')) dropToastIf('board', 'Could not close check-in', boardMeeting);
+  }
   if (BoardUI.tab === 'session' && !BoardUI.error && $('#qrBox')){
     paintBoard();
     paintAttendanceCount(boardMeeting);
