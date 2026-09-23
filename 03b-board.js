@@ -58,7 +58,7 @@ const BOARD_FRESH = () => ({
   tab:'session', loading:false, shown:null, error:null,
   prizes:null, owedAll:false, prizesStale:false, lost:new Set(),
   handQ:'', handFound:null, handed:{}, meetings:null, members:null,
-  memberDetail:null, meetingDetail:null, pendingId:null, refocus:null, leftFrom:null,
+  memberDetail:null, meetingDetail:null, pendingId:null, refocus:null, leftFrom:null, toTop:false,
   q:'', sort:'username', page:1, confirmDelete:null, deleteNote:null, form:null, formOpen:false,
 });
 

@@ -518,7 +518,7 @@ html{font-synthesis:none}
 
 .view--auth{display:block;width:100%;max-width:none;padding:0;margin:0}
 
-.spread{--band:clamp(230px,42dvh,400px);--lap:clamp(34px,9vw,64px);
+.spread{--band:clamp(230px,42svh,400px);--lap:clamp(34px,9vw,64px);
   position:relative;width:100%;box-sizing:border-box;
   display:grid;grid-template-columns:minmax(0,1fr);
   grid-template-rows:calc(var(--band) - var(--sp-row)) auto 1fr;
@@ -536,7 +536,9 @@ html{font-synthesis:none}
   fill:var(--paper);opacity:1}
 
 .spread__head{grid-row:1;position:relative;z-index:2;
-  padding:clamp(26px,7vw,44px) var(--gutter) 0;
+  padding:calc(clamp(26px,7vw,44px) + env(safe-area-inset-top,0px))
+          calc(var(--gutter) + env(safe-area-inset-right,0px)) 0
+          calc(var(--gutter) + env(safe-area-inset-left,0px));
   color:var(--paper);align-self:start}
 .spread__sub{margin:0 0 var(--sp-row);font-size:var(--t-caption);
   letter-spacing:.16em;color:var(--tint);
@@ -556,12 +558,16 @@ html{font-synthesis:none}
 
 .bform__head{display:flex;align-items:center;
   justify-content:space-between;gap:12px}
+/* on a short landscape phone the wordmark is sized by the height too, so
+   the card below never covers it */
 .spread__wm{font-family:var(--f-display);text-transform:uppercase;
-  font-size:clamp(46px,15vw,124px);line-height:.9;letter-spacing:.01em;
+  font-size:clamp(46px,min(15vw,18svh),124px);line-height:.9;letter-spacing:.01em;
   margin:0;padding-bottom:.06em}
 
 .authp{grid-row:2;position:relative;z-index:2;
-  margin:calc(var(--lap) * -1) var(--gutter) clamp(14px,3dvh,32px);
+  margin:calc(var(--lap) * -1) calc(var(--gutter) + env(safe-area-inset-right,0px))
+         calc(clamp(14px,3dvh,32px) + env(safe-area-inset-bottom,0px))
+         calc(var(--gutter) + env(safe-area-inset-left,0px));
   background:var(--paper);
   border:var(--edge-frame) solid var(--ink);
   padding:clamp(20px,5vw,32px);
@@ -617,14 +623,14 @@ html{font-synthesis:none}
     grid-template-columns:calc(54% - var(--lap)) minmax(0,1fr);
     grid-template-rows:auto;
     column-gap:0;align-content:center;
-    padding-block:clamp(40px,7vh,96px)}
+    padding-block:clamp(40px,7vh,96px) calc(clamp(40px,7vh,96px) + env(safe-area-inset-bottom,0px))}
 
   .spread__head{
     grid-row:1;
     margin-top:calc(clamp(40px,7vh,96px) * -1);
     padding-top:clamp(28px,6vh,64px);
     grid-column:1;
-    padding:0 var(--gutter);
+    padding:0 var(--gutter) 0 calc(var(--gutter) + env(safe-area-inset-left,0px));
     align-self:start}
   .spread__field{right:auto;bottom:0;height:auto;
     width:54%}
@@ -633,8 +639,10 @@ html{font-synthesis:none}
     left:calc(var(--swirl) * -.3);bottom:calc(var(--swirl) * -.36)}
 
   .spread__wm{font-size:clamp(44px,7.4vw,104px)}
-  .authp{grid-row:1;grid-column:2;margin:0 var(--gutter) 0 0;
-    justify-self:start;width:100%;max-width:460px}
+  /* the card fills its column less its right margin (width:100% ran it
+     past the margin to the window's edge), up to its measure */
+  .authp{grid-row:1;grid-column:2;margin:0 calc(var(--gutter) + env(safe-area-inset-right,0px)) 0 0;
+    justify-self:stretch;width:auto;max-width:460px}
 
 }
 
@@ -1134,7 +1142,9 @@ html{font-synthesis:none}
 .is-projecting .tabs,.is-projecting .rail{visibility:hidden}
 .is-projecting .rig{isolation:auto}
 .proj.proj--full{position:fixed;inset:0;z-index:400;display:grid;margin:0;
-  width:auto;height:auto;padding:3vh 4vw;border:0;background:var(--ink);
+  width:auto;height:auto;border:0;background:var(--ink);
+  padding:max(3vh,env(safe-area-inset-top,0px)) max(4vw,env(safe-area-inset-right,0px))
+          max(3vh,env(safe-area-inset-bottom,0px)) max(4vw,env(safe-area-inset-left,0px));
   grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;
   grid-template-areas:"meet word" "plate count" "plate ctls";
   align-items:center;column-gap:5vw;row-gap:2vh}
@@ -1152,9 +1162,12 @@ html{font-synthesis:none}
 /* on the wall the one control is small and quiet */
 .proj--full .proj__ctl{font:400 clamp(13px,1.6vh,16px)/1.2 var(--f-body);letter-spacing:.04em;
   padding:1vh 1.4vw;background:transparent;color:var(--tint);border-color:var(--tone)}
+@media (pointer:coarse){.proj--full .proj__ctl{min-height:var(--tap)}}
 @media (max-aspect-ratio:1/1){
   .proj.proj--full{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto minmax(0,1fr) auto;
-    grid-template-areas:"meet word" "count count" "plate plate" "ctls ctls";padding:3vh 5vw}
+    grid-template-areas:"meet word" "count count" "plate plate" "ctls ctls";
+    padding:max(3vh,env(safe-area-inset-top,0px)) max(5vw,env(safe-area-inset-right,0px))
+            max(3vh,env(safe-area-inset-bottom,0px)) max(5vw,env(safe-area-inset-left,0px))}
   .proj--full .proj__meet{flex-direction:column;gap:0}
   .proj--full .proj__count{flex-direction:row;align-items:baseline;gap:3vw;justify-self:start}
   .proj--full .proj__count b{font-size:clamp(72px,14vh,160px)}
@@ -1190,6 +1203,8 @@ html{font-synthesis:none}
 :root{--f-mono:'Keystamp Mono',ui-monospace,'SF Mono',Menlo,monospace}
 .rail__name,.who__name,.brow--member .brow__mid b,.brow--owed .brow__mid b,.brow--hand .brow__mid b,.bdetail__name--id,.authp__in{
   font-family:var(--f-mono);font-weight:400;text-transform:none;letter-spacing:.01em}
+/* a long username breaks, rather than widening a phone page past its edge */
+.bdetail__name--id{overflow-wrap:anywhere;min-width:0}
 #authErr{display:none;margin-top:var(--sp-pad)}
 #authErr.is-on{display:block}
 .viewer--stalled video,.viewer--stalled .reticle,.viewer--stalled .viewer__scrim{display:none}

@@ -460,7 +460,7 @@ document.addEventListener('click', e => {
   const bmember = e.target.closest('[data-bmember]');
   if (bmember){
     boardGoto({ memberDetail:'pending', meetingDetail:null, pendingId:bmember.dataset.bmember, refocus:'[data-bback]',
-                leftFrom:`button[data-bmember="${bmember.dataset.bmember}"]` });
+                leftFrom:`button[data-bmember="${bmember.dataset.bmember}"]`, toTop:true });
     return;
   }
   const bmeeting = e.target.closest('[data-bmeeting]');
@@ -468,7 +468,7 @@ document.addEventListener('click', e => {
     BoardUI.handQ = ''; BoardUI.handFound = null;
     boardGoto({ meetingDetail:'pending', memberDetail:null, pendingId:bmeeting.dataset.bmeeting,
                 refocus:bmeeting.hasAttribute('data-bhandfocus') ? '#bhq' : '[data-bback]',
-                leftFrom:`button[data-bmeeting="${bmeeting.dataset.bmeeting}"]` });
+                leftFrom:`button[data-bmeeting="${bmeeting.dataset.bmeeting}"]`, toTop:true });
     return;
   }
   /* Stamping someone by hand cannot be taken back from the app, so it
@@ -922,6 +922,9 @@ async function loadBoard(){
     if (qb) qb.innerHTML = shownQR.svg;
     syncProjector();
     /* a confirmation takes the focus, and gives it back when dismissed */
+    /* a detail opened from far down a list starts at its own top, with
+       its heading and Back in view */
+    if (BoardUI.toTop && !error){ BoardUI.toTop = false; try { scrollTo(0, 0); } catch (_) {} }
     /* "a || b": the first of these the page now has */
     if (BoardUI.refocus){
       BoardUI.refocus.split('||').map(q => $(q.trim())).find(Boolean)?.focus({ preventScroll:true });
