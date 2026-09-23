@@ -12,8 +12,8 @@ const ctx = vm.createContext({
   localStorage:{ getItem(){ return null; }, setItem(){}, removeItem(){} },
 });
 vm.runInContext(read('./01a-backend.js') + '\n' + read('./01-core.js')
-  + '\nthis.__x = { rewardState, REWARD_TIERS, Store };', ctx);
-const { rewardState, REWARD_TIERS, Store } = ctx.__x;
+  + '\nthis.__x = { rewardState, REWARD_TIERS, Store, Schedule, Handover, HandStamp };', ctx);
+const { rewardState, REWARD_TIERS, Store, Schedule, Handover, HandStamp } = ctx.__x;
 const [r1, r2, r3] = REWARD_TIERS;
 
 test('a tier is locked, unlocked, or claimed, in that order of fact', () => {
@@ -25,7 +25,7 @@ test('a tier is locked, unlocked, or claimed, in that order of fact', () => {
   assert.equal(rewardState(r1, 10, true), 'claimed');
 });
 test('a claim outlives the stamps that earned it', () => {
-  // a deleted meeting can take stamps back; the prize was still handed over
+  // a deleted meeting can take stamps back; the member still asked for it
   assert.equal(rewardState(r1, 1, true), 'claimed');
   assert.equal(rewardState(r1, 0, true), 'claimed');
 });
@@ -89,4 +89,68 @@ test('a rung\'s ticks count only the stamps since the rung below, so it reads re
   const ready = C.tier(S.rewards[0], 10, 0);
   assert.equal(ready.includes('tier--ready'), true);
   assert.equal(ready.includes('data-claim="r1"'), true);
+});
+
+// ── the member's day, and the join date ────────────────────────────────
+const day = (over = {}) => ({ id:'m', no:19, date:'2026-09-23', time:'12:40 PM', endTime:'1:30 PM',
+  place:'MPR', open:false, today:true, ended:false, upcoming:true, ...over });
+const withDay = (meetings, stamps = [], joined = null) => {
+  Schedule.today = () => '2026-09-23';
+  Store.user = { id:'u', joined };
+  Store.meetings = meetings.map(m => ({ ...m }));
+  Store.scans = stamps.map(id => ({ meetingId:id, at:'2026-09-23T19:45:00Z', method:'qr' }));
+  Store.settle();
+  return Store;
+};
+
+test('today\'s meeting is ahead until it opens, the member is stamped, or it ends', () => {
+  assert.equal(withDay([day()]).meetings[0].upcoming, true);
+  assert.equal(withDay([day({ open:true })]).meetings[0].upcoming, false);
+  assert.equal(withDay([day()], ['m']).meetings[0].upcoming, false);
+  assert.equal(withDay([day({ ended:true })]).meetings[0].upcoming, false);
+  // closed again after the member was stamped: held, and on the record today
+  const s = withDay([day({ open:false })], ['m']);
+  assert.equal(s.state(s.meetings[0]), 'set');
+  assert.equal(s.heldMeetings().length, 1);
+  // a future meeting is ahead, a past one is held
+  assert.equal(withDay([day({ id:'f', date:'2026-09-30', today:false })]).meetings[0].upcoming, true);
+  assert.equal(withDay([day({ id:'p', date:'2026-09-16', today:false, ended:true })]).meetings[0].upcoming, false);
+});
+
+test('the day\'s meeting: open, else next today by time, else stamped, else over', () => {
+  const a = day({ id:'a', no:19, time:'12:40 PM' }), b = day({ id:'b', no:20, time:'3:15 PM' });
+  assert.equal(withDay([b, a]).todayMeeting().id, 'a');
+  assert.equal(withDay([a, { ...b, open:true }]).todayMeeting().id, 'b');
+  assert.equal(withDay([a, b], ['a']).todayMeeting().id, 'b');
+  assert.equal(withDay([a, { ...b, ended:true }], ['a']).todayMeeting().id, 'a');
+  assert.equal(withDay([{ ...a, ended:true }]).todayMeeting().id, 'a');
+  assert.equal(withDay([day({ id:'f', date:'2026-09-30', today:false })]).todayMeeting(), null);
+});
+
+test('a meeting before the account existed is not one they missed', () => {
+  const past = (id, date) => day({ id, date, today:false, ended:true });
+  const ms = [past('m1', '2026-09-02'), past('m2', '2026-09-09'), past('m3', '2026-09-16')];
+  let s = withDay(ms, [], '2026-09-09');
+  assert.deepEqual(s.heldMeetings().map(m => m.id), ['m2', 'm3']);   // the join day itself counts
+  assert.equal(s.attendanceRate(), 0);
+  s = withDay(ms, ['m1', 'm3'], '2026-09-10');                        // stamped always counts
+  assert.deepEqual(s.heldMeetings().map(m => m.id), ['m1', 'm3']);
+  assert.equal(s.attendanceRate(), 100);
+  s = withDay(ms, ['m3'], null);                                      // no join date: everything counts
+  assert.equal(s.heldMeetings().length, 3);
+  assert.equal(s.attendanceRate(), 33);
+});
+
+test('refusals from the database are named, not printed raw', () => {
+  const err = (message, code = 'P0001') => ({ code, message });
+  assert.equal(Handover.code(err('ALREADY_HANDED_OVER')), 'ALREADY_HANDED_OVER');
+  assert.equal(Handover.code(err('SELF_HANDOVER')), 'SELF_HANDOVER');
+  assert.equal(Handover.code(err('x', 'PGRST202')), 'NOT_INSTALLED');
+  assert.equal(Handover.absent({ code:'PGRST205' }), true);
+  assert.equal(Handover.absent({ code:'42501' }), false);
+  assert.equal(HandStamp.code(err('duplicate key', '23505')), 'ALREADY_CHECKED_IN');
+  assert.equal(HandStamp.code(err('NOT_TODAY')), 'NOT_TODAY');
+  assert.equal(HandStamp.code(err('row-level security', '42501')), 'NOT_AUTHORIZED');
+  assert.match(HandStamp.message('ALREADY_CHECKED_IN'), /Already checked in/);
+  assert.doesNotMatch(Handover.message('NOT_EARNED'), /NOT_EARNED/);
 });

@@ -73,20 +73,20 @@ so the built `index.html` issues **zero same-origin requests**. Nothing left to
 
 ## Screens
 
-Members get five; board accounts get four of their own and never see the
+Members get five; board accounts get three of their own and never see the
 member set.
 
 | Member | | Board | |
 |---|---|---|---|
-| Home | the stamp card | Club Tools | the meeting happening now + the year's standing |
-| Record | every meeting, stamped or missed | Meetings | schedule and delete meetings |
-| Scan | camera + manual code entry | Check-In | the projector QR and the live count |
-| Rewards | 10 / 20 / 30 tiers | Members | roster, search, per-member detail |
-| Member | identity plate + the card; sign-out and the motion setting | | |
+| Home | today's meeting line + the stamp card | Check-in | today's meeting: open, the projector QR and live count, close; add someone by hand |
+| Record | every meeting since the account was made, stamped or missed | Meetings | schedule, open and delete meetings; attendees |
+| Scan | the camera | Members | prizes to hand over, the roster, per-member detail |
+| Rewards | 10 / 20 / 30 tiers, claimed and collected | | |
+| Member | identity plate + completed cards; sign-out and the motion setting | | |
 
 Navigation is the page's left margin from 1024px up (`.rail`) and a tab bar
 below that. Sign-out and the motion setting live in the rail's foot; below
-1024px they sit at the foot of Member and of Club Tools, so neither role has
+1024px they sit at the foot of Member and of Check-in, so neither role has
 a page that exists only to hold them.
 
 The rail reuses what the other screens already do: the wordmark
@@ -104,11 +104,40 @@ One rule decides what a reward tier is to a member, and it reads two
 facts: the stamp count and whether a claim row is on file. A tier is
 *claimed* when the claim exists, else *unlocked* when the stamps reach its
 threshold, else *locked*; "rewards unlocked" anywhere is the number of tiers
-that are not locked. A claim is a fact (the prize was handed over), so it
-stays counted even if a deleted meeting later takes stamps back. The rule
-is `rewardState` in `01a-backend.js`, and the board function and the test
-double carry the same three lines, so the Rewards page, the member's
-standing, the roster and the board's member detail can never disagree.
+that are not locked. A claim is the member asking for the prize on the
+record, so it stays counted even if a deleted meeting later takes stamps
+back. The rule is `rewardState` in `01a-backend.js`, and the board function
+and the test double carry the same three lines, so the Rewards page, the
+member's standing, the roster and the board's member detail can never
+disagree.
+
+### Prizes: claimed, then handed over
+
+A claim is written from the member's own phone, so on its own it says the
+member asked, not that they were given anything. The hand-over is a second
+fact, kept apart from the rule above (`reward_handovers`, written only by
+`hand_over_reward()`; see `README.md`, "Prizes and stamps by hand"):
+
+| Member sees | when |
+|---|---|
+| ticks and "N more stamps" | not reached |
+| **Claim** | reached, not claimed |
+| **Claimed**, "Collect it from an officer at a meeting" | claimed, not handed over |
+| **Collected**, "On Sep 23" | an officer recorded the hand-over |
+
+The board's **Members** page opens on *To hand over*: every member owed a
+prize, the ones who have claimed first, with how many of each prize that
+is and how many more members are one stamp short, so officers bring enough
+to the table. **Hand over** takes two taps, the second naming who and what.
+The officer who recorded it can **Undo** for fifteen minutes (a wrong name
+at a busy table); after that it is part of the record. Two officers tapping
+the same prize get one hand-over and one "Already handed over". A member who
+never pressed Claim can still be handed their prize (the claim is written
+with it); an officer cannot hand themselves one. Member detail carries the
+same action per prize.
+
+A project that has not run the migration shows exactly what it did before:
+**Claimed**, with no promise of a hand-over, and no list on Members.
 
 Numbers: a meeting identifier is a label and keeps its leading zero
 (`GM 04`); a count is a plain integer (`3 / 10`). Every screen writes a
@@ -117,7 +146,7 @@ PM never breaks (`knit` in `02-motion.js`).
 
 Routing is hash-based (`#/record`). `gate()` in `06-app.js` is the enforcement
 point: signed-out visitors land on the sign-in spread whatever the hash says, a
-member cannot reach a board route, and a board account lands in Club Tools.
+member cannot reach a board route, and a board account lands in Check-in.
 
 Credentials: usernames are case-insensitive (`Config.canonUsername` lowercases
 them only to build the synthetic sign-in address; the typed form is kept as the
@@ -228,8 +257,62 @@ Functions use, so the client and the server never disagree about the date.
 Deriving "today" from `toISOString()` would report tomorrow all evening for
 anyone west of Greenwich and slide meetings a day out of place.
 
-A meeting still on today's date counts as ahead, not missed, until check-in
-opens or the day turns over.
+A meeting on today's date is still ahead of a member until check-in opens,
+they are stamped, or its end time passes on the club's clock (a meeting with
+no end time is not over until the day is). `Store.settle()` in `01-core.js`
+decides this after every read, and Home's top line follows it:
+
+- **Check in / GM 19**: check-in is open and they have no stamp;
+- **Checked in / GM 19 / 12:43 PM**: stamped, for the rest of the day, open or
+  closed; "added by an officer" in place of the time for a stamp added by hand;
+- **Today / GM 19 / 12:40 PM**: today's meeting, not open. Members cannot see
+  attendance sessions, so "not opened yet" and "closed early" look the same;
+  the line claims neither, and never says when check-in will open;
+- **Not checked in / GM 19**: over, no stamp (an officer can still add one
+  today); Record says the same for today's row and "Missed" after;
+- **Next / GM 20 / Wed, Sep 30**: no meeting today.
+
+While Home or Scan shows today's meeting still to be stamped and the tab is
+in view, `TodayWatch` in `06-app.js` asks two one-row questions every 15
+seconds (with jitter): is check-in open, and do I have a stamp. Anything
+changed re-reads the record, so the Check in line appears when an officer
+opens check-in, and a stamp added by hand arrives, without a reload. A failed
+background read leaves the page as it was; it never turns a loaded page into
+"Could not load", and an older read arriving late is dropped.
+
+A meeting held before the member's account existed (`profiles.created_at`,
+as a club day) and not attended is not on their Record and not in their
+attendance rate: they could not have checked in to it.
+
+---
+
+## Not built yet: service hours
+
+Keystamp records attendance, not service. There is no service data
+anywhere in the schema, and what counts as an hour, who signs it off and
+how it is reported are the club's rules to set, not the app's to guess.
+When the club has them, the shape that fits what is already here:
+
+- **One table, `service_entries`**: `user_id`, `event_date` (a club day),
+  `hours` (`numeric(4,2)`, above 0 and at most 12), `activity` (short
+  text), `status` (`pending` | `approved` | `rejected`), `reviewed_by`,
+  `reviewed_at`, `note`, `created_at`. No stored totals: a member's hours
+  are the sum of their approved rows at read time, as stamps are a count.
+- **RLS as for claims and hand-overs**: a member inserts their own rows,
+  only as `pending` with no reviewer; reads their own; may withdraw their
+  own pending row. The board reads all. Nobody updates a row from a
+  browser: approving or rejecting goes through one security-definer
+  function (`review_service(id, status, note)`), board-only and never on
+  your own entry, the way `hand_over_reward` works.
+- **Where it shows**: a *Service* section on the member's Member page (the
+  log, newest first, each line with its status, and the approved total), a
+  *Log hours* form beside it, and on the board's Members page a *To
+  review* list above the roster, like *To hand over*, approved or
+  rejected in two taps. No new tab for either role.
+- **Questions for the club first**: which activities count; whether
+  entries are free-form or tied to events the board creates (then an
+  `events` table and sign-ups come before hours); who may approve; and
+  what the district report needs, so an export matches it.
 
 ---
 

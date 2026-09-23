@@ -11,6 +11,14 @@ function nextMeetingNumber(list){
 
 const MEETING_DEFAULTS = { start:'12:40', end:'13:30' };
 
+/* the officer who recorded a hand-over may take it back this long
+   (undo_hand_over holds the same line in the database) */
+const HANDOVER_UNDO_MS = 15 * 60 * 1000;
+
+/* the thirty-stamp prize is a secret to members; the board sees which
+   rung it is */
+const prizeName = r => r.name === '???' ? `${r.required || 30}-stamp prize` : r.name;
+
 /* The usual time and room are said once, by the club, not on every
    line; a meeting that differs says how. */
 function meetingAway(m){
@@ -19,23 +27,12 @@ function meetingAway(m){
   return usual ? '' : ` / ${esc(span)} / ${esc(room)}`;
 }
 
-/* minutes past midnight at the club */
-function clubMinutes(d = new Date()){
-  try {
-    const p = new Intl.DateTimeFormat('en-US', { timeZone:CLUB_TZ, hour:'2-digit', minute:'2-digit', hourCycle:'h23' })
-      .formatToParts(d);
-    const v = t => Number((p.find(x => x.type === t) || {}).value);
-    return v('hour') * 60 + v('minute');
-  } catch (_) { return d.getHours() * 60 + d.getMinutes(); }
-}
-
 /* The server calls every unopened meeting dated today ENDED. Until its
    end time has passed it is today's meeting, not a held one. */
 function meetingPhase(m, today, now = clubMinutes()){
   if (!m || m.state !== 'ENDED' || m.meeting_date !== today) return m && m.state;
-  const e = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(m.end_time || '').trim());
-  if (!e) return 'TODAY';
-  const end = (Number(e[1]) % 12 + (/pm/i.test(e[3]) ? 12 : 0)) * 60 + Number(e[2]);
+  const end = clockMinutes(m.end_time);
+  if (Number.isNaN(end)) return 'TODAY';
   return now < end ? 'TODAY' : 'ENDED';
 }
 
@@ -54,7 +51,11 @@ const BoardUI = {
   shown: null,          /* the tab whose loaded content the pane holds */
   error: null,
 
-  overview: null,
+  prizes: null,         /* {owed} | {code} when it could not be read | null */
+  owedAll: false,       /* the prize list unfolded past its first rows */
+  handQ: '',            /* the name typed to stamp someone by hand */
+  handFound: null,      /* {people} | {code} | null before any search */
+  handed: {},           /* "user:reward" -> what this officer just handed over */
   meetings: null,
   members: null,
   memberDetail: null,
@@ -130,15 +131,70 @@ const BoardUI = {
   backLabel(){ return 'Back'; },
 
   progressPane(){
-    const o = this.overview || {};
-    const ms = o.milestones || {};
-    const reached = REWARD_TIERS.map(r => ({ n:r.required, key:'m' + r.required, name:r.name }));
     return `<div class="bpanel memgrid">
-
+      ${this.owedBody()}
       <section class="rosterpanel">
         ${this.rosterBody()}
       </section>
     </div>`;
+  },
+
+  /* The prize table's list: who is owed a prize now, the member who has
+     asked (claimed) first. Each row is handed over where it stands, and
+     one handed over a moment ago stays, with its undo, until the window
+     for it closes. A project without hand-overs, or a function that
+     does not know the list yet, shows nothing here. */
+  owedBody(){
+    const pz = this.prizes;
+    if (!pz || pz.code === 'INVALID_REQUEST' || pz.code === 'NOT_READY') return '';
+    if (pz.code) return `<section class="owed">
+        <div class="meetband"><h2 class="meetband__t">To hand over</h2></div>
+        ${this.empty('The prize list could not be read. Try again in a moment.')}
+      </section>`;
+
+    const now = Date.now();
+    const just = Object.entries(this.handed)
+      .filter(([, h]) => now - h.when < HANDOVER_UNDO_MS)
+      .map(([key, h]) => ({ key, ...h }));
+    const owed = (pz.owed || []).filter(o => !this.handed[o.user_id + ':' + o.reward_id]);
+
+    /* how many of each prize to bring: owed now, and how many more the
+       next meeting could add (members one stamp short). Counts, not a
+       forecast; the only sums an officer at the prize table needs */
+    const near = pz.near || {};
+    const tally = REWARD_TIERS.map(t => [t, owed.filter(o => o.reward_id === t.id).length, Number(near[t.id]) || 0])
+      .filter(([, n, k]) => n || k)
+      .map(([t, n, k]) => `${n} ${esc(prizeName(t))}${k ? ` (+${k} a stamp away)` : ''}`).join(' / ');
+
+    const row = o => {
+      const key = o.user_id + ':' + o.reward_id;
+      return `<li class="brow brow--owed">
+        <span class="brow__mid"><b>${esc(o.username)}</b>
+          <span class="muted">${esc(prizeName(o))} / ${o.claimed_at ? `claimed ${esc(fmtClubDay(o.claimed_at))}` : 'earned, not claimed'}</span></span>
+        ${o.user_id === (Store.user && Store.user.id)
+          ? '<span class="muted owed__self">Another officer hands this over</span>'
+          : `<button class="btn owed__go" type="button" data-bhand="${esc(key)}"
+          data-who="${esc(o.username)}" data-prize="${esc(prizeName(o))}">Hand over</button>`}
+      </li>`;
+    };
+    const done = h => `<li class="brow brow--owed brow--handed">
+        <span class="brow__mid"><b>${esc(h.username)}</b>
+          <span class="muted">${esc(h.prize)} / handed over ${esc(fmtTime(h.at))}</span></span>
+        <button class="link owed__undo" type="button" data-bundo="${esc(h.key)}" data-busy="Undoing">Undo</button>
+      </li>`;
+
+    /* a long list folds after a few rows, so the roster below it is not
+       pushed out of reach; the claimed ones come first either way */
+    const FOLD = 6;
+    const shown = this.owedAll ? owed : owed.slice(0, FOLD);
+    return `<section class="owed" aria-label="Prizes to hand over">
+      <div class="meetband"><h2 class="meetband__t">To hand over</h2>${tally ? `<span class="meetband__n">${tally}</span>` : ''}</div>
+      ${owed.length || just.length
+        ? `<ul class="blist" id="owedList">${just.map(done).join('')}${shown.map(row).join('')}</ul>
+           ${owed.length > FOLD ? `<button class="link owed__more" type="button" data-bowed aria-controls="owedList"
+             aria-expanded="${this.owedAll}">${this.owedAll ? 'Show fewer' : `Show all ${owed.length}`}</button>` : ''}`
+        : this.empty('No prizes owed')}
+    </section>`;
   },
 
   meetingsPane(){
@@ -282,12 +338,7 @@ const BoardUI = {
 
       ${d.rewards.some(r => r.state !== 'locked') ? `<h2 class="h2 bsec">Rewards</h2>
       <ul class="blist">
-        ${d.rewards.filter(r => r.state !== 'locked').map(r => `<li class="brow brow--reward">
-          <span class="brow__mid"><b>${esc(r.name)}</b>
-            <span class="muted">${r.required} stamps</span></span>
-          <span class="bstate bstate--${r.state === 'claimed' ? 'ended' : 'open'}">${
-            r.state === 'claimed' ? 'Claimed' : 'Ready to claim'}</span>
-        </li>`).join('')}
+        ${d.rewards.filter(r => r.state !== 'locked').map(r => this.rewardRow(m, r, d.handovers)).join('')}
       </ul>` : ''}
 
       <h2 class="h2 bsec meetband"><span>Attendance</span>${d.attendance.length
@@ -303,14 +354,40 @@ const BoardUI = {
     </div>`;
   },
 
+  /* one prize, for one member: what it is, where it stands, and the
+     one thing an officer can do about it */
+  rewardRow(m, r, tracked){
+    const key = m.id + ':' + r.id;
+    const handed = r.handed_at || (this.handed[key] && this.handed[key].at);
+    /* where it stands, in one line under the prize, as the owed list
+       says it; the one action beside it */
+    const when = handed ? `Handed over ${fmtClubDay(handed)}`
+      : r.state === 'claimed' ? (r.claimed_at ? `Claimed ${fmtClubDay(r.claimed_at)}` : 'Claimed')
+      : 'Earned, not claimed';
+    const undo = handed && (r.can_undo || (this.handed[key] && Date.now() - this.handed[key].when < HANDOVER_UNDO_MS));
+    return `<li class="brow brow--reward${handed ? ' brow--handed' : ''}">
+      <span class="brow__mid"><b>${esc(prizeName(r))}</b>
+        <span class="muted">${esc(when)}</span></span>
+      ${!tracked ? '' : undo
+        ? `<button class="link owed__undo" type="button" data-bundo="${esc(key)}" data-busy="Undoing">Undo</button>`
+        : handed ? ''
+        : m.id === (Store.user && Store.user.id) ? '<span class="muted owed__self">Another officer hands this over</span>'
+        : `<button class="btn owed__go" type="button" data-bhand="${esc(key)}"
+            data-who="${esc(m.username)}" data-prize="${esc(prizeName(r))}">Hand over</button>`}
+    </li>`;
+  },
+
   meetingPane(){
     const d = this.meetingDetail;
     const m = d.meeting;
+    const today = String(m.meeting_date) === Schedule.today();
     return `<div class="panel bpanel">
       <button class="link bback" data-bback>${this.backLabel()}</button>
 
       <h2 class="bdetail__name">GM ${pad(m.meeting_number)}</h2>
       <p class="muted">${esc(fmtDay(m.meeting_date))}${meetingAway(m)}${m.check_in_open ? ' / Check-in open' : ''}</p>
+
+      ${today ? this.handBlock(m) : ''}
 
       ${String(m.meeting_date) > Schedule.today() ? '' : `<h2 class="h2 bsec meetband"><span>Attendees</span>${d.attendees.length
         ? `<span class="meetband__n">${d.attendees.length} checked in</span>` : ''}</h2>
@@ -318,11 +395,51 @@ const BoardUI = {
         ? `<ul class="blist">${d.attendees.map(a => `
             <li class="brow brow--member"><button class="brow__go" type="button" data-bmember="${esc(a.user_id)}">
               <span class="brow__mid"><b>${esc(a.username)}</b></span>
-              <span class="muted">${esc(fmtTime(a.checked_in_at))}</span>
+              <span class="muted">${esc(fmtTime(a.checked_in_at))}${
+                a.method === 'board' || a.method === 'manual' ? ' / by hand' : ''}</span>
             </button></li>`).join('')}</ul>`
         : this.empty('No check-ins yet')}`}
       ${this.deleteBlock(m, d.attendees.length)}
     </div>`;
+  },
+
+  /* Stamping someone by hand, for a phone that cannot scan. Offered on
+     today's meeting only, and on this page only, never on the stage: the
+     stage is what goes up on the projector, and this lists names. The
+     name is looked up on the server; there is no typing a stamp in for
+     someone without an account. */
+  handBlock(m){
+    return `<section class="hand" aria-label="Add someone by hand">
+      <h2 class="h2 bsec meetband"><span>Add by hand</span></h2>
+      <label class="field"><span class="sr-only">Find a member by name</span>
+        <input class="input" id="bhq" type="search" value="${esc(this.handQ)}" placeholder="Name or username"
+               autocapitalize="none" autocomplete="off" spellcheck="false" data-meeting="${esc(m.id)}"></label>
+      <div class="hand__found" aria-live="polite">${this.handList(m)}</div>
+    </section>`;
+  },
+
+  handList(m){
+    const f = this.handFound;
+    /* a stamp the attendee list already shows counts, whatever the
+       search said a moment ago */
+    const inn = new Set(((this.meetingDetail && this.meetingDetail.attendees) || []).map(a => a.user_id));
+    const me = Store.user && Store.user.id;
+    const people = ((f && f.people) || []).map(p => ({ ...p,
+      checked_in: p.checked_in || inn.has(p.id), self: p.id === me }));
+    return !this.handQ ? ''
+      : !f ? ''
+      : f.code ? this.empty('Could not search. Try again.')
+      : !people.length ? this.empty('No account by that name')
+      : `<ul class="blist handlist">${people.map(p => `<li class="brow brow--hand">
+          <span class="brow__mid"><b>${esc(p.name)}</b>${
+            p.name.toLowerCase() !== String(p.username).toLowerCase() || p.board
+              ? `<span class="muted">${[p.name.toLowerCase() !== String(p.username).toLowerCase() ? esc(p.username) : '', p.board ? 'Board' : ''].filter(Boolean).join(' / ')}</span>` : ''}</span>
+          ${p.checked_in
+            ? '<span class="bstate bstate--ended">Checked in</span>'
+            : p.self ? '<span class="muted">Another officer adds you</span>'
+            : `<button class="btn owed__go" type="button" data-bstamp="${esc(p.id)}" data-who="${esc(p.name)}"
+                 data-meeting="${esc(m.id)}" data-no="${pad(m.meeting_number)}">Add</button>`}
+        </li>`).join('')}</ul>`;
   },
 
   /* A meeting nobody attended can go at any time; one with stamps only
@@ -360,6 +477,9 @@ const BoardUI = {
 
     const isOpen = Boolean(sel.check_in_open);
     const id = esc(sel.id);
+    /* today's meeting, not open: how many it has already, so a closed
+       check-in reads as a result rather than an invitation to reopen */
+    const held = !isOpen && Number(sel.attendance_count) > 0 ? Number(sel.attendance_count) : 0;
     /* a check-in left open on another day says so */
     const stale = isOpen && sel.meeting_date !== today;
 
@@ -383,9 +503,17 @@ const BoardUI = {
         <div class="proj__ctls">
           <button class="proj__ctl proj__ctl--go" type="button" data-bfull>Full screen</button>
         </div>
-        <button class="link proj__end" type="button" data-bend="${id}">Close check-in</button>
-        <div class="proj__plate"><div class="qrpanel__code" id="qrBox"></div></div>` : `<div class="proj__ctls">
-          <button class="proj__ctl proj__ctl--go" type="button" data-bstart="${id}" data-busy="Opening">Open check-in</button>
+        <div class="proj__side">
+          <button class="link proj__end" type="button" data-bend="${id}">Close check-in</button>
+          <button class="link proj__hand" type="button" data-bmeeting="${id}" data-bhandfocus>Add by hand</button>
+        </div>
+        <div class="proj__plate"><div class="qrpanel__code" id="qrBox"></div></div>` : `${held ? `
+        <p class="proj__count proj__count--held"><b>${held}</b><span>checked in</span></p>` : ''}
+        <div class="proj__ctls">
+          <button class="proj__ctl${held ? '' : ' proj__ctl--go'}" type="button" data-bstart="${id}" data-busy="Opening">Open check-in</button>
+        </div>
+        <div class="proj__side">
+          <button class="link proj__hand" type="button" data-bmeeting="${id}" data-bhandfocus>${held ? 'Attendees and add by hand' : 'Add by hand'}</button>
         </div>`}
       </section>
     </div>`;

@@ -10,7 +10,11 @@ const knit = s => String(s).replace(/ (AM|PM)\b/gi, '\u00a0$1');
 const ctx = vm.createContext({ Schedule:{ today:() => '2026-09-07', PLACE:'MPR' }, knit,
   esc:s => String(s), pad:n => String(n).padStart(2, '0'), fmtDate:iso => iso, fmtTime:iso => iso,
   fmtDay:iso => iso, brandSeal:() => '<svg></svg>' });
-vm.runInContext('const CLUB_TZ = "America/Los_Angeles"; var boardMeeting = null;\n' + src + '\nthis.__x = { nextMeetingNumber, spanTime, BoardUI, MEETING_DEFAULTS, meetingPhase };', ctx);
+// the club-clock helpers live with the backend; taken from there, not copied
+const backend = readFileSync(new URL('./01a-backend.js', import.meta.url), 'utf8');
+const clock = backend.slice(backend.indexOf('/* minutes past midnight at the club */'),
+                            backend.indexOf('const WriteFailure'));
+vm.runInContext('const CLUB_TZ = "America/Los_Angeles"; var boardMeeting = null;\n' + clock + src + '\nthis.__x = { nextMeetingNumber, spanTime, BoardUI, MEETING_DEFAULTS, meetingPhase };', ctx);
 const { nextMeetingNumber, spanTime, BoardUI, MEETING_DEFAULTS, meetingPhase } = ctx.__x;
 const rows = nums => nums.map(n => ({ meeting_number:n }));
 

@@ -88,12 +88,24 @@ const Store = {
   emit(){ this.listeners.forEach(fn => { try { fn(); } catch (_) {} }); },
 
   loadError: null,
+  seq: 0,
+  /* whether this club records prize hand-overs (the migration has run) */
+  handovers: false,
 
-  async hydrate(){
+  /* `keep`: a re-read in the background (a poll, the tab coming back)
+     that fails leaves what is on screen as it was, rather than turning
+     a page that loaded into "Could not load" on one dropped request */
+  async hydrate({ keep = false } = {}){
+    const held = keep && this.ready && !this.loadError && this.user;
+    const before = this.ready && !this.loadError && this.user ? this.user.id : null;
+    /* the newest read wins: an older answer arriving late (a poll sent
+       before a scan landed) is dropped, never painted over a newer one */
+    const seq = ++this.seq;
     let session = null;
     try {
       session = await Backend.currentSession();
     } catch (_){
+      if (held) return this;
       this.loadError = 'SESSION';
       this.ready = true; this.emit();
       return this;
@@ -102,18 +114,30 @@ const Store = {
     this.user = session;
     if (!session){
       this.meetings = []; this.scans = [];
-      this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:false }));
+      this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:false })); this.handovers = false;
       this.loadError = null; this.ready = true; this.emit();
       return this;
     }
 
-    const [meetings, scans, claims] = await Promise.all([
+    const [meetings, scans, claims, handedRead] = await Promise.all([
       Backend.listMeetings().then(v => v, () => null),
       Backend.listAttendance(session.id).then(v => v, () => null),
       Backend.listRewardClaims(session.id).then(v => v, () => null),
+      Backend.listHandovers(session.id).then(v => v, () => null),
     ]);
+    if (seq !== this.seq) return this;
+
+    /* Hand-overs are a line of detail on Rewards, never a reason the
+       app will not load: a failed read keeps what the page already knew
+       for this member, or else says only Claimed, as a club without
+       hand-overs does. */
+    const same = before === session.id;
+    const handed = handedRead !== null ? handedRead
+      : same && this.handovers ? this.rewards.filter(r => r.handedAt).map(r => ({ id:r.id, at:r.handedAt }))
+      : false;
 
     if (scans === null || meetings === null || claims === null){
+      if (held && session.id === before) return this;
       this.loadError = 'DATA';
       this.ready = true; this.emit();
       return this;
@@ -121,7 +145,12 @@ const Store = {
 
     this.meetings = meetings;
     this.scans = scans;
-    this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:claims.includes(r.id) }));
+    this.settle();
+    this.handovers = handed !== false;
+    this.rewards = REWARD_TIERS.map(r => {
+      const c = claims.find(x => x.id === r.id), h = handed && handed.find(x => x.id === r.id);
+      return { ...r, claimed:Boolean(c), claimedAt:c ? c.at : null, handedAt:h ? h.at : null };
+    });
     this.loadError = null;
     this.ready = true;
     this.emit();
@@ -136,9 +165,9 @@ const Store = {
   stamp(){
     return JSON.stringify([
       this.user ? this.user.id : null, this.loadError,
-      this.meetings.map(m => [m.id, m.no, m.date, m.time, m.open, m.upcoming]),
-      this.scans.map(s => [s.meetingId, s.at]),
-      this.rewards.map(r => [r.id, r.claimed]),
+      this.meetings.map(m => [m.id, m.no, m.date, m.time, m.open, m.upcoming, m.ended, m.before]),
+      this.scans.map(s => [s.meetingId, s.at, s.method]),
+      this.rewards.map(r => [r.id, r.claimed, r.handedAt]), this.handovers,
     ]);
   },
 
@@ -175,9 +204,37 @@ const Store = {
   async signOut(){
     await Backend.signOut();
 
-    this.user = null; this.meetings = []; this.scans = [];
+    this.user = null; this.meetings = []; this.scans = []; this.handovers = false;
     this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:false }));
     await this.hydrate();
+  },
+
+  /* Today's meeting is still ahead of the member until it opens, they
+     are stamped, or its end time passes. Before this, a meeting whose
+     check-in had closed went back to being "next" for the rest of the
+     day, and the stamp just earned at it was missing from Record. */
+  settle(){
+    const joined = this.user && this.user.joined;
+    this.meetings.forEach(m => {
+      m.upcoming = !m.open && (m.today
+        ? !m.ended && !this.attended(m.id)
+        : String(m.date) > Schedule.today());
+      /* held before the account existed: not a meeting they missed */
+      m.before = Boolean(joined) && String(m.date) < joined && !this.attended(m.id);
+    });
+  },
+
+  /* The meeting a member's day is about: the one open now, else the
+     next one today not yet over, else one today they were stamped at.
+     The board may hold two in a day. */
+  todayMeeting(){
+    const t = this.meetings.filter(m => m.today);
+    const at = m => { const v = clockMinutes(m.time); return Number.isNaN(v) ? 0 : v; };
+    return t.find(m => m.open)
+        || t.filter(m => m.upcoming).sort((a, b) => at(a) - at(b))[0]
+        || t.filter(m => this.attended(m.id)).sort((a, b) => at(b) - at(a))[0]
+        || t.filter(m => m.ended && !m.before).sort((a, b) => at(b) - at(a))[0]
+        || null;
   },
 
   meeting(id){ return this.meetings.find(m => m.id === id) || null; },
@@ -190,8 +247,8 @@ const Store = {
     return [...this.meetings].filter(m => m.upcoming)
       .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)[0] || null;
   },
-  heldMeetings(){ return this.meetings.filter(m => !m.upcoming); },
-  countedMeetings(){ return this.meetings.filter(m => !m.upcoming && (!m.open || this.attended(m.id))); },
+  heldMeetings(){ return this.meetings.filter(m => !m.upcoming && !m.before); },
+  countedMeetings(){ return this.heldMeetings().filter(m => !m.open || this.attended(m.id)); },
   tierState(r){ return rewardState(r, this.totalStamps(), r.claimed); },
   rewardsUnlocked(){ return this.rewards.filter(r => this.tierState(r) !== 'locked').length; },
   attendanceRate(){

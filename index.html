@@ -943,6 +943,22 @@ body{
 .rosterpanel .meetband{margin:0 0 var(--sp-row)}
 .rosterpanel > div{padding:0}
 
+/* the prize table: who is owed what, handed over where it stands */
+.owed{min-width:0}
+.owed .meetband{margin:0 0 var(--sp-tight)}
+.owed .meetband__n{white-space:normal;text-align:right}
+.brow--owed,.brow--reward{cursor:default;flex-wrap:nowrap}
+@media (hover:hover){.brow--owed:hover,.brow--reward:hover{background:none}}
+.brow--owed .brow__mid,.brow--reward .brow__mid{flex:1 1 auto}
+.owed__go{flex:none;min-width:10ch;min-height:44px;padding:0 var(--sp-row)}
+.brow--armed .owed__go{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.owed__undo{flex:none;color:var(--ink-2)}
+.owed__more{color:var(--ink-2);font-size:var(--t-caption)}
+.owed__self{flex:0 1 14ch;text-align:right;font-size:var(--t-caption)}
+.brow--handed .brow__mid b{color:var(--ink-2)}
+/* the username under a found name is a name too */
+.brow--hand .brow__mid .muted{font-family:var(--f-mono);text-transform:none;letter-spacing:.01em}
+
 /* a list row holds one button, and the button is the row */
 .brow:has(> .brow__go){display:block;padding:0}
 .brow__go{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-tight) var(--sp-row);
@@ -1617,7 +1633,11 @@ html{font-synthesis:none}
 
 .tier--claimed{color:var(--ink-2)}
 .tier--claimed .tier__at,.tier--claimed .tier__name{color:var(--ink-2)}
-.tier--claimed{grid-template-areas:"at body" "at say"}
+.tier--claimed{grid-template-areas:"at body" "at say" "at note"}
+/* what happens next, or when it did: a line under the punch */
+.tier__note{grid-area:note;margin-top:var(--sp-tight);
+  font-size:var(--t-caption);line-height:1.35;color:var(--ink-2)}
+.tier--took .tier__punch{border-color:var(--ink-2);color:var(--ink-2)}
 .tier__punch{grid-area:say;justify-self:start;
   transform:rotate(-4deg);transform-origin:0 100%;
   font-family:var(--f-head);text-transform:uppercase;line-height:1;
@@ -1785,13 +1805,13 @@ html{font-synthesis:none}
   .proj__plate{grid-column:1/-1;grid-row:2}
   .proj__count{grid-column:1/-1;grid-row:3;justify-self:start}
   .proj__ctls{grid-column:1/-1;grid-row:3;justify-self:end}
-  .proj__end{grid-column:1/-1;grid-row:4;justify-self:end}
+  .proj__side{grid-column:1/-1;grid-row:4;justify-self:end}
   .proj:not(.proj--live) .proj__ctls{grid-row:2;justify-self:start}
 }
 @media(max-width:559px){
   .proj__ctls{grid-row:4;justify-self:stretch}
   .proj__ctl{flex:1 1 auto}
-  .proj__end{grid-row:5}
+  .proj__side{grid-row:5}
 }
 
 .proj__count{display:flex;align-items:baseline;gap:var(--sp-row);margin:0}
@@ -1807,9 +1827,20 @@ html{font-synthesis:none}
   font-size:clamp(17px,1.8vw,24px);white-space:nowrap}
 .proj__ctl:focus-visible{outline:var(--edge-panel) solid var(--paper);
   outline-offset:3px}
-/* closing is the quiet control: it ends the meeting's check-in */
-.proj__end{color:var(--tint);font-size:var(--t-caption)}
-.proj__end:focus-visible{outline-color:var(--paper)}
+/* closing is the quiet control: it ends the meeting's check-in; adding
+   someone by hand sits beside it and leaves the stage for a page of
+   names that is never projected */
+.proj__side{display:flex;flex-wrap:wrap;justify-content:flex-end;column-gap:var(--sp-pad)}
+.proj__end,.proj__hand{color:var(--tint);font-size:var(--t-caption)}
+.proj__end:focus-visible,.proj__hand:focus-visible{outline-color:var(--paper)}
+/* today's meeting, not open: a column, the count it already has first */
+.proj:not(.proj--live){display:flex;flex-direction:column;align-items:flex-start}
+.proj:not(.proj--live) .proj__side{justify-content:flex-start}
+.proj:not(.proj--live) .proj__hand{color:var(--ink-2)}
+.proj:not(.proj--live) .proj__hand:focus-visible{outline-color:var(--ink)}
+.proj__count--held b{font-size:clamp(40px,5vw,64px)}
+.proj:not(.proj--live) .proj__count span{color:var(--ink-2)}
+.proj:not(.proj--live) .proj__ctl:not(.proj__ctl--go){border-color:var(--ink);background:none;color:var(--ink)}
 
 /* the code on white, with its own quiet zone as the only margin */
 .proj__plate{background:#fff;color:var(--ink);
@@ -1834,7 +1865,7 @@ html{font-synthesis:none}
   .proj__count b{font-size:clamp(88px,10vw,168px)}
   .proj__count span{font-size:clamp(14px,1.4vw,20px)}
   .proj__ctls{grid-area:3/2;justify-self:end;align-self:end}
-  .proj__end{grid-area:4/2;justify-self:end}
+  .proj__side{grid-area:4/2;justify-self:end}
   .proj:not(.proj--live) .proj__ctls{grid-area:2/1;justify-self:start;align-self:start}
   .proj__plate .qrpanel__code{width:min(50vw,calc(100dvh - 350px),640px)}
 }
@@ -1852,7 +1883,7 @@ html{font-synthesis:none}
   align-items:center;column-gap:5vw;row-gap:2vh}
 .proj--full .proj__meet{grid-area:meet;flex-direction:row;align-items:baseline;gap:2vw}
 .proj--full .proj__no{font-size:clamp(40px,8vh,110px)}
-.proj--full .proj__when,.proj--full .proj__end{display:none}
+.proj--full .proj__when,.proj--full .proj__side{display:none}
 .proj--full .proj__word{grid-area:word;font-size:clamp(40px,8vh,110px);justify-self:end;align-self:center}
 .proj--full .proj__plate{grid-area:plate;justify-self:start;align-self:center}
 .proj--full .proj__plate .qrpanel__code{width:min(80vh,56vw);min-width:0;max-width:none}
@@ -1900,7 +1931,7 @@ html{font-synthesis:none}
    case, a refusal keeps its room, the camera is offered again in place,
    a working button keeps its width, every part of a field is ringed ══ */
 :root{--f-mono:'Keystamp Mono',ui-monospace,'SF Mono',Menlo,monospace}
-.rail__name,.who__name,.brow--member .brow__mid b,.bdetail__name--id,.authp__in{
+.rail__name,.who__name,.brow--member .brow__mid b,.brow--owed .brow__mid b,.brow--hand .brow__mid b,.bdetail__name--id,.authp__in{
   font-family:var(--f-mono);font-weight:400;text-transform:none;letter-spacing:.01em}
 #authErr{display:none;margin-top:var(--sp-pad)}
 #authErr.is-on{display:block}
@@ -14519,6 +14550,23 @@ const clubDay = (d = new Date()) => {
   }
 };
 
+/* minutes past midnight at the club */
+function clubMinutes(d = new Date()){
+  try {
+    const p = new Intl.DateTimeFormat('en-US', { timeZone:CLUB_TZ, hour:'2-digit', minute:'2-digit', hourCycle:'h23' })
+      .formatToParts(d);
+    const v = t => Number((p.find(x => x.type === t) || {}).value);
+    return v('hour') * 60 + v('minute');
+  } catch (_) { return d.getHours() * 60 + d.getMinutes(); }
+}
+
+/* "1:30 PM" as minutes past midnight; NaN for anything else */
+function clockMinutes(t){
+  const e = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(t || '').trim());
+  if (!e) return NaN;
+  return (Number(e[1]) % 12 + (/pm/i.test(e[3]) ? 12 : 0)) * 60 + Number(e[2]);
+}
+
 const WriteFailure = {
   constraintOf(ex){
     const msg = String((ex && ex.message) || '');
@@ -14660,14 +14708,72 @@ const REWARD_TIERS = [
   { id:'r3', name:'???',           required:30, desc:'' },
 ];
 
-/* What one tier is to one member, read from the two facts that exist:
-   the stamp count and whether a claim row is on file. A claim is a
-   fact (the prize was handed over), so a claimed tier stays reached
-   even if a deleted meeting later takes stamps back, and every count
-   of "rewards unlocked" is the number of tiers that are not locked.
-   The board function and the test double carry these same lines. */
+/* What one tier is to one member, read from the stamp count and
+   whether a claim row is on file. A claim is the member asking for the
+   prize on the record, so a claimed tier stays reached even if a
+   deleted meeting later takes stamps back, and every count of "rewards
+   unlocked" is the number of tiers that are not locked. Whether an
+   officer then handed the prize over is a separate fact
+   (reward_handovers), carried beside this, never folded into it. The
+   board function and the test double carry these same lines. */
 const rewardState = (tier, stamps, claimed) =>
   claimed ? 'claimed' : stamps >= tier.required ? 'unlocked' : 'locked';
+
+/* Hand-over refusals, as the database raises them. */
+const Handover = {
+  CODES: ['NOT_AUTHORIZED', 'NOT_EARNED', 'ALREADY_HANDED_OVER', 'UNDO_EXPIRED', 'INVALID_REWARD', 'SELF_HANDOVER'],
+  /* refusals that mean the request never reached a decision */
+  OFFLINE: ['NETWORK_ERROR', 'SERVER_ERROR', 'NOT_INSTALLED'],
+  /* the table or the function is not on this project yet */
+  absent(error){
+    const code = String((error && error.code) || '');
+    return code === '42P01' || code === 'PGRST205' || code === 'PGRST202' || code === '42883';
+  },
+  code(error){
+    if (this.absent(error)) return 'NOT_INSTALLED';
+    const msg = String((error && error.message) || '');
+    const hit = this.CODES.find(c => msg.includes(c));
+    if (hit) return hit;
+    return WriteFailure.classify(error).kind === 'network' ? 'NETWORK_ERROR' : 'SERVER_ERROR';
+  },
+  message(code){
+    return ({
+      NOT_AUTHORIZED:      'Only a board account can hand over a prize.',
+      NOT_EARNED:          'This member has not earned that prize.',
+      ALREADY_HANDED_OVER: 'Another officer has already handed this over.',
+      UNDO_EXPIRED:        'It can only be taken back by the officer who recorded it, within 15 minutes.',
+      INVALID_REWARD:      'That prize does not exist.',
+      SELF_HANDOVER:       'Another officer has to hand you your prize.',
+      NOT_INSTALLED:       'Prize hand-overs are not set up on this project yet.',
+      NETWORK_ERROR:       'Not saved. Check your connection and try again.',
+    })[code] || 'Not saved. Try again.';
+  },
+};
+
+/* Stamp-by-hand refusals, from the function or from the table. */
+const HandStamp = {
+  CODES: ['NOT_AUTHORIZED', 'SELF_STAMP', 'NOT_TODAY', 'MEETING_NOT_FOUND', 'MEMBER_NOT_FOUND', 'ALREADY_CHECKED_IN'],
+  code(error){
+    const code = String((error && error.code) || ''), msg = String((error && error.message) || '');
+    const hit = this.CODES.find(c => msg.includes(c));
+    if (hit) return hit;
+    if (code === '23505') return 'ALREADY_CHECKED_IN';
+    if (code === '23503') return 'MEETING_NOT_FOUND';
+    if (code === '42501') return 'NOT_AUTHORIZED';
+    return WriteFailure.classify(error).kind === 'network' ? 'NETWORK_ERROR' : 'SERVER_ERROR';
+  },
+  message(code){
+    return ({
+      ALREADY_CHECKED_IN: 'Already checked in.',
+      SELF_STAMP:         'Another officer has to add you.',
+      NOT_TODAY:          'Only today\'s meeting takes stamps by hand.',
+      MEETING_NOT_FOUND:  'That meeting no longer exists.',
+      MEMBER_NOT_FOUND:   'That account no longer exists.',
+      NOT_AUTHORIZED:     'Only a board account can add a stamp.',
+      NETWORK_ERROR:      'Not saved. Check your connection and try again.',
+    })[code] || 'Not saved. Try again.';
+  },
+};
 
 const SupabaseAdapter = {
   name: 'supabase',
@@ -14708,7 +14814,7 @@ const SupabaseAdapter = {
     const deadline = Date.now() + waitMs;
     for (;;){
       const { data, error } = await this.client
-        .from('profiles').select('id, username, display_name, role')
+        .from('profiles').select('id, username, display_name, role, created_at')
         .eq('id', authUser.id).maybeSingle();
       if (error) throw error;
       if (data) return this.shapeProfile(data);
@@ -14718,10 +14824,14 @@ const SupabaseAdapter = {
   },
 
   shapeProfile(data){
+    const made = data.created_at ? new Date(data.created_at) : null;
     return { id:data.id, username:data.username,
              name:data.display_name || data.username,
              role:data.role === 'board' ? 'board' : 'member',
-             isBoard:data.role === 'board' };
+             isBoard:data.role === 'board',
+             /* the club day the account was made; a meeting before it
+                is not one the member could have checked in to */
+             joined: made && !Number.isNaN(made.getTime()) ? clubDay(made) : null };
   },
 
   authUnreachable(error){
@@ -14812,6 +14922,12 @@ const SupabaseAdapter = {
          codes have expired), so for a member it is a held meeting */
       open: Boolean(row.check_in_open) && row.meeting_date === today,
       today: row.meeting_date === today,
+      /* today's meeting is over once its end time has passed on the
+         club's clock; one without an end time is not over until the
+         day is */
+      ended: row.meeting_date < today ||
+        (row.meeting_date === today && clubMinutes() >= clockMinutes(row.end_time)),
+      /* ahead of the member, until Store.settle() has the stamps */
       upcoming: row.meeting_date >= today && !row.check_in_open,
     };
   },
@@ -14829,7 +14945,53 @@ const SupabaseAdapter = {
     const { data, error } = await this.client
       .from('reward_claims').select('reward_id, claimed_at').eq('user_id', userId);
     if (error) throw error;
-    return (data || []).map(r => r.reward_id);
+    return (data || []).map(r => ({ id:r.reward_id, at:r.claimed_at }));
+  },
+
+  /* The prizes an officer has handed this member. `false`, not an
+     empty list, on a project that has not run
+     migrations/2026-09-23-reward-handover.sql: there, a claim is all
+     the club records, and the page says only that. */
+  async listHandovers(userId){
+    const { data, error } = await this.client
+      .from('reward_handovers').select('reward_id, handed_at').eq('user_id', userId);
+    if (error){
+      if (Handover.absent(error)) return false;
+      throw error;
+    }
+    return (data || []).map(r => ({ id:r.reward_id, at:r.handed_at }));
+  },
+
+  /* Board only, decided by the database (hand_over_reward). Resolves
+     to the time it was recorded; refuses with one of Handover.CODES. */
+  async handOverReward(userId, rewardId){
+    const { data, error } = await this.client.rpc('hand_over_reward',
+      { p_user_id:userId, p_reward_id:rewardId });
+    if (error) throw new Error(Handover.code(error));
+    return data;
+  },
+  async undoHandOver(userId, rewardId){
+    const { error } = await this.client.rpc('undo_hand_over',
+      { p_user_id:userId, p_reward_id:rewardId });
+    if (error) throw new Error(Handover.code(error));
+    return true;
+  },
+
+  /* A board member stamps someone at today's meeting by hand: a flat
+     battery, no phone. The database decides (stamp_by_hand: board only,
+     today's meeting only, never yourself, labelled 'board', the time is
+     the server's). A project that has not run
+     migrations/2026-09-23-prizes-and-hand-stamps.sql has no function
+     but still has the older insert policy, so the same row is written
+     directly there, and the page holds it to today's meeting. */
+  async addAttendance(userId, meetingId){
+    const { error } = await this.client.rpc('stamp_by_hand', { p_user_id:userId, p_meeting_id:meetingId });
+    if (!error) return true;
+    if (!Handover.absent(error)) throw new Error(HandStamp.code(error));
+    const { error:e2 } = await this.client.from('attendance')
+      .insert({ user_id:userId, meeting_id:meetingId, verification_method:'board' });
+    if (!e2) return true;
+    throw new Error(HandStamp.code(e2));
   },
 
   async claimReward(userId, rewardId){
@@ -14864,6 +15026,8 @@ const SupabaseAdapter = {
       const status = (error.context && error.context.status) || error.status;
       if (status === 401) throw new Error('NOT_AUTHENTICATED');
       if (status === 403) throw new Error('NOT_AUTHORIZED');
+      /* an action the deployed function does not know yet */
+      if (status === 400) throw new Error('INVALID_REQUEST');
       throw new Error('SERVER_ERROR');
     }
     if (!data || !data.ok) throw new Error((data && data.code) || 'SERVER_ERROR');
@@ -14919,6 +15083,15 @@ const SupabaseAdapter = {
     return count || 0;
   },
 
+  /* whether this member has a stamp for this meeting: one row at most */
+  async attendedMeeting(userId, meetingId){
+    const { count, error } = await this.client
+      .from('attendance').select('id', { count:'exact', head:true })
+      .eq('user_id', userId).eq('meeting_id', meetingId);
+    if (error) throw error;
+    return (count || 0) > 0;
+  },
+
   /* whether check-in is still open, so a wall left projecting learns
      that another officer closed it */
   async meetingOpen(meetingId){
@@ -14941,6 +15114,10 @@ const PreviewAdapter = {
   async deleteMeeting(){ throw new Error('No backend is configured.'); },
   async listAttendance(){ return []; },
   async listRewardClaims(){ return []; },
+  async listHandovers(){ return false; },
+  async handOverReward(){ throw new Error('NO_BACKEND'); },
+  async undoHandOver(){ throw new Error('NO_BACKEND'); },
+  async addAttendance(){ throw new Error('NO_BACKEND'); },
   async claimReward(){ throw new Error('No backend is configured.'); },
   async verifyCode(){ return { ok:false, code:'NO_BACKEND' }; },
   async startAttendance(){ throw new Error('No backend is configured.'); },
@@ -14948,6 +15125,7 @@ const PreviewAdapter = {
   async issueToken(){ throw new Error('No backend is configured.'); },
   async attendanceCount(){ return 0; },
   async meetingOpen(){ return false; },
+  async attendedMeeting(){ return false; },
   async board(){ throw new Error('No backend is configured.'); },
   async deleteMeetingAndStamps(){ throw new Error('No backend is configured.'); },
 };
@@ -14959,8 +15137,8 @@ const UnavailableAdapter = {
   async currentSession(){ return null; },
 };
 ['signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
- 'listRewardClaims','claimReward','startAttendance',
- 'endAttendance','issueToken','attendanceCount','meetingOpen','board',
+ 'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','startAttendance',
+ 'endAttendance','issueToken','attendanceCount','meetingOpen','attendedMeeting','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   UnavailableAdapter[fn] = async () => { throw new Error('BACKEND_UNAVAILABLE'); };
 });
@@ -15009,8 +15187,8 @@ const Backend = {
 };
 
 ['currentSession','signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
- 'listRewardClaims','claimReward','verifyCode',
- 'startAttendance','endAttendance','issueToken','attendanceCount','meetingOpen','board',
+ 'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','verifyCode',
+ 'startAttendance','endAttendance','issueToken','attendanceCount','meetingOpen','attendedMeeting','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   Backend[fn] = function(...a){ return this.adapter[fn](...a); };
 });
@@ -15108,12 +15286,24 @@ const Store = {
   emit(){ this.listeners.forEach(fn => { try { fn(); } catch (_) {} }); },
 
   loadError: null,
+  seq: 0,
+  /* whether this club records prize hand-overs (the migration has run) */
+  handovers: false,
 
-  async hydrate(){
+  /* `keep`: a re-read in the background (a poll, the tab coming back)
+     that fails leaves what is on screen as it was, rather than turning
+     a page that loaded into "Could not load" on one dropped request */
+  async hydrate({ keep = false } = {}){
+    const held = keep && this.ready && !this.loadError && this.user;
+    const before = this.ready && !this.loadError && this.user ? this.user.id : null;
+    /* the newest read wins: an older answer arriving late (a poll sent
+       before a scan landed) is dropped, never painted over a newer one */
+    const seq = ++this.seq;
     let session = null;
     try {
       session = await Backend.currentSession();
     } catch (_){
+      if (held) return this;
       this.loadError = 'SESSION';
       this.ready = true; this.emit();
       return this;
@@ -15122,18 +15312,30 @@ const Store = {
     this.user = session;
     if (!session){
       this.meetings = []; this.scans = [];
-      this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:false }));
+      this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:false })); this.handovers = false;
       this.loadError = null; this.ready = true; this.emit();
       return this;
     }
 
-    const [meetings, scans, claims] = await Promise.all([
+    const [meetings, scans, claims, handedRead] = await Promise.all([
       Backend.listMeetings().then(v => v, () => null),
       Backend.listAttendance(session.id).then(v => v, () => null),
       Backend.listRewardClaims(session.id).then(v => v, () => null),
+      Backend.listHandovers(session.id).then(v => v, () => null),
     ]);
+    if (seq !== this.seq) return this;
+
+    /* Hand-overs are a line of detail on Rewards, never a reason the
+       app will not load: a failed read keeps what the page already knew
+       for this member, or else says only Claimed, as a club without
+       hand-overs does. */
+    const same = before === session.id;
+    const handed = handedRead !== null ? handedRead
+      : same && this.handovers ? this.rewards.filter(r => r.handedAt).map(r => ({ id:r.id, at:r.handedAt }))
+      : false;
 
     if (scans === null || meetings === null || claims === null){
+      if (held && session.id === before) return this;
       this.loadError = 'DATA';
       this.ready = true; this.emit();
       return this;
@@ -15141,7 +15343,12 @@ const Store = {
 
     this.meetings = meetings;
     this.scans = scans;
-    this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:claims.includes(r.id) }));
+    this.settle();
+    this.handovers = handed !== false;
+    this.rewards = REWARD_TIERS.map(r => {
+      const c = claims.find(x => x.id === r.id), h = handed && handed.find(x => x.id === r.id);
+      return { ...r, claimed:Boolean(c), claimedAt:c ? c.at : null, handedAt:h ? h.at : null };
+    });
     this.loadError = null;
     this.ready = true;
     this.emit();
@@ -15156,9 +15363,9 @@ const Store = {
   stamp(){
     return JSON.stringify([
       this.user ? this.user.id : null, this.loadError,
-      this.meetings.map(m => [m.id, m.no, m.date, m.time, m.open, m.upcoming]),
-      this.scans.map(s => [s.meetingId, s.at]),
-      this.rewards.map(r => [r.id, r.claimed]),
+      this.meetings.map(m => [m.id, m.no, m.date, m.time, m.open, m.upcoming, m.ended, m.before]),
+      this.scans.map(s => [s.meetingId, s.at, s.method]),
+      this.rewards.map(r => [r.id, r.claimed, r.handedAt]), this.handovers,
     ]);
   },
 
@@ -15195,9 +15402,37 @@ const Store = {
   async signOut(){
     await Backend.signOut();
 
-    this.user = null; this.meetings = []; this.scans = [];
+    this.user = null; this.meetings = []; this.scans = []; this.handovers = false;
     this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:false }));
     await this.hydrate();
+  },
+
+  /* Today's meeting is still ahead of the member until it opens, they
+     are stamped, or its end time passes. Before this, a meeting whose
+     check-in had closed went back to being "next" for the rest of the
+     day, and the stamp just earned at it was missing from Record. */
+  settle(){
+    const joined = this.user && this.user.joined;
+    this.meetings.forEach(m => {
+      m.upcoming = !m.open && (m.today
+        ? !m.ended && !this.attended(m.id)
+        : String(m.date) > Schedule.today());
+      /* held before the account existed: not a meeting they missed */
+      m.before = Boolean(joined) && String(m.date) < joined && !this.attended(m.id);
+    });
+  },
+
+  /* The meeting a member's day is about: the one open now, else the
+     next one today not yet over, else one today they were stamped at.
+     The board may hold two in a day. */
+  todayMeeting(){
+    const t = this.meetings.filter(m => m.today);
+    const at = m => { const v = clockMinutes(m.time); return Number.isNaN(v) ? 0 : v; };
+    return t.find(m => m.open)
+        || t.filter(m => m.upcoming).sort((a, b) => at(a) - at(b))[0]
+        || t.filter(m => this.attended(m.id)).sort((a, b) => at(b) - at(a))[0]
+        || t.filter(m => m.ended && !m.before).sort((a, b) => at(b) - at(a))[0]
+        || null;
   },
 
   meeting(id){ return this.meetings.find(m => m.id === id) || null; },
@@ -15210,8 +15445,8 @@ const Store = {
     return [...this.meetings].filter(m => m.upcoming)
       .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)[0] || null;
   },
-  heldMeetings(){ return this.meetings.filter(m => !m.upcoming); },
-  countedMeetings(){ return this.meetings.filter(m => !m.upcoming && (!m.open || this.attended(m.id))); },
+  heldMeetings(){ return this.meetings.filter(m => !m.upcoming && !m.before); },
+  countedMeetings(){ return this.heldMeetings().filter(m => !m.open || this.attended(m.id)); },
   tierState(r){ return rewardState(r, this.totalStamps(), r.claimed); },
   rewardsUnlocked(){ return this.rewards.filter(r => this.tierState(r) !== 'locked').length; },
   attendanceRate(){
@@ -15305,14 +15540,27 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"']/g, c =>
   ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
-const fmtDate = iso => new Date(iso + (iso.length === 10 ? 'T12:00:00' : ''))
-  .toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
-const fmtDay = iso => new Date(iso + (iso.length === 10 ? 'T12:00:00' : ''))
-  .toLocaleDateString('en-US', { month:'short', day:'numeric' });
+/* A calendar date ("2026-09-23") is read at noon wherever the reader
+   is, so it is that day in any time zone; a moment (a check-in) is read
+   on the club's clock, so a phone set to another zone, or the board's
+   laptop, says the same day and time the room did. */
+const onClock = (iso, opts) => {
+  const s = String(iso);
+  const day = s.length === 10;
+  try {
+    return new Date(s + (day ? 'T12:00:00' : ''))
+      .toLocaleString('en-US', day ? opts : { ...opts, timeZone:CLUB_TZ });
+  } catch (_) {
+    return new Date(s + (day ? 'T12:00:00' : '')).toLocaleString('en-US', opts);
+  }
+};
+const fmtDate = iso => onClock(iso, { weekday:'short', month:'short', day:'numeric' });
+const fmtDay = iso => onClock(iso, { month:'short', day:'numeric' });
+/* a moment, as the date it was at the club */
+const fmtClubDay = iso => fmtDay(iso);
 /* A clock reading is one word: the space before AM/PM never breaks. */
 const knit = s => String(s).replace(/ (AM|PM)\b/gi, '\u00a0$1');
-const fmtTime = iso => knit(new Date(iso)
-  .toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' }));
+const fmtTime = iso => knit(onClock(iso, { hour:'numeric', minute:'2-digit' }));
 
 const TOAST_LIMIT = 3;
 const TOAST_LIFE = 2600;
@@ -15395,6 +15643,12 @@ function stampShape(seed, grow = 0){
 
 const STAMP_FIT = .62;
 
+/* A stamp an officer added by hand was recorded when they added it,
+   which is not when the member walked in; it says so instead of
+   printing that time as a check-in. */
+const byHand = scan => Boolean(scan) && (scan.method === 'board' || scan.method === 'manual');
+const stampWhen = scan => byHand(scan) ? 'added by an officer' : fmtTime(scan.at);
+
 /* the usual time and room are not repeated; a meeting that differs
    says how (the same rule the ledger and the board lists follow) */
 const unusual = m => (m.time && m.time !== '12:40 PM') || (m.place && m.place !== Schedule.PLACE)
@@ -15408,6 +15662,12 @@ const C = {
     const at    = Store.tierState(r);
     const ready = at === 'unlocked';
     const state = at === 'claimed' ? 'claimed' : ready ? 'ready' : 'sealed';
+    /* a claim is the member asking; the prize is theirs once an officer
+       has handed it over. A club that does not record hand-overs sees
+       only Claimed, as before */
+    const took  = at === 'claimed' && r.handedAt;
+    const note  = at !== 'claimed' || !Store.handovers ? ''
+      : took ? `On ${fmtClubDay(r.handedAt)}` : 'Collect it from an officer at a meeting';
     const span  = Math.max(1, r.required - prev);
     const got   = Math.max(0, Math.min(span, total - prev));
     const left  = r.required - total;
@@ -15416,14 +15676,15 @@ const C = {
     const ticks = Array.from({ length:span }, (_, i) =>
       `<i class="${i < got ? 'is-on' : ''}"></i>`).join('');
 
-    return `<div class="tier tier--${state}${far ? ' tier--far' : ''}" data-reward="${r.id}">
+    return `<div class="tier tier--${state}${took ? ' tier--took' : ''}${far ? ' tier--far' : ''}" data-reward="${r.id}">
       <span class="tier__at">${pad(r.required)}</span>
       <span class="tier__body">
         <span class="tier__name">${esc(r.name)}</span>
         <span class="tier__desc">${esc(r.desc || '')}</span>
       </span>
       ${state === 'sealed' && !far ? `<span class="tier__ticks" aria-hidden="true">${ticks}</span>` : ''}
-      ${at === 'claimed' ? `<span class="tier__punch">Claimed</span>` : ''}
+      ${at === 'claimed' ? `<span class="tier__punch">${took ? 'Collected' : 'Claimed'}</span>` : ''}
+      ${note ? `<span class="tier__note">${esc(note)}</span>` : ''}
       ${ready
         ? `<button class="tier__claim" type="button" data-claim="${r.id}">Claim</button>`
         : say ? `<span class="tier__say">${say}</span>` : ''}
@@ -15456,7 +15717,7 @@ const C = {
       const fit  = STAMP_FIT;
       return `<li class="seal ${state ? 'seal--' + state : ''}${hero}${mile}" data-seal="${state || 'empty'}" style="${tilt}"${
         docket ? ` tabindex="0" aria-label="Stamp ${pad(p.floor + i + 1)}: general meeting ${
-          mtg.no}, ${fmtDate(mtg.date)}, checked in at ${fmtTime(rec.at)}"` : ''}>
+          mtg.no}, ${fmtDate(mtg.date)}, ${byHand(rec) ? 'added by an officer' : `checked in at ${fmtTime(rec.at)}`}"` : ''}>
         <svg viewBox="0 0 64 64" aria-hidden="true">
           ${mile ? `<path class="sf-back" d="${stampShape(seed * 3 + 1, 3.4)}"/>` : ''}
           <g class="sf-press">
@@ -15476,7 +15737,8 @@ const C = {
         <polyline points="16.0,8.6 46.0,13.3 74.0,21.1 81.0,40.6 58.0,50.0 31.0,54.7 11.0,72.7 34.0,81.3 58.0,71.9 83.0,83.6"/></svg>`;
 
     const say = full
-      ? (goal && !goal.claimed ? `${goal.name} ready to claim` : goal ? `${goal.name} claimed` : '')
+      ? (goal && !goal.claimed ? `${goal.name} ready to claim`
+         : goal ? `${goal.name} ${goal.handedAt ? 'collected' : 'claimed'}` : '')
       : goal ? `${pad(p.remaining)} to ${goal.name}` : `${pad(p.remaining)} to a full card`;
 
     return `<section class="card${full ? ' card--full' : ''}">
@@ -15517,7 +15779,7 @@ const C = {
     const away = m.place && m.place !== Schedule.PLACE ? ` / ${esc(m.place)}` : '';
     return `<span class="sealmeta" data-layer aria-hidden="true">
       <b class="sealmeta__no">GM ${pad(m.no)}</b>
-      <span>${fmtDate(m.date)} / ${fmtTime(rec.at)}${away}</span>
+      <span>${fmtDate(m.date)} / ${stampWhen(rec)}${away}</span>
     </span>`;
   },
 
@@ -15541,9 +15803,10 @@ const C = {
        not the usual room */
     const away = m.place && m.place !== Schedule.PLACE ? ` / ${esc(m.place)}` : '';
     const detail = {
-      set:  (scan ? fmtTime(scan.at) : 'Stamped') + away,
+      set:  (scan ? (byHand(scan) ? 'Added by an officer' : fmtTime(scan.at)) : 'Stamped') + away,
       open: 'Check-in open' + away,
-      miss: 'Missed' + away,
+      /* today's is still the day's: an officer can add a stamp by hand */
+      miss: (m.today ? 'Not checked in' : 'Missed') + away,
       upcoming: esc(m.time) + away,
     }[state];
 
@@ -15591,24 +15854,36 @@ const Views = {
 
   home(){
     if (Store.failed) return this.loadFailure('Your card');
-    const open = Store.openMeeting();
-    const next = Store.nextMeeting();
-    const done = open && Store.attended(open.id);
-    const live = Boolean(open && !done);
+    /* the top line answers "what now": check in, checked in, today's
+       meeting still to come, or the next one. Only what the record
+       says is printed; a member cannot see when check-in will open, so
+       the page never guesses */
+    const day  = Store.todayMeeting();
+    const scan = day && Store.scanFor(day.id);
+    const live = Boolean(day && day.open && !scan);
+    const next = Store.meetings.filter(m => m.upcoming && (!day || m.id !== day.id))
+      .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)[0] || null;
 
     let action = '';
-    if (open && !done)
+    if (live)
       action = C.strike({ verb:'Check in',
-                          sub:[`GM ${pad(open.no)}`, ...(open.today ? [] : [fmtDay(open.date)]), ...unusual(open)].join('\u00a0/ '),
+                          sub:[`GM ${pad(day.no)}`, ...unusual(day)].join('\u00a0/ '),
                           go:'scan', live:true });
-    else if (open && done){
-      const scan = Store.scanFor(open.id);
-      action = C.line('Checked in', `GM ${pad(open.no)}${scan ? ` / ${fmtTime(scan.at)}` : ''}`);
-    }
+    else if (scan)
+      action = C.line('Checked in', `GM ${pad(day.no)} / ${stampWhen(scan)}`);
+    /* over, and no stamp: said as today's fact, not yet a "missed" one,
+       since an officer can still add a stamp by hand */
+    else if (day && day.ended && !day.open)
+      action = C.line('Not checked in', `GM ${pad(day.no)}`);
+    /* the day's own meeting gives its time even when it is the usual
+       one: today, that is the thing to know */
+    else if (day)
+      action = C.line('Today', [`GM ${pad(day.no)}`, day.time, ...(unusual(day).includes(day.place) ? [day.place] : [])]
+        .filter(Boolean).map(esc).join(' / '));
     else if (next)
       action = C.line('Next', [`GM ${pad(next.no)}`, fmtDate(next.date), ...unusual(next).map(esc)].join(' / '));
 
-    const showing = open ? open.id : next ? next.id : null;
+    const showing = day ? day.id : next ? next.id : null;
     const ahead = Store.meetings
       .filter(m => m.upcoming && m.id !== showing)
       .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)
@@ -15696,7 +15971,7 @@ const Views = {
       <header class="rechead">
         <h1 class="title rechead__title">Scan</h1>
       </header>
-      ${C.line('Checked in', `GM ${pad(open.no)} / ${fmtTime(stamp.at)}`)}
+      ${C.line('Checked in', `GM ${pad(open.no)} / ${stampWhen(stamp)}`)}
     </div>`;
 
     const standing = scanStanding();
@@ -15802,7 +16077,8 @@ const Views = {
             <span class="cards__marks" aria-hidden="true">${run.map((_, i) =>
               `<svg viewBox="0 0 64 64">${stampMark(k * Rules.CARD + i)}</svg>`).join('')}</span>
             <span class="cards__when">${fmtDay(run[0].at)} – ${fmtDay(run[run.length - 1].at)}</span>
-            ${prize ? `<span class="cards__prize">${esc(prize.name)} / ${prize.claimed ? 'claimed' : 'not claimed'}</span>` : ''}
+            ${prize ? `<span class="cards__prize">${esc(prize.name)} / ${
+              prize.handedAt ? 'collected' : prize.claimed ? 'claimed' : 'not claimed'}</span>` : ''}
           </li>`;
         }).join('')}</ol>
       </section>` : ''}
@@ -15896,6 +16172,14 @@ function nextMeetingNumber(list){
 
 const MEETING_DEFAULTS = { start:'12:40', end:'13:30' };
 
+/* the officer who recorded a hand-over may take it back this long
+   (undo_hand_over holds the same line in the database) */
+const HANDOVER_UNDO_MS = 15 * 60 * 1000;
+
+/* the thirty-stamp prize is a secret to members; the board sees which
+   rung it is */
+const prizeName = r => r.name === '???' ? `${r.required || 30}-stamp prize` : r.name;
+
 /* The usual time and room are said once, by the club, not on every
    line; a meeting that differs says how. */
 function meetingAway(m){
@@ -15904,23 +16188,12 @@ function meetingAway(m){
   return usual ? '' : ` / ${esc(span)} / ${esc(room)}`;
 }
 
-/* minutes past midnight at the club */
-function clubMinutes(d = new Date()){
-  try {
-    const p = new Intl.DateTimeFormat('en-US', { timeZone:CLUB_TZ, hour:'2-digit', minute:'2-digit', hourCycle:'h23' })
-      .formatToParts(d);
-    const v = t => Number((p.find(x => x.type === t) || {}).value);
-    return v('hour') * 60 + v('minute');
-  } catch (_) { return d.getHours() * 60 + d.getMinutes(); }
-}
-
 /* The server calls every unopened meeting dated today ENDED. Until its
    end time has passed it is today's meeting, not a held one. */
 function meetingPhase(m, today, now = clubMinutes()){
   if (!m || m.state !== 'ENDED' || m.meeting_date !== today) return m && m.state;
-  const e = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(m.end_time || '').trim());
-  if (!e) return 'TODAY';
-  const end = (Number(e[1]) % 12 + (/pm/i.test(e[3]) ? 12 : 0)) * 60 + Number(e[2]);
+  const end = clockMinutes(m.end_time);
+  if (Number.isNaN(end)) return 'TODAY';
   return now < end ? 'TODAY' : 'ENDED';
 }
 
@@ -15939,7 +16212,11 @@ const BoardUI = {
   shown: null,          /* the tab whose loaded content the pane holds */
   error: null,
 
-  overview: null,
+  prizes: null,         /* {owed} | {code} when it could not be read | null */
+  owedAll: false,       /* the prize list unfolded past its first rows */
+  handQ: '',            /* the name typed to stamp someone by hand */
+  handFound: null,      /* {people} | {code} | null before any search */
+  handed: {},           /* "user:reward" -> what this officer just handed over */
   meetings: null,
   members: null,
   memberDetail: null,
@@ -16015,15 +16292,70 @@ const BoardUI = {
   backLabel(){ return 'Back'; },
 
   progressPane(){
-    const o = this.overview || {};
-    const ms = o.milestones || {};
-    const reached = REWARD_TIERS.map(r => ({ n:r.required, key:'m' + r.required, name:r.name }));
     return `<div class="bpanel memgrid">
-
+      ${this.owedBody()}
       <section class="rosterpanel">
         ${this.rosterBody()}
       </section>
     </div>`;
+  },
+
+  /* The prize table's list: who is owed a prize now, the member who has
+     asked (claimed) first. Each row is handed over where it stands, and
+     one handed over a moment ago stays, with its undo, until the window
+     for it closes. A project without hand-overs, or a function that
+     does not know the list yet, shows nothing here. */
+  owedBody(){
+    const pz = this.prizes;
+    if (!pz || pz.code === 'INVALID_REQUEST' || pz.code === 'NOT_READY') return '';
+    if (pz.code) return `<section class="owed">
+        <div class="meetband"><h2 class="meetband__t">To hand over</h2></div>
+        ${this.empty('The prize list could not be read. Try again in a moment.')}
+      </section>`;
+
+    const now = Date.now();
+    const just = Object.entries(this.handed)
+      .filter(([, h]) => now - h.when < HANDOVER_UNDO_MS)
+      .map(([key, h]) => ({ key, ...h }));
+    const owed = (pz.owed || []).filter(o => !this.handed[o.user_id + ':' + o.reward_id]);
+
+    /* how many of each prize to bring: owed now, and how many more the
+       next meeting could add (members one stamp short). Counts, not a
+       forecast; the only sums an officer at the prize table needs */
+    const near = pz.near || {};
+    const tally = REWARD_TIERS.map(t => [t, owed.filter(o => o.reward_id === t.id).length, Number(near[t.id]) || 0])
+      .filter(([, n, k]) => n || k)
+      .map(([t, n, k]) => `${n} ${esc(prizeName(t))}${k ? ` (+${k} a stamp away)` : ''}`).join(' / ');
+
+    const row = o => {
+      const key = o.user_id + ':' + o.reward_id;
+      return `<li class="brow brow--owed">
+        <span class="brow__mid"><b>${esc(o.username)}</b>
+          <span class="muted">${esc(prizeName(o))} / ${o.claimed_at ? `claimed ${esc(fmtClubDay(o.claimed_at))}` : 'earned, not claimed'}</span></span>
+        ${o.user_id === (Store.user && Store.user.id)
+          ? '<span class="muted owed__self">Another officer hands this over</span>'
+          : `<button class="btn owed__go" type="button" data-bhand="${esc(key)}"
+          data-who="${esc(o.username)}" data-prize="${esc(prizeName(o))}">Hand over</button>`}
+      </li>`;
+    };
+    const done = h => `<li class="brow brow--owed brow--handed">
+        <span class="brow__mid"><b>${esc(h.username)}</b>
+          <span class="muted">${esc(h.prize)} / handed over ${esc(fmtTime(h.at))}</span></span>
+        <button class="link owed__undo" type="button" data-bundo="${esc(h.key)}" data-busy="Undoing">Undo</button>
+      </li>`;
+
+    /* a long list folds after a few rows, so the roster below it is not
+       pushed out of reach; the claimed ones come first either way */
+    const FOLD = 6;
+    const shown = this.owedAll ? owed : owed.slice(0, FOLD);
+    return `<section class="owed" aria-label="Prizes to hand over">
+      <div class="meetband"><h2 class="meetband__t">To hand over</h2>${tally ? `<span class="meetband__n">${tally}</span>` : ''}</div>
+      ${owed.length || just.length
+        ? `<ul class="blist" id="owedList">${just.map(done).join('')}${shown.map(row).join('')}</ul>
+           ${owed.length > FOLD ? `<button class="link owed__more" type="button" data-bowed aria-controls="owedList"
+             aria-expanded="${this.owedAll}">${this.owedAll ? 'Show fewer' : `Show all ${owed.length}`}</button>` : ''}`
+        : this.empty('No prizes owed')}
+    </section>`;
   },
 
   meetingsPane(){
@@ -16167,12 +16499,7 @@ const BoardUI = {
 
       ${d.rewards.some(r => r.state !== 'locked') ? `<h2 class="h2 bsec">Rewards</h2>
       <ul class="blist">
-        ${d.rewards.filter(r => r.state !== 'locked').map(r => `<li class="brow brow--reward">
-          <span class="brow__mid"><b>${esc(r.name)}</b>
-            <span class="muted">${r.required} stamps</span></span>
-          <span class="bstate bstate--${r.state === 'claimed' ? 'ended' : 'open'}">${
-            r.state === 'claimed' ? 'Claimed' : 'Ready to claim'}</span>
-        </li>`).join('')}
+        ${d.rewards.filter(r => r.state !== 'locked').map(r => this.rewardRow(m, r, d.handovers)).join('')}
       </ul>` : ''}
 
       <h2 class="h2 bsec meetband"><span>Attendance</span>${d.attendance.length
@@ -16188,14 +16515,40 @@ const BoardUI = {
     </div>`;
   },
 
+  /* one prize, for one member: what it is, where it stands, and the
+     one thing an officer can do about it */
+  rewardRow(m, r, tracked){
+    const key = m.id + ':' + r.id;
+    const handed = r.handed_at || (this.handed[key] && this.handed[key].at);
+    /* where it stands, in one line under the prize, as the owed list
+       says it; the one action beside it */
+    const when = handed ? `Handed over ${fmtClubDay(handed)}`
+      : r.state === 'claimed' ? (r.claimed_at ? `Claimed ${fmtClubDay(r.claimed_at)}` : 'Claimed')
+      : 'Earned, not claimed';
+    const undo = handed && (r.can_undo || (this.handed[key] && Date.now() - this.handed[key].when < HANDOVER_UNDO_MS));
+    return `<li class="brow brow--reward${handed ? ' brow--handed' : ''}">
+      <span class="brow__mid"><b>${esc(prizeName(r))}</b>
+        <span class="muted">${esc(when)}</span></span>
+      ${!tracked ? '' : undo
+        ? `<button class="link owed__undo" type="button" data-bundo="${esc(key)}" data-busy="Undoing">Undo</button>`
+        : handed ? ''
+        : m.id === (Store.user && Store.user.id) ? '<span class="muted owed__self">Another officer hands this over</span>'
+        : `<button class="btn owed__go" type="button" data-bhand="${esc(key)}"
+            data-who="${esc(m.username)}" data-prize="${esc(prizeName(r))}">Hand over</button>`}
+    </li>`;
+  },
+
   meetingPane(){
     const d = this.meetingDetail;
     const m = d.meeting;
+    const today = String(m.meeting_date) === Schedule.today();
     return `<div class="panel bpanel">
       <button class="link bback" data-bback>${this.backLabel()}</button>
 
       <h2 class="bdetail__name">GM ${pad(m.meeting_number)}</h2>
       <p class="muted">${esc(fmtDay(m.meeting_date))}${meetingAway(m)}${m.check_in_open ? ' / Check-in open' : ''}</p>
+
+      ${today ? this.handBlock(m) : ''}
 
       ${String(m.meeting_date) > Schedule.today() ? '' : `<h2 class="h2 bsec meetband"><span>Attendees</span>${d.attendees.length
         ? `<span class="meetband__n">${d.attendees.length} checked in</span>` : ''}</h2>
@@ -16203,11 +16556,51 @@ const BoardUI = {
         ? `<ul class="blist">${d.attendees.map(a => `
             <li class="brow brow--member"><button class="brow__go" type="button" data-bmember="${esc(a.user_id)}">
               <span class="brow__mid"><b>${esc(a.username)}</b></span>
-              <span class="muted">${esc(fmtTime(a.checked_in_at))}</span>
+              <span class="muted">${esc(fmtTime(a.checked_in_at))}${
+                a.method === 'board' || a.method === 'manual' ? ' / by hand' : ''}</span>
             </button></li>`).join('')}</ul>`
         : this.empty('No check-ins yet')}`}
       ${this.deleteBlock(m, d.attendees.length)}
     </div>`;
+  },
+
+  /* Stamping someone by hand, for a phone that cannot scan. Offered on
+     today's meeting only, and on this page only, never on the stage: the
+     stage is what goes up on the projector, and this lists names. The
+     name is looked up on the server; there is no typing a stamp in for
+     someone without an account. */
+  handBlock(m){
+    return `<section class="hand" aria-label="Add someone by hand">
+      <h2 class="h2 bsec meetband"><span>Add by hand</span></h2>
+      <label class="field"><span class="sr-only">Find a member by name</span>
+        <input class="input" id="bhq" type="search" value="${esc(this.handQ)}" placeholder="Name or username"
+               autocapitalize="none" autocomplete="off" spellcheck="false" data-meeting="${esc(m.id)}"></label>
+      <div class="hand__found" aria-live="polite">${this.handList(m)}</div>
+    </section>`;
+  },
+
+  handList(m){
+    const f = this.handFound;
+    /* a stamp the attendee list already shows counts, whatever the
+       search said a moment ago */
+    const inn = new Set(((this.meetingDetail && this.meetingDetail.attendees) || []).map(a => a.user_id));
+    const me = Store.user && Store.user.id;
+    const people = ((f && f.people) || []).map(p => ({ ...p,
+      checked_in: p.checked_in || inn.has(p.id), self: p.id === me }));
+    return !this.handQ ? ''
+      : !f ? ''
+      : f.code ? this.empty('Could not search. Try again.')
+      : !people.length ? this.empty('No account by that name')
+      : `<ul class="blist handlist">${people.map(p => `<li class="brow brow--hand">
+          <span class="brow__mid"><b>${esc(p.name)}</b>${
+            p.name.toLowerCase() !== String(p.username).toLowerCase() || p.board
+              ? `<span class="muted">${[p.name.toLowerCase() !== String(p.username).toLowerCase() ? esc(p.username) : '', p.board ? 'Board' : ''].filter(Boolean).join(' / ')}</span>` : ''}</span>
+          ${p.checked_in
+            ? '<span class="bstate bstate--ended">Checked in</span>'
+            : p.self ? '<span class="muted">Another officer adds you</span>'
+            : `<button class="btn owed__go" type="button" data-bstamp="${esc(p.id)}" data-who="${esc(p.name)}"
+                 data-meeting="${esc(m.id)}" data-no="${pad(m.meeting_number)}">Add</button>`}
+        </li>`).join('')}</ul>`;
   },
 
   /* A meeting nobody attended can go at any time; one with stamps only
@@ -16245,6 +16638,9 @@ const BoardUI = {
 
     const isOpen = Boolean(sel.check_in_open);
     const id = esc(sel.id);
+    /* today's meeting, not open: how many it has already, so a closed
+       check-in reads as a result rather than an invitation to reopen */
+    const held = !isOpen && Number(sel.attendance_count) > 0 ? Number(sel.attendance_count) : 0;
     /* a check-in left open on another day says so */
     const stale = isOpen && sel.meeting_date !== today;
 
@@ -16268,9 +16664,17 @@ const BoardUI = {
         <div class="proj__ctls">
           <button class="proj__ctl proj__ctl--go" type="button" data-bfull>Full screen</button>
         </div>
-        <button class="link proj__end" type="button" data-bend="${id}">Close check-in</button>
-        <div class="proj__plate"><div class="qrpanel__code" id="qrBox"></div></div>` : `<div class="proj__ctls">
-          <button class="proj__ctl proj__ctl--go" type="button" data-bstart="${id}" data-busy="Opening">Open check-in</button>
+        <div class="proj__side">
+          <button class="link proj__end" type="button" data-bend="${id}">Close check-in</button>
+          <button class="link proj__hand" type="button" data-bmeeting="${id}" data-bhandfocus>Add by hand</button>
+        </div>
+        <div class="proj__plate"><div class="qrpanel__code" id="qrBox"></div></div>` : `${held ? `
+        <p class="proj__count proj__count--held"><b>${held}</b><span>checked in</span></p>` : ''}
+        <div class="proj__ctls">
+          <button class="proj__ctl${held ? '' : ' proj__ctl--go'}" type="button" data-bstart="${id}" data-busy="Opening">Open check-in</button>
+        </div>
+        <div class="proj__side">
+          <button class="link proj__hand" type="button" data-bmeeting="${id}" data-bhandfocus>${held ? 'Attendees and add by hand' : 'Add by hand'}</button>
         </div>`}
       </section>
     </div>`;
@@ -16749,7 +17153,7 @@ function scanStanding(){
   const done = open && Store.attended(open.id);
   if (Store.failed) return { lab:'Record not loaded', at:'Check your connection' };
   return !open || done
-    ? { lab:'Check-in', at:open ? `GM ${pad(open.no)} stamped` : 'Closed' }
+    ? { lab:'Check-in', at:open ? `GM ${pad(open.no)} stamped` : 'Not open' }
     : { lab:'Checking in to', at:`GM ${pad(open.no)}` };
 }
 function paintScanStanding(){
@@ -17504,7 +17908,47 @@ function afterRender(id, nav = false, covered = false){
   if (id === 'scan'){ Scanner.armStart(); if (Store.signedIn) Store.hydrate(); }
   if (PANE_ROUTES.includes(id)){ loadBoard(); }
   else { clearInterval(countTimer); }
+  TodayWatch.sync();
 }
+
+/* On a meeting day, a member's Home and Scan learn without a reload
+   that check-in has opened or closed, or that a board member has
+   stamped them by hand. Two one-row reads every fifteen seconds, and
+   only while today's meeting is still to be stamped, one of those two
+   pages is showing, and the tab is in view; anything that changed
+   re-reads the record, and the page repaints through Store.onChange. */
+const TodayWatch = {
+  timer: null,
+  id: null,
+  EVERY: 15000,
+
+  sync(){
+    const day = Store.ready && Store.signedIn && !Store.isBoard && !Store.failed ? Store.todayMeeting() : null;
+    const want = day && !Store.attended(day.id) && (day.open || day.upcoming)
+      && (current === 'home' || current === 'scan');
+    if (!want){ this.stop(); return; }
+    if (this.timer && this.id === day.id) return;
+    this.stop();
+    this.id = day.id;
+    /* a room of phones does not ask in step */
+    this.timer = setInterval(() => this.tick(), this.EVERY + Math.round(Math.random() * 3000));
+  },
+  stop(){ clearInterval(this.timer); this.timer = null; this.id = null; },
+
+  async tick(){
+    if (document.hidden || navigating || Landing.active || Scenes.busy || !Store.user) return;
+    const day = Store.meeting(this.id);
+    if (!day) return this.sync();
+    /* the end time passing needs no read, only a re-sort */
+    if (!day.ended && clubMinutes() >= clockMinutes(day.endTime)){ Store.hydrate({ keep:true }); return; }
+    let open, mine;
+    try {
+      [open, mine] = await Promise.all([Backend.meetingOpen(day.id),
+                                        Backend.attendedMeeting(Store.user.id, day.id)]);
+    } catch (_) { return; }
+    if (open !== day.open || mine !== Store.attended(day.id)) Store.hydrate({ keep:true });
+  },
+};
 
 /* The error box keeps its room whether or not it has words, so a
    refusal never moves the button under the finger. */
@@ -17561,6 +18005,14 @@ document.addEventListener('input', e => {
     clearTimeout(bqTimer);
     const v = e.target.value;
     bqTimer = setTimeout(() => boardGoto({ q:v, page:1 }), 300);
+    return;
+  }
+  if (e.target.id === 'bhq'){
+    clearTimeout(bqTimer);
+    const v = e.target.value.trim(), mid = e.target.dataset.meeting;
+    BoardUI.handQ = v;
+    if (!v){ BoardUI.handFound = null; paintHandList(); return; }
+    bqTimer = setTimeout(() => handSearch(v, mid), 300);
   }
 });
 document.addEventListener('change', e => {
@@ -17672,8 +18124,48 @@ document.addEventListener('click', e => {
   }
   const bmeeting = e.target.closest('[data-bmeeting]');
   if (bmeeting){
-    boardGoto({ meetingDetail:'pending', memberDetail:null, pendingId:bmeeting.dataset.bmeeting, refocus:'[data-bback]',
+    BoardUI.handQ = ''; BoardUI.handFound = null;
+    boardGoto({ meetingDetail:'pending', memberDetail:null, pendingId:bmeeting.dataset.bmeeting,
+                refocus:bmeeting.hasAttribute('data-bhandfocus') ? '#bhq' : '[data-bback]',
                 leftFrom:`button[data-bmeeting="${bmeeting.dataset.bmeeting}"]` });
+    return;
+  }
+  /* Stamping someone by hand cannot be taken back from the app, so it
+     takes a second tap, and the second tap names who and which meeting. */
+  const stamp = e.target.closest('[data-bstamp]');
+  if (stamp){
+    if (stamp.disabled) return;
+    const who = stamp.dataset.who, no = stamp.dataset.no;
+    if (!stamp.dataset.armed){
+      stamp.dataset.armed = '1';
+      stamp.textContent = 'Confirm';
+      stamp.setAttribute('aria-label', `Confirm: check ${who} in to GM ${no}`);
+      stamp.closest('.brow')?.classList.add('brow--armed');
+      stamp.addEventListener('blur', () => {
+        if (stamp.disabled) return;
+        delete stamp.dataset.armed;
+        stamp.textContent = 'Add';
+        stamp.removeAttribute('aria-label');
+        stamp.closest('.brow')?.classList.remove('brow--armed');
+      }, { once:true });
+      return;
+    }
+    hold(stamp, 'Adding');
+    const uid = stamp.dataset.bstamp;
+    const mark = () => { const p = ((BoardUI.handFound || {}).people || []).find(x => x.id === uid); if (p) p.checked_in = true; };
+    Backend.addAttendance(uid, stamp.dataset.meeting).then(() => {
+      mark();
+      toast({ key:'board', title:`${who} checked in to GM ${no}`, detail:'Added by hand.' });
+      reloadBoardHere('#bhq');
+    }).catch(err => {
+      const code = String((err && err.message) || '');
+      if (code === 'ALREADY_CHECKED_IN'){
+        mark();
+        toast({ key:'board', title:'Already checked in', detail:`${who} has a stamp for GM ${no}.` });
+      } else toast({ key:'board', bad:true, title:'Not checked in', detail:HandStamp.message(code) });
+      if (Handover.OFFLINE.includes(code)) return unarm(stamp, 'Add');
+      reloadBoardHere('#bhq');
+    });
     return;
   }
   const bconfirm = e.target.closest('[data-bconfirm]');
@@ -17821,6 +18313,75 @@ document.addEventListener('click', e => {
   const nav = e.target.closest('[data-go]');
   if (nav){ go(nav.dataset.go); return; }
 
+  /* Handing a prize over cannot be quietly repeated or taken back
+     later, so it takes a second, deliberate tap, the way a claim does,
+     and the second tap names who and what. */
+  const hand = e.target.closest('[data-bhand]');
+  if (hand){
+    if (hand.disabled) return;
+    const [uid, rid] = hand.dataset.bhand.split(':');
+    const who = hand.dataset.who, prize = hand.dataset.prize;
+    if (!hand.dataset.armed){
+      hand.dataset.armed = '1';
+      hand.textContent = 'Confirm';
+      hand.setAttribute('aria-label', `Confirm: hand ${prize} to ${who}`);
+      hand.closest('.brow')?.classList.add('brow--armed');
+      hand.addEventListener('blur', () => {
+        if (hand.disabled) return;
+        delete hand.dataset.armed;
+        hand.textContent = 'Hand over';
+        hand.removeAttribute('aria-label');
+        hand.closest('.brow')?.classList.remove('brow--armed');
+      }, { once:true });
+      return;
+    }
+    hold(hand, 'Saving');
+    Backend.handOverReward(uid, rid).then(at => {
+      BoardUI.handed[hand.dataset.bhand] = { at:at || new Date().toISOString(), when:Date.now(),
+                                             username:who, prize };
+      toast({ key:'board', title:`${prize} handed to ${who}` });
+      reloadBoardHere(`[data-bundo="${hand.dataset.bhand}"]`);
+    }).catch(err => {
+      const code = String((err && err.message) || '');
+      /* two officers at one table: the other got there first. That is
+         the record working, not a failure to retry */
+      if (code === 'ALREADY_HANDED_OVER')
+        toast({ key:'board', title:'Already handed over', detail:`${prize} for ${who} was recorded by another officer.` });
+      else toast({ key:'board', bad:true, title:'Not handed over', detail:Handover.message(code) });
+      /* nothing reached the database: the row stays as it was, ready to
+         try again, rather than re-reading a list over a dead connection */
+      if (Handover.OFFLINE.includes(code)) return unarm(hand, 'Hand over');
+      /* otherwise the list on screen is out of date: re-read it */
+      reloadBoardHere();
+    });
+    return;
+  }
+  const more = e.target.closest('[data-bowed]');
+  if (more){
+    BoardUI.owedAll = !BoardUI.owedAll;
+    const box = $('#boardPane');
+    if (box){ box.innerHTML = BoardUI.pane(); $('[data-bowed]')?.focus({ preventScroll:true }); }
+    return;
+  }
+  const undo = e.target.closest('[data-bundo]');
+  if (undo){
+    if (undo.disabled) return;
+    const [uid, rid] = undo.dataset.bundo.split(':');
+    hold(undo, 'Undoing');
+    Backend.undoHandOver(uid, rid).then(() => {
+      delete BoardUI.handed[undo.dataset.bundo];
+      toast({ key:'board', title:'Hand-over taken back' });
+      reloadBoardHere(`[data-bhand="${undo.dataset.bundo}"]`);
+    }).catch(err => {
+      const code = String((err && err.message) || '');
+      if (code === 'UNDO_EXPIRED') delete BoardUI.handed[undo.dataset.bundo];
+      toast({ key:'board', bad:true, title:'Not taken back', detail:Handover.message(code) });
+      if (Handover.OFFLINE.includes(code)) return release(undo, 'Undo');
+      reloadBoardHere();
+    });
+    return;
+  }
+
   const claim = e.target.closest('[data-claim]');
   if (claim){
     if (claim.disabled) return;
@@ -17840,7 +18401,8 @@ document.addEventListener('click', e => {
     Store.claimReward(claim.dataset.claim).then(r => {
       go('rewards', { instant:true });
       FX.claimStamp($(`[data-reward="${claim.dataset.claim}"]`));
-      setTimeout(() => toast({ key:'claim', title:`${r.name} claimed` }), 260);
+      setTimeout(() => toast({ key:'claim', title:`${r.name} claimed`,
+        detail:Store.handovers ? 'Collect it from an officer at a meeting.' : '' }), 260);
     }).catch(err => {
       delete claim.dataset.armed;
       claim.textContent = 'Claim';
@@ -17888,11 +18450,12 @@ async function loadBoard(){
     } else if (BoardUI.meetingDetail === 'pending'){
       BoardUI.meetingDetail = await Backend.board('meeting', { id:BoardUI.pendingId });
     } else if (BoardUI.tab === 'progress'){
-      const [ov, mem] = await Promise.all([
-        Backend.board('overview'),
+      /* the prize list failing never takes the roster down with it */
+      const [pz, mem] = await Promise.all([
+        Backend.board('prizes').catch(e => ({ code:String((e && e.message) || 'SERVER_ERROR') })),
         Backend.board('members', { q:BoardUI.q, sort:BoardUI.sort, page:BoardUI.page }),
       ]);
-      BoardUI.overview = ov; BoardUI.members = mem;
+      BoardUI.prizes = pz; BoardUI.members = mem;
     } else {
       BoardUI.meetings = await Backend.board('meetings');
     }
@@ -17929,6 +18492,52 @@ async function loadBoard(){
     boardStamp = false;
     if (BoardUI.tab === 'session' && !BoardUI.error) FX.boardSeal();
   }
+}
+
+/* The name typed to stamp someone by hand is looked up on the server.
+   Only the newest search is shown; the list under the field is
+   repainted alone, so the field keeps its focus and caret. A function
+   deployed before `find` existed is asked through the roster search. */
+let handSeq = 0;
+async function handSearch(q, meetingId){
+  const seq = ++handSeq;
+  let res;
+  try { res = await Backend.board('find', { q, meeting_id:meetingId }); }
+  catch (e){
+    if (String(e && e.message) === 'INVALID_REQUEST'){
+      try {
+        const r = await Backend.board('members', { q, page:1 });
+        res = { people:(r.members || []).slice(0, 8).map(m =>
+          ({ id:m.id, name:m.username, username:m.username, board:false, checked_in:false })) };
+      } catch (_){ res = { code:'SERVER_ERROR' }; }
+    } else res = { code:String((e && e.message) || 'SERVER_ERROR') };
+  }
+  if (seq !== handSeq || BoardUI.handQ !== q) return;
+  BoardUI.handFound = res;
+  paintHandList();
+}
+function paintHandList(){
+  const box = $('.hand__found'), d = BoardUI.meetingDetail;
+  if (box && d && d.meeting) box.innerHTML = BoardUI.handList(d.meeting);
+}
+
+/* a two-tap button back at rest after a request that never landed */
+function unarm(btn, label){
+  release(btn, label);
+  delete btn.dataset.armed;
+  btn.removeAttribute('aria-label');
+  btn.closest('.brow')?.classList.remove('brow--armed');
+  btn.focus({ preventScroll:true });
+}
+
+/* re-read what the pane shows, in place: the member open in it, or
+   the chapter's list */
+function reloadBoardHere(refocus = null){
+  const m = BoardUI.memberDetail && BoardUI.memberDetail.member;
+  const g = BoardUI.meetingDetail && BoardUI.meetingDetail.meeting;
+  boardGoto(m ? { memberDetail:'pending', pendingId:m.id, refocus }
+          : g ? { meetingDetail:'pending', pendingId:g.id, refocus }
+          : { refocus });
 }
 
 function boardGoto(next){
@@ -17984,7 +18593,7 @@ document.addEventListener('keydown', e => {
 });
 
 addEventListener('pagehide', () => {
-  Scanner.stop(); clearInterval(countTimer);
+  Scanner.stop(); clearInterval(countTimer); TodayWatch.stop();
 });
 
 let opening = null;
@@ -18017,6 +18626,7 @@ try {
       else if (current && current !== 'auth' && Store.stamp() !== painted)
         go(current, { instant:true, force:true, quiet:true });   /* force: not dropped if it lands mid-cut */
       paintIdentity();
+      TodayWatch.sync();
     });
 
     /* Coming back to the tab re-reads what the page shows: the record
@@ -18029,7 +18639,7 @@ try {
       if (PANE_ROUTES.includes(current)){
         if (BoardUI.loading || $('#boardPane [aria-busy]')) return;
         loadBoard();
-      } else Store.hydrate();
+      } else Store.hydrate({ keep:true });
     });
 
     paintBrand();

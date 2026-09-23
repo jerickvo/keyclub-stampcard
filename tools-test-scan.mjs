@@ -36,7 +36,7 @@ function load({ meetings = [], scans = [], claims = [] } = {}){
 test('the meeting line over the viewer follows the record', () => {
   const line = () => { const s = scanStanding(); return `${s.lab} | ${s.at}`; };
   load({ meetings:[...held(3), meeting(4, { upcoming:true })] });
-  assert.equal(line(), 'Check-in | Closed');
+  assert.equal(line(), 'Check-in | Not open');
   load({ meetings:[...held(3), meeting(4, { open:true, today:true })] });
   // today's meeting in the usual room: the number is all a member needs
   assert.equal(line(), 'Checking in to | GM 04');

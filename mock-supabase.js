@@ -10,7 +10,7 @@
 const MOCK_KEY = '__keystamp_mock_db';
 function loadDB(){
   try { const raw = localStorage.getItem(MOCK_KEY); if (raw) return JSON.parse(raw); } catch (_) {}
-  return { users:[], profiles:[], meetings:[], attendance:[], reward_claims:[], sessions:[], session:null };
+  return { users:[], profiles:[], meetings:[], attendance:[], reward_claims:[], reward_handovers:[], sessions:[], session:null };
 }
 window.__mockDB = loadDB();
 window.saveDB = saveDB;
@@ -21,6 +21,60 @@ function saveDB(){
 function mkClient(){
   const db = window.__mockDB;
   const uuid = () => 'u_' + Math.random().toString(36).slice(2, 10);
+
+  /* Stands in for hand_over_reward and undo_hand_over
+     (migrations/2026-09-23-reward-handover.sql), in the same order of
+     checks. As with the rest of this file, it is not evidence the real
+     functions behave this way; 03-handover_test.sql is. */
+  const NEED = { r1:10, r2:20, r3:30 };
+  const raise = m => ({ data:null, error:{ code:'P0001', message:m } });
+  /* stands in for stamp_by_hand(), same order of checks */
+  function stampByHand({ p_user_id:uid, p_meeting_id:mid }){
+    const me = db.session && db.profiles.find(p => p.id === db.session.user.id);
+    if (!me || me.role !== 'board') return raise('NOT_AUTHORIZED');
+    if (uid === me.id) return raise('SELF_STAMP');
+    const m = (db.meetings || []).find(x => x.id === mid);
+    if (!m) return raise('MEETING_NOT_FOUND');
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone:'America/Los_Angeles',
+      year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date());
+    if (m.meeting_date !== today) return raise('NOT_TODAY');
+    if (!db.profiles.some(p => p.id === uid)) return raise('MEMBER_NOT_FOUND');
+    db.attendance = db.attendance || [];
+    if (db.attendance.some(a => a.user_id === uid && a.meeting_id === mid)) return raise('ALREADY_CHECKED_IN');
+    const at = new Date().toISOString();
+    db.attendance.push({ id:'att_'+Math.random().toString(36).slice(2,8), user_id:uid, meeting_id:mid,
+                         checked_in_at:at, verification_method:'board' });
+    saveDB();
+    return { data:at, error:null };
+  }
+
+  function handover(name, { p_user_id:uid, p_reward_id:rid }){
+    const me = db.session && db.profiles.find(p => p.id === db.session.user.id);
+    if (!me || me.role !== 'board') return raise('NOT_AUTHORIZED');
+    if (name === 'hand_over_reward' && uid === me.id) return raise('SELF_HANDOVER');
+    db.reward_handovers = db.reward_handovers || [];
+    db.reward_claims = db.reward_claims || [];
+    const has = db.reward_handovers.find(h => h.user_id === uid && h.reward_id === rid);
+    if (name === 'undo_hand_over'){
+      if (!has || has.handed_by !== me.id || Date.now() - Date.parse(has.handed_at) >= 15 * 60 * 1000)
+        return raise('UNDO_EXPIRED');
+      db.reward_handovers = db.reward_handovers.filter(h => h !== has); saveDB();
+      return { data:true, error:null };
+    }
+    if (!NEED[rid]) return raise('INVALID_REWARD');
+    if (has) return raise('ALREADY_HANDED_OVER');
+    const claimed = db.reward_claims.some(c => c.user_id === uid && c.reward_id === rid);
+    if (!claimed){
+      const n = (db.attendance || []).filter(a => a.user_id === uid).length;
+      if (n < NEED[rid]) return raise('NOT_EARNED');
+      db.reward_claims.push({ id:'rc_'+Math.random().toString(36).slice(2,8), user_id:uid,
+                              reward_id:rid, claimed_at:new Date().toISOString() });
+    }
+    const at = new Date().toISOString();
+    db.reward_handovers.push({ user_id:uid, reward_id:rid, handed_at:at, handed_by:me.id });
+    saveDB();
+    return { data:at, error:null };
+  }
 
   return {
     auth: {
@@ -66,6 +120,9 @@ function mkClient(){
         return rows().filter(r => this._f.every(([c, v]) => r[c] === v));
       };
       q._fail = function(){ return window.__failTable === this._table || window.__failTable === '*'; };
+      /* a project that has not run the hand-over migration: PostgREST
+         answers PGRST205 for a table it does not know */
+      q._absent = function(){ return this._table === 'reward_handovers' && window.__noHandovers; };
       q.maybeSingle = async function(){
         if (this._fail()) return { data:null, error:{ message:'network' } };
         return { data:this._rows()[0] || null, error:null };
@@ -75,6 +132,8 @@ function mkClient(){
         return r ? { data:r, error:null } : { data:null, error:{ message:'no rows' } };
       };
       q.then = function(res){
+        if (this._absent()) return Promise.resolve({ data:null,
+          error:{ code:'PGRST205', message:"Could not find the table 'public.reward_handovers' in the schema cache" } }).then(res);
         if (this._fail()) return Promise.resolve({ data:null, error:{ message:'network' } }).then(res);
         const found = this._rows();
         if (this._count) return Promise.resolve({ data:this._head ? null : found, count:found.length, error:null }).then(res);
@@ -151,12 +210,36 @@ function mkClient(){
             return { data:payload, error:null };
           },
           then(res){
+            /* Before migrations/2026-09-23-prizes-and-hand-stamps.sql
+               (window.__noHandovers), attendance_board_write let a board
+               account insert a stamp labelled 'manual' or 'board'. After
+               it, nobody inserts directly; stamp_by_hand() does. The
+               unique key refuses a second stamp either way. */
+            if (self._table === 'attendance'){
+              const me = db.session && db.profiles.find(p => p.id === db.session.user.id);
+              if (!window.__noHandovers || !me || me.role !== 'board' || !['manual','board'].includes(payload.verification_method))
+                return Promise.resolve({ data:null, error:{ message:'new row violates row-level security policy', code:'42501' } }).then(res);
+              if (!(db.meetings || []).some(m => m.id === payload.meeting_id))
+                return Promise.resolve({ data:null, error:{ message:'violates foreign key constraint', code:'23503' } }).then(res);
+              db.attendance = db.attendance || [];
+              if (db.attendance.some(a => a.user_id === payload.user_id && a.meeting_id === payload.meeting_id))
+                return Promise.resolve({ data:null, error:{ message:'duplicate key value violates unique constraint "one_stamp_per_meeting"', code:'23505' } }).then(res);
+              const row = Object.assign({ id:'att_'+Math.random().toString(36).slice(2,8),
+                                          checked_in_at:new Date().toISOString() }, payload);
+              db.attendance.push(row); saveDB();
+              return Promise.resolve({ data:null, error:null }).then(res);
+            }
             /* A claim insert must actually write: otherwise a member
                could claim a reward, see the confirmation, and find it
                still unclaimed on the next read. The real table has a
                unique key on (user_id, reward_id), which is why the
                client tolerates 23505 — so the mock enforces it too. */
             if (self._table === 'reward_claims'){
+              const uid = db.session && db.session.user.id;
+              const need = { r1:10, r2:20, r3:30 }[payload.reward_id];
+              const have = (db.attendance || []).filter(a => a.user_id === uid).length;
+              if (!uid || payload.user_id !== uid || !need || have < need)
+                return Promise.resolve({ data:null, error:{ message:'new row violates row-level security policy', code:'42501' } }).then(res);
               const dup = (db.reward_claims || []).some(c =>
                 c.user_id === payload.user_id && c.reward_id === payload.reward_id);
               if (dup) return Promise.resolve({ data:null,
@@ -175,6 +258,11 @@ function mkClient(){
        wiring can be exercised; it is NOT evidence the deployed function
        behaves the same way. */
     async rpc(name, args){
+      /* the connection drops mid-request */
+      if (window.__failRpc) return { data:null, error:{ message:'TypeError: Failed to fetch' } };
+      if ((name === 'hand_over_reward' || name === 'undo_hand_over') && !window.__noHandovers)
+        return handover(name, args || {});
+      if (name === 'stamp_by_hand' && !window.__noHandovers) return stampByHand(args || {});
       if (name !== 'delete_meeting_and_stamps')
         return { data:null, error:{ message:
           'Could not find the function public.' + name + ' in the schema cache',
@@ -281,6 +369,44 @@ function mkClient(){
               active_meeting:open, next_meeting:next, server_date:today,
               today_attendance:open ? A.filter(a => a.meeting_id === open.id).length : 0 }, error:null };
           }
+          const H = window.__noHandovers ? null : (db.reward_handovers || []);
+          if (body.action === 'prizes' && !window.__oldBoardData){
+            if (!H) return { data:{ ok:false, code:'NOT_READY' }, error:null };
+            const per = new Map();
+            for (const a of A) per.set(a.user_id, (per.get(a.user_id) || 0) + 1);
+            const C = db.reward_claims || [];
+            const everyone = new Set([...per.keys(), ...C.map(c => c.user_id)]);
+            const owed = [];
+            for (const uid of everyone){
+              const p = P.find(x => x.id === uid);
+              if (!p) continue;
+              const stamps = per.get(uid) || 0;
+              for (const t of TIERS){
+                const c = C.find(x => x.user_id === uid && x.reward_id === t.id);
+                if (tierState(t, stamps, Boolean(c)) === 'locked') continue;
+                if (H.some(h => h.user_id === uid && h.reward_id === t.id)) continue;
+                owed.push({ user_id:uid, reward_id:t.id, claimed_at:c ? c.claimed_at : null, stamps,
+                            username:p.display_name || p.username, name:t.name, required:t.required });
+              }
+            }
+            owed.sort((a, b) => Number(!a.claimed_at) - Number(!b.claimed_at) ||
+              a.required - b.required || a.username.localeCompare(b.username));
+            const near = {};
+            for (const t of TIERS) near[t.id] = [...per.entries()].filter(([uid, n]) =>
+              n === t.required - 1 && !C.some(c => c.user_id === uid && c.reward_id === t.id)).length;
+            return { data:{ ok:true, owed, near }, error:null };
+          }
+          if (body.action === 'find' && !window.__oldBoardData){
+            const q = String(body.q || '').trim().toLowerCase();
+            if (!q) return { data:{ ok:true, people:[] }, error:null };
+            const people = P.filter(p => p.username.toLowerCase().includes(q) ||
+                                         String(p.display_name || '').toLowerCase().includes(q))
+              .sort((a, b) => a.username.localeCompare(b.username)).slice(0, 8)
+              .map(p => ({ id:p.id, name:p.display_name || p.username, username:p.username,
+                           board:p.role === 'board',
+                           checked_in:A.some(a => a.user_id === p.id && a.meeting_id === body.meeting_id) }));
+            return { data:{ ok:true, people }, error:null };
+          }
           if (body.action === 'members'){
             const q = String(body.q || '').toLowerCase();
             let rows = P.filter(p => p.role === 'member')
@@ -311,8 +437,16 @@ function mkClient(){
             return { data:{ ok:true,
               member:{ id:p.id, username:p.display_name || p.username, role:p.role,
                        created_at:p.created_at, stamps, last_attendance:mine[0]?.checked_in_at || null },
-              rewards:TIERS.map(t => ({ ...t, unlocked:stamps >= t.required, claimed:claimed.has(t.id),
-                                        state:tierState(t, stamps, claimed.has(t.id)) })),
+              handovers:Boolean(H) && !window.__oldBoardData,
+              rewards:TIERS.map(t => {
+                const c = (db.reward_claims||[]).find(x => x.user_id === p.id && x.reward_id === t.id);
+                const h = H && H.find(x => x.user_id === p.id && x.reward_id === t.id);
+                return { ...t, unlocked:stamps >= t.required, claimed:claimed.has(t.id),
+                         claimed_at:c ? c.claimed_at : null,
+                         state:tierState(t, stamps, claimed.has(t.id)),
+                         handed_at:h ? h.handed_at : null,
+                         can_undo:Boolean(h && h.handed_by === me.id && Date.now() - Date.parse(h.handed_at) < 15 * 60 * 1000) };
+              }),
               attendance:mine.map(a => {
                 const m = M.find(x => x.id === a.meeting_id) || {};
                 return { id:a.id, meeting_id:a.meeting_id, meeting_number:m.meeting_number || null,
@@ -333,7 +467,7 @@ function mkClient(){
               attendees:A.filter(a => a.meeting_id === m.id).map(a => {
                 const p = P.find(x => x.id === a.user_id) || {};
                 return { user_id:a.user_id, username:p.display_name || p.username || 'unknown',
-                         checked_in_at:a.checked_in_at };
+                         checked_in_at:a.checked_in_at, method:a.verification_method };
               }) }, error:null };
           }
           return { data:null, error:{ context:{ status:400 } } };

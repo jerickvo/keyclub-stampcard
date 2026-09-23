@@ -206,7 +206,47 @@ function afterRender(id, nav = false, covered = false){
   if (id === 'scan'){ Scanner.armStart(); if (Store.signedIn) Store.hydrate(); }
   if (PANE_ROUTES.includes(id)){ loadBoard(); }
   else { clearInterval(countTimer); }
+  TodayWatch.sync();
 }
+
+/* On a meeting day, a member's Home and Scan learn without a reload
+   that check-in has opened or closed, or that a board member has
+   stamped them by hand. Two one-row reads every fifteen seconds, and
+   only while today's meeting is still to be stamped, one of those two
+   pages is showing, and the tab is in view; anything that changed
+   re-reads the record, and the page repaints through Store.onChange. */
+const TodayWatch = {
+  timer: null,
+  id: null,
+  EVERY: 15000,
+
+  sync(){
+    const day = Store.ready && Store.signedIn && !Store.isBoard && !Store.failed ? Store.todayMeeting() : null;
+    const want = day && !Store.attended(day.id) && (day.open || day.upcoming)
+      && (current === 'home' || current === 'scan');
+    if (!want){ this.stop(); return; }
+    if (this.timer && this.id === day.id) return;
+    this.stop();
+    this.id = day.id;
+    /* a room of phones does not ask in step */
+    this.timer = setInterval(() => this.tick(), this.EVERY + Math.round(Math.random() * 3000));
+  },
+  stop(){ clearInterval(this.timer); this.timer = null; this.id = null; },
+
+  async tick(){
+    if (document.hidden || navigating || Landing.active || Scenes.busy || !Store.user) return;
+    const day = Store.meeting(this.id);
+    if (!day) return this.sync();
+    /* the end time passing needs no read, only a re-sort */
+    if (!day.ended && clubMinutes() >= clockMinutes(day.endTime)){ Store.hydrate({ keep:true }); return; }
+    let open, mine;
+    try {
+      [open, mine] = await Promise.all([Backend.meetingOpen(day.id),
+                                        Backend.attendedMeeting(Store.user.id, day.id)]);
+    } catch (_) { return; }
+    if (open !== day.open || mine !== Store.attended(day.id)) Store.hydrate({ keep:true });
+  },
+};
 
 /* The error box keeps its room whether or not it has words, so a
    refusal never moves the button under the finger. */
@@ -263,6 +303,14 @@ document.addEventListener('input', e => {
     clearTimeout(bqTimer);
     const v = e.target.value;
     bqTimer = setTimeout(() => boardGoto({ q:v, page:1 }), 300);
+    return;
+  }
+  if (e.target.id === 'bhq'){
+    clearTimeout(bqTimer);
+    const v = e.target.value.trim(), mid = e.target.dataset.meeting;
+    BoardUI.handQ = v;
+    if (!v){ BoardUI.handFound = null; paintHandList(); return; }
+    bqTimer = setTimeout(() => handSearch(v, mid), 300);
   }
 });
 document.addEventListener('change', e => {
@@ -374,8 +422,48 @@ document.addEventListener('click', e => {
   }
   const bmeeting = e.target.closest('[data-bmeeting]');
   if (bmeeting){
-    boardGoto({ meetingDetail:'pending', memberDetail:null, pendingId:bmeeting.dataset.bmeeting, refocus:'[data-bback]',
+    BoardUI.handQ = ''; BoardUI.handFound = null;
+    boardGoto({ meetingDetail:'pending', memberDetail:null, pendingId:bmeeting.dataset.bmeeting,
+                refocus:bmeeting.hasAttribute('data-bhandfocus') ? '#bhq' : '[data-bback]',
                 leftFrom:`button[data-bmeeting="${bmeeting.dataset.bmeeting}"]` });
+    return;
+  }
+  /* Stamping someone by hand cannot be taken back from the app, so it
+     takes a second tap, and the second tap names who and which meeting. */
+  const stamp = e.target.closest('[data-bstamp]');
+  if (stamp){
+    if (stamp.disabled) return;
+    const who = stamp.dataset.who, no = stamp.dataset.no;
+    if (!stamp.dataset.armed){
+      stamp.dataset.armed = '1';
+      stamp.textContent = 'Confirm';
+      stamp.setAttribute('aria-label', `Confirm: check ${who} in to GM ${no}`);
+      stamp.closest('.brow')?.classList.add('brow--armed');
+      stamp.addEventListener('blur', () => {
+        if (stamp.disabled) return;
+        delete stamp.dataset.armed;
+        stamp.textContent = 'Add';
+        stamp.removeAttribute('aria-label');
+        stamp.closest('.brow')?.classList.remove('brow--armed');
+      }, { once:true });
+      return;
+    }
+    hold(stamp, 'Adding');
+    const uid = stamp.dataset.bstamp;
+    const mark = () => { const p = ((BoardUI.handFound || {}).people || []).find(x => x.id === uid); if (p) p.checked_in = true; };
+    Backend.addAttendance(uid, stamp.dataset.meeting).then(() => {
+      mark();
+      toast({ key:'board', title:`${who} checked in to GM ${no}`, detail:'Added by hand.' });
+      reloadBoardHere('#bhq');
+    }).catch(err => {
+      const code = String((err && err.message) || '');
+      if (code === 'ALREADY_CHECKED_IN'){
+        mark();
+        toast({ key:'board', title:'Already checked in', detail:`${who} has a stamp for GM ${no}.` });
+      } else toast({ key:'board', bad:true, title:'Not checked in', detail:HandStamp.message(code) });
+      if (Handover.OFFLINE.includes(code)) return unarm(stamp, 'Add');
+      reloadBoardHere('#bhq');
+    });
     return;
   }
   const bconfirm = e.target.closest('[data-bconfirm]');
@@ -523,6 +611,75 @@ document.addEventListener('click', e => {
   const nav = e.target.closest('[data-go]');
   if (nav){ go(nav.dataset.go); return; }
 
+  /* Handing a prize over cannot be quietly repeated or taken back
+     later, so it takes a second, deliberate tap, the way a claim does,
+     and the second tap names who and what. */
+  const hand = e.target.closest('[data-bhand]');
+  if (hand){
+    if (hand.disabled) return;
+    const [uid, rid] = hand.dataset.bhand.split(':');
+    const who = hand.dataset.who, prize = hand.dataset.prize;
+    if (!hand.dataset.armed){
+      hand.dataset.armed = '1';
+      hand.textContent = 'Confirm';
+      hand.setAttribute('aria-label', `Confirm: hand ${prize} to ${who}`);
+      hand.closest('.brow')?.classList.add('brow--armed');
+      hand.addEventListener('blur', () => {
+        if (hand.disabled) return;
+        delete hand.dataset.armed;
+        hand.textContent = 'Hand over';
+        hand.removeAttribute('aria-label');
+        hand.closest('.brow')?.classList.remove('brow--armed');
+      }, { once:true });
+      return;
+    }
+    hold(hand, 'Saving');
+    Backend.handOverReward(uid, rid).then(at => {
+      BoardUI.handed[hand.dataset.bhand] = { at:at || new Date().toISOString(), when:Date.now(),
+                                             username:who, prize };
+      toast({ key:'board', title:`${prize} handed to ${who}` });
+      reloadBoardHere(`[data-bundo="${hand.dataset.bhand}"]`);
+    }).catch(err => {
+      const code = String((err && err.message) || '');
+      /* two officers at one table: the other got there first. That is
+         the record working, not a failure to retry */
+      if (code === 'ALREADY_HANDED_OVER')
+        toast({ key:'board', title:'Already handed over', detail:`${prize} for ${who} was recorded by another officer.` });
+      else toast({ key:'board', bad:true, title:'Not handed over', detail:Handover.message(code) });
+      /* nothing reached the database: the row stays as it was, ready to
+         try again, rather than re-reading a list over a dead connection */
+      if (Handover.OFFLINE.includes(code)) return unarm(hand, 'Hand over');
+      /* otherwise the list on screen is out of date: re-read it */
+      reloadBoardHere();
+    });
+    return;
+  }
+  const more = e.target.closest('[data-bowed]');
+  if (more){
+    BoardUI.owedAll = !BoardUI.owedAll;
+    const box = $('#boardPane');
+    if (box){ box.innerHTML = BoardUI.pane(); $('[data-bowed]')?.focus({ preventScroll:true }); }
+    return;
+  }
+  const undo = e.target.closest('[data-bundo]');
+  if (undo){
+    if (undo.disabled) return;
+    const [uid, rid] = undo.dataset.bundo.split(':');
+    hold(undo, 'Undoing');
+    Backend.undoHandOver(uid, rid).then(() => {
+      delete BoardUI.handed[undo.dataset.bundo];
+      toast({ key:'board', title:'Hand-over taken back' });
+      reloadBoardHere(`[data-bhand="${undo.dataset.bundo}"]`);
+    }).catch(err => {
+      const code = String((err && err.message) || '');
+      if (code === 'UNDO_EXPIRED') delete BoardUI.handed[undo.dataset.bundo];
+      toast({ key:'board', bad:true, title:'Not taken back', detail:Handover.message(code) });
+      if (Handover.OFFLINE.includes(code)) return release(undo, 'Undo');
+      reloadBoardHere();
+    });
+    return;
+  }
+
   const claim = e.target.closest('[data-claim]');
   if (claim){
     if (claim.disabled) return;
@@ -542,7 +699,8 @@ document.addEventListener('click', e => {
     Store.claimReward(claim.dataset.claim).then(r => {
       go('rewards', { instant:true });
       FX.claimStamp($(`[data-reward="${claim.dataset.claim}"]`));
-      setTimeout(() => toast({ key:'claim', title:`${r.name} claimed` }), 260);
+      setTimeout(() => toast({ key:'claim', title:`${r.name} claimed`,
+        detail:Store.handovers ? 'Collect it from an officer at a meeting.' : '' }), 260);
     }).catch(err => {
       delete claim.dataset.armed;
       claim.textContent = 'Claim';
@@ -590,11 +748,12 @@ async function loadBoard(){
     } else if (BoardUI.meetingDetail === 'pending'){
       BoardUI.meetingDetail = await Backend.board('meeting', { id:BoardUI.pendingId });
     } else if (BoardUI.tab === 'progress'){
-      const [ov, mem] = await Promise.all([
-        Backend.board('overview'),
+      /* the prize list failing never takes the roster down with it */
+      const [pz, mem] = await Promise.all([
+        Backend.board('prizes').catch(e => ({ code:String((e && e.message) || 'SERVER_ERROR') })),
         Backend.board('members', { q:BoardUI.q, sort:BoardUI.sort, page:BoardUI.page }),
       ]);
-      BoardUI.overview = ov; BoardUI.members = mem;
+      BoardUI.prizes = pz; BoardUI.members = mem;
     } else {
       BoardUI.meetings = await Backend.board('meetings');
     }
@@ -631,6 +790,52 @@ async function loadBoard(){
     boardStamp = false;
     if (BoardUI.tab === 'session' && !BoardUI.error) FX.boardSeal();
   }
+}
+
+/* The name typed to stamp someone by hand is looked up on the server.
+   Only the newest search is shown; the list under the field is
+   repainted alone, so the field keeps its focus and caret. A function
+   deployed before `find` existed is asked through the roster search. */
+let handSeq = 0;
+async function handSearch(q, meetingId){
+  const seq = ++handSeq;
+  let res;
+  try { res = await Backend.board('find', { q, meeting_id:meetingId }); }
+  catch (e){
+    if (String(e && e.message) === 'INVALID_REQUEST'){
+      try {
+        const r = await Backend.board('members', { q, page:1 });
+        res = { people:(r.members || []).slice(0, 8).map(m =>
+          ({ id:m.id, name:m.username, username:m.username, board:false, checked_in:false })) };
+      } catch (_){ res = { code:'SERVER_ERROR' }; }
+    } else res = { code:String((e && e.message) || 'SERVER_ERROR') };
+  }
+  if (seq !== handSeq || BoardUI.handQ !== q) return;
+  BoardUI.handFound = res;
+  paintHandList();
+}
+function paintHandList(){
+  const box = $('.hand__found'), d = BoardUI.meetingDetail;
+  if (box && d && d.meeting) box.innerHTML = BoardUI.handList(d.meeting);
+}
+
+/* a two-tap button back at rest after a request that never landed */
+function unarm(btn, label){
+  release(btn, label);
+  delete btn.dataset.armed;
+  btn.removeAttribute('aria-label');
+  btn.closest('.brow')?.classList.remove('brow--armed');
+  btn.focus({ preventScroll:true });
+}
+
+/* re-read what the pane shows, in place: the member open in it, or
+   the chapter's list */
+function reloadBoardHere(refocus = null){
+  const m = BoardUI.memberDetail && BoardUI.memberDetail.member;
+  const g = BoardUI.meetingDetail && BoardUI.meetingDetail.meeting;
+  boardGoto(m ? { memberDetail:'pending', pendingId:m.id, refocus }
+          : g ? { meetingDetail:'pending', pendingId:g.id, refocus }
+          : { refocus });
 }
 
 function boardGoto(next){
@@ -686,7 +891,7 @@ document.addEventListener('keydown', e => {
 });
 
 addEventListener('pagehide', () => {
-  Scanner.stop(); clearInterval(countTimer);
+  Scanner.stop(); clearInterval(countTimer); TodayWatch.stop();
 });
 
 let opening = null;
@@ -719,6 +924,7 @@ try {
       else if (current && current !== 'auth' && Store.stamp() !== painted)
         go(current, { instant:true, force:true, quiet:true });   /* force: not dropped if it lands mid-cut */
       paintIdentity();
+      TodayWatch.sync();
     });
 
     /* Coming back to the tab re-reads what the page shows: the record
@@ -731,7 +937,7 @@ try {
       if (PANE_ROUTES.includes(current)){
         if (BoardUI.loading || $('#boardPane [aria-busy]')) return;
         loadBoard();
-      } else Store.hydrate();
+      } else Store.hydrate({ keep:true });
     });
 
     paintBrand();

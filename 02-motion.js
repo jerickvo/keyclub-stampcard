@@ -38,14 +38,27 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"']/g, c =>
   ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
-const fmtDate = iso => new Date(iso + (iso.length === 10 ? 'T12:00:00' : ''))
-  .toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
-const fmtDay = iso => new Date(iso + (iso.length === 10 ? 'T12:00:00' : ''))
-  .toLocaleDateString('en-US', { month:'short', day:'numeric' });
+/* A calendar date ("2026-09-23") is read at noon wherever the reader
+   is, so it is that day in any time zone; a moment (a check-in) is read
+   on the club's clock, so a phone set to another zone, or the board's
+   laptop, says the same day and time the room did. */
+const onClock = (iso, opts) => {
+  const s = String(iso);
+  const day = s.length === 10;
+  try {
+    return new Date(s + (day ? 'T12:00:00' : ''))
+      .toLocaleString('en-US', day ? opts : { ...opts, timeZone:CLUB_TZ });
+  } catch (_) {
+    return new Date(s + (day ? 'T12:00:00' : '')).toLocaleString('en-US', opts);
+  }
+};
+const fmtDate = iso => onClock(iso, { weekday:'short', month:'short', day:'numeric' });
+const fmtDay = iso => onClock(iso, { month:'short', day:'numeric' });
+/* a moment, as the date it was at the club */
+const fmtClubDay = iso => fmtDay(iso);
 /* A clock reading is one word: the space before AM/PM never breaks. */
 const knit = s => String(s).replace(/ (AM|PM)\b/gi, '\u00a0$1');
-const fmtTime = iso => knit(new Date(iso)
-  .toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' }));
+const fmtTime = iso => knit(onClock(iso, { hour:'numeric', minute:'2-digit' }));
 
 const TOAST_LIMIT = 3;
 const TOAST_LIFE = 2600;

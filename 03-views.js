@@ -15,6 +15,12 @@ function stampShape(seed, grow = 0){
 
 const STAMP_FIT = .62;
 
+/* A stamp an officer added by hand was recorded when they added it,
+   which is not when the member walked in; it says so instead of
+   printing that time as a check-in. */
+const byHand = scan => Boolean(scan) && (scan.method === 'board' || scan.method === 'manual');
+const stampWhen = scan => byHand(scan) ? 'added by an officer' : fmtTime(scan.at);
+
 /* the usual time and room are not repeated; a meeting that differs
    says how (the same rule the ledger and the board lists follow) */
 const unusual = m => (m.time && m.time !== '12:40 PM') || (m.place && m.place !== Schedule.PLACE)
@@ -28,6 +34,12 @@ const C = {
     const at    = Store.tierState(r);
     const ready = at === 'unlocked';
     const state = at === 'claimed' ? 'claimed' : ready ? 'ready' : 'sealed';
+    /* a claim is the member asking; the prize is theirs once an officer
+       has handed it over. A club that does not record hand-overs sees
+       only Claimed, as before */
+    const took  = at === 'claimed' && r.handedAt;
+    const note  = at !== 'claimed' || !Store.handovers ? ''
+      : took ? `On ${fmtClubDay(r.handedAt)}` : 'Collect it from an officer at a meeting';
     const span  = Math.max(1, r.required - prev);
     const got   = Math.max(0, Math.min(span, total - prev));
     const left  = r.required - total;
@@ -36,14 +48,15 @@ const C = {
     const ticks = Array.from({ length:span }, (_, i) =>
       `<i class="${i < got ? 'is-on' : ''}"></i>`).join('');
 
-    return `<div class="tier tier--${state}${far ? ' tier--far' : ''}" data-reward="${r.id}">
+    return `<div class="tier tier--${state}${took ? ' tier--took' : ''}${far ? ' tier--far' : ''}" data-reward="${r.id}">
       <span class="tier__at">${pad(r.required)}</span>
       <span class="tier__body">
         <span class="tier__name">${esc(r.name)}</span>
         <span class="tier__desc">${esc(r.desc || '')}</span>
       </span>
       ${state === 'sealed' && !far ? `<span class="tier__ticks" aria-hidden="true">${ticks}</span>` : ''}
-      ${at === 'claimed' ? `<span class="tier__punch">Claimed</span>` : ''}
+      ${at === 'claimed' ? `<span class="tier__punch">${took ? 'Collected' : 'Claimed'}</span>` : ''}
+      ${note ? `<span class="tier__note">${esc(note)}</span>` : ''}
       ${ready
         ? `<button class="tier__claim" type="button" data-claim="${r.id}">Claim</button>`
         : say ? `<span class="tier__say">${say}</span>` : ''}
@@ -76,7 +89,7 @@ const C = {
       const fit  = STAMP_FIT;
       return `<li class="seal ${state ? 'seal--' + state : ''}${hero}${mile}" data-seal="${state || 'empty'}" style="${tilt}"${
         docket ? ` tabindex="0" aria-label="Stamp ${pad(p.floor + i + 1)}: general meeting ${
-          mtg.no}, ${fmtDate(mtg.date)}, checked in at ${fmtTime(rec.at)}"` : ''}>
+          mtg.no}, ${fmtDate(mtg.date)}, ${byHand(rec) ? 'added by an officer' : `checked in at ${fmtTime(rec.at)}`}"` : ''}>
         <svg viewBox="0 0 64 64" aria-hidden="true">
           ${mile ? `<path class="sf-back" d="${stampShape(seed * 3 + 1, 3.4)}"/>` : ''}
           <g class="sf-press">
@@ -96,7 +109,8 @@ const C = {
         <polyline points="16.0,8.6 46.0,13.3 74.0,21.1 81.0,40.6 58.0,50.0 31.0,54.7 11.0,72.7 34.0,81.3 58.0,71.9 83.0,83.6"/></svg>`;
 
     const say = full
-      ? (goal && !goal.claimed ? `${goal.name} ready to claim` : goal ? `${goal.name} claimed` : '')
+      ? (goal && !goal.claimed ? `${goal.name} ready to claim`
+         : goal ? `${goal.name} ${goal.handedAt ? 'collected' : 'claimed'}` : '')
       : goal ? `${pad(p.remaining)} to ${goal.name}` : `${pad(p.remaining)} to a full card`;
 
     return `<section class="card${full ? ' card--full' : ''}">
@@ -137,7 +151,7 @@ const C = {
     const away = m.place && m.place !== Schedule.PLACE ? ` / ${esc(m.place)}` : '';
     return `<span class="sealmeta" data-layer aria-hidden="true">
       <b class="sealmeta__no">GM ${pad(m.no)}</b>
-      <span>${fmtDate(m.date)} / ${fmtTime(rec.at)}${away}</span>
+      <span>${fmtDate(m.date)} / ${stampWhen(rec)}${away}</span>
     </span>`;
   },
 
@@ -161,9 +175,10 @@ const C = {
        not the usual room */
     const away = m.place && m.place !== Schedule.PLACE ? ` / ${esc(m.place)}` : '';
     const detail = {
-      set:  (scan ? fmtTime(scan.at) : 'Stamped') + away,
+      set:  (scan ? (byHand(scan) ? 'Added by an officer' : fmtTime(scan.at)) : 'Stamped') + away,
       open: 'Check-in open' + away,
-      miss: 'Missed' + away,
+      /* today's is still the day's: an officer can add a stamp by hand */
+      miss: (m.today ? 'Not checked in' : 'Missed') + away,
       upcoming: esc(m.time) + away,
     }[state];
 
@@ -211,24 +226,36 @@ const Views = {
 
   home(){
     if (Store.failed) return this.loadFailure('Your card');
-    const open = Store.openMeeting();
-    const next = Store.nextMeeting();
-    const done = open && Store.attended(open.id);
-    const live = Boolean(open && !done);
+    /* the top line answers "what now": check in, checked in, today's
+       meeting still to come, or the next one. Only what the record
+       says is printed; a member cannot see when check-in will open, so
+       the page never guesses */
+    const day  = Store.todayMeeting();
+    const scan = day && Store.scanFor(day.id);
+    const live = Boolean(day && day.open && !scan);
+    const next = Store.meetings.filter(m => m.upcoming && (!day || m.id !== day.id))
+      .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)[0] || null;
 
     let action = '';
-    if (open && !done)
+    if (live)
       action = C.strike({ verb:'Check in',
-                          sub:[`GM ${pad(open.no)}`, ...(open.today ? [] : [fmtDay(open.date)]), ...unusual(open)].join('\u00a0/ '),
+                          sub:[`GM ${pad(day.no)}`, ...unusual(day)].join('\u00a0/ '),
                           go:'scan', live:true });
-    else if (open && done){
-      const scan = Store.scanFor(open.id);
-      action = C.line('Checked in', `GM ${pad(open.no)}${scan ? ` / ${fmtTime(scan.at)}` : ''}`);
-    }
+    else if (scan)
+      action = C.line('Checked in', `GM ${pad(day.no)} / ${stampWhen(scan)}`);
+    /* over, and no stamp: said as today's fact, not yet a "missed" one,
+       since an officer can still add a stamp by hand */
+    else if (day && day.ended && !day.open)
+      action = C.line('Not checked in', `GM ${pad(day.no)}`);
+    /* the day's own meeting gives its time even when it is the usual
+       one: today, that is the thing to know */
+    else if (day)
+      action = C.line('Today', [`GM ${pad(day.no)}`, day.time, ...(unusual(day).includes(day.place) ? [day.place] : [])]
+        .filter(Boolean).map(esc).join(' / '));
     else if (next)
       action = C.line('Next', [`GM ${pad(next.no)}`, fmtDate(next.date), ...unusual(next).map(esc)].join(' / '));
 
-    const showing = open ? open.id : next ? next.id : null;
+    const showing = day ? day.id : next ? next.id : null;
     const ahead = Store.meetings
       .filter(m => m.upcoming && m.id !== showing)
       .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)
@@ -316,7 +343,7 @@ const Views = {
       <header class="rechead">
         <h1 class="title rechead__title">Scan</h1>
       </header>
-      ${C.line('Checked in', `GM ${pad(open.no)} / ${fmtTime(stamp.at)}`)}
+      ${C.line('Checked in', `GM ${pad(open.no)} / ${stampWhen(stamp)}`)}
     </div>`;
 
     const standing = scanStanding();
@@ -422,7 +449,8 @@ const Views = {
             <span class="cards__marks" aria-hidden="true">${run.map((_, i) =>
               `<svg viewBox="0 0 64 64">${stampMark(k * Rules.CARD + i)}</svg>`).join('')}</span>
             <span class="cards__when">${fmtDay(run[0].at)} – ${fmtDay(run[run.length - 1].at)}</span>
-            ${prize ? `<span class="cards__prize">${esc(prize.name)} / ${prize.claimed ? 'claimed' : 'not claimed'}</span>` : ''}
+            ${prize ? `<span class="cards__prize">${esc(prize.name)} / ${
+              prize.handedAt ? 'collected' : prize.claimed ? 'claimed' : 'not claimed'}</span>` : ''}
           </li>`;
         }).join('')}</ol>
       </section>` : ''}

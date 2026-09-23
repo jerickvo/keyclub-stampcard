@@ -192,6 +192,22 @@ body{
 .rosterpanel .meetband{margin:0 0 var(--sp-row)}
 .rosterpanel > div{padding:0}
 
+/* the prize table: who is owed what, handed over where it stands */
+.owed{min-width:0}
+.owed .meetband{margin:0 0 var(--sp-tight)}
+.owed .meetband__n{white-space:normal;text-align:right}
+.brow--owed,.brow--reward{cursor:default;flex-wrap:nowrap}
+@media (hover:hover){.brow--owed:hover,.brow--reward:hover{background:none}}
+.brow--owed .brow__mid,.brow--reward .brow__mid{flex:1 1 auto}
+.owed__go{flex:none;min-width:10ch;min-height:44px;padding:0 var(--sp-row)}
+.brow--armed .owed__go{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.owed__undo{flex:none;color:var(--ink-2)}
+.owed__more{color:var(--ink-2);font-size:var(--t-caption)}
+.owed__self{flex:0 1 14ch;text-align:right;font-size:var(--t-caption)}
+.brow--handed .brow__mid b{color:var(--ink-2)}
+/* the username under a found name is a name too */
+.brow--hand .brow__mid .muted{font-family:var(--f-mono);text-transform:none;letter-spacing:.01em}
+
 /* a list row holds one button, and the button is the row */
 .brow:has(> .brow__go){display:block;padding:0}
 .brow__go{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-tight) var(--sp-row);
@@ -866,7 +882,11 @@ html{font-synthesis:none}
 
 .tier--claimed{color:var(--ink-2)}
 .tier--claimed .tier__at,.tier--claimed .tier__name{color:var(--ink-2)}
-.tier--claimed{grid-template-areas:"at body" "at say"}
+.tier--claimed{grid-template-areas:"at body" "at say" "at note"}
+/* what happens next, or when it did: a line under the punch */
+.tier__note{grid-area:note;margin-top:var(--sp-tight);
+  font-size:var(--t-caption);line-height:1.35;color:var(--ink-2)}
+.tier--took .tier__punch{border-color:var(--ink-2);color:var(--ink-2)}
 .tier__punch{grid-area:say;justify-self:start;
   transform:rotate(-4deg);transform-origin:0 100%;
   font-family:var(--f-head);text-transform:uppercase;line-height:1;
@@ -1034,13 +1054,13 @@ html{font-synthesis:none}
   .proj__plate{grid-column:1/-1;grid-row:2}
   .proj__count{grid-column:1/-1;grid-row:3;justify-self:start}
   .proj__ctls{grid-column:1/-1;grid-row:3;justify-self:end}
-  .proj__end{grid-column:1/-1;grid-row:4;justify-self:end}
+  .proj__side{grid-column:1/-1;grid-row:4;justify-self:end}
   .proj:not(.proj--live) .proj__ctls{grid-row:2;justify-self:start}
 }
 @media(max-width:559px){
   .proj__ctls{grid-row:4;justify-self:stretch}
   .proj__ctl{flex:1 1 auto}
-  .proj__end{grid-row:5}
+  .proj__side{grid-row:5}
 }
 
 .proj__count{display:flex;align-items:baseline;gap:var(--sp-row);margin:0}
@@ -1056,9 +1076,20 @@ html{font-synthesis:none}
   font-size:clamp(17px,1.8vw,24px);white-space:nowrap}
 .proj__ctl:focus-visible{outline:var(--edge-panel) solid var(--paper);
   outline-offset:3px}
-/* closing is the quiet control: it ends the meeting's check-in */
-.proj__end{color:var(--tint);font-size:var(--t-caption)}
-.proj__end:focus-visible{outline-color:var(--paper)}
+/* closing is the quiet control: it ends the meeting's check-in; adding
+   someone by hand sits beside it and leaves the stage for a page of
+   names that is never projected */
+.proj__side{display:flex;flex-wrap:wrap;justify-content:flex-end;column-gap:var(--sp-pad)}
+.proj__end,.proj__hand{color:var(--tint);font-size:var(--t-caption)}
+.proj__end:focus-visible,.proj__hand:focus-visible{outline-color:var(--paper)}
+/* today's meeting, not open: a column, the count it already has first */
+.proj:not(.proj--live){display:flex;flex-direction:column;align-items:flex-start}
+.proj:not(.proj--live) .proj__side{justify-content:flex-start}
+.proj:not(.proj--live) .proj__hand{color:var(--ink-2)}
+.proj:not(.proj--live) .proj__hand:focus-visible{outline-color:var(--ink)}
+.proj__count--held b{font-size:clamp(40px,5vw,64px)}
+.proj:not(.proj--live) .proj__count span{color:var(--ink-2)}
+.proj:not(.proj--live) .proj__ctl:not(.proj__ctl--go){border-color:var(--ink);background:none;color:var(--ink)}
 
 /* the code on white, with its own quiet zone as the only margin */
 .proj__plate{background:#fff;color:var(--ink);
@@ -1083,7 +1114,7 @@ html{font-synthesis:none}
   .proj__count b{font-size:clamp(88px,10vw,168px)}
   .proj__count span{font-size:clamp(14px,1.4vw,20px)}
   .proj__ctls{grid-area:3/2;justify-self:end;align-self:end}
-  .proj__end{grid-area:4/2;justify-self:end}
+  .proj__side{grid-area:4/2;justify-self:end}
   .proj:not(.proj--live) .proj__ctls{grid-area:2/1;justify-self:start;align-self:start}
   .proj__plate .qrpanel__code{width:min(50vw,calc(100dvh - 350px),640px)}
 }
@@ -1101,7 +1132,7 @@ html{font-synthesis:none}
   align-items:center;column-gap:5vw;row-gap:2vh}
 .proj--full .proj__meet{grid-area:meet;flex-direction:row;align-items:baseline;gap:2vw}
 .proj--full .proj__no{font-size:clamp(40px,8vh,110px)}
-.proj--full .proj__when,.proj--full .proj__end{display:none}
+.proj--full .proj__when,.proj--full .proj__side{display:none}
 .proj--full .proj__word{grid-area:word;font-size:clamp(40px,8vh,110px);justify-self:end;align-self:center}
 .proj--full .proj__plate{grid-area:plate;justify-self:start;align-self:center}
 .proj--full .proj__plate .qrpanel__code{width:min(80vh,56vw);min-width:0;max-width:none}
@@ -1149,7 +1180,7 @@ html{font-synthesis:none}
    case, a refusal keeps its room, the camera is offered again in place,
    a working button keeps its width, every part of a field is ringed ══ */
 :root{--f-mono:'Keystamp Mono',ui-monospace,'SF Mono',Menlo,monospace}
-.rail__name,.who__name,.brow--member .brow__mid b,.bdetail__name--id,.authp__in{
+.rail__name,.who__name,.brow--member .brow__mid b,.brow--owed .brow__mid b,.brow--hand .brow__mid b,.bdetail__name--id,.authp__in{
   font-family:var(--f-mono);font-weight:400;text-transform:none;letter-spacing:.01em}
 #authErr{display:none;margin-top:var(--sp-pad)}
 #authErr.is-on{display:block}

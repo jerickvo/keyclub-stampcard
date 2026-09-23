@@ -66,7 +66,7 @@ function scanStanding(){
   const done = open && Store.attended(open.id);
   if (Store.failed) return { lab:'Record not loaded', at:'Check your connection' };
   return !open || done
-    ? { lab:'Check-in', at:open ? `GM ${pad(open.no)} stamped` : 'Closed' }
+    ? { lab:'Check-in', at:open ? `GM ${pad(open.no)} stamped` : 'Not open' }
     : { lab:'Checking in to', at:`GM ${pad(open.no)}` };
 }
 function paintScanStanding(){
