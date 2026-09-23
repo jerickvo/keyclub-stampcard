@@ -571,6 +571,11 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 [data-screen="auth"] .tabs{display:none}
 
 [data-screen="auth"] main#view{padding:0;max-width:none}
+/* the "Could not load" page shown there instead keeps the page gutter */
+[data-screen="auth"] main#view > .view:not(.view--auth){max-width:var(--page-max);margin-inline:auto;
+  padding:calc(var(--sp-pad) + env(safe-area-inset-top, 0px))
+          calc(var(--gutter) + max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))
+          calc(var(--sp-page) + env(safe-area-inset-bottom, 0px))}
 
 .bpanel{
   position:relative}
@@ -14790,11 +14795,17 @@ const Handover = {
     const msg = String((error && error.message) || '');
     const hit = this.CODES.find(c => msg.includes(c));
     if (hit) return hit;
-    return WriteFailure.classify(error).kind === 'network' ? 'NETWORK_ERROR' : 'SERVER_ERROR';
+    /* the function refused to run for this caller (a signed-out
+       session), or the session itself was refused */
+    const kind = WriteFailure.classify(error).kind;
+    if (kind === 'permission') return 'NOT_AUTHORIZED';
+    if (kind === 'auth') return 'NOT_AUTHENTICATED';
+    return kind === 'network' ? 'NETWORK_ERROR' : 'SERVER_ERROR';
   },
   message(code){
     return ({
       NOT_AUTHORIZED:      'Only a board account can hand over a prize.',
+      NOT_AUTHENTICATED:   'Your session has ended. Sign in again.',
       NOT_EARNED:          'This member has not earned that prize.',
       ALREADY_HANDED_OVER: 'Another officer has already handed this over.',
       UNDO_EXPIRED:        'It can only be taken back by the officer who recorded it, within 15 minutes.',
@@ -14862,7 +14873,19 @@ const SupabaseAdapter = {
     const capped = (input, init = {}) => {
       if (init.signal) return fetch(input, init);
       const stop = new AbortController(), fuse = setTimeout(() => stop.abort(), WAIT);
-      return fetch(input, { ...init, signal:stop.signal }).finally(() => clearTimeout(fuse));
+      const url = String(input && input.url || input);
+      /* a sign-in the page has given up on is cut off with it */
+      const held = this.signInStop;
+      if (held && /grant_type=password/.test(url)){
+        if (held.signal.aborted) stop.abort();
+        else held.signal.addEventListener('abort', () => stop.abort(), { once:true });
+      }
+      const asked = fetch(input, { ...init, signal:stop.signal }).finally(() => clearTimeout(fuse));
+      /* a limit's 429 may come with no JSON (a proxy's page), and then
+         supabase-js reports it with no status: the page keeps its own */
+      if (!/\/auth\/v1\/(token\?grant_type=password|signup)/.test(url)) return asked;
+      this.authStatus = 0;
+      return asked.then(res => { this.authStatus = res.status; return res; });
     };
     this.client = window.supabase.createClient(
       Config.supabaseUrl, Config.supabaseAnonKey,
@@ -14936,22 +14959,35 @@ const SupabaseAdapter = {
   },
 
   SIGN_IN_WAIT: 20000,
+  signInStop: null,
+  authStatus: 0,
   async signIn(username, password){
     const UNREACHABLE = 'Could not reach the club records. Try again.';
-    /* a sign-in that never answers is given up on; if it answers after
-       the page has said so, that session is not kept */
-    let gaveUp = false;
-    const asked = this.client.auth.signInWithPassword({
-      email: Config.emailForUsername(username), password });
-    asked.then(r => { if (gaveUp && r && r.data && r.data.session) this.signOut(); }, () => {});
-    const { data, error } = await Promise.race([asked,
-      new Promise(r => setTimeout(() => { gaveUp = true; r({ error:{ name:'AuthRetryableFetchError', status:0 } }); }, this.SIGN_IN_WAIT))]);
+    /* A sign-in that never answers is given up on, and its request is
+       cut off, so an answer after the page has said so cannot sign this
+       member in behind the form, or sign out the retry that worked. */
+    const stop = this.signInStop = new AbortController();
+    const fuse = setTimeout(() => stop.abort(), this.SIGN_IN_WAIT);
+    let answer;
+    try {
+      answer = await this.client.auth.signInWithPassword({
+        email: Config.emailForUsername(username), password });
+    } finally {
+      clearTimeout(fuse);
+      if (this.signInStop === stop) this.signInStop = null;
+    }
+    const { data, error } = answer;
+    if (!error && stop.signal.aborted){
+      /* answered in the instant it was cut off */
+      await this.dropSession(data.session);
+      throw new Error(UNREACHABLE);
+    }
     if (error){
-      if (this.authUnreachable(error)) throw new Error(UNREACHABLE);
       /* a limit on attempts from this network, not a refusal of the password */
-      if (Number(error.status) === 429 || /rate.?limit/i.test(String(error.code || error.message || '')))
+      const status = Number(error.status) || this.authStatus;
+      if (status === 429 || /rate.?limit/i.test(String(error.code || error.message || '')))
         throw new Error('Too many sign-in attempts from this network. Wait a minute and try again.');
-
+      if (this.authUnreachable(error)) throw new Error(UNREACHABLE);
       throw new Error('That username and password do not match.');
     }
     /* the password was accepted but the account could not be read: the
@@ -14981,15 +15017,26 @@ const SupabaseAdapter = {
         throw new Error('Username is already taken.');
       if (code === 'email_address_invalid' || code === 'validation_failed')
         throw new Error('That username cannot be used. Pick another.');
-      if (Number(error.status) === 429 || /rate.?limit/i.test(code))
+      const status = Number(error.status) || this.authStatus;
+      if (status === 429 || /rate.?limit/i.test(code))
         throw new Error('Too many accounts made from this network. Wait a minute and try again.');
+      if (this.authUnreachable(error)) throw new Error('Could not reach the club records. Try again.');
       throw new Error('Could not create that account. Try again.');
     }
     if (!data.session){
       throw new Error('Account created but sign-in is not enabled. Ask a board member to turn off email confirmation.');
     }
 
-    const profile = await this.profileFor(data.user, { waitMs:3000 });
+    /* The account is made; if it cannot be read now, the session is not
+       kept half-made, and the member is sent to Sign in (making it again
+       would say the username is taken). */
+    let profile;
+    try { profile = await this.profileFor(data.user, { waitMs:3000 }); }
+    catch (_){
+      await this.signOut();
+      throw Object.assign(new Error('Your account is made, but the club records did not answer. Sign in to continue.'),
+                          { made:true });
+    }
     if (!profile)
       throw new Error('Your account was created but its profile did not appear. Tell a board member before signing in again.');
     return profile;
@@ -14997,18 +15044,54 @@ const SupabaseAdapter = {
 
   /* Signing out ends this device's session; another phone or the
      projector laptop signed in to the same account stays signed in.
-     The device forgets its session even when the server cannot be told
-     (offline, or a token that cannot refresh), so a reload never signs
-     the last person back in. */
+     The device lets go of the session first, and then tells the server
+     on its own: supabase-js's signOut waits on its auth lock and, when
+     its request answers, removes whatever session is stored by then,
+     which could be the next person's. Nothing that answers late can
+     bring the session back or take another one away, and a reload during
+     the sign-out never signs the last person back in. */
   SIGN_OUT_WAIT: 5000,
   async signOut(){
-    let error = null;
+    const auth = this.client.auth;
+    const token = this.storedToken();
     try {
-      ({ error } = await Promise.race([
-        this.client.auth.signOut({ scope:'local' }),
-        new Promise(r => setTimeout(() => r({ error:new Error('SIGN_OUT_TIMEOUT') }), this.SIGN_OUT_WAIT))]));
-    } catch (ex){ error = ex; }
-    if (error) this.forgetSession();
+      if (typeof auth._removeSession === 'function'){
+        this.forgetSession();
+        /* tells this page's listeners and the other tabs */
+        await Promise.race([auth._removeSession(),
+          new Promise(r => setTimeout(r, this.SIGN_OUT_WAIT))]);
+      } else {
+        await Promise.race([auth.signOut({ scope:'local' }),
+          new Promise(r => setTimeout(r, this.SIGN_OUT_WAIT))]);
+      }
+    } catch (_) {}
+    this.forgetSession();
+    if (token) this.revoke(token);
+  },
+
+  /* a session that answered after the page gave up on it goes, unless
+     another has been stored since */
+  async dropSession(session){
+    if (!session || this.storedToken() !== session.access_token) return;
+    await this.signOut();
+  },
+
+  storedToken(){
+    try {
+      const kept = JSON.parse(localStorage.getItem(this.client.auth.storageKey) || 'null');
+      return kept && kept.access_token || null;
+    } catch (_){ return null; }
+  },
+
+  /* the server ends that session's refresh token; its answer changes
+     nothing on this device */
+  revoke(token){
+    const stop = new AbortController();
+    setTimeout(() => stop.abort(), 10000);
+    fetch(`${Config.supabaseUrl}/auth/v1/logout?scope=local`, {
+      method:'POST', keepalive:true, signal:stop.signal,
+      headers:{ apikey:Config.supabaseAnonKey, Authorization:`Bearer ${token}` },
+    }).catch(() => {});
   },
 
   async listMeetings(){
@@ -18517,6 +18600,16 @@ document.addEventListener('submit', async e => {
     }));
   } catch (err){
     const msg = err && err.message ? err.message : 'Could not sign in. Try again.';
+    if (err && err.made){
+      /* the account exists: the next step is Sign in, with what was typed */
+      AuthUI.mode = 'in';
+      go('auth', { force:true, instant:true });
+      $('#authUser').value = username;
+      $('#authPass').value = password;
+      authErr(msg);
+      $('#authGo').focus();
+      return;
+    }
     authErr(msg);
     authBusy(false);
     /* Focus lands on the first field at fault, in form order. A password
@@ -18860,8 +18953,9 @@ document.addEventListener('click', e => {
       /* the row comes back where it sorts, which may be past the fold */
       BoardUI.owedAll = true;
       reloadBoardHere(`[data-bhand="${undo.dataset.bundo}"]`);
-    }).catch(err => {
+    }).catch(async err => {
       const code = String((err && err.message) || '');
+      if ((code === 'NOT_AUTHORIZED' || code === 'NOT_AUTHENTICATED') && await sessionGone()) return;
       if (code === 'UNDO_EXPIRED') delete BoardUI.handed[undo.dataset.bundo];
       toast({ key:'board', bad:true, title:'Not taken back', detail:Handover.message(code) });
       if (Handover.OFFLINE.includes(code)) return release(undo, 'Undo');

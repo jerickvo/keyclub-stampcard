@@ -29,6 +29,11 @@
 [data-screen="auth"] .tabs{display:none}
 
 [data-screen="auth"] main#view{padding:0;max-width:none}
+/* the "Could not load" page shown there instead keeps the page gutter */
+[data-screen="auth"] main#view > .view:not(.view--auth){max-width:var(--page-max);margin-inline:auto;
+  padding:calc(var(--sp-pad) + env(safe-area-inset-top, 0px))
+          calc(var(--gutter) + max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))
+          calc(var(--sp-page) + env(safe-area-inset-bottom, 0px))}
 
 .bpanel{
   position:relative}

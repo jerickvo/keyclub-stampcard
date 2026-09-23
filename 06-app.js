@@ -441,6 +441,16 @@ document.addEventListener('submit', async e => {
     }));
   } catch (err){
     const msg = err && err.message ? err.message : 'Could not sign in. Try again.';
+    if (err && err.made){
+      /* the account exists: the next step is Sign in, with what was typed */
+      AuthUI.mode = 'in';
+      go('auth', { force:true, instant:true });
+      $('#authUser').value = username;
+      $('#authPass').value = password;
+      authErr(msg);
+      $('#authGo').focus();
+      return;
+    }
     authErr(msg);
     authBusy(false);
     /* Focus lands on the first field at fault, in form order. A password
@@ -784,8 +794,9 @@ document.addEventListener('click', e => {
       /* the row comes back where it sorts, which may be past the fold */
       BoardUI.owedAll = true;
       reloadBoardHere(`[data-bhand="${undo.dataset.bundo}"]`);
-    }).catch(err => {
+    }).catch(async err => {
       const code = String((err && err.message) || '');
+      if ((code === 'NOT_AUTHORIZED' || code === 'NOT_AUTHENTICATED') && await sessionGone()) return;
       if (code === 'UNDO_EXPIRED') delete BoardUI.handed[undo.dataset.bundo];
       toast({ key:'board', bad:true, title:'Not taken back', detail:Handover.message(code) });
       if (Handover.OFFLINE.includes(code)) return release(undo, 'Undo');
