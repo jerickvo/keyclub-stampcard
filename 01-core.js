@@ -335,8 +335,12 @@ const Store = {
     return m.open ? 'open' : 'miss';
   },
 
+  /* claims on their way, as "<account>:<reward>": a page drawn again
+     while one saves shows it saving */
+  claiming: new Set(),
   async claimReward(id){
     if (!this.user) throw new Error('Not signed in.');
+    const who = this.user.id;
     const r = this.rewards.find(x => x.id === id);
     if (r && this.totalStamps() < r.required) throw new Error('Not earned yet.');
     await Backend.claimReward(this.user.id, id);
@@ -345,7 +349,7 @@ const Store = {
     const before = this.applied;
     await this.hydrate({ keep:true });
     const now = this.rewards.find(x => x.id === id) || null;
-    if (now && this.applied === before && !now.claimed){
+    if (now && this.applied === before && !now.claimed && this.user && this.user.id === who){
       now.claimed = true; now.claimedAt = new Date().toISOString();
     }
     return now;

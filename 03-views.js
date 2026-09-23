@@ -57,7 +57,9 @@ const C = {
       ${state === 'sealed' && !far ? `<span class="tier__ticks" aria-hidden="true">${ticks}</span>` : ''}
       ${at === 'claimed' ? `<span class="tier__punch">${took ? 'Collected' : 'Claimed'}</span>` : ''}
       ${note ? `<span class="tier__note">${esc(note)}</span>` : ''}
-      ${ready
+      ${ready && Store.claiming.has(`${Store.user && Store.user.id}:${r.id}`)
+        ? `<button class="tier__claim" type="button" data-claim="${r.id}" aria-busy="true" aria-disabled="true" aria-label="${esc(`Claiming ${r.name}`)}">Claiming</button>`
+        : ready
         ? `<button class="tier__claim" type="button" data-claim="${r.id}" aria-label="${esc(`Claim ${r.name}`)}">Claim</button>`
         : say ? `<span class="tier__say">${say}</span>` : ''}
     </div>`;

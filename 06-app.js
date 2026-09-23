@@ -475,14 +475,18 @@ document.addEventListener('submit', async e => {
     const ticket = BoardUI.formTicket = (BoardUI.formTicket || 0) + 1;
     const who = Store.user && Store.user.id;
     const mine = () => BoardUI.formTicket === ticket && Boolean(Store.user) && Store.user.id === who;
+    const still = () => Boolean(Store.user) && Store.user.id === who;
     const scheduled = () => {
-      BoardUI.form = null; BoardUI.formOpen = false;
       toast({ key:'board', title:`GM ${pad(no)} scheduled` });
+      /* an attempt the form has moved on from is still said, but the
+         form is not touched */
+      if (!mine()) return BoardUI.tab === 'meetings' && !BoardUI.meetingDetail && !BoardUI.memberDetail ? loadBoard() : null;
+      BoardUI.form = null; BoardUI.formOpen = false;
       boardGoto({ tab:'meetings', refocus:'[data-mform]' });
     };
     try {
       await Backend.createMeeting({ no, date, startTime:to12h(start), endTime:to12h(end) });
-      if (mine()) scheduled();
+      if (still()) scheduled();
     } catch (ex){
       const kind = WriteFailure.classify(ex).kind;
       const gone = (kind === 'permission' || kind === 'auth') && await sessionGone();
@@ -490,11 +494,12 @@ document.addEventListener('submit', async e => {
       /* the list is read again: a meeting whose answer was lost is there
          (said as scheduled), and a number another officer took shows */
       const now = await Backend.board('meetings').catch(() => null);
-      if (!mine()) return;
+      if (!still()) return;
       const asked = { start:to12h(start), end:to12h(end) };
       if (now && (now.meetings || []).some(m => Number(m.meeting_number) === no && m.meeting_date === date &&
                                                m.start_time === asked.start && m.end_time === asked.end))
         return scheduled();
+      if (!mine()) return;
       const msg = WriteFailure.explain(ex, 'create meeting');
       if (now){ BoardUI.meetings = now; const box = $('#boardPane'); if (box) box.innerHTML = BoardUI.pane(); }
       show(msg);
@@ -612,13 +617,18 @@ document.addEventListener('click', e => {
     /* a double-tap is one touch: a confirm this soon after arming is not taken */
     if (Date.now() - Number(stamp.dataset.armed) < 400) return;
     hold(stamp, 'Adding');
+    stamp.setAttribute('aria-label', `Adding ${who} to GM ${no}`);
     const uid = stamp.dataset.bstamp;
+    const officer = Store.user && Store.user.id;
+    const still = () => Boolean(Store.user) && Store.user.id === officer;
     const mark = () => { const p = ((BoardUI.handFound || {}).people || []).find(x => x.id === uid); if (p) p.checked_in = true; };
     Backend.addAttendance(uid, stamp.dataset.meeting).then(() => {
+      if (!still()) return;
       mark();
       toast({ key:'board', title:`${who} checked in to GM ${no}`, detail:'Added by hand.' });
       reloadBoardHere('#bhq');
     }).catch(async err => {
+      if (!still()) return;
       const code = String((err && err.message) || '');
       /* the database answers a missing session as "not allowed": a
          session that ended says so, and the page goes to Sign in */
@@ -644,6 +654,8 @@ document.addEventListener('click', e => {
   if (mform){
     const open = mform.dataset.mform !== 'close';
     BoardUI.formOpen = open;
+    /* an attempt still saving no longer owns the form */
+    BoardUI.formTicket = (BoardUI.formTicket || 0) + 1;
     if (!open) BoardUI.form = null;
     const box = $('#boardPane');
     if (box){ box.innerHTML = BoardUI.pane(); }
@@ -661,6 +673,8 @@ document.addEventListener('click', e => {
     const stamps = Number(bdelete.dataset.bstamps) || 0;
     const gm = bdelete.dataset.bno ? `GM ${bdelete.dataset.bno}` : 'Meeting';
     hold(bdelete, 'Deleting');
+    const officer = Store.user && Store.user.id;
+    const still = () => Boolean(Store.user) && Store.user.id === officer;
 
     /* gone (deleted here, or by another officer): back to the list */
     const clear = note => {
@@ -675,15 +689,17 @@ document.addEventListener('click', e => {
 
     (stamps
       ? Backend.deleteMeetingAndStamps(id).then(res => {
+          if (!still()) return;
           toast({ key:'board', title:`${gm} deleted`,
                   detail:`${res.removed} stamp${res.removed === 1 ? '' : 's'} removed` });
           clear(null);
         })
       : Backend.deleteMeeting(id).then(res =>
-          res && res.ok ? (toast({ key:'board', title:`${gm} deleted` }), clear(null))
+          !still() ? null
+          : res && res.ok ? (toast({ key:'board', title:`${gm} deleted` }), clear(null))
           : res && res.code === 'MEETING_NOT_FOUND' ? clear(res.code)
           : stay((res && res.code) || 'SERVER_ERROR'))
-    ).catch(ex => stay(WriteFailure.explain(ex, 'delete meeting')));
+    ).catch(ex => { if (still()) stay(WriteFailure.explain(ex, 'delete meeting')); });
     return;
   }
 
@@ -720,6 +736,7 @@ document.addEventListener('click', e => {
          read; opening this one would end theirs without a word. If that
          cannot be read, nothing is opened. */
       const now = await Backend.board('meetings');
+      if (!still()) throw new Error('NOT_AUTHENTICATED');
       if (openNow(now).some(m => m.id !== id)) throw new Error('ATTENDANCE_ALREADY_OPEN');
       await Backend.startAttendance(id);
     })().then(() => { if (still()) opened(); }).catch(async err => {
@@ -845,13 +862,18 @@ document.addEventListener('click', e => {
     }
     if (Date.now() - Number(hand.dataset.armed) < 400) return;
     hold(hand, 'Saving');
+    hand.setAttribute('aria-label', `Saving: ${prize} to ${who}`);
     const key = hand.dataset.bhand;
+    const officer = Store.user && Store.user.id;
+    const still = () => Boolean(Store.user) && Store.user.id === officer;
     Backend.handOverReward(uid, rid).then(at => {
+      if (!still()) return;
       BoardUI.handed[hand.dataset.bhand] = { at:at || new Date().toISOString(), when:Date.now(),
                                              username:who, prize };
       toast({ key:'board', title:`${prize} handed to ${who}` });
       reloadBoardHere(`[data-bundo="${hand.dataset.bhand}"]`);
     }).catch(async err => {
+      if (!still()) return;
       const code = String((err && err.message) || '');
       if ((code === 'NOT_AUTHORIZED' || code === 'NOT_AUTHENTICATED') && await sessionGone()) return;
       /* two officers at one table: the other got there first. That is
@@ -910,8 +932,8 @@ document.addEventListener('click', e => {
 
   const claim = e.target.closest('[data-claim]');
   if (claim){
-    if (busy(claim)) return;
     const rid = claim.dataset.claim;
+    if (busy(claim) || Store.claiming.has(`${Store.user && Store.user.id}:${rid}`)) return;
     const prize = (Store.rewards.find(r => r.id === rid) || {}).name || 'reward';
     const name = armed => claim.setAttribute('aria-label', armed ? `Confirm: claim ${prize}` : `Claim ${prize}`);
     /* a claim cannot be taken back, so it takes a second, deliberate tap */
@@ -928,6 +950,9 @@ document.addEventListener('click', e => {
     hold(claim, 'Claiming');
     claim.setAttribute('aria-label', `Claiming ${prize}`);
     const who = Store.user && Store.user.id;
+    /* the page knows this claim is saving, whichever page is drawn */
+    const flight = `${who}:${rid}`;
+    Store.claiming.add(flight);
     /* signed out (or someone else) since: not this page's news */
     const mine = () => Boolean(Store.user) && Store.user.id === who;
     const landed = r => {
@@ -935,7 +960,10 @@ document.addEventListener('click', e => {
       /* a reader who has moved on (or is moving on, mid-cut) is not
          pulled back to Rewards; one who is there sees it claimed */
       const here = navigating && heading ? heading : current;
-      if (here === 'rewards'){
+      /* mid-cut, the page is drawn again after the cut, and a turn the
+         reader has queued meanwhile is theirs */
+      if (here === 'rewards' && navigating) go('rewards', { instant:true, force:true, quiet:true });
+      else if (here === 'rewards'){
         go('rewards', { instant:true, force:true });
         FX.claimStamp($(`[data-reward="${rid}"]`));
       }
@@ -952,7 +980,8 @@ document.addEventListener('click', e => {
       btn.setAttribute('aria-label', `Claim ${prize}`);
       btn.focus({ preventScroll:true });
     };
-    Store.claimReward(rid).then(landed).catch(async err => {
+    Store.claimReward(rid).then(r => { Store.claiming.delete(flight); landed(r); }).catch(async err => {
+      Store.claiming.delete(flight);
       if (!mine()) return;
       const msg = String((err && err.message) || '');
       /* refused on this page, which counts fewer stamps: nothing was sent */
@@ -960,8 +989,11 @@ document.addEventListener('click', e => {
         settle();
         return toast({ key:'claim', bad:true, title:'Could not claim', detail:'This reward is not earned yet.' });
       }
-      /* a session that ended says so once, on the key Sign in uses */
-      if (/not signed/i.test(msg) || await sessionGone())
+      /* a session that ended says so once, on the key Sign in uses; if
+         another account is signed in now, it is not theirs to hear */
+      const gone = /not signed/i.test(msg) ? 'ended' : await sessionGone();
+      if (gone === 'switched' || (gone && !mine())) return;
+      if (gone)
         return toast({ key:'auth', bad:true, title:'Could not claim',
                        detail:'You are no longer signed in here. Sign in again to claim.' });
       if (!mine()) return;
@@ -999,7 +1031,9 @@ async function sessionGone(){
   try { now = await Backend.currentSession(); } catch (_) { return false; }
   if (now && Store.user && now.id === Store.user.id) return false;
   Store.hydrate();
-  return true;
+  /* "switched": another account is signed in now, and what this page
+     was doing is not theirs to hear about */
+  return now ? 'switched' : 'ended';
 }
 
 async function loadBoard(){
