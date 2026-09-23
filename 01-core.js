@@ -88,40 +88,86 @@ const Store = {
   emit(){ this.listeners.forEach(fn => { try { fn(); } catch (_) {} }); },
 
   loadError: null,
+  seq: 0,        /* reads begun */
+  applied: 0,    /* the newest read shown */
+  /* whether this club records prize hand-overs (the migration has run) */
+  handovers: false,
 
-  async hydrate(){
+  /* `keep`: a re-read in the background (a poll, the tab coming back)
+     that fails leaves what is on screen as it was, rather than turning
+     a page that loaded into "Could not load" on one dropped request.
+
+     Reads can overlap (a poll and the read after a scan). Whichever
+     finishes first is shown; one that finishes after a read that began
+     later is dropped, so an answer from before a stamp landed is never
+     painted over one from after it, and a read that fails never throws
+     away one that worked. Nothing is written to the store until a read
+     is applied, so a slow read cannot sign an account back in after a
+     sign-out either. */
+  async hydrate({ keep = false } = {}){
+    const held = keep && this.ready && !this.loadError && this.user;
+    const before = this.ready && !this.loadError && this.user ? this.user.id : null;
+    const seq = ++this.seq;
+    const stale = () => seq < this.applied;
+    const apply = () => { this.applied = seq; };
+
     let session = null;
     try {
       session = await Backend.currentSession();
     } catch (_){
+      if (held || stale()) return this;
+      apply();
       this.loadError = 'SESSION';
       this.ready = true; this.emit();
       return this;
     }
+    if (stale()) return this;
 
-    this.user = session;
     if (!session){
+      apply();
+      this.user = null;
       this.meetings = []; this.scans = [];
-      this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:false }));
+      this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:false })); this.handovers = false;
       this.loadError = null; this.ready = true; this.emit();
       return this;
     }
 
-    const [meetings, scans, claims] = await Promise.all([
+    const [meetings, scans, claims, handedRead] = await Promise.all([
       Backend.listMeetings().then(v => v, () => null),
       Backend.listAttendance(session.id).then(v => v, () => null),
       Backend.listRewardClaims(session.id).then(v => v, () => null),
+      Backend.listHandovers(session.id).then(v => v, () => null),
     ]);
+    if (stale()) return this;
 
     if (scans === null || meetings === null || claims === null){
+      if (held && session.id === before) return this;
+      apply();
+      this.user = session;
       this.loadError = 'DATA';
       this.ready = true; this.emit();
       return this;
     }
 
+    /* Hand-overs are a line of detail on Rewards, never a reason the
+       app will not load: a failed read keeps what the page already knew
+       for this member, or else says only Claimed, as a club without
+       hand-overs does. */
+    const same = before === session.id;
+    const handed = handedRead !== null ? handedRead
+      : same && this.handovers ? this.rewards.filter(r => r.handedAt).map(r => ({ id:r.id, at:r.handedAt }))
+      : false;
+
+    apply();
+    this.user = session;
     this.meetings = meetings;
     this.scans = scans;
-    this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:claims.includes(r.id) }));
+    this.settle();
+    this.handovers = handed !== false;
+    this.rewards = REWARD_TIERS.map(r => {
+      const c = claims.find(x => x.id === r.id), h = handed && handed.find(x => x.id === r.id);
+      return { ...r, claimed:Boolean(c), claimedAt:c ? c.at : null, handedAt:h ? h.at : null };
+    });
     this.loadError = null;
     this.ready = true;
     this.emit();
@@ -130,15 +176,24 @@ const Store = {
 
   get failed(){ return this.loadError !== null; },
 
+  /* A read of the record, and whether it (or one begun after it) was
+     applied: a read begun earlier that lands meanwhile holds the record
+     as it was before, and does not count as this one getting through. */
+  async reread(opts){
+    const mine = this.seq + 1;
+    await this.hydrate(opts);
+    return this.applied >= mine;
+  },
+
   /* One line that changes whenever a page would: who is signed in, what
      loaded, which meetings are open or ahead, the stamps, the claims.
      A re-read that finds nothing new repaints nothing. */
   stamp(){
     return JSON.stringify([
       this.user ? this.user.id : null, this.loadError,
-      this.meetings.map(m => [m.id, m.no, m.date, m.time, m.open, m.upcoming]),
-      this.scans.map(s => [s.meetingId, s.at]),
-      this.rewards.map(r => [r.id, r.claimed]),
+      this.meetings.map(m => [m.id, m.no, m.date, m.time, m.open, m.upcoming, m.ended, m.started, m.before]),
+      this.scans.map(s => [s.meetingId, s.at, s.method]),
+      this.rewards.map(r => [r.id, r.claimed, r.handedAt]), this.handovers,
     ]);
   },
 
@@ -151,15 +206,18 @@ const Store = {
     if (st === 'unconfigured')
       throw new Error('Keystamp is not connected to a Supabase project yet.');
     if (st === 'unavailable')
-      throw new Error('Keystamp cannot reach the server right now. Try again in a moment.');
+      throw new Error('Could not reach the club records. Try again.');
   },
 
   async signIn(username, password){
     this.authGuard();
-    const bad = Config.validateUsername(username) || Config.validatePassword(password);
+    const bad = Config.checkSignInName(username) || Config.validatePassword(password);
     if (bad) throw new Error(bad);
-    await Backend.signIn(username, password);
-    await this.hydrate();
+    this.signingIn = true;
+    try {
+      await Backend.signIn(username, password);
+      await this.hydrate();
+    } finally { this.signingIn = false; }
     return this.user;
   },
   async signUp(username, password, confirm){
@@ -168,21 +226,101 @@ const Store = {
              || Config.validatePassword(password)
              || (password !== confirm ? 'Passwords do not match.' : null);
     if (bad) throw new Error(bad);
-    await Backend.signUp(username, password);
-    await this.hydrate();
+    this.signingIn = true;
+    try {
+      await Backend.signUp(username, password);
+      await this.hydrate();
+    } finally { this.signingIn = false; }
     return this.user;
   },
+  /* while the page signs in or out, the auth client's own "signed in"
+     or "signed out" is the page's doing, not news */
+  signingIn: false,
+  signingOut: false,
   async signOut(){
-    await Backend.signOut();
+    this.signingOut = true;
+    try {
+      await Backend.signOut();
 
-    this.user = null; this.meetings = []; this.scans = [];
-    this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:false }));
-    await this.hydrate();
+      this.user = null; this.meetings = []; this.scans = []; this.handovers = false;
+      this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:false }));
+      await this.hydrate();
+    } finally { this.signingOut = false; }
+  },
+
+  /* Where each meeting stands for this member, on the club's clock
+     (`now`, minutes past midnight there). Today's meeting is ahead until
+     its start time; after that, until its end, it is in progress; then
+     over. Open beats all of these (a board may run over), and a stamp
+     makes it held whatever the time. Before this, a meeting whose
+     check-in had closed went back to being "next" for the rest of the
+     day, and the stamp just earned at it was missing from Record. */
+  settle(now = clubMinutes()){
+    const today = Schedule.today();
+    const u = this.user || {};
+    this.meetings.forEach(m => {
+      const start = clockMinutes(m.time), end = clockMinutes(m.endTime);
+      const mine = this.attended(m.id);
+      m.ended = String(m.date) < today || (m.today && now >= end);
+      m.started = m.today && now >= start;
+      m.upcoming = !m.open && (m.today
+        ? !m.ended && !m.started && !mine
+        : String(m.date) > today);
+      /* held before the account existed: not a meeting they missed. On
+         the day they joined, a meeting already over when the account was
+         made is one of those too */
+      const last = Number.isNaN(end) ? start : end;
+      m.before = Boolean(u.joined) && !mine && (String(m.date) < u.joined ||
+        (String(m.date) === u.joined && Number.isFinite(u.joinedAt) && u.joinedAt >= last));
+    });
+  },
+
+  /* the clock moved (a start or end time passed): re-sort, and repaint
+     only if that changed what a page shows */
+  resettle(){
+    const was = this.stamp();
+    this.settle();
+    if (this.stamp() !== was) this.emit();
+  },
+
+  /* The meeting a member's day is about: the one open now, else one in
+     progress they have no stamp for, else the next one today, else one
+     today they were stamped at, else one today that is over. The board
+     may hold two in a day. */
+  todayMeeting(){
+    const t = this.meetings.filter(m => m.today && !m.before);
+    const at = m => { const v = clockMinutes(m.time); return Number.isNaN(v) ? 0 : v; };
+    /* same start time: the lower number, as the board's stage picks it */
+    const first = (a, b) => at(a) - at(b) || a.no - b.no;
+    return t.find(m => m.open)
+        || t.filter(m => m.started && !m.ended && !this.attended(m.id)).sort(first)[0]
+        || t.filter(m => m.upcoming).sort(first)[0]
+        || t.filter(m => this.attended(m.id)).sort((a, b) => at(b) - at(a))[0]
+        || t.filter(m => m.ended).sort((a, b) => at(b) - at(a))[0]
+        || null;
+  },
+
+  /* Whether today still has something to learn about: a meeting today
+     this member has no stamp for, open, still to come or in progress,
+     or over by less than an hour (an officer may add a stamp by hand
+     after the end; a board may run over). */
+  dayLive(now = clubMinutes()){
+    return this.meetings.some(m => m.today && !m.before && !this.attended(m.id) &&
+      (m.open || !m.ended || now < clockMinutes(m.endTime) + 60));
   },
 
   meeting(id){ return this.meetings.find(m => m.id === id) || null; },
   totalStamps(){ return this.scans.length; },
   attended(id){ return this.scans.some(s => s.meetingId === id); },
+  /* a stamp the verifier accepted, shown before the record can be read
+     again (the next read that gets through replaces it with the row) */
+  noteStamp(meetingId){
+    if (!this.user || this.attended(meetingId)) return;
+    this.scans = [{ id:null, meetingId, at:new Date().toISOString(), method:'qr' }, ...this.scans];
+    this.settle();
+    /* a read that began before the stamp does not take it away */
+    this.applied = ++this.seq;
+  },
   scanFor(id){ return this.scans.find(s => s.meetingId === id) || null; },
   openMeeting(){ return this.meetings.find(m => m.open) || null; },
 
@@ -190,8 +328,11 @@ const Store = {
     return [...this.meetings].filter(m => m.upcoming)
       .sort((a, b) => String(a.date) < String(b.date) ? -1 : 1)[0] || null;
   },
-  heldMeetings(){ return this.meetings.filter(m => !m.upcoming); },
-  countedMeetings(){ return this.meetings.filter(m => !m.upcoming && (!m.open || this.attended(m.id))); },
+  heldMeetings(){ return this.meetings.filter(m => !m.upcoming && !m.before); },
+  /* what the tally and the attendance rate count: a meeting today with
+     no stamp is not missed yet (it is open, or an officer can still add
+     a stamp by hand), as its Record row says */
+  countedMeetings(){ return this.heldMeetings().filter(m => this.attended(m.id) || (!m.open && !m.today)); },
   tierState(r){ return rewardState(r, this.totalStamps(), r.claimed); },
   rewardsUnlocked(){ return this.rewards.filter(r => this.tierState(r) !== 'locked').length; },
   attendanceRate(){
@@ -205,13 +346,23 @@ const Store = {
     return m.open ? 'open' : 'miss';
   },
 
+  /* claims on their way, as "<account>:<reward>": a page drawn again
+     while one saves shows it saving */
+  claiming: new Set(),
   async claimReward(id){
     if (!this.user) throw new Error('Not signed in.');
+    const who = this.user.id;
     const r = this.rewards.find(x => x.id === id);
     if (r && this.totalStamps() < r.required) throw new Error('Not earned yet.');
     await Backend.claimReward(this.user.id, id);
-    await this.hydrate();
-    return this.rewards.find(x => x.id === id) || null;
+    /* the claim is on file: a re-read that fails keeps the card, and
+       the reward shows as claimed until one gets through */
+    const got = await this.reread({ keep:true });
+    const now = this.rewards.find(x => x.id === id) || null;
+    if (now && !got && !now.claimed && this.user && this.user.id === who){
+      now.claimed = true; now.claimedAt = new Date().toISOString();
+    }
+    return now;
   },
 };
 

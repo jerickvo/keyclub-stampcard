@@ -47,6 +47,42 @@ function mustCount(res: { count: number | null; error: unknown | null }): number
   return res.count;
 }
 
+// Supabase caps every PostgREST response at db-max-rows (1000 by
+// default), whatever .limit() asks for, and says nothing when it does. A
+// read of a whole table is therefore paged to the end, so a club past
+// its thousandth stamp is not quietly counted short. Each page starts
+// after the last row of the one before, in the table's key order: a row
+// written while the pages are read neither shifts a later page (and is
+// counted twice) nor pushes a row out of one.
+const ROWS = 1000;
+async function readAll<T = any>(page: (last: T | null) => PromiseLike<{ data: T[] | null; error: unknown }>,
+                                 start: T | null = null): Promise<T[]> {
+  const out: T[] = [];
+  let last = start;
+  for (let n = 0; ; n++) {
+    const rows = must(await page(last)) ?? [];
+    out.push(...rows);
+    if (rows.length < ROWS) return out;
+    last = rows[rows.length - 1];
+    if (n >= 500) throw new Error('QUERY_FAILED');   // a runaway, not a club
+  }
+}
+// a page of a table keyed on id, after the last row read
+const byId = (b: any, last: { id: string } | null) =>
+  (last ? b.gt('id', last.id) : b).order('id').limit(ROWS);
+
+// The name the board sees. A display name is the username as it was
+// typed at sign-up (its case kept); one that says anything else (a
+// member can rewrite their own row) is not shown in place of the
+// username, so no account can pass itself off as another on the board.
+const shown = (p: { username: string; display_name?: string | null }) =>
+  p.display_name && p.display_name.toLowerCase() === String(p.username).toLowerCase()
+    ? p.display_name : p.username;
+
+// A search term as a LIKE pattern: % and _ are literal (usernames may
+// hold _), and * (PostgREST's other wildcard) cannot be in a username.
+const likeTerm = (q: string) => q.replace(/[\\%_]/g, c => '\\' + c).replace(/\*/g, '');
+
 const PAGE_SIZE = 25;
 const TIERS = [
   { id: 'r1', name: 'Club Merch',    required: 10 },
@@ -56,8 +92,9 @@ const TIERS = [
 
 // What one tier is to one member: the same three lines the client's
 // 01a-backend.js applies to its own stamps and claims. A claim is a fact
-// (the prize was handed over), so a claimed tier stays reached even if a
-// deleted meeting later takes stamps back. Every "rewards unlocked"
+// (the member asked for the prize on the record), so a claimed tier stays
+// reached even if a deleted meeting later takes stamps back. Whether the
+// prize was then handed over is a separate fact, in reward_handovers. Every "rewards unlocked"
 // figure this function returns counts the tiers that are not locked.
 type Tier = { id: string; name: string; required: number };
 const rewardState = (tier: Tier, stamps: number, claimed: boolean) =>
@@ -73,6 +110,10 @@ const claimsByMember = (rows: { user_id: string; reward_id: string }[] | null) =
   }
   return by;
 };
+
+// How long the officer who recorded a hand-over may take it back. The
+// database decides (undo_hand_over); this only says whether to offer it.
+const UNDO_MS = 15 * 60 * 1000;
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -99,6 +140,35 @@ Deno.serve(async (req) => {
   if (!user) return json({ ok: false, code: 'NOT_AUTHENTICATED' }, 401);
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+
+  // Hand-overs keyed "user:reward", for the given members or everyone.
+  // null, not an empty map, when the project has no reward_handovers
+  // table yet (migrations/2026-09-23-prizes-and-hand-stamps.sql not run): "no
+  // prize has been handed over" and "this club does not record hand-overs"
+  // are different facts. Any other failure is a failure.
+  const handoversOf = async (ids: string[] | null) => {
+    type H = { user_id: string; reward_id: string; handed_at: string; handed_by: string | null };
+    // keyed on (user_id, reward_id)
+    const q = (last: H | null) => {
+      let b = admin.from('reward_handovers').select('user_id, reward_id, handed_at, handed_by');
+      if (ids) b = b.in('user_id', ids);
+      if (last) b = b.or(`user_id.gt.${last.user_id},and(user_id.eq.${last.user_id},reward_id.gt.${last.reward_id})`);
+      return b.order('user_id').order('reward_id').limit(ROWS);
+    };
+    // the first page tells a missing table from an empty one
+    const first = await q(null);
+    if (first.error) {
+      const code = String((first.error as { code?: string }).code ?? '');
+      if (code === '42P01' || code === 'PGRST205') return null;
+      throw new Error('QUERY_FAILED');
+    }
+    const head = (first.data ?? []) as H[];
+    const rows = head.length < ROWS ? head
+      : [...head, ...await readAll<H>(q, head[head.length - 1])];
+    const by = new Map<string, { handed_at: string; handed_by: string | null }>();
+    for (const h of rows) by.set(h.user_id + ':' + h.reward_id, h);
+    return by;
+  };
 
   // The gate. Read from the database every call — a role in a JWT
   // claim or a request body would be the browser's word for it.
@@ -135,10 +205,12 @@ Deno.serve(async (req) => {
         // milestone tier. No counter is stored: these are recomputed from
         // the same rows the member's own stamp total comes from, so the
         // board and the member can never disagree.
-        admin.from('attendance').select('user_id').limit(20000),
+        readAll(l => byId(admin.from('attendance').select('id, user_id'), l))
+          .then(data => ({ data, error: null })),
         // and one pass over claims: a milestone counts a member who
         // reached the tier or who holds its prize.
-        admin.from('reward_claims').select('user_id, reward_id').limit(20000),
+        readAll(l => byId(admin.from('reward_claims').select('id, user_id, reward_id'), l))
+          .then(data => ({ data, error: null })),
       ]);
 
       // Each of these four was previously `?? 0`. Every one of those was
@@ -194,7 +266,11 @@ Deno.serve(async (req) => {
       let query = admin.from('profiles')
         .select('id, username, display_name, role, created_at', { count: 'exact' })
         .eq('role', 'member');
-      if (q) query = query.ilike('username', `%${q}%`);
+      // a username holds only letters, digits, _ and .: a term with anything
+      // else matches no one (rather than being loosened into "everyone")
+      if (q && !/^[a-z0-9_.]+$/.test(q))
+        return json({ ok: true, members: [], page: 1, page_size: PAGE_SIZE, total: 0, pages: 1 });
+      if (q) query = query.ilike('username', `%${likeTerm(q)}%`);
 
       // Stamp-ordered sorts need the counts first, so they are resolved
       // after aggregation below; the database orders the rest.
@@ -217,22 +293,24 @@ Deno.serve(async (req) => {
         // one read, aggregated here, rather than a query per member.
         // Unchecked, a failure here showed every member on the page with
         // 0 stamps — a whole club apparently reset overnight.
-        const att = must(await admin.from('attendance')
-          .select('user_id, checked_in_at').in('user_id', ids));
-        for (const a of att ?? []) {
+        // paged: a page of up to 500 members has more rows than one
+        // response carries once the club passes 1000 stamps
+        const att = await readAll(l => byId(admin.from('attendance')
+          .select('id, user_id, checked_in_at').in('user_id', ids), l));
+        for (const a of att) {
           totals.set(a.user_id, (totals.get(a.user_id) ?? 0) + 1);
           const prev = lastAt.get(a.user_id);
           if (!prev || a.checked_in_at > prev) lastAt.set(a.user_id, a.checked_in_at);
         }
-        claimed = claimsByMember(must(await admin.from('reward_claims')
-          .select('user_id, reward_id').in('user_id', ids)));
+        claimed = claimsByMember(await readAll(l => byId(admin.from('reward_claims')
+          .select('id, user_id, reward_id').in('user_id', ids), l)));
       }
 
       let members = (rows ?? []).map(r => {
         const stamps = totals.get(r.id) ?? 0;
         return {
           id: r.id,
-          username: r.display_name || r.username,
+          username: shown(r),
           stamps,
           rewards_unlocked: reached(stamps, claimed.get(r.id)),
           created_at: r.created_at,
@@ -282,24 +360,41 @@ Deno.serve(async (req) => {
       const claims = must(await admin.from('reward_claims')
         .select('reward_id, claimed_at').eq('user_id', id));
       const claimed = new Set((claims ?? []).map(c => c.reward_id));
+      const claimedAt = new Map((claims ?? []).map(c => [c.reward_id, c.claimed_at]));
+      const handed = await handoversOf([id]);
 
-      const stamps = (att ?? []).length;
+      // the total is counted, not the length of the (newest 200) list
+      const stamps = mustCount(await admin.from('attendance')
+        .select('id', { count: 'exact', head: true }).eq('user_id', id));
       return json({
         ok: true,
         member: {
           id: p.id,
-          username: p.display_name || p.username,
+          username: shown(p),
           role: p.role,
           created_at: p.created_at,
           stamps,
           last_attendance: att?.[0]?.checked_in_at ?? null,
         },
-        rewards: TIERS.map(t => ({
-          id: t.id, name: t.name, required: t.required,
-          unlocked: stamps >= t.required,
-          claimed: claimed.has(t.id),
-          state: rewardState(t, stamps, claimed.has(t.id)),
-        })),
+        // `state` keeps its three values so a page built before hand-overs
+        // still reads it; the hand-over is a fact beside it. handed_at is
+        // null when the prize has not been handed over, and absent
+        // altogether (handovers: false) on a project without the table.
+        handovers: handed !== null,
+        rewards: TIERS.map(t => {
+          const h = handed?.get(id + ':' + t.id) ?? null;
+          return {
+            id: t.id, name: t.name, required: t.required,
+            unlocked: stamps >= t.required,
+            claimed: claimed.has(t.id),
+            claimed_at: claimedAt.get(t.id) ?? null,
+            state: rewardState(t, stamps, claimed.has(t.id)),
+            handed_at: h?.handed_at ?? null,
+            // the officer who recorded it may take it back for a while
+            can_undo: Boolean(h && h.handed_by === user.id &&
+              Date.now() - Date.parse(h.handed_at) < UNDO_MS),
+          };
+        }),
         attendance: (att ?? []).map(a => {
           const m = meetings.get(a.meeting_id) ?? {};
           return {
@@ -315,19 +410,136 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── PRIZES OWED ────────────────────────────────────────────────
+    // Who is owed a prize right now: every member who has reached a tier
+    // (claimed it, or has the stamps) and has not had it handed over. A
+    // claim first, because that member has asked; then by tier and name.
+    // It is the list an officer works through at the prize table, so it
+    // carries nothing else.
+    if (action === 'prizes') {
+      const [roll, claimRows] = await Promise.all([
+        readAll(l => byId(admin.from('attendance').select('id, user_id'), l)),
+        readAll(l => byId(admin.from('reward_claims').select('id, user_id, reward_id, claimed_at'), l)),
+      ]);
+      const perMember = new Map<string, number>();
+      for (const a of roll) perMember.set(a.user_id, (perMember.get(a.user_id) ?? 0) + 1);
+      const claimedAt = new Map<string, string>();
+      for (const c of claimRows) claimedAt.set(c.user_id + ':' + c.reward_id, c.claimed_at);
+
+      const handed = await handoversOf(null);
+      if (handed === null) return json({ ok: false, code: 'NOT_READY' });
+
+      const owed: { user_id: string; reward_id: string; claimed_at: string | null; stamps: number }[] = [];
+      const everyone = new Set([...perMember.keys(), ...[...claimedAt.keys()].map(k => k.split(':')[0])]);
+      for (const uid of everyone) {
+        const stamps = perMember.get(uid) ?? 0;
+        for (const t of TIERS) {
+          const key = uid + ':' + t.id;
+          const has = claimedAt.has(key);
+          if (rewardState(t, stamps, has) === 'locked' || handed.has(key)) continue;
+          owed.push({ user_id: uid, reward_id: t.id, claimed_at: claimedAt.get(key) ?? null, stamps });
+        }
+      }
+
+      // this officer's own hand-overs still inside the undo window, so a
+      // refreshed page still offers the Undo for a wrong name
+      const now = Date.now();
+      const recent = [...handed.entries()]
+        .filter(([, h]) => h.handed_by === user.id && now - Date.parse(h.handed_at) < UNDO_MS)
+        .map(([key, h]) => ({ user_id: key.split(':')[0], reward_id: key.split(':')[1], handed_at: h.handed_at }));
+
+      // board accounts included: an officer who earns a prize is owed it
+      // like anyone, and hand_over_reward refuses the officer themselves
+      const ids = [...new Set([...owed, ...recent].map(o => o.user_id))];
+      const names = new Map<string, string>();
+      if (ids.length) {
+        const ps = must(await admin.from('profiles')
+          .select('id, username, display_name').in('id', ids));
+        for (const p of ps ?? []) names.set(p.id, shown(p));
+      }
+
+      const tier = new Map(TIERS.map(t => [t.id, t]));
+      const list = owed
+        .filter(o => names.has(o.user_id))
+        .map(o => ({ ...o, username: names.get(o.user_id)!,
+                     name: tier.get(o.reward_id)!.name, required: tier.get(o.reward_id)!.required }))
+        .sort((a, b) =>
+          Number(!a.claimed_at) - Number(!b.claimed_at) ||
+          a.required - b.required ||
+          a.username.localeCompare(b.username));
+
+      // how many more of each prize the next meeting could add: members
+      // one stamp short of a tier they have not reached. A count of
+      // rows, not a forecast, so officers bring enough to the table.
+      const near: Record<string, number> = {};
+      for (const t of TIERS) {
+        near[t.id] = [...perMember.entries()].filter(([uid, n]) =>
+          n === t.required - 1 && !claimedAt.has(uid + ':' + t.id)).length;
+      }
+
+      const mine = recent.filter(r => names.has(r.user_id)).map(r => ({ ...r,
+        username: names.get(r.user_id)!, name: tier.get(r.reward_id)!.name, required: tier.get(r.reward_id)!.required }));
+
+      return json({ ok: true, owed: list, near, recent: mine });
+    }
+
+    // ── FIND SOMEONE TO STAMP BY HAND ──────────────────────────────
+    // A name said at the table: username or display name, any role, a
+    // handful of matches, each marked if already stamped at the meeting
+    // in question. The stamp itself is written by stamp_by_hand() in the
+    // database, as the officer, not here.
+    if (action === 'find') {
+      const q = String(body.q ?? '').trim().toLowerCase().slice(0, 40);
+      const meetingId = String(body.meeting_id ?? '');
+      // a name holds only letters, digits, _ and .: any other term (a *,
+      // which would be dropped into "everyone") finds no one
+      if (!q || !/^[a-z0-9_.]+$/.test(q)) return json({ ok: true, people: [] });
+      // % and _ are LIKE wildcards; a search for "_" is not everyone
+      const like = '%' + likeTerm(q) + '%';
+      // the whole name typed exactly is always among the results, however
+      // many other names contain it
+      const exact = like.slice(1, -1);
+      const cols = 'id, username, display_name, role';
+      const [isUser, isName, byUser, byName] = await Promise.all([
+        admin.from('profiles').select(cols).ilike('username', exact).limit(8),
+        admin.from('profiles').select(cols).ilike('display_name', exact).limit(8),
+        admin.from('profiles').select(cols).ilike('username', like).order('username').limit(8),
+        admin.from('profiles').select(cols).ilike('display_name', like).order('username').limit(8),
+      ]);
+      type P = { id: string; username: string; display_name: string | null; role: string };
+      const hits = (rows: P[] | null) => (rows ?? []).sort((a, b) => a.username.localeCompare(b.username));
+      const seen = new Map<string, P>();
+      for (const p of [...hits(must(isUser)), ...hits(must(isName)), ...hits(must(byUser)), ...hits(must(byName))])
+        if (!seen.has(p.id)) seen.set(p.id, p);
+      const people = [...seen.values()].slice(0, 8);
+
+      const stamped = new Set<string>();
+      if (meetingId && people.length) {
+        const att = must(await admin.from('attendance').select('user_id')
+          .eq('meeting_id', meetingId).in('user_id', people.map(p => p.id)));
+        for (const a of att ?? []) stamped.add(a.user_id);
+      }
+      return json({ ok: true, people: people.map(p => ({
+        id: p.id,
+        name: shown(p),
+        username: p.username,
+        board: p.role === 'board',
+        checked_in: stamped.has(p.id),
+      })) });
+    }
+
     // ── MEETINGS LIST ──────────────────────────────────────────────
     if (action === 'meetings') {
       // Ordered by date, not by meeting number: the number is a label
       // the board chooses, the date is when the meeting actually is,
       // and meetings may fall on any day in any order.
-      const { data: ms, error } = await admin.from('meetings')
-        .select('id, meeting_number, meeting_date, start_time, end_time, location, check_in_open')
-        .order('meeting_date', { ascending: false }).limit(200);
-      if (error) throw error;
+      const ms = (await readAll(l => byId(admin.from('meetings')
+        .select('id, meeting_number, meeting_date, start_time, end_time, location, check_in_open'), l)))
+        .sort((a, b) => String(b.meeting_date).localeCompare(String(a.meeting_date)) || (a.id < b.id ? -1 : 1));
 
       const counts = new Map<string, number>();
-      const att = must(await admin.from('attendance').select('meeting_id').limit(20000));
-      for (const a of att ?? []) counts.set(a.meeting_id, (counts.get(a.meeting_id) ?? 0) + 1);
+      const att = await readAll(l => byId(admin.from('attendance').select('id, meeting_id'), l));
+      for (const a of att) counts.set(a.meeting_id, (counts.get(a.meeting_id) ?? 0) + 1);
 
       const today = clubDay();
       return json({
@@ -353,7 +565,7 @@ Deno.serve(async (req) => {
       // An unchecked failure here rendered "No one has checked in yet"
       // over a meeting that forty people attended.
       const att = must(await admin.from('attendance')
-        .select('id, user_id, checked_in_at').eq('meeting_id', id)
+        .select('id, user_id, checked_in_at, verification_method').eq('meeting_id', id)
         .order('checked_in_at', { ascending: false }).limit(500));
 
       const ids = [...new Set((att ?? []).map(a => a.user_id))];
@@ -361,7 +573,7 @@ Deno.serve(async (req) => {
       if (ids.length) {
         const ps = must(await admin.from('profiles')
           .select('id, username, display_name').in('id', ids));
-        for (const p of ps ?? []) names.set(p.id, p.display_name || p.username);
+        for (const p of ps ?? []) names.set(p.id, shown(p));
       }
 
       return json({
@@ -370,6 +582,8 @@ Deno.serve(async (req) => {
           user_id: a.user_id,
           username: names.get(a.user_id) ?? 'unknown',
           checked_in_at: a.checked_in_at,
+          // 'qr' from the verifier; 'manual' or 'board' added by an officer
+          method: a.verification_method,
         })),
       });
     }

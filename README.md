@@ -26,7 +26,9 @@ It is idempotent (`if not exists`, `drop policy if exists`), so
 re-running is safe.
 
 Confirm in Table Editor: `profiles`, `meetings`, `attendance_sessions`,
-`attendance`, `reward_claims`.
+`attendance`, `reward_claims`, `reward_handovers`.
+
+A project set up before 2026-09-23: see "Prizes and stamps by hand" below.
 
 ## 2. Turn OFF email confirmation
 
@@ -105,10 +107,12 @@ member → verify-attendance  (Edge Function) → attendance row in Postgres
 ```
 
 A token is `keystamp://a/<base64url(session.meeting.expiry)>.<HMAC-SHA256>`,
-signed with `ATTENDANCE_TOKEN_SECRET`, valid for **20 seconds**. The
-board fetches a replacement at T-5s, so the projected QR rotates on its
-own and is never briefly invalid. The token text is never displayed —
-printing it would hand every member in the room something to forward.
+signed with `ATTENDANCE_TOKEN_SECRET`. The deployed `attendance-session`
+function issues one code per check-in session that stays valid until
+the end of the meeting's day (its expiry is the day's 23:59:59), so the
+projected QR does not rotate: a photo of it works for as long as that
+check-in stays open. Closing check-in is what ends it (below). The token
+text is never displayed on the page.
 
 The browser cannot forge a token: the secret exists only in the
 functions' environment. There is no client-side verifier.
@@ -132,8 +136,9 @@ is not.
 
 Enforced by RLS and triggers, not JavaScript: change their own role,
 insert/update/delete attendance, create or modify meetings, read
-attendance sessions, or claim a tier they have not earned (the claim
-policy counts real attendance rows in a subquery).
+attendance sessions, claim a tier they have not earned (the claim
+policy counts real attendance rows in a subquery), or record a prize as
+handed over (nobody writes `reward_handovers` from a browser).
 
 `profiles` select is now **own-row only** — board administration does
 not rely on a board branch in that policy, so a member cannot
@@ -142,10 +147,62 @@ somewhere. All board reads go through `board-data`.
 
 ### Stamps are not editable
 
-There is no board control that adds, edits or removes a stamp, and no
-stored `total_stamps` column. Every total is `COUNT(attendance)`
-computed at read time. Attendance is evidence of having been in the
-MPR; a button that granted one would make the scanner pointless.
+There is no control that edits or removes a stamp, and no stored
+`total_stamps` column. Every total is `COUNT(attendance)` computed at
+read time. Attendance is evidence of having been in the MPR.
+
+There is one way to add a stamp other than scanning, for a member who is
+in the room with a phone that cannot scan (dead battery, no camera):
+`stamp_by_hand()`. It is board-only, for **today's** meeting only (the
+club's calendar day, the same rule a scan meets), never for the officer
+themselves, writes `verification_method = 'board'` with the server's
+clock, and refuses a second stamp for the same meeting. Nothing else can
+insert attendance from a browser: the older `attendance_board_write`
+policy, which let a board account write any row labelled 'manual' or
+'board' (itself, next month, any time), is dropped. Every screen that
+shows such a stamp says "added by an officer" instead of printing the
+time it was recorded as a check-in time.
+
+---
+
+## Prizes and stamps by hand
+
+`migrations/2026-09-23-prizes-and-hand-stamps.sql` (already folded into
+`schema.sql` for a new project) adds:
+
+- `reward_handovers`: one row per prize physically handed over, when and
+  by which officer. Members read their own; the board reads all; nobody
+  writes it from a browser.
+- `hand_over_reward(user, reward)`: board-only, never to yourself; the
+  tier must be earned (or already claimed); writes the claim too if the
+  member never pressed Claim; refuses a second hand-over of the same
+  prize (two officers at once get one row and one `ALREADY_HANDED_OVER`).
+- `undo_hand_over(user, reward)`: the officer who recorded it, within 15
+  minutes.
+- `stamp_by_hand(user, meeting)`, replacing `attendance_board_write` (see
+  above).
+
+To upgrade a live project, in this order:
+
+1. `select count(*) from public.reward_claims;` Every claim on file shows
+   up as a prize still owed. If any of those prizes were already handed
+   out, reconcile them by hand first; do not run `hand_over_reward` for
+   them (it would date the hand-over today).
+2. Run the migration in the SQL Editor. It is idempotent.
+3. `supabase functions deploy board-data` (the `prizes` and `find`
+   actions, hand-over dates on `member`, how each stamp was made on
+   `meeting`).
+4. Publish the client.
+
+The client works at every step of that order: without the table it shows
+**Claimed** as before and no prize list; without the new function it hides
+the prize list and searches names through the roster; without
+`stamp_by_hand` it writes the stamp directly, which the old policy still
+allows.
+
+`02-rls_test.sql` and `03-handover_test.sql` (47 checks) run against
+local Postgres 16 with `00-supabase.sql`, both for a fresh `schema.sql`
+and for the previous `schema.sql` plus the migration run twice.
 
 ---
 

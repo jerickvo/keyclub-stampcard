@@ -118,9 +118,13 @@ select test.ck('member cannot insert attendance for someone else',
 select test.ck('board CANNOT write a row labelled qr from the browser',
   test.try('authenticated','33333333-3333-3333-3333-333333333333',
     $$insert into public.attendance(user_id, meeting_id, verification_method) values ('11111111-1111-1111-1111-111111111111','aaaaaaaa-0000-0000-0000-000000000001','qr')$$), '42501');
-select test.ck('board CAN add someone manually, labelled honestly',
+select test.ck('board cannot insert attendance directly either (stamp_by_hand is the way)',
   test.try('authenticated','33333333-3333-3333-3333-333333333333',
-    $$insert into public.attendance(user_id, meeting_id, verification_method) values ('11111111-1111-1111-1111-111111111111','aaaaaaaa-0000-0000-0000-000000000001','manual')$$), 'OK');
+    $$insert into public.attendance(user_id, meeting_id, verification_method) values ('11111111-1111-1111-1111-111111111111','aaaaaaaa-0000-0000-0000-000000000001','manual')$$), '42501');
+-- the stamp the rest of this file builds on, written the way the
+-- verifier writes one
+insert into public.attendance(user_id, meeting_id, verification_method)
+  values ('11111111-1111-1111-1111-111111111111','aaaaaaaa-0000-0000-0000-000000000001','manual');
 select test.ck('duplicate attendance is impossible',
   test.try('service_role', null,
     $$insert into public.attendance(user_id, meeting_id) values ('11111111-1111-1111-1111-111111111111','aaaaaaaa-0000-0000-0000-000000000001')$$), '23505');

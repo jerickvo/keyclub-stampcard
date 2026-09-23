@@ -53,13 +53,15 @@ window.Guard = (function(){
     report(String((r && r.message) || r));
   });
 
+  /* the opening scene lifts itself (its own fuse is 7 s, whether or not
+     the record has loaded); this is only for a scene that never ran */
   watchdog = setTimeout(function(){
     var b = document.getElementById('boot');
-    if (b && !b.classList.contains('is-done')){
-      console.warn('[keystamp] boot animation never finished; watchdog lifted the curtain.');
+    if (b && b.isConnected && !b.classList.contains('is-done')){
+      console.warn('[keystamp] the opening scene did not lift; the watchdog lifted it.');
       lift();
     }
-  }, 4000);
+  }, 9000);
 
   return { lift: lift, report: report };
 })();

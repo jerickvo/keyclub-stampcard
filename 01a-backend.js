@@ -17,6 +17,23 @@ const clubDay = (d = new Date()) => {
   }
 };
 
+/* minutes past midnight at the club */
+function clubMinutes(d = new Date()){
+  try {
+    const p = new Intl.DateTimeFormat('en-US', { timeZone:CLUB_TZ, hour:'2-digit', minute:'2-digit', hourCycle:'h23' })
+      .formatToParts(d);
+    const v = t => Number((p.find(x => x.type === t) || {}).value);
+    return v('hour') * 60 + v('minute');
+  } catch (_) { return d.getHours() * 60 + d.getMinutes(); }
+}
+
+/* "1:30 PM" as minutes past midnight; NaN for anything else */
+function clockMinutes(t){
+  const e = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(t || '').trim());
+  if (!e) return NaN;
+  return (Number(e[1]) % 12 + (/pm/i.test(e[3]) ? 12 : 0)) * 60 + Number(e[2]);
+}
+
 const WriteFailure = {
   constraintOf(ex){
     const msg = String((ex && ex.message) || '');
@@ -30,7 +47,7 @@ const WriteFailure = {
     const c    = this.constraintOf(ex);
 
     if (/BACKEND_UNAVAILABLE|No backend is configured/i.test(msg))
-      return { kind:'backend', say:'The club records are unreachable right now. Try again in a moment.' };
+      return { kind:'backend', say:'Could not reach the club records. Try again.' };
     if (code === '42501' || /row-level security|permission denied/i.test(msg))
       return { kind:'permission', say:'That account is not allowed to schedule meetings.' };
     if (code === '401' || code === '403' || /jwt|not signed in|invalid token/i.test(msg))
@@ -58,8 +75,11 @@ const WriteFailure = {
                say: msg.replace(/^TEMP-TEST-TOOLING:\s*/i, '')
                        .replace(/^\w/, ch => ch.toUpperCase()) + '.' };
     if (/failed to fetch|networkerror|load failed/i.test(msg))
-      return { kind:'network', say:'Could not reach the club records. Check the connection and try again.' };
-    return { kind:'unknown', say:'Could not save that. Check the details and try again.' };
+      return { kind:'network', say:'Could not reach the club records. Check your connection.' };
+    /* a value the database cannot hold is about the details; anything
+       else unrecognised is the records not answering, not the input */
+    if (/^22/.test(code)) return { kind:'data', say:'The database refused those details. Check them and try again.' };
+    return { kind:'unknown', say:'Not saved. The club records did not answer. Try again.' };
   },
 
   explain(ex, what){
@@ -71,6 +91,8 @@ const WriteFailure = {
         details:(ex && ex.details) || null,
         hint:(ex && ex.hint) || null,
         constraint:c });
+    /* a delete has no details to check and saves nothing */
+    if (v.kind === 'unknown' && /^delete/.test(what)) return 'Not deleted. The club records did not answer. Try again.';
     return v.say;
   },
 };
@@ -142,7 +164,22 @@ const Config = {
     if (u.length < this.USERNAME_MIN) return `Username must be at least ${this.USERNAME_MIN} characters.`;
     if (u.length > this.USERNAME_MAX) return `Username must be ${this.USERNAME_MAX} characters or fewer.`;
     if (!this.USERNAME_RE.test(u)) return 'Username can only use letters, numbers, underscores and periods.';
+    /* a name of only dots or underscores reads as a placeholder on the
+       roster, and the dots have to make a valid sign-in address */
+    if (!/[a-z0-9]/i.test(u)) return 'Username needs at least one letter or number.';
+    if (/^\.|\.$|\.\./.test(u)) return 'Username cannot start or end with a period, or have two in a row.';
     if (this.USERNAME_BLOCKED.includes(this.canonUsername(u))) return 'That username is reserved. Pick another.';
+    return null;
+  },
+  /* signing in asks only whether it could be a username at all; whether
+     the account exists is the server's answer, said the same way for
+     every name (a reserved one included) */
+  checkSignInName(raw){
+    const u = String(raw || '').trim();
+    if (!u) return 'Username is required.';
+    if (u.length < this.USERNAME_MIN) return `Username must be at least ${this.USERNAME_MIN} characters.`;
+    if (u.length > this.USERNAME_MAX) return `Username must be ${this.USERNAME_MAX} characters or fewer.`;
+    if (!this.USERNAME_RE.test(u)) return 'Username can only use letters, numbers, underscores and periods.';
     return null;
   },
   validatePassword(pw){
@@ -155,17 +192,81 @@ const Config = {
 const REWARD_TIERS = [
   { id:'r1', name:'Club Merch',    required:10, desc:'' },
   { id:'r2', name:'Free Blindbox', required:20, desc:'' },
-  { id:'r3', name:'???',           required:30, desc:'A surprise. You will find out.' },
+  { id:'r3', name:'???',           required:30, desc:'' },
 ];
 
-/* What one tier is to one member, read from the two facts that exist:
-   the stamp count and whether a claim row is on file. A claim is a
-   fact (the prize was handed over), so a claimed tier stays reached
-   even if a deleted meeting later takes stamps back, and every count
-   of "rewards unlocked" is the number of tiers that are not locked.
-   The board function and the test double carry these same lines. */
+/* What one tier is to one member, read from the stamp count and
+   whether a claim row is on file. A claim is the member asking for the
+   prize on the record, so a claimed tier stays reached even if a
+   deleted meeting later takes stamps back, and every count of "rewards
+   unlocked" is the number of tiers that are not locked. Whether an
+   officer then handed the prize over is a separate fact
+   (reward_handovers), carried beside this, never folded into it. The
+   board function and the test double carry these same lines. */
 const rewardState = (tier, stamps, claimed) =>
   claimed ? 'claimed' : stamps >= tier.required ? 'unlocked' : 'locked';
+
+/* Hand-over refusals, as the database raises them. */
+const Handover = {
+  CODES: ['NOT_AUTHORIZED', 'NOT_EARNED', 'ALREADY_HANDED_OVER', 'UNDO_EXPIRED', 'INVALID_REWARD', 'SELF_HANDOVER'],
+  /* refusals that mean the request never reached a decision */
+  OFFLINE: ['NETWORK_ERROR', 'SERVER_ERROR', 'NOT_INSTALLED'],
+  /* the table or the function is not on this project yet */
+  absent(error){
+    const code = String((error && error.code) || '');
+    return code === '42P01' || code === 'PGRST205' || code === 'PGRST202' || code === '42883';
+  },
+  code(error){
+    if (this.absent(error)) return 'NOT_INSTALLED';
+    const msg = String((error && error.message) || '');
+    const hit = this.CODES.find(c => msg.includes(c));
+    if (hit) return hit;
+    /* the function refused to run for this caller (a signed-out
+       session), or the session itself was refused */
+    const kind = WriteFailure.classify(error).kind;
+    if (kind === 'permission') return 'NOT_AUTHORIZED';
+    if (kind === 'auth') return 'NOT_AUTHENTICATED';
+    return kind === 'network' ? 'NETWORK_ERROR' : 'SERVER_ERROR';
+  },
+  message(code){
+    return ({
+      NOT_AUTHORIZED:      'Only a board account can hand over a prize.',
+      NOT_AUTHENTICATED:   'Your session has ended. Sign in again.',
+      NOT_EARNED:          'This member has not earned that prize.',
+      ALREADY_HANDED_OVER: 'Another officer has already handed this over.',
+      UNDO_EXPIRED:        'It can only be taken back by the officer who recorded it, within 15 minutes.',
+      INVALID_REWARD:      'That prize does not exist.',
+      SELF_HANDOVER:       'Another officer has to hand you your prize.',
+      NOT_INSTALLED:       'Prize hand-overs are not set up on this project yet.',
+      NETWORK_ERROR:       'Not saved. Check your connection and try again.',
+    })[code] || 'Not saved. Try again.';
+  },
+};
+
+/* Stamp-by-hand refusals, from the function or from the table. */
+const HandStamp = {
+  CODES: ['NOT_AUTHORIZED', 'SELF_STAMP', 'NOT_TODAY', 'MEETING_NOT_FOUND', 'MEMBER_NOT_FOUND', 'ALREADY_CHECKED_IN'],
+  code(error){
+    const code = String((error && error.code) || ''), msg = String((error && error.message) || '');
+    const hit = this.CODES.find(c => msg.includes(c));
+    if (hit) return hit;
+    if (code === '23505') return 'ALREADY_CHECKED_IN';
+    if (code === '23503') return 'MEETING_NOT_FOUND';
+    if (code === '42501') return 'NOT_AUTHORIZED';
+    return WriteFailure.classify(error).kind === 'network' ? 'NETWORK_ERROR' : 'SERVER_ERROR';
+  },
+  message(code){
+    return ({
+      ALREADY_CHECKED_IN: 'Already checked in.',
+      SELF_STAMP:         'Another officer has to add you.',
+      NOT_TODAY:          'Only today\'s meeting takes stamps by hand.',
+      MEETING_NOT_FOUND:  'That meeting no longer exists.',
+      MEMBER_NOT_FOUND:   'That account no longer exists.',
+      NOT_AUTHORIZED:     'Only a board account can add a stamp.',
+      NETWORK_ERROR:      'Not saved. Check your connection and try again.',
+    })[code] || 'Not saved. Try again.';
+  },
+};
 
 const SupabaseAdapter = {
   name: 'supabase',
@@ -190,23 +291,70 @@ const SupabaseAdapter = {
     await SupabaseAdapter.awaitLibrary();
     if (!window.supabase || !window.supabase.createClient)
       throw new Error('supabase-js did not load');
+    /* No request waits forever: one with no deadline of its own (a
+       record read, a profile read at sign-in) is given up after 25 s, and
+       the page's error paths take over, instead of "Signing in" or an
+       empty page holding until the browser gives up. */
+    const WAIT = 25000;
+    const capped = (input, init = {}) => {
+      if (init.signal) return fetch(input, init);
+      const stop = new AbortController(), fuse = setTimeout(() => stop.abort(), WAIT);
+      const url = String(input && input.url || input);
+      /* a sign-in the page has given up on is cut off with it */
+      const held = this.signInStop;
+      if (held && /grant_type=password/.test(url)){
+        if (held.signal.aborted) stop.abort();
+        else held.signal.addEventListener('abort', () => stop.abort(), { once:true });
+      }
+      const asked = fetch(input, { ...init, signal:stop.signal }).finally(() => clearTimeout(fuse));
+      /* a limit's 429 may come with no JSON (a proxy's page), and then
+         supabase-js reports it with no status: the page keeps its own */
+      if (!/\/auth\/v1\/(token\?grant_type=password|signup)/.test(url)) return asked;
+      this.authStatus = 0;
+      return asked.then(res => { this.authStatus = res.status; return res; });
+    };
     this.client = window.supabase.createClient(
       Config.supabaseUrl, Config.supabaseAnonKey,
-      { auth:{ persistSession:true, autoRefreshToken:true } });
+      { auth:{ persistSession:true, autoRefreshToken:true }, global:{ fetch:capped } });
     return this.client;
   },
 
   async currentSession(){
-    const { data } = await this.client.auth.getSession();
+    const { data, error } = await this.client.auth.getSession();
+    /* a stored session whose refresh could not reach the server is not
+       a signed-out one: the page says it could not load, and keeps it */
+    if (error && this.authUnreachable(error)) throw error;
     if (!data || !data.session) return null;
     return this.profileFor(data.session.user);
+  },
+
+  /* Session changes the page did not make: a refresh the server refused
+     (signed out on another device, or revoked), or another tab signing
+     out or in as someone else. */
+  onAuthChange(fn){
+    const { data } = this.client.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') return;
+      /* outside supabase-js's lock: the listener reads the record again */
+      setTimeout(() => fn(event, session ? session.user.id : null), 0);
+    });
+    return data && data.subscription;
+  },
+
+  /* this device forgets the session, whether or not the server heard */
+  forgetSession(){
+    const key = this.client && this.client.auth && this.client.auth.storageKey;
+    if (!key) return;
+    try {
+      Object.keys(localStorage).filter(k => k === key || k.startsWith(key + '-'))
+        .forEach(k => localStorage.removeItem(k));
+    } catch (_) {}
   },
 
   async profileFor(authUser, { waitMs = 0 } = {}){
     const deadline = Date.now() + waitMs;
     for (;;){
       const { data, error } = await this.client
-        .from('profiles').select('id, username, display_name, role')
+        .from('profiles').select('id, username, display_name, role, created_at')
         .eq('id', authUser.id).maybeSingle();
       if (error) throw error;
       if (data) return this.shapeProfile(data);
@@ -216,10 +364,15 @@ const SupabaseAdapter = {
   },
 
   shapeProfile(data){
+    const made = data.created_at ? new Date(data.created_at) : null;
     return { id:data.id, username:data.username,
              name:data.display_name || data.username,
              role:data.role === 'board' ? 'board' : 'member',
-             isBoard:data.role === 'board' };
+             isBoard:data.role === 'board',
+             /* the club day the account was made; a meeting before it
+                is not one the member could have checked in to */
+             joined: made && !Number.isNaN(made.getTime()) ? clubDay(made) : null,
+             joinedAt: made && !Number.isNaN(made.getTime()) ? clubMinutes(made) : null };
   },
 
   authUnreachable(error){
@@ -231,16 +384,43 @@ const SupabaseAdapter = {
       /fetch|network|load failed|connect/i.test(String(error.message || ''));
   },
 
+  SIGN_IN_WAIT: 20000,
+  signInStop: null,
+  authStatus: 0,
   async signIn(username, password){
-    const { data, error } = await this.client.auth.signInWithPassword({
-      email: Config.emailForUsername(username), password });
+    const UNREACHABLE = 'Could not reach the club records. Try again.';
+    /* A sign-in that never answers is given up on, and its request is
+       cut off, so an answer after the page has said so cannot sign this
+       member in behind the form, or sign out the retry that worked. */
+    const stop = this.signInStop = new AbortController();
+    const fuse = setTimeout(() => stop.abort(), this.SIGN_IN_WAIT);
+    let answer;
+    try {
+      answer = await this.client.auth.signInWithPassword({
+        email: Config.emailForUsername(username), password });
+    } finally {
+      clearTimeout(fuse);
+      if (this.signInStop === stop) this.signInStop = null;
+    }
+    const { data, error } = answer;
+    if (!error && stop.signal.aborted){
+      /* answered in the instant it was cut off */
+      await this.dropSession(data.session);
+      throw new Error(UNREACHABLE);
+    }
     if (error){
-      if (this.authUnreachable(error))
-        throw new Error('Keystamp cannot reach the server right now. Try again in a moment.');
-
+      /* a limit on attempts from this network, not a refusal of the password */
+      const status = Number(error.status) || this.authStatus;
+      if (status === 429 || /rate.?limit/i.test(String(error.code || error.message || '')))
+        throw new Error('Too many sign-in attempts from this network. Wait a minute and try again.');
+      if (this.authUnreachable(error)) throw new Error(UNREACHABLE);
       throw new Error('That username and password do not match.');
     }
-    const profile = await this.profileFor(data.user, { waitMs:1500 });
+    /* the password was accepted but the account could not be read: the
+       half-made session is not left behind to sign in on the next load */
+    let profile;
+    try { profile = await this.profileFor(data.user, { waitMs:1500 }); }
+    catch (_){ await this.signOut(); throw new Error(UNREACHABLE); }
     if (!profile) throw new Error('That account has no profile yet. Ask a board member.');
     return profile;
   },
@@ -254,23 +434,113 @@ const SupabaseAdapter = {
       options:{ data:{ username: Config.canonUsername(display), display_name: display } },
     });
     if (error){
-      const m = String(error.message || '').toLowerCase();
-      if (m.includes('already registered') || m.includes('already exists') || error.status === 422)
+      const m = String(error.message || '').toLowerCase(), code = String(error.code || '');
+      /* the auth server answers 422 for several refusals; each says which */
+      if (code === 'weak_password' || (!code && m.includes('password')))
+        throw new Error('Password is too weak. Pick a longer or less common one.');
+      if (code === 'user_already_exists' || code === 'email_exists' ||
+          m.includes('already registered') || m.includes('already exists'))
         throw new Error('Username is already taken.');
-      if (m.includes('password')) throw new Error('Password is too weak. Use at least 8 characters.');
-      throw new Error('Could not create that account. Try again in a moment.');
+      if (code === 'email_address_invalid' || code === 'validation_failed')
+        throw new Error('That username cannot be used. Pick another.');
+      const status = Number(error.status) || this.authStatus;
+      if (status === 429 || /rate.?limit/i.test(code))
+        throw new Error('Too many accounts made from this network. Wait a minute and try again.');
+      if (this.authUnreachable(error)) throw new Error('Could not reach the club records. Try again.');
+      throw new Error('Could not create that account. Try again.');
     }
     if (!data.session){
       throw new Error('Account created but sign-in is not enabled. Ask a board member to turn off email confirmation.');
     }
 
-    const profile = await this.profileFor(data.user, { waitMs:3000 });
+    /* The account is made; if it cannot be read now, the session is not
+       kept half-made, and the member is sent to Sign in (making it again
+       would say the username is taken). */
+    let profile;
+    try { profile = await this.profileFor(data.user, { waitMs:3000 }); }
+    catch (_){
+      await this.signOut();
+      throw Object.assign(new Error('Your account is made, but the club records did not answer. Sign in to continue.'),
+                          { made:true });
+    }
     if (!profile)
       throw new Error('Your account was created but its profile did not appear. Tell a board member before signing in again.');
     return profile;
   },
 
-  async signOut(){ await this.client.auth.signOut(); },
+  /* Signing out ends this device's session; another phone or the
+     projector laptop signed in to the same account stays signed in.
+     The device lets go of the session first, and then tells the server
+     on its own: supabase-js's signOut waits on its auth lock and, when
+     its request answers, removes whatever session is stored by then,
+     which could be the next person's. Nothing that answers late can
+     bring the session back or take another one away, and a reload during
+     the sign-out never signs the last person back in. */
+  SIGN_OUT_WAIT: 5000,
+  /* The device lets go at the tap, before the sign-out scene plays: a
+     reload or a new tab from then on is signed out. signOut() finishes
+     the job (this tab's listeners and the other tabs). */
+  letGo(){
+    const kept = this.storedSession();
+    this.forgetSession();
+    /* and the server is told now, so a tab closed during the scene
+       still ends the session there */
+    if (kept) this.revoke(kept);
+  },
+  async signOut(){
+    const auth = this.client.auth;
+    const kept = this.storedSession();
+    try {
+      if (typeof auth._removeSession === 'function'){
+        this.forgetSession();
+        /* tells this page's listeners and the other tabs */
+        await Promise.race([auth._removeSession(),
+          new Promise(r => setTimeout(r, this.SIGN_OUT_WAIT))]);
+      } else {
+        await Promise.race([auth.signOut({ scope:'local' }),
+          new Promise(r => setTimeout(r, this.SIGN_OUT_WAIT))]);
+      }
+    } catch (_) {}
+    this.forgetSession();
+    if (kept) this.revoke(kept);
+  },
+
+  /* a session that answered after the page gave up on it goes, unless
+     another has been stored since */
+  async dropSession(session){
+    if (!session || this.storedToken() !== session.access_token) return;
+    await this.signOut();
+  },
+
+  storedSession(){
+    try {
+      const kept = JSON.parse(localStorage.getItem(this.client.auth.storageKey) || 'null');
+      return kept && kept.access_token ? kept : null;
+    } catch (_){ return null; }
+  },
+  storedToken(){ const kept = this.storedSession(); return kept ? kept.access_token : null; },
+
+  /* The server ends that session's refresh token; its answer changes
+     nothing on this device. The server takes a logout only with a live
+     access token, so an expired one is first exchanged for a fresh one
+     with the session's own refresh token. */
+  async revoke(kept){
+    const call = (path, init) => {
+      const stop = new AbortController();
+      setTimeout(() => stop.abort(), 10000);
+      return fetch(`${Config.supabaseUrl}/auth/v1/${path}`, { method:'POST', keepalive:true, signal:stop.signal,
+        ...init, headers:{ apikey:Config.supabaseAnonKey, 'Content-Type':'application/json', ...(init.headers || {}) } });
+    };
+    try {
+      let token = kept.access_token;
+      if (Number(kept.expires_at) * 1000 < Date.now() + 30000 && kept.refresh_token){
+        const res = await call('token?grant_type=refresh_token', { body:JSON.stringify({ refresh_token:kept.refresh_token }) });
+        const fresh = res.ok ? await res.json() : null;
+        if (fresh && fresh.access_token) token = fresh.access_token;
+      }
+      await call('logout?scope=local', { headers:{ Authorization:`Bearer ${token}` } });
+    } catch (_) {}
+  },
 
   async listMeetings(){
     const { data, error } = await this.client
@@ -282,19 +552,41 @@ const SupabaseAdapter = {
   },
 
   async createMeeting(m){
-    const { data, error } = await this.client.from('meetings').insert({
-      meeting_number:m.no, meeting_date:m.date, start_time:m.startTime,
-      end_time:m.endTime, location:'MPR' }).select().single();
-    if (error) throw error;
-    return this.toMeeting(data);
+    /* who scheduled it goes on the record (meetings.created_by), as the
+       officer who opened check-in does on its session */
+    const { data:auth } = await this.client.auth.getSession();
+    const by = auth && auth.session && auth.session.user ? auth.session.user.id : null;
+    /* a write that never answers is given up on, as unreachable */
+    const stop = new AbortController(), fuse = setTimeout(() => stop.abort(), this.WRITE_WAIT);
+    try {
+      const { data, error } = await this.client.from('meetings').insert({
+        meeting_number:m.no, meeting_date:m.date, start_time:m.startTime,
+        end_time:m.endTime, location:'MPR', ...(by ? { created_by:by } : {}) })
+        .select().abortSignal(stop.signal).single();
+      if (error) throw stop.signal.aborted ? new Error('BACKEND_UNAVAILABLE') : error;
+      return this.toMeeting(data);
+    } finally { clearTimeout(fuse); }
   },
+  WRITE_WAIT: 15000,
 
+  /* A meeting whose check-in is open is not deleted, whatever a page
+     that read it earlier offers; a delete that removes nothing says why. */
   async deleteMeeting(id){
     const { data, error } = await this.client.from('meetings')
-      .delete().eq('id', id).select('id');
+      .delete().eq('id', id).eq('check_in_open', false).select('id');
     if (error) throw error;
-    if (!data || data.length === 0) return { ok:false, code:'HAS_ATTENDANCE' };
-    return { ok:true };
+    if (data && data.length) return { ok:true };
+    /* nothing was deleted: why, read now (a read that fails says so,
+       rather than "gone") */
+    const [{ data:still, error:e1 }, { count, error:e2 }] = await Promise.all([
+      this.client.from('meetings').select('id, check_in_open').eq('id', id).maybeSingle(),
+      this.client.from('attendance').select('id', { count:'exact', head:true }).eq('meeting_id', id),
+    ]);
+    if (e1) throw e1;
+    if (!still) return { ok:false, code:'MEETING_NOT_FOUND' };
+    if (still.check_in_open) return { ok:false, code:'CHECK_IN_OPEN' };
+    if (!e2 && count > 0) return { ok:false, code:'HAS_ATTENDANCE' };
+    return { ok:false, code:'NOT_DELETED' };
   },
 
   toMeeting(row){
@@ -306,8 +598,12 @@ const SupabaseAdapter = {
       time: row.start_time,
       endTime: row.end_time,
       place: row.location || 'MPR',
-      open: Boolean(row.check_in_open),
+      /* a check-in left open from an earlier day takes no scans (its
+         codes have expired), so for a member it is a held meeting */
+      open: Boolean(row.check_in_open) && row.meeting_date === today,
       today: row.meeting_date === today,
+      /* ahead of the member, until Store.settle() has the stamps and
+         the club's clock (started, ended) */
       upcoming: row.meeting_date >= today && !row.check_in_open,
     };
   },
@@ -325,20 +621,87 @@ const SupabaseAdapter = {
     const { data, error } = await this.client
       .from('reward_claims').select('reward_id, claimed_at').eq('user_id', userId);
     if (error) throw error;
-    return (data || []).map(r => r.reward_id);
+    return (data || []).map(r => ({ id:r.reward_id, at:r.claimed_at }));
+  },
+
+  /* The prizes an officer has handed this member. `false`, not an
+     empty list, on a project that has not run
+     migrations/2026-09-23-prizes-and-hand-stamps.sql: there, a claim is all
+     the club records, and the page says only that. */
+  async listHandovers(userId){
+    /* asked once per page: a project without the table answers 404 to
+       every read, and a browser logs each one as an error */
+    if (this.noHandovers) return false;
+    const { data, error } = await this.client
+      .from('reward_handovers').select('reward_id, handed_at').eq('user_id', userId);
+    if (error){
+      if (Handover.absent(error)){ this.noHandovers = true; return false; }
+      throw error;
+    }
+    return (data || []).map(r => ({ id:r.reward_id, at:r.handed_at }));
+  },
+
+  /* Board only, decided by the database (hand_over_reward). Resolves
+     to the time it was recorded; refuses with one of Handover.CODES. */
+  async handOverReward(userId, rewardId){
+    const { data, error } = await this.client.rpc('hand_over_reward',
+      { p_user_id:userId, p_reward_id:rewardId });
+    if (error) throw new Error(Handover.code(error));
+    return data;
+  },
+  async undoHandOver(userId, rewardId){
+    const { error } = await this.client.rpc('undo_hand_over',
+      { p_user_id:userId, p_reward_id:rewardId });
+    if (error) throw new Error(Handover.code(error));
+    return true;
+  },
+
+  /* A board member stamps someone at today's meeting by hand: a flat
+     battery, no phone. The database decides (stamp_by_hand: board only,
+     today's meeting only, never yourself, labelled 'board', the time is
+     the server's). A project that has not run
+     migrations/2026-09-23-prizes-and-hand-stamps.sql has no function
+     but still has the older insert policy, so the same row is written
+     directly there, and the page holds it to today's meeting. */
+  /* the account the stored session belongs to now */
+  sessionUser(){ const kept = this.storedSession(); return kept && kept.user ? kept.user.id : null; },
+
+  async addAttendance(userId, meetingId, officer = null){
+    const { error } = await this.client.rpc('stamp_by_hand', { p_user_id:userId, p_meeting_id:meetingId });
+    if (!error) return true;
+    if (!Handover.absent(error)) throw new Error(HandStamp.code(error));
+    /* the older way, as a second request: only for the officer who asked */
+    if (officer && this.sessionUser() !== officer) throw new Error('NOT_AUTHENTICATED');
+    const { error:e2 } = await this.client.from('attendance')
+      .insert({ user_id:userId, meeting_id:meetingId, verification_method:'board' });
+    if (!e2) return true;
+    throw new Error(HandStamp.code(e2));
   },
 
   async claimReward(userId, rewardId){
+    /* a claim already on file (another tab, a retry after a lost answer)
+       is the same outcome, so it is asked for as one: no conflict */
     const { error } = await this.client.from('reward_claims')
-      .insert({ user_id:userId, reward_id:rewardId });
+      .upsert({ user_id:userId, reward_id:rewardId },
+              { onConflict:'user_id,reward_id', ignoreDuplicates:true });
     if (error && error.code !== '23505') throw error;
     return rewardId;
   },
 
-  async verifyCode(rawCode){
+  /* a check that never answers is given up on, as no connection */
+  VERIFY_WAIT: 12000,
+  async verifyCode(rawCode, expect = null){
+    /* the stamp goes to the session's account, which must be the one
+       the page shows: another tab may have signed in as someone else */
+    if (expect){
+      const { data } = await this.client.auth.getSession();
+      const who = data && data.session && data.session.user && data.session.user.id;
+      if (who !== expect) return { ok:false, code:'NOT_AUTHENTICATED' };
+    }
     let res;
     try {
-      res = await this.client.functions.invoke('verify-attendance', { body:{ code:rawCode } });
+      res = await this.client.functions.invoke('verify-attendance',
+        { body:{ code:rawCode }, timeout:this.VERIFY_WAIT });
     } catch (err){
       return { ok:false, code:'NETWORK_ERROR' };
     }
@@ -347,52 +710,72 @@ const SupabaseAdapter = {
       if (status === 401) return { ok:false, code:'NOT_AUTHENTICATED' };
       if (status === 403) return { ok:false, code:'NOT_AUTHORIZED' };
       if (status === 404) return { ok:false, code:'VERIFIER_UNAVAILABLE' };
+      /* no answer at all: a dropped connection, or the wait ran out
+         (supabase-js returns these as FunctionsFetchError, never throws) */
+      if (!status) return { ok:false, code:'NETWORK_ERROR' };
 
       return { ok:false, code:'SERVER_ERROR' };
     }
     return res.data || { ok:false, code:'SERVER_ERROR' };
   },
 
+  /* a board read that never answers is given up on, and the pane says
+     it could not load, with its Try again */
+  READ_WAIT: 15000,
   async board(action, params){
     const { data, error } = await this.client.functions
-      .invoke('board-data', { body:{ action, ...(params || {}) } });
+      .invoke('board-data', { body:{ action, ...(params || {}) }, timeout:this.READ_WAIT });
     if (error){
       const status = (error.context && error.context.status) || error.status;
       if (status === 401) throw new Error('NOT_AUTHENTICATED');
       if (status === 403) throw new Error('NOT_AUTHORIZED');
+      /* an action the deployed function does not know yet */
+      if (status === 400) throw new Error('INVALID_REQUEST');
       throw new Error('SERVER_ERROR');
     }
     if (!data || !data.ok) throw new Error((data && data.code) || 'SERVER_ERROR');
     return data;
   },
 
+  /* the function answers 200 with {ok:false, code} for a refusal; that
+     is a failure to the caller, never a success */
   async startAttendance(meetingId){
     const { data, error } = await this.client.functions
       .invoke('attendance-session', { body:{ action:'start', meeting_id:meetingId } });
-    if (error) throw new Error('Could not start attendance.');
+    if (error) throw new Error(this.functionCode(error));
+    if (data && data.ok === false) throw new Error(data.code || 'SERVER_ERROR');
     return data;
   },
   async endAttendance(meetingId){
     const { data, error } = await this.client.functions
       .invoke('attendance-session', { body:{ action:'end', meeting_id:meetingId } });
-    if (error) throw new Error('Could not end attendance.');
+    if (error) throw new Error(this.functionCode(error));
+    if (data && data.ok === false) throw new Error(data.code || 'SERVER_ERROR');
     return data;
+  },
+  functionCode(error){
+    const status = (error && error.context && error.context.status) || (error && error.status);
+    if (status === 401) return 'NOT_AUTHENTICATED';
+    if (status === 403) return 'NOT_AUTHORIZED';
+    return 'SERVER_ERROR';
   },
   async issueToken(meetingId){
     const { data, error } = await this.client.functions
       .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId } });
-    if (error) throw new Error('Could not get a code.');
-
-    return { token: data && data.token };
+    if (error) throw new Error(this.functionCode(error));
+    if (!data || data.ok === false || !data.token) throw new Error((data && data.code) || 'NO_TOKEN');
+    return { token: data.token };
   },
   /* Board-only and held-only are enforced by the database function,
      not here. The legacy name is tried once for projects that have not
      run migrations/2026-09-10-delete-meeting.sql yet. */
-  async deleteMeetingAndStamps(meetingId){
+  async deleteMeetingAndStamps(meetingId, officer = null){
     const call = name => this.client.rpc(name, { p_meeting_id:meetingId });
     let { data, error } = await call('delete_meeting_and_stamps');
-    if (error && /^PGRST2/.test(String(error.code || '')))
+    if (error && /^PGRST2/.test(String(error.code || ''))){
+      if (officer && this.sessionUser() !== officer) throw new Error('NOT_AUTHENTICATED');
       ({ data, error } = await call('tmp_test_purge_meeting'));
+    }
     if (error) throw error;
     return { removed: Number(data) || 0 };
   },
@@ -404,6 +787,38 @@ const SupabaseAdapter = {
     if (error) throw error;
     return count || 0;
   },
+
+  /* today at a glance, in one small read: the meeting whose check-in is
+     open today, if any, and which meetings are on today (a list, so a
+     meeting scheduled for today after the page loaded is noticed) */
+  async openToday(){
+    const day = clubDay();
+    const { data, error } = await this.client
+      .from('meetings').select('id, meeting_date, check_in_open')
+      .or(`check_in_open.eq.true,meeting_date.eq.${day}`);
+    if (error) throw error;
+    const rows = data || [];
+    const open = rows.find(m => m.check_in_open && m.meeting_date === day);
+    return { open:open ? open.id : null,
+             today:rows.filter(m => m.meeting_date === day).map(m => m.id).sort().join(',') };
+  },
+
+  /* how many stamps this member has: a count, no rows */
+  async myStampCount(userId){
+    const { count, error } = await this.client
+      .from('attendance').select('id', { count:'exact', head:true }).eq('user_id', userId);
+    if (error) throw error;
+    return count || 0;
+  },
+
+  /* whether check-in is still open, so a wall left projecting learns
+     that another officer closed it */
+  async meetingOpen(meetingId){
+    const { data, error } = await this.client
+      .from('meetings').select('check_in_open').eq('id', meetingId).maybeSingle();
+    if (error) throw error;
+    return Boolean(data && data.check_in_open);
+  },
 };
 
 const PreviewAdapter = {
@@ -413,17 +828,25 @@ const PreviewAdapter = {
   async signIn(){ throw new Error('No backend is configured, so sign-in is unavailable.'); },
   async signUp(){ throw new Error('No backend is configured, so accounts cannot be created.'); },
   async signOut(){},
+  letGo(){},
   async listMeetings(){ return []; },
   async createMeeting(){ throw new Error('No backend is configured.'); },
   async deleteMeeting(){ throw new Error('No backend is configured.'); },
   async listAttendance(){ return []; },
   async listRewardClaims(){ return []; },
+  async listHandovers(){ return false; },
+  async handOverReward(){ throw new Error('NO_BACKEND'); },
+  async undoHandOver(){ throw new Error('NO_BACKEND'); },
+  async addAttendance(){ throw new Error('NO_BACKEND'); },
   async claimReward(){ throw new Error('No backend is configured.'); },
   async verifyCode(){ return { ok:false, code:'NO_BACKEND' }; },
   async startAttendance(){ throw new Error('No backend is configured.'); },
   async endAttendance(){ throw new Error('No backend is configured.'); },
   async issueToken(){ throw new Error('No backend is configured.'); },
   async attendanceCount(){ return 0; },
+  async meetingOpen(){ return false; },
+  async myStampCount(){ return 0; },
+  async openToday(){ return null; },
   async board(){ throw new Error('No backend is configured.'); },
   async deleteMeetingAndStamps(){ throw new Error('No backend is configured.'); },
 };
@@ -433,10 +856,11 @@ const UnavailableAdapter = {
   detail: null,
   async init(){ return this; },
   async currentSession(){ return null; },
+  letGo(){},
 };
 ['signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
- 'listRewardClaims','claimReward','startAttendance',
- 'endAttendance','issueToken','attendanceCount','board',
+ 'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','startAttendance',
+ 'endAttendance','issueToken','attendanceCount','meetingOpen','myStampCount','openToday','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   UnavailableAdapter[fn] = async () => { throw new Error('BACKEND_UNAVAILABLE'); };
 });
@@ -484,9 +908,9 @@ const Backend = {
   },
 };
 
-['currentSession','signIn','signUp','signOut','listMeetings','createMeeting','deleteMeeting','listAttendance',
- 'listRewardClaims','claimReward','verifyCode',
- 'startAttendance','endAttendance','issueToken','attendanceCount','board',
+['currentSession','signIn','signUp','signOut','letGo','listMeetings','createMeeting','deleteMeeting','listAttendance',
+ 'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','verifyCode',
+ 'startAttendance','endAttendance','issueToken','attendanceCount','meetingOpen','myStampCount','openToday','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   Backend[fn] = function(...a){ return this.adapter[fn](...a); };
 });
