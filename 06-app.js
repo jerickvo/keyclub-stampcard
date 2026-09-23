@@ -78,6 +78,9 @@ let painted = null;   /* Store.stamp() as of the last paint */
    A button that names its progress word (data-busy) carries the other
    label as a hidden line, so it is as wide as the wider of the two at
    rest and while working; any other is held at the width it had. */
+/* A held button is not disabled, which would drop the keyboard's focus
+   to the page: it says it is busy and unavailable, and its taps are
+   not taken (below). */
 function hold(btn, label){
   if (!btn || btn.hasAttribute('aria-busy')) return;
   const word = btn.dataset.busy || label;
@@ -87,9 +90,33 @@ function hold(btn, label){
   } else {
     btn.style.minWidth = btn.getBoundingClientRect().width + 'px';
   }
-  btn.disabled = true;
+  btn.setAttribute('aria-disabled', 'true');
   btn.setAttribute('aria-busy', 'true');
   btn.textContent = word;
+}
+/* a control mid-save: taps on it are not taken */
+function busy(btn){ return Boolean(btn) && (btn.disabled || btn.hasAttribute('aria-busy')); }
+document.addEventListener('click', e => {
+  const held = e.target.closest && e.target.closest('button[aria-disabled="true"]');
+  if (held){ e.preventDefault(); e.stopImmediatePropagation(); }
+}, true);
+
+/* A control armed for its second tap stays armed until the reader
+   moves on: focus leaves it, or a tap lands anywhere else (Safari does
+   not focus a tapped button, so it may never blur). A confirmed one,
+   saving, is left to its save. */
+function arm(btn, disarm){
+  btn.dataset.armed = String(Date.now());
+  const away = e => { if (!btn.contains(e.target)) off(); };
+  const off = () => {
+    btn.removeEventListener('blur', off);
+    document.removeEventListener('pointerdown', away, true);
+    if (busy(btn) || btn.dataset.armed === undefined) return;
+    delete btn.dataset.armed;
+    disarm();
+  };
+  btn.addEventListener('blur', off);
+  document.addEventListener('pointerdown', away, true);
 }
 function release(btn, label){
   if (!btn) return;
@@ -98,7 +125,7 @@ function release(btn, label){
     btn.dataset.busy = btn.textContent;
     delete btn.dataset.rest;
   }
-  btn.disabled = false;
+  btn.removeAttribute('aria-disabled');
   btn.removeAttribute('aria-busy');
   btn.style.minWidth = '';
   btn.textContent = word;
@@ -124,14 +151,26 @@ function paintBrand(){
 
 function paintNav(){
   const tabs = $('#tabs'), rail = $('#railNav');
-  $$('.tab', tabs).forEach(el => el.remove());
-  $$('.rail__link', rail).forEach(el => el.remove());
-
   /* while a check-in is open and not yet stamped, the Scan tab is the
      way in, under the thumb, so it is set in ink */
   const open = !Store.isBoard && Store.openMeeting();
   const live = Boolean(open && !Store.attended(open.id));
-  navFor().forEach((n, i) => {
+  const nav = navFor();
+
+  /* the same pages as before: the buttons stay (a focused tab keeps its
+     focus, a tap in progress keeps its target); only their state moves */
+  const had = $$('.tab', tabs).map(el => el.dataset.go);
+  if (had.length === nav.length && nav.every((n, i) => had[i] === n.id)){
+    $$('[data-go]', tabs).concat($$('.rail__link', rail)).forEach(el => {
+      if (current === el.dataset.go) el.setAttribute('aria-current', 'page');
+      else el.removeAttribute('aria-current');
+    });
+    $$('.tab', tabs).forEach(el => el.classList.toggle('tab--live', live && el.dataset.go === 'scan'));
+    return;
+  }
+  $$('.tab', tabs).forEach(el => el.remove());
+  $$('.rail__link', rail).forEach(el => el.remove());
+  nav.forEach((n, i) => {
     const cur = current === n.id ? ' aria-current="page"' : '';
     const hot = live && n.id === 'scan' ? ' tab--live' : '';
     tabs.insertAdjacentHTML('beforeend',
@@ -144,7 +183,16 @@ function paintNav(){
 async function go(id, opts = {}){
   if (!ROUTES.includes(id)) id = 'home';
   id = gate(id);
-  if (navigating){ pendingNav = { id, opts }; return; }
+  if (navigating){
+    /* The next page turn waits for this one. A background repaint never
+       replaces the reader's own turn (it only makes sure the page is
+       drawn again), and a turn to the page a repaint was owed for keeps
+       the repaint. */
+    const was = pendingNav;
+    if (was && opts.quiet && !was.opts.quiet) was.opts = { ...was.opts, force:true };
+    else pendingNav = { id, opts:was && was.id === id && was.opts.force ? { ...opts, force:true } : opts };
+    return;
+  }
   if (current === 'scan' && id !== 'scan') Scanner.stop();
 
   const view = $('#view');
@@ -152,6 +200,7 @@ async function go(id, opts = {}){
   const render = (nav = false) => {
     /* a background repaint puts the reader's focus back where it was */
     const back = opts.quiet && from === id ? focusKey(view, document.activeElement) : null;
+    const navBack = opts.quiet && from === id ? focusKey(document.body, document.activeElement) : null;
     current = id;
     syncHash(id);
     Motion.settle(view);
@@ -164,6 +213,7 @@ async function go(id, opts = {}){
     if (!opts.quiet){ try { scrollTo(0, 0); } catch (_) {} }
     afterRender(id, nav, Boolean(opts.covered || opts.quiet));
     if (back) refocusKey(view, back);
+    else if (navBack && document.activeElement === document.body) refocusKey(document.body, navBack);
     /* focus follows a page turn; the first paint has nowhere to move it
        from, and asking costs a whole layout of a page nobody has seen */
     /* the page is named in the tab title and read from its heading */
@@ -193,21 +243,42 @@ async function go(id, opts = {}){
   }
 }
 
-/* A stable name for a focused control, to find its twin after the page
-   is drawn again: its id, or its first data-* attribute, or (a seal) its
-   place among the seals. */
-function focusKey(view, el){
-  if (!el || el === view || !view.contains(el)) return null;
-  if (el.id) return { q:'#' + CSS.escape(el.id) };
-  for (const a of el.attributes)
-    if (/^data-/.test(a.name) && !/^data-(armed|busy|rest)$/.test(a.name))
-      return { q:`[${a.name}="${CSS.escape(a.value)}"]` };
-  if (el.matches('.seal[tabindex]')) return { seal:[...view.querySelectorAll('.seal[tabindex]')].indexOf(el) };
-  return null;
+/* A repaint held back for an armed or saving control is tried again
+   until the page is free. A page cut in the meantime draws from the
+   record itself, so nothing is owed then. */
+const HELD = '#view [data-armed], #view [aria-busy="true"]';
+let freeTimer = null;
+function repaintWhenFree(){
+  if (freeTimer) return;
+  const tick = () => {
+    freeTimer = null;
+    if (navigating || current === 'auth' || Store.stamp() === painted) return;
+    if ($(HELD)){ freeTimer = setTimeout(tick, 400); return; }
+    go(current, { instant:true, force:true, quiet:true });
+  };
+  freeTimer = setTimeout(tick, 400);
 }
-function refocusKey(view, key){
-  const el = key.q ? view.querySelector(key.q) : view.querySelectorAll('.seal[tabindex]')[key.seal];
-  if (el && typeof el.focus === 'function') el.focus({ preventScroll:true });
+
+/* A stable name for a focused control, to find its twin after the page
+   is drawn again: its id; or its tag and all its data-* attributes (or
+   its label, or its first class), with its place among the controls
+   that share them (the seals all read data-seal="set"). */
+function focusKey(root, el){
+  if (!el || el === root || !root.contains(el)) return null;
+  if (el.id) return { q:'#' + CSS.escape(el.id), i:0 };
+  const data = [...el.attributes].filter(a => /^data-/.test(a.name) && !/^data-(armed|busy|rest)$/.test(a.name));
+  const label = el.getAttribute('aria-label');
+  const q = el.tagName.toLowerCase() + (
+    data.length ? data.map(a => `[${a.name}="${CSS.escape(a.value)}"]`).join('')
+    : label ? `[aria-label="${CSS.escape(label)}"]`
+    : el.classList.length ? '.' + CSS.escape(el.classList[0]) : '');
+  return { q, i:[...root.querySelectorAll(q)].indexOf(el) };
+}
+function refocusKey(root, key){
+  const all = root.querySelectorAll(key.q);
+  const el = all[key.i] || all[0];
+  if (el && typeof el.focus === 'function'){ el.focus({ preventScroll:true }); return el; }
+  return null;
 }
 
 /* the one intro a page has: a stamp just earned is primed to land */
@@ -303,6 +374,12 @@ function authBusy(on, label){
 }
 
 document.addEventListener('keydown', e => {
+  /* Enter held down on a button is one press, not a stream of them
+     (a held Enter would otherwise arm and confirm a claim) */
+  if (e.repeat && (e.key === 'Enter' || e.key === ' ') && e.target && e.target.closest && e.target.closest('button')){
+    e.preventDefault();
+    return;
+  }
   /* an open stamp closes on Escape, as any slip over the page should */
   if (e.key === 'Escape' && e.target && e.target.matches && e.target.matches('.seal[tabindex]')){
     e.target.blur();
@@ -369,7 +446,7 @@ document.addEventListener('submit', async e => {
     e.preventDefault();
     const show = msg => { const err = $('#mErr'); if (err){ err.hidden = !msg; err.textContent = msg || ''; } };
     const btn = $('#mGo');
-    if (btn && btn.disabled) return;
+    if (busy(btn)) return;
 
     const noRaw = String($('#mNo').value || '').trim();
     const no    = Number(noRaw);
@@ -517,20 +594,17 @@ document.addEventListener('click', e => {
      takes a second tap, and the second tap names who and which meeting. */
   const stamp = e.target.closest('[data-bstamp]');
   if (stamp){
-    if (stamp.disabled) return;
+    if (busy(stamp)) return;
     const who = stamp.dataset.who, no = stamp.dataset.no;
     if (!stamp.dataset.armed){
-      stamp.dataset.armed = String(Date.now());
-      stamp.textContent = 'Confirm';
-      stamp.setAttribute('aria-label', `Confirm: check ${who} in to GM ${no}`);
-      stamp.closest('.brow')?.classList.add('brow--armed');
-      stamp.addEventListener('blur', () => {
-        if (stamp.disabled) return;
-        delete stamp.dataset.armed;
+      arm(stamp, () => {
         stamp.textContent = 'Add';
         stamp.setAttribute('aria-label', `Add ${who} to GM ${no}`);
         stamp.closest('.brow')?.classList.remove('brow--armed');
-      }, { once:true });
+      });
+      stamp.textContent = 'Confirm';
+      stamp.setAttribute('aria-label', `Confirm: check ${who} in to GM ${no}`);
+      stamp.closest('.brow')?.classList.add('brow--armed');
       return;
     }
     /* a double-tap is one touch: a confirm this soon after arming is not taken */
@@ -580,7 +654,7 @@ document.addEventListener('click', e => {
 
   const bdelete = e.target.closest('[data-bdelete]');
   if (bdelete){
-    if (bdelete.disabled) return;
+    if (busy(bdelete)) return;
     const id = bdelete.dataset.bdelete;
     const stamps = Number(bdelete.dataset.bstamps) || 0;
     const gm = bdelete.dataset.bno ? `GM ${bdelete.dataset.bno}` : 'Meeting';
@@ -749,21 +823,18 @@ document.addEventListener('click', e => {
      and the second tap names who and what. */
   const hand = e.target.closest('[data-bhand]');
   if (hand){
-    if (hand.disabled) return;
+    if (busy(hand)) return;
     const [uid, rid] = hand.dataset.bhand.split(':');
     const who = hand.dataset.who, prize = hand.dataset.prize;
     if (!hand.dataset.armed){
-      hand.dataset.armed = String(Date.now());
-      hand.textContent = 'Confirm';
-      hand.setAttribute('aria-label', `Confirm: hand ${prize} to ${who}`);
-      hand.closest('.brow')?.classList.add('brow--armed');
-      hand.addEventListener('blur', () => {
-        if (hand.disabled) return;
-        delete hand.dataset.armed;
+      arm(hand, () => {
         hand.textContent = 'Hand over';
         hand.setAttribute('aria-label', `Hand ${prize} to ${who}`);
         hand.closest('.brow')?.classList.remove('brow--armed');
-      }, { once:true });
+      });
+      hand.textContent = 'Confirm';
+      hand.setAttribute('aria-label', `Confirm: hand ${prize} to ${who}`);
+      hand.closest('.brow')?.classList.add('brow--armed');
       return;
     }
     if (Date.now() - Number(hand.dataset.armed) < 400) return;
@@ -811,7 +882,7 @@ document.addEventListener('click', e => {
   }
   const undo = e.target.closest('[data-bundo]');
   if (undo){
-    if (undo.disabled) return;
+    if (busy(undo)) return;
     const [uid, rid] = undo.dataset.bundo.split(':');
     hold(undo, 'Undoing');
     Backend.undoHandOver(uid, rid).then(() => {
@@ -833,22 +904,16 @@ document.addEventListener('click', e => {
 
   const claim = e.target.closest('[data-claim]');
   if (claim){
-    if (claim.disabled) return;
+    if (busy(claim)) return;
     const rid = claim.dataset.claim;
     const prize = (Store.rewards.find(r => r.id === rid) || {}).name || 'reward';
     const name = armed => claim.setAttribute('aria-label', armed ? `Confirm: claim ${prize}` : `Claim ${prize}`);
     /* a claim cannot be taken back, so it takes a second, deliberate tap */
     if (!claim.dataset.armed){
-      claim.dataset.armed = String(Date.now());
+      /* it stays armed until the reader moves on, not on a timer */
+      arm(claim, () => { claim.textContent = 'Claim'; name(false); });
       claim.textContent = 'Confirm claim';
       name(true);
-      /* it stays armed until the reader moves on, not on a timer */
-      claim.addEventListener('blur', () => {
-        if (claim.disabled) return;
-        delete claim.dataset.armed;
-        claim.textContent = 'Claim';
-        name(false);
-      }, { once:true });
       return;
     }
     /* a double-tap is one touch, not two: a confirm this soon after the
@@ -945,7 +1010,7 @@ async function loadBoard(){
   /* a field the reader is typing in (the roster search) gets its focus
      back after the repaint */
   const active = document.activeElement;
-  const focusId = keep && active && active.id && box.contains(active) ? active.id : null;
+  const focusAt = keep ? focusKey(box, active) : null;
   /* the code already on the projector stays up while its token is
      re-issued; a code that was not on screen is never shown early */
   const shownQR = keep && boardMeeting ? { meeting:boardMeeting, svg:$('#qrBox svg', box)?.outerHTML || null } : null;
@@ -1002,9 +1067,8 @@ async function loadBoard(){
   if (pane()){
     pane().innerHTML = BoardUI.pane();
     pane().removeAttribute('aria-busy');
-    const again = focusId && document.getElementById(focusId);
-    if (again){
-      again.focus({ preventScroll:true });
+    const again = focusAt && document.activeElement === document.body ? refocusKey(pane(), focusAt) : null;
+    if (again && typeof again.value === 'string'){
       try { const n = again.value.length; again.setSelectionRange(n, n); } catch (_) {}
     }
     const qb = shownQR && shownQR.svg && boardMeeting === shownQR.meeting ? $('#qrBox') : null;
@@ -1217,12 +1281,9 @@ try {
         }
       }
       else if (here && here !== 'auth' && Store.stamp() !== painted){
-        /* a control armed for its second tap is not swept away under
-           the finger: the repaint waits until it lets go */
-        const armed = !navigating && $('#view [data-armed]');
-        if (armed) armed.addEventListener('blur', () => setTimeout(() => {
-          if (Store.stamp() !== painted) go(current, { instant:true, force:true, quiet:true });
-        }, 0), { once:true });
+        /* a control armed for its second tap, or saving, is not swept
+           away under the finger: the repaint waits until it is free */
+        if (!navigating && $(HELD)) repaintWhenFree();
         else go(here, { instant:true, force:true, quiet:true });   /* force: not dropped if it lands mid-cut */
       }
       paintIdentity();

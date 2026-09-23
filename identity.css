@@ -1213,6 +1213,8 @@ html{font-synthesis:none}
 [data-busy]::after{content:attr(data-busy);display:block;height:0;overflow:hidden;visibility:hidden}
 .btn[disabled],.proj__ctl[disabled],.authp__go[disabled],.tier__claim[disabled],.rail__out[disabled],.acct__out[disabled]{
   opacity:.55;pointer-events:none}
+/* a button mid-save keeps the keyboard's focus; taps on it are not taken */
+button[aria-disabled="true"]{opacity:.55;cursor:progress}
 .input:focus-within{outline:2px solid var(--ink);outline-offset:3px}
 .toast{cursor:pointer}
 .toast:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:3px}

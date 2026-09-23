@@ -69,9 +69,9 @@ const Scenes = {
     if (Motion.off){
       el.classList.remove('scene--play');
       el.classList.add('scene--set');
+      /* taps are swallowed until the cover is gone, not while it fades */
       return { release(){
         if (released) return; released = true;
-        el.style.pointerEvents = 'none';
         revealOnce(); fadeAway(el, 150, finish);
       } };
     }
@@ -79,9 +79,10 @@ const Scenes = {
     if (!boot) el.classList.add('scene--play');
 
     const MIN = 600;
+    /* the cover takes taps until it is gone: its panels are opaque over
+       the page for most of the way out */
     const open = () => {
       if (done) return;
-      el.style.pointerEvents = 'none';
       el.classList.add('scene--set');
       const W = innerWidth;
       const vec = this.exitVector(p, W, innerHeight);

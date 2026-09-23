@@ -53,7 +53,7 @@ function watchClosedStage(meetingId){
     if (Schedule.today() !== day){ clearInterval(countTimer); loadBoard(); return; }
     let open;
     try { open = await Backend.meetingOpen(meetingId); } catch (_) { return; }
-    if (open === true && here() && !here().disabled){ clearInterval(countTimer); loadBoard(); }
+    if (open === true && here() && !busy(here())){ clearInterval(countTimer); dropToast('board', true); loadBoard(); }
   }, 10000);
 }
 function paintAttendanceCount(meetingId){
