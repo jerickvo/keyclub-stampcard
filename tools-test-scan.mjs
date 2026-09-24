@@ -49,7 +49,7 @@ test('the meeting line over the viewer follows the record', () => {
   const done = Views.scan();
   assert.equal(done.includes('id="cam"'), false);
   assert.equal(done.includes('Checked in'), true);
-  assert.equal(done.includes('GM 04'), true);
+  assert.match(done, /GM<\/span> <b class="tkt__no">04</);
 });
 
 test('the store fingerprint changes only when a page would', () => {
@@ -68,26 +68,28 @@ test('the store fingerprint changes only when a page would', () => {
   assert.notEqual(Store.stamp(), stamped);
 });
 
-test('the Card sends a member to Scan only while a meeting is open and unstamped', () => {
-  const target = html => (html.match(/class="act__btn"[^>]*data-go="([a-z]+)"/) || [])[1];
+test('Today sends a member to Scan only while a meeting is open and unstamped', () => {
+  const target = html => (html.match(/class="tkt tkt--live"[^>]*data-go="([a-z]+)"/) || [])[1];
+  const gm = (html, no) => html.includes(`GM</span> <b class="tkt__no">${no}</b>`);
   load({ meetings:[...held(3), meeting(4, { open:true, today:true })] });
   assert.equal(target(Views.home()), 'scan');
-  assert.equal(Views.home().includes('act act--live'), true);
+  assert.equal(Views.home().includes('>Check in<'), true);
   // stamped: a line of type, not a button
   load({ meetings:[...held(3), meeting(4, { open:true, today:true })], scans:[{ meetingId:'m4', at:'2026-09-14T19:50:00Z' }] });
   assert.equal(target(Views.home()), undefined);
   assert.equal(Views.home().includes('Checked in'), true);
-  assert.equal(Views.home().includes('GM 04'), true);
+  assert.equal(gm(Views.home(), '04'), true);
   // nothing open: the next meeting, with no verb
   load({ meetings:[...held(3), meeting(4, { upcoming:true })] });
   assert.equal(target(Views.home()), undefined);
   assert.equal(Views.home().includes('>Next<'), true);
-  assert.equal(Views.home().includes('GM 04'), true);
+  assert.equal(gm(Views.home(), '04'), true);
   assert.equal(Views.home().includes('Nothing open'), false);
   // nothing scheduled: nothing is said
   load({ meetings:held(3) });
   assert.equal(target(Views.home()), undefined);
   assert.equal(Views.home().includes('nowline'), false);
+  assert.equal(Views.home().includes('class="tkt'), false);
 });
 
 test('every refusal the verifier can send has its own words; an unknown one has the safe words', () => {
