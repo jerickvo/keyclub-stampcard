@@ -120,7 +120,7 @@ body{
   width:clamp(7px,1vw,15px);background:var(--ink);
   clip-path:polygon(28% 0,100% 0,100% 100%,40% 100%,12% 88%,52% 74%,
                     22% 61%,58% 47%,18% 34%,50% 22%,20% 10%)}
-[data-screen="auth"] .ground__bleed{display:none}
+[data-screen="auth"] .ground__bleed,[data-screen="checkin"] .ground__bleed{display:none}
 
 .shell{
   position:relative;
@@ -570,9 +570,11 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 }
 
 [data-screen="auth"] .rail__nav,
-[data-screen="auth"] .tabs{display:none}
+[data-screen="auth"] .tabs,
+[data-screen="checkin"] .rail__nav,
+[data-screen="checkin"] .tabs{display:none}
 
-[data-screen="auth"] main#view{padding:0;max-width:none}
+[data-screen="auth"] main#view,[data-screen="checkin"] main#view{padding:0;max-width:none}
 /* the "Could not load" page shown there instead keeps the page gutter */
 [data-screen="auth"] main#view > .view:not(.view--auth){max-width:var(--page-max);margin-inline:auto;
   padding:calc(var(--sp-pad) + env(safe-area-inset-top, 0px))
@@ -1013,8 +1015,8 @@ div.brow__go{cursor:default}
 main#view:focus,main#view:focus-visible,.rechead__title:focus{outline:none}
 
 @media(min-width:1024px){
-  [data-screen="auth"] .rail{display:none}
-  [data-screen="auth"] .shell{grid-template-columns:1fr}
+  [data-screen="auth"] .rail,[data-screen="checkin"] .rail{display:none}
+  [data-screen="auth"] .shell,[data-screen="checkin"] .shell{grid-template-columns:1fr}
 }
 
 
@@ -1371,6 +1373,18 @@ html{font-synthesis:none}
   background:none;border:0;cursor:pointer;padding:0;
   color:var(--ink);font-family:var(--f-body);font-size:var(--t-body);
   text-decoration:underline;text-underline-offset:3px;text-align:left}
+
+/* ══ Arriving by a wall code's link: the sign-in spread, the meeting
+   named in the band, and one card that says what happens next ══ */
+.arrive__status{display:inline-flex;align-items:center;gap:10px;margin:var(--sp-row) 0 0;
+  font:400 12px/1 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--paper)}
+.arrive__status::before{content:'';width:10px;height:10px;background:var(--paper)}
+.arrive{gap:var(--sp-pad)}
+.arrive__word{margin:0;font-family:var(--f-head);font-weight:400;text-transform:uppercase;
+  font-size:var(--t-head);line-height:1;overflow-wrap:anywhere}
+.arrive__note{margin:0;font-size:var(--t-body);line-height:1.4;color:var(--ink-2)}
+.authp__arrive{margin:0;padding-bottom:var(--sp-row);border-bottom:var(--edge-panel) solid var(--ink);
+  font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
 
 @media(min-width:600px) and (max-width:819px){
   .authp{margin-inline:auto}
@@ -15541,6 +15555,27 @@ const SupabaseAdapter = {
     return res.data || { ok:false, code:'SERVER_ERROR' };
   },
 
+  /* What a code on the wall is for, asked before anyone has signed in
+     (the phone's own camera opened its link). The verifier checks it as
+     it would a check-in, on its own clock, and says only whether it
+     would be taken now and for which meeting; nothing is written. */
+  async peekCode(rawCode){
+    let res;
+    try {
+      res = await this.client.functions.invoke('verify-attendance',
+        { body:{ code:rawCode, peek:true }, timeout:this.VERIFY_WAIT });
+    } catch (err){
+      return { ok:false, code:'NETWORK_ERROR' };
+    }
+    if (res.error){
+      const status = (res.error.context && res.error.context.status) || res.error.status;
+      if (status === 401) return { ok:false, code:'NOT_AUTHENTICATED' };
+      if (!status) return { ok:false, code:'NETWORK_ERROR' };
+      return { ok:false, code:'SERVER_ERROR' };
+    }
+    return res.data || { ok:false, code:'SERVER_ERROR' };
+  },
+
   /* a board read that never answers is given up on, and the pane says
      it could not load, with its Try again */
   READ_WAIT: 15000,
@@ -15662,6 +15697,7 @@ const PreviewAdapter = {
   async addAttendance(){ throw new Error('NO_BACKEND'); },
   async claimReward(){ throw new Error('No backend is configured.'); },
   async verifyCode(){ return { ok:false, code:'NO_BACKEND' }; },
+  async peekCode(){ return { ok:false, code:'NO_BACKEND' }; },
   async startAttendance(){ throw new Error('No backend is configured.'); },
   async endAttendance(){ throw new Error('No backend is configured.'); },
   async issueToken(){ throw new Error('No backend is configured.'); },
@@ -15687,6 +15723,7 @@ const UnavailableAdapter = {
   UnavailableAdapter[fn] = async () => { throw new Error('BACKEND_UNAVAILABLE'); };
 });
 UnavailableAdapter.verifyCode = async () => ({ ok:false, code:'BACKEND_UNAVAILABLE' });
+UnavailableAdapter.peekCode = async () => ({ ok:false, code:'BACKEND_UNAVAILABLE' });
 
 const Backend = {
   adapter: null,
@@ -15731,7 +15768,7 @@ const Backend = {
 };
 
 ['currentSession','signIn','signUp','signOut','letGo','listMeetings','createMeeting','deleteMeeting','listAttendance',
- 'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','verifyCode',
+ 'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','verifyCode','peekCode',
  'startAttendance','endAttendance','issueToken','attendanceCount','meetingOpen','myStampCount','openToday','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   Backend[fn] = function(...a){ return this.adapter[fn](...a); };
@@ -16110,9 +16147,47 @@ const Store = {
 
 const QRFormat = {
   SCHEME: 'keystamp://a/',
+  /* The wall's code is also a link, so a phone's own camera opens
+     Keystamp with it: https://<the app>/#/a/<signed code>. The code
+     rides in the fragment, which a browser never sends to a server, and
+     it is the same signed code as ever: the link only carries it. */
+  LINK: '#/a/',
+  HOME: 'https://keystamp.vercel.app/',
+  BARE: /^[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{16,}$/,
+
+  here(){
+    try {
+      if (/^https?:$/.test(location.protocol)) return location.origin + location.pathname;
+    } catch (_) {}
+    return this.HOME;
+  },
+  /* the link the projector draws for a code */
+  link(code){
+    const bare = String(code || '').trim().replace(/^keystamp:\/\/a\//i, '');
+    return this.here() + this.LINK + bare;
+  },
+  /* the code a link carries, if it is a link to this app (or to the
+     club's own address) and carries one; else null */
+  fromLink(raw){
+    let u;
+    try { u = new URL(String(raw || '').trim()); } catch (_) { return null; }
+    let host = '';
+    try { host = location.host; } catch (_) {}
+    const ours = u.host === 'keystamp.vercel.app' || (host && u.host === host);
+    const safe = u.protocol === 'https:' || (u.protocol === 'http:' && ours && u.host === host);
+    if (!ours || !safe || !u.hash.startsWith(this.LINK)) return null;
+    const bare = u.hash.slice(this.LINK.length);
+    return this.BARE.test(bare) ? bare : null;
+  },
+  /* what goes to the verifier: the code in its own form */
+  canonical(raw){
+    const bare = this.fromLink(raw);
+    return bare ? this.SCHEME + bare : String(raw || '').trim();
+  },
   looksLikeKeystamp(raw){
     const t = String(raw || '').trim();
     if (t.toLowerCase().startsWith(this.SCHEME)) return true;
+    if (/^https?:\/\//i.test(t)) return this.fromLink(t) !== null;
 
     if (/^[a-z][a-z0-9+.-]*:\/\//i.test(t)) return false;
 
@@ -16547,6 +16622,14 @@ C.ticket = ({ m, kick, day = '', meta = '', go = false, scan = null, quiet = fal
     : `<div class="${cls}">${inner}</div>`;
 };
 
+/* the meeting a signed code names, read for display only */
+function arrivalMeeting(bare){
+  try {
+    const part = String(bare).split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
+    return atob(part + '==='.slice((part.length + 3) % 4)).split('.')[1] || null;
+  } catch (_) { return null; }
+}
+
 const Views = {
   loadFailure(title){
     return `<div class="view">
@@ -16859,6 +16942,72 @@ const Views = {
     </div>`;
   },
 
+  /* Arriving by the wall code's link. Signed out, the page says what
+     the server says the code is for and offers a way in; signed in, it
+     says it is checking in while the verifier answers. The code itself
+     is never printed. */
+  checkin(){
+    const A = Arrival;
+    const signed = Store.signedIn;
+    const code = A.phase === 'refused' ? A.refusal : null;
+    /* the meeting's number: as the server said it, or as the record has
+       the meeting the code names (the code is read, not trusted: the
+       verifier still decides) */
+    const no = A.no || (signed && A.bare ? (Store.meeting(arrivalMeeting(A.bare)) || {}).no : null) || null;
+
+    const acts = (...b) => `<div class="authp__act">${b.join('')}</div>`;
+    const go = (attr, label) => `<button class="authp__go" type="button" ${attr}>${label}</button>`;
+    const alt = (attr, label) => `<button class="authp__swap" type="button" ${attr}>${label}</button>`;
+    const onward = signed ? go('data-go="home"', Store.isBoard ? 'Go to Check-in' : 'Go to Today')
+      : alt('data-arrive="in"', 'Sign in');
+    const say = (word, note = '', tail = '') => `<section class="authp arrive" aria-live="polite">
+        <h2 class="arrive__word">${word}</h2>
+        ${note ? `<p class="arrive__note">${note}</p>` : ''}
+        ${tail}
+      </section>`;
+
+    let status = '', card;
+    if (code === 'ALREADY_CHECKED_IN'){
+      status = 'Checked in';
+      card = say('Already checked in', '', acts(onward));
+    } else if (code && SCAN_TRANSIENT.has(code)){
+      card = say(scanMessage(code)[0], 'Try again in a moment.',
+        acts(go('data-arrive="again"', 'Try again'), signed ? '' : onward));
+    } else if (code === 'BOARD_ACCOUNT'){
+      card = say('Board account', 'Another officer adds you to the meeting.', acts(onward));
+    } else if (code === 'NOT_AUTHORIZED'){
+      card = say('Not allowed', 'This account cannot check in.', acts(onward));
+    } else if (code){
+      const [what, todo] = scanMessage(code);
+      card = say('Check-in unavailable', [what, todo].filter(Boolean).join('. ') + '.', acts(onward));
+    } else if (signed){
+      card = say('Checking in');
+    } else if (!A.peek){
+      card = say('Reading the code');
+    } else {
+      status = A.peek.ok ? 'Check-in open' : '';
+      card = say('Collect your attendance stamp', '',
+        acts(go('data-arrive="up"', 'Create account'), alt('data-arrive="in"', 'Sign in')));
+    }
+
+    return `<div class="view view--auth view--arrive">
+      <div class="spread">
+        <div class="spread__field crop" aria-hidden="true">
+          <svg class="spread__seal crop__art" viewBox="0 0 100 100">${sealArt()}</svg>
+          <span class="spread__kci">${brandSeal('kci')}</span>
+        </div>
+
+        <header class="spread__head">
+          <p class="spread__sub"><span>Keystamp</span></p>
+          <h1 class="spread__wm">${no ? `GM ${pad(no)}` : 'Check-in'}</h1>
+          ${status ? `<p class="arrive__status">${status}</p>` : ''}
+        </header>
+
+        ${card}
+      </div>
+    </div>`;
+  },
+
   auth(){
     /* a session is stored but could not be read (offline at load): the
        member is asked to retry, not to type the password again */
@@ -16894,6 +17043,8 @@ const Views = {
         </header>
 
         <form class="authp" id="authForm" novalidate>
+
+          ${Arrival.bare ? `<p class="authp__arrive">Then: ${Arrival.no ? `check in to GM ${pad(Arrival.no)}` : 'check in'}</p>` : ''}
 
           <div class="authp__f">
             <label class="authp__lab" for="authUser">Username</label>
@@ -18032,7 +18183,9 @@ function paintBoard(attempt = 0){
   const meeting = boardMeeting;
   Backend.issueToken(meeting).then(({ token }) => {
     if (!document.body.contains(box)) return;
-    const svg = qrSVG(token);
+    /* the code as a link, so a phone's own camera opens Keystamp with it;
+       Scan reads the same link */
+    const svg = qrSVG(QRFormat.link(token));
     box.innerHTML = svg || `<p class="qrpanel__fail">The code could not be drawn. Reload the page.</p>`;
   }).catch(() => {
     if (!document.body.contains(box)) return;
@@ -18583,7 +18736,7 @@ const Landing = {
 
     /* The reader may have left Scan during the hold. The record is
        fresh either way; the page they chose is not taken from them. */
-    if (current !== 'scan'){
+    if (current !== 'scan' && current !== 'checkin'){
       scene.clear();
       this.armed = null; this.active = false; this.scene = null;
       if (!fresh && Store.signedIn){
@@ -18645,12 +18798,13 @@ const sealsAsked = new Map();
    them before the answer was lost */
 const sealsUnanswered = new Set();
 
-/* `run` is the camera run that read the code; the refusal, if any, is
-   shown on that run and no other. */
-async function submitSeal(raw, run = Scanner.run){
-  if (!QRFormat.looksLikeKeystamp(raw)) return rejectVisual('INVALID_TOKEN', raw, run);
-
-  Scanner.setState('busy', 'Checking');
+/* The one way a code reaches the verifier, however it was read: by the
+   camera on Scan, or by the phone's own camera through the code's link.
+   Answers {code} for a refusal, {meeting} for the stamp this call
+   landed, or null when the answer is not this page's to show (another
+   account is signed in now, or an earlier call for the same code is
+   the one that shows it). */
+async function checkSeal(raw){
   const uid = Store.user && Store.user.id;
   const key = `${uid}|${raw}`;
   let asked = sealsAsked.get(key);
@@ -18658,9 +18812,8 @@ async function submitSeal(raw, run = Scanner.run){
   if (first){ asked = Backend.verifyCode(raw, uid); sealsAsked.set(key, asked); }
   const result = await asked;
   if (first) sealsAsked.delete(key);
-  /* another account is signed in now: this answer was the last one's,
-     and the page has moved to the new account's Scan */
-  if (!Store.user || Store.user.id !== uid) return;
+  /* another account is signed in now: this answer was the last one's */
+  if (!Store.user || Store.user.id !== uid) return null;
 
   let code = result && result.ok ? null : ((result && result.code) || 'SERVER_ERROR');
   /* "already checked in", right after a check that got no answer, to a
@@ -18694,17 +18847,155 @@ async function submitSeal(raw, run = Scanner.run){
         if (got && Store.openMeeting()) code = 'STALE_CODE';
       }
     }
-    return rejectVisual(code, raw, run);
+    return { code, no:result && result.meeting_number };
   }
-  if (!first) return;
+  if (!first) return null;
 
   const meeting = Store.meeting(result.meeting_id) ||
                   { id:result.meeting_id, no:result.meeting_number, place:Schedule.PLACE };
-  /* said on the live line, under the scene, so a screen reader hears it */
-  Scanner.setState('good', `Stamp acquired. GM ${pad(meeting.no)}`);
-  Scanner.stop();
-  await Landing.run(meeting);
+  return { meeting };
 }
+
+/* `run` is the camera run that read the code; the refusal, if any, is
+   shown on that run and no other. */
+async function submitSeal(raw, run = Scanner.run){
+  if (!QRFormat.looksLikeKeystamp(raw)) return rejectVisual('INVALID_TOKEN', raw, run);
+
+  Scanner.setState('busy', 'Checking');
+  const got = await checkSeal(QRFormat.canonical(raw));
+  if (!got) return;
+  if (got.code) return rejectVisual(got.code, raw, run);
+
+  /* said on the live line, under the scene, so a screen reader hears it */
+  Scanner.setState('good', `Stamp acquired. GM ${pad(got.meeting.no)}`);
+  Scanner.stop();
+  await Landing.run(got.meeting);
+}
+
+/* ══ Arriving by link ═══════════════════════════════════════════════
+   The wall's code is a link a phone's own camera can open. The code is
+   taken off the address at once and kept for this tab only (memory and
+   sessionStorage, never localStorage), so it outlives signing in or
+   making an account, and then goes to the verifier the way a scan
+   does. Nothing about it is shown; the verifier alone decides. */
+const Arrival = {
+  KEY: 'keystamp:arrival',
+  /* long enough to make an account; not so long that the next person to
+     sign in on a shared phone is checked in with it */
+  KEEP: 45 * 60 * 1000,
+  bare: null,          /* the signed code, without its scheme */
+  peek: null,          /* {ok, no} | {code} | {unknown:true} once asked */
+  peeking: false,
+  phase: 'idle',       /* idle | checking | refused */
+  refusal: null,
+  no: null,            /* the meeting's number, once the server has said it */
+
+  get code(){ return this.bare ? QRFormat.SCHEME + this.bare : null; },
+  /* whether the arrival page has anything to show */
+  get here(){ return Boolean(this.bare) || this.phase === 'refused'; },
+
+  /* the address the phone opened: the code is kept and the address
+     loses it before anything is drawn */
+  take(){
+    let hash = '';
+    try { hash = location.hash; } catch (_) { return false; }
+    if (!hash.startsWith(QRFormat.LINK)) return false;
+    const bare = hash.slice(QRFormat.LINK.length);
+    try { history.replaceState(null, '', location.pathname + location.search + '#/checkin'); } catch (_) {}
+    if (!QRFormat.BARE.test(bare)){ this.forget(); this.phase = 'refused'; this.refusal = 'INVALID_TOKEN'; return true; }
+    this.forget();
+    this.bare = bare;
+    try { sessionStorage.setItem(this.KEY, JSON.stringify({ c:bare, at:Date.now() })); } catch (_) {}
+    return true;
+  },
+  /* a code kept by this tab before a reload (signing up can reload) */
+  restore(){
+    if (this.bare) return;
+    try {
+      const v = JSON.parse(sessionStorage.getItem(this.KEY) || 'null');
+      if (v && QRFormat.BARE.test(String(v.c)) && Date.now() - Number(v.at) < this.KEEP) this.bare = v.c;
+      else sessionStorage.removeItem(this.KEY);
+    } catch (_) {}
+  },
+  /* the code is done with: stamped, refused for good, or its reader
+     signed out */
+  forget(){
+    this.bare = null; this.peek = null; this.no = null;
+    this.phase = 'idle'; this.refusal = null;
+    try { sessionStorage.removeItem(this.KEY); } catch (_) {}
+  },
+  /* a verdict stays on the page until the reader moves on */
+  leave(){ if (!this.bare){ this.phase = 'idle'; this.refusal = null; this.no = null; } },
+
+  paint(){ if (current === 'checkin') go('checkin', { instant:true, force:true, quiet:true }); },
+
+  /* what happens on arrival: signed in, the code goes to the verifier;
+     signed out, the server is asked what it is for */
+  run(){
+    if (!this.bare) return;
+    /* an officer is added by another officer, as on the meeting page;
+       a board account does not stamp itself from the wall */
+    if (Store.signedIn && Store.isBoard){
+      this.forget(); this.phase = 'refused'; this.refusal = 'BOARD_ACCOUNT';
+      this.paint();
+      return;
+    }
+    if (Store.signedIn){ if (this.phase === 'idle') this.submit(); }
+    else if (!this.peek) this.ask();
+  },
+
+  async ask(){
+    if (this.peeking || !this.bare) return;
+    this.peeking = true;
+    const mine = this.bare;
+    const res = await Backend.peekCode(this.code).catch(() => ({ ok:false, code:'NETWORK_ERROR' }));
+    this.peeking = false;
+    if (this.bare !== mine) return;
+    if (res && res.ok){ this.peek = { ok:true }; this.no = Number(res.meeting_number) || null; }
+    else {
+      const code = (res && res.code) || 'SERVER_ERROR';
+      /* a verifier that cannot say (no connection, or one from before
+         peeks, which asks for a session first) leaves the meeting
+         unnamed; signing in still checks the code */
+      if (!SCAN_FINAL.has(code)) this.peek = { unknown:true };
+      else { this.forget(); this.phase = 'refused'; this.refusal = code; }
+    }
+    this.paint();
+  },
+
+  async submit(){
+    if (!this.bare || this.phase === 'checking') return;
+    const mine = this.bare;
+    this.phase = 'checking'; this.refusal = null;
+    this.paint();
+    /* a refusal that may pass on a second try is tried again, quietly,
+       a few times: an account made a moment ago may not be ready yet */
+    let got = null;
+    for (let i = 0; i < 3; i++){
+      got = await checkSeal(this.code);
+      if (this.bare !== mine) return;
+      if (!got || !got.code || !SCAN_TRANSIENT.has(got.code)) break;
+      await new Promise(r => setTimeout(r, 1200 * (i + 1)));
+      if (this.bare !== mine || !Store.signedIn) return;
+    }
+    if (!got){ this.phase = 'idle'; return; }
+    if (got.code){
+      if (got.no) this.no = Number(got.no) || this.no;
+      /* signed out under it: the code waits for the next sign-in */
+      if (got.code === 'NOT_AUTHENTICATED'){ this.phase = 'idle'; return; }
+      const code = got.code;
+      if (!SCAN_TRANSIENT.has(code)){ const no = this.no; this.forget(); this.no = no; }
+      this.phase = 'refused'; this.refusal = code;
+      this.paint();
+      return;
+    }
+    this.forget();
+    await Landing.run(got.meeting);
+  },
+};
+/* refusals that settle a code for good: it is not offered again */
+const SCAN_FINAL = new Set(['INVALID_TOKEN', 'EXPIRED_TOKEN', 'MEETING_NOT_FOUND', 'MEETING_NOT_ACTIVE',
+  'ATTENDANCE_CLOSED', 'STALE_CODE', 'WRONG_DAY', 'ALREADY_CHECKED_IN', 'NOT_AUTHORIZED']);
 
 /* The refusal is shown on the camera run that read the code and stays
    on the line until another code is read; a run that has since been
@@ -18747,7 +19038,7 @@ const BOARD_NAV = [
 const navFor = () => (Store.isBoard ? BOARD_NAV : MEMBER_NAV);
 
 const ROUTES = MEMBER_NAV.map(n => n.id)
-  .concat(BOARD_NAV.map(n => n.id), 'auth');
+  .concat(BOARD_NAV.map(n => n.id), 'auth', 'checkin');
 
 const AuthUI = {
   mode:'in', busy:false,
@@ -18780,6 +19071,11 @@ const PANE_ROUTES = ['bmeet', 'bcheckin', 'bmembers'];
 
 function gate(id){
   if (!Store.ready) return id;
+  /* the page a wall code's link opens, while it has something to say */
+  if (id === 'checkin'){
+    if (Arrival.here) return 'checkin';
+    id = 'home';
+  }
   if (!Store.signedIn) return 'auth';
   if (!Store.isBoard){
     if (BOARD_ROUTES.includes(id)) return 'home';
@@ -18946,7 +19242,7 @@ async function go(id, opts = {}){
     /* focus follows a page turn; the first paint has nowhere to move it
        from, and asking costs a whole layout of a page nobody has seen */
     /* the page is named in the tab title and read from its heading */
-    document.title = id === 'auth' ? 'Sign in / Keystamp'
+    document.title = id === 'auth' ? 'Sign in / Keystamp' : id === 'checkin' ? 'Check-in / Keystamp'
       : `${(navFor().find(n => n.id === id) || {}).label || 'Keystamp'} / Keystamp`;
     /* a background refresh never moves the reader's focus */
     if (booted && !opts.quiet){
@@ -19026,6 +19322,7 @@ function afterRender(id, nav = false, covered = false){
   if (booted && !covered) playViewIntro(id, nav);
 
   if (id === 'auth') AuthUI.busy = false;
+  if (id === 'checkin') Arrival.run(); else Arrival.leave();
   paintMotion();
   /* the meeting line under the camera is re-read on arrival */
   if (id === 'scan'){ Scanner.armStart(); if (Store.signedIn) Store.hydrate({ keep:true }); }
@@ -19264,7 +19561,8 @@ document.addEventListener('submit', async e => {
 
     const scene = Scenes.opening({ reveal(){ playViewIntro(current); } });
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      go('home', { instant:true, covered:true });
+      /* a code that brought them here is checked in with now */
+      go(Arrival.bare ? 'checkin' : 'home', { instant:true, covered:true });
       scene.release();
     }));
   } catch (err){
@@ -19537,6 +19835,15 @@ document.addEventListener('click', e => {
     return;
   }
 
+  /* the arrival page's ways on: an account, or another try */
+  const arrive = e.target.closest('[data-arrive]');
+  if (arrive){
+    if (arrive.dataset.arrive === 'again'){ Arrival.phase = 'idle'; Arrival.refusal = null; Arrival.run(); return; }
+    AuthUI.mode = arrive.dataset.arrive === 'up' ? 'up' : 'in';
+    go('auth');
+    return;
+  }
+
   const swap = e.target.closest('#authSwap');
   if (swap){
     AuthUI.mode = AuthUI.mode === 'up' ? 'in' : 'up';
@@ -19554,8 +19861,10 @@ document.addEventListener('click', e => {
     Scenes.exit({
       btn: out,
       swap: () => Store.signOut().then(() => {
-        /* what one officer did at the table is not the next one's */
+        /* what one officer did at the table is not the next one's, and a
+           code one member arrived with is not the next member's */
         BoardUI.reset();
+        Arrival.forget();
         TodayWatch.stop();
         AuthUI.mode = 'in';
         go('auth', { instant:true });
@@ -19953,7 +20262,11 @@ function paintMotion(){
 
 /* an unknown hash resolves to the page already showing; the address is
    corrected so it never names a page that does not exist */
-addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); else syncHash(current); });
+addEventListener('hashchange', () => {
+  /* a wall code's link opened in a tab already showing Keystamp */
+  if (Arrival.take()){ go('checkin', { force:true }); return; }
+  const id = hashRoute(); if (id !== current) go(id); else syncHash(current);
+});
 
 /* Projector mode is the stage laid over the whole window. Full screen is
    asked for as well where the browser allows it (not on an iPhone), on the
@@ -20006,6 +20319,9 @@ try {
 }
 
 (async () => {
+  /* a wall code's link: the code leaves the address before anything
+     else happens; one kept by this tab before a reload comes back */
+  if (!Arrival.take()) Arrival.restore();
   try {
     /* the record may take a while: whatever lifts the cover finds this,
        never an empty page */
@@ -20043,7 +20359,7 @@ try {
       }
       /* no signed-in page stays up without a session (the page's own
          sign-out takes itself to Sign in, after its scene) */
-      if (!Store.signedIn && current !== 'auth' && !Store.signingOut){
+      if (!Store.signedIn && current !== 'auth' && !(current === 'checkin' && Arrival.here) && !Store.signingOut){
         Scanner.stop(); clearInterval(countTimer); TodayWatch.stop();
         go('auth', { instant:true, force:true });
         paintIdentity();
@@ -20055,7 +20371,7 @@ try {
          Scan left up would otherwise check in whoever is signed in now) */
       if ((Store.signedIn && current === 'auth' && !Store.signingIn) || switched){
         if (switched){ Scanner.stop(); clearInterval(countTimer); }
-        go(switched ? current : 'home', { instant:true, force:true });
+        go(switched ? current : Arrival.bare ? 'checkin' : 'home', { instant:true, force:true });
         paintIdentity();
         return;
       }

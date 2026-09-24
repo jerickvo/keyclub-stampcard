@@ -266,6 +266,14 @@ C.ticket = ({ m, kick, day = '', meta = '', go = false, scan = null, quiet = fal
     : `<div class="${cls}">${inner}</div>`;
 };
 
+/* the meeting a signed code names, read for display only */
+function arrivalMeeting(bare){
+  try {
+    const part = String(bare).split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
+    return atob(part + '==='.slice((part.length + 3) % 4)).split('.')[1] || null;
+  } catch (_) { return null; }
+}
+
 const Views = {
   loadFailure(title){
     return `<div class="view">
@@ -578,6 +586,72 @@ const Views = {
     </div>`;
   },
 
+  /* Arriving by the wall code's link. Signed out, the page says what
+     the server says the code is for and offers a way in; signed in, it
+     says it is checking in while the verifier answers. The code itself
+     is never printed. */
+  checkin(){
+    const A = Arrival;
+    const signed = Store.signedIn;
+    const code = A.phase === 'refused' ? A.refusal : null;
+    /* the meeting's number: as the server said it, or as the record has
+       the meeting the code names (the code is read, not trusted: the
+       verifier still decides) */
+    const no = A.no || (signed && A.bare ? (Store.meeting(arrivalMeeting(A.bare)) || {}).no : null) || null;
+
+    const acts = (...b) => `<div class="authp__act">${b.join('')}</div>`;
+    const go = (attr, label) => `<button class="authp__go" type="button" ${attr}>${label}</button>`;
+    const alt = (attr, label) => `<button class="authp__swap" type="button" ${attr}>${label}</button>`;
+    const onward = signed ? go('data-go="home"', Store.isBoard ? 'Go to Check-in' : 'Go to Today')
+      : alt('data-arrive="in"', 'Sign in');
+    const say = (word, note = '', tail = '') => `<section class="authp arrive" aria-live="polite">
+        <h2 class="arrive__word">${word}</h2>
+        ${note ? `<p class="arrive__note">${note}</p>` : ''}
+        ${tail}
+      </section>`;
+
+    let status = '', card;
+    if (code === 'ALREADY_CHECKED_IN'){
+      status = 'Checked in';
+      card = say('Already checked in', '', acts(onward));
+    } else if (code && SCAN_TRANSIENT.has(code)){
+      card = say(scanMessage(code)[0], 'Try again in a moment.',
+        acts(go('data-arrive="again"', 'Try again'), signed ? '' : onward));
+    } else if (code === 'BOARD_ACCOUNT'){
+      card = say('Board account', 'Another officer adds you to the meeting.', acts(onward));
+    } else if (code === 'NOT_AUTHORIZED'){
+      card = say('Not allowed', 'This account cannot check in.', acts(onward));
+    } else if (code){
+      const [what, todo] = scanMessage(code);
+      card = say('Check-in unavailable', [what, todo].filter(Boolean).join('. ') + '.', acts(onward));
+    } else if (signed){
+      card = say('Checking in');
+    } else if (!A.peek){
+      card = say('Reading the code');
+    } else {
+      status = A.peek.ok ? 'Check-in open' : '';
+      card = say('Collect your attendance stamp', '',
+        acts(go('data-arrive="up"', 'Create account'), alt('data-arrive="in"', 'Sign in')));
+    }
+
+    return `<div class="view view--auth view--arrive">
+      <div class="spread">
+        <div class="spread__field crop" aria-hidden="true">
+          <svg class="spread__seal crop__art" viewBox="0 0 100 100">${sealArt()}</svg>
+          <span class="spread__kci">${brandSeal('kci')}</span>
+        </div>
+
+        <header class="spread__head">
+          <p class="spread__sub"><span>Keystamp</span></p>
+          <h1 class="spread__wm">${no ? `GM ${pad(no)}` : 'Check-in'}</h1>
+          ${status ? `<p class="arrive__status">${status}</p>` : ''}
+        </header>
+
+        ${card}
+      </div>
+    </div>`;
+  },
+
   auth(){
     /* a session is stored but could not be read (offline at load): the
        member is asked to retry, not to type the password again */
@@ -613,6 +687,8 @@ const Views = {
         </header>
 
         <form class="authp" id="authForm" novalidate>
+
+          ${Arrival.bare ? `<p class="authp__arrive">Then: ${Arrival.no ? `check in to GM ${pad(Arrival.no)}` : 'check in'}</p>` : ''}
 
           <div class="authp__f">
             <label class="authp__lab" for="authUser">Username</label>

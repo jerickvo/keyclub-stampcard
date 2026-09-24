@@ -760,6 +760,27 @@ const SupabaseAdapter = {
     return res.data || { ok:false, code:'SERVER_ERROR' };
   },
 
+  /* What a code on the wall is for, asked before anyone has signed in
+     (the phone's own camera opened its link). The verifier checks it as
+     it would a check-in, on its own clock, and says only whether it
+     would be taken now and for which meeting; nothing is written. */
+  async peekCode(rawCode){
+    let res;
+    try {
+      res = await this.client.functions.invoke('verify-attendance',
+        { body:{ code:rawCode, peek:true }, timeout:this.VERIFY_WAIT });
+    } catch (err){
+      return { ok:false, code:'NETWORK_ERROR' };
+    }
+    if (res.error){
+      const status = (res.error.context && res.error.context.status) || res.error.status;
+      if (status === 401) return { ok:false, code:'NOT_AUTHENTICATED' };
+      if (!status) return { ok:false, code:'NETWORK_ERROR' };
+      return { ok:false, code:'SERVER_ERROR' };
+    }
+    return res.data || { ok:false, code:'SERVER_ERROR' };
+  },
+
   /* a board read that never answers is given up on, and the pane says
      it could not load, with its Try again */
   READ_WAIT: 15000,
@@ -881,6 +902,7 @@ const PreviewAdapter = {
   async addAttendance(){ throw new Error('NO_BACKEND'); },
   async claimReward(){ throw new Error('No backend is configured.'); },
   async verifyCode(){ return { ok:false, code:'NO_BACKEND' }; },
+  async peekCode(){ return { ok:false, code:'NO_BACKEND' }; },
   async startAttendance(){ throw new Error('No backend is configured.'); },
   async endAttendance(){ throw new Error('No backend is configured.'); },
   async issueToken(){ throw new Error('No backend is configured.'); },
@@ -906,6 +928,7 @@ const UnavailableAdapter = {
   UnavailableAdapter[fn] = async () => { throw new Error('BACKEND_UNAVAILABLE'); };
 });
 UnavailableAdapter.verifyCode = async () => ({ ok:false, code:'BACKEND_UNAVAILABLE' });
+UnavailableAdapter.peekCode = async () => ({ ok:false, code:'BACKEND_UNAVAILABLE' });
 
 const Backend = {
   adapter: null,
@@ -950,7 +973,7 @@ const Backend = {
 };
 
 ['currentSession','signIn','signUp','signOut','letGo','listMeetings','createMeeting','deleteMeeting','listAttendance',
- 'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','verifyCode',
+ 'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','verifyCode','peekCode',
  'startAttendance','endAttendance','issueToken','attendanceCount','meetingOpen','myStampCount','openToday','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   Backend[fn] = function(...a){ return this.adapter[fn](...a); };

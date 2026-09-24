@@ -19,7 +19,7 @@ const BOARD_NAV = [
 const navFor = () => (Store.isBoard ? BOARD_NAV : MEMBER_NAV);
 
 const ROUTES = MEMBER_NAV.map(n => n.id)
-  .concat(BOARD_NAV.map(n => n.id), 'auth');
+  .concat(BOARD_NAV.map(n => n.id), 'auth', 'checkin');
 
 const AuthUI = {
   mode:'in', busy:false,
@@ -52,6 +52,11 @@ const PANE_ROUTES = ['bmeet', 'bcheckin', 'bmembers'];
 
 function gate(id){
   if (!Store.ready) return id;
+  /* the page a wall code's link opens, while it has something to say */
+  if (id === 'checkin'){
+    if (Arrival.here) return 'checkin';
+    id = 'home';
+  }
   if (!Store.signedIn) return 'auth';
   if (!Store.isBoard){
     if (BOARD_ROUTES.includes(id)) return 'home';
@@ -218,7 +223,7 @@ async function go(id, opts = {}){
     /* focus follows a page turn; the first paint has nowhere to move it
        from, and asking costs a whole layout of a page nobody has seen */
     /* the page is named in the tab title and read from its heading */
-    document.title = id === 'auth' ? 'Sign in / Keystamp'
+    document.title = id === 'auth' ? 'Sign in / Keystamp' : id === 'checkin' ? 'Check-in / Keystamp'
       : `${(navFor().find(n => n.id === id) || {}).label || 'Keystamp'} / Keystamp`;
     /* a background refresh never moves the reader's focus */
     if (booted && !opts.quiet){
@@ -298,6 +303,7 @@ function afterRender(id, nav = false, covered = false){
   if (booted && !covered) playViewIntro(id, nav);
 
   if (id === 'auth') AuthUI.busy = false;
+  if (id === 'checkin') Arrival.run(); else Arrival.leave();
   paintMotion();
   /* the meeting line under the camera is re-read on arrival */
   if (id === 'scan'){ Scanner.armStart(); if (Store.signedIn) Store.hydrate({ keep:true }); }
@@ -536,7 +542,8 @@ document.addEventListener('submit', async e => {
 
     const scene = Scenes.opening({ reveal(){ playViewIntro(current); } });
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      go('home', { instant:true, covered:true });
+      /* a code that brought them here is checked in with now */
+      go(Arrival.bare ? 'checkin' : 'home', { instant:true, covered:true });
       scene.release();
     }));
   } catch (err){
@@ -809,6 +816,15 @@ document.addEventListener('click', e => {
     return;
   }
 
+  /* the arrival page's ways on: an account, or another try */
+  const arrive = e.target.closest('[data-arrive]');
+  if (arrive){
+    if (arrive.dataset.arrive === 'again'){ Arrival.phase = 'idle'; Arrival.refusal = null; Arrival.run(); return; }
+    AuthUI.mode = arrive.dataset.arrive === 'up' ? 'up' : 'in';
+    go('auth');
+    return;
+  }
+
   const swap = e.target.closest('#authSwap');
   if (swap){
     AuthUI.mode = AuthUI.mode === 'up' ? 'in' : 'up';
@@ -826,8 +842,10 @@ document.addEventListener('click', e => {
     Scenes.exit({
       btn: out,
       swap: () => Store.signOut().then(() => {
-        /* what one officer did at the table is not the next one's */
+        /* what one officer did at the table is not the next one's, and a
+           code one member arrived with is not the next member's */
         BoardUI.reset();
+        Arrival.forget();
         TodayWatch.stop();
         AuthUI.mode = 'in';
         go('auth', { instant:true });
@@ -1225,7 +1243,11 @@ function paintMotion(){
 
 /* an unknown hash resolves to the page already showing; the address is
    corrected so it never names a page that does not exist */
-addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); else syncHash(current); });
+addEventListener('hashchange', () => {
+  /* a wall code's link opened in a tab already showing Keystamp */
+  if (Arrival.take()){ go('checkin', { force:true }); return; }
+  const id = hashRoute(); if (id !== current) go(id); else syncHash(current);
+});
 
 /* Projector mode is the stage laid over the whole window. Full screen is
    asked for as well where the browser allows it (not on an iPhone), on the
@@ -1278,6 +1300,9 @@ try {
 }
 
 (async () => {
+  /* a wall code's link: the code leaves the address before anything
+     else happens; one kept by this tab before a reload comes back */
+  if (!Arrival.take()) Arrival.restore();
   try {
     /* the record may take a while: whatever lifts the cover finds this,
        never an empty page */
@@ -1315,7 +1340,7 @@ try {
       }
       /* no signed-in page stays up without a session (the page's own
          sign-out takes itself to Sign in, after its scene) */
-      if (!Store.signedIn && current !== 'auth' && !Store.signingOut){
+      if (!Store.signedIn && current !== 'auth' && !(current === 'checkin' && Arrival.here) && !Store.signingOut){
         Scanner.stop(); clearInterval(countTimer); TodayWatch.stop();
         go('auth', { instant:true, force:true });
         paintIdentity();
@@ -1327,7 +1352,7 @@ try {
          Scan left up would otherwise check in whoever is signed in now) */
       if ((Store.signedIn && current === 'auth' && !Store.signingIn) || switched){
         if (switched){ Scanner.stop(); clearInterval(countTimer); }
-        go(switched ? current : 'home', { instant:true, force:true });
+        go(switched ? current : Arrival.bare ? 'checkin' : 'home', { instant:true, force:true });
         paintIdentity();
         return;
       }

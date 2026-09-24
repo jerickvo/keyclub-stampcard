@@ -26,9 +26,11 @@
 }
 
 [data-screen="auth"] .rail__nav,
-[data-screen="auth"] .tabs{display:none}
+[data-screen="auth"] .tabs,
+[data-screen="checkin"] .rail__nav,
+[data-screen="checkin"] .tabs{display:none}
 
-[data-screen="auth"] main#view{padding:0;max-width:none}
+[data-screen="auth"] main#view,[data-screen="checkin"] main#view{padding:0;max-width:none}
 /* the "Could not load" page shown there instead keeps the page gutter */
 [data-screen="auth"] main#view > .view:not(.view--auth){max-width:var(--page-max);margin-inline:auto;
   padding:calc(var(--sp-pad) + env(safe-area-inset-top, 0px))
