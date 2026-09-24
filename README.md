@@ -112,17 +112,14 @@ member → verify-attendance  (Edge Function) → attendance row in Postgres
 ```
 
 A token is `keystamp://a/<base64url(session.meeting.expiry)>.<HMAC-SHA256>`,
-signed with `ATTENDANCE_TOKEN_SECRET`. `attendance-session` issues a code
-that lasts 45 seconds from the moment it is asked for, and tells the
-projector to ask for the next one every 15 seconds, so the code on the
-wall always has at least 30 seconds left for a slow camera or network.
-A photo of the wall sent out of the room stops working within 45
-seconds (once the second deploy step below is done). The server decides: `verify-attendance` checks the expiry on
-its own clock and refuses a code that claims to last longer than 60
-seconds (the day-long codes issued before this change). A projector
-whose refresh fails keeps its code up while it is good, takes it down
-five seconds before it runs out ("Getting a new code"), and keeps
-asking. The token text is never displayed on the page.
+signed with `ATTENDANCE_TOKEN_SECRET`. `attendance-session` issues one
+code per check-in session: the projected QR stays the same for as long
+as check-in is open, and asking again gives the same code. Closing
+check-in is what ends it (below); opening again starts a new session
+with a new code. Its expiry is the end of the meeting's day, and the
+verifier takes it only for an open meeting dated today. A photo of the
+wall therefore works while that check-in stays open. The token text is
+never displayed on the page.
 
 Opening and closing check-in are one database function each
 (`start_check_in`, `end_check_in`), called only by `attendance-session`
@@ -251,27 +248,12 @@ the SQL Editor (each is idempotent): `2026-09-10-delete-meeting`,
 `2026-09-24-meeting-guards`, `2026-09-24-check-in-transitions`,
 `2026-09-24-claim-ownership`, `2026-09-24-advisor-fixes`,
 `2026-09-24-claim-indexes`. Every step
-works with the page and the functions already live.
+works with the page and the functions already live. Then deploy
+`board-data`, `attendance-session` and `verify-attendance`, and publish
+the client.
 
-The functions go out in two steps, because the page published before
-rotation asks for one code and shows it until it is reloaded:
-
-1. With `DAY_CODES_FOR_OLD_PAGES` (attendance-session) and
-   `ACCEPT_DAY_CODES` (verify-attendance) both `true`, deploy
-   `board-data`, `attendance-session` and `verify-attendance`. Opening
-   and closing go through the database; a page that asks with
-   `rotate: true` gets 45-second codes; an older page still gets its
-   day-long code, and the verifier still accepts it.
-2. Publish the client. Once it is live, set both switches to `false` and
-   deploy both functions together, at a time no check-in is in progress.
-   From then on no day-long code is issued or accepted, and a board page
-   left open from before is refused a code (`RELOAD_REQUIRED`): its wall
-   says it could not load the code instead of showing one that dies in 45
-   seconds. Reload any board tab left open across the deploy.
-
-The client works with the previous functions too: it rotates the code
-only when told to, and claims through the older insert when
-`claim_reward` is absent. That older insert, from a page published
+The client works with the previous functions too: it claims through the
+older insert when `claim_reward` is absent. That older insert, from a page published
 before `claim_reward`, still makes a hand-over's claim the member's (a
 trigger on `reward_claims`), so Undo cannot take it back either.
 

@@ -21,17 +21,6 @@ const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const ANON_KEY     = Deno.env.get('SUPABASE_ANON_KEY')!;
 const TOKEN_SECRET = Deno.env.get('ATTENDANCE_TOKEN_SECRET')!;
 
-// attendance-session issues codes that last 45 s. A signed code that
-// claims to last longer than this was made before codes were short-lived
-// (one code for the whole day): it is refused as expired, so a photo of
-// an old wall cannot be used while that check-in stays open.
-const MAX_CODE_LIFE_MS = 60_000;
-// ACCEPT_DAY_CODES: true while attendance-session still issues day-long
-// codes to the page published before rotation (its
-// DAY_CODES_FOR_OLD_PAGES). Both go to false, and both functions are
-// deployed together, once the rotating page is live.
-const ACCEPT_DAY_CODES = false;
-
 // The club is in one place and meets on one local calendar day. UTC is
 // not that calendar: at 4:00 PM Pacific in winter it is already the next
 // day in UTC, so a legitimate afternoon check-in was being told
@@ -121,11 +110,10 @@ Deno.serve(async (req) => {
   const [sessionId, meetingId, expStr] = payload.split('.');
   if (!sessionId || !meetingId || !expStr) return json({ ok: false, code: 'INVALID_TOKEN' });
 
-  // 4. expiry, on the server's clock: past its expiry, or made to last
-  // longer than a code now lasts
+  // 4. expiry, on the server's clock. A code lasts as long as its
+  // check-in session (below), within the meeting's day.
   const exp = Number(expStr);
-  const now = Date.now();
-  if (!Number.isFinite(exp) || now > exp || (!ACCEPT_DAY_CODES && exp - now > MAX_CODE_LIFE_MS))
+  if (!Number.isFinite(exp) || Date.now() > exp)
     return json({ ok: false, code: 'EXPIRED_TOKEN' });
 
   // 5. the session must still be running.

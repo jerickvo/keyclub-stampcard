@@ -343,20 +343,18 @@ function mkClient(){
             return { data:{ ok:true, open:false }, error:null };
           }
           if (body.action === 'token'){
-            if (body.rotate !== true) return { data:{ ok:false, code:'RELOAD_REQUIRED' }, error:null };
             const sess = (db.sessions || []).find(x => x.meeting_id === mid && !x.ended_at);
             if (!sess || !meeting.check_in_open)
               return { data:{ ok:false, code:'ATTENDANCE_CLOSED' }, error:null };
-            /* mirrors the real function: a code lasts 45 s and the wall
-               asks for the next every 15 s (window.__qrLifeMs and
-               __qrRefreshMs shorten them for a test). The signature is an
-               opaque marker here because the browser must not be able to
-               make one either way. */
-            const life = window.__qrLifeMs || 45000, every = window.__qrRefreshMs || 15000;
-            const exp = Date.now() + life;
+            /* mirrors the real function: one code per session, its expiry
+               the end of the meeting's day, so the same meeting always
+               yields the same token until check-in is closed. The signature
+               is an opaque marker here because the browser must not be able
+               to make one either way. */
+            const exp = Date.parse(meeting.meeting_date + 'T23:59:59-08:00');
             const token = `keystamp://a/${btoa(sess.id+'.'+mid+'.'+exp)}.SERVERSIG`;
             return { data:{ ok:true, token, expires_at:new Date(exp).toISOString(),
-                            expires_in:life, refresh_in:every }, error:null };
+                            static:true }, error:null };
           }
           return { data:null, error:{ context:{ status:400 } } };
         }
@@ -521,7 +519,7 @@ function mkClient(){
           let payload; try { payload = atob(bare.slice(0,dot)); }
           catch(e){ return { data:{ ok:false, code:'INVALID_TOKEN' }, error:null }; }
           const [sid, mid, expStr] = payload.split('.');
-          if (Date.now() > Number(expStr) || Number(expStr) - Date.now() > 60000)
+          if (Date.now() > Number(expStr))
             return { data:{ ok:false, code:'EXPIRED_TOKEN' }, error:null };
           const sess = (db.sessions || []).find(x => x.id === sid);
           if (!sess) return { data:{ ok:false, code:'INVALID_TOKEN' }, error:null };

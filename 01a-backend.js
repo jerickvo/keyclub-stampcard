@@ -802,15 +802,10 @@ const SupabaseAdapter = {
   },
   async issueToken(meetingId){
     const { data, error } = await this.client.functions
-      .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId, rotate:true } });
+      .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId } });
     if (error) throw new Error(this.functionCode(error));
     if (!data || data.ok === false || !data.token) throw new Error((data && data.code) || 'NO_TOKEN');
-    /* a code lasts a short while and comes with when to ask for the
-       next; one from a function deployed before that lasts the day and
-       comes with neither */
-    return { token: data.token,
-             lifeMs: Number(data.expires_in) || null,
-             refreshMs: Number(data.refresh_in) || null };
+    return { token: data.token };
   },
   /* Board-only and held-only are enforced by the database function,
      not here. The legacy name is tried once for projects that have not

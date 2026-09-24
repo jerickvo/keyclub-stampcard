@@ -15382,15 +15382,10 @@ const SupabaseAdapter = {
   },
   async issueToken(meetingId){
     const { data, error } = await this.client.functions
-      .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId, rotate:true } });
+      .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId } });
     if (error) throw new Error(this.functionCode(error));
     if (!data || data.ok === false || !data.token) throw new Error((data && data.code) || 'NO_TOKEN');
-    /* a code lasts a short while and comes with when to ask for the
-       next; one from a function deployed before that lasts the day and
-       comes with neither */
-    return { token: data.token,
-             lifeMs: Number(data.expires_in) || null,
-             refreshMs: Number(data.refresh_in) || null };
+    return { token: data.token };
   },
   /* Board-only and held-only are enforced by the database function,
      not here. The legacy name is tried once for projects that have not
@@ -17642,59 +17637,28 @@ let boardMeeting = null;
    default is chosen again on every read */
 let boardPicked = null;
 
-/* A code on the wall lasts a short while (the server says how long and
-   refuses it after that), and the wall asks for the next one well before
-   then. Until when, on this device's clock, the code shown is worth
-   scanning: a code with only seconds left is taken down, not left up
-   for a phone to be told it expired. */
-let qrRetry = null, qrExpire = null;
-let qrGoodUntil = 0, qrDue = Infinity;
-/* the code last put on the wall, for a repaint of the pane to put back */
-let qrShown = null;
-const QR_MARGIN = 5000;
+let qrRetry = null;
 function paintBoard(attempt = 0){
   const box = $('#qrBox');
   clearTimeout(qrRetry);
   if (!box) return;
 
   const meeting = boardMeeting;
-  const again = (ms, next) => {
-    clearTimeout(qrRetry);
-    qrDue = Date.now() + ms;
-    qrRetry = setTimeout(() => {
-      if (document.body.contains(box) && boardMeeting === meeting) paintBoard(next);
-    }, ms);
-  };
-  Backend.issueToken(meeting).then(({ token, lifeMs, refreshMs }) => {
-    if (!document.body.contains(box) || boardMeeting !== meeting) return;
+  Backend.issueToken(meeting).then(({ token }) => {
+    if (!document.body.contains(box)) return;
     const svg = qrSVG(token);
     box.innerHTML = svg || `<p class="qrpanel__fail">The code could not be drawn. Reload the page.</p>`;
-    qrShown = { meeting, svg };
-    qrGoodUntil = lifeMs ? Date.now() + lifeMs - QR_MARGIN : Infinity;
-    clearTimeout(qrExpire);
-    if (lifeMs) qrExpire = setTimeout(takeDownQR, Math.max(0, qrGoodUntil - Date.now()));
-    if (refreshMs) again(refreshMs, 0); else qrDue = Infinity;
   }).catch(() => {
     if (!document.body.contains(box)) return;
-    /* a code still good stays up; otherwise the wall says it is trying
-       again, and does, while it is showing this meeting */
-    if (!box.querySelector('svg') || Date.now() >= qrGoodUntil)
+    /* a code already on the wall stays up; otherwise the wall says it is
+       trying again, and does, while it is showing this meeting */
+    if (!box.querySelector('svg'))
       box.innerHTML = `<p class="qrpanel__fail" role="status">Could not load the code. Trying again.</p>`;
-    again(Math.min(30000, 3000 * 2 ** attempt), attempt + 1);
+    qrRetry = setTimeout(() => {
+      if (document.body.contains(box) && boardMeeting === meeting) paintBoard(attempt + 1);
+    }, Math.min(30000, 3000 * 2 ** attempt));
   });
 }
-function takeDownQR(){
-  const box = $('#qrBox');
-  if (box && box.querySelector('svg') && Date.now() >= qrGoodUntil)
-    box.innerHTML = `<p class="qrpanel__fail" role="status">Getting a new code.</p>`;
-}
-/* a wall put away (a sleeping laptop, a hidden tab) whose timers were
-   held back asks for its next code as soon as it is seen again */
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState !== 'visible' || !$('#qrBox')) return;
-  takeDownQR();
-  if (Date.now() >= qrDue) paintBoard();
-});
 
 let countTimer = null;
 /* A closed stage for today's meeting learns, slowly, that check-in was
@@ -19434,11 +19398,9 @@ async function loadBoard(){
      back after the repaint */
   const active = document.activeElement;
   const focusAt = keep ? focusKey(box, active) : null;
-  /* the code on the projector stays up while the next is asked for: the
-     newest one, and only if it is still good when the pane is drawn
-     again (this read can take a while); a code that was not on screen
-     is never shown early */
-  const keptQR = keep && boardMeeting && Boolean($('#qrBox svg', box)) ? boardMeeting : null;
+  /* the code already on the projector stays up while its token is
+     re-issued; a code that was not on screen is never shown early */
+  const shownQR = keep && boardMeeting ? { meeting:boardMeeting, svg:$('#qrBox svg', box)?.outerHTML || null } : null;
   if (keep) box.setAttribute('aria-busy', 'true');
   else if (!BoardUI.loading){
     BoardUI.loading = true;
@@ -19496,9 +19458,8 @@ async function loadBoard(){
     if (again && typeof again.value === 'string'){
       try { const n = again.value.length; again.setSelectionRange(n, n); } catch (_) {}
     }
-    const qb = keptQR && keptQR === boardMeeting && qrShown && qrShown.meeting === boardMeeting
-      && qrShown.svg && Date.now() < qrGoodUntil ? $('#qrBox') : null;
-    if (qb) qb.innerHTML = qrShown.svg;
+    const qb = shownQR && shownQR.svg && boardMeeting === shownQR.meeting ? $('#qrBox') : null;
+    if (qb) qb.innerHTML = shownQR.svg;
     syncProjector();
     /* a confirmation takes the focus, and gives it back when dismissed */
     /* a detail opened from far down a list starts at its own top, with
