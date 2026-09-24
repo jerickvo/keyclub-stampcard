@@ -2134,6 +2134,13 @@ html{font-synthesis:none}
 .meetgrid__up .blist--meet .brow--open .brow__day,.meetgrid__up .blist--meet .brow--open .brow__n b{color:var(--paper)}
 .meetgrid__up .blist--meet .brow--open .brow__when,.meetgrid__up .blist--meet .brow--open .brow__nlab{color:var(--tint)}
 .meetgrid__up .blist--meet .brow--open .bstate{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+/* a narrow ticket keeps the day and time to themselves: the state and
+   the count take a line of their own under them */
+@media(max-width:479px){
+  .meetgrid__up .blist--meet .brow__go{grid-template-columns:clamp(72px,22vw,96px) minmax(0,1fr) auto;
+    grid-template-areas:"no day day" "no when when" "no st n"}
+  .meetgrid__up .blist--meet .bstate{justify-self:start;align-self:end;margin:0 0 var(--sp-row) var(--sp-pad)}
+}
 @media (hover:hover){ .meetgrid__up .blist--meet .brow:hover{background:none}
   .meetgrid__up .blist--meet .brow:not(.brow--open) .brow__go:hover{background:var(--tint)} }
 
