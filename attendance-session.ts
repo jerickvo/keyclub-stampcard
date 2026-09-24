@@ -1,8 +1,8 @@
 // ═══════════════════════════════════════════════════════════════════
 // attendance-session — board only
 //
-// Opens and closes check-in for a meeting, and issues the short-lived
-// signed codes the projector shows as a QR code.
+// Opens and closes check-in for a meeting, and issues the signed code
+// the projector shows as a QR code.
 //
 // The signing secret (ATTENDANCE_TOKEN_SECRET) exists only here and in
 // verify-attendance, in the functions' environment. It is never sent to a
@@ -21,26 +21,6 @@ const SUPABASE_URL  = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY   = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const ANON_KEY      = Deno.env.get('SUPABASE_ANON_KEY')!;
 const TOKEN_SECRET  = Deno.env.get('ATTENDANCE_TOKEN_SECRET')!;
-
-// A code is good for 45 s from the moment it is issued, and the projector
-// asks for the next one every 15 s. So the code on the wall always has at
-// least 30 s left: a phone with a slow camera, or a slow network, still
-// lands inside it. A photo of the wall forwarded out of the room is
-// refused within 45 s of being taken, instead of working for as long as
-// check-in stays open. The server decides: verify-attendance checks the
-// expiry on its own clock, and refuses a code that claims to last longer
-// than this (a code from before this change, made to last all day).
-const TOKEN_TTL_MS = 45_000;
-const REFRESH_MS   = 15_000;
-
-// DAY_CODES_FOR_OLD_PAGES: while the page published before rotation is
-// still the live one, a request without rotate:true gets the code that
-// page always got (one for the meeting's day, which verify-attendance
-// accepts while its ACCEPT_DAY_CODES is true). Once the rotating page is
-// live, both switches go to false and both functions are deployed
-// together: an old page is then refused (RELOAD_REQUIRED) and no
-// day-long code is issued or accepted.
-const DAY_CODES_FOR_OLD_PAGES = false;
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -101,7 +81,7 @@ Deno.serve(async (req) => {
   if (!profile || profile.role !== 'board')
     return json({ ok: false, code: 'NOT_AUTHORIZED' }, 403);
 
-  let body: { action?: string; meeting_id?: string; rotate?: boolean };
+  let body: { action?: string; meeting_id?: string };
   try { body = await req.json(); } catch { return json({ ok: false, code: 'INVALID_REQUEST' }, 400); }
 
   const meetingId = body.meeting_id;
@@ -134,15 +114,14 @@ Deno.serve(async (req) => {
     return json({ ok: true, meeting_id: meetingId, open: false, was_open: Boolean(data) });
   }
 
-  // ── token ────────────────────────────────────────────────────────
+  // ── token ──────────────────────────────────────────────────────
+  // One code per check-in session: the same code every time it is asked
+  // for, so the wall does not change while check-in is open. Closing
+  // check-in ends the session, and the verifier refuses every code of an
+  // ended session; reopening starts a new session with a new code. The
+  // code also carries the end of the meeting's day, and the verifier
+  // takes it only for an open meeting dated today.
   if (body.action === 'token') {
-    // A page published before codes were short-lived asks for one code
-    // and shows it until it is reloaded: it would put up a code that dies
-    // in 45 s and never replace it. It is refused instead, so its wall
-    // says it could not load the code rather than showing a dead one.
-    if (body.rotate !== true && !DAY_CODES_FOR_OLD_PAGES)
-      return json({ ok: false, code: 'RELOAD_REQUIRED' }, 200);
-
     const { data: meeting, error: mErr } = await admin
       .from('meetings').select('id, meeting_date, check_in_open').eq('id', meetingId).maybeSingle();
     if (mErr) return json({ ok: false, code: 'SERVER_ERROR' }, 500);
@@ -154,30 +133,15 @@ Deno.serve(async (req) => {
     if (!session || !meeting.check_in_open)
       return json({ ok: false, code: 'ATTENDANCE_CLOSED' }, 200);
 
-    // An old page's code, exactly as the function before this one made it
-    if (body.rotate !== true) {
-      const day = Date.parse(`${meeting.meeting_date}T23:59:59-08:00`);
-      if (!Number.isFinite(day)) return json({ ok: false, code: 'SERVER_ERROR' }, 500);
-      const payload = `${session.id}.${meetingId}.${day}`;
-      const token = `keystamp://a/${b64url(new TextEncoder().encode(payload))}.${await sign(payload)}`;
-      return json({ ok: true, token, expires_at: new Date(day).toISOString(), static: true });
-    }
+    const exp = Date.parse(`${meeting.meeting_date}T23:59:59-08:00`);
+    if (!Number.isFinite(exp)) return json({ ok: false, code: 'SERVER_ERROR' }, 500);
 
-    // The code names the session (closing check-in kills every code it
-    // issued), the meeting, and its own expiry, and is signed. The expiry
-    // is on the server's clock and checked by the server.
-    const exp = Date.now() + TOKEN_TTL_MS;
+    // The code names the session, the meeting and that expiry, and is
+    // signed; nothing in it changes between requests.
     const payload = `${session.id}.${meetingId}.${exp}`;
     const token = `keystamp://a/${b64url(new TextEncoder().encode(payload))}.${await sign(payload)}`;
 
-    return json({
-      ok: true, token,
-      expires_at: new Date(exp).toISOString(),
-      // how long the code lasts, so a projector whose clock is off can
-      // still tell when it has run out; and when it asks for the next
-      expires_in: TOKEN_TTL_MS,
-      refresh_in: REFRESH_MS,
-    });
+    return json({ ok: true, token, expires_at: new Date(exp).toISOString(), static: true });
   }
 
   return json({ ok: false, code: 'INVALID_REQUEST' }, 400);
