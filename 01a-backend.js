@@ -709,7 +709,9 @@ const SupabaseAdapter = {
        an officer's hand-over already wrote theirs, so taking the
        hand-over back leaves it. A claim already on file (another tab, a
        retry after a lost answer) is the same outcome. */
-    const { error:e1 } = await this.client.rpc('claim_reward', { p_reward_id:rewardId });
+    /* the account the page shows is named: the database refuses the
+       claim if another tab has signed in as someone else since */
+    const { error:e1 } = await this.client.rpc('claim_reward', { p_user_id:userId, p_reward_id:rewardId });
     if (!e1) return rewardId;
     if (!Handover.absent(e1)){
       const msg = String(e1.message || '');
@@ -800,7 +802,7 @@ const SupabaseAdapter = {
   },
   async issueToken(meetingId){
     const { data, error } = await this.client.functions
-      .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId } });
+      .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId, rotate:true } });
     if (error) throw new Error(this.functionCode(error));
     if (!data || data.ok === false || !data.token) throw new Error((data && data.code) || 'NO_TOKEN');
     /* a code lasts a short while and comes with when to ask for the

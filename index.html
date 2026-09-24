@@ -15289,7 +15289,9 @@ const SupabaseAdapter = {
        an officer's hand-over already wrote theirs, so taking the
        hand-over back leaves it. A claim already on file (another tab, a
        retry after a lost answer) is the same outcome. */
-    const { error:e1 } = await this.client.rpc('claim_reward', { p_reward_id:rewardId });
+    /* the account the page shows is named: the database refuses the
+       claim if another tab has signed in as someone else since */
+    const { error:e1 } = await this.client.rpc('claim_reward', { p_user_id:userId, p_reward_id:rewardId });
     if (!e1) return rewardId;
     if (!Handover.absent(e1)){
       const msg = String(e1.message || '');
@@ -15380,7 +15382,7 @@ const SupabaseAdapter = {
   },
   async issueToken(meetingId){
     const { data, error } = await this.client.functions
-      .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId } });
+      .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId, rotate:true } });
     if (error) throw new Error(this.functionCode(error));
     if (!data || data.ok === false || !data.token) throw new Error((data && data.code) || 'NO_TOKEN');
     /* a code lasts a short while and comes with when to ask for the
@@ -17647,6 +17649,8 @@ let boardPicked = null;
    for a phone to be told it expired. */
 let qrRetry = null, qrExpire = null;
 let qrGoodUntil = 0, qrDue = Infinity;
+/* the code last put on the wall, for a repaint of the pane to put back */
+let qrShown = null;
 const QR_MARGIN = 5000;
 function paintBoard(attempt = 0){
   const box = $('#qrBox');
@@ -17665,6 +17669,7 @@ function paintBoard(attempt = 0){
     if (!document.body.contains(box) || boardMeeting !== meeting) return;
     const svg = qrSVG(token);
     box.innerHTML = svg || `<p class="qrpanel__fail">The code could not be drawn. Reload the page.</p>`;
+    qrShown = { meeting, svg };
     qrGoodUntil = lifeMs ? Date.now() + lifeMs - QR_MARGIN : Infinity;
     clearTimeout(qrExpire);
     if (lifeMs) qrExpire = setTimeout(takeDownQR, Math.max(0, qrGoodUntil - Date.now()));
@@ -19429,11 +19434,11 @@ async function loadBoard(){
      back after the repaint */
   const active = document.activeElement;
   const focusAt = keep ? focusKey(box, active) : null;
-  /* the code already on the projector stays up while its token is
-     re-issued, if it is still good; a code that was not on screen is
-     never shown early */
-  const shownQR = keep && boardMeeting && Date.now() < qrGoodUntil
-    ? { meeting:boardMeeting, svg:$('#qrBox svg', box)?.outerHTML || null } : null;
+  /* the code on the projector stays up while the next is asked for: the
+     newest one, and only if it is still good when the pane is drawn
+     again (this read can take a while); a code that was not on screen
+     is never shown early */
+  const keptQR = keep && boardMeeting && Boolean($('#qrBox svg', box)) ? boardMeeting : null;
   if (keep) box.setAttribute('aria-busy', 'true');
   else if (!BoardUI.loading){
     BoardUI.loading = true;
@@ -19491,8 +19496,9 @@ async function loadBoard(){
     if (again && typeof again.value === 'string'){
       try { const n = again.value.length; again.setSelectionRange(n, n); } catch (_) {}
     }
-    const qb = shownQR && shownQR.svg && boardMeeting === shownQR.meeting ? $('#qrBox') : null;
-    if (qb) qb.innerHTML = shownQR.svg;
+    const qb = keptQR && keptQR === boardMeeting && qrShown && qrShown.meeting === boardMeeting
+      && qrShown.svg && Date.now() < qrGoodUntil ? $('#qrBox') : null;
+    if (qb) qb.innerHTML = qrShown.svg;
     syncProjector();
     /* a confirmation takes the focus, and gives it back when dismissed */
     /* a detail opened from far down a list starts at its own top, with

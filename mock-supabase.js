@@ -82,9 +82,9 @@ function mkClient(){
   }
 
   /* stands in for claim_reward (migrations/2026-09-24-claim-ownership.sql) */
-  function claimReward({ p_reward_id:rid }){
+  function claimReward({ p_user_id:who, p_reward_id:rid }){
     const uid = db.session && db.session.user.id;
-    if (!uid) return raise('NOT_AUTHENTICATED');
+    if (!uid || who !== uid) return raise('NOT_AUTHENTICATED');
     if (!NEED[rid]) return raise('INVALID_REWARD');
     db.reward_claims = db.reward_claims || [];
     const has = db.reward_claims.find(c => c.user_id === uid && c.reward_id === rid);
@@ -343,6 +343,7 @@ function mkClient(){
             return { data:{ ok:true, open:false }, error:null };
           }
           if (body.action === 'token'){
+            if (body.rotate !== true) return { data:{ ok:false, code:'RELOAD_REQUIRED' }, error:null };
             const sess = (db.sessions || []).find(x => x.meeting_id === mid && !x.ended_at);
             if (!sess || !meeting.check_in_open)
               return { data:{ ok:false, code:'ATTENDANCE_CLOSED' }, error:null };

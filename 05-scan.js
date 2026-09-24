@@ -27,6 +27,8 @@ let boardPicked = null;
    for a phone to be told it expired. */
 let qrRetry = null, qrExpire = null;
 let qrGoodUntil = 0, qrDue = Infinity;
+/* the code last put on the wall, for a repaint of the pane to put back */
+let qrShown = null;
 const QR_MARGIN = 5000;
 function paintBoard(attempt = 0){
   const box = $('#qrBox');
@@ -45,6 +47,7 @@ function paintBoard(attempt = 0){
     if (!document.body.contains(box) || boardMeeting !== meeting) return;
     const svg = qrSVG(token);
     box.innerHTML = svg || `<p class="qrpanel__fail">The code could not be drawn. Reload the page.</p>`;
+    qrShown = { meeting, svg };
     qrGoodUntil = lifeMs ? Date.now() + lifeMs - QR_MARGIN : Infinity;
     clearTimeout(qrExpire);
     if (lifeMs) qrExpire = setTimeout(takeDownQR, Math.max(0, qrGoodUntil - Date.now()));

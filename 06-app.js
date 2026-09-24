@@ -1056,11 +1056,11 @@ async function loadBoard(){
      back after the repaint */
   const active = document.activeElement;
   const focusAt = keep ? focusKey(box, active) : null;
-  /* the code already on the projector stays up while its token is
-     re-issued, if it is still good; a code that was not on screen is
-     never shown early */
-  const shownQR = keep && boardMeeting && Date.now() < qrGoodUntil
-    ? { meeting:boardMeeting, svg:$('#qrBox svg', box)?.outerHTML || null } : null;
+  /* the code on the projector stays up while the next is asked for: the
+     newest one, and only if it is still good when the pane is drawn
+     again (this read can take a while); a code that was not on screen
+     is never shown early */
+  const keptQR = keep && boardMeeting && Boolean($('#qrBox svg', box)) ? boardMeeting : null;
   if (keep) box.setAttribute('aria-busy', 'true');
   else if (!BoardUI.loading){
     BoardUI.loading = true;
@@ -1118,8 +1118,9 @@ async function loadBoard(){
     if (again && typeof again.value === 'string'){
       try { const n = again.value.length; again.setSelectionRange(n, n); } catch (_) {}
     }
-    const qb = shownQR && shownQR.svg && boardMeeting === shownQR.meeting ? $('#qrBox') : null;
-    if (qb) qb.innerHTML = shownQR.svg;
+    const qb = keptQR && keptQR === boardMeeting && qrShown && qrShown.meeting === boardMeeting
+      && qrShown.svg && Date.now() < qrGoodUntil ? $('#qrBox') : null;
+    if (qb) qb.innerHTML = qrShown.svg;
     syncProjector();
     /* a confirmation takes the focus, and gives it back when dismissed */
     /* a detail opened from far down a list starts at its own top, with
