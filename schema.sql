@@ -191,6 +191,7 @@ create table if not exists public.reward_claims (
 alter table public.reward_claims
   add column if not exists claimed_by uuid references public.profiles(id) on delete set null;
 alter table public.reward_claims alter column claimed_by set default auth.uid();
+create index if not exists reward_claims_claimed_by_idx on public.reward_claims (claimed_by);
 
 -- ═══════════════════════════════════════════════════════════════════
 -- ROW LEVEL SECURITY
@@ -541,6 +542,7 @@ create table if not exists public.reward_handovers (
 
 -- a table created by an earlier run of this file gains the column
 alter table public.reward_handovers add column if not exists made_claim boolean not null default false;
+create index if not exists reward_handovers_handed_by_idx on public.reward_handovers (handed_by);
 
 alter table public.reward_handovers enable row level security;
 

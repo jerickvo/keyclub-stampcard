@@ -249,7 +249,8 @@ A project on the schema before 2026-09-10 runs, in this order, each in
 the SQL Editor (each is idempotent): `2026-09-10-delete-meeting`,
 `2026-09-23-prizes-and-hand-stamps`, `2026-09-24-profile-names`,
 `2026-09-24-meeting-guards`, `2026-09-24-check-in-transitions`,
-`2026-09-24-claim-ownership`, `2026-09-24-advisor-fixes`. Every step
+`2026-09-24-claim-ownership`, `2026-09-24-advisor-fixes`,
+`2026-09-24-claim-indexes`. Every step
 works with the page and the functions already live.
 
 The functions go out in two steps, because the page published before
