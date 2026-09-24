@@ -117,7 +117,7 @@ that lasts 45 seconds from the moment it is asked for, and tells the
 projector to ask for the next one every 15 seconds, so the code on the
 wall always has at least 30 seconds left for a slow camera or network.
 A photo of the wall sent out of the room stops working within 45
-seconds. The server decides: `verify-attendance` checks the expiry on
+seconds (once the second deploy step below is done). The server decides: `verify-attendance` checks the expiry on
 its own clock and refuses a code that claims to last longer than 60
 seconds (the day-long codes issued before this change). A projector
 whose refresh fails keeps its code up while it is good, takes it down
@@ -220,7 +220,7 @@ the prize list and searches names through the roster; without
 allows.
 
 `02-rls_test.sql`, `03-handover_test.sql` and `04-hardening_test.sql`
-(43 + 51 + 52 checks) run against local Postgres 16 with
+(43 + 51 + 60 checks) run against local Postgres 16 with
 `00-supabase.sql`, both for a fresh `schema.sql` and for the previous
 `schema.sql` plus the migrations run twice.
 
@@ -233,7 +233,9 @@ allows.
 - `migrations/2026-09-24-claim-ownership.sql`: `reward_claims.claimed_by`
   records who made a claim (the member, or the officer whose hand-over
   wrote it). The member's Claim is `claim_reward()`, which also makes a
-  claim a hand-over wrote the member's own, and `undo_hand_over` removes
+  claim a hand-over wrote the member's own (it names the account the
+  page shows, and is refused if another account is signed in), and
+  `undo_hand_over` removes
   a claim only while it is still the one the hand-over wrote: an
   officer's Undo never takes back a claim the member made, before or
   after, or at the same moment (both take the same lock).
@@ -247,13 +249,30 @@ A project on the schema before 2026-09-10 runs, in this order, each in
 the SQL Editor (each is idempotent): `2026-09-10-delete-meeting`,
 `2026-09-23-prizes-and-hand-stamps`, `2026-09-24-profile-names`,
 `2026-09-24-meeting-guards`, `2026-09-24-check-in-transitions`,
-`2026-09-24-claim-ownership`, `2026-09-24-advisor-fixes`. Then deploy
-`board-data`, publish the client, deploy `attendance-session`, and last
-`verify-attendance` (it refuses the day-long codes the previous
-`attendance-session` issued, so it goes after the function that stops
-issuing them, at a time no check-in is in progress). The client works
-with the previous functions: it rotates the code only when told to, and
-claims through the older insert when `claim_reward` is absent.
+`2026-09-24-claim-ownership`, `2026-09-24-advisor-fixes`. Every step
+works with the page and the functions already live.
+
+The functions go out in two steps, because the page published before
+rotation asks for one code and shows it until it is reloaded:
+
+1. With `DAY_CODES_FOR_OLD_PAGES` (attendance-session) and
+   `ACCEPT_DAY_CODES` (verify-attendance) both `true`, deploy
+   `board-data`, `attendance-session` and `verify-attendance`. Opening
+   and closing go through the database; a page that asks with
+   `rotate: true` gets 45-second codes; an older page still gets its
+   day-long code, and the verifier still accepts it.
+2. Publish the client. Once it is live, set both switches to `false` and
+   deploy both functions together, at a time no check-in is in progress.
+   From then on no day-long code is issued or accepted, and a board page
+   left open from before is refused a code (`RELOAD_REQUIRED`): its wall
+   says it could not load the code instead of showing one that dies in 45
+   seconds. Reload any board tab left open across the deploy.
+
+The client works with the previous functions too: it rotates the code
+only when told to, and claims through the older insert when
+`claim_reward` is absent. That older insert, from a page published
+before `claim_reward`, still makes a hand-over's claim the member's (a
+trigger on `reward_claims`), so Undo cannot take it back either.
 
 ---
 
