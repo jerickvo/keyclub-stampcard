@@ -47,12 +47,17 @@ alter table public.profiles add constraint username_not_reserved
      'moderator','mod','owner','support','null','undefined'));
 
 create or replace function public.touch_updated_at()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql
+set search_path = pg_catalog, public as $$
 begin new.updated_at = now(); return new; end $$;
 
 drop trigger if exists profiles_touch on public.profiles;
 create trigger profiles_touch before update on public.profiles
   for each row execute function public.touch_updated_at();
+
+-- a trigger function, never an RPC: a trigger needs no EXECUTE grant to
+-- fire, and Supabase's default privileges grant anon and authenticated
+revoke all on function public.touch_updated_at() from public, anon, authenticated;
 
 -- ── meetings ───────────────────────────────────────────────────────
 -- Created by the board. The client no longer generates a schedule.
@@ -125,6 +130,9 @@ create table if not exists public.attendance_sessions (
 -- at most one running session per meeting
 create unique index if not exists one_live_session_per_meeting
   on public.attendance_sessions (meeting_id) where ended_at is null;
+create index if not exists attendance_sessions_started_by_idx
+  on public.attendance_sessions (started_by);
+create index if not exists meetings_created_by_idx on public.meetings (created_by);
 
 -- ── attendance ─────────────────────────────────────────────────────
 -- The stamp record. The unique constraint is the real defence against
@@ -140,6 +148,10 @@ create table if not exists public.attendance (
   created_at          timestamptz not null default now(),
   constraint one_stamp_per_meeting unique (user_id, meeting_id)
 );
+
+-- one_stamp_per_meeting leads with user_id, so a meeting's own rows (its
+-- count, its attendee list, a delete of the meeting) need their own index
+create index if not exists attendance_meeting_id_idx on public.attendance (meeting_id);
 
 -- `create table if not exists` is a no-op on a database that already has
 -- the table, so the CASCADE -> RESTRICT change is applied explicitly.
@@ -170,8 +182,15 @@ create table if not exists public.reward_claims (
   user_id    uuid not null references public.profiles(id) on delete cascade,
   reward_id  text not null check (reward_id in ('r1','r2','r3')),
   claimed_at timestamptz not null default now(),
+  -- who made the claim: the member, or the officer whose hand-over
+  -- wrote it for them (undo_hand_over takes back only its own)
+  claimed_by uuid references public.profiles(id) on delete set null default auth.uid(),
   constraint one_claim_per_reward unique (user_id, reward_id)
 );
+
+alter table public.reward_claims
+  add column if not exists claimed_by uuid references public.profiles(id) on delete set null;
+alter table public.reward_claims alter column claimed_by set default auth.uid();
 
 -- ═══════════════════════════════════════════════════════════════════
 -- ROW LEVEL SECURITY
@@ -207,24 +226,19 @@ $$;
 revoke all on function public.is_board() from public;
 grant execute on function public.is_board() to authenticated;
 
--- Sessions are board-only in every direction. Members never need to
--- read them, and a member who could read one would learn a session id
--- that appears inside tokens.
--- Board-only in every direction EXCEPT delete. A session is the record
--- of "check-in was open at this time", which is the audit trail behind
--- every stamp it produced; deleting one from a browser is never part of
--- running a meeting. Ending a session is an UPDATE (ended_at), which is
--- what the attendance-session function actually does.
+-- Sessions are read by the board only. Members never need to read them,
+-- and a member who could read one would learn a session id that appears
+-- inside tokens. A session is the record of "check-in was open at this
+-- time", the audit trail behind every stamp it produced: no browser
+-- inserts, updates or deletes one.
 drop policy if exists sessions_board_only on public.attendance_sessions;
 drop policy if exists sessions_board_read on public.attendance_sessions;
 create policy sessions_board_read on public.attendance_sessions
   for select using (public.is_board());
+-- Sessions are written only by start_check_in() and end_check_in(),
+-- through the attendance-session function: no browser writes them.
 drop policy if exists sessions_board_insert on public.attendance_sessions;
-create policy sessions_board_insert on public.attendance_sessions
-  for insert with check (public.is_board());
 drop policy if exists sessions_board_update on public.attendance_sessions;
-create policy sessions_board_update on public.attendance_sessions
-  for update using (public.is_board()) with check (public.is_board());
 
 revoke delete on public.attendance_sessions from anon, authenticated;
 revoke truncate on public.attendance_sessions from anon, authenticated;
@@ -298,6 +312,8 @@ begin
   return new;
 end $$;
 
+revoke all on function public.freeze_identity_fields() from public, anon, authenticated;
+
 drop trigger if exists profiles_freeze on public.profiles;
 create trigger profiles_freeze before update on public.profiles
   for each row execute function public.freeze_identity_fields();
@@ -307,8 +323,8 @@ drop policy if exists meetings_read on public.meetings;
 create policy meetings_read on public.meetings
   for select to authenticated using (true);
 
--- Board writes are split into one policy per verb. INSERT and UPDATE are
--- below; DELETE is granted separately and narrowly, further down.
+-- Board writes are split into one policy per verb. INSERT is below;
+-- DELETE is granted separately and narrowly, further down.
 --
 -- The original `for all` policy included DELETE while attendance.meeting_id
 -- was `on delete cascade`. That meant one board account, with nothing but
@@ -322,9 +338,9 @@ drop policy if exists meetings_board_write on public.meetings;
 drop policy if exists meetings_board_insert on public.meetings;
 create policy meetings_board_insert on public.meetings
   for insert with check (public.is_board());
+-- No UPDATE: nothing edits a meeting after it is made, and check_in_open
+-- changes only through start_check_in() and end_check_in().
 drop policy if exists meetings_board_update on public.meetings;
-create policy meetings_board_update on public.meetings
-  for update using (public.is_board()) with check (public.is_board());
 
 -- Board members may delete a meeting they created by mistake -- the
 -- wrong date, a duplicate number -- but ONLY while it is empty.
@@ -388,6 +404,7 @@ drop policy if exists claims_self_insert on public.reward_claims;
 create policy claims_self_insert on public.reward_claims
   for insert with check (
     user_id = auth.uid()
+    and claimed_by is not distinct from auth.uid()
     and (select count(*) from public.attendance a where a.user_id = auth.uid())
         >= case reward_id when 'r1' then 10 when 'r2' then 20 else 30 end
   );
@@ -428,6 +445,8 @@ begin
           'member');
   return new;
 end $$;
+
+revoke all on function public.handle_new_user() from public, anon, authenticated;
 
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
@@ -538,6 +557,52 @@ grant select on public.reward_handovers to authenticated, service_role;
 revoke insert, update, delete, truncate on public.reward_handovers from anon, authenticated;
 revoke all on public.reward_handovers from anon;
 
+-- ── a member claims a prize ───────────────────────────────────────
+create or replace function public.claim_reward(p_reward_id text)
+returns timestamptz
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  me uuid := auth.uid();
+  need integer;
+  have integer;
+  at timestamptz;
+begin
+  if me is null then
+    raise exception 'NOT_AUTHENTICATED' using errcode = 'P0001';
+  end if;
+  need := case p_reward_id when 'r1' then 10 when 'r2' then 20 when 'r3' then 30 end;
+  if need is null then
+    raise exception 'INVALID_REWARD' using errcode = 'P0001';
+  end if;
+
+  -- the lock a hand-over of this prize takes, so the two are served in turn
+  perform pg_advisory_xact_lock(hashtext(me::text || ':' || p_reward_id));
+
+  -- a claim already on file is the member's from now on: one a hand-over
+  -- wrote for them is no longer the hand-over's to take back
+  update public.reward_claims set claimed_by = me
+   where user_id = me and reward_id = p_reward_id
+  returning claimed_at into at;
+  if found then return at; end if;
+
+  -- the same threshold the insert policy checks, against real attendance
+  select count(*) into have from public.attendance where user_id = me;
+  if have < need then
+    raise exception 'NOT_EARNED' using errcode = 'P0001';
+  end if;
+
+  insert into public.reward_claims (user_id, reward_id, claimed_by)
+  values (me, p_reward_id, me)
+  returning claimed_at into at;
+  return at;
+end $$;
+
+revoke all on function public.claim_reward(text) from public, anon;
+grant execute on function public.claim_reward(text) to authenticated;
+
 -- ── hand a prize over ─────────────────────────────────────────────
 -- Board-only, checked here, and never to yourself. The member must have
 -- earned the tier: the same count the claim policy uses, or a claim
@@ -572,8 +637,8 @@ begin
     raise exception 'INVALID_REWARD' using errcode = 'P0001';
   end if;
 
-  -- one hand-over at a time per member and prize, so the check below
-  -- and the insert after it cannot interleave with another officer's
+  -- one change at a time per member and prize: another officer's
+  -- hand-over, and the member's own claim_reward, take the same lock
   perform pg_advisory_xact_lock(hashtext(p_user_id::text || ':' || p_reward_id));
 
   if exists (select 1 from public.reward_handovers
@@ -588,11 +653,11 @@ begin
     if have < need then
       raise exception 'NOT_EARNED' using errcode = 'P0001';
     end if;
-    -- the member's own claim can land between the check above and this
-    -- insert (their insert does not take the lock); the hand-over made
-    -- the claim only if this insert is the one that wrote it
-    insert into public.reward_claims (user_id, reward_id)
-    values (p_user_id, p_reward_id)
+    -- a member's direct insert (a page from before claim_reward) does not
+    -- take the lock and can still land first; the hand-over made the
+    -- claim only if this insert is the one that wrote it
+    insert into public.reward_claims (user_id, reward_id, claimed_by)
+    values (p_user_id, p_reward_id, auth.uid())
     on conflict (user_id, reward_id) do nothing;
     made := found;
   end if;
@@ -603,17 +668,16 @@ begin
   return at;
 end $$;
 
--- Supabase's default privileges grant every new function to anon
--- directly, which `from public` does not take away
 revoke all on function public.hand_over_reward(uuid, text) from public, anon;
 grant execute on function public.hand_over_reward(uuid, text) to authenticated;
 
 -- ── take back a mistaken hand-over ────────────────────────────────
 -- For the wrong name tapped at a busy table: the officer who recorded a
 -- hand-over may withdraw it within fifteen minutes. After that it is
--- part of the record. A claim the member made stays; it was theirs. A
--- claim the hand-over wrote for them goes with it, so the wrong name is
--- not left holding a claim they never made.
+-- part of the record. A claim the member made, before or after the
+-- hand-over, stays; it is theirs. A claim the hand-over wrote for them,
+-- and still its own (claimed_by), goes with it, so the wrong name is not
+-- left holding a claim they never made.
 create or replace function public.undo_hand_over(p_user_id uuid, p_reward_id text)
 returns boolean
 language plpgsql
@@ -627,6 +691,8 @@ begin
     raise exception 'NOT_AUTHORIZED' using errcode = 'P0001';
   end if;
 
+  perform pg_advisory_xact_lock(hashtext(p_user_id::text || ':' || p_reward_id));
+
   delete from public.reward_handovers
   where user_id = p_user_id and reward_id = p_reward_id
     and handed_by = auth.uid()
@@ -637,13 +703,12 @@ begin
   end if;
   if made then
     delete from public.reward_claims
-    where user_id = p_user_id and reward_id = p_reward_id;
+    where user_id = p_user_id and reward_id = p_reward_id
+      and claimed_by = auth.uid();
   end if;
   return true;
 end $$;
 
--- Supabase's default privileges grant every new function to anon
--- directly, which `from public` does not take away
 revoke all on function public.undo_hand_over(uuid, text) from public, anon;
 grant execute on function public.undo_hand_over(uuid, text) to authenticated;
 
@@ -703,3 +768,94 @@ end $$;
 -- directly, which `from public` does not take away
 revoke all on function public.stamp_by_hand(uuid, uuid) from public, anon;
 grant execute on function public.stamp_by_hand(uuid, uuid) to authenticated;
+
+-- ═══════════════════════════════════════════════════════════════════
+-- OPENING AND CLOSING CHECK-IN
+--
+-- One state change each, made here under one lock, and called only by
+-- the attendance-session function (service role). Opening refuses while
+-- another meeting is taking check-ins (ATTENDANCE_ALREADY_OPEN) instead
+-- of closing it; two officers opening the same meeting at once are
+-- served one after the other; a session and its meeting's check_in_open
+-- change together, so neither is left behind by a write that failed
+-- halfway.
+-- ═══════════════════════════════════════════════════════════════════
+create or replace function public.start_check_in(p_meeting_id uuid, p_officer uuid)
+returns table (session_id uuid, already_open boolean)
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  was_open boolean;
+  sid uuid;
+begin
+  -- one change of check-in state at a time, club-wide
+  perform pg_advisory_xact_lock(hashtext('keystamp:check-in'));
+
+  if not exists (select 1 from public.profiles where id = p_officer and role = 'board') then
+    raise exception 'NOT_AUTHORIZED' using errcode = 'P0001';
+  end if;
+
+  select check_in_open into was_open from public.meetings where id = p_meeting_id;
+  if not found then
+    raise exception 'MEETING_NOT_FOUND' using errcode = 'P0001';
+  end if;
+
+  -- another meeting taking check-ins is never closed from here
+  if exists (select 1 from public.meetings
+             where check_in_open and id <> p_meeting_id) then
+    raise exception 'ATTENDANCE_ALREADY_OPEN' using errcode = 'P0001';
+  end if;
+
+  -- a session left running on a closed meeting takes no scans (the
+  -- verifier needs the meeting open); it is ended rather than left behind
+  update public.attendance_sessions set ended_at = now()
+   where ended_at is null and meeting_id <> p_meeting_id;
+
+  select id into sid from public.attendance_sessions
+   where meeting_id = p_meeting_id and ended_at is null;
+  if sid is null then
+    insert into public.attendance_sessions (meeting_id, started_by)
+    values (p_meeting_id, p_officer)
+    returning id into sid;
+  end if;
+
+  update public.meetings set check_in_open = true
+   where id = p_meeting_id and not check_in_open;
+
+  return query select sid, was_open;
+end $$;
+
+create or replace function public.end_check_in(p_meeting_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  was_open boolean;
+begin
+  perform pg_advisory_xact_lock(hashtext('keystamp:check-in'));
+
+  select check_in_open into was_open from public.meetings where id = p_meeting_id;
+  if not found then
+    raise exception 'MEETING_NOT_FOUND' using errcode = 'P0001';
+  end if;
+
+  -- the meeting and its session close together; closing a closed
+  -- meeting changes nothing and is not an error
+  update public.meetings set check_in_open = false
+   where id = p_meeting_id and check_in_open;
+  update public.attendance_sessions set ended_at = now()
+   where meeting_id = p_meeting_id and ended_at is null;
+
+  return was_open;
+end $$;
+
+-- the function's service role only; Supabase's default privileges grant
+-- every new function to anon and authenticated directly
+revoke all on function public.start_check_in(uuid, uuid) from public, anon, authenticated;
+revoke all on function public.end_check_in(uuid) from public, anon, authenticated;
+grant execute on function public.start_check_in(uuid, uuid) to service_role;
+grant execute on function public.end_check_in(uuid) to service_role;

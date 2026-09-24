@@ -49,6 +49,17 @@ exception when others then
   return sqlstate;
 end $$;
 
+-- refused either way: by a revoked privilege (42501), or by RLS with no
+-- policy for the verb (0 rows touched)
+create or replace function test.refused(p_role text, p_uid text, p_sql text)
+returns text language plpgsql as $$
+declare r text;
+begin
+  r := test.val(p_role, p_uid,
+    'with x as (' || p_sql || ' returning 1) select count(*)::text from x');
+  return case when r in ('0', '42501') then 'refused' else 'ALLOWED ' || r end;
+end $$;
+
 create table if not exists test.results(n serial, name text, pass boolean, got text);
 create or replace function test.ck(p_name text, p_got text, p_want text)
 returns void language sql as $$
@@ -155,9 +166,12 @@ select test.ck('attendance survived the delete attempts',
 select test.ck('board CAN create a meeting',
   test.try('authenticated','33333333-3333-3333-3333-333333333333',
     $$insert into public.meetings(meeting_number, meeting_date, start_time, end_time) values (2,'2026-01-14','3:15 PM','4:15 PM')$$), 'OK');
-select test.ck('board CAN open and close check-in',
-  test.try('authenticated','33333333-3333-3333-3333-333333333333',
-    $$update public.meetings set check_in_open=false where meeting_number=1$$), 'OK');
+-- check-in opens and closes only through start_check_in()/end_check_in()
+-- (the attendance-session function); a board account's own UPDATE of a
+-- meeting touches nothing
+select test.ck('board cannot open or close check-in by updating a meeting',
+  test.refused('authenticated','33333333-3333-3333-3333-333333333333',
+    $$update public.meetings set check_in_open = not check_in_open where meeting_number=1$$), 'refused');
 select test.ck('member cannot create a meeting',
   test.try('authenticated','11111111-1111-1111-1111-111111111111',
     $$insert into public.meetings(meeting_number, meeting_date, start_time) values (99,'2026-01-21','3:15 PM')$$), '42501');
