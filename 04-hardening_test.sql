@@ -18,7 +18,8 @@ insert into auth.users(id, email, raw_user_meta_data) values
   ('70000000-0000-0000-0000-000000000002','provost@keystamp.invalid','{"username":"provost"}'),
   ('70000000-0000-0000-0000-000000000003','dana@keystamp.invalid',   '{"username":"dana","display_name":"Dana"}'),
   ('70000000-0000-0000-0000-000000000004','eli@keystamp.invalid',    '{"username":"eli"}'),
-  ('70000000-0000-0000-0000-000000000005','fay@keystamp.invalid',    '{"username":"fay"}');
+  ('70000000-0000-0000-0000-000000000005','fay@keystamp.invalid',    '{"username":"fay"}'),
+  ('70000000-0000-0000-0000-000000000006','gus@keystamp.invalid',    '{"username":"gus"}');
 select test.try('service_role', null,
   $$update public.profiles set role = 'board' where id in
     ('70000000-0000-0000-0000-000000000001','70000000-0000-0000-0000-000000000002')$$);
@@ -30,7 +31,7 @@ insert into public.attendance(user_id, meeting_id)
   select u::uuid, ('c0000000-0000-0000-0000-0000000000'||i)::uuid
   from generate_series(10, 19) i,
        unnest(array['70000000-0000-0000-0000-000000000003','70000000-0000-0000-0000-000000000004',
-                    '70000000-0000-0000-0000-000000000005']) u;
+                    '70000000-0000-0000-0000-000000000005','70000000-0000-0000-0000-000000000006']) u;
 
 -- ══ 1. OPENING AND CLOSING CHECK-IN ══
 select test.ck('a signed-in account cannot call start_check_in',
@@ -123,7 +124,7 @@ select test.ck('the board still reads sessions',
 -- (a) the member claims first; the hand-over did not make it; Undo keeps it
 select test.ck('dana claims r1 herself',
   test.try('authenticated','70000000-0000-0000-0000-000000000003',
-    $$select public.claim_reward('r1')$$), 'OK');
+    $$select public.claim_reward('70000000-0000-0000-0000-000000000003', 'r1')$$), 'OK');
 select test.ck('the claim is hers',
   (select claimed_by::text from public.reward_claims
     where user_id='70000000-0000-0000-0000-000000000003' and reward_id='r1'), '70000000-0000-0000-0000-000000000003');
@@ -149,7 +150,7 @@ select test.ck('the hand-over wrote eli''s claim, as the officer''s',
     where user_id='70000000-0000-0000-0000-000000000004' and reward_id='r1'), '70000000-0000-0000-0000-000000000001');
 select test.ck('eli presses Claim: accepted, not an error',
   test.try('authenticated','70000000-0000-0000-0000-000000000004',
-    $$select public.claim_reward('r1')$$), 'OK');
+    $$select public.claim_reward('70000000-0000-0000-0000-000000000004', 'r1')$$), 'OK');
 select test.ck('the claim is now his own',
   (select claimed_by::text from public.reward_claims
     where user_id='70000000-0000-0000-0000-000000000004' and reward_id='r1'), '70000000-0000-0000-0000-000000000004');
@@ -181,18 +182,23 @@ select test.ck('a claim the hand-over wrote goes with its Undo',
 -- (d) claim_reward's own rules
 select test.ck('claiming again is not an error (a retry, a second tab)',
   test.try('authenticated','70000000-0000-0000-0000-000000000003',
-    $$select public.claim_reward('r1')$$), 'OK');
+    $$select public.claim_reward('70000000-0000-0000-0000-000000000003', 'r1')$$), 'OK');
 select test.ck('and there is still one claim',
   (select count(*)::text from public.reward_claims
     where user_id='70000000-0000-0000-0000-000000000003' and reward_id='r1'), '1');
 select test.ck('a tier not earned is refused by name',
   test.msg('authenticated','70000000-0000-0000-0000-000000000003',
-    $$select public.claim_reward('r2')$$), 'P0001 NOT_EARNED');
+    $$select public.claim_reward('70000000-0000-0000-0000-000000000003', 'r2')$$), 'P0001 NOT_EARNED');
 select test.ck('an invented tier is refused by name',
   test.msg('authenticated','70000000-0000-0000-0000-000000000003',
-    $$select public.claim_reward('r9')$$), 'P0001 INVALID_REWARD');
+    $$select public.claim_reward('70000000-0000-0000-0000-000000000003', 'r9')$$), 'P0001 INVALID_REWARD');
 select test.ck('anon cannot claim',
-  test.try('anon', null, $$select public.claim_reward('r1')$$), '42501');
+  test.try('anon', null, $$select public.claim_reward('70000000-0000-0000-0000-000000000003', 'r1')$$), '42501');
+select test.ck('a page showing another account cannot claim for the one signed in',
+  test.msg('authenticated','70000000-0000-0000-0000-000000000005',
+    $$select public.claim_reward('70000000-0000-0000-0000-000000000003', 'r1')$$), 'P0001 NOT_AUTHENTICATED');
+select test.ck('and nothing was written for fay',
+  (select count(*)::text from public.reward_claims where user_id = '70000000-0000-0000-0000-000000000005'), '0');
 select test.ck('a member cannot record their own insert as someone else''s',
   test.try('authenticated','70000000-0000-0000-0000-000000000005',
     $$insert into public.reward_claims(user_id, reward_id, claimed_by) values ('70000000-0000-0000-0000-000000000005','r1','70000000-0000-0000-0000-000000000001')$$), '42501');
@@ -205,6 +211,33 @@ select test.ck('claimed_by comes from the session',
 select test.ck('nobody can change who made a claim',
   test.refused('authenticated','70000000-0000-0000-0000-000000000005',
     $$update public.reward_claims set claimed_by = '70000000-0000-0000-0000-000000000001' where user_id = auth.uid()$$), 'refused');
+
+-- (e) an older page's Claim after a hand-over: its insert does nothing
+-- (on conflict do nothing), but the claim becomes the member's all the same
+select test.try('authenticated','70000000-0000-0000-0000-000000000001',
+  $$select public.hand_over_reward('70000000-0000-0000-0000-000000000006','r1')$$);
+select test.ck('gus: the hand-over wrote the claim, as the officer''s',
+  (select claimed_by::text from public.reward_claims
+    where user_id='70000000-0000-0000-0000-000000000006' and reward_id='r1'), '70000000-0000-0000-0000-000000000001');
+select test.ck('gus presses Claim on an older page: no error',
+  test.try('authenticated','70000000-0000-0000-0000-000000000006',
+    $$insert into public.reward_claims(user_id, reward_id) values ('70000000-0000-0000-0000-000000000006','r1')
+      on conflict (user_id, reward_id) do nothing$$), 'OK');
+select test.ck('and the claim is his now',
+  (select claimed_by::text from public.reward_claims
+    where user_id='70000000-0000-0000-0000-000000000006' and reward_id='r1'), '70000000-0000-0000-0000-000000000006');
+select test.try('authenticated','70000000-0000-0000-0000-000000000001',
+  $$select public.undo_hand_over('70000000-0000-0000-0000-000000000006','r1')$$);
+select test.ck('the officer''s Undo leaves it',
+  (select count(*)::text from public.reward_claims
+    where user_id='70000000-0000-0000-0000-000000000006' and reward_id='r1')
+  || ' ' || (select count(*) from public.reward_handovers where user_id='70000000-0000-0000-0000-000000000006'), '1 0');
+select test.ck('an older page''s Claim of a tier not earned takes nothing over',
+  test.try('authenticated','70000000-0000-0000-0000-000000000006',
+    $$insert into public.reward_claims(user_id, reward_id) values ('70000000-0000-0000-0000-000000000006','r2')
+      on conflict (user_id, reward_id) do nothing$$), '42501');
+select test.ck('the ownership trigger is not an RPC',
+  test.try('authenticated','70000000-0000-0000-0000-000000000006', $$select public.claim_taken_by_member()$$), '42501');
 
 -- ══ 4. THE ADVISOR FIXES ══
 select test.ck('anon''s is_board answers false (kept callable)',

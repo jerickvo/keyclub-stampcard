@@ -17,6 +17,15 @@ alter table public.reward_claims
   add column if not exists claimed_by uuid references public.profiles(id) on delete set null;
 alter table public.reward_claims alter column claimed_by set default auth.uid();
 
+-- claims already on file: a hand-over that wrote one made it the
+-- officer's (so it can still be taken back within its fifteen minutes);
+-- every other claim was the member's own insert
+update public.reward_claims c set claimed_by = h.handed_by
+  from public.reward_handovers h
+ where c.claimed_by is null and h.made_claim
+   and h.user_id = c.user_id and h.reward_id = c.reward_id;
+update public.reward_claims set claimed_by = user_id where claimed_by is null;
+
 -- a member's own insert is theirs: it cannot be recorded as someone else's
 drop policy if exists claims_self_insert on public.reward_claims;
 create policy claims_self_insert on public.reward_claims
@@ -28,7 +37,7 @@ create policy claims_self_insert on public.reward_claims
   );
 
 -- ── a member claims a prize ───────────────────────────────────────
-create or replace function public.claim_reward(p_reward_id text)
+create or replace function public.claim_reward(p_user_id uuid, p_reward_id text)
 returns timestamptz
 language plpgsql
 security definer
@@ -40,7 +49,9 @@ declare
   have integer;
   at timestamptz;
 begin
-  if me is null then
+  -- the account the page shows must be the one signed in: another tab
+  -- may have signed in as someone else since the page was drawn
+  if me is null or p_user_id is distinct from me then
     raise exception 'NOT_AUTHENTICATED' using errcode = 'P0001';
   end if;
   need := case p_reward_id when 'r1' then 10 when 'r2' then 20 when 'r3' then 30 end;
@@ -70,8 +81,37 @@ begin
   return at;
 end $$;
 
-revoke all on function public.claim_reward(text) from public, anon;
-grant execute on function public.claim_reward(text) to authenticated;
+revoke all on function public.claim_reward(uuid, text) from public, anon;
+grant execute on function public.claim_reward(uuid, text) to authenticated;
+
+-- ── a page from before claim_reward ───────────────────────────────
+-- It claims with a direct insert that does nothing when a claim is
+-- already on file (on conflict do nothing). If that claim is one a
+-- hand-over wrote, the member pressing Claim makes it theirs here, before
+-- the insert is found to conflict, as claim_reward does; under the same
+-- lock. An insert that is then refused (not earned) takes this with it.
+create or replace function public.claim_taken_by_member()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+begin
+  if new.user_id is not distinct from auth.uid() then
+    perform pg_advisory_xact_lock(hashtext(new.user_id::text || ':' || new.reward_id));
+    update public.reward_claims set claimed_by = new.user_id
+     where user_id = new.user_id and reward_id = new.reward_id
+       and claimed_by is distinct from new.user_id;
+  end if;
+  return new;
+end $$;
+
+revoke all on function public.claim_taken_by_member() from public, anon, authenticated;
+
+drop trigger if exists reward_claims_member_claim on public.reward_claims;
+create trigger reward_claims_member_claim
+  before insert on public.reward_claims
+  for each row execute function public.claim_taken_by_member();
 
 -- ── hand a prize over (unchanged, but for claimed_by) ──────────────
 create or replace function public.hand_over_reward(p_user_id uuid, p_reward_id text)
