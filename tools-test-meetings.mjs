@@ -9,7 +9,7 @@ const src = readFileSync(new URL('./03b-board.js', import.meta.url), 'utf8');
 const knit = s => String(s).replace(/ (AM|PM)\b/gi, '\u00a0$1');
 const ctx = vm.createContext({ Schedule:{ today:() => '2026-09-07', PLACE:'MPR' }, knit,
   esc:s => String(s), pad:n => String(n).padStart(2, '0'), fmtDate:iso => iso, fmtTime:iso => iso,
-  fmtDay:iso => iso, brandSeal:() => '<svg></svg>' });
+  fmtDay:iso => iso, onClock:iso => iso, brandSeal:() => '<svg></svg>' });
 // the club-clock helpers live with the backend; taken from there, not copied
 const backend = readFileSync(new URL('./01a-backend.js', import.meta.url), 'utf8');
 const clock = backend.slice(backend.indexOf('/* minutes past midnight at the club */'),
@@ -83,7 +83,7 @@ test('a meeting row carries its count, and the count only means something once h
   assert.equal(BoardUI.meetingRow({ ...m, state:'OPEN', attendance_count:3 }).includes('>Open</span>'), true);
   assert.equal(held.includes('brow--past'), true);
   assert.equal(held.includes('<span class="brow__n"><b>12</b>'), true);
-  assert.equal(ahead.includes('GM 04'), true);
+  assert.equal(ahead.includes('GM <b>04</b>'), true);
   // rows carry no delete control; the usual time and room are not repeated
   assert.equal(ahead.includes('data-bconfirm'), false);
   assert.equal(held.includes('data-bconfirm'), false);
@@ -100,7 +100,7 @@ test('the meetings register splits into coming up and already held', () => {
   assert.equal(html.includes('Upcoming'), true);
   assert.equal(html.includes('>Held<'), true);
   assert.equal((html.match(/class="blist blist--meet"/g) || []).length, 2);
-  assert.equal(html.indexOf('GM 02') < html.indexOf('GM 01'), true);
+  assert.equal(html.indexOf('GM <b>02</b>') < html.indexOf('GM <b>01</b>'), true);
 });
 
 test('the schedule form stays folded until asked for', () => {
@@ -133,7 +133,7 @@ test('check-in is offered only for today; an open one is shown whatever its date
   BoardUI.meetings = { server_date:'2026-09-07', meetings:future };
   html = BoardUI.sessionPane();
   assert.equal(html.includes('No meeting today'), true);
-  assert.equal(html.includes('GM 21'), true);             // named as the next one
+  assert.equal(html.includes('GM</span> <b class="tkt__no">21</b>'), true);  // named as the next one
   assert.equal(html.includes('data-bstart'), false);
 
   // left open last week: shown live so it can be closed, even with a stale pick

@@ -368,9 +368,47 @@ const Store = {
 
 const QRFormat = {
   SCHEME: 'keystamp://a/',
+  /* The wall's code is also a link, so a phone's own camera opens
+     Keystamp with it: https://<the app>/#/a/<signed code>. The code
+     rides in the fragment, which a browser never sends to a server, and
+     it is the same signed code as ever: the link only carries it. */
+  LINK: '#/a/',
+  HOME: 'https://keystamp.vercel.app/',
+  BARE: /^[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{16,}$/,
+
+  here(){
+    try {
+      if (/^https?:$/.test(location.protocol)) return location.origin + location.pathname;
+    } catch (_) {}
+    return this.HOME;
+  },
+  /* the link the projector draws for a code */
+  link(code){
+    const bare = String(code || '').trim().replace(/^keystamp:\/\/a\//i, '');
+    return this.here() + this.LINK + bare;
+  },
+  /* the code a link carries, if it is a link to this app (or to the
+     club's own address) and carries one; else null */
+  fromLink(raw){
+    let u;
+    try { u = new URL(String(raw || '').trim()); } catch (_) { return null; }
+    let host = '';
+    try { host = location.host; } catch (_) {}
+    const ours = u.host === 'keystamp.vercel.app' || (host && u.host === host);
+    const safe = u.protocol === 'https:' || (u.protocol === 'http:' && ours && u.host === host);
+    if (!ours || !safe || !u.hash.startsWith(this.LINK)) return null;
+    const bare = u.hash.slice(this.LINK.length);
+    return this.BARE.test(bare) ? bare : null;
+  },
+  /* what goes to the verifier: the code in its own form */
+  canonical(raw){
+    const bare = this.fromLink(raw);
+    return bare ? this.SCHEME + bare : String(raw || '').trim();
+  },
   looksLikeKeystamp(raw){
     const t = String(raw || '').trim();
     if (t.toLowerCase().startsWith(this.SCHEME)) return true;
+    if (/^https?:\/\//i.test(t)) return this.fromLink(t) !== null;
 
     if (/^[a-z][a-z0-9+.-]*:\/\//i.test(t)) return false;
 

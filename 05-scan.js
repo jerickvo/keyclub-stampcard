@@ -29,7 +29,9 @@ function paintBoard(attempt = 0){
   const meeting = boardMeeting;
   Backend.issueToken(meeting).then(({ token }) => {
     if (!document.body.contains(box)) return;
-    const svg = qrSVG(token);
+    /* the code as a link, so a phone's own camera opens Keystamp with it;
+       Scan reads the same link */
+    const svg = qrSVG(QRFormat.link(token));
     box.innerHTML = svg || `<p class="qrpanel__fail">The code could not be drawn. Reload the page.</p>`;
   }).catch(() => {
     if (!document.body.contains(box)) return;
@@ -580,7 +582,7 @@ const Landing = {
 
     /* The reader may have left Scan during the hold. The record is
        fresh either way; the page they chose is not taken from them. */
-    if (current !== 'scan'){
+    if (current !== 'scan' && current !== 'checkin'){
       scene.clear();
       this.armed = null; this.active = false; this.scene = null;
       if (!fresh && Store.signedIn){
@@ -642,12 +644,13 @@ const sealsAsked = new Map();
    them before the answer was lost */
 const sealsUnanswered = new Set();
 
-/* `run` is the camera run that read the code; the refusal, if any, is
-   shown on that run and no other. */
-async function submitSeal(raw, run = Scanner.run){
-  if (!QRFormat.looksLikeKeystamp(raw)) return rejectVisual('INVALID_TOKEN', raw, run);
-
-  Scanner.setState('busy', 'Checking');
+/* The one way a code reaches the verifier, however it was read: by the
+   camera on Scan, or by the phone's own camera through the code's link.
+   Answers {code} for a refusal, {meeting} for the stamp this call
+   landed, or null when the answer is not this page's to show (another
+   account is signed in now, or an earlier call for the same code is
+   the one that shows it). */
+async function checkSeal(raw){
   const uid = Store.user && Store.user.id;
   const key = `${uid}|${raw}`;
   let asked = sealsAsked.get(key);
@@ -655,9 +658,8 @@ async function submitSeal(raw, run = Scanner.run){
   if (first){ asked = Backend.verifyCode(raw, uid); sealsAsked.set(key, asked); }
   const result = await asked;
   if (first) sealsAsked.delete(key);
-  /* another account is signed in now: this answer was the last one's,
-     and the page has moved to the new account's Scan */
-  if (!Store.user || Store.user.id !== uid) return;
+  /* another account is signed in now: this answer was the last one's */
+  if (!Store.user || Store.user.id !== uid) return null;
 
   let code = result && result.ok ? null : ((result && result.code) || 'SERVER_ERROR');
   /* "already checked in", right after a check that got no answer, to a
@@ -691,17 +693,155 @@ async function submitSeal(raw, run = Scanner.run){
         if (got && Store.openMeeting()) code = 'STALE_CODE';
       }
     }
-    return rejectVisual(code, raw, run);
+    return { code, no:result && result.meeting_number };
   }
-  if (!first) return;
+  if (!first) return null;
 
   const meeting = Store.meeting(result.meeting_id) ||
                   { id:result.meeting_id, no:result.meeting_number, place:Schedule.PLACE };
-  /* said on the live line, under the scene, so a screen reader hears it */
-  Scanner.setState('good', `Stamp acquired. GM ${pad(meeting.no)}`);
-  Scanner.stop();
-  await Landing.run(meeting);
+  return { meeting };
 }
+
+/* `run` is the camera run that read the code; the refusal, if any, is
+   shown on that run and no other. */
+async function submitSeal(raw, run = Scanner.run){
+  if (!QRFormat.looksLikeKeystamp(raw)) return rejectVisual('INVALID_TOKEN', raw, run);
+
+  Scanner.setState('busy', 'Checking');
+  const got = await checkSeal(QRFormat.canonical(raw));
+  if (!got) return;
+  if (got.code) return rejectVisual(got.code, raw, run);
+
+  /* said on the live line, under the scene, so a screen reader hears it */
+  Scanner.setState('good', `Stamp acquired. GM ${pad(got.meeting.no)}`);
+  Scanner.stop();
+  await Landing.run(got.meeting);
+}
+
+/* ══ Arriving by link ═══════════════════════════════════════════════
+   The wall's code is a link a phone's own camera can open. The code is
+   taken off the address at once and kept for this tab only (memory and
+   sessionStorage, never localStorage), so it outlives signing in or
+   making an account, and then goes to the verifier the way a scan
+   does. Nothing about it is shown; the verifier alone decides. */
+const Arrival = {
+  KEY: 'keystamp:arrival',
+  /* long enough to make an account; not so long that the next person to
+     sign in on a shared phone is checked in with it */
+  KEEP: 45 * 60 * 1000,
+  bare: null,          /* the signed code, without its scheme */
+  peek: null,          /* {ok, no} | {code} | {unknown:true} once asked */
+  peeking: false,
+  phase: 'idle',       /* idle | checking | refused */
+  refusal: null,
+  no: null,            /* the meeting's number, once the server has said it */
+
+  get code(){ return this.bare ? QRFormat.SCHEME + this.bare : null; },
+  /* whether the arrival page has anything to show */
+  get here(){ return Boolean(this.bare) || this.phase === 'refused'; },
+
+  /* the address the phone opened: the code is kept and the address
+     loses it before anything is drawn */
+  take(){
+    let hash = '';
+    try { hash = location.hash; } catch (_) { return false; }
+    if (!hash.startsWith(QRFormat.LINK)) return false;
+    const bare = hash.slice(QRFormat.LINK.length);
+    try { history.replaceState(null, '', location.pathname + location.search + '#/checkin'); } catch (_) {}
+    if (!QRFormat.BARE.test(bare)){ this.forget(); this.phase = 'refused'; this.refusal = 'INVALID_TOKEN'; return true; }
+    this.forget();
+    this.bare = bare;
+    try { sessionStorage.setItem(this.KEY, JSON.stringify({ c:bare, at:Date.now() })); } catch (_) {}
+    return true;
+  },
+  /* a code kept by this tab before a reload (signing up can reload) */
+  restore(){
+    if (this.bare) return;
+    try {
+      const v = JSON.parse(sessionStorage.getItem(this.KEY) || 'null');
+      if (v && QRFormat.BARE.test(String(v.c)) && Date.now() - Number(v.at) < this.KEEP) this.bare = v.c;
+      else sessionStorage.removeItem(this.KEY);
+    } catch (_) {}
+  },
+  /* the code is done with: stamped, refused for good, or its reader
+     signed out */
+  forget(){
+    this.bare = null; this.peek = null; this.no = null;
+    this.phase = 'idle'; this.refusal = null;
+    try { sessionStorage.removeItem(this.KEY); } catch (_) {}
+  },
+  /* a verdict stays on the page until the reader moves on */
+  leave(){ if (!this.bare){ this.phase = 'idle'; this.refusal = null; this.no = null; } },
+
+  paint(){ if (current === 'checkin') go('checkin', { instant:true, force:true, quiet:true }); },
+
+  /* what happens on arrival: signed in, the code goes to the verifier;
+     signed out, the server is asked what it is for */
+  run(){
+    if (!this.bare) return;
+    /* an officer is added by another officer, as on the meeting page;
+       a board account does not stamp itself from the wall */
+    if (Store.signedIn && Store.isBoard){
+      this.forget(); this.phase = 'refused'; this.refusal = 'BOARD_ACCOUNT';
+      this.paint();
+      return;
+    }
+    if (Store.signedIn){ if (this.phase === 'idle') this.submit(); }
+    else if (!this.peek) this.ask();
+  },
+
+  async ask(){
+    if (this.peeking || !this.bare) return;
+    this.peeking = true;
+    const mine = this.bare;
+    const res = await Backend.peekCode(this.code).catch(() => ({ ok:false, code:'NETWORK_ERROR' }));
+    this.peeking = false;
+    if (this.bare !== mine) return;
+    if (res && res.ok){ this.peek = { ok:true }; this.no = Number(res.meeting_number) || null; }
+    else {
+      const code = (res && res.code) || 'SERVER_ERROR';
+      /* a verifier that cannot say (no connection, or one from before
+         peeks, which asks for a session first) leaves the meeting
+         unnamed; signing in still checks the code */
+      if (!SCAN_FINAL.has(code)) this.peek = { unknown:true };
+      else { this.forget(); this.phase = 'refused'; this.refusal = code; }
+    }
+    this.paint();
+  },
+
+  async submit(){
+    if (!this.bare || this.phase === 'checking') return;
+    const mine = this.bare;
+    this.phase = 'checking'; this.refusal = null;
+    this.paint();
+    /* a refusal that may pass on a second try is tried again, quietly,
+       a few times: an account made a moment ago may not be ready yet */
+    let got = null;
+    for (let i = 0; i < 3; i++){
+      got = await checkSeal(this.code);
+      if (this.bare !== mine) return;
+      if (!got || !got.code || !SCAN_TRANSIENT.has(got.code)) break;
+      await new Promise(r => setTimeout(r, 1200 * (i + 1)));
+      if (this.bare !== mine || !Store.signedIn) return;
+    }
+    if (!got){ this.phase = 'idle'; return; }
+    if (got.code){
+      if (got.no) this.no = Number(got.no) || this.no;
+      /* signed out under it: the code waits for the next sign-in */
+      if (got.code === 'NOT_AUTHENTICATED'){ this.phase = 'idle'; return; }
+      const code = got.code;
+      if (!SCAN_TRANSIENT.has(code)){ const no = this.no; this.forget(); this.no = no; }
+      this.phase = 'refused'; this.refusal = code;
+      this.paint();
+      return;
+    }
+    this.forget();
+    await Landing.run(got.meeting);
+  },
+};
+/* refusals that settle a code for good: it is not offered again */
+const SCAN_FINAL = new Set(['INVALID_TOKEN', 'EXPIRED_TOKEN', 'MEETING_NOT_FOUND', 'MEETING_NOT_ACTIVE',
+  'ATTENDANCE_CLOSED', 'STALE_CODE', 'WRONG_DAY', 'ALREADY_CHECKED_IN', 'NOT_AUTHORIZED']);
 
 /* The refusal is shown on the camera run that read the code and stays
    on the line until another code is read; a run that has since been

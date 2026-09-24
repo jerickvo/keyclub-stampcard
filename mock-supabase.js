@@ -509,9 +509,10 @@ function mkClient(){
 
         if (name === 'verify-attendance'){
           const uid = db.session && db.session.user.id;
-          if (!uid) return { data:null, error:{ context:{ status:401 } } };
+          const peek = body.peek === true;
+          if (!uid && !peek) return { data:null, error:{ context:{ status:401 } } };
           const raw = String(body.code || '');
-          const bare = raw.replace(/^keystamp:\/\/a\//i, '');
+          const bare = raw.replace(/^keystamp:\/\/a\//i, '').replace(/^https?:\/\/[^#]*#\/a\//i, '');
           const dot = bare.lastIndexOf('.');
           if (dot < 1) return { data:{ ok:false, code:'INVALID_TOKEN' }, error:null };
           if (bare.slice(dot+1) !== 'SERVERSIG')
@@ -527,6 +528,7 @@ function mkClient(){
           const meeting = (db.meetings || []).find(m => m.id === mid);
           if (!meeting) return { data:{ ok:false, code:'MEETING_NOT_FOUND' }, error:null };
           if (!meeting.check_in_open) return { data:{ ok:false, code:'MEETING_NOT_ACTIVE' }, error:null };
+          if (peek) return { data:{ ok:true, peek:true, meeting_number:meeting.meeting_number }, error:null };
           db.attendance = db.attendance || [];
           if (db.attendance.some(a => a.user_id === uid && a.meeting_id === mid))
             return { data:{ ok:false, code:'ALREADY_CHECKED_IN', meeting_id:mid }, error:null };

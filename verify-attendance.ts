@@ -67,9 +67,85 @@ function safeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+type Meeting = { id: string; meeting_number: number; meeting_date: string; check_in_open: boolean };
+type Verdict = { code: string; status?: number } | { meeting: Meeting; meetingId: string };
+
+// Steps 3 to 6: whether a code would be taken now, and for which
+// meeting. Shared by a check-in and by a peek, so the two can never
+// disagree about a code.
+async function readCode(raw: string, admin: ReturnType<typeof createClient>): Promise<Verdict> {
+  if (!raw) return { code: 'INVALID_TOKEN' };
+
+  // 3. validate the token's shape and signature. The wall's code is
+  // also a link (https://<app>/#/a/<code>) so a phone's own camera can
+  // open Keystamp with it; the link only carries the same signed code.
+  const link = raw.indexOf('#/a/');
+  const bare = /^https?:\/\//i.test(raw) && link > 0 ? raw.slice(link + '#/a/'.length)
+    : raw.toLowerCase().startsWith('keystamp://a/') ? raw.slice('keystamp://a/'.length) : raw;
+  const dot = bare.lastIndexOf('.');
+  if (dot < 1) return { code: 'INVALID_TOKEN' };
+
+  const encoded = bare.slice(0, dot);
+  const provided = bare.slice(dot + 1);
+
+  let payload: string;
+  try { payload = new TextDecoder().decode(fromB64url(encoded)); }
+  catch { return { code: 'INVALID_TOKEN' }; }
+
+  if (!safeEqual(provided, await sign(payload)))
+    return { code: 'INVALID_TOKEN' };
+
+  const [sessionId, meetingId, expStr] = payload.split('.');
+  if (!sessionId || !meetingId || !expStr) return { code: 'INVALID_TOKEN' };
+
+  // 4. expiry, on the server's clock. A code lasts as long as its
+  // check-in session (below), within the meeting's day.
+  const exp = Number(expStr);
+  if (!Number.isFinite(exp) || Date.now() > exp)
+    return { code: 'EXPIRED_TOKEN' };
+
+  // 5. the session must still be running.
+  // A read that ERRORS is not a read that found nothing: reporting a
+  // database outage as INVALID_TOKEN would tell a member standing in the
+  // room that their code is fake. Fail closed, but fail honestly.
+  const { data: session, error: sErr } = await admin.from('attendance_sessions')
+    .select('id, meeting_id, ended_at').eq('id', sessionId).maybeSingle();
+  if (sErr) return { code: 'SERVER_ERROR', status: 500 };
+  if (!session) return { code: 'INVALID_TOKEN' };
+  if (session.ended_at) return { code: 'ATTENDANCE_CLOSED' };
+  if (session.meeting_id !== meetingId) return { code: 'INVALID_TOKEN' };
+
+  // 6. the meeting must exist, be open, and be today
+  const { data: meeting, error: mErr } = await admin.from('meetings')
+    .select('id, meeting_number, meeting_date, check_in_open')
+    .eq('id', meetingId).maybeSingle();
+  if (mErr) return { code: 'SERVER_ERROR', status: 500 };
+  if (!meeting) return { code: 'MEETING_NOT_FOUND' };
+  if (!meeting.check_in_open) return { code: 'MEETING_NOT_ACTIVE' };
+
+  if (meeting.meeting_date !== clubDay()) return { code: 'WRONG_DAY' };
+
+  return { meeting: meeting as Meeting, meetingId };
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (!TOKEN_SECRET) return json({ ok: false, code: 'SERVER_ERROR' }, 500);
+
+  let body: { code?: string; peek?: boolean } | null = null;
+  try { body = await req.json(); } catch { body = null; }
+
+  // A peek: what a code on the wall is for, asked before anyone has
+  // signed in (a phone's own camera opened the code's link). It runs
+  // the same checks as a check-in and answers only whether the code
+  // would be taken now and the meeting's number. It writes nothing,
+  // names no one, and the check-in itself still needs a session.
+  if (body && body.peek === true) {
+    const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+    const got = await readCode(String(body.code ?? '').trim(), admin);
+    if ('code' in got) return json({ ok: false, code: got.code }, got.status ?? 200);
+    return json({ ok: true, peek: true, meeting_number: got.meeting.meeting_number });
+  }
 
   // 1. authenticate the member
   const auth = req.headers.get('Authorization') ?? '';
@@ -87,55 +163,12 @@ Deno.serve(async (req) => {
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
   // 2. read the payload
-  let body: { code?: string };
-  try { body = await req.json(); } catch { return json({ ok: false, code: 'INVALID_TOKEN' }); }
-  const raw = String(body.code ?? '').trim();
-  if (!raw) return json({ ok: false, code: 'INVALID_TOKEN' });
+  if (!body) return json({ ok: false, code: 'INVALID_TOKEN' });
 
-  // 3. validate the token's shape and signature
-  const bare = raw.toLowerCase().startsWith('keystamp://a/') ? raw.slice('keystamp://a/'.length) : raw;
-  const dot = bare.lastIndexOf('.');
-  if (dot < 1) return json({ ok: false, code: 'INVALID_TOKEN' });
-
-  const encoded = bare.slice(0, dot);
-  const provided = bare.slice(dot + 1);
-
-  let payload: string;
-  try { payload = new TextDecoder().decode(fromB64url(encoded)); }
-  catch { return json({ ok: false, code: 'INVALID_TOKEN' }); }
-
-  if (!safeEqual(provided, await sign(payload)))
-    return json({ ok: false, code: 'INVALID_TOKEN' });
-
-  const [sessionId, meetingId, expStr] = payload.split('.');
-  if (!sessionId || !meetingId || !expStr) return json({ ok: false, code: 'INVALID_TOKEN' });
-
-  // 4. expiry, on the server's clock. A code lasts as long as its
-  // check-in session (below), within the meeting's day.
-  const exp = Number(expStr);
-  if (!Number.isFinite(exp) || Date.now() > exp)
-    return json({ ok: false, code: 'EXPIRED_TOKEN' });
-
-  // 5. the session must still be running.
-  // A read that ERRORS is not a read that found nothing: reporting a
-  // database outage as INVALID_TOKEN would tell a member standing in the
-  // room that their code is fake. Fail closed, but fail honestly.
-  const { data: session, error: sErr } = await admin.from('attendance_sessions')
-    .select('id, meeting_id, ended_at').eq('id', sessionId).maybeSingle();
-  if (sErr) return json({ ok: false, code: 'SERVER_ERROR' }, 500);
-  if (!session) return json({ ok: false, code: 'INVALID_TOKEN' });
-  if (session.ended_at) return json({ ok: false, code: 'ATTENDANCE_CLOSED' });
-  if (session.meeting_id !== meetingId) return json({ ok: false, code: 'INVALID_TOKEN' });
-
-  // 6. the meeting must exist, be open, and be today
-  const { data: meeting, error: mErr } = await admin.from('meetings')
-    .select('id, meeting_number, meeting_date, check_in_open')
-    .eq('id', meetingId).maybeSingle();
-  if (mErr) return json({ ok: false, code: 'SERVER_ERROR' }, 500);
-  if (!meeting) return json({ ok: false, code: 'MEETING_NOT_FOUND' });
-  if (!meeting.check_in_open) return json({ ok: false, code: 'MEETING_NOT_ACTIVE' });
-
-  if (meeting.meeting_date !== clubDay()) return json({ ok: false, code: 'WRONG_DAY' });
+  // 3 to 6. the code, its session and its meeting
+  const got = await readCode(String(body.code ?? '').trim(), admin);
+  if ('code' in got) return json({ ok: false, code: got.code }, got.status ?? 200);
+  const { meeting, meetingId } = got;
 
   // 7. insert. The unique (user_id, meeting_id) constraint is the real
   // duplicate guard: if two scans race, one insert wins and the other

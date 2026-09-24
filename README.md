@@ -121,6 +121,32 @@ verifier takes it only for an open meeting dated today. A photo of the
 wall therefore works while that check-in stays open. The token text is
 never displayed on the page.
 
+The projector draws the code as a link, so a phone's own camera opens
+Keystamp with it: `https://keystamp.vercel.app/#/a/<the same signed
+code>` (the app's own address when it runs elsewhere). The code rides in
+the fragment, which a browser never sends to a server. Nothing else is
+in it: no user, no decision, no secret. Scan in the app reads either
+form. A link opened on a phone:
+
+- takes the code off the address before anything is drawn, and keeps
+  it for that tab only (memory and `sessionStorage`, never
+  `localStorage`) until it is used, refused for good, or the reader
+  signs out;
+- signed in, sends it through the same path a scan takes
+  (`verify-attendance`), and shows Checking in, then Stamp acquired or
+  the real refusal (already checked in; check-in unavailable for an
+  expired, invalid, closed or other day's code);
+- signed out, asks `verify-attendance` to *peek* (`{ code, peek:true }`):
+  the same checks as a check-in, no session needed, nothing written,
+  and only the meeting's number in the answer. The page then offers
+  Create account or Sign in, and checks in automatically once the
+  reader is in; there is no second scan. A verifier from before peeks
+  answers 401, and the page offers the same way in without naming the
+  meeting.
+
+A board account opening the link is told another officer adds it, as
+on the meeting page; it does not stamp itself.
+
 Opening and closing check-in are one database function each
 (`start_check_in`, `end_check_in`), called only by `attendance-session`
 under one lock: opening a meeting while another is taking check-ins is
@@ -135,7 +161,9 @@ functions' environment. There is no client-side verifier.
 
 `verify-attendance` checks, in order: caller's JWT → HMAC signature
 (constant-time compare) → expiry **on the server clock** → session
-still open → meeting exists, is open, and is dated today → insert.
+still open → meeting exists, is open, and is dated today → insert. A
+peek runs the same checks from the signature on, with no JWT, and stops
+before the insert.
 
 The insert is a bare `INSERT`, so the `unique (user_id, meeting_id)`
 constraint resolves races: two simultaneous scans produce one row and

@@ -44,7 +44,7 @@ body{
   width:clamp(7px,1vw,15px);background:var(--ink);
   clip-path:polygon(28% 0,100% 0,100% 100%,40% 100%,12% 88%,52% 74%,
                     22% 61%,58% 47%,18% 34%,50% 22%,20% 10%)}
-[data-screen="auth"] .ground__bleed{display:none}
+[data-screen="auth"] .ground__bleed,[data-screen="checkin"] .ground__bleed{display:none}
 
 .shell{
   position:relative;

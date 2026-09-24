@@ -44,24 +44,24 @@ const C = {
     const got   = Math.max(0, Math.min(span, total - prev));
     const left  = r.required - total;
     const far   = state === 'sealed' && total < prev;
-    const say   = state === 'sealed' && !far ? `${left} more ${left === 1 ? 'stamp' : 'stamps'}` : '';
+    const say   = state === 'sealed' ? `${left} more ${left === 1 ? 'stamp' : 'stamps'}` : '';
     const ticks = Array.from({ length:span }, (_, i) =>
       `<i class="${i < got ? 'is-on' : ''}"></i>`).join('');
 
-    return `<div class="tier tier--${state}${took ? ' tier--took' : ''}${far ? ' tier--far' : ''}" data-reward="${r.id}">
-      <span class="tier__at">${pad(r.required)}</span>
+    return `<div class="tier tier--${state}${took ? ' tier--took' : ''}${far ? ' tier--far' : ''}" data-reward="${r.id}" style="--got:${(got / span).toFixed(3)}">
+      <span class="tier__at"><b>${pad(r.required)}</b><span>stamps</span></span>
       <span class="tier__body">
         <span class="tier__name">${esc(r.name)}</span>
-        <span class="tier__desc">${esc(r.desc || '')}</span>
+        ${r.desc ? `<span class="tier__desc">${esc(r.desc)}</span>` : ''}
+        ${state === 'sealed' && !far ? `<span class="tier__ticks" aria-hidden="true">${ticks}</span>` : ''}
+        ${ready && Store.claiming.has(`${Store.user && Store.user.id}:${r.id}`)
+          ? `<button class="tier__claim" type="button" data-claim="${r.id}" aria-busy="true" aria-disabled="true" aria-label="${esc(`Claiming ${r.name}`)}">Claiming</button>`
+          : ready
+          ? `<button class="tier__claim" type="button" data-claim="${r.id}" aria-label="${esc(`Claim ${r.name}`)}">Claim</button>`
+          : say ? `<span class="tier__say">${say}</span>` : ''}
+        ${note ? `<span class="tier__note">${esc(note)}</span>` : ''}
       </span>
-      ${state === 'sealed' && !far ? `<span class="tier__ticks" aria-hidden="true">${ticks}</span>` : ''}
       ${at === 'claimed' ? `<span class="tier__punch">${took ? 'Collected' : 'Claimed'}</span>` : ''}
-      ${note ? `<span class="tier__note">${esc(note)}</span>` : ''}
-      ${ready && Store.claiming.has(`${Store.user && Store.user.id}:${r.id}`)
-        ? `<button class="tier__claim" type="button" data-claim="${r.id}" aria-busy="true" aria-disabled="true" aria-label="${esc(`Claiming ${r.name}`)}">Claiming</button>`
-        : ready
-        ? `<button class="tier__claim" type="button" data-claim="${r.id}" aria-label="${esc(`Claim ${r.name}`)}">Claim</button>`
-        : say ? `<span class="tier__say">${say}</span>` : ''}
     </div>`;
   },
 
@@ -75,10 +75,12 @@ const C = {
     const full = p.filled >= p.span;
 
     const cells = Array.from({ length:p.span }, (_, i) => {
-      /* the next slot is ringed only while a check-in is open for it */
-      const state = i < p.filled ? 'set' : live && i === p.filled ? 'next' : '';
+      /* the next slot is where the member stands on the route: ringed in
+         ink, and in the club's red while a check-in is open for it */
+      const state = i < p.filled ? 'set' : i === p.filled ? 'next' : '';
       const hero = state === 'set' && i === p.filled - 1 ? ' seal--hero' : '';
       const mile = i === p.span - 1 ? ' seal--mile' : '';
+      const now  = state === 'next' && live ? ' seal--live' : '';
 
       const tilt = state === 'set'
         ? `--press-tilt:${[-2.1, 1.4, -1.2, 2.3, -1.7][i % 5]}deg` : '';
@@ -89,7 +91,7 @@ const C = {
 
       const seed = p.floor + i + 1;
       const fit  = STAMP_FIT;
-      return `<li class="seal ${state ? 'seal--' + state : ''}${hero}${mile}" data-seal="${state || 'empty'}" style="${tilt}"${
+      return `<li class="seal ${state ? 'seal--' + state : ''}${hero}${mile}${now}" data-seal="${state || 'empty'}" style="${tilt}"${
         docket ? ` tabindex="0" aria-label="Stamp ${pad(p.floor + i + 1)}: general meeting ${
           mtg.no}, ${fmtDate(mtg.date)}, ${byHand(rec) ? 'added by an officer' : `checked in at ${fmtTime(rec.at)}`}"` : ''}>
         <svg viewBox="0 0 64 64" aria-hidden="true">
@@ -117,7 +119,7 @@ const C = {
          not held out as the thing to reach */
       : goal && !goal.claimed ? `${pad(p.remaining)} to ${goal.name}` : `${pad(p.remaining)} to a full card`;
 
-    return `<section class="card${full ? ' card--full' : ''}">
+    return `<section class="card${full ? ' card--full' : ''}${live ? ' card--live' : ''}">
       <div class="card__face">
         <div class="card__id">
           <span class="card__cardno">Card ${pad(cardNo)}</span>
@@ -140,15 +142,6 @@ const C = {
   /* a state that asks nothing of the member is a line of type */
   line(lab, text){
     return `<p class="nowline"><b class="nowline__lab">${esc(lab)}</b><span>${text}</span></p>`;
-  },
-
-  strike({ verb, sub, go, live = false }){
-    return `<div class="act ${live ? 'act--live' : ''}">
-      <button class="act__btn" data-go="${go}">
-        <span class="act__verb">${esc(verb)}</span>
-        <span class="act__sub">${esc(sub)}</span>
-      </button>
-    </div>`;
   },
 
   sealMeta(rec, m){
@@ -212,6 +205,75 @@ C.account = () => `<section class="acct">
   <button class="acct__out" data-signout type="button">Sign out</button>
 </section>`;
 
+/* A card already filled, filed under the one in progress: the same seat
+   map and route in miniature, every seat pressed, the prize it earned
+   punched across it. */
+const SEATS = [[2,4,15,-2.5],[21.5,16,14.5,1.5],[40.5,4,15,-1],[59.5,13.5,14.5,2],[79,26,15,-2],
+               [52,36.5,14.5,1],[30.5,39,15,-1.5],[5,49,14.5,2.2],[27,64,15,-2],[63,58.5,23,-3]];
+const ROUTE = [[9.5,12.3],[28.8,24],[48,12.3],[66.8,21.5],[86.5,34.3],[59.3,44.5],[38,47.3],[12.3,57],[34.5,72.3],[74.5,71.2]];
+
+/* where a prize stands, in the one word the member reads for it */
+const prizeWord = r => !r ? '' : r.handedAt ? 'Collected' : r.claimed ? 'Claimed'
+  : Store.tierState(r) === 'unlocked' ? 'Ready to claim' : '';
+
+C.filed = (k, run) => {
+  const prize = Store.rewards.find(r => r.required === (k + 1) * Rules.CARD) || null;
+  const word  = prizeWord(prize);
+  const lift  = (32 - 32 * STAMP_FIT).toFixed(1);
+  const seats = SEATS.map(([x, y, s, lean], i) => {
+    const n = k * Rules.CARD + i;
+    const tilt = lean + [-2.1, 1.4, -1.2, 2.3, -1.7][i % 5];
+    return `<g transform="translate(${x} ${(y * .9).toFixed(2)}) scale(${(s / 64).toFixed(4)}) rotate(${tilt} 32 32)">
+      ${i === 9 ? `<path class="fc-back" d="${stampShape((n + 1) * 3 + 1, 3.4)}"/>` : ''}
+      <path class="fc-face" d="${stampShape(n + 1, 0)}"/>
+      <g class="fc-mark" transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(n)}</g>
+    </g>`;
+  }).join('');
+  const route = ROUTE.map(([x, y]) => `${x},${(y * .9).toFixed(2)}`).join(' ');
+  return `<li class="filed${prize && prize.handedAt ? ' filed--took' : ''}">
+    <div class="filed__card" aria-hidden="true">
+      <span class="filed__id"><b>${pad(k + 1)}</b></span>
+      <svg class="filed__field" viewBox="0 0 100 90"><polyline class="fc-route" points="${route}"/>${seats}</svg>
+      ${word ? `<span class="filed__punch">${word}</span>` : ''}
+    </div>
+    <p class="filed__no">Card ${pad(k + 1)}</p>
+    <p class="filed__when">${fmtDay(run[0].at)} – ${fmtDay(run[run.length - 1].at)}</p>
+    ${prize ? `<p class="filed__prize">${esc(prize.name)}${word ? ` / ${word.toLowerCase()}` : ''}</p>` : ''}
+  </li>`;
+};
+
+/* The meeting a day is about, as a ticket: its number on the stub, the
+   day and what stands on the body. Open, the whole ticket is the way in;
+   stamped, it carries the impression it earned. */
+C.ticket = ({ m, kick, day = '', meta = '', go = false, scan = null, quiet = false }) => {
+  const idx = scan ? [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1)
+    .findIndex(x => x.meetingId === m.id) : -1;
+  const lift = (32 - 32 * STAMP_FIT).toFixed(1);
+  const inner = `
+    <span class="tkt__stub"><span class="tkt__gm">GM</span> <b class="tkt__no">${pad(m.no)}</b></span>
+    <span class="tkt__body">
+      <span class="tkt__kick">${esc(kick)}</span>
+      <span class="tkt__day">${day || (m.today ? 'Today' : fmtDate(m.date))}</span>
+      ${meta ? `<span class="tkt__meta">${meta}</span>` : ''}
+      ${go ? '<span class="tkt__verb">Check in</span>' : ''}
+    </span>
+    ${idx >= 0 ? `<svg class="tkt__imp" viewBox="0 0 64 64" aria-hidden="true">
+      <path class="tkt__face" d="${stampShape(idx + 1, 0)}"/>
+      <g transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(idx)}</g></svg>` : ''}`;
+  const cls = `tkt${go ? ' tkt--live' : scan ? ' tkt--set' : quiet ? ' tkt--quiet' : ''}`;
+  return go
+    ? `<button class="${cls}" type="button" data-go="scan">${inner}</button>`
+    : `<div class="${cls}">${inner}</div>`;
+};
+
+/* the meeting a signed code names, read for display only */
+function arrivalMeeting(bare){
+  try {
+    const part = String(bare).split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
+    return atob(part + '==='.slice((part.length + 3) % 4)).split('.')[1] || null;
+  } catch (_) { return null; }
+}
+
 const Views = {
   loadFailure(title){
     return `<div class="view">
@@ -229,8 +291,8 @@ const Views = {
   },
 
   home(){
-    if (Store.failed) return this.loadFailure('Your card');
-    /* the top line answers "what now": check in, checked in, today's
+    if (Store.failed) return this.loadFailure('Today');
+    /* the ticket answers "what now": check in, checked in, today's
        meeting still to come, or the next one. Only what the record
        says is printed; a member cannot see when check-in will open, so
        the page never guesses */
@@ -241,29 +303,28 @@ const Views = {
     const at = m => { const v = clockMinutes(m.time); return Number.isNaN(v) ? 0 : v; };
     const soonest = (a, b) => String(a.date).localeCompare(String(b.date)) || at(a) - at(b) || a.no - b.no;
     const next = Store.meetings.filter(m => m.upcoming && (!day || m.id !== day.id)).sort(soonest)[0] || null;
+    const where = m => unusual(m).map(esc).join(' / ');
 
-    let action = '';
+    let act = '';
     if (live)
-      action = C.strike({ verb:'Check in',
-                          sub:[`GM ${pad(day.no)}`, ...unusual(day)].join('\u00a0/ '),
-                          go:'scan', live:true });
+      act = C.ticket({ m:day, kick:'Check-in open', meta:where(day), go:true });
     else if (scan)
-      action = C.line('Checked in', `GM ${pad(day.no)} / ${stampWhen(scan)}`);
+      act = C.ticket({ m:day, kick:'Checked in', meta:stampWhen(scan), scan });
     /* over, and no stamp: said as today's fact, not yet a "missed" one,
        since an officer can still add a stamp by hand */
     else if (day && day.ended && !day.open)
-      action = C.line('Not checked in', `GM ${pad(day.no)}`);
+      act = C.ticket({ m:day, kick:'Not checked in', quiet:true });
     /* under way and not open: before opening or after an early close,
        which a member cannot tell apart, so only what is true now */
     else if (day && day.started && !day.open)
-      action = C.line('Today', `GM ${pad(day.no)} / check-in not open`);
+      act = C.ticket({ m:day, kick:'Check-in not open', quiet:true });
     /* the day's own meeting gives its time even when it is the usual
        one: today, that is the thing to know */
     else if (day)
-      action = C.line('Today', [`GM ${pad(day.no)}`, day.time, ...(unusual(day).includes(day.place) ? [day.place] : [])]
-        .filter(Boolean).map(esc).join(' / '));
+      act = C.ticket({ m:day, kick:'Today', day:esc(day.time || 'Today'),
+        meta:unusual(day).includes(day.place) ? esc(day.place) : '', quiet:true });
     else if (next)
-      action = C.line('Next', [`GM ${pad(next.no)}`, fmtDate(next.date), ...unusual(next).map(esc)].join(' / '));
+      act = C.ticket({ m:next, kick:'Next', meta:where(next), quiet:true });
 
     const showing = day ? day.id : next ? next.id : null;
     const ahead = Store.meetings
@@ -271,24 +332,38 @@ const Views = {
       .sort(soonest)
       .slice(0, 3);
 
+    /* the last stamp, unless the ticket is already about it */
+    const chrono = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
+    const last = chrono[chrono.length - 1];
+    const lastM = last && Store.meeting(last.meetingId);
+    const showLast = lastM && !(scan && lastM.id === day.id);
+
+    const side = showLast || ahead.length ? `<div class="deck__side">
+        ${showLast ? `<p class="deck__last">
+          <span class="deck__lab">Last stamp</span>
+          <span class="deck__val">GM ${pad(lastM.no)} / ${fmtDay(lastM.date)}</span>
+        </p>` : ''}
+        ${ahead.length ? `<section class="ahead">
+          <h2 class="ahead__mark">Ahead</h2>
+          <ul class="ahead__list">
+            ${ahead.map(m => `<li class="ahead__row">
+              <span class="ahead__no">GM ${pad(m.no)}</span>
+              <span class="ahead__day">${fmtDate(m.date)}</span>
+              ${unusual(m).length ? `<span class="ahead__at">${unusual(m).map(esc).join(' / ')}</span>` : ''}
+            </li>`).join('')}
+          </ul>
+        </section>` : ''}
+      </div>` : '';
+
     return `<div class="view view--home">
       <header class="rechead">
-        <h1 class="title rechead__title">Your card</h1>
+        <h1 class="title rechead__title">Today</h1>
       </header>
 
       <div class="deck${live ? ' deck--live' : ''}">
-        ${action ? `<div class="deck__act">${action}</div>` : ''}
+        ${act ? `<div class="deck__act">${act}</div>` : ''}
         ${C.sealGrid(live)}
-        ${ahead.length ? `<section class="ahead deck__ahead">
-            <h2 class="ahead__mark">Ahead</h2>
-            <ul class="ahead__list">
-              ${ahead.map(m => `<li class="ahead__row">
-                <span class="ahead__no">GM ${pad(m.no)}</span>
-                <span class="ahead__day">${fmtDate(m.date)}</span>
-                ${unusual(m).length ? `<span class="ahead__at">${unusual(m).map(esc).join(' / ')}</span>` : ''}
-              </li>`).join('')}
-            </ul>
-          </section>` : ''}
+        ${side}
       </div>
     </div>`;
   },
@@ -304,6 +379,23 @@ const Views = {
     const kept = counted.filter(m => Store.attended(m.id)).length;
     const gone = counted.length - kept;
 
+    /* the ledger is kept by the month, the way a club's minutes are */
+    const months = [];
+    held.forEach(m => {
+      const key = String(m.date).slice(0, 7);
+      const last = months[months.length - 1];
+      if (last && last.key === key) last.rows.push(m);
+      else months.push({ key, rows:[m] });
+    });
+    const monthName = key => onClock(`${key}-01`, { month:'long' });
+
+    /* every meeting held since the member joined, oldest first, as one
+       line of marks: pressed where they were stamped */
+    const line = [...held].reverse().map(m => {
+      const s = Store.state(m);
+      return `<i class="strip__m strip__m--${s}${m.today && s === 'miss' ? ' strip__m--today' : ''}"></i>`;
+    }).join('');
+
     return `<div class="view view--record">
       <header class="rechead">
         <h1 class="title rechead__title">Record</h1>
@@ -311,14 +403,22 @@ const Views = {
 
       ${held.length ? `<div class="recbody">
         <aside class="tally">
-          <p class="figline">
-            <span><b>${kept}</b> stamped</span>
-            <span><b>${gone}</b> missed</span>
-          </p>
+          <p class="tally__kept"><b>${kept}</b> <span>stamped</span></p>
+          <p class="tally__gone"><b>${gone}</b> <span>missed</span></p>
+          <p class="tally__held">${held.length} ${held.length === 1 ? 'meeting' : 'meetings'} held since
+            ${fmtDay(held[held.length - 1].date)}</p>
+          <span class="strip" aria-hidden="true">${line}</span>
         </aside>
 
-        <section class="ledger">
-          ${held.map(m => C.ledgerRow(m)).join('')}
+        <section class="ledger" aria-label="Meetings, newest first">
+          ${months.map(g => {
+            const got = g.rows.filter(m => Store.attended(m.id)).length;
+            return `<h2 class="ledger__month">
+                <span class="ledger__mname">${monthName(g.key)}</span>
+                <span class="ledger__mcount">${got} of ${g.rows.length}</span>
+              </h2>
+              ${g.rows.map(m => C.ledgerRow(m)).join('')}`;
+          }).join('')}
         </section>
       </div>`
       : C.empty('No meetings held yet')}
@@ -330,32 +430,40 @@ const Views = {
     if (Store.failed) return this.loadFailure('Rewards');
     const total = Store.totalStamps();
     const tiers = [...Store.rewards].sort((a, b) => a.required - b.required);
+    const next = tiers.find(t => total < t.required) || null;
+    const left = next ? next.required - total : 0;
 
     return `<div class="view view--rewards">
       <header class="rechead">
         <h1 class="title rechead__title">Rewards</h1>
       </header>
 
-      <p class="figline">
-        <span><b>${total}</b> ${total === 1 ? 'stamp' : 'stamps'}</span>
-      </p>
+      <div class="prize">
+        <div class="prize__fig">
+          ${next ? `<p class="prize__n">${pad(left)}</p>
+          <p class="prize__to">more ${left === 1 ? 'stamp' : 'stamps'} to <b>${esc(next.name)}</b></p>`
+          : `<p class="prize__n">${total}</p>
+          <p class="prize__to">Every reward reached</p>`}
+          <p class="prize__of">${total} ${total === 1 ? 'stamp' : 'stamps'} so far</p>
+        </div>
 
-      <section class="tiers">
-        ${tiers.map((t, i) => C.tier(t, total, i ? tiers[i - 1].required : 0)).join('')}
-      </section>
+        <section class="tiers" aria-label="Rewards, by the stamps they take">
+          ${tiers.map((t, i) => C.tier(t, total, i ? tiers[i - 1].required : 0)).join('')}
+        </section>
+      </div>
     </div>`;
   },
 
   scan(){
     /* already stamped for the open meeting: nothing to scan, and the page
-       says so the way Home does */
+       says so the way Today does */
     const open = Store.openMeeting();
     const stamp = open && Store.scanFor(open.id);
     if (stamp) return `<div class="view view--scan">
       <header class="rechead">
         <h1 class="title rechead__title">Scan</h1>
       </header>
-      ${C.line('Checked in', `GM ${pad(open.no)} / ${stampWhen(stamp)}`)}
+      <div class="deck__act">${C.ticket({ m:open, kick:'Checked in', meta:stampWhen(stamp), scan:stamp })}</div>
     </div>`;
 
     const standing = scanStanding();
@@ -365,26 +473,27 @@ const Views = {
         <h1 class="title rechead__title">Scan</h1>
       </header>
 
-      <div class="viewer" id="viewer">
-        <video id="cam" playsinline muted autoplay></video>
-        <div class="viewer__scrim" aria-hidden="true"></div>
-        <div class="reticle" id="reticle" aria-hidden="true">
-          <span class="reticle__c reticle__c--tl"></span>
-          <span class="reticle__c reticle__c--tr"></span>
-          <span class="reticle__c reticle__c--bl"></span>
-          <span class="reticle__c reticle__c--br"></span>
+      <div class="scanframe">
+        <p class="standing">
+          <span class="standing__lab">${standing.lab}</span>
+          <span class="standing__at">${standing.at}</span>
+        </p>
+
+        <div class="viewer" id="viewer">
+          <video id="cam" playsinline muted autoplay></video>
+          <div class="reticle" id="reticle" aria-hidden="true">
+            <span class="reticle__c reticle__c--tl"></span>
+            <span class="reticle__c reticle__c--tr"></span>
+            <span class="reticle__c reticle__c--bl"></span>
+            <span class="reticle__c reticle__c--br"></span>
+          </div>
         </div>
+
+        <p class="scanline scanline--boot" id="scanLine" aria-live="polite">
+          <i class="scanline__dot" aria-hidden="true"></i>
+          <span class="scanline__msg" id="scanMsg">Starting camera</span>
+        </p>
       </div>
-
-      <p class="scanline scanline--boot" id="scanLine" aria-live="polite">
-        <i class="scanline__dot" aria-hidden="true"></i>
-        <span class="scanline__msg" id="scanMsg">Starting camera</span>
-      </p>
-
-      <p class="standing">
-        <span class="standing__lab">${standing.lab}</span>
-        <span class="standing__at">${standing.at}</span>
-      </p>
     </div>`;
   },
 
@@ -398,6 +507,7 @@ const Views = {
     BoardUI.deleteNote = null;
     /* a chapter opened afresh reads its prize list afresh */
     BoardUI.prizesStale = true;
+    BoardUI.clubStale = true;
     /* a fresh chapter opens on the wait panel, never on another
        chapter's data */
     BoardUI.loading = true;
@@ -422,55 +532,123 @@ const Views = {
   profile(){
     if (Store.failed) return this.loadFailure('Member');
     const held     = Store.countedMeetings();
+    const attended = held.filter(m => Store.attended(m.id)).length;
     const total    = Store.totalStamps();
     const name     = memberName();
     const handle   = (Store.user && Store.user.username) || name;
+    const joined   = Store.user && Store.user.joined;
     const chrono   = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
-    const first    = chrono[0], last = chrono[chrono.length - 1];
-    const cards    = Math.floor(total / Rules.CARD);
+    const p        = Rules.progress();
+    /* the cards filled before the one on the sheet */
+    const filed    = Array.from({ length:p.card - 1 }, (_, k) =>
+      C.filed(k, chrono.slice(k * Rules.CARD, (k + 1) * Rules.CARD))).reverse();
+    const open     = Store.openMeeting();
+    const live     = Boolean(open && !Store.scanFor(open.id));
+    /* the name is printed once; the username only where it differs */
+    const tag = [Store.isBoard ? 'Board' : '',
+                 handle.toLowerCase() !== name.toLowerCase() ? esc(handle) : ''].filter(Boolean);
 
     return `<div class="view view--member">
       <header class="rechead">
         <h1 class="title rechead__title">Member</h1>
       </header>
 
-      <section class="who">
-        <p class="who__name">${esc(name)}</p>
-        ${(() => {
-          /* the title already says Member, and the seal the district */
-          const bits = [Store.isBoard ? 'Board' : '', handle.toLowerCase() !== name.toLowerCase() ? esc(handle) : ''].filter(Boolean);
-          return bits.length ? `<p class="who__line">${bits.join(' / ')}</p>` : '';
-        })()}
-        <span class="who__seal" aria-hidden="true">${brandSeal('cnh')}</span>
-      </section>
+      <div class="mem${filed.length ? ' mem--filed' : ''}">
+        <section class="who" aria-label="Member">
+          <p class="who__org">Cali-Nev-Ha District<br>Key Club</p>
+          <span class="who__emblem" aria-hidden="true">${brandSeal('cnh')}</span>
+          <div class="who__id">
+            ${tag.length ? `<p class="who__tag">${tag.join(' / ')}</p>` : ''}
+            <p class="who__name">${esc(name)}</p>
+            ${joined ? `<p class="who__since">Member since ${onClock(joined, { month:'long', year:'numeric' })}</p>` : ''}
+          </div>
+        </section>
 
-      ${total ? `<section class="standing-band">
-        <p class="standing-band__fig">${total}</p>
-        <p class="standing-band__of">${total === 1 ? 'stamp' : 'stamps'}</p>
-        <dl class="standing-band__rest">
-          <div><dt>Attendance</dt><dd>${held.length ? Store.attendanceRate() : 0}%</dd></div>
-          ${cards ? '' : `<div><dt>First stamp</dt><dd>${fmtDay(first.at)}</dd></div>`}
-          <div><dt>Latest stamp</dt><dd>${fmtDay(last.at)}</dd></div>
-        </dl>
-      </section>` : `<p class="nowline"><b class="nowline__lab">No attendance yet</b></p>`}
+        ${C.sealGrid(live)}
 
-      ${cards ? `<section class="cards">
-        <h2 class="ledger__mark">Completed cards</h2>
-        <ol class="cards__list">${Array.from({ length:cards }, (_, k) => {
-          const run = chrono.slice(k * Rules.CARD, (k + 1) * Rules.CARD);
-          const prize = Store.rewards.find(r => r.required === (k + 1) * Rules.CARD);
-          return `<li class="cards__row">
-            <span class="cards__no">Card ${pad(k + 1)}</span>
-            <span class="cards__marks" aria-hidden="true">${run.map((_, i) =>
-              `<svg viewBox="0 0 64 64">${stampMark(k * Rules.CARD + i)}</svg>`).join('')}</span>
-            <span class="cards__when">${fmtDay(run[0].at)} – ${fmtDay(run[run.length - 1].at)}</span>
-            ${prize ? `<span class="cards__prize">${esc(prize.name)} / ${
-              prize.handedAt ? 'collected' : prize.claimed ? 'claimed' : 'not claimed'}</span>` : ''}
-          </li>`;
-        }).join('')}</ol>
-      </section>` : ''}
+        <section class="standing-band">
+          <p class="standing-band__fig">${total}</p>
+          <p class="standing-band__of">${total === 1 ? 'stamp' : 'stamps'} collected</p>
+          <dl class="standing-band__rest">
+            <div><dt>Meetings attended</dt><dd>${attended} of ${held.length}</dd></div>
+            <div><dt>Attendance</dt><dd>${held.length ? `${Store.attendanceRate()}%` : '–'}</dd></div>
+            <div><dt>Rewards</dt><dd>${Store.rewardsUnlocked()} of ${Store.rewards.length}</dd></div>
+          </dl>
+        </section>
+
+        ${filed.length ? `<section class="files">
+          <h2 class="files__mark">Completed cards</h2>
+          <ol class="files__list">${filed.join('')}</ol>
+        </section>` : ''}
+      </div>
 
       ${C.account()}
+    </div>`;
+  },
+
+  /* Arriving by the wall code's link. Signed out, the page says what
+     the server says the code is for and offers a way in; signed in, it
+     says it is checking in while the verifier answers. The code itself
+     is never printed. */
+  checkin(){
+    const A = Arrival;
+    const signed = Store.signedIn;
+    const code = A.phase === 'refused' ? A.refusal : null;
+    /* the meeting's number: as the server said it, or as the record has
+       the meeting the code names (the code is read, not trusted: the
+       verifier still decides) */
+    const no = A.no || (signed && A.bare ? (Store.meeting(arrivalMeeting(A.bare)) || {}).no : null) || null;
+
+    const acts = (...b) => `<div class="authp__act">${b.join('')}</div>`;
+    const go = (attr, label) => `<button class="authp__go" type="button" ${attr}>${label}</button>`;
+    const alt = (attr, label) => `<button class="authp__swap" type="button" ${attr}>${label}</button>`;
+    const onward = signed ? go('data-go="home"', Store.isBoard ? 'Go to Check-in' : 'Go to Today')
+      : alt('data-arrive="in"', 'Sign in');
+    const say = (word, note = '', tail = '') => `<section class="authp arrive" aria-live="polite">
+        <h2 class="arrive__word">${word}</h2>
+        ${note ? `<p class="arrive__note">${note}</p>` : ''}
+        ${tail}
+      </section>`;
+
+    let status = '', card;
+    if (code === 'ALREADY_CHECKED_IN'){
+      status = 'Checked in';
+      card = say('Already checked in', '', acts(onward));
+    } else if (code && SCAN_TRANSIENT.has(code)){
+      card = say(scanMessage(code)[0], 'Try again in a moment.',
+        acts(go('data-arrive="again"', 'Try again'), signed ? '' : onward));
+    } else if (code === 'BOARD_ACCOUNT'){
+      card = say('Board account', 'Another officer adds you to the meeting.', acts(onward));
+    } else if (code === 'NOT_AUTHORIZED'){
+      card = say('Not allowed', 'This account cannot check in.', acts(onward));
+    } else if (code){
+      const [what, todo] = scanMessage(code);
+      card = say('Check-in unavailable', [what, todo].filter(Boolean).join('. ') + '.', acts(onward));
+    } else if (signed){
+      card = say('Checking in');
+    } else if (!A.peek){
+      card = say('Reading the code');
+    } else {
+      status = A.peek.ok ? 'Check-in open' : '';
+      card = say('Collect your attendance stamp', '',
+        acts(go('data-arrive="up"', 'Create account'), alt('data-arrive="in"', 'Sign in')));
+    }
+
+    return `<div class="view view--auth view--arrive">
+      <div class="spread">
+        <div class="spread__field crop" aria-hidden="true">
+          <svg class="spread__seal crop__art" viewBox="0 0 100 100">${sealArt()}</svg>
+          <span class="spread__kci">${brandSeal('kci')}</span>
+        </div>
+
+        <header class="spread__head">
+          <p class="spread__sub"><span>Keystamp</span></p>
+          <h1 class="spread__wm">${no ? `GM ${pad(no)}` : 'Check-in'}</h1>
+          ${status ? `<p class="arrive__status">${status}</p>` : ''}
+        </header>
+
+        ${card}
+      </div>
     </div>`;
   },
 
@@ -509,6 +687,8 @@ const Views = {
         </header>
 
         <form class="authp" id="authForm" novalidate>
+
+          ${Arrival.bare ? `<p class="authp__arrive">Then: ${Arrival.no ? `check in to GM ${pad(Arrival.no)}` : 'check in'}</p>` : ''}
 
           <div class="authp__f">
             <label class="authp__lab" for="authUser">Username</label>

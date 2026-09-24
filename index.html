@@ -120,7 +120,7 @@ body{
   width:clamp(7px,1vw,15px);background:var(--ink);
   clip-path:polygon(28% 0,100% 0,100% 100%,40% 100%,12% 88%,52% 74%,
                     22% 61%,58% 47%,18% 34%,50% 22%,20% 10%)}
-[data-screen="auth"] .ground__bleed{display:none}
+[data-screen="auth"] .ground__bleed,[data-screen="checkin"] .ground__bleed{display:none}
 
 .shell{
   position:relative;
@@ -570,9 +570,11 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 }
 
 [data-screen="auth"] .rail__nav,
-[data-screen="auth"] .tabs{display:none}
+[data-screen="auth"] .tabs,
+[data-screen="checkin"] .rail__nav,
+[data-screen="checkin"] .tabs{display:none}
 
-[data-screen="auth"] main#view{padding:0;max-width:none}
+[data-screen="auth"] main#view,[data-screen="checkin"] main#view{padding:0;max-width:none}
 /* the "Could not load" page shown there instead keeps the page gutter */
 [data-screen="auth"] main#view > .view:not(.view--auth){max-width:var(--page-max);margin-inline:auto;
   padding:calc(var(--sp-pad) + env(safe-area-inset-top, 0px))
@@ -840,22 +842,6 @@ body{
 .brow__no{color:var(--ink-2)}
 .brow__n{font-family:var(--f-head)}
 
-.blist--meet .brow__go{display:grid;column-gap:var(--sp-row);row-gap:4px;align-items:center;
-  grid-template-columns:auto minmax(0,1fr) auto;
-  grid-template-areas:"no day state" "no when when" "no n n";
-  padding:var(--sp-row) 0;cursor:pointer;min-height:44px}
-/* the whole row opens the meeting */
-.blist--meet .brow__no{grid-area:no;flex:none;align-self:start;min-height:0;padding-top:2px}
-.blist--meet .brow__day{grid-area:day;
-  font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);line-height:1.05;
-  letter-spacing:.01em;color:var(--ink);min-width:0;overflow-wrap:anywhere}
-.blist--meet .brow__when{grid-area:when;min-width:0;overflow-wrap:anywhere;
-  font:500 clamp(11px,.4vw + 9.7px,12.5px)/1.4 var(--f-mono);
-  letter-spacing:.04em;color:var(--ink-2)}
-.blist--meet .bstate{grid-area:state;justify-self:end;align-self:start}
-.blist--meet .brow__n{grid-area:n;display:flex;align-items:baseline;gap:6px;
-  justify-self:start;text-align:left;padding-top:2px}
-.blist--meet .brow--past .brow__day{color:var(--ink-2)}
 
 .bconfirm{display:flex;align-items:center;justify-content:flex-end;
   gap:var(--sp-tight);flex-wrap:wrap;width:100%}
@@ -878,35 +864,14 @@ body{
 @media (hover:hover){.bconfirm--heavy .btn--go:hover{
   background:var(--ink);border-color:var(--ink)}}
 .bform .field{display:flex;flex-direction:column;justify-content:flex-end;min-width:0}
-.bform .bform__grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-@media(max-width:339px){ .bform .bform__grid{grid-template-columns:minmax(0,1fr)} }
 .bform .field > .kicker{flex:none}
 .bform .field > .input{flex:none;width:100%}
 
-@media(min-width:640px){
-  .blist--meet .brow__go{grid-template-columns:auto minmax(0,1fr) auto auto;
-    grid-template-areas:"no day state n" "no when state n";row-gap:2px}
-  .blist--meet .brow__no{align-self:center;padding-top:0}
-  .blist--meet .bstate{align-self:center}
-  .blist--meet .brow__n{display:grid;justify-items:end;gap:1px;
-    text-align:right;padding-top:0}
-}
 
-/* the form opens in place, under the band that asked for it */
-.bform{padding:var(--sp-pad) 0;border-bottom:var(--edge-rule) solid var(--tint)}
-@media(min-width:640px){ .bform .bform__grid{grid-template-columns:repeat(4,minmax(0,1fr))} }
 
 .bform .input,.bfilters .input{font-family:var(--f-mono);
   color-scheme:light;accent-color:var(--ink)}
 
-.meetgrid{display:flex;flex-direction:column;gap:var(--sp-block)}
-.meetgrid > *{min-width:0}
-@media(min-width:1024px){
-  .meetgrid .blist--meet .brow__go{
-    grid-template-columns:7ch minmax(9ch,12ch) minmax(0,1fr) auto minmax(8ch,auto);
-    grid-template-areas:"no day when state n";align-items:center;row-gap:0}
-  .meetgrid .blist--meet .brow__n{display:flex;align-items:baseline;gap:6px;justify-self:end}
-}
 
 .meetband__t{margin:0;font:inherit;letter-spacing:inherit;text-transform:inherit}
 .meetband{display:flex;align-items:baseline;justify-content:space-between;
@@ -922,17 +887,6 @@ body{
 .meetband .meetband__act{min-height:44px;margin:-14px 0 -6px;padding:0;
   font-family:var(--f-body);text-transform:none;
   font-size:var(--t-body);letter-spacing:.02em;white-space:nowrap}
-/* the Held band names its count column once; each row is one line */
-/* the unit is named once in the band; each count keeps it for a reader */
-.meetpanel--held .brow__nlab{position:absolute;width:1px;height:1px;overflow:hidden;
-  clip-path:inset(50%);white-space:nowrap}
-@media(max-width:1023px){
-  .meetpanel--held .blist--meet .brow__go{grid-template-columns:auto minmax(0,1fr) auto auto;
-    grid-template-areas:"no day state n" "no when when when";row-gap:2px}
-  .meetpanel--held .blist--meet .brow__n{justify-self:end;padding-top:0}
-}
-.meetpanel--held .brow__day{font:500 clamp(12px,.4vw + 10px,14px)/1.4 var(--f-mono);
-  letter-spacing:.04em;text-transform:uppercase}
 .meetgrid .bsec::before,.bsec.meetband::before{content:none}
 .bsec.meetband{padding-top:0}
 
@@ -1000,9 +954,9 @@ div.brow__go{cursor:default}
   color:var(--ink-2);white-space:nowrap;vertical-align:bottom}
 /* the date and count columns take only what they need; the name takes the rest */
 .roster th:nth-child(n+2),.roster td:nth-child(n+2){width:1%;white-space:nowrap;padding-left:var(--sp-row)}
-.roster th:nth-child(3),.roster td:nth-child(3){text-align:right}
+.roster th:last-child,.roster td:last-child{text-align:right}
 .roster td{font:400 clamp(11px,.4vw + 9.7px,12.5px)/1.4 var(--f-mono);letter-spacing:.04em;color:var(--ink-2)}
-.roster td:nth-child(3){font-size:15px;color:var(--ink)}
+.roster td:last-child{font:400 clamp(18px,1.6vw,22px)/1 var(--f-head);color:var(--ink)}
 .roster tbody tr{cursor:pointer}
 @media (hover:hover){.roster tbody tr:hover{background:var(--tint)}}
 .roster__name{min-height:44px;margin:-12px 0;padding:0;border:0;background:none;cursor:pointer;
@@ -1011,8 +965,7 @@ div.brow__go{cursor:default}
 .roster__name:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:2px}
 .brow__none{color:var(--ink-2)}
 @media(min-width:768px){
-  .roster th:nth-child(2),.roster td:nth-child(2){width:14rem}
-  .roster th:nth-child(3),.roster td:nth-child(3){width:6rem}
+  .roster th:last-child,.roster td:last-child{width:5rem}
 }
 .bsec{border-bottom:var(--edge-thin) solid var(--ink);color:var(--ink)}
 
@@ -1062,8 +1015,8 @@ div.brow__go{cursor:default}
 main#view:focus,main#view:focus-visible,.rechead__title:focus{outline:none}
 
 @media(min-width:1024px){
-  [data-screen="auth"] .rail{display:none}
-  [data-screen="auth"] .shell{grid-template-columns:1fr}
+  [data-screen="auth"] .rail,[data-screen="checkin"] .rail{display:none}
+  [data-screen="auth"] .shell,[data-screen="checkin"] .shell{grid-template-columns:1fr}
 }
 
 
@@ -1202,65 +1155,102 @@ main#view:focus,main#view:focus-visible,.rechead__title:focus{outline:none}
   border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;
   transform:rotate(-5deg);pointer-events:none}
 
+/* a check-in is open: the slot the member stands on is marked in the
+   club's red, the one colour the card keeps for now */
+.seal--live::after{border-color:var(--seal);border-width:3px}
+.seal--live .sf-face{stroke:var(--seal);stroke-opacity:1;stroke-width:1.6}
+.seal--live .seal__mark{opacity:.34}
+.seal--live .seal__mark path{fill:var(--seal)}
+.seal--live .seal__no{color:var(--seal)}
+
 .seal__no{position:absolute;right:-3%;bottom:-5%;
   font:500 clamp(11px,1.9cqw,12px)/1 var(--f-mono);color:var(--ink-2)}
 
-.act{display:flex}
 .nowline{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px var(--sp-row);margin:0;
   font:500 clamp(11px,.5vw + 9.4px,13px)/1.4 var(--f-mono);letter-spacing:.1em;
   text-transform:uppercase;color:var(--ink-2)}
 .nowline__lab{font-family:var(--f-head);font-weight:400;letter-spacing:.02em;
   font-size:var(--t-sub);line-height:1;color:var(--ink)}
 
-.act__btn{position:relative;overflow:hidden;isolation:isolate;
-  display:grid;align-content:end;gap:4px;
-  width:100%;min-height:clamp(84px,12vw,112px);
-  padding:var(--sp-pad);border:var(--edge-panel) solid var(--ink);
-  background:var(--paper);color:var(--ink);text-align:left;cursor:pointer;
-  font-family:var(--f-body)}
-.act--live .act__btn{background:var(--ink);color:var(--paper)}
-.act:not(.act--live) .act__btn{min-height:0;padding:var(--sp-row) 0 0;border:0;
-  border-top:var(--edge-panel) solid var(--ink);background:none}
-.act:not(.act--live) .act__verb{font-size:var(--t-sub)}
-.act:not(.act--live) .act__sub{font-size:var(--t-caption);opacity:1;color:var(--ink-2)}
-@media (hover:hover){.act:not(.act--live) .act__btn:hover{background:none;color:var(--ink)}}
-@media (hover:hover){.act:not(.act--live) .act__btn:hover .act__verb{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}}
-.act__verb{font-family:var(--f-head);text-transform:uppercase;
-  font-size:var(--t-verb);line-height:1;letter-spacing:.01em}
-.act__sub{font-size:var(--t-body);line-height:1.3;opacity:.7;text-wrap:pretty}
-@media (hover:hover){.act__btn:hover{background:var(--ink);color:var(--paper)}}
-
+/* ══ Today: the meeting the day is about, as a ticket; the card beside
+   it; the last stamp and the meetings ahead under the ticket ══ */
 .deck{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr);
-  grid-template-areas:"act" "card" "ahead"}
+  grid-template-areas:"act" "card" "side";align-items:start}
 .deck > .card{grid-area:card}
 .deck__act{grid-area:act;min-width:0}
-.deck__ahead{grid-area:ahead}
+.deck__side{grid-area:side;display:grid;gap:var(--sp-block);min-width:0;align-content:start}
 
-.deck .act--live .act__btn{
-  clip-path:polygon(0 clamp(10px,2vw,22px),100% 0,100% 100%,0 100%);
-  padding-top:calc(var(--sp-pad) + clamp(10px,2vw,22px));
-  border-right:0}
-
-.deck .act--live{margin-right:calc(var(--gutter) * -1)}
-.deck .act--live .act__btn:focus-visible{outline:var(--edge-panel) solid var(--paper);outline-offset:-6px}
-
-@media(min-width:1280px){
-  .deck{grid-template-columns:minmax(0,68fr) minmax(0,32fr);
-    grid-template-areas:"card act" "card ahead" "card .";
-    grid-template-rows:auto auto minmax(0,1fr);align-items:start}
-  .deck .act--live{margin-right:0}
-  .deck .act--live .act__btn{border-right:var(--edge-panel) solid var(--ink)}
-  /* nothing open and nothing ahead: the card alone is the page */
-  .deck:not(:has(.deck__act,.deck__ahead)){grid-template-columns:minmax(0,1fr);
+@media(min-width:1100px){
+  .deck{grid-template-columns:minmax(0,63fr) minmax(0,37fr);column-gap:clamp(28px,3.2vw,56px);
+    grid-template-areas:"card act" "card side";grid-template-rows:auto minmax(0,1fr)}
+  .deck:not(:has(.deck__act)){grid-template-areas:"card side" "card side"}
+  .deck:not(:has(.deck__act,.deck__side)){grid-template-columns:minmax(0,1fr);
     grid-template-areas:"card";grid-template-rows:auto}
-  .deck:not(:has(.deck__act,.deck__ahead)) > .card{max-width:min(100%,1080px)}
+  .deck:not(:has(.deck__act,.deck__side)) > .card{max-width:min(100%,1080px)}
+  .deck .tkt{min-height:clamp(200px,17vw,280px)}
+  .deck .tkt__no{font-size:clamp(96px,8.4vw,150px)}
+  .deck .tkt__day{font-size:clamp(30px,2.8vw,44px)}
 }
+
+/* the ticket: a stub with the meeting's number, a perforation, a body */
+.tkt{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);
+  width:100%;min-height:clamp(128px,14vw,176px);margin:0;padding:0;
+  background:var(--paper);color:var(--ink);text-align:left;font:inherit;letter-spacing:inherit;
+  border:var(--edge-panel) solid var(--ink);border-radius:0}
+.tkt__stub{position:relative;display:flex;flex-direction:column;justify-content:space-between;
+  gap:var(--sp-tight);min-width:clamp(92px,10vw,128px);
+  padding:var(--sp-pad) clamp(14px,1.8vw,22px);
+  border-right:var(--edge-panel) dashed currentColor}
+/* the two notches of the perforation */
+.tkt__stub::before,.tkt__stub::after{content:'';position:absolute;right:-9px;
+  width:16px;height:16px;border-radius:50%;box-sizing:border-box;
+  background:var(--paper);border:var(--edge-panel) solid var(--ink)}
+.tkt__stub::before{top:-9px;clip-path:inset(50% -2px -2px -2px)}
+.tkt__stub::after{bottom:-9px;clip-path:inset(-2px -2px 50% -2px)}
+.tkt__gm{font:400 11.5px/1 var(--f-mono);letter-spacing:.2em;color:var(--ink-2)}
+.tkt__no{font:400 clamp(58px,6.4vw,96px)/.78 var(--f-display);letter-spacing:-.01em}
+.tkt__body{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0;
+  padding:var(--sp-pad) clamp(16px,2.2vw,26px)}
+.tkt__kick{font:400 11.5px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-2)}
+.tkt__day{font-family:var(--f-head);font-weight:400;text-transform:uppercase;
+  font-size:clamp(24px,2.5vw,34px);line-height:1;overflow-wrap:anywhere}
+.tkt__meta{font:400 12.5px/1.35 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-2)}
+.tkt__verb{margin-top:auto;padding-top:var(--sp-tight);font-family:var(--f-head);font-weight:400;
+  text-transform:uppercase;font-size:var(--t-verb);line-height:1}
+
+/* open: the ticket is the way in, in ink, reaching the edge of a phone */
+.tkt--live{background:var(--ink);color:var(--paper);cursor:pointer}
+.tkt--live .tkt__stub::before,.tkt--live .tkt__stub::after{border-color:var(--ink)}
+.tkt--live .tkt__gm,.tkt--live .tkt__meta{color:var(--tint)}
+.tkt--live .tkt__kick{color:var(--paper)}
+@media (hover:hover){.tkt--live:hover .tkt__verb{text-decoration:underline;
+  text-decoration-thickness:3px;text-underline-offset:6px}}
+.tkt--live:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:3px}
+@media(max-width:1099px){
+  .deck .tkt--live{width:calc(100% + var(--gutter));margin-right:calc(var(--gutter) * -1);
+    border-right:0}
+}
+
+/* stamped: the impression it earned, pressed over the body */
+.tkt__imp{position:absolute;right:clamp(14px,2vw,26px);top:50%;
+  width:clamp(64px,7vw,96px);height:auto;translate:0 -50%;rotate:-8deg;pointer-events:none}
+.tkt__face{fill:var(--ink)}
+.tkt__imp g path{fill:var(--paper)}
+.tkt--set .tkt__body{padding-right:calc(clamp(64px,7vw,96px) + clamp(22px,3vw,40px))}
+.tkt--quiet .tkt__no{color:var(--ink)}
+
+.deck__last{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;
+  gap:4px var(--sp-row);margin:0;padding-bottom:var(--sp-tight);
+  border-bottom:var(--edge-panel) solid var(--ink)}
+.deck__val{font:400 14px/1.2 var(--f-mono);letter-spacing:.04em;text-transform:uppercase}
 
 .ahead{position:relative;display:flex;flex-direction:column}
 .ahead__mark{margin:0 0 var(--sp-tight);padding-bottom:var(--sp-tight);
   border-bottom:var(--edge-panel) solid var(--ink);
   font-family:var(--f-head);text-transform:uppercase;
-  font-size:clamp(19px,3.6vw,26px);line-height:1}
+  font-size:clamp(19px,2.2vw,26px);line-height:1}
 .ahead__list{list-style:none;margin:0;padding:0;
   display:flex;flex-direction:column}
 .ahead__row{display:grid;
@@ -1271,7 +1261,7 @@ main#view:focus,main#view:focus-visible,.rechead__title:focus{outline:none}
 .ahead__row:last-child{border-bottom:0}
 .ahead__no{font:400 14px/1 var(--f-mono);letter-spacing:.04em;
   color:var(--ink-2);min-width:2ch}
-.ahead__day{font-size:var(--t-body);color:var(--ink-2)}
+.ahead__day{font-size:var(--t-body);color:var(--ink)}
 .ahead__at{font:400 12.5px/1.35 var(--f-mono);letter-spacing:.04em;
   text-transform:uppercase;color:var(--ink-2);justify-self:end;text-align:right}
 
@@ -1384,6 +1374,18 @@ html{font-synthesis:none}
   color:var(--ink);font-family:var(--f-body);font-size:var(--t-body);
   text-decoration:underline;text-underline-offset:3px;text-align:left}
 
+/* ══ Arriving by a wall code's link: the sign-in spread, the meeting
+   named in the band, and one card that says what happens next ══ */
+.arrive__status{display:inline-flex;align-items:center;gap:10px;margin:var(--sp-row) 0 0;
+  font:400 12px/1 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--paper)}
+.arrive__status::before{content:'';width:10px;height:10px;background:var(--paper)}
+.arrive{gap:var(--sp-pad)}
+.arrive__word{margin:0;font-family:var(--f-head);font-weight:400;text-transform:uppercase;
+  font-size:var(--t-head);line-height:1;overflow-wrap:anywhere}
+.arrive__note{margin:0;font-size:var(--t-body);line-height:1.4;color:var(--ink-2)}
+.authp__arrive{margin:0;padding-bottom:var(--sp-row);border-bottom:var(--edge-panel) solid var(--ink);
+  font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
+
 @media(min-width:600px) and (max-width:819px){
   .authp{margin-inline:auto}
 }
@@ -1430,19 +1432,52 @@ html{font-synthesis:none}
 
 .rechead__title{margin:0;padding-bottom:.2em}
 
-.recbody{display:grid;gap:var(--sp-pad)}
+/* ══ Record: the minutes of every meeting since the member joined, kept
+   by the month; its totals at the head, as an account's are, and every
+   meeting as one mark in a line ══ */
+.recbody{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr)}
 
-/* the ledger line: the figures a page is about, set as type, not display */
-.figline{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--sp-tight) clamp(16px,2.4vw,32px);
-  margin:0;font:500 clamp(11px,.5vw + 9.4px,13px)/1.2 var(--f-mono);
-  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.figline b{font-family:var(--f-head);font-weight:400;letter-spacing:0;
-  font-size:clamp(24px,2.6vw,34px);line-height:1;color:var(--ink);margin-right:.3em}
+.tally{display:grid;grid-template-columns:repeat(3,auto) minmax(0,1fr);align-items:baseline;
+  column-gap:clamp(16px,3vw,32px);row-gap:var(--sp-row);
+  padding-bottom:var(--sp-pad);border-bottom:var(--edge-frame) solid var(--ink)}
+.tally > p{margin:0;display:flex;align-items:baseline;gap:6px;white-space:nowrap}
+.tally b{font-family:var(--f-head);font-weight:400;line-height:.9;color:var(--ink);
+  font-size:clamp(30px,6vw,40px)}
+.tally__kept b{font-size:clamp(44px,10vw,64px)}
+.tally__gone b{color:var(--ink-2)}
+.tally > p > span,.tally__held{font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-2)}
+.tally__held{grid-column:1/-1;white-space:normal}
+.strip{grid-column:1/-1;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
+  gap:clamp(2px,.3vw,4px);height:clamp(26px,3vw,36px)}
+.strip__m{display:block;background:var(--tint)}
+.strip__m--set{background:var(--ink)}
+.strip__m--open{background:var(--seal)}
+.strip__m--today{background:none;box-shadow:inset 0 0 0 2px var(--tone)}
 
-.tally{display:grid;gap:var(--sp-row)}
+@media(min-width:1100px){
+  .recbody{grid-template-columns:minmax(0,30fr) minmax(0,70fr);column-gap:clamp(36px,4.4vw,72px);
+    align-items:start}
+  .tally{position:sticky;top:var(--sp-pad);grid-template-columns:auto minmax(0,1fr);
+    row-gap:var(--sp-tight);padding:0;border:0}
+  .tally > p{grid-column:1/-1;justify-content:space-between;padding:var(--sp-tight) 0;
+    border-bottom:var(--edge-rule) solid var(--tint);flex-direction:row-reverse}
+  .tally__kept{border-bottom:var(--edge-frame) solid var(--ink)!important}
+  .tally__kept b{font-size:clamp(64px,6vw,96px)}
+  .tally b{font-size:clamp(32px,2.8vw,44px)}
+  .tally__held{padding-top:var(--sp-tight)}
+  .strip{margin-top:var(--sp-tight)}
+}
 
-.ledger{display:flex;flex-direction:column;
-  border-top:var(--edge-panel) solid var(--ink)}
+.ledger{display:flex;flex-direction:column}
+.ledger__month{display:flex;justify-content:space-between;align-items:baseline;gap:var(--sp-row);
+  margin:var(--sp-block) 0 0;padding:0 0 var(--sp-tight);
+  border-bottom:var(--edge-panel) solid var(--ink)}
+.ledger__month:first-child{margin-top:0}
+.ledger__mname{font-family:var(--f-head);font-weight:400;text-transform:uppercase;
+  font-size:clamp(20px,2.4vw,30px);line-height:1}
+.ledger__mcount{font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
 
 .ledger__mark{margin:0 0 var(--sp-tight);padding-bottom:var(--sp-tight);
   border-bottom:var(--edge-panel) solid var(--ink);
@@ -1450,42 +1485,40 @@ html{font-synthesis:none}
   font-size:clamp(19px,3.6vw,26px);line-height:1}
 
 .lrow{display:grid;
-  grid-template-columns:auto clamp(30px,7vw,42px) minmax(0,1fr) auto;
+  grid-template-columns:clamp(40px,10vw,56px) clamp(28px,7vw,38px) minmax(0,1fr) auto;
   align-items:center;gap:var(--sp-row);
   width:100%;text-align:left;background:none;border:0;border-radius:0;
   color:inherit;font:inherit;
-  padding:clamp(9px,1.4vw,13px) 0;
+  padding:clamp(9px,1.4vw,12px) 0;
   border-bottom:var(--edge-rule) solid var(--tint)}
 
-.lrow__no{font:400 14px/1 var(--f-mono);letter-spacing:.04em;
-  color:var(--tone);min-width:2ch}
+/* the meeting's number carries the row, as a minute book's entry does */
+.lrow__no{font-family:var(--f-head);font-weight:400;line-height:.9;letter-spacing:0;
+  font-size:clamp(24px,5.4vw,32px);color:var(--tone)}
 .lrow__stamp{display:grid;place-items:center;aspect-ratio:1}
 .lrow__mark{width:100%;height:100%;display:block}
 .lrow__mark path{fill:var(--ink)}
 
 .lrow__slot{width:58%;aspect-ratio:1;border-radius:50%;
   border:var(--edge-panel) solid var(--tint)}
-
-.lrow__body{display:flex;flex-direction:column;gap:0;min-width:0}
+.lrow__body{display:flex;flex-direction:column;gap:2px;min-width:0}
 .lrow__date{font-size:var(--t-body);line-height:1.15}
 .lrow__when{font:400 12.5px/1.35 var(--f-mono);letter-spacing:.04em;
   text-transform:uppercase;color:var(--ink-2)}
 
 .lrow--set .lrow__no{color:var(--ink)}
 
-.lrow--miss .lrow__no{color:var(--ink-2)}
-.lrow--miss .lrow__date{color:var(--ink-2)}
-.lrow--miss .lrow__when{color:var(--ink-2)}
+.lrow--miss .lrow__date,.lrow--miss .lrow__when{color:var(--ink-2)}
 
 .lrow--upcoming .lrow__no{color:var(--ink-2)}
 .lrow--upcoming .lrow__date{color:var(--ink-2)}
 .lrow--upcoming .lrow__when{color:var(--ink-2)}
 
 /* the open meeting is a ledger row like the others, in full ink, with
-   its way to Scan; the black call to action belongs to Home */
+   its way to Scan and the club's red on its slot */
 .lrow--open{cursor:pointer}
 .lrow--open .lrow__no{color:var(--ink)}
-.lrow--open .lrow__slot{border-color:var(--ink)}
+.lrow--open .lrow__slot{border-color:var(--seal);border-width:3px}
 .lrow--open .lrow__when{color:var(--ink)}
 .lrow__go{font:400 12.5px/1 var(--f-mono);letter-spacing:.12em;
   text-transform:uppercase;color:var(--ink);white-space:nowrap;
@@ -1499,7 +1532,7 @@ html{font-synthesis:none}
 }
 
 @media(min-width:900px){
-  .lrow{grid-template-columns:auto 32px minmax(7rem,auto)
+  .lrow{grid-template-columns:clamp(48px,4.4vw,60px) 32px minmax(9rem,auto)
       minmax(0,1fr) auto;padding-block:var(--sp-tight);
     align-items:baseline;column-gap:var(--sp-pad)}
   .lrow__body{display:contents}
@@ -1509,26 +1542,34 @@ html{font-synthesis:none}
   .lrow__go{grid-column:5}
 }
 
+/* ══ Scan: one frame — the meeting a scan would stamp across its head,
+   the camera, and the line the scanner speaks on across its foot ══ */
+.scanframe{display:grid;grid-template-columns:minmax(0,1fr);
+  border:var(--edge-frame) solid var(--ink);background:var(--ink)}
+.scanframe > .standing{display:flex;align-items:baseline;flex-wrap:wrap;
+  gap:2px var(--sp-row);margin:0;padding:10px var(--sp-pad) 12px;
+  background:var(--ink);color:var(--paper);border:0}
+.standing__lab{font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;
+  text-transform:uppercase;color:var(--tone);white-space:nowrap}
+.standing__at{font-family:var(--f-head);font-size:clamp(20px,2.2vw,28px);line-height:1;
+  color:var(--paper);min-width:0;overflow-wrap:anywhere}
+
 .viewer{position:relative;display:grid;place-items:center;
   grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);
   isolation:isolate;overflow:hidden;container-type:size;
-  width:100%;height:clamp(220px,calc(100dvh - 341px),640px);
-  border:var(--edge-frame) solid var(--ink);background:var(--tint)}
+  width:100%;height:clamp(220px,calc(100dvh - 330px),640px);
+  border:0;background:var(--ink-2)}
 
 .viewer > *{grid-column:1;grid-row:1;min-height:0;min-width:0}
 .viewer video{width:100%;height:100%;display:block;
   object-fit:cover;object-position:center;
   filter:grayscale(1) contrast(1.06)}
 
-.viewer__scrim{width:100%;height:100%;pointer-events:none;
-  background-image:radial-gradient(rgba(10,10,10,.34) 1.1px,transparent 1.2px);
-  background-size:5px 5px}
-
 .reticle{position:relative;place-self:center;
-  width:min(56cqw,72cqh,290px);aspect-ratio:1;
+  width:min(62cqw,74cqh,320px);aspect-ratio:1;
   pointer-events:none;z-index:3}
-.reticle__c{position:absolute;width:15%;height:15%;
-  border:var(--edge-frame) solid var(--paper);
+.reticle__c{position:absolute;width:16%;height:16%;
+  border:var(--edge-card) solid var(--paper);
   /* an ink keyline, so the corners read over a white screen too */
   filter:drop-shadow(1.5px 1.5px 0 var(--ink)) drop-shadow(-1.5px -1.5px 0 var(--ink))}
 .reticle__c--tl{top:0;left:0;border-right:0;border-bottom:0}
@@ -1536,13 +1577,14 @@ html{font-synthesis:none}
 .reticle__c--bl{bottom:0;left:0;border-right:0;border-top:0}
 .reticle__c--br{bottom:0;right:0;border-left:0;border-top:0}
 
-.reticle--good .reticle__c{width:19%;height:19%}
+.reticle--good .reticle__c{width:20%;height:20%}
 .reticle--bad .reticle__c{width:12%;height:12%}
 
-.scanline{display:flex;align-items:center;gap:var(--sp-row);margin:0;min-height:26px;
+.scanline{display:flex;align-items:center;gap:var(--sp-row);margin:0;min-height:48px;
+  padding:10px var(--sp-pad);background:var(--paper);
   font:400 clamp(13px,3.6vw,15px)/1.35 var(--f-mono);letter-spacing:.1em;
   text-transform:uppercase;color:var(--ink)}
-.scanline__dot{flex:none;width:9px;height:9px;
+.scanline__dot{flex:none;width:10px;height:10px;
   border:2px solid var(--ink);background:transparent}
 .scanline__msg{min-width:0;overflow-wrap:anywhere}
 .scanline--boot{color:var(--ink-2)}
@@ -1553,17 +1595,8 @@ html{font-synthesis:none}
 .scanline--busy .scanline__dot{background:var(--tone);border-color:var(--tone)}
 .scanline--good .scanline__dot{background:var(--ink)}
 .scanline--good .scanline__msg,.scanline--busy .scanline__msg{background:var(--ink);color:var(--paper);padding:3px 8px}
-.scanline--bad .scanline__dot{background:var(--paper)}
+.scanline--bad .scanline__dot{background:var(--seal);border-color:var(--seal)}
 .scanline--bad .scanline__msg{text-decoration:underline 2px;text-underline-offset:4px}
-
-.standing{display:flex;align-items:baseline;justify-content:flex-start;
-  gap:var(--sp-tight) var(--sp-pad);flex-wrap:wrap;margin:0;
-  padding-top:var(--sp-row);border-top:var(--edge-panel) solid var(--ink)}
-.standing__lab{font-size:var(--t-caption);color:var(--ink-2);
-  letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
-.standing__at{font-family:var(--f-head);font-size:var(--t-sub);line-height:1.05;
-  color:var(--ink);text-align:left;min-width:0;overflow-wrap:anywhere}
-
 
 .zoom{position:relative;z-index:4;align-self:end;justify-self:stretch;
   display:flex;align-items:center;gap:var(--sp-row);margin:0;padding:8px 12px;
@@ -1588,18 +1621,16 @@ html{font-synthesis:none}
 .viewer--zoom .reticle{width:min(56cqw,62cqh,290px);margin-bottom:44px}
 
 .viewer--stalled{aspect-ratio:auto;height:auto;min-height:0;border:0;
-  container-type:normal;place-items:stretch;background:none}
+  container-type:normal;place-items:stretch;background:var(--paper);
+  padding:var(--sp-block) var(--sp-pad)}
 
+/* a phone on its side: the frame beside the title, as tall as the window */
 @media(max-height:520px) and (min-aspect-ratio:4/3){
-  .view--scan{display:grid;
-    grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);
-    grid-template-rows:auto auto minmax(0,1fr);gap:var(--sp-row) var(--sp-block);
-    grid-template-areas:"stage head" "stage line" "stage standing"}
-  .view--scan > .rechead{grid-area:head;margin:0}
-  .view--scan > .viewer{grid-area:stage;margin:0;aspect-ratio:4/3;height:auto;
-    max-height:calc(100dvh - 136px);min-height:0;align-self:start}
-  .view--scan > .scanline{grid-area:line}
-  .view--scan > .standing{grid-area:standing;margin:0;align-self:start}
+  .view--scan{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);
+    align-items:start;gap:var(--sp-block)}
+  .view--scan > .rechead{grid-column:2;grid-row:1;margin:0}
+  .view--scan > .scanframe{grid-column:1;grid-row:1}
+  .scanframe .viewer{height:calc(100dvh - 150px);min-height:160px}
 }
 
 .stall{display:flex;flex-direction:column;justify-content:center;
@@ -1614,154 +1645,190 @@ html{font-synthesis:none}
 /* on a desktop the camera spans the page at the shape of the stream it
    shows, so what is in the frame is what the decoder reads */
 @media(min-width:1024px){
-  .view--scan > .viewer{height:auto;aspect-ratio:16/9;
-    max-height:calc(100dvh - 300px);min-height:320px}
-  .view--scan > .viewer--stalled{aspect-ratio:auto;min-height:0}
+  .scanframe .viewer{height:auto;aspect-ratio:16/9;
+    max-height:calc(100dvh - 330px);min-height:320px}
+  .scanframe .viewer--stalled{aspect-ratio:auto;min-height:0}
 }
 
-.tiers{display:flex;flex-direction:column;gap:0}
+/* ══ Rewards: the prizes as tickets on a rail, each rung's length of
+   the rail filled as far as the member has come; the count still to go
+   is the page's figure ══ */
+.prize{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr)}
+.prize__fig{display:grid;grid-template-columns:auto minmax(0,1fr);
+  grid-template-areas:"n to" "n of";column-gap:var(--sp-pad);row-gap:var(--sp-tight);align-items:end;
+  padding-bottom:var(--sp-pad);border-bottom:var(--edge-frame) solid var(--ink)}
+.prize__n{grid-area:n;margin:0;font:400 clamp(80px,19vw,150px)/.78 var(--f-display);
+  color:var(--ink);padding-bottom:.02em}
+.prize__to{grid-area:to;margin:0;font-family:var(--f-head);text-transform:uppercase;
+  font-size:var(--t-sub);line-height:1.05;color:var(--ink-2)}
+.prize__to b{display:block;font-weight:400;color:var(--ink)}
+.prize__of{grid-area:of;margin:0 0 .4em}
+@media(min-width:1100px){
+  .prize{grid-template-columns:minmax(0,30fr) minmax(0,70fr);column-gap:clamp(36px,4.4vw,72px);
+    align-items:start}
+  .prize__fig{position:sticky;top:var(--sp-pad);grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"n" "to" "of";row-gap:var(--sp-pad)}
+  .prize__n{font-size:clamp(150px,13vw,220px)}
+  .prize__to{font-size:clamp(26px,2.4vw,36px)}
+}
+
+.tiers{--rail:clamp(26px,3vw,40px);display:flex;flex-direction:column;
+  gap:var(--sp-pad);padding-left:var(--rail)}
 
 .tier{position:relative;display:grid;min-width:0;
-  grid-template-columns:clamp(56px,5.2vw,80px) minmax(0,1fr);
-  grid-template-areas:"at body" "at ticks" "at say";
-  column-gap:clamp(14px,2.4vw,26px);row-gap:var(--sp-tight);align-items:start;
-  padding:clamp(16px,2.4vw,24px) 0;
-  border:0;border-top:var(--edge-panel) solid var(--ink);background:none}
-.tier__at{grid-area:at;font-family:var(--f-head);line-height:.82;
-  font-size:clamp(32px,3.6vw,44px);color:var(--ink);min-width:2.2ch}
-.tier__body{grid-area:body;display:flex;flex-direction:column;gap:3px;min-width:0}
-.tier__name{font-family:var(--f-head);font-size:var(--t-sub);
-  line-height:1.05;overflow-wrap:anywhere}
+  grid-template-columns:clamp(74px,8vw,108px) minmax(0,1fr);
+  min-height:clamp(112px,11vw,150px);
+  border:var(--edge-panel) solid var(--ink);background:var(--paper);color:var(--ink)}
+/* the rail beside each ticket: the track, then as much of it as is earned */
+.tier::before,.tier::after{content:'';position:absolute;
+  left:calc(var(--edge-panel) * -1 - var(--rail));width:10px;top:calc(var(--edge-panel) * -1)}
+.tier::before{bottom:calc(var(--edge-panel) * -1 - var(--sp-pad));background:var(--tint)}
+.tier:last-child::before{bottom:calc(var(--edge-panel) * -1)}
+.tier::after{height:calc((100% + var(--edge-panel) * 2 + var(--sp-pad)) * var(--got,0));background:var(--ink)}
+.tier:last-child::after{height:calc((100% + var(--edge-panel) * 2) * var(--got,0))}
+
+.tier__at{display:flex;flex-direction:column;justify-content:space-between;gap:var(--sp-tight);
+  padding:var(--sp-pad) clamp(12px,1.6vw,18px);border-right:var(--edge-panel) dashed currentColor}
+.tier__at b{font:400 clamp(40px,4.6vw,60px)/.82 var(--f-head);color:inherit}
+.tier__at span{font:400 11px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;opacity:.75}
+.tier__body{display:flex;flex-direction:column;align-items:flex-start;gap:var(--sp-tight);
+  min-width:0;padding:var(--sp-pad) clamp(14px,2vw,26px)}
+.tier__name{font-family:var(--f-head);font-size:var(--t-sub);line-height:1.05;
+  text-transform:uppercase;overflow-wrap:anywhere}
 .tier__desc{font-size:var(--t-caption);color:var(--ink-2);line-height:1.35}
-.tier__desc:empty{display:none}
-
-.tier__ticks{grid-area:ticks;display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
-.tier__ticks i{display:block;width:clamp(12px,2.4vw,18px);aspect-ratio:1;
-  background:var(--tint)}
+.tier__ticks{display:flex;flex-wrap:wrap;gap:4px}
+.tier__ticks i{display:block;width:clamp(12px,2.2vw,16px);aspect-ratio:1;background:var(--tint)}
 .tier__ticks i.is-on{background:var(--ink)}
-
-.tier__say{grid-area:say;margin:0;font-size:var(--t-body);color:var(--ink)}
-.tier--far .tier__say{color:var(--ink-2)}
-.tier__claim{grid-area:say;justify-self:start;
-  padding:10px var(--sp-pad);cursor:pointer;
-  border:var(--edge-panel) solid var(--paper);
-  background:var(--paper);color:var(--ink);
-  font-family:var(--f-head);
-  font-size:var(--t-sub);line-height:1.15;white-space:nowrap}
-@media (hover:hover){.tier__claim:hover{background:transparent;color:var(--paper)}}
-.tier__claim:focus-visible{outline:var(--edge-panel) solid var(--paper);
-  outline-offset:3px}
-
-.tier--ready{background:var(--ink);color:var(--paper);border-top-color:var(--ink);
-  max-width:none;margin-right:calc(var(--gutter) * -1);
-  padding:clamp(22px,3.4vw,38px) var(--gutter) clamp(22px,3.4vw,38px) clamp(16px,2.4vw,26px)}
-.tier--ready + .tier{border-top-width:0}
-.tier--ready .tier__at{color:var(--paper);font-size:clamp(36px,4.4vw,56px)}
-.tier--ready .tier__desc{color:var(--tint)}
-
-.tier--claimed{color:var(--ink-2)}
-.tier--claimed .tier__at,.tier--claimed .tier__name{color:var(--ink-2)}
-.tier--claimed{grid-template-areas:"at body" "at say" "at note"}
-/* what happens next, or when it did: a line under the punch */
-.tier__note{grid-area:note;margin-top:var(--sp-tight);
-  font-size:var(--t-caption);line-height:1.35;color:var(--ink-2)}
-.tier--took .tier__punch{border-color:var(--ink-2);color:var(--ink-2)}
-.tier__punch{grid-area:say;justify-self:start;
-  transform:rotate(-4deg);transform-origin:0 100%;
-  font-family:var(--f-head);text-transform:uppercase;line-height:1;
-  font-size:clamp(17px,2.6vw,24px);color:var(--ink);
-  border:var(--edge-panel) solid var(--ink);padding:.2em .5em;
-  pointer-events:none}
-
-.tier--far .tier__at,.tier--far .tier__name{color:var(--ink-2)}
-
-@media(min-width:900px){
-  /* the slab hangs into the gutter by its own padding, so its name
-     lines up with the other rungs */
-  .tier--ready{margin-right:0;padding-right:var(--sp-pad);
-    margin-left:calc(-1 * clamp(16px,2.4vw,26px))}
-}
-/* the list pages are sheets: one measure, and the title's rule ends
-   where the content ends; Home, Scan and Check-in are stages */
-@media(min-width:1024px){
-  .view--record,.view--rewards,.view--member,
-  [data-screen="bmeet"] .view--board,[data-screen="bmembers"] .view--board{max-width:760px}
-}
-.tier--ready + .tier--ready{margin-top:3px}
-
-/* the member, set as type: name, standing, district, and the district's
-   own seal at the size of a signature, not a banner */
-.who{display:grid;grid-template-columns:auto auto;justify-content:start;
-  grid-template-areas:"name seal" "line seal";column-gap:var(--sp-block);row-gap:6px;
-  align-items:end}
-.who__name{grid-area:name;margin:0;line-height:1;color:var(--ink);
-  font-size:clamp(26px,3vw,36px);overflow-wrap:anywhere}
-.who__line{grid-area:line;margin:0;font:500 clamp(11px,.5vw + 9.4px,13px)/1.4 var(--f-mono);
-  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.who__seal{grid-area:seal;width:clamp(56px,7vw,88px);align-self:center}
-.who__seal .brandseal{display:block;width:100%;height:auto}
-@media(min-width:760px){
-  .view--member .standing-band__rest{grid-template-columns:repeat(3,minmax(0,1fr))}
-}
-
-/* the cards a member has filled, as a strip of their own impressions */
-.cards__list{list-style:none;margin:0;padding:0}
-.cards__row{display:grid;grid-template-columns:auto minmax(0,1fr);
-  grid-template-areas:"no when" "marks marks" "prize prize";gap:6px var(--sp-pad);
-  align-items:baseline;padding:var(--sp-row) 0;border-bottom:var(--edge-rule) solid var(--tint)}
-.cards__no{grid-area:no;font:400 clamp(15px,1.2vw,17px)/1.2 var(--f-mono);
-  letter-spacing:.04em;text-transform:uppercase}
-.cards__marks{grid-area:marks;display:flex;gap:clamp(4px,1vw,10px)}
-.cards__marks svg{width:clamp(20px,5.2vw,30px);height:auto}
-.cards__marks path{fill:var(--ink)}
-.cards__when,.cards__prize{font:500 clamp(11px,.5vw + 9.4px,13px)/1.4 var(--f-mono);
-  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
-.cards__when{grid-area:when;justify-self:end}
-.cards__prize{grid-area:prize}
-@media(min-width:900px){
-  .cards__row{grid-template-columns:8ch auto minmax(0,1fr);
-    grid-template-areas:"no marks when" "no marks prize";align-items:center}
-  .cards__when{justify-self:start;white-space:nowrap}
-}
-
-
-.standing-band{display:grid;gap:2px;
-  grid-template-columns:auto minmax(0,1fr);
-  grid-template-areas:"fig of" "rest rest";align-items:end;
-  border-top:var(--edge-frame) solid var(--ink);padding-top:var(--sp-pad)}
-.standing-band__fig{grid-area:fig;margin:0;padding-bottom:.1em;
-  font-family:var(--f-head);line-height:.8;
-  font-size:clamp(48px,7vw,80px);color:var(--ink)}
-.standing-band__of{grid-area:of;margin:0 0 .55em var(--sp-tight);
-  font-size:var(--t-caption);color:var(--ink-2);line-height:1.2}
-
-.standing-band__rest{grid-area:rest;display:grid;gap:0;margin:var(--sp-pad) 0 0;
-  grid-template-columns:minmax(0,1fr)}
-.standing-band__rest > div{display:grid;
-  grid-template-columns:minmax(0,1fr) auto;align-items:baseline;
-  gap:var(--sp-row);padding:clamp(9px,1.4vw,13px) 0;
-  border-bottom:var(--edge-rule) solid var(--tint)}
-.standing-band__rest dt{font-size:var(--t-caption);color:var(--ink-2)}
-
-.standing-band__rest dd{margin:0;justify-self:end;
-  font:400 clamp(15px,1.2vw,17px)/1.2 var(--f-mono);letter-spacing:.04em;
+.tier__say{margin-top:auto;font:400 12.5px/1.3 var(--f-mono);letter-spacing:.08em;
   text-transform:uppercase;color:var(--ink)}
+.tier__note{margin-top:auto;font-size:var(--t-caption);line-height:1.35;color:var(--ink-2)}
 
-@media(min-width:760px){
-  .standing-band{grid-template-columns:auto auto minmax(0,1fr);
-    grid-template-areas:"fig of rest";align-items:center;
-    column-gap:var(--sp-row)}
-  .standing-band__of{margin:0 clamp(24px,4vw,56px) 0 0;
-    align-self:end;padding-bottom:.62em}
-  .standing-band__rest{margin:0;
-    grid-template-columns:repeat(3,minmax(0,1fr));
-    column-gap:clamp(16px,2.4vw,36px);row-gap:var(--sp-pad)}
-  .standing-band__rest > div{grid-template-columns:minmax(0,1fr);
-    align-content:end;gap:2px;
-    border-bottom:0;border-top:var(--edge-rule) solid var(--tint);
-    padding:var(--sp-tight) 0 0}
-  .standing-band__rest dd{justify-self:start}
+/* the punch pressed onto a claimed ticket; its turn and lift are their
+   own properties, so the press animation's scale adds to them */
+.tier__punch{position:absolute;right:clamp(12px,2.4vw,30px);top:50%;
+  translate:0 -50%;rotate:-9deg;
+  font-family:var(--f-head);text-transform:uppercase;line-height:1;
+  font-size:clamp(20px,3vw,34px);color:var(--ink);background:var(--paper);
+  border:var(--edge-frame) solid currentColor;padding:.14em .42em;pointer-events:none}
+.tier--claimed .tier__body{padding-right:clamp(116px,17vw,220px)}
+
+/* earned: an ink ticket, and the claim on it */
+.tier--ready{background:var(--ink);color:var(--paper)}
+.tier--ready .tier__desc{color:var(--tint)}
+.tier__claim{margin-top:auto;padding:10px var(--sp-pad);cursor:pointer;
+  border:var(--edge-panel) solid var(--paper);background:var(--paper);color:var(--ink);
+  font-family:var(--f-head);font-size:var(--t-sub);line-height:1.15;white-space:nowrap}
+@media (hover:hover){.tier__claim:hover{background:transparent;color:var(--paper)}}
+.tier__claim:focus-visible{outline:var(--edge-panel) solid var(--paper);outline-offset:3px}
+
+/* handed over: the last state a prize has — the ticket filed, greyed,
+   and struck in the club's red */
+.tier--took{background:var(--tint);border-color:var(--ink-2);color:var(--ink-2)}
+.tier--took .tier__name{color:var(--ink)}
+.tier--took .tier__punch{color:var(--seal);background:var(--tint)}
+
+/* a rung beyond the next: drawn in pencil until the one before it is reached */
+.tier--far{border-color:var(--tone);color:var(--ink-2)}
+.tier--far .tier__say{color:var(--ink-2)}
+
+/* ══ Member: the member's own record. The district's plate and the card
+   side by side; the standing under the plate, the cards already filled
+   under the card ══ */
+.mem{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"who" "card" "band" "files";align-items:start}
+.mem > .who{grid-area:who}
+.mem > .card{grid-area:card}
+.mem > .standing-band{grid-area:band}
+.mem > .files{grid-area:files}
+@media(min-width:900px){
+  .mem{grid-template-columns:minmax(0,34fr) minmax(0,66fr);column-gap:clamp(20px,2.8vw,44px);
+    grid-template-areas:"who card" "band band"}
+  .mem--filed{grid-template-areas:"who card" "band files"}
 }
+
+/* the plate: black, the district's seal pressed into it and cut by its
+   edge, the member's name under a rule */
+.who{position:relative;display:grid;gap:var(--sp-pad);
+  grid-template-rows:minmax(clamp(84px,22vw,220px),1fr) auto;
+  container-type:inline-size;isolation:isolate;overflow:hidden;
+  background:var(--ink);color:var(--paper);
+  padding:clamp(18px,3vw,32px);
+  margin-left:calc(var(--gutter) * -1);
+  padding-left:max(var(--gutter),clamp(18px,3vw,32px))}
+.who__org{grid-row:1;align-self:start;position:relative;z-index:1;margin:0;
+  font:400 11.5px/1.7 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--paper)}
+/* the seal is cut by the plate's own box: it runs off the plate's edge,
+   never off the page */
+.who__emblem{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.who__emblem .brandseal{position:absolute;right:-24%;top:42%;display:block;height:auto;
+  width:clamp(200px,72cqw,460px);translate:0 -50%;rotate:-8deg;opacity:.34;
+  --si:var(--tone);--sp:transparent}
+@container (min-width:420px){ .who__emblem .brandseal{right:-18%;top:50%;width:clamp(210px,84cqw,460px)} }
+.who__id{grid-row:2;position:relative;z-index:1;align-self:end;display:grid;gap:5px;
+  border-top:var(--edge-rule) solid var(--ink-2);padding-top:clamp(10px,1.6vw,16px)}
+.who__tag,.who__since{margin:0;font:400 11.5px/1.4 var(--f-mono);letter-spacing:.12em;
+  text-transform:uppercase;color:var(--tint);overflow-wrap:anywhere}
+.who__since{color:var(--tone)}
+.who__name{margin:0;color:var(--paper);line-height:1;
+  font-size:clamp(28px,11cqw,52px);overflow-wrap:anywhere}
+@media(min-width:900px){
+  .who{margin-left:0;padding-left:clamp(18px,3vw,32px);align-self:stretch}
+}
+
+/* the standing: one figure in the display face, the rest set as a ledger */
+.standing-band{display:grid;grid-template-columns:auto minmax(0,1fr);
+  grid-template-areas:"fig of" "rest rest";align-items:end;column-gap:var(--sp-row);
+  border-top:var(--edge-frame) solid var(--ink);padding-top:var(--sp-pad)}
+.standing-band__fig{grid-area:fig;margin:0;padding-bottom:.04em;
+  font-family:var(--f-display);line-height:.78;
+  font-size:clamp(72px,17vw,132px);color:var(--ink)}
+.standing-band__of{grid-area:of;margin:0 0 .5em}
+.standing-band__rest{grid-area:rest;display:grid;margin:var(--sp-pad) 0 0;
+  grid-template-columns:minmax(0,1fr)}
+.standing-band__rest > div{display:grid;grid-template-columns:minmax(0,1fr) auto;
+  align-items:baseline;gap:var(--sp-row);padding:10px 0;
+  border-bottom:var(--edge-rule) solid var(--tint)}
+.standing-band__rest > div:last-child{border-bottom:0}
+.standing-band__rest dd{margin:0;justify-self:end;font-family:var(--f-head);
+  font-size:clamp(19px,2vw,24px);line-height:1;color:var(--ink)}
+@media(min-width:760px){
+  .mem:not(.mem--filed) .standing-band{grid-template-columns:auto auto minmax(0,1fr);
+    grid-template-areas:"fig of rest";align-items:end}
+  .mem:not(.mem--filed) .standing-band__of{margin-right:clamp(24px,4vw,56px)}
+  .mem:not(.mem--filed) .standing-band__rest{margin:0;
+    grid-template-columns:repeat(3,minmax(0,1fr));column-gap:clamp(16px,2.4vw,36px)}
+  .mem:not(.mem--filed) .standing-band__rest > div{grid-template-columns:minmax(0,1fr);gap:4px;
+    border-bottom:0;border-top:var(--edge-rule) solid var(--tint);padding:var(--sp-tight) 0 0}
+  .mem:not(.mem--filed) .standing-band__rest dd{justify-self:start}
+}
+
+/* the cards already filled, filed side by side under the one in hand */
+.files{display:grid;gap:var(--sp-pad);border-top:var(--edge-frame) solid var(--ink);
+  padding-top:var(--sp-pad);min-width:0}
+.files__mark{margin:0;font-family:var(--f-head);font-weight:400;text-transform:uppercase;
+  font-size:clamp(19px,2.2vw,26px);line-height:1}
+.files__list{list-style:none;margin:0;padding:0;display:grid;gap:var(--sp-block) var(--sp-pad);
+  grid-template-columns:repeat(auto-fill,minmax(min(100%,148px),1fr))}
+@media(min-width:900px){ .files__list{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))} }
+.filed{display:flex;flex-direction:column;gap:3px;min-width:0}
+.filed__card{position:relative;display:grid;grid-template-columns:22% minmax(0,1fr);
+  margin:0 0 var(--sp-tight);container-type:inline-size;
+  border:var(--edge-frame) solid var(--ink);background:var(--paper);
+  box-shadow:4px 4px 0 var(--tone)}
+.filed__id{display:block;background:var(--ink);color:var(--paper);padding:10% 12%}
+.filed__id b{display:block;font:400 clamp(20px,13cqw,40px)/.8 var(--f-display)}
+.filed__field{display:block;width:90%;height:auto;margin:5%;overflow:visible}
+.fc-route{fill:none;stroke:var(--tone);stroke-width:.7;stroke-dasharray:.2 2.6;stroke-linecap:round}
+.fc-face{fill:var(--ink)}
+.fc-mark path{fill:var(--paper)}
+.fc-back{fill:none;stroke:var(--ink);stroke-width:3}
+.filed__punch{position:absolute;right:5%;bottom:9%;rotate:-8deg;
+  font-family:var(--f-head);text-transform:uppercase;line-height:1;
+  font-size:clamp(12px,8.4cqw,20px);color:var(--ink);background:var(--paper);
+  border:var(--edge-panel) solid currentColor;padding:.18em .4em;pointer-events:none;white-space:nowrap}
+.filed--took .filed__punch{color:var(--seal)}
+.filed__no{margin:0;font:400 15px/1.2 var(--f-mono);letter-spacing:.04em;text-transform:uppercase}
+.filed__when,.filed__prize{margin:0}
 
 .acct{display:grid;gap:var(--sp-row);justify-items:start;
   border-top:var(--edge-panel) solid var(--ink);padding-top:var(--sp-pad)}
@@ -1780,7 +1847,6 @@ html{font-synthesis:none}
   outline-offset:3px}
 /* from 1024px up the rail's foot carries the account block */
 @media(min-width:1024px){ .view--member .acct,.view--board .acct{display:none} }
-
 
 
 .crop{overflow:hidden;isolation:isolate}
@@ -1961,12 +2027,168 @@ html{font-synthesis:none}
 .bback{align-self:flex-start;margin-bottom:var(--sp-pad)}
 
 /* one label: small caps of record, in the record face */
-.kicker,.figline,.meetband__n,.card__cardno,.who__line,
-.rail__role,.standing__lab,.standing-band__of,.standing-band__rest dt,.brow__nlab,
-.authp__lab,.cards__when,.cards__prize{
+.kicker,.meetband__n,.card__cardno,
+.rail__role,.standing-band__of,.standing-band__rest dt,.brow__nlab,
+.authp__lab,.filed__when,.filed__prize,.prize__of,.deck__lab{
   font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;
   color:var(--ink-2)}
 .card__cardno{color:var(--tint);opacity:1}
+
+/* ══ Board. Members: the club's figures at the head of its roster, the
+   prize table beside it; Meetings: the schedule as tickets beside the
+   minute book; the detail pages: who or what, then its record ══ */
+.memgrid{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"club" "owed" "roster";align-items:start}
+.memgrid > .club{grid-area:club}
+.memgrid > .owed{grid-area:owed}
+.memgrid > .rosterpanel{grid-area:roster}
+@media(min-width:1100px){
+  .memgrid{grid-template-columns:minmax(0,60fr) minmax(0,40fr);column-gap:clamp(32px,4vw,64px);
+    grid-template-areas:"club club" "roster owed"}
+  .memgrid > .owed{position:sticky;top:var(--sp-pad)}
+}
+
+.club{display:grid;gap:var(--sp-block);padding-bottom:var(--sp-pad);
+  border-bottom:var(--edge-frame) solid var(--ink)}
+.club__figs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:var(--sp-pad) clamp(16px,2.4vw,36px);margin:0;align-items:end}
+.club__fig{display:flex;flex-direction:column-reverse;gap:6px;min-width:0}
+.club__fig dt{font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-2);border-top:var(--edge-rule) solid var(--tint);padding-top:6px}
+.club__fig dd{margin:0;font:400 clamp(32px,3.6vw,48px)/.9 var(--f-head);color:var(--ink)}
+.club__fig--lead dd{font-family:var(--f-display);font-size:clamp(64px,8vw,120px);line-height:.8}
+.club__tiers{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr)}
+.club__tier{display:grid;grid-template-columns:clamp(48px,5vw,64px) minmax(0,1fr) auto;
+  align-items:baseline;column-gap:var(--sp-row);padding:var(--sp-tight) 0;
+  border-bottom:var(--edge-rule) solid var(--tint)}
+.club__tier:last-child{border-bottom:0}
+.club__at{font:400 clamp(24px,2.4vw,32px)/.9 var(--f-head)}
+.club__tname{font-family:var(--f-head);font-size:clamp(15px,1.3vw,18px);text-transform:uppercase;
+  overflow-wrap:anywhere}
+.club__tn{font:400 12.5px/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-2);white-space:nowrap}
+@media(min-width:760px){ .club__figs{grid-template-columns:repeat(4,minmax(0,1fr))} }
+@media(min-width:1100px){
+  .club{grid-template-columns:minmax(0,60fr) minmax(0,40fr);column-gap:clamp(32px,4vw,64px);
+    align-items:end}
+}
+
+/* the roster: a member's card as its ten seats, beside the count */
+.roster__cno{margin-right:8px;font:400 12px/1 var(--f-mono);color:var(--ink-2)}
+.roster__seats{display:inline-flex;gap:2px;vertical-align:-1px}
+.roster__seats i{display:block;width:8px;height:8px;background:var(--tint)}
+.roster__seats i.is-on{background:var(--ink)}
+@media(max-width:699px){ .roster .roster__card,.roster .roster__rw{display:none} }
+
+/* Meetings: the schedule and the minute book side by side */
+.meetgrid{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr)}
+.meetgrid > *{min-width:0}
+@media(min-width:1100px){
+  .meetgrid{grid-template-columns:minmax(0,40fr) minmax(0,60fr);column-gap:clamp(32px,4vw,64px);
+    align-items:start}
+  .meetgrid > .meetgrid__err{grid-column:1/-1}
+}
+
+/* every meeting row: its number carries it */
+.blist--meet .brow{border-bottom:var(--edge-rule) solid var(--tint)}
+.blist--meet .brow__go{display:grid;align-items:center;column-gap:var(--sp-pad);row-gap:2px;
+  grid-template-columns:clamp(62px,7vw,80px) minmax(0,1fr) auto auto;
+  grid-template-areas:"no day st n" "no when st n";padding:10px 0;min-height:44px;cursor:pointer}
+.blist--meet .brow__no{grid-area:no;flex:none;display:flex;align-items:baseline;gap:5px;min-height:0;
+  font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;color:var(--ink-2)}
+.blist--meet .brow__no b{font:400 clamp(26px,2.8vw,34px)/.9 var(--f-head);letter-spacing:0;color:var(--ink)}
+.blist--meet .brow__day{grid-area:day;min-width:0;
+  font:400 clamp(12.5px,1vw,14px)/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.blist--meet .brow__when{grid-area:when;min-width:0;overflow-wrap:anywhere;
+  font:400 11.5px/1.35 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.blist--meet .bstate{grid-area:st;justify-self:end}
+.blist--meet .brow__n{grid-area:n;display:grid;justify-items:end;gap:2px;min-width:4ch}
+.blist--meet .brow__n b{font:400 clamp(20px,2vw,26px)/1 var(--f-head)}
+.meetpanel--held .brow__nlab{position:absolute;width:1px;height:1px;overflow:hidden;
+  clip-path:inset(50%);white-space:nowrap}
+.meetpanel--held .blist--meet .brow__no{flex-direction:row}
+@media(min-width:640px){
+  .meetpanel--held .blist--meet .brow__go{grid-template-columns:clamp(62px,6vw,80px) minmax(6.5rem,auto) minmax(0,1fr) auto auto;
+    grid-template-areas:"no day when st n";padding-block:6px}
+}
+.meetpanel--held .ledger__month{margin-top:var(--sp-pad)}
+.meetpanel--held .meetband + .ledger__month{margin-top:var(--sp-tight)}
+
+/* the schedule: each meeting ahead a ticket, today's first, in ink while open */
+.meetgrid__up .blist--meet{display:grid;gap:var(--sp-row)}
+.meetgrid__up .blist--meet .brow{border:0;padding:0}
+.meetgrid__up .blist--meet .brow__go{padding:0;column-gap:0;row-gap:0;align-items:stretch;
+  grid-template-columns:clamp(84px,8vw,108px) minmax(0,1fr) auto;
+  grid-template-areas:"no day st" "no when n";
+  border:var(--edge-panel) solid var(--ink);background:var(--paper);min-height:clamp(88px,8vw,104px)}
+.meetgrid__up .blist--meet .brow__no{flex-direction:column;justify-content:space-between;align-items:flex-start;
+  padding:var(--sp-row);border-right:var(--edge-panel) dashed currentColor}
+.meetgrid__up .blist--meet .brow__no b{font-size:clamp(38px,4vw,54px);line-height:.8}
+.meetgrid__up .blist--meet .brow__day{align-self:end;padding:var(--sp-row) var(--sp-pad) 2px;
+  font-family:var(--f-head);font-size:clamp(20px,2vw,26px);line-height:1;letter-spacing:0}
+.meetgrid__up .blist--meet .brow__when{padding:0 var(--sp-pad) var(--sp-row)}
+.meetgrid__up .blist--meet .bstate{align-self:start;margin:var(--sp-row) var(--sp-row) 0 0}
+.meetgrid__up .blist--meet .brow__n{align-self:end;padding:0 var(--sp-row) var(--sp-row) 0}
+.meetgrid__up .blist--meet .brow--open .brow__go{background:var(--ink);color:var(--paper)}
+.meetgrid__up .blist--meet .brow--open .brow__no,.meetgrid__up .blist--meet .brow--open .brow__no b,
+.meetgrid__up .blist--meet .brow--open .brow__day,.meetgrid__up .blist--meet .brow--open .brow__n b{color:var(--paper)}
+.meetgrid__up .blist--meet .brow--open .brow__when,.meetgrid__up .blist--meet .brow--open .brow__nlab{color:var(--tint)}
+.meetgrid__up .blist--meet .brow--open .bstate{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+/* a narrow ticket keeps the day and time to themselves: the state and
+   the count take a line of their own under them */
+@media(max-width:479px){
+  .meetgrid__up .blist--meet .brow__go{grid-template-columns:clamp(72px,22vw,96px) minmax(0,1fr) auto;
+    grid-template-areas:"no day day" "no when when" "no st n"}
+  .meetgrid__up .blist--meet .bstate{justify-self:start;align-self:end;margin:0 0 var(--sp-row) var(--sp-pad)}
+}
+@media (hover:hover){ .meetgrid__up .blist--meet .brow:hover{background:none}
+  .meetgrid__up .blist--meet .brow:not(.brow--open) .brow__go:hover{background:var(--tint)} }
+
+/* scheduling: a blank ticket, the number on its stub */
+.bform{margin:0 0 var(--sp-row);padding:0;border:var(--edge-panel) solid var(--ink);background:var(--paper)}
+.bform .bform__grid{display:grid;gap:0;grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-areas:"no no" "date date" "start end"}
+.bform .field{padding:var(--sp-row) var(--sp-pad) var(--sp-tight)}
+.bform .bform__grid > .field:nth-child(2){grid-area:date}
+.bform .bform__grid > .field:nth-child(3){grid-area:start}
+.bform .bform__grid > .field:nth-child(4){grid-area:end}
+.bform__no{grid-area:no;border-bottom:var(--edge-panel) dashed var(--ink)}
+.bform .bform__no .input{font:400 clamp(34px,4vw,48px)/1 var(--f-head);letter-spacing:0;padding-block:4px}
+.bform #mErr{margin:0 var(--sp-pad)}
+.bform__row{padding:0 var(--sp-pad) var(--sp-pad)}
+@media(min-width:560px){
+  .bform .bform__grid{grid-template-columns:clamp(128px,13vw,168px) minmax(0,1fr) minmax(0,1fr);
+    grid-template-areas:"no date date" "no start end"}
+  .bform__no{border-bottom:0;border-right:var(--edge-panel) dashed var(--ink)}
+}
+
+/* the detail pages: who or what on the left, its record on the right */
+.bdet{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr)}
+.bdet__head,.bdet__body{min-width:0}
+.bdet__body > .bsec:first-child{margin-top:0}
+@media(min-width:1100px){
+  .bdet{grid-template-columns:minmax(0,34fr) minmax(0,66fr);column-gap:clamp(32px,4vw,64px);
+    align-items:start}
+  .bdet__head{position:sticky;top:var(--sp-pad)}
+}
+.bwho,.bmeet{display:grid;gap:6px;padding-bottom:var(--sp-pad);border-bottom:var(--edge-frame) solid var(--ink)}
+.bwho__lab{margin:0;font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.bwho .bdetail__name{margin:0;font-size:clamp(32px,4.4vw,60px);line-height:1}
+.bmeet .bdetail__name{margin:0;padding-bottom:.16em;font:400 clamp(64px,8vw,128px)/.82 var(--f-display);letter-spacing:0}
+.bmeet__when{margin:0;font:400 12.5px/1.4 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.bmeet__when b{font-weight:400;color:var(--ink)}
+.bwho__figs{display:flex;flex-wrap:wrap;gap:var(--sp-pad) var(--sp-block);margin:var(--sp-tight) 0 0}
+.bwho__figs > div{display:flex;flex-direction:column-reverse;gap:4px}
+.bwho__figs dt{font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.bwho__figs dd{margin:0;font:400 clamp(22px,2.2vw,30px)/1 var(--f-head)}
+.brow--att .brow__no{display:flex;flex-direction:row;align-items:baseline;gap:5px;font:400 10.5px/1 var(--f-mono);letter-spacing:.14em}
+.brow--att .brow__no b{font:400 clamp(22px,2.2vw,28px)/.9 var(--f-head);letter-spacing:0;color:var(--ink)}
+
+/* Check-in with no meeting today: the day, said once, and the next one */
+.bidle{display:grid;gap:var(--sp-pad);justify-items:start}
+.bidle__day{margin:0;font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.bidle__word{margin:0;font:400 clamp(48px,8vw,120px)/.85 var(--f-display);text-transform:uppercase}
+.bidle__next{max-width:min(100%,560px)}
 
 /* ══ behaviour carried from the four passes: identity data keeps its
    case, a refusal keeps its room, the camera is offered again in place,
@@ -1978,7 +2200,7 @@ html{font-synthesis:none}
 .bdetail__name--id{overflow-wrap:anywhere;min-width:0}
 #authErr{display:none;margin-top:var(--sp-pad)}
 #authErr.is-on{display:block}
-.viewer--stalled video,.viewer--stalled .reticle,.viewer--stalled .viewer__scrim{display:none}
+.viewer--stalled video,.viewer--stalled .reticle{display:none}
 .stall__retry{align-self:flex-start;margin-top:var(--sp-row)}
 .btn[data-busy],.link[data-busy]{flex-direction:column;gap:0}
 [data-busy]::after{content:attr(data-busy);display:block;height:0;overflow:hidden;visibility:hidden}
@@ -15340,6 +15562,27 @@ const SupabaseAdapter = {
     return res.data || { ok:false, code:'SERVER_ERROR' };
   },
 
+  /* What a code on the wall is for, asked before anyone has signed in
+     (the phone's own camera opened its link). The verifier checks it as
+     it would a check-in, on its own clock, and says only whether it
+     would be taken now and for which meeting; nothing is written. */
+  async peekCode(rawCode){
+    let res;
+    try {
+      res = await this.client.functions.invoke('verify-attendance',
+        { body:{ code:rawCode, peek:true }, timeout:this.VERIFY_WAIT });
+    } catch (err){
+      return { ok:false, code:'NETWORK_ERROR' };
+    }
+    if (res.error){
+      const status = (res.error.context && res.error.context.status) || res.error.status;
+      if (status === 401) return { ok:false, code:'NOT_AUTHENTICATED' };
+      if (!status) return { ok:false, code:'NETWORK_ERROR' };
+      return { ok:false, code:'SERVER_ERROR' };
+    }
+    return res.data || { ok:false, code:'SERVER_ERROR' };
+  },
+
   /* a board read that never answers is given up on, and the pane says
      it could not load, with its Try again */
   READ_WAIT: 15000,
@@ -15461,6 +15704,7 @@ const PreviewAdapter = {
   async addAttendance(){ throw new Error('NO_BACKEND'); },
   async claimReward(){ throw new Error('No backend is configured.'); },
   async verifyCode(){ return { ok:false, code:'NO_BACKEND' }; },
+  async peekCode(){ return { ok:false, code:'NO_BACKEND' }; },
   async startAttendance(){ throw new Error('No backend is configured.'); },
   async endAttendance(){ throw new Error('No backend is configured.'); },
   async issueToken(){ throw new Error('No backend is configured.'); },
@@ -15486,6 +15730,7 @@ const UnavailableAdapter = {
   UnavailableAdapter[fn] = async () => { throw new Error('BACKEND_UNAVAILABLE'); };
 });
 UnavailableAdapter.verifyCode = async () => ({ ok:false, code:'BACKEND_UNAVAILABLE' });
+UnavailableAdapter.peekCode = async () => ({ ok:false, code:'BACKEND_UNAVAILABLE' });
 
 const Backend = {
   adapter: null,
@@ -15530,7 +15775,7 @@ const Backend = {
 };
 
 ['currentSession','signIn','signUp','signOut','letGo','listMeetings','createMeeting','deleteMeeting','listAttendance',
- 'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','verifyCode',
+ 'listRewardClaims','listHandovers','handOverReward','undoHandOver','addAttendance','claimReward','verifyCode','peekCode',
  'startAttendance','endAttendance','issueToken','attendanceCount','meetingOpen','myStampCount','openToday','board',
  'deleteMeetingAndStamps'].forEach(fn => {
   Backend[fn] = function(...a){ return this.adapter[fn](...a); };
@@ -15909,9 +16154,47 @@ const Store = {
 
 const QRFormat = {
   SCHEME: 'keystamp://a/',
+  /* The wall's code is also a link, so a phone's own camera opens
+     Keystamp with it: https://<the app>/#/a/<signed code>. The code
+     rides in the fragment, which a browser never sends to a server, and
+     it is the same signed code as ever: the link only carries it. */
+  LINK: '#/a/',
+  HOME: 'https://keystamp.vercel.app/',
+  BARE: /^[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{16,}$/,
+
+  here(){
+    try {
+      if (/^https?:$/.test(location.protocol)) return location.origin + location.pathname;
+    } catch (_) {}
+    return this.HOME;
+  },
+  /* the link the projector draws for a code */
+  link(code){
+    const bare = String(code || '').trim().replace(/^keystamp:\/\/a\//i, '');
+    return this.here() + this.LINK + bare;
+  },
+  /* the code a link carries, if it is a link to this app (or to the
+     club's own address) and carries one; else null */
+  fromLink(raw){
+    let u;
+    try { u = new URL(String(raw || '').trim()); } catch (_) { return null; }
+    let host = '';
+    try { host = location.host; } catch (_) {}
+    const ours = u.host === 'keystamp.vercel.app' || (host && u.host === host);
+    const safe = u.protocol === 'https:' || (u.protocol === 'http:' && ours && u.host === host);
+    if (!ours || !safe || !u.hash.startsWith(this.LINK)) return null;
+    const bare = u.hash.slice(this.LINK.length);
+    return this.BARE.test(bare) ? bare : null;
+  },
+  /* what goes to the verifier: the code in its own form */
+  canonical(raw){
+    const bare = this.fromLink(raw);
+    return bare ? this.SCHEME + bare : String(raw || '').trim();
+  },
   looksLikeKeystamp(raw){
     const t = String(raw || '').trim();
     if (t.toLowerCase().startsWith(this.SCHEME)) return true;
+    if (/^https?:\/\//i.test(t)) return this.fromLink(t) !== null;
 
     if (/^[a-z][a-z0-9+.-]*:\/\//i.test(t)) return false;
 
@@ -16124,24 +16407,24 @@ const C = {
     const got   = Math.max(0, Math.min(span, total - prev));
     const left  = r.required - total;
     const far   = state === 'sealed' && total < prev;
-    const say   = state === 'sealed' && !far ? `${left} more ${left === 1 ? 'stamp' : 'stamps'}` : '';
+    const say   = state === 'sealed' ? `${left} more ${left === 1 ? 'stamp' : 'stamps'}` : '';
     const ticks = Array.from({ length:span }, (_, i) =>
       `<i class="${i < got ? 'is-on' : ''}"></i>`).join('');
 
-    return `<div class="tier tier--${state}${took ? ' tier--took' : ''}${far ? ' tier--far' : ''}" data-reward="${r.id}">
-      <span class="tier__at">${pad(r.required)}</span>
+    return `<div class="tier tier--${state}${took ? ' tier--took' : ''}${far ? ' tier--far' : ''}" data-reward="${r.id}" style="--got:${(got / span).toFixed(3)}">
+      <span class="tier__at"><b>${pad(r.required)}</b><span>stamps</span></span>
       <span class="tier__body">
         <span class="tier__name">${esc(r.name)}</span>
-        <span class="tier__desc">${esc(r.desc || '')}</span>
+        ${r.desc ? `<span class="tier__desc">${esc(r.desc)}</span>` : ''}
+        ${state === 'sealed' && !far ? `<span class="tier__ticks" aria-hidden="true">${ticks}</span>` : ''}
+        ${ready && Store.claiming.has(`${Store.user && Store.user.id}:${r.id}`)
+          ? `<button class="tier__claim" type="button" data-claim="${r.id}" aria-busy="true" aria-disabled="true" aria-label="${esc(`Claiming ${r.name}`)}">Claiming</button>`
+          : ready
+          ? `<button class="tier__claim" type="button" data-claim="${r.id}" aria-label="${esc(`Claim ${r.name}`)}">Claim</button>`
+          : say ? `<span class="tier__say">${say}</span>` : ''}
+        ${note ? `<span class="tier__note">${esc(note)}</span>` : ''}
       </span>
-      ${state === 'sealed' && !far ? `<span class="tier__ticks" aria-hidden="true">${ticks}</span>` : ''}
       ${at === 'claimed' ? `<span class="tier__punch">${took ? 'Collected' : 'Claimed'}</span>` : ''}
-      ${note ? `<span class="tier__note">${esc(note)}</span>` : ''}
-      ${ready && Store.claiming.has(`${Store.user && Store.user.id}:${r.id}`)
-        ? `<button class="tier__claim" type="button" data-claim="${r.id}" aria-busy="true" aria-disabled="true" aria-label="${esc(`Claiming ${r.name}`)}">Claiming</button>`
-        : ready
-        ? `<button class="tier__claim" type="button" data-claim="${r.id}" aria-label="${esc(`Claim ${r.name}`)}">Claim</button>`
-        : say ? `<span class="tier__say">${say}</span>` : ''}
     </div>`;
   },
 
@@ -16155,10 +16438,12 @@ const C = {
     const full = p.filled >= p.span;
 
     const cells = Array.from({ length:p.span }, (_, i) => {
-      /* the next slot is ringed only while a check-in is open for it */
-      const state = i < p.filled ? 'set' : live && i === p.filled ? 'next' : '';
+      /* the next slot is where the member stands on the route: ringed in
+         ink, and in the club's red while a check-in is open for it */
+      const state = i < p.filled ? 'set' : i === p.filled ? 'next' : '';
       const hero = state === 'set' && i === p.filled - 1 ? ' seal--hero' : '';
       const mile = i === p.span - 1 ? ' seal--mile' : '';
+      const now  = state === 'next' && live ? ' seal--live' : '';
 
       const tilt = state === 'set'
         ? `--press-tilt:${[-2.1, 1.4, -1.2, 2.3, -1.7][i % 5]}deg` : '';
@@ -16169,7 +16454,7 @@ const C = {
 
       const seed = p.floor + i + 1;
       const fit  = STAMP_FIT;
-      return `<li class="seal ${state ? 'seal--' + state : ''}${hero}${mile}" data-seal="${state || 'empty'}" style="${tilt}"${
+      return `<li class="seal ${state ? 'seal--' + state : ''}${hero}${mile}${now}" data-seal="${state || 'empty'}" style="${tilt}"${
         docket ? ` tabindex="0" aria-label="Stamp ${pad(p.floor + i + 1)}: general meeting ${
           mtg.no}, ${fmtDate(mtg.date)}, ${byHand(rec) ? 'added by an officer' : `checked in at ${fmtTime(rec.at)}`}"` : ''}>
         <svg viewBox="0 0 64 64" aria-hidden="true">
@@ -16197,7 +16482,7 @@ const C = {
          not held out as the thing to reach */
       : goal && !goal.claimed ? `${pad(p.remaining)} to ${goal.name}` : `${pad(p.remaining)} to a full card`;
 
-    return `<section class="card${full ? ' card--full' : ''}">
+    return `<section class="card${full ? ' card--full' : ''}${live ? ' card--live' : ''}">
       <div class="card__face">
         <div class="card__id">
           <span class="card__cardno">Card ${pad(cardNo)}</span>
@@ -16220,15 +16505,6 @@ const C = {
   /* a state that asks nothing of the member is a line of type */
   line(lab, text){
     return `<p class="nowline"><b class="nowline__lab">${esc(lab)}</b><span>${text}</span></p>`;
-  },
-
-  strike({ verb, sub, go, live = false }){
-    return `<div class="act ${live ? 'act--live' : ''}">
-      <button class="act__btn" data-go="${go}">
-        <span class="act__verb">${esc(verb)}</span>
-        <span class="act__sub">${esc(sub)}</span>
-      </button>
-    </div>`;
   },
 
   sealMeta(rec, m){
@@ -16292,6 +16568,75 @@ C.account = () => `<section class="acct">
   <button class="acct__out" data-signout type="button">Sign out</button>
 </section>`;
 
+/* A card already filled, filed under the one in progress: the same seat
+   map and route in miniature, every seat pressed, the prize it earned
+   punched across it. */
+const SEATS = [[2,4,15,-2.5],[21.5,16,14.5,1.5],[40.5,4,15,-1],[59.5,13.5,14.5,2],[79,26,15,-2],
+               [52,36.5,14.5,1],[30.5,39,15,-1.5],[5,49,14.5,2.2],[27,64,15,-2],[63,58.5,23,-3]];
+const ROUTE = [[9.5,12.3],[28.8,24],[48,12.3],[66.8,21.5],[86.5,34.3],[59.3,44.5],[38,47.3],[12.3,57],[34.5,72.3],[74.5,71.2]];
+
+/* where a prize stands, in the one word the member reads for it */
+const prizeWord = r => !r ? '' : r.handedAt ? 'Collected' : r.claimed ? 'Claimed'
+  : Store.tierState(r) === 'unlocked' ? 'Ready to claim' : '';
+
+C.filed = (k, run) => {
+  const prize = Store.rewards.find(r => r.required === (k + 1) * Rules.CARD) || null;
+  const word  = prizeWord(prize);
+  const lift  = (32 - 32 * STAMP_FIT).toFixed(1);
+  const seats = SEATS.map(([x, y, s, lean], i) => {
+    const n = k * Rules.CARD + i;
+    const tilt = lean + [-2.1, 1.4, -1.2, 2.3, -1.7][i % 5];
+    return `<g transform="translate(${x} ${(y * .9).toFixed(2)}) scale(${(s / 64).toFixed(4)}) rotate(${tilt} 32 32)">
+      ${i === 9 ? `<path class="fc-back" d="${stampShape((n + 1) * 3 + 1, 3.4)}"/>` : ''}
+      <path class="fc-face" d="${stampShape(n + 1, 0)}"/>
+      <g class="fc-mark" transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(n)}</g>
+    </g>`;
+  }).join('');
+  const route = ROUTE.map(([x, y]) => `${x},${(y * .9).toFixed(2)}`).join(' ');
+  return `<li class="filed${prize && prize.handedAt ? ' filed--took' : ''}">
+    <div class="filed__card" aria-hidden="true">
+      <span class="filed__id"><b>${pad(k + 1)}</b></span>
+      <svg class="filed__field" viewBox="0 0 100 90"><polyline class="fc-route" points="${route}"/>${seats}</svg>
+      ${word ? `<span class="filed__punch">${word}</span>` : ''}
+    </div>
+    <p class="filed__no">Card ${pad(k + 1)}</p>
+    <p class="filed__when">${fmtDay(run[0].at)} – ${fmtDay(run[run.length - 1].at)}</p>
+    ${prize ? `<p class="filed__prize">${esc(prize.name)}${word ? ` / ${word.toLowerCase()}` : ''}</p>` : ''}
+  </li>`;
+};
+
+/* The meeting a day is about, as a ticket: its number on the stub, the
+   day and what stands on the body. Open, the whole ticket is the way in;
+   stamped, it carries the impression it earned. */
+C.ticket = ({ m, kick, day = '', meta = '', go = false, scan = null, quiet = false }) => {
+  const idx = scan ? [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1)
+    .findIndex(x => x.meetingId === m.id) : -1;
+  const lift = (32 - 32 * STAMP_FIT).toFixed(1);
+  const inner = `
+    <span class="tkt__stub"><span class="tkt__gm">GM</span> <b class="tkt__no">${pad(m.no)}</b></span>
+    <span class="tkt__body">
+      <span class="tkt__kick">${esc(kick)}</span>
+      <span class="tkt__day">${day || (m.today ? 'Today' : fmtDate(m.date))}</span>
+      ${meta ? `<span class="tkt__meta">${meta}</span>` : ''}
+      ${go ? '<span class="tkt__verb">Check in</span>' : ''}
+    </span>
+    ${idx >= 0 ? `<svg class="tkt__imp" viewBox="0 0 64 64" aria-hidden="true">
+      <path class="tkt__face" d="${stampShape(idx + 1, 0)}"/>
+      <g transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(idx)}</g></svg>` : ''}`;
+  const cls = `tkt${go ? ' tkt--live' : scan ? ' tkt--set' : quiet ? ' tkt--quiet' : ''}`;
+  return go
+    ? `<button class="${cls}" type="button" data-go="scan">${inner}</button>`
+    : `<div class="${cls}">${inner}</div>`;
+};
+
+/* the meeting a signed code names, read for display only */
+function arrivalMeeting(bare){
+  try {
+    const part = String(bare).split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
+    return atob(part + '==='.slice((part.length + 3) % 4)).split('.')[1] || null;
+  } catch (_) { return null; }
+}
+
 const Views = {
   loadFailure(title){
     return `<div class="view">
@@ -16309,8 +16654,8 @@ const Views = {
   },
 
   home(){
-    if (Store.failed) return this.loadFailure('Your card');
-    /* the top line answers "what now": check in, checked in, today's
+    if (Store.failed) return this.loadFailure('Today');
+    /* the ticket answers "what now": check in, checked in, today's
        meeting still to come, or the next one. Only what the record
        says is printed; a member cannot see when check-in will open, so
        the page never guesses */
@@ -16321,29 +16666,28 @@ const Views = {
     const at = m => { const v = clockMinutes(m.time); return Number.isNaN(v) ? 0 : v; };
     const soonest = (a, b) => String(a.date).localeCompare(String(b.date)) || at(a) - at(b) || a.no - b.no;
     const next = Store.meetings.filter(m => m.upcoming && (!day || m.id !== day.id)).sort(soonest)[0] || null;
+    const where = m => unusual(m).map(esc).join(' / ');
 
-    let action = '';
+    let act = '';
     if (live)
-      action = C.strike({ verb:'Check in',
-                          sub:[`GM ${pad(day.no)}`, ...unusual(day)].join('\u00a0/ '),
-                          go:'scan', live:true });
+      act = C.ticket({ m:day, kick:'Check-in open', meta:where(day), go:true });
     else if (scan)
-      action = C.line('Checked in', `GM ${pad(day.no)} / ${stampWhen(scan)}`);
+      act = C.ticket({ m:day, kick:'Checked in', meta:stampWhen(scan), scan });
     /* over, and no stamp: said as today's fact, not yet a "missed" one,
        since an officer can still add a stamp by hand */
     else if (day && day.ended && !day.open)
-      action = C.line('Not checked in', `GM ${pad(day.no)}`);
+      act = C.ticket({ m:day, kick:'Not checked in', quiet:true });
     /* under way and not open: before opening or after an early close,
        which a member cannot tell apart, so only what is true now */
     else if (day && day.started && !day.open)
-      action = C.line('Today', `GM ${pad(day.no)} / check-in not open`);
+      act = C.ticket({ m:day, kick:'Check-in not open', quiet:true });
     /* the day's own meeting gives its time even when it is the usual
        one: today, that is the thing to know */
     else if (day)
-      action = C.line('Today', [`GM ${pad(day.no)}`, day.time, ...(unusual(day).includes(day.place) ? [day.place] : [])]
-        .filter(Boolean).map(esc).join(' / '));
+      act = C.ticket({ m:day, kick:'Today', day:esc(day.time || 'Today'),
+        meta:unusual(day).includes(day.place) ? esc(day.place) : '', quiet:true });
     else if (next)
-      action = C.line('Next', [`GM ${pad(next.no)}`, fmtDate(next.date), ...unusual(next).map(esc)].join(' / '));
+      act = C.ticket({ m:next, kick:'Next', meta:where(next), quiet:true });
 
     const showing = day ? day.id : next ? next.id : null;
     const ahead = Store.meetings
@@ -16351,24 +16695,38 @@ const Views = {
       .sort(soonest)
       .slice(0, 3);
 
+    /* the last stamp, unless the ticket is already about it */
+    const chrono = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
+    const last = chrono[chrono.length - 1];
+    const lastM = last && Store.meeting(last.meetingId);
+    const showLast = lastM && !(scan && lastM.id === day.id);
+
+    const side = showLast || ahead.length ? `<div class="deck__side">
+        ${showLast ? `<p class="deck__last">
+          <span class="deck__lab">Last stamp</span>
+          <span class="deck__val">GM ${pad(lastM.no)} / ${fmtDay(lastM.date)}</span>
+        </p>` : ''}
+        ${ahead.length ? `<section class="ahead">
+          <h2 class="ahead__mark">Ahead</h2>
+          <ul class="ahead__list">
+            ${ahead.map(m => `<li class="ahead__row">
+              <span class="ahead__no">GM ${pad(m.no)}</span>
+              <span class="ahead__day">${fmtDate(m.date)}</span>
+              ${unusual(m).length ? `<span class="ahead__at">${unusual(m).map(esc).join(' / ')}</span>` : ''}
+            </li>`).join('')}
+          </ul>
+        </section>` : ''}
+      </div>` : '';
+
     return `<div class="view view--home">
       <header class="rechead">
-        <h1 class="title rechead__title">Your card</h1>
+        <h1 class="title rechead__title">Today</h1>
       </header>
 
       <div class="deck${live ? ' deck--live' : ''}">
-        ${action ? `<div class="deck__act">${action}</div>` : ''}
+        ${act ? `<div class="deck__act">${act}</div>` : ''}
         ${C.sealGrid(live)}
-        ${ahead.length ? `<section class="ahead deck__ahead">
-            <h2 class="ahead__mark">Ahead</h2>
-            <ul class="ahead__list">
-              ${ahead.map(m => `<li class="ahead__row">
-                <span class="ahead__no">GM ${pad(m.no)}</span>
-                <span class="ahead__day">${fmtDate(m.date)}</span>
-                ${unusual(m).length ? `<span class="ahead__at">${unusual(m).map(esc).join(' / ')}</span>` : ''}
-              </li>`).join('')}
-            </ul>
-          </section>` : ''}
+        ${side}
       </div>
     </div>`;
   },
@@ -16384,6 +16742,23 @@ const Views = {
     const kept = counted.filter(m => Store.attended(m.id)).length;
     const gone = counted.length - kept;
 
+    /* the ledger is kept by the month, the way a club's minutes are */
+    const months = [];
+    held.forEach(m => {
+      const key = String(m.date).slice(0, 7);
+      const last = months[months.length - 1];
+      if (last && last.key === key) last.rows.push(m);
+      else months.push({ key, rows:[m] });
+    });
+    const monthName = key => onClock(`${key}-01`, { month:'long' });
+
+    /* every meeting held since the member joined, oldest first, as one
+       line of marks: pressed where they were stamped */
+    const line = [...held].reverse().map(m => {
+      const s = Store.state(m);
+      return `<i class="strip__m strip__m--${s}${m.today && s === 'miss' ? ' strip__m--today' : ''}"></i>`;
+    }).join('');
+
     return `<div class="view view--record">
       <header class="rechead">
         <h1 class="title rechead__title">Record</h1>
@@ -16391,14 +16766,22 @@ const Views = {
 
       ${held.length ? `<div class="recbody">
         <aside class="tally">
-          <p class="figline">
-            <span><b>${kept}</b> stamped</span>
-            <span><b>${gone}</b> missed</span>
-          </p>
+          <p class="tally__kept"><b>${kept}</b> <span>stamped</span></p>
+          <p class="tally__gone"><b>${gone}</b> <span>missed</span></p>
+          <p class="tally__held">${held.length} ${held.length === 1 ? 'meeting' : 'meetings'} held since
+            ${fmtDay(held[held.length - 1].date)}</p>
+          <span class="strip" aria-hidden="true">${line}</span>
         </aside>
 
-        <section class="ledger">
-          ${held.map(m => C.ledgerRow(m)).join('')}
+        <section class="ledger" aria-label="Meetings, newest first">
+          ${months.map(g => {
+            const got = g.rows.filter(m => Store.attended(m.id)).length;
+            return `<h2 class="ledger__month">
+                <span class="ledger__mname">${monthName(g.key)}</span>
+                <span class="ledger__mcount">${got} of ${g.rows.length}</span>
+              </h2>
+              ${g.rows.map(m => C.ledgerRow(m)).join('')}`;
+          }).join('')}
         </section>
       </div>`
       : C.empty('No meetings held yet')}
@@ -16410,32 +16793,40 @@ const Views = {
     if (Store.failed) return this.loadFailure('Rewards');
     const total = Store.totalStamps();
     const tiers = [...Store.rewards].sort((a, b) => a.required - b.required);
+    const next = tiers.find(t => total < t.required) || null;
+    const left = next ? next.required - total : 0;
 
     return `<div class="view view--rewards">
       <header class="rechead">
         <h1 class="title rechead__title">Rewards</h1>
       </header>
 
-      <p class="figline">
-        <span><b>${total}</b> ${total === 1 ? 'stamp' : 'stamps'}</span>
-      </p>
+      <div class="prize">
+        <div class="prize__fig">
+          ${next ? `<p class="prize__n">${pad(left)}</p>
+          <p class="prize__to">more ${left === 1 ? 'stamp' : 'stamps'} to <b>${esc(next.name)}</b></p>`
+          : `<p class="prize__n">${total}</p>
+          <p class="prize__to">Every reward reached</p>`}
+          <p class="prize__of">${total} ${total === 1 ? 'stamp' : 'stamps'} so far</p>
+        </div>
 
-      <section class="tiers">
-        ${tiers.map((t, i) => C.tier(t, total, i ? tiers[i - 1].required : 0)).join('')}
-      </section>
+        <section class="tiers" aria-label="Rewards, by the stamps they take">
+          ${tiers.map((t, i) => C.tier(t, total, i ? tiers[i - 1].required : 0)).join('')}
+        </section>
+      </div>
     </div>`;
   },
 
   scan(){
     /* already stamped for the open meeting: nothing to scan, and the page
-       says so the way Home does */
+       says so the way Today does */
     const open = Store.openMeeting();
     const stamp = open && Store.scanFor(open.id);
     if (stamp) return `<div class="view view--scan">
       <header class="rechead">
         <h1 class="title rechead__title">Scan</h1>
       </header>
-      ${C.line('Checked in', `GM ${pad(open.no)} / ${stampWhen(stamp)}`)}
+      <div class="deck__act">${C.ticket({ m:open, kick:'Checked in', meta:stampWhen(stamp), scan:stamp })}</div>
     </div>`;
 
     const standing = scanStanding();
@@ -16445,26 +16836,27 @@ const Views = {
         <h1 class="title rechead__title">Scan</h1>
       </header>
 
-      <div class="viewer" id="viewer">
-        <video id="cam" playsinline muted autoplay></video>
-        <div class="viewer__scrim" aria-hidden="true"></div>
-        <div class="reticle" id="reticle" aria-hidden="true">
-          <span class="reticle__c reticle__c--tl"></span>
-          <span class="reticle__c reticle__c--tr"></span>
-          <span class="reticle__c reticle__c--bl"></span>
-          <span class="reticle__c reticle__c--br"></span>
+      <div class="scanframe">
+        <p class="standing">
+          <span class="standing__lab">${standing.lab}</span>
+          <span class="standing__at">${standing.at}</span>
+        </p>
+
+        <div class="viewer" id="viewer">
+          <video id="cam" playsinline muted autoplay></video>
+          <div class="reticle" id="reticle" aria-hidden="true">
+            <span class="reticle__c reticle__c--tl"></span>
+            <span class="reticle__c reticle__c--tr"></span>
+            <span class="reticle__c reticle__c--bl"></span>
+            <span class="reticle__c reticle__c--br"></span>
+          </div>
         </div>
+
+        <p class="scanline scanline--boot" id="scanLine" aria-live="polite">
+          <i class="scanline__dot" aria-hidden="true"></i>
+          <span class="scanline__msg" id="scanMsg">Starting camera</span>
+        </p>
       </div>
-
-      <p class="scanline scanline--boot" id="scanLine" aria-live="polite">
-        <i class="scanline__dot" aria-hidden="true"></i>
-        <span class="scanline__msg" id="scanMsg">Starting camera</span>
-      </p>
-
-      <p class="standing">
-        <span class="standing__lab">${standing.lab}</span>
-        <span class="standing__at">${standing.at}</span>
-      </p>
     </div>`;
   },
 
@@ -16478,6 +16870,7 @@ const Views = {
     BoardUI.deleteNote = null;
     /* a chapter opened afresh reads its prize list afresh */
     BoardUI.prizesStale = true;
+    BoardUI.clubStale = true;
     /* a fresh chapter opens on the wait panel, never on another
        chapter's data */
     BoardUI.loading = true;
@@ -16502,55 +16895,123 @@ const Views = {
   profile(){
     if (Store.failed) return this.loadFailure('Member');
     const held     = Store.countedMeetings();
+    const attended = held.filter(m => Store.attended(m.id)).length;
     const total    = Store.totalStamps();
     const name     = memberName();
     const handle   = (Store.user && Store.user.username) || name;
+    const joined   = Store.user && Store.user.joined;
     const chrono   = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
-    const first    = chrono[0], last = chrono[chrono.length - 1];
-    const cards    = Math.floor(total / Rules.CARD);
+    const p        = Rules.progress();
+    /* the cards filled before the one on the sheet */
+    const filed    = Array.from({ length:p.card - 1 }, (_, k) =>
+      C.filed(k, chrono.slice(k * Rules.CARD, (k + 1) * Rules.CARD))).reverse();
+    const open     = Store.openMeeting();
+    const live     = Boolean(open && !Store.scanFor(open.id));
+    /* the name is printed once; the username only where it differs */
+    const tag = [Store.isBoard ? 'Board' : '',
+                 handle.toLowerCase() !== name.toLowerCase() ? esc(handle) : ''].filter(Boolean);
 
     return `<div class="view view--member">
       <header class="rechead">
         <h1 class="title rechead__title">Member</h1>
       </header>
 
-      <section class="who">
-        <p class="who__name">${esc(name)}</p>
-        ${(() => {
-          /* the title already says Member, and the seal the district */
-          const bits = [Store.isBoard ? 'Board' : '', handle.toLowerCase() !== name.toLowerCase() ? esc(handle) : ''].filter(Boolean);
-          return bits.length ? `<p class="who__line">${bits.join(' / ')}</p>` : '';
-        })()}
-        <span class="who__seal" aria-hidden="true">${brandSeal('cnh')}</span>
-      </section>
+      <div class="mem${filed.length ? ' mem--filed' : ''}">
+        <section class="who" aria-label="Member">
+          <p class="who__org">Cali-Nev-Ha District<br>Key Club</p>
+          <span class="who__emblem" aria-hidden="true">${brandSeal('cnh')}</span>
+          <div class="who__id">
+            ${tag.length ? `<p class="who__tag">${tag.join(' / ')}</p>` : ''}
+            <p class="who__name">${esc(name)}</p>
+            ${joined ? `<p class="who__since">Member since ${onClock(joined, { month:'long', year:'numeric' })}</p>` : ''}
+          </div>
+        </section>
 
-      ${total ? `<section class="standing-band">
-        <p class="standing-band__fig">${total}</p>
-        <p class="standing-band__of">${total === 1 ? 'stamp' : 'stamps'}</p>
-        <dl class="standing-band__rest">
-          <div><dt>Attendance</dt><dd>${held.length ? Store.attendanceRate() : 0}%</dd></div>
-          ${cards ? '' : `<div><dt>First stamp</dt><dd>${fmtDay(first.at)}</dd></div>`}
-          <div><dt>Latest stamp</dt><dd>${fmtDay(last.at)}</dd></div>
-        </dl>
-      </section>` : `<p class="nowline"><b class="nowline__lab">No attendance yet</b></p>`}
+        ${C.sealGrid(live)}
 
-      ${cards ? `<section class="cards">
-        <h2 class="ledger__mark">Completed cards</h2>
-        <ol class="cards__list">${Array.from({ length:cards }, (_, k) => {
-          const run = chrono.slice(k * Rules.CARD, (k + 1) * Rules.CARD);
-          const prize = Store.rewards.find(r => r.required === (k + 1) * Rules.CARD);
-          return `<li class="cards__row">
-            <span class="cards__no">Card ${pad(k + 1)}</span>
-            <span class="cards__marks" aria-hidden="true">${run.map((_, i) =>
-              `<svg viewBox="0 0 64 64">${stampMark(k * Rules.CARD + i)}</svg>`).join('')}</span>
-            <span class="cards__when">${fmtDay(run[0].at)} – ${fmtDay(run[run.length - 1].at)}</span>
-            ${prize ? `<span class="cards__prize">${esc(prize.name)} / ${
-              prize.handedAt ? 'collected' : prize.claimed ? 'claimed' : 'not claimed'}</span>` : ''}
-          </li>`;
-        }).join('')}</ol>
-      </section>` : ''}
+        <section class="standing-band">
+          <p class="standing-band__fig">${total}</p>
+          <p class="standing-band__of">${total === 1 ? 'stamp' : 'stamps'} collected</p>
+          <dl class="standing-band__rest">
+            <div><dt>Meetings attended</dt><dd>${attended} of ${held.length}</dd></div>
+            <div><dt>Attendance</dt><dd>${held.length ? `${Store.attendanceRate()}%` : '–'}</dd></div>
+            <div><dt>Rewards</dt><dd>${Store.rewardsUnlocked()} of ${Store.rewards.length}</dd></div>
+          </dl>
+        </section>
+
+        ${filed.length ? `<section class="files">
+          <h2 class="files__mark">Completed cards</h2>
+          <ol class="files__list">${filed.join('')}</ol>
+        </section>` : ''}
+      </div>
 
       ${C.account()}
+    </div>`;
+  },
+
+  /* Arriving by the wall code's link. Signed out, the page says what
+     the server says the code is for and offers a way in; signed in, it
+     says it is checking in while the verifier answers. The code itself
+     is never printed. */
+  checkin(){
+    const A = Arrival;
+    const signed = Store.signedIn;
+    const code = A.phase === 'refused' ? A.refusal : null;
+    /* the meeting's number: as the server said it, or as the record has
+       the meeting the code names (the code is read, not trusted: the
+       verifier still decides) */
+    const no = A.no || (signed && A.bare ? (Store.meeting(arrivalMeeting(A.bare)) || {}).no : null) || null;
+
+    const acts = (...b) => `<div class="authp__act">${b.join('')}</div>`;
+    const go = (attr, label) => `<button class="authp__go" type="button" ${attr}>${label}</button>`;
+    const alt = (attr, label) => `<button class="authp__swap" type="button" ${attr}>${label}</button>`;
+    const onward = signed ? go('data-go="home"', Store.isBoard ? 'Go to Check-in' : 'Go to Today')
+      : alt('data-arrive="in"', 'Sign in');
+    const say = (word, note = '', tail = '') => `<section class="authp arrive" aria-live="polite">
+        <h2 class="arrive__word">${word}</h2>
+        ${note ? `<p class="arrive__note">${note}</p>` : ''}
+        ${tail}
+      </section>`;
+
+    let status = '', card;
+    if (code === 'ALREADY_CHECKED_IN'){
+      status = 'Checked in';
+      card = say('Already checked in', '', acts(onward));
+    } else if (code && SCAN_TRANSIENT.has(code)){
+      card = say(scanMessage(code)[0], 'Try again in a moment.',
+        acts(go('data-arrive="again"', 'Try again'), signed ? '' : onward));
+    } else if (code === 'BOARD_ACCOUNT'){
+      card = say('Board account', 'Another officer adds you to the meeting.', acts(onward));
+    } else if (code === 'NOT_AUTHORIZED'){
+      card = say('Not allowed', 'This account cannot check in.', acts(onward));
+    } else if (code){
+      const [what, todo] = scanMessage(code);
+      card = say('Check-in unavailable', [what, todo].filter(Boolean).join('. ') + '.', acts(onward));
+    } else if (signed){
+      card = say('Checking in');
+    } else if (!A.peek){
+      card = say('Reading the code');
+    } else {
+      status = A.peek.ok ? 'Check-in open' : '';
+      card = say('Collect your attendance stamp', '',
+        acts(go('data-arrive="up"', 'Create account'), alt('data-arrive="in"', 'Sign in')));
+    }
+
+    return `<div class="view view--auth view--arrive">
+      <div class="spread">
+        <div class="spread__field crop" aria-hidden="true">
+          <svg class="spread__seal crop__art" viewBox="0 0 100 100">${sealArt()}</svg>
+          <span class="spread__kci">${brandSeal('kci')}</span>
+        </div>
+
+        <header class="spread__head">
+          <p class="spread__sub"><span>Keystamp</span></p>
+          <h1 class="spread__wm">${no ? `GM ${pad(no)}` : 'Check-in'}</h1>
+          ${status ? `<p class="arrive__status">${status}</p>` : ''}
+        </header>
+
+        ${card}
+      </div>
     </div>`;
   },
 
@@ -16589,6 +17050,8 @@ const Views = {
         </header>
 
         <form class="authp" id="authForm" novalidate>
+
+          ${Arrival.bare ? `<p class="authp__arrive">Then: ${Arrival.no ? `check in to GM ${pad(Arrival.no)}` : 'check in'}</p>` : ''}
 
           <div class="authp__f">
             <label class="authp__lab" for="authUser">Username</label>
@@ -16689,7 +17152,7 @@ function spanTime(start, end){
    next account's */
 const BOARD_FRESH = () => ({
   tab:'session', loading:false, shown:null, error:null,
-  prizes:null, owedAll:false, prizesStale:false, lost:new Set(),
+  prizes:null, owedAll:false, prizesStale:false, lost:new Set(), club:null, clubStale:false,
   handQ:'', handFound:null, handed:{}, meetings:null, members:null,
   memberDetail:null, meetingDetail:null, pendingId:null, refocus:null, leftFrom:null, toTop:false,
   q:'', sort:'username', page:1, confirmDelete:null, deleteNote:null, form:null, formOpen:false,
@@ -16712,6 +17175,8 @@ const BoardUI = {
   error: null,
 
   prizes: null,         /* {owed} | {code} when it could not be read | null */
+  club: null,           /* the club's totals (board-data overview) | {code} | null */
+  clubStale: false,     /* re-read the totals on the next load */
   owedAll: false,       /* the prize list unfolded past its first rows */
   prizesStale: false,   /* re-read the prize list on the next load */
   lost: new Set(),      /* hand-overs whose answer never came back */
@@ -16796,11 +17261,39 @@ const BoardUI = {
 
   progressPane(){
     return `<div class="bpanel memgrid">
+      ${this.clubHead()}
       ${this.owedBody()}
-      <section class="rosterpanel">
+      <section class="rosterpanel" aria-label="Roster">
         ${this.rosterBody()}
       </section>
     </div>`;
+  },
+
+  /* The club at a glance, at the head of its roster: how many members,
+     the stamps given, the meetings held and how many come to one, and
+     how many members stand at each prize. Counted by the server from
+     the same rows the members' own totals come from. A read that fails
+     leaves the head off; the roster stands on its own. */
+  clubHead(){
+    const c = this.club;
+    if (!c || c.code) return '';
+    const ms = c.milestones || {};
+    const avg = c.average_attendance;
+    return `<section class="club" aria-label="The club">
+      <dl class="club__figs">
+        <div class="club__fig club__fig--lead"><dt>Members</dt><dd>${Number(c.total_members) || 0}</dd></div>
+        <div class="club__fig"><dt>Stamps given</dt><dd>${Number(c.total_seals) || 0}</dd></div>
+        <div class="club__fig"><dt>Meetings held</dt><dd>${Number(c.meetings_held) || 0}</dd></div>
+        <div class="club__fig"><dt>At a meeting</dt><dd>${avg == null ? '–' : esc(String(avg))}</dd></div>
+      </dl>
+      <ol class="club__tiers" aria-label="Members at each prize">
+        ${REWARD_TIERS.map(t => `<li class="club__tier">
+          <b class="club__at">${pad(t.required)}</b>
+          <span class="club__tname">${esc(prizeName(t))}</span>
+          <span class="club__tn">${Number(ms['m' + t.required]) || 0} reached</span>
+        </li>`).join('')}
+      </ol>
+    </section>`;
   },
 
   /* The prize table's list: who is owed a prize now, the member who has
@@ -16898,12 +17391,26 @@ const BoardUI = {
       </section>
 
       <section class="meetgrid__held meetpanel meetpanel--held">
-        ${band('Held', '<span class="meetband__n" aria-hidden="true">Checked in</span>')}
-        ${past.length
-          ? `<ul class="blist blist--meet">${past.map(m => this.meetingRow(m)).join('')}</ul>`
+        ${band('Held', past.length ? `<span class="meetband__n">${past.length} ${past.length === 1 ? 'meeting' : 'meetings'} / ${
+          past.reduce((n, m) => n + (Number(m.attendance_count) || 0), 0)} check-ins</span>` : '')}
+        ${past.length ? this.byMonth(past).map(g => `
+          <h3 class="ledger__month"><span class="ledger__mname">${esc(onClock(`${g.key}-01`, { month:'long' }))}</span>
+            <span class="ledger__mcount">${g.rows.reduce((n, m) => n + (Number(m.attendance_count) || 0), 0)} checked in</span></h3>
+          <ul class="blist blist--meet">${g.rows.map(m => this.meetingRow(m)).join('')}</ul>`).join('')
           : this.empty('No meetings held yet')}
       </section>
     </div>`;
+  },
+
+  /* the meetings of one month together, in the order given */
+  byMonth(list){
+    const out = [];
+    list.forEach(m => {
+      const key = String(m.meeting_date).slice(0, 7);
+      const last = out[out.length - 1];
+      if (last && last.key === key) last.rows.push(m); else out.push({ key, rows:[m] });
+    });
+    return out;
   },
 
   meetingRow(m){
@@ -16920,8 +17427,8 @@ const BoardUI = {
     const usual = span === spanTime('12:40 PM', '1:30 PM') && room === Schedule.PLACE;
 
     return `<li class="brow brow--${state}"><button class="brow__go" type="button" data-bmeeting="${esc(m.id)}">
-      <span class="brow__no">GM ${no}</span>
-      <span class="brow__day">${esc(fmtDay(m.meeting_date))}</span>
+      <span class="brow__no">GM <b>${no}</b></span>
+      <span class="brow__day">${esc(state === 'upcoming' || state === 'today' || state === 'open' ? fmtDate(m.meeting_date) : fmtDay(m.meeting_date))}</span>
       ${usual ? '' : `<span class="brow__when">${esc(span)} / ${esc(room)}</span>`}
       ${word ? `<span class="bstate bstate--${state}">${word}</span>` : ''}
       ${upcoming ? '' : `<span class="brow__n"><b>${stamps}</b> <span class="brow__nlab">checked in</span></span>`}
@@ -16950,7 +17457,7 @@ const BoardUI = {
     const d = this.formDefaults();
     return `<form class="bform" id="meetingForm" novalidate aria-label="Schedule a meeting">
       <div class="bform__grid">
-        <label class="field"><span class="kicker">Meeting number</span>
+        <label class="field bform__no"><span class="kicker">Meeting number</span>
           <input class="input" id="mNo" type="number" min="1" max="${MEETING_NO_MAX}" step="1" inputmode="numeric"
                  value="${esc(f.no)}" placeholder="${esc(d.no)}"></label>
         <label class="field"><span class="kicker">Date</span>
@@ -16987,12 +17494,21 @@ const BoardUI = {
 
       ${rows.length ? `
         <table class="roster">
-          <thead><tr><th scope="col">Member</th><th scope="col">Last check-in</th><th scope="col">Stamps</th></tr></thead>
-          <tbody>${rows.map(m => `<tr data-bmember="${esc(m.id)}">
+          <thead><tr><th scope="col">Member</th><th scope="col" class="roster__card">Card</th>
+            <th scope="col" class="roster__rw">Prizes</th><th scope="col">Last check-in</th><th scope="col">Stamps</th></tr></thead>
+          <tbody>${rows.map(m => {
+            /* where the member's own card stands: its number and its ten seats */
+            const n = Number(m.stamps) || 0;
+            const on = n && n % 10 === 0 ? 10 : n % 10;
+            const card = n && n % 10 === 0 ? n / 10 : Math.floor(n / 10) + 1;
+            return `<tr data-bmember="${esc(m.id)}">
             <th scope="row"><button class="roster__name" type="button" data-bmember="${esc(m.id)}">${esc(m.username)}</button></th>
+            <td class="roster__card"><span class="roster__cno">${pad(card)}</span><span class="roster__seats" aria-label="${on} of 10 on card ${pad(card)}">${
+              Array.from({ length:10 }, (_, i) => `<i${i < on ? ' class="is-on"' : ''}></i>`).join('')}</span></td>
+            <td class="roster__rw">${Number(m.rewards_unlocked) || 0} of ${REWARD_TIERS.length}</td>
             <td>${m.last_attendance ? esc(fmtDay(m.last_attendance)) : '<span class="brow__none">-</span>'}</td>
-            <td>${m.stamps}</td>
-          </tr>`).join('')}</tbody>
+            <td>${n}</td>
+          </tr>`;}).join('')}</tbody>
         </table>
         ${d.pages > 1 ? `<div class="bpage">
           <button class="btn" data-bpage="${Math.max(1, d.page - 1)}" ${d.page <= 1 ? 'disabled' : ''}>Previous</button>
@@ -17009,11 +17525,23 @@ const BoardUI = {
     /* the member's total, as the server counts it; the list below is
        their most recent check-ins only */
     const total = Number(m.stamps) || d.attendance.length;
-    return `<div class="panel bpanel">
+    return `<div class="panel bpanel bdet">
+      <div class="bdet__head">
       <button class="link bback" data-bback>${this.backLabel()}</button>
 
-      <h2 class="bdetail__name bdetail__name--id">${esc(m.username)}</h2>
+      <div class="bwho">
+        <p class="bwho__lab">Member${m.created_at ? ` since ${esc(onClock(m.created_at, { month:'long', year:'numeric' }))}` : ''}</p>
+        <h2 class="bdetail__name bdetail__name--id">${esc(m.username)}</h2>
+        <dl class="bwho__figs">
+          <div><dt>Stamps</dt><dd>${total}</dd></div>
+          <div><dt>Card ${pad(total && total % 10 === 0 ? total / 10 : Math.floor(total / 10) + 1)}</dt><dd>${
+            total && total % 10 === 0 ? 10 : total % 10} of 10</dd></div>
+          <div><dt>Prizes</dt><dd>${d.rewards.filter(r => r.state !== 'locked').length} of ${d.rewards.length}</dd></div>
+        </dl>
+      </div>
+      </div>
 
+      <div class="bdet__body">
       ${d.rewards.some(r => r.state !== 'locked') ? `<h2 class="h2 bsec">Rewards</h2>
       <ul class="blist">
         ${d.rewards.filter(r => r.state !== 'locked').map(r => this.rewardRow(m, r, d.handovers)).join('')}
@@ -17024,12 +17552,13 @@ const BoardUI = {
       ${d.attendance.length
         ? `<ul class="blist">${d.attendance.map(a => `
             <li class="brow brow--att"><${a.meeting_id ? `button class="brow__go" type="button" data-bmeeting="${esc(a.meeting_id)}"` : 'div class="brow__go"'}>
-              <span class="brow__no">GM ${a.meeting_number ? pad(a.meeting_number) : '-'}</span>
+              <span class="brow__no">GM <b>${a.meeting_number ? pad(a.meeting_number) : '-'}</b></span>
               <span class="brow__mid"><b>${esc(fmtDay(a.meeting_date))}</b></span>
               <span class="brow__cell">${esc(fmtTime(a.checked_in_at))}${a.location && a.location !== Schedule.PLACE ? ` / ${esc(a.location)}` : ''}</span>
             </${a.meeting_id ? 'button' : 'div'}></li>`).join('')}</ul>${total > d.attendance.length
             ? `<p class="muted bempty">The newest ${d.attendance.length} check-ins are shown.</p>` : ''}`
         : this.empty('No attendance yet')}
+      </div>
     </div>`;
   },
 
@@ -17061,12 +17590,18 @@ const BoardUI = {
     const d = this.meetingDetail;
     const m = d.meeting;
     const today = String(m.meeting_date) === Schedule.today();
-    return `<div class="panel bpanel">
+    return `<div class="panel bpanel bdet">
+      <div class="bdet__head">
       <button class="link bback" data-bback>${this.backLabel()}</button>
 
-      <h2 class="bdetail__name">GM ${pad(m.meeting_number)}</h2>
-      <p class="muted">${esc(fmtDay(m.meeting_date))}${meetingAway(m)}${m.check_in_open ? ' / Check-in open' : ''}</p>
+      <div class="bmeet">
+        <p class="bwho__lab">General meeting</p>
+        <h2 class="bdetail__name">GM ${pad(m.meeting_number)}</h2>
+        <p class="bmeet__when">${esc(fmtDate(m.meeting_date))} / ${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || Schedule.PLACE)}${m.check_in_open ? ' / <b>Check-in open</b>' : ''}</p>
+      </div>
+      </div>
 
+      <div class="bdet__body">
       ${today ? this.handBlock(m) : ''}
 
       ${String(m.meeting_date) > Schedule.today() ? '' : `<h2 class="h2 bsec meetband"><span>Attendees</span>${d.attendees.length
@@ -17081,6 +17616,7 @@ const BoardUI = {
         : this.empty('No check-ins yet')}`}
       ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
       ${this.deleteBlock(m, d.attendees.length)}
+      </div>
     </div>`;
   },
 
@@ -17152,9 +17688,17 @@ const BoardUI = {
 
     if (!sel){
       const next = list.filter(m => String(m.meeting_date) > today).sort(meetingOrder(1))[0];
-      return `<div class="bpanel fail">
-        <p class="nowline"><b class="nowline__lab">No meeting today</b>${next
-          ? `<span>Next GM ${pad(next.meeting_number)} / ${esc(fmtDay(next.meeting_date))}</span>` : ''}</p>
+      return `<div class="bpanel bidle">
+        <p class="bidle__day">${esc(fmtDate(today))}</p>
+        <p class="bidle__word">No meeting today</p>
+        ${next ? `<div class="tkt tkt--quiet bidle__next">
+          <span class="tkt__stub"><span class="tkt__gm">GM</span> <b class="tkt__no">${pad(next.meeting_number)}</b></span>
+          <span class="tkt__body">
+            <span class="tkt__kick">Next</span>
+            <span class="tkt__day">${esc(fmtDate(next.meeting_date))}</span>
+            <span class="tkt__meta">${esc(spanTime(next.start_time, next.end_time))} / ${esc(next.location || Schedule.PLACE)}</span>
+          </span>
+        </div>` : ''}
         <button class="link" type="button" data-btab="meetings" data-mnew>Schedule a meeting</button>
       </div>`;
     }
@@ -17646,7 +18190,9 @@ function paintBoard(attempt = 0){
   const meeting = boardMeeting;
   Backend.issueToken(meeting).then(({ token }) => {
     if (!document.body.contains(box)) return;
-    const svg = qrSVG(token);
+    /* the code as a link, so a phone's own camera opens Keystamp with it;
+       Scan reads the same link */
+    const svg = qrSVG(QRFormat.link(token));
     box.innerHTML = svg || `<p class="qrpanel__fail">The code could not be drawn. Reload the page.</p>`;
   }).catch(() => {
     if (!document.body.contains(box)) return;
@@ -18197,7 +18743,7 @@ const Landing = {
 
     /* The reader may have left Scan during the hold. The record is
        fresh either way; the page they chose is not taken from them. */
-    if (current !== 'scan'){
+    if (current !== 'scan' && current !== 'checkin'){
       scene.clear();
       this.armed = null; this.active = false; this.scene = null;
       if (!fresh && Store.signedIn){
@@ -18259,12 +18805,13 @@ const sealsAsked = new Map();
    them before the answer was lost */
 const sealsUnanswered = new Set();
 
-/* `run` is the camera run that read the code; the refusal, if any, is
-   shown on that run and no other. */
-async function submitSeal(raw, run = Scanner.run){
-  if (!QRFormat.looksLikeKeystamp(raw)) return rejectVisual('INVALID_TOKEN', raw, run);
-
-  Scanner.setState('busy', 'Checking');
+/* The one way a code reaches the verifier, however it was read: by the
+   camera on Scan, or by the phone's own camera through the code's link.
+   Answers {code} for a refusal, {meeting} for the stamp this call
+   landed, or null when the answer is not this page's to show (another
+   account is signed in now, or an earlier call for the same code is
+   the one that shows it). */
+async function checkSeal(raw){
   const uid = Store.user && Store.user.id;
   const key = `${uid}|${raw}`;
   let asked = sealsAsked.get(key);
@@ -18272,9 +18819,8 @@ async function submitSeal(raw, run = Scanner.run){
   if (first){ asked = Backend.verifyCode(raw, uid); sealsAsked.set(key, asked); }
   const result = await asked;
   if (first) sealsAsked.delete(key);
-  /* another account is signed in now: this answer was the last one's,
-     and the page has moved to the new account's Scan */
-  if (!Store.user || Store.user.id !== uid) return;
+  /* another account is signed in now: this answer was the last one's */
+  if (!Store.user || Store.user.id !== uid) return null;
 
   let code = result && result.ok ? null : ((result && result.code) || 'SERVER_ERROR');
   /* "already checked in", right after a check that got no answer, to a
@@ -18308,17 +18854,155 @@ async function submitSeal(raw, run = Scanner.run){
         if (got && Store.openMeeting()) code = 'STALE_CODE';
       }
     }
-    return rejectVisual(code, raw, run);
+    return { code, no:result && result.meeting_number };
   }
-  if (!first) return;
+  if (!first) return null;
 
   const meeting = Store.meeting(result.meeting_id) ||
                   { id:result.meeting_id, no:result.meeting_number, place:Schedule.PLACE };
-  /* said on the live line, under the scene, so a screen reader hears it */
-  Scanner.setState('good', `Stamp acquired. GM ${pad(meeting.no)}`);
-  Scanner.stop();
-  await Landing.run(meeting);
+  return { meeting };
 }
+
+/* `run` is the camera run that read the code; the refusal, if any, is
+   shown on that run and no other. */
+async function submitSeal(raw, run = Scanner.run){
+  if (!QRFormat.looksLikeKeystamp(raw)) return rejectVisual('INVALID_TOKEN', raw, run);
+
+  Scanner.setState('busy', 'Checking');
+  const got = await checkSeal(QRFormat.canonical(raw));
+  if (!got) return;
+  if (got.code) return rejectVisual(got.code, raw, run);
+
+  /* said on the live line, under the scene, so a screen reader hears it */
+  Scanner.setState('good', `Stamp acquired. GM ${pad(got.meeting.no)}`);
+  Scanner.stop();
+  await Landing.run(got.meeting);
+}
+
+/* ══ Arriving by link ═══════════════════════════════════════════════
+   The wall's code is a link a phone's own camera can open. The code is
+   taken off the address at once and kept for this tab only (memory and
+   sessionStorage, never localStorage), so it outlives signing in or
+   making an account, and then goes to the verifier the way a scan
+   does. Nothing about it is shown; the verifier alone decides. */
+const Arrival = {
+  KEY: 'keystamp:arrival',
+  /* long enough to make an account; not so long that the next person to
+     sign in on a shared phone is checked in with it */
+  KEEP: 45 * 60 * 1000,
+  bare: null,          /* the signed code, without its scheme */
+  peek: null,          /* {ok, no} | {code} | {unknown:true} once asked */
+  peeking: false,
+  phase: 'idle',       /* idle | checking | refused */
+  refusal: null,
+  no: null,            /* the meeting's number, once the server has said it */
+
+  get code(){ return this.bare ? QRFormat.SCHEME + this.bare : null; },
+  /* whether the arrival page has anything to show */
+  get here(){ return Boolean(this.bare) || this.phase === 'refused'; },
+
+  /* the address the phone opened: the code is kept and the address
+     loses it before anything is drawn */
+  take(){
+    let hash = '';
+    try { hash = location.hash; } catch (_) { return false; }
+    if (!hash.startsWith(QRFormat.LINK)) return false;
+    const bare = hash.slice(QRFormat.LINK.length);
+    try { history.replaceState(null, '', location.pathname + location.search + '#/checkin'); } catch (_) {}
+    if (!QRFormat.BARE.test(bare)){ this.forget(); this.phase = 'refused'; this.refusal = 'INVALID_TOKEN'; return true; }
+    this.forget();
+    this.bare = bare;
+    try { sessionStorage.setItem(this.KEY, JSON.stringify({ c:bare, at:Date.now() })); } catch (_) {}
+    return true;
+  },
+  /* a code kept by this tab before a reload (signing up can reload) */
+  restore(){
+    if (this.bare) return;
+    try {
+      const v = JSON.parse(sessionStorage.getItem(this.KEY) || 'null');
+      if (v && QRFormat.BARE.test(String(v.c)) && Date.now() - Number(v.at) < this.KEEP) this.bare = v.c;
+      else sessionStorage.removeItem(this.KEY);
+    } catch (_) {}
+  },
+  /* the code is done with: stamped, refused for good, or its reader
+     signed out */
+  forget(){
+    this.bare = null; this.peek = null; this.no = null;
+    this.phase = 'idle'; this.refusal = null;
+    try { sessionStorage.removeItem(this.KEY); } catch (_) {}
+  },
+  /* a verdict stays on the page until the reader moves on */
+  leave(){ if (!this.bare){ this.phase = 'idle'; this.refusal = null; this.no = null; } },
+
+  paint(){ if (current === 'checkin') go('checkin', { instant:true, force:true, quiet:true }); },
+
+  /* what happens on arrival: signed in, the code goes to the verifier;
+     signed out, the server is asked what it is for */
+  run(){
+    if (!this.bare) return;
+    /* an officer is added by another officer, as on the meeting page;
+       a board account does not stamp itself from the wall */
+    if (Store.signedIn && Store.isBoard){
+      this.forget(); this.phase = 'refused'; this.refusal = 'BOARD_ACCOUNT';
+      this.paint();
+      return;
+    }
+    if (Store.signedIn){ if (this.phase === 'idle') this.submit(); }
+    else if (!this.peek) this.ask();
+  },
+
+  async ask(){
+    if (this.peeking || !this.bare) return;
+    this.peeking = true;
+    const mine = this.bare;
+    const res = await Backend.peekCode(this.code).catch(() => ({ ok:false, code:'NETWORK_ERROR' }));
+    this.peeking = false;
+    if (this.bare !== mine) return;
+    if (res && res.ok){ this.peek = { ok:true }; this.no = Number(res.meeting_number) || null; }
+    else {
+      const code = (res && res.code) || 'SERVER_ERROR';
+      /* a verifier that cannot say (no connection, or one from before
+         peeks, which asks for a session first) leaves the meeting
+         unnamed; signing in still checks the code */
+      if (!SCAN_FINAL.has(code)) this.peek = { unknown:true };
+      else { this.forget(); this.phase = 'refused'; this.refusal = code; }
+    }
+    this.paint();
+  },
+
+  async submit(){
+    if (!this.bare || this.phase === 'checking') return;
+    const mine = this.bare;
+    this.phase = 'checking'; this.refusal = null;
+    this.paint();
+    /* a refusal that may pass on a second try is tried again, quietly,
+       a few times: an account made a moment ago may not be ready yet */
+    let got = null;
+    for (let i = 0; i < 3; i++){
+      got = await checkSeal(this.code);
+      if (this.bare !== mine) return;
+      if (!got || !got.code || !SCAN_TRANSIENT.has(got.code)) break;
+      await new Promise(r => setTimeout(r, 1200 * (i + 1)));
+      if (this.bare !== mine || !Store.signedIn) return;
+    }
+    if (!got){ this.phase = 'idle'; return; }
+    if (got.code){
+      if (got.no) this.no = Number(got.no) || this.no;
+      /* signed out under it: the code waits for the next sign-in */
+      if (got.code === 'NOT_AUTHENTICATED'){ this.phase = 'idle'; return; }
+      const code = got.code;
+      if (!SCAN_TRANSIENT.has(code)){ const no = this.no; this.forget(); this.no = no; }
+      this.phase = 'refused'; this.refusal = code;
+      this.paint();
+      return;
+    }
+    this.forget();
+    await Landing.run(got.meeting);
+  },
+};
+/* refusals that settle a code for good: it is not offered again */
+const SCAN_FINAL = new Set(['INVALID_TOKEN', 'EXPIRED_TOKEN', 'MEETING_NOT_FOUND', 'MEETING_NOT_ACTIVE',
+  'ATTENDANCE_CLOSED', 'STALE_CODE', 'WRONG_DAY', 'ALREADY_CHECKED_IN', 'NOT_AUTHORIZED']);
 
 /* The refusal is shown on the camera run that read the code and stays
    on the line until another code is read; a run that has since been
@@ -18361,7 +19045,7 @@ const BOARD_NAV = [
 const navFor = () => (Store.isBoard ? BOARD_NAV : MEMBER_NAV);
 
 const ROUTES = MEMBER_NAV.map(n => n.id)
-  .concat(BOARD_NAV.map(n => n.id), 'auth');
+  .concat(BOARD_NAV.map(n => n.id), 'auth', 'checkin');
 
 const AuthUI = {
   mode:'in', busy:false,
@@ -18394,6 +19078,11 @@ const PANE_ROUTES = ['bmeet', 'bcheckin', 'bmembers'];
 
 function gate(id){
   if (!Store.ready) return id;
+  /* the page a wall code's link opens, while it has something to say */
+  if (id === 'checkin'){
+    if (Arrival.here) return 'checkin';
+    id = 'home';
+  }
   if (!Store.signedIn) return 'auth';
   if (!Store.isBoard){
     if (BOARD_ROUTES.includes(id)) return 'home';
@@ -18560,7 +19249,7 @@ async function go(id, opts = {}){
     /* focus follows a page turn; the first paint has nowhere to move it
        from, and asking costs a whole layout of a page nobody has seen */
     /* the page is named in the tab title and read from its heading */
-    document.title = id === 'auth' ? 'Sign in / Keystamp'
+    document.title = id === 'auth' ? 'Sign in / Keystamp' : id === 'checkin' ? 'Check-in / Keystamp'
       : `${(navFor().find(n => n.id === id) || {}).label || 'Keystamp'} / Keystamp`;
     /* a background refresh never moves the reader's focus */
     if (booted && !opts.quiet){
@@ -18640,6 +19329,7 @@ function afterRender(id, nav = false, covered = false){
   if (booted && !covered) playViewIntro(id, nav);
 
   if (id === 'auth') AuthUI.busy = false;
+  if (id === 'checkin') Arrival.run(); else Arrival.leave();
   paintMotion();
   /* the meeting line under the camera is re-read on arrival */
   if (id === 'scan'){ Scanner.armStart(); if (Store.signedIn) Store.hydrate({ keep:true }); }
@@ -18878,7 +19568,8 @@ document.addEventListener('submit', async e => {
 
     const scene = Scenes.opening({ reveal(){ playViewIntro(current); } });
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      go('home', { instant:true, covered:true });
+      /* a code that brought them here is checked in with now */
+      go(Arrival.bare ? 'checkin' : 'home', { instant:true, covered:true });
       scene.release();
     }));
   } catch (err){
@@ -19151,6 +19842,15 @@ document.addEventListener('click', e => {
     return;
   }
 
+  /* the arrival page's ways on: an account, or another try */
+  const arrive = e.target.closest('[data-arrive]');
+  if (arrive){
+    if (arrive.dataset.arrive === 'again'){ Arrival.phase = 'idle'; Arrival.refusal = null; Arrival.run(); return; }
+    AuthUI.mode = arrive.dataset.arrive === 'up' ? 'up' : 'in';
+    go('auth');
+    return;
+  }
+
   const swap = e.target.closest('#authSwap');
   if (swap){
     AuthUI.mode = AuthUI.mode === 'up' ? 'in' : 'up';
@@ -19168,8 +19868,10 @@ document.addEventListener('click', e => {
     Scenes.exit({
       btn: out,
       swap: () => Store.signOut().then(() => {
-        /* what one officer did at the table is not the next one's */
+        /* what one officer did at the table is not the next one's, and a
+           code one member arrived with is not the next member's */
         BoardUI.reset();
+        Arrival.forget();
         TodayWatch.stop();
         AuthUI.mode = 'in';
         go('auth', { instant:true });
@@ -19428,6 +20130,10 @@ async function loadBoard(){
           && !BoardUI.prizesStale ? BoardUI.prizes
           : Backend.board('prizes').catch(e => ({ code:String((e && e.message) || 'SERVER_ERROR') })),
         Backend.board('members', { q:BoardUI.q, sort:BoardUI.sort, page:BoardUI.page }),
+        /* the club's totals head the roster; read when the chapter opens,
+           and their failing leaves the roster as it is */
+        BoardUI.club && !BoardUI.club.code && !BoardUI.clubStale ? BoardUI.club
+          : Backend.board('overview').catch(e => ({ code:String((e && e.message) || 'SERVER_ERROR') })),
       ]);
     } else got = await Backend.board('meetings');
   } catch (err){
@@ -19439,7 +20145,7 @@ async function loadBoard(){
   if (!error){
     if (kind === 'member') BoardUI.memberDetail = got;
     else if (kind === 'meeting') BoardUI.meetingDetail = got;
-    else if (kind === 'progress'){ [BoardUI.prizes, BoardUI.members] = got; BoardUI.prizesStale = false; }
+    else if (kind === 'progress'){ [BoardUI.prizes, BoardUI.members, BoardUI.club] = got; BoardUI.prizesStale = false; BoardUI.clubStale = false; }
     else BoardUI.meetings = got;
   }
   if (BoardUI.error === 'NOT_AUTHENTICATED') Store.hydrate();
@@ -19563,7 +20269,11 @@ function paintMotion(){
 
 /* an unknown hash resolves to the page already showing; the address is
    corrected so it never names a page that does not exist */
-addEventListener('hashchange', () => { const id = hashRoute(); if (id !== current) go(id); else syncHash(current); });
+addEventListener('hashchange', () => {
+  /* a wall code's link opened in a tab already showing Keystamp */
+  if (Arrival.take()){ go('checkin', { force:true }); return; }
+  const id = hashRoute(); if (id !== current) go(id); else syncHash(current);
+});
 
 /* Projector mode is the stage laid over the whole window. Full screen is
    asked for as well where the browser allows it (not on an iPhone), on the
@@ -19616,6 +20326,9 @@ try {
 }
 
 (async () => {
+  /* a wall code's link: the code leaves the address before anything
+     else happens; one kept by this tab before a reload comes back */
+  if (!Arrival.take()) Arrival.restore();
   try {
     /* the record may take a while: whatever lifts the cover finds this,
        never an empty page */
@@ -19653,7 +20366,7 @@ try {
       }
       /* no signed-in page stays up without a session (the page's own
          sign-out takes itself to Sign in, after its scene) */
-      if (!Store.signedIn && current !== 'auth' && !Store.signingOut){
+      if (!Store.signedIn && current !== 'auth' && !(current === 'checkin' && Arrival.here) && !Store.signingOut){
         Scanner.stop(); clearInterval(countTimer); TodayWatch.stop();
         go('auth', { instant:true, force:true });
         paintIdentity();
@@ -19665,7 +20378,7 @@ try {
          Scan left up would otherwise check in whoever is signed in now) */
       if ((Store.signedIn && current === 'auth' && !Store.signingIn) || switched){
         if (switched){ Scanner.stop(); clearInterval(countTimer); }
-        go(switched ? current : 'home', { instant:true, force:true });
+        go(switched ? current : Arrival.bare ? 'checkin' : 'home', { instant:true, force:true });
         paintIdentity();
         return;
       }
