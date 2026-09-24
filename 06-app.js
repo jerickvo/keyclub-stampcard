@@ -1057,8 +1057,10 @@ async function loadBoard(){
   const active = document.activeElement;
   const focusAt = keep ? focusKey(box, active) : null;
   /* the code already on the projector stays up while its token is
-     re-issued; a code that was not on screen is never shown early */
-  const shownQR = keep && boardMeeting ? { meeting:boardMeeting, svg:$('#qrBox svg', box)?.outerHTML || null } : null;
+     re-issued, if it is still good; a code that was not on screen is
+     never shown early */
+  const shownQR = keep && boardMeeting && Date.now() < qrGoodUntil
+    ? { meeting:boardMeeting, svg:$('#qrBox svg', box)?.outerHTML || null } : null;
   if (keep) box.setAttribute('aria-busy', 'true');
   else if (!BoardUI.loading){
     BoardUI.loading = true;
@@ -1289,13 +1291,10 @@ try {
     if (Backend.live) SupabaseAdapter.onAuthChange((event, uid) => {
       if (!Store.ready || Store.signingOut || Store.signingIn) return;
       const was = Store.user ? Store.user.id : null;
-      if (event === 'SIGNED_OUT' ? was !== null : uid !== null && uid !== was){
-        /* another tab's session can reach this tab's storage a moment
-           after its message: read once more if it was not there yet */
-        Store.hydrate().then(() => {
-          if (uid && (!Store.user || Store.user.id !== uid)) setTimeout(() => Store.hydrate(), 600);
-        });
-      }
+      /* another tab's session reaching this tab's storage is told as
+         its own change (onAuthChange), so a read that came too early is
+         followed by one that finds it */
+      if (event === 'SIGNED_OUT' ? was !== null : uid !== null && uid !== was) Store.hydrate();
     });
 
     let shownUser = Store.user ? Store.user.id : null;

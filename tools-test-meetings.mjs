@@ -14,7 +14,7 @@ const ctx = vm.createContext({ Schedule:{ today:() => '2026-09-07', PLACE:'MPR' 
 const backend = readFileSync(new URL('./01a-backend.js', import.meta.url), 'utf8');
 const clock = backend.slice(backend.indexOf('/* minutes past midnight at the club */'),
                             backend.indexOf('const WriteFailure'));
-vm.runInContext('const CLUB_TZ = "America/Los_Angeles"; var boardMeeting = null;\n' + clock + src + '\nthis.__x = { nextMeetingNumber, spanTime, BoardUI, MEETING_DEFAULTS, meetingPhase };', ctx);
+vm.runInContext('const CLUB_TZ = "America/Los_Angeles"; var boardMeeting = null, boardPicked = null;\n' + clock + src + '\nthis.__x = { nextMeetingNumber, spanTime, BoardUI, MEETING_DEFAULTS, meetingPhase };', ctx);
 const { nextMeetingNumber, spanTime, BoardUI, MEETING_DEFAULTS, meetingPhase } = ctx.__x;
 const rows = nums => nums.map(n => ({ meeting_number:n }));
 
