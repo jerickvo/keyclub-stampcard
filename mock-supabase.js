@@ -59,8 +59,10 @@ function mkClient(){
       if (!has || has.handed_by !== me.id || Date.now() - Date.parse(has.handed_at) >= 15 * 60 * 1000)
         return raise('UNDO_EXPIRED');
       db.reward_handovers = db.reward_handovers.filter(h => h !== has);
-      /* a claim the hand-over wrote goes with it */
-      if (has.made_claim) db.reward_claims = db.reward_claims.filter(c => !(c.user_id === uid && c.reward_id === rid));
+      /* a claim the hand-over wrote goes with it, while it is still the
+         officer's (a member's own claim_reward makes it theirs) */
+      if (has.made_claim) db.reward_claims = db.reward_claims.filter(c =>
+        !(c.user_id === uid && c.reward_id === rid && c.claimed_by === me.id));
       saveDB();
       return { data:true, error:null };
     }
@@ -71,10 +73,26 @@ function mkClient(){
       const n = (db.attendance || []).filter(a => a.user_id === uid).length;
       if (n < NEED[rid]) return raise('NOT_EARNED');
       db.reward_claims.push({ id:'rc_'+Math.random().toString(36).slice(2,8), user_id:uid,
-                              reward_id:rid, claimed_at:new Date().toISOString() });
+                              reward_id:rid, claimed_at:new Date().toISOString(), claimed_by:me.id });
     }
     const at = new Date().toISOString();
     db.reward_handovers.push({ user_id:uid, reward_id:rid, handed_at:at, handed_by:me.id, made_claim:!claimed });
+    saveDB();
+    return { data:at, error:null };
+  }
+
+  /* stands in for claim_reward (migrations/2026-09-24-claim-ownership.sql) */
+  function claimReward({ p_user_id:who, p_reward_id:rid }){
+    const uid = db.session && db.session.user.id;
+    if (!uid || who !== uid) return raise('NOT_AUTHENTICATED');
+    if (!NEED[rid]) return raise('INVALID_REWARD');
+    db.reward_claims = db.reward_claims || [];
+    const has = db.reward_claims.find(c => c.user_id === uid && c.reward_id === rid);
+    if (has){ has.claimed_by = uid; saveDB(); return { data:has.claimed_at, error:null }; }
+    if ((db.attendance || []).filter(a => a.user_id === uid).length < NEED[rid]) return raise('NOT_EARNED');
+    const at = new Date().toISOString();
+    db.reward_claims.push({ id:'rc_'+Math.random().toString(36).slice(2,8), user_id:uid,
+                            reward_id:rid, claimed_at:at, claimed_by:uid });
     saveDB();
     return { data:at, error:null };
   }
@@ -247,7 +265,7 @@ function mkClient(){
                 c.user_id === payload.user_id && c.reward_id === payload.reward_id);
               if (dup) return Promise.resolve({ data:null,
                 error:{ message:'duplicate key value', code:'23505' } }).then(res);
-              return Promise.resolve({ data:writeClaim(payload), error:null }).then(res);
+              return Promise.resolve({ data:writeClaim({ claimed_by:uid, ...payload }), error:null }).then(res);
             }
             return Promise.resolve({ data:payload, error:null }).then(res);
           },
@@ -266,6 +284,7 @@ function mkClient(){
       if ((name === 'hand_over_reward' || name === 'undo_hand_over') && !window.__noHandovers)
         return handover(name, args || {});
       if (name === 'stamp_by_hand' && !window.__noHandovers) return stampByHand(args || {});
+      if (name === 'claim_reward' && !window.__noHandovers && !window.__noClaimFn) return claimReward(args || {});
       if (name !== 'delete_meeting_and_stamps')
         return { data:null, error:{ message:
           'Could not find the function public.' + name + ' in the schema cache',
@@ -306,11 +325,17 @@ function mkClient(){
           if (!meeting) return { data:{ ok:false, code:'MEETING_NOT_FOUND' }, error:null };
 
           if (body.action === 'start'){
+            /* start_check_in: another meeting taking check-ins is never
+               closed from here */
+            if ((db.meetings || []).some(m => m.check_in_open && m.id !== mid))
+              return { data:{ ok:false, code:'ATTENDANCE_ALREADY_OPEN' }, error:null };
+            const was = Boolean(meeting.check_in_open);
             db.sessions = db.sessions || [];
+            db.sessions.forEach(x => { if (x.meeting_id !== mid && !x.ended_at) x.ended_at = new Date().toISOString(); });
             if (!db.sessions.some(x => x.meeting_id === mid && !x.ended_at))
               db.sessions.push({ id:'sess_'+Math.random().toString(36).slice(2,8), meeting_id:mid, ended_at:null });
             meeting.check_in_open = true; saveDB();
-            return { data:{ ok:true, open:true }, error:null };
+            return { data:{ ok:true, open:true, already_open:was }, error:null };
           }
           if (body.action === 'end'){
             (db.sessions || []).forEach(x => { if (x.meeting_id === mid) x.ended_at = new Date().toISOString(); });
@@ -318,17 +343,20 @@ function mkClient(){
             return { data:{ ok:true, open:false }, error:null };
           }
           if (body.action === 'token'){
+            if (body.rotate !== true) return { data:{ ok:false, code:'RELOAD_REQUIRED' }, error:null };
             const sess = (db.sessions || []).find(x => x.meeting_id === mid && !x.ended_at);
             if (!sess || !meeting.check_in_open)
               return { data:{ ok:false, code:'ATTENDANCE_CLOSED' }, error:null };
-            /* mirrors the real function: exp comes from the meeting's own
-               date, not the clock, so the same meeting always yields the
-               same token. The signature is an opaque marker here because
-               the browser must not be able to make one either way. */
-            const exp = Date.parse(meeting.meeting_date + 'T23:59:59-08:00');
+            /* mirrors the real function: a code lasts 45 s and the wall
+               asks for the next every 15 s (window.__qrLifeMs and
+               __qrRefreshMs shorten them for a test). The signature is an
+               opaque marker here because the browser must not be able to
+               make one either way. */
+            const life = window.__qrLifeMs || 45000, every = window.__qrRefreshMs || 15000;
+            const exp = Date.now() + life;
             const token = `keystamp://a/${btoa(sess.id+'.'+mid+'.'+exp)}.SERVERSIG`;
             return { data:{ ok:true, token, expires_at:new Date(exp).toISOString(),
-                            static:true }, error:null };
+                            expires_in:life, refresh_in:every }, error:null };
           }
           return { data:null, error:{ context:{ status:400 } } };
         }
@@ -493,7 +521,7 @@ function mkClient(){
           let payload; try { payload = atob(bare.slice(0,dot)); }
           catch(e){ return { data:{ ok:false, code:'INVALID_TOKEN' }, error:null }; }
           const [sid, mid, expStr] = payload.split('.');
-          if (Date.now() > Number(expStr))
+          if (Date.now() > Number(expStr) || Number(expStr) - Date.now() > 60000)
             return { data:{ ok:false, code:'EXPIRED_TOKEN' }, error:null };
           const sess = (db.sessions || []).find(x => x.id === sid);
           if (!sess) return { data:{ ok:false, code:'INVALID_TOKEN' }, error:null };

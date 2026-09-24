@@ -20,28 +20,59 @@ let boardMeeting = null;
    default is chosen again on every read */
 let boardPicked = null;
 
-let qrRetry = null;
+/* A code on the wall lasts a short while (the server says how long and
+   refuses it after that), and the wall asks for the next one well before
+   then. Until when, on this device's clock, the code shown is worth
+   scanning: a code with only seconds left is taken down, not left up
+   for a phone to be told it expired. */
+let qrRetry = null, qrExpire = null;
+let qrGoodUntil = 0, qrDue = Infinity;
+/* the code last put on the wall, for a repaint of the pane to put back */
+let qrShown = null;
+const QR_MARGIN = 5000;
 function paintBoard(attempt = 0){
   const box = $('#qrBox');
   clearTimeout(qrRetry);
   if (!box) return;
 
   const meeting = boardMeeting;
-  Backend.issueToken(meeting).then(({ token }) => {
-    if (!document.body.contains(box)) return;
+  const again = (ms, next) => {
+    clearTimeout(qrRetry);
+    qrDue = Date.now() + ms;
+    qrRetry = setTimeout(() => {
+      if (document.body.contains(box) && boardMeeting === meeting) paintBoard(next);
+    }, ms);
+  };
+  Backend.issueToken(meeting).then(({ token, lifeMs, refreshMs }) => {
+    if (!document.body.contains(box) || boardMeeting !== meeting) return;
     const svg = qrSVG(token);
     box.innerHTML = svg || `<p class="qrpanel__fail">The code could not be drawn. Reload the page.</p>`;
+    qrShown = { meeting, svg };
+    qrGoodUntil = lifeMs ? Date.now() + lifeMs - QR_MARGIN : Infinity;
+    clearTimeout(qrExpire);
+    if (lifeMs) qrExpire = setTimeout(takeDownQR, Math.max(0, qrGoodUntil - Date.now()));
+    if (refreshMs) again(refreshMs, 0); else qrDue = Infinity;
   }).catch(() => {
     if (!document.body.contains(box)) return;
-    /* a code already on the wall stays up; otherwise the wall says it is
-       trying again, and does, while it is showing this meeting */
-    if (!box.querySelector('svg'))
+    /* a code still good stays up; otherwise the wall says it is trying
+       again, and does, while it is showing this meeting */
+    if (!box.querySelector('svg') || Date.now() >= qrGoodUntil)
       box.innerHTML = `<p class="qrpanel__fail" role="status">Could not load the code. Trying again.</p>`;
-    qrRetry = setTimeout(() => {
-      if (document.body.contains(box) && boardMeeting === meeting) paintBoard(attempt + 1);
-    }, Math.min(30000, 3000 * 2 ** attempt));
+    again(Math.min(30000, 3000 * 2 ** attempt), attempt + 1);
   });
 }
+function takeDownQR(){
+  const box = $('#qrBox');
+  if (box && box.querySelector('svg') && Date.now() >= qrGoodUntil)
+    box.innerHTML = `<p class="qrpanel__fail" role="status">Getting a new code.</p>`;
+}
+/* a wall put away (a sleeping laptop, a hidden tab) whose timers were
+   held back asks for its next code as soon as it is seen again */
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || !$('#qrBox')) return;
+  takeDownQR();
+  if (Date.now() >= qrDue) paintBoard();
+});
 
 let countTimer = null;
 /* A closed stage for today's meeting learns, slowly, that check-in was

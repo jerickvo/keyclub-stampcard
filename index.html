@@ -14917,6 +14917,19 @@ const SupabaseAdapter = {
       /* outside supabase-js's lock: the listener reads the record again */
       setTimeout(() => fn(event, session ? session.user.id : null), 0);
     });
+    /* Another tab's sign-in or sign-out, told when the session it stored
+       (or removed) can be read here. supabase-js's own message between
+       tabs can arrive before that, and a re-read then finds the old
+       session; this one never does. */
+    const key = this.client.auth.storageKey;
+    addEventListener('storage', e => {
+      if (e.storageArea !== localStorage || (e.key !== key && e.key !== null)) return;
+      const uid = (() => {
+        try { const s = JSON.parse(e.key === null ? localStorage.getItem(key) : e.newValue);
+              return s && s.access_token && s.user ? s.user.id : null; } catch (_) { return null; }
+      })();
+      fn(uid ? 'SIGNED_IN' : 'SIGNED_OUT', uid);
+    });
     return data && data.subscription;
   },
 
@@ -15103,7 +15116,13 @@ const SupabaseAdapter = {
   /* The server ends that session's refresh token; its answer changes
      nothing on this device. The server takes a logout only with a live
      access token, so an expired one is first exchanged for a fresh one
-     with the session's own refresh token. */
+     with the session's own refresh token. Only the tokens it was handed
+     are ever used: nothing it does, however late, touches the session
+     stored now, which may be the next person's. A request that gets no
+     answer, or a server fault, is tried twice more (after 2 s and 6 s)
+     while the page is open; a refusal means the session is already over
+     there. */
+  REVOKE_RETRY: [2000, 6000],
   async revoke(kept){
     const call = (path, init) => {
       const stop = new AbortController();
@@ -15111,15 +15130,22 @@ const SupabaseAdapter = {
       return fetch(`${Config.supabaseUrl}/auth/v1/${path}`, { method:'POST', keepalive:true, signal:stop.signal,
         ...init, headers:{ apikey:Config.supabaseAnonKey, 'Content-Type':'application/json', ...(init.headers || {}) } });
     };
-    try {
-      let token = kept.access_token;
-      if (Number(kept.expires_at) * 1000 < Date.now() + 30000 && kept.refresh_token){
-        const res = await call('token?grant_type=refresh_token', { body:JSON.stringify({ refresh_token:kept.refresh_token }) });
-        const fresh = res.ok ? await res.json() : null;
-        if (fresh && fresh.access_token) token = fresh.access_token;
-      }
-      await call('logout?scope=local', { headers:{ Authorization:`Bearer ${token}` } });
-    } catch (_) {}
+    let cur = { access_token:kept.access_token, refresh_token:kept.refresh_token, expires_at:kept.expires_at };
+    for (let i = 0; i <= this.REVOKE_RETRY.length; i++){
+      if (i) await new Promise(r => setTimeout(r, this.REVOKE_RETRY[i - 1]));
+      try {
+        if (Number(cur.expires_at) * 1000 < Date.now() + 30000 && cur.refresh_token){
+          const res = await call('token?grant_type=refresh_token', { body:JSON.stringify({ refresh_token:cur.refresh_token }) });
+          if (!res.ok){ if (res.status >= 500) continue; return; }
+          const fresh = await res.json().catch(() => null);
+          if (!fresh || !fresh.access_token) continue;
+          /* the refresh token is spent: a retry uses the one it came with */
+          cur = { access_token:fresh.access_token, refresh_token:fresh.refresh_token, expires_at:fresh.expires_at };
+        }
+        const out = await call('logout?scope=local', { headers:{ Authorization:`Bearer ${cur.access_token}` } });
+        if (out.status < 500) return;
+      } catch (_) {}
+    }
   },
 
   async listMeetings(){
@@ -15259,8 +15285,23 @@ const SupabaseAdapter = {
   },
 
   async claimReward(userId, rewardId){
-    /* a claim already on file (another tab, a retry after a lost answer)
-       is the same outcome, so it is asked for as one: no conflict */
+    /* The database records the claim as the member's own, and makes one
+       an officer's hand-over already wrote theirs, so taking the
+       hand-over back leaves it. A claim already on file (another tab, a
+       retry after a lost answer) is the same outcome. */
+    /* the account the page shows is named: the database refuses the
+       claim if another tab has signed in as someone else since */
+    const { error:e1 } = await this.client.rpc('claim_reward', { p_user_id:userId, p_reward_id:rewardId });
+    if (!e1) return rewardId;
+    if (!Handover.absent(e1)){
+      const msg = String(e1.message || '');
+      /* refused on the server's count: the page's count was out of date */
+      if (msg.includes('NOT_EARNED')) throw Object.assign(new Error('NOT_EARNED'), { code:'42501' });
+      if (msg.includes('NOT_AUTHENTICATED')) throw new Error('Not signed in.');
+      throw e1;
+    }
+    /* a database from before claim_reward: the member's own insert, as
+       one request, no conflict */
     const { error } = await this.client.from('reward_claims')
       .upsert({ user_id:userId, reward_id:rewardId },
               { onConflict:'user_id,reward_id', ignoreDuplicates:true });
@@ -15341,10 +15382,15 @@ const SupabaseAdapter = {
   },
   async issueToken(meetingId){
     const { data, error } = await this.client.functions
-      .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId } });
+      .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId, rotate:true } });
     if (error) throw new Error(this.functionCode(error));
     if (!data || data.ok === false || !data.token) throw new Error((data && data.code) || 'NO_TOKEN');
-    return { token: data.token };
+    /* a code lasts a short while and comes with when to ask for the
+       next; one from a function deployed before that lasts the day and
+       comes with neither */
+    return { token: data.token,
+             lifeMs: Number(data.expires_in) || null,
+             refreshMs: Number(data.refresh_in) || null };
   },
   /* Board-only and held-only are enforced by the database function,
      not here. The legacy name is tried once for projects that have not
@@ -17596,28 +17642,59 @@ let boardMeeting = null;
    default is chosen again on every read */
 let boardPicked = null;
 
-let qrRetry = null;
+/* A code on the wall lasts a short while (the server says how long and
+   refuses it after that), and the wall asks for the next one well before
+   then. Until when, on this device's clock, the code shown is worth
+   scanning: a code with only seconds left is taken down, not left up
+   for a phone to be told it expired. */
+let qrRetry = null, qrExpire = null;
+let qrGoodUntil = 0, qrDue = Infinity;
+/* the code last put on the wall, for a repaint of the pane to put back */
+let qrShown = null;
+const QR_MARGIN = 5000;
 function paintBoard(attempt = 0){
   const box = $('#qrBox');
   clearTimeout(qrRetry);
   if (!box) return;
 
   const meeting = boardMeeting;
-  Backend.issueToken(meeting).then(({ token }) => {
-    if (!document.body.contains(box)) return;
+  const again = (ms, next) => {
+    clearTimeout(qrRetry);
+    qrDue = Date.now() + ms;
+    qrRetry = setTimeout(() => {
+      if (document.body.contains(box) && boardMeeting === meeting) paintBoard(next);
+    }, ms);
+  };
+  Backend.issueToken(meeting).then(({ token, lifeMs, refreshMs }) => {
+    if (!document.body.contains(box) || boardMeeting !== meeting) return;
     const svg = qrSVG(token);
     box.innerHTML = svg || `<p class="qrpanel__fail">The code could not be drawn. Reload the page.</p>`;
+    qrShown = { meeting, svg };
+    qrGoodUntil = lifeMs ? Date.now() + lifeMs - QR_MARGIN : Infinity;
+    clearTimeout(qrExpire);
+    if (lifeMs) qrExpire = setTimeout(takeDownQR, Math.max(0, qrGoodUntil - Date.now()));
+    if (refreshMs) again(refreshMs, 0); else qrDue = Infinity;
   }).catch(() => {
     if (!document.body.contains(box)) return;
-    /* a code already on the wall stays up; otherwise the wall says it is
-       trying again, and does, while it is showing this meeting */
-    if (!box.querySelector('svg'))
+    /* a code still good stays up; otherwise the wall says it is trying
+       again, and does, while it is showing this meeting */
+    if (!box.querySelector('svg') || Date.now() >= qrGoodUntil)
       box.innerHTML = `<p class="qrpanel__fail" role="status">Could not load the code. Trying again.</p>`;
-    qrRetry = setTimeout(() => {
-      if (document.body.contains(box) && boardMeeting === meeting) paintBoard(attempt + 1);
-    }, Math.min(30000, 3000 * 2 ** attempt));
+    again(Math.min(30000, 3000 * 2 ** attempt), attempt + 1);
   });
 }
+function takeDownQR(){
+  const box = $('#qrBox');
+  if (box && box.querySelector('svg') && Date.now() >= qrGoodUntil)
+    box.innerHTML = `<p class="qrpanel__fail" role="status">Getting a new code.</p>`;
+}
+/* a wall put away (a sleeping laptop, a hidden tab) whose timers were
+   held back asks for its next code as soon as it is seen again */
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || !$('#qrBox')) return;
+  takeDownQR();
+  if (Date.now() >= qrDue) paintBoard();
+});
 
 let countTimer = null;
 /* A closed stage for today's meeting learns, slowly, that check-in was
@@ -19357,9 +19434,11 @@ async function loadBoard(){
      back after the repaint */
   const active = document.activeElement;
   const focusAt = keep ? focusKey(box, active) : null;
-  /* the code already on the projector stays up while its token is
-     re-issued; a code that was not on screen is never shown early */
-  const shownQR = keep && boardMeeting ? { meeting:boardMeeting, svg:$('#qrBox svg', box)?.outerHTML || null } : null;
+  /* the code on the projector stays up while the next is asked for: the
+     newest one, and only if it is still good when the pane is drawn
+     again (this read can take a while); a code that was not on screen
+     is never shown early */
+  const keptQR = keep && boardMeeting && Boolean($('#qrBox svg', box)) ? boardMeeting : null;
   if (keep) box.setAttribute('aria-busy', 'true');
   else if (!BoardUI.loading){
     BoardUI.loading = true;
@@ -19417,8 +19496,9 @@ async function loadBoard(){
     if (again && typeof again.value === 'string'){
       try { const n = again.value.length; again.setSelectionRange(n, n); } catch (_) {}
     }
-    const qb = shownQR && shownQR.svg && boardMeeting === shownQR.meeting ? $('#qrBox') : null;
-    if (qb) qb.innerHTML = shownQR.svg;
+    const qb = keptQR && keptQR === boardMeeting && qrShown && qrShown.meeting === boardMeeting
+      && qrShown.svg && Date.now() < qrGoodUntil ? $('#qrBox') : null;
+    if (qb) qb.innerHTML = qrShown.svg;
     syncProjector();
     /* a confirmation takes the focus, and gives it back when dismissed */
     /* a detail opened from far down a list starts at its own top, with
@@ -19590,13 +19670,10 @@ try {
     if (Backend.live) SupabaseAdapter.onAuthChange((event, uid) => {
       if (!Store.ready || Store.signingOut || Store.signingIn) return;
       const was = Store.user ? Store.user.id : null;
-      if (event === 'SIGNED_OUT' ? was !== null : uid !== null && uid !== was){
-        /* another tab's session can reach this tab's storage a moment
-           after its message: read once more if it was not there yet */
-        Store.hydrate().then(() => {
-          if (uid && (!Store.user || Store.user.id !== uid)) setTimeout(() => Store.hydrate(), 600);
-        });
-      }
+      /* another tab's session reaching this tab's storage is told as
+         its own change (onAuthChange), so a read that came too early is
+         followed by one that finds it */
+      if (event === 'SIGNED_OUT' ? was !== null : uid !== null && uid !== was) Store.hydrate();
     });
 
     let shownUser = Store.user ? Store.user.id : null;

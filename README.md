@@ -58,6 +58,11 @@ supabase functions deploy board-data
 supabase secrets set ATTENDANCE_TOKEN_SECRET="$(openssl rand -hex 32)"
 ```
 
+Each function is one file in this repository, deployed as that
+function's `index.ts`: `attendance-session.ts`, `verify-attendance.ts`,
+and `index.ts` (board-data). `attendance-session` needs
+`migrations/2026-09-24-check-in-transitions.sql` on the database first.
+
 `board-data` is the only privileged read path for club administration.
 It re-reads the caller's role from `profiles` on every call, so a
 member hitting the same endpoint gets 403 rather than data.
@@ -107,12 +112,26 @@ member → verify-attendance  (Edge Function) → attendance row in Postgres
 ```
 
 A token is `keystamp://a/<base64url(session.meeting.expiry)>.<HMAC-SHA256>`,
-signed with `ATTENDANCE_TOKEN_SECRET`. The deployed `attendance-session`
-function issues one code per check-in session that stays valid until
-the end of the meeting's day (its expiry is the day's 23:59:59), so the
-projected QR does not rotate: a photo of it works for as long as that
-check-in stays open. Closing check-in is what ends it (below). The token
-text is never displayed on the page.
+signed with `ATTENDANCE_TOKEN_SECRET`. `attendance-session` issues a code
+that lasts 45 seconds from the moment it is asked for, and tells the
+projector to ask for the next one every 15 seconds, so the code on the
+wall always has at least 30 seconds left for a slow camera or network.
+A photo of the wall sent out of the room stops working within 45
+seconds (once the second deploy step below is done). The server decides: `verify-attendance` checks the expiry on
+its own clock and refuses a code that claims to last longer than 60
+seconds (the day-long codes issued before this change). A projector
+whose refresh fails keeps its code up while it is good, takes it down
+five seconds before it runs out ("Getting a new code"), and keeps
+asking. The token text is never displayed on the page.
+
+Opening and closing check-in are one database function each
+(`start_check_in`, `end_check_in`), called only by `attendance-session`
+under one lock: opening a meeting while another is taking check-ins is
+refused (`ATTENDANCE_ALREADY_OPEN`) instead of closing the other one; two
+officers opening the same meeting at once both succeed with one session;
+a meeting's `check_in_open` and its session always change together. A
+board account cannot change check-in state around the function (its
+direct write policies are removed).
 
 The browser cannot forge a token: the secret exists only in the
 functions' environment. There is no client-side verifier.
@@ -200,9 +219,61 @@ the prize list and searches names through the roster; without
 `stamp_by_hand` it writes the stamp directly, which the old policy still
 allows.
 
-`02-rls_test.sql` and `03-handover_test.sql` (47 checks) run against
-local Postgres 16 with `00-supabase.sql`, both for a fresh `schema.sql`
-and for the previous `schema.sql` plus the migration run twice.
+`02-rls_test.sql`, `03-handover_test.sql` and `04-hardening_test.sql`
+(43 + 51 + 60 checks) run against local Postgres 16 with
+`00-supabase.sql`, both for a fresh `schema.sql` and for the previous
+`schema.sql` plus the migrations run twice.
+
+## Check-in, claims and the advisors (2026-09-24)
+
+- `migrations/2026-09-24-check-in-transitions.sql`: `start_check_in` and
+  `end_check_in` (above), callable by the service role only; drops the
+  board's direct write policies on `attendance_sessions` and its update
+  policy on `meetings`.
+- `migrations/2026-09-24-claim-ownership.sql`: `reward_claims.claimed_by`
+  records who made a claim (the member, or the officer whose hand-over
+  wrote it). The member's Claim is `claim_reward()`, which also makes a
+  claim a hand-over wrote the member's own (it names the account the
+  page shows, and is refused if another account is signed in), and
+  `undo_hand_over` removes
+  a claim only while it is still the one the hand-over wrote: an
+  officer's Undo never takes back a claim the member made, before or
+  after, or at the same moment (both take the same lock).
+- `migrations/2026-09-24-advisor-fixes.sql`: `touch_updated_at` gets a
+  fixed `search_path`; the trigger functions are no longer callable as
+  RPCs; indexes on `attendance.meeting_id` and two small foreign keys.
+  Leaked-password protection is a dashboard setting (Authentication →
+  password security), not SQL.
+
+A project on the schema before 2026-09-10 runs, in this order, each in
+the SQL Editor (each is idempotent): `2026-09-10-delete-meeting`,
+`2026-09-23-prizes-and-hand-stamps`, `2026-09-24-profile-names`,
+`2026-09-24-meeting-guards`, `2026-09-24-check-in-transitions`,
+`2026-09-24-claim-ownership`, `2026-09-24-advisor-fixes`,
+`2026-09-24-claim-indexes`. Every step
+works with the page and the functions already live.
+
+The functions go out in two steps, because the page published before
+rotation asks for one code and shows it until it is reloaded:
+
+1. With `DAY_CODES_FOR_OLD_PAGES` (attendance-session) and
+   `ACCEPT_DAY_CODES` (verify-attendance) both `true`, deploy
+   `board-data`, `attendance-session` and `verify-attendance`. Opening
+   and closing go through the database; a page that asks with
+   `rotate: true` gets 45-second codes; an older page still gets its
+   day-long code, and the verifier still accepts it.
+2. Publish the client. Once it is live, set both switches to `false` and
+   deploy both functions together, at a time no check-in is in progress.
+   From then on no day-long code is issued or accepted, and a board page
+   left open from before is refused a code (`RELOAD_REQUIRED`): its wall
+   says it could not load the code instead of showing one that dies in 45
+   seconds. Reload any board tab left open across the deploy.
+
+The client works with the previous functions too: it rotates the code
+only when told to, and claims through the older insert when
+`claim_reward` is absent. That older insert, from a page published
+before `claim_reward`, still makes a hand-over's claim the member's (a
+trigger on `reward_claims`), so Undo cannot take it back either.
 
 ---
 

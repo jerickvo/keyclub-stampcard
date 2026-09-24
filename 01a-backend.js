@@ -337,6 +337,19 @@ const SupabaseAdapter = {
       /* outside supabase-js's lock: the listener reads the record again */
       setTimeout(() => fn(event, session ? session.user.id : null), 0);
     });
+    /* Another tab's sign-in or sign-out, told when the session it stored
+       (or removed) can be read here. supabase-js's own message between
+       tabs can arrive before that, and a re-read then finds the old
+       session; this one never does. */
+    const key = this.client.auth.storageKey;
+    addEventListener('storage', e => {
+      if (e.storageArea !== localStorage || (e.key !== key && e.key !== null)) return;
+      const uid = (() => {
+        try { const s = JSON.parse(e.key === null ? localStorage.getItem(key) : e.newValue);
+              return s && s.access_token && s.user ? s.user.id : null; } catch (_) { return null; }
+      })();
+      fn(uid ? 'SIGNED_IN' : 'SIGNED_OUT', uid);
+    });
     return data && data.subscription;
   },
 
@@ -523,7 +536,13 @@ const SupabaseAdapter = {
   /* The server ends that session's refresh token; its answer changes
      nothing on this device. The server takes a logout only with a live
      access token, so an expired one is first exchanged for a fresh one
-     with the session's own refresh token. */
+     with the session's own refresh token. Only the tokens it was handed
+     are ever used: nothing it does, however late, touches the session
+     stored now, which may be the next person's. A request that gets no
+     answer, or a server fault, is tried twice more (after 2 s and 6 s)
+     while the page is open; a refusal means the session is already over
+     there. */
+  REVOKE_RETRY: [2000, 6000],
   async revoke(kept){
     const call = (path, init) => {
       const stop = new AbortController();
@@ -531,15 +550,22 @@ const SupabaseAdapter = {
       return fetch(`${Config.supabaseUrl}/auth/v1/${path}`, { method:'POST', keepalive:true, signal:stop.signal,
         ...init, headers:{ apikey:Config.supabaseAnonKey, 'Content-Type':'application/json', ...(init.headers || {}) } });
     };
-    try {
-      let token = kept.access_token;
-      if (Number(kept.expires_at) * 1000 < Date.now() + 30000 && kept.refresh_token){
-        const res = await call('token?grant_type=refresh_token', { body:JSON.stringify({ refresh_token:kept.refresh_token }) });
-        const fresh = res.ok ? await res.json() : null;
-        if (fresh && fresh.access_token) token = fresh.access_token;
-      }
-      await call('logout?scope=local', { headers:{ Authorization:`Bearer ${token}` } });
-    } catch (_) {}
+    let cur = { access_token:kept.access_token, refresh_token:kept.refresh_token, expires_at:kept.expires_at };
+    for (let i = 0; i <= this.REVOKE_RETRY.length; i++){
+      if (i) await new Promise(r => setTimeout(r, this.REVOKE_RETRY[i - 1]));
+      try {
+        if (Number(cur.expires_at) * 1000 < Date.now() + 30000 && cur.refresh_token){
+          const res = await call('token?grant_type=refresh_token', { body:JSON.stringify({ refresh_token:cur.refresh_token }) });
+          if (!res.ok){ if (res.status >= 500) continue; return; }
+          const fresh = await res.json().catch(() => null);
+          if (!fresh || !fresh.access_token) continue;
+          /* the refresh token is spent: a retry uses the one it came with */
+          cur = { access_token:fresh.access_token, refresh_token:fresh.refresh_token, expires_at:fresh.expires_at };
+        }
+        const out = await call('logout?scope=local', { headers:{ Authorization:`Bearer ${cur.access_token}` } });
+        if (out.status < 500) return;
+      } catch (_) {}
+    }
   },
 
   async listMeetings(){
@@ -679,8 +705,23 @@ const SupabaseAdapter = {
   },
 
   async claimReward(userId, rewardId){
-    /* a claim already on file (another tab, a retry after a lost answer)
-       is the same outcome, so it is asked for as one: no conflict */
+    /* The database records the claim as the member's own, and makes one
+       an officer's hand-over already wrote theirs, so taking the
+       hand-over back leaves it. A claim already on file (another tab, a
+       retry after a lost answer) is the same outcome. */
+    /* the account the page shows is named: the database refuses the
+       claim if another tab has signed in as someone else since */
+    const { error:e1 } = await this.client.rpc('claim_reward', { p_user_id:userId, p_reward_id:rewardId });
+    if (!e1) return rewardId;
+    if (!Handover.absent(e1)){
+      const msg = String(e1.message || '');
+      /* refused on the server's count: the page's count was out of date */
+      if (msg.includes('NOT_EARNED')) throw Object.assign(new Error('NOT_EARNED'), { code:'42501' });
+      if (msg.includes('NOT_AUTHENTICATED')) throw new Error('Not signed in.');
+      throw e1;
+    }
+    /* a database from before claim_reward: the member's own insert, as
+       one request, no conflict */
     const { error } = await this.client.from('reward_claims')
       .upsert({ user_id:userId, reward_id:rewardId },
               { onConflict:'user_id,reward_id', ignoreDuplicates:true });
@@ -761,10 +802,15 @@ const SupabaseAdapter = {
   },
   async issueToken(meetingId){
     const { data, error } = await this.client.functions
-      .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId } });
+      .invoke('attendance-session', { body:{ action:'token', meeting_id:meetingId, rotate:true } });
     if (error) throw new Error(this.functionCode(error));
     if (!data || data.ok === false || !data.token) throw new Error((data && data.code) || 'NO_TOKEN');
-    return { token: data.token };
+    /* a code lasts a short while and comes with when to ask for the
+       next; one from a function deployed before that lasts the day and
+       comes with neither */
+    return { token: data.token,
+             lifeMs: Number(data.expires_in) || null,
+             refreshMs: Number(data.refresh_in) || null };
   },
   /* Board-only and held-only are enforced by the database function,
      not here. The legacy name is tried once for projects that have not

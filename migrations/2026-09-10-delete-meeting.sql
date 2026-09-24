@@ -15,6 +15,7 @@ begin
     raise exception 'only board accounts can delete a meeting';
   end if;
 
+  -- held means the club's day has moved on and check-in is closed
   if not exists (
     select 1 from public.meetings m
     where m.id = p_meeting_id
@@ -30,8 +31,9 @@ begin
   return removed;
 end $$;
 
-revoke all on function public.delete_meeting_and_stamps(uuid) from public;
+-- Supabase's default privileges grant every new function to anon
+-- directly, which `from public` does not take away
+revoke all on function public.delete_meeting_and_stamps(uuid) from public, anon;
 grant execute on function public.delete_meeting_and_stamps(uuid) to authenticated;
 
-revoke all on function public.tmp_test_purge_meeting(uuid) from authenticated;
 drop function if exists public.tmp_test_purge_meeting(uuid);
