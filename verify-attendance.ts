@@ -30,7 +30,7 @@ const MAX_CODE_LIFE_MS = 60_000;
 // codes to the page published before rotation (its
 // DAY_CODES_FOR_OLD_PAGES). Both go to false, and both functions are
 // deployed together, once the rotating page is live.
-const ACCEPT_DAY_CODES = true;
+const ACCEPT_DAY_CODES = false;
 
 // The club is in one place and meets on one local calendar day. UTC is
 // not that calendar: at 4:00 PM Pacific in winter it is already the next

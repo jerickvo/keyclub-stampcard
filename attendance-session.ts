@@ -40,7 +40,7 @@ const REFRESH_MS   = 15_000;
 // live, both switches go to false and both functions are deployed
 // together: an old page is then refused (RELOAD_REQUIRED) and no
 // day-long code is issued or accepted.
-const DAY_CODES_FOR_OLD_PAGES = true;
+const DAY_CODES_FOR_OLD_PAGES = false;
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
