@@ -33,6 +33,15 @@ const TOKEN_SECRET  = Deno.env.get('ATTENDANCE_TOKEN_SECRET')!;
 const TOKEN_TTL_MS = 45_000;
 const REFRESH_MS   = 15_000;
 
+// DAY_CODES_FOR_OLD_PAGES: while the page published before rotation is
+// still the live one, a request without rotate:true gets the code that
+// page always got (one for the meeting's day, which verify-attendance
+// accepts while its ACCEPT_DAY_CODES is true). Once the rotating page is
+// live, both switches go to false and both functions are deployed
+// together: an old page is then refused (RELOAD_REQUIRED) and no
+// day-long code is issued or accepted.
+const DAY_CODES_FOR_OLD_PAGES = true;
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info',
@@ -92,7 +101,7 @@ Deno.serve(async (req) => {
   if (!profile || profile.role !== 'board')
     return json({ ok: false, code: 'NOT_AUTHORIZED' }, 403);
 
-  let body: { action?: string; meeting_id?: string };
+  let body: { action?: string; meeting_id?: string; rotate?: boolean };
   try { body = await req.json(); } catch { return json({ ok: false, code: 'INVALID_REQUEST' }, 400); }
 
   const meetingId = body.meeting_id;
@@ -127,8 +136,15 @@ Deno.serve(async (req) => {
 
   // ── token ────────────────────────────────────────────────────────
   if (body.action === 'token') {
+    // A page published before codes were short-lived asks for one code
+    // and shows it until it is reloaded: it would put up a code that dies
+    // in 45 s and never replace it. It is refused instead, so its wall
+    // says it could not load the code rather than showing a dead one.
+    if (body.rotate !== true && !DAY_CODES_FOR_OLD_PAGES)
+      return json({ ok: false, code: 'RELOAD_REQUIRED' }, 200);
+
     const { data: meeting, error: mErr } = await admin
-      .from('meetings').select('id, check_in_open').eq('id', meetingId).maybeSingle();
+      .from('meetings').select('id, meeting_date, check_in_open').eq('id', meetingId).maybeSingle();
     if (mErr) return json({ ok: false, code: 'SERVER_ERROR' }, 500);
     if (!meeting) return json({ ok: false, code: 'MEETING_NOT_FOUND' }, 200);
 
@@ -137,6 +153,15 @@ Deno.serve(async (req) => {
     if (sErr) return json({ ok: false, code: 'SERVER_ERROR' }, 500);
     if (!session || !meeting.check_in_open)
       return json({ ok: false, code: 'ATTENDANCE_CLOSED' }, 200);
+
+    // An old page's code, exactly as the function before this one made it
+    if (body.rotate !== true) {
+      const day = Date.parse(`${meeting.meeting_date}T23:59:59-08:00`);
+      if (!Number.isFinite(day)) return json({ ok: false, code: 'SERVER_ERROR' }, 500);
+      const payload = `${session.id}.${meetingId}.${day}`;
+      const token = `keystamp://a/${b64url(new TextEncoder().encode(payload))}.${await sign(payload)}`;
+      return json({ ok: true, token, expires_at: new Date(day).toISOString(), static: true });
+    }
 
     // The code names the session (closing check-in kills every code it
     // issued), the meeting, and its own expiry, and is signed. The expiry

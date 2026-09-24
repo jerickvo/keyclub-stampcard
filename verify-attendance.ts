@@ -26,6 +26,11 @@ const TOKEN_SECRET = Deno.env.get('ATTENDANCE_TOKEN_SECRET')!;
 // (one code for the whole day): it is refused as expired, so a photo of
 // an old wall cannot be used while that check-in stays open.
 const MAX_CODE_LIFE_MS = 60_000;
+// ACCEPT_DAY_CODES: true while attendance-session still issues day-long
+// codes to the page published before rotation (its
+// DAY_CODES_FOR_OLD_PAGES). Both go to false, and both functions are
+// deployed together, once the rotating page is live.
+const ACCEPT_DAY_CODES = true;
 
 // The club is in one place and meets on one local calendar day. UTC is
 // not that calendar: at 4:00 PM Pacific in winter it is already the next
@@ -120,7 +125,7 @@ Deno.serve(async (req) => {
   // longer than a code now lasts
   const exp = Number(expStr);
   const now = Date.now();
-  if (!Number.isFinite(exp) || now > exp || exp - now > MAX_CODE_LIFE_MS)
+  if (!Number.isFinite(exp) || now > exp || (!ACCEPT_DAY_CODES && exp - now > MAX_CODE_LIFE_MS))
     return json({ ok: false, code: 'EXPIRED_TOKEN' });
 
   // 5. the session must still be running.
