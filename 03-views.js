@@ -499,6 +499,7 @@ const Views = {
     BoardUI.deleteNote = null;
     /* a chapter opened afresh reads its prize list afresh */
     BoardUI.prizesStale = true;
+    BoardUI.clubStale = true;
     /* a fresh chapter opens on the wait panel, never on another
        chapter's data */
     BoardUI.loading = true;

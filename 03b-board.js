@@ -58,7 +58,7 @@ function spanTime(start, end){
    next account's */
 const BOARD_FRESH = () => ({
   tab:'session', loading:false, shown:null, error:null,
-  prizes:null, owedAll:false, prizesStale:false, lost:new Set(),
+  prizes:null, owedAll:false, prizesStale:false, lost:new Set(), club:null, clubStale:false,
   handQ:'', handFound:null, handed:{}, meetings:null, members:null,
   memberDetail:null, meetingDetail:null, pendingId:null, refocus:null, leftFrom:null, toTop:false,
   q:'', sort:'username', page:1, confirmDelete:null, deleteNote:null, form:null, formOpen:false,
@@ -81,6 +81,8 @@ const BoardUI = {
   error: null,
 
   prizes: null,         /* {owed} | {code} when it could not be read | null */
+  club: null,           /* the club's totals (board-data overview) | {code} | null */
+  clubStale: false,     /* re-read the totals on the next load */
   owedAll: false,       /* the prize list unfolded past its first rows */
   prizesStale: false,   /* re-read the prize list on the next load */
   lost: new Set(),      /* hand-overs whose answer never came back */
@@ -165,11 +167,39 @@ const BoardUI = {
 
   progressPane(){
     return `<div class="bpanel memgrid">
+      ${this.clubHead()}
       ${this.owedBody()}
-      <section class="rosterpanel">
+      <section class="rosterpanel" aria-label="Roster">
         ${this.rosterBody()}
       </section>
     </div>`;
+  },
+
+  /* The club at a glance, at the head of its roster: how many members,
+     the stamps given, the meetings held and how many come to one, and
+     how many members stand at each prize. Counted by the server from
+     the same rows the members' own totals come from. A read that fails
+     leaves the head off; the roster stands on its own. */
+  clubHead(){
+    const c = this.club;
+    if (!c || c.code) return '';
+    const ms = c.milestones || {};
+    const avg = c.average_attendance;
+    return `<section class="club" aria-label="The club">
+      <dl class="club__figs">
+        <div class="club__fig club__fig--lead"><dt>Members</dt><dd>${Number(c.total_members) || 0}</dd></div>
+        <div class="club__fig"><dt>Stamps given</dt><dd>${Number(c.total_seals) || 0}</dd></div>
+        <div class="club__fig"><dt>Meetings held</dt><dd>${Number(c.meetings_held) || 0}</dd></div>
+        <div class="club__fig"><dt>At a meeting</dt><dd>${avg == null ? '–' : esc(String(avg))}</dd></div>
+      </dl>
+      <ol class="club__tiers" aria-label="Members at each prize">
+        ${REWARD_TIERS.map(t => `<li class="club__tier">
+          <b class="club__at">${pad(t.required)}</b>
+          <span class="club__tname">${esc(prizeName(t))}</span>
+          <span class="club__tn">${Number(ms['m' + t.required]) || 0} reached</span>
+        </li>`).join('')}
+      </ol>
+    </section>`;
   },
 
   /* The prize table's list: who is owed a prize now, the member who has
@@ -267,12 +297,26 @@ const BoardUI = {
       </section>
 
       <section class="meetgrid__held meetpanel meetpanel--held">
-        ${band('Held', '<span class="meetband__n" aria-hidden="true">Checked in</span>')}
-        ${past.length
-          ? `<ul class="blist blist--meet">${past.map(m => this.meetingRow(m)).join('')}</ul>`
+        ${band('Held', past.length ? `<span class="meetband__n">${past.length} ${past.length === 1 ? 'meeting' : 'meetings'} / ${
+          past.reduce((n, m) => n + (Number(m.attendance_count) || 0), 0)} check-ins</span>` : '')}
+        ${past.length ? this.byMonth(past).map(g => `
+          <h3 class="ledger__month"><span class="ledger__mname">${esc(onClock(`${g.key}-01`, { month:'long' }))}</span>
+            <span class="ledger__mcount">${g.rows.reduce((n, m) => n + (Number(m.attendance_count) || 0), 0)} checked in</span></h3>
+          <ul class="blist blist--meet">${g.rows.map(m => this.meetingRow(m)).join('')}</ul>`).join('')
           : this.empty('No meetings held yet')}
       </section>
     </div>`;
+  },
+
+  /* the meetings of one month together, in the order given */
+  byMonth(list){
+    const out = [];
+    list.forEach(m => {
+      const key = String(m.meeting_date).slice(0, 7);
+      const last = out[out.length - 1];
+      if (last && last.key === key) last.rows.push(m); else out.push({ key, rows:[m] });
+    });
+    return out;
   },
 
   meetingRow(m){
@@ -289,8 +333,8 @@ const BoardUI = {
     const usual = span === spanTime('12:40 PM', '1:30 PM') && room === Schedule.PLACE;
 
     return `<li class="brow brow--${state}"><button class="brow__go" type="button" data-bmeeting="${esc(m.id)}">
-      <span class="brow__no">GM ${no}</span>
-      <span class="brow__day">${esc(fmtDay(m.meeting_date))}</span>
+      <span class="brow__no">GM <b>${no}</b></span>
+      <span class="brow__day">${esc(state === 'upcoming' || state === 'today' || state === 'open' ? fmtDate(m.meeting_date) : fmtDay(m.meeting_date))}</span>
       ${usual ? '' : `<span class="brow__when">${esc(span)} / ${esc(room)}</span>`}
       ${word ? `<span class="bstate bstate--${state}">${word}</span>` : ''}
       ${upcoming ? '' : `<span class="brow__n"><b>${stamps}</b> <span class="brow__nlab">checked in</span></span>`}
@@ -319,7 +363,7 @@ const BoardUI = {
     const d = this.formDefaults();
     return `<form class="bform" id="meetingForm" novalidate aria-label="Schedule a meeting">
       <div class="bform__grid">
-        <label class="field"><span class="kicker">Meeting number</span>
+        <label class="field bform__no"><span class="kicker">Meeting number</span>
           <input class="input" id="mNo" type="number" min="1" max="${MEETING_NO_MAX}" step="1" inputmode="numeric"
                  value="${esc(f.no)}" placeholder="${esc(d.no)}"></label>
         <label class="field"><span class="kicker">Date</span>
@@ -356,12 +400,21 @@ const BoardUI = {
 
       ${rows.length ? `
         <table class="roster">
-          <thead><tr><th scope="col">Member</th><th scope="col">Last check-in</th><th scope="col">Stamps</th></tr></thead>
-          <tbody>${rows.map(m => `<tr data-bmember="${esc(m.id)}">
+          <thead><tr><th scope="col">Member</th><th scope="col" class="roster__card">Card</th>
+            <th scope="col" class="roster__rw">Prizes</th><th scope="col">Last check-in</th><th scope="col">Stamps</th></tr></thead>
+          <tbody>${rows.map(m => {
+            /* where the member's own card stands: its number and its ten seats */
+            const n = Number(m.stamps) || 0;
+            const on = n && n % 10 === 0 ? 10 : n % 10;
+            const card = n && n % 10 === 0 ? n / 10 : Math.floor(n / 10) + 1;
+            return `<tr data-bmember="${esc(m.id)}">
             <th scope="row"><button class="roster__name" type="button" data-bmember="${esc(m.id)}">${esc(m.username)}</button></th>
+            <td class="roster__card"><span class="roster__cno">${pad(card)}</span><span class="roster__seats" aria-label="${on} of 10 on card ${pad(card)}">${
+              Array.from({ length:10 }, (_, i) => `<i${i < on ? ' class="is-on"' : ''}></i>`).join('')}</span></td>
+            <td class="roster__rw">${Number(m.rewards_unlocked) || 0} of ${REWARD_TIERS.length}</td>
             <td>${m.last_attendance ? esc(fmtDay(m.last_attendance)) : '<span class="brow__none">-</span>'}</td>
-            <td>${m.stamps}</td>
-          </tr>`).join('')}</tbody>
+            <td>${n}</td>
+          </tr>`;}).join('')}</tbody>
         </table>
         ${d.pages > 1 ? `<div class="bpage">
           <button class="btn" data-bpage="${Math.max(1, d.page - 1)}" ${d.page <= 1 ? 'disabled' : ''}>Previous</button>
@@ -378,11 +431,23 @@ const BoardUI = {
     /* the member's total, as the server counts it; the list below is
        their most recent check-ins only */
     const total = Number(m.stamps) || d.attendance.length;
-    return `<div class="panel bpanel">
+    return `<div class="panel bpanel bdet">
+      <div class="bdet__head">
       <button class="link bback" data-bback>${this.backLabel()}</button>
 
-      <h2 class="bdetail__name bdetail__name--id">${esc(m.username)}</h2>
+      <div class="bwho">
+        <p class="bwho__lab">Member${m.created_at ? ` since ${esc(onClock(m.created_at, { month:'long', year:'numeric' }))}` : ''}</p>
+        <h2 class="bdetail__name bdetail__name--id">${esc(m.username)}</h2>
+        <dl class="bwho__figs">
+          <div><dt>Stamps</dt><dd>${total}</dd></div>
+          <div><dt>Card ${pad(total && total % 10 === 0 ? total / 10 : Math.floor(total / 10) + 1)}</dt><dd>${
+            total && total % 10 === 0 ? 10 : total % 10} of 10</dd></div>
+          <div><dt>Prizes</dt><dd>${d.rewards.filter(r => r.state !== 'locked').length} of ${d.rewards.length}</dd></div>
+        </dl>
+      </div>
+      </div>
 
+      <div class="bdet__body">
       ${d.rewards.some(r => r.state !== 'locked') ? `<h2 class="h2 bsec">Rewards</h2>
       <ul class="blist">
         ${d.rewards.filter(r => r.state !== 'locked').map(r => this.rewardRow(m, r, d.handovers)).join('')}
@@ -393,12 +458,13 @@ const BoardUI = {
       ${d.attendance.length
         ? `<ul class="blist">${d.attendance.map(a => `
             <li class="brow brow--att"><${a.meeting_id ? `button class="brow__go" type="button" data-bmeeting="${esc(a.meeting_id)}"` : 'div class="brow__go"'}>
-              <span class="brow__no">GM ${a.meeting_number ? pad(a.meeting_number) : '-'}</span>
+              <span class="brow__no">GM <b>${a.meeting_number ? pad(a.meeting_number) : '-'}</b></span>
               <span class="brow__mid"><b>${esc(fmtDay(a.meeting_date))}</b></span>
               <span class="brow__cell">${esc(fmtTime(a.checked_in_at))}${a.location && a.location !== Schedule.PLACE ? ` / ${esc(a.location)}` : ''}</span>
             </${a.meeting_id ? 'button' : 'div'}></li>`).join('')}</ul>${total > d.attendance.length
             ? `<p class="muted bempty">The newest ${d.attendance.length} check-ins are shown.</p>` : ''}`
         : this.empty('No attendance yet')}
+      </div>
     </div>`;
   },
 
@@ -430,12 +496,18 @@ const BoardUI = {
     const d = this.meetingDetail;
     const m = d.meeting;
     const today = String(m.meeting_date) === Schedule.today();
-    return `<div class="panel bpanel">
+    return `<div class="panel bpanel bdet">
+      <div class="bdet__head">
       <button class="link bback" data-bback>${this.backLabel()}</button>
 
-      <h2 class="bdetail__name">GM ${pad(m.meeting_number)}</h2>
-      <p class="muted">${esc(fmtDay(m.meeting_date))}${meetingAway(m)}${m.check_in_open ? ' / Check-in open' : ''}</p>
+      <div class="bmeet">
+        <p class="bwho__lab">General meeting</p>
+        <h2 class="bdetail__name">GM ${pad(m.meeting_number)}</h2>
+        <p class="bmeet__when">${esc(fmtDate(m.meeting_date))} / ${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || Schedule.PLACE)}${m.check_in_open ? ' / <b>Check-in open</b>' : ''}</p>
+      </div>
+      </div>
 
+      <div class="bdet__body">
       ${today ? this.handBlock(m) : ''}
 
       ${String(m.meeting_date) > Schedule.today() ? '' : `<h2 class="h2 bsec meetband"><span>Attendees</span>${d.attendees.length
@@ -450,6 +522,7 @@ const BoardUI = {
         : this.empty('No check-ins yet')}`}
       ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
       ${this.deleteBlock(m, d.attendees.length)}
+      </div>
     </div>`;
   },
 
@@ -521,9 +594,17 @@ const BoardUI = {
 
     if (!sel){
       const next = list.filter(m => String(m.meeting_date) > today).sort(meetingOrder(1))[0];
-      return `<div class="bpanel fail">
-        <p class="nowline"><b class="nowline__lab">No meeting today</b>${next
-          ? `<span>Next GM ${pad(next.meeting_number)} / ${esc(fmtDay(next.meeting_date))}</span>` : ''}</p>
+      return `<div class="bpanel bidle">
+        <p class="bidle__day">${esc(fmtDate(today))}</p>
+        <p class="bidle__word">No meeting today</p>
+        ${next ? `<div class="tkt tkt--quiet bidle__next">
+          <span class="tkt__stub"><span class="tkt__gm">GM</span> <b class="tkt__no">${pad(next.meeting_number)}</b></span>
+          <span class="tkt__body">
+            <span class="tkt__kick">Next</span>
+            <span class="tkt__day">${esc(fmtDate(next.meeting_date))}</span>
+            <span class="tkt__meta">${esc(spanTime(next.start_time, next.end_time))} / ${esc(next.location || Schedule.PLACE)}</span>
+          </span>
+        </div>` : ''}
         <button class="link" type="button" data-btab="meetings" data-mnew>Schedule a meeting</button>
       </div>`;
     }

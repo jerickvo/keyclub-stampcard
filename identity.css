@@ -71,22 +71,6 @@ body{
 .brow__no{color:var(--ink-2)}
 .brow__n{font-family:var(--f-head)}
 
-.blist--meet .brow__go{display:grid;column-gap:var(--sp-row);row-gap:4px;align-items:center;
-  grid-template-columns:auto minmax(0,1fr) auto;
-  grid-template-areas:"no day state" "no when when" "no n n";
-  padding:var(--sp-row) 0;cursor:pointer;min-height:44px}
-/* the whole row opens the meeting */
-.blist--meet .brow__no{grid-area:no;flex:none;align-self:start;min-height:0;padding-top:2px}
-.blist--meet .brow__day{grid-area:day;
-  font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);line-height:1.05;
-  letter-spacing:.01em;color:var(--ink);min-width:0;overflow-wrap:anywhere}
-.blist--meet .brow__when{grid-area:when;min-width:0;overflow-wrap:anywhere;
-  font:500 clamp(11px,.4vw + 9.7px,12.5px)/1.4 var(--f-mono);
-  letter-spacing:.04em;color:var(--ink-2)}
-.blist--meet .bstate{grid-area:state;justify-self:end;align-self:start}
-.blist--meet .brow__n{grid-area:n;display:flex;align-items:baseline;gap:6px;
-  justify-self:start;text-align:left;padding-top:2px}
-.blist--meet .brow--past .brow__day{color:var(--ink-2)}
 
 .bconfirm{display:flex;align-items:center;justify-content:flex-end;
   gap:var(--sp-tight);flex-wrap:wrap;width:100%}
@@ -109,35 +93,14 @@ body{
 @media (hover:hover){.bconfirm--heavy .btn--go:hover{
   background:var(--ink);border-color:var(--ink)}}
 .bform .field{display:flex;flex-direction:column;justify-content:flex-end;min-width:0}
-.bform .bform__grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-@media(max-width:339px){ .bform .bform__grid{grid-template-columns:minmax(0,1fr)} }
 .bform .field > .kicker{flex:none}
 .bform .field > .input{flex:none;width:100%}
 
-@media(min-width:640px){
-  .blist--meet .brow__go{grid-template-columns:auto minmax(0,1fr) auto auto;
-    grid-template-areas:"no day state n" "no when state n";row-gap:2px}
-  .blist--meet .brow__no{align-self:center;padding-top:0}
-  .blist--meet .bstate{align-self:center}
-  .blist--meet .brow__n{display:grid;justify-items:end;gap:1px;
-    text-align:right;padding-top:0}
-}
 
-/* the form opens in place, under the band that asked for it */
-.bform{padding:var(--sp-pad) 0;border-bottom:var(--edge-rule) solid var(--tint)}
-@media(min-width:640px){ .bform .bform__grid{grid-template-columns:repeat(4,minmax(0,1fr))} }
 
 .bform .input,.bfilters .input{font-family:var(--f-mono);
   color-scheme:light;accent-color:var(--ink)}
 
-.meetgrid{display:flex;flex-direction:column;gap:var(--sp-block)}
-.meetgrid > *{min-width:0}
-@media(min-width:1024px){
-  .meetgrid .blist--meet .brow__go{
-    grid-template-columns:7ch minmax(9ch,12ch) minmax(0,1fr) auto minmax(8ch,auto);
-    grid-template-areas:"no day when state n";align-items:center;row-gap:0}
-  .meetgrid .blist--meet .brow__n{display:flex;align-items:baseline;gap:6px;justify-self:end}
-}
 
 .meetband__t{margin:0;font:inherit;letter-spacing:inherit;text-transform:inherit}
 .meetband{display:flex;align-items:baseline;justify-content:space-between;
@@ -153,17 +116,6 @@ body{
 .meetband .meetband__act{min-height:44px;margin:-14px 0 -6px;padding:0;
   font-family:var(--f-body);text-transform:none;
   font-size:var(--t-body);letter-spacing:.02em;white-space:nowrap}
-/* the Held band names its count column once; each row is one line */
-/* the unit is named once in the band; each count keeps it for a reader */
-.meetpanel--held .brow__nlab{position:absolute;width:1px;height:1px;overflow:hidden;
-  clip-path:inset(50%);white-space:nowrap}
-@media(max-width:1023px){
-  .meetpanel--held .blist--meet .brow__go{grid-template-columns:auto minmax(0,1fr) auto auto;
-    grid-template-areas:"no day state n" "no when when when";row-gap:2px}
-  .meetpanel--held .blist--meet .brow__n{justify-self:end;padding-top:0}
-}
-.meetpanel--held .brow__day{font:500 clamp(12px,.4vw + 10px,14px)/1.4 var(--f-mono);
-  letter-spacing:.04em;text-transform:uppercase}
 .meetgrid .bsec::before,.bsec.meetband::before{content:none}
 .bsec.meetband{padding-top:0}
 
@@ -231,9 +183,9 @@ div.brow__go{cursor:default}
   color:var(--ink-2);white-space:nowrap;vertical-align:bottom}
 /* the date and count columns take only what they need; the name takes the rest */
 .roster th:nth-child(n+2),.roster td:nth-child(n+2){width:1%;white-space:nowrap;padding-left:var(--sp-row)}
-.roster th:nth-child(3),.roster td:nth-child(3){text-align:right}
+.roster th:last-child,.roster td:last-child{text-align:right}
 .roster td{font:400 clamp(11px,.4vw + 9.7px,12.5px)/1.4 var(--f-mono);letter-spacing:.04em;color:var(--ink-2)}
-.roster td:nth-child(3){font-size:15px;color:var(--ink)}
+.roster td:last-child{font:400 clamp(18px,1.6vw,22px)/1 var(--f-head);color:var(--ink)}
 .roster tbody tr{cursor:pointer}
 @media (hover:hover){.roster tbody tr:hover{background:var(--tint)}}
 .roster__name{min-height:44px;margin:-12px 0;padding:0;border:0;background:none;cursor:pointer;
@@ -242,8 +194,7 @@ div.brow__go{cursor:default}
 .roster__name:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:2px}
 .brow__none{color:var(--ink-2)}
 @media(min-width:768px){
-  .roster th:nth-child(2),.roster td:nth-child(2){width:14rem}
-  .roster th:nth-child(3),.roster td:nth-child(3){width:6rem}
+  .roster th:last-child,.roster td:last-child{width:5rem}
 }
 .bsec{border-bottom:var(--edge-thin) solid var(--ink);color:var(--ink)}
 
@@ -1299,6 +1250,155 @@ html{font-synthesis:none}
   font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;
   color:var(--ink-2)}
 .card__cardno{color:var(--tint);opacity:1}
+
+/* ══ Board. Members: the club's figures at the head of its roster, the
+   prize table beside it; Meetings: the schedule as tickets beside the
+   minute book; the detail pages: who or what, then its record ══ */
+.memgrid{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"club" "owed" "roster";align-items:start}
+.memgrid > .club{grid-area:club}
+.memgrid > .owed{grid-area:owed}
+.memgrid > .rosterpanel{grid-area:roster}
+@media(min-width:1100px){
+  .memgrid{grid-template-columns:minmax(0,60fr) minmax(0,40fr);column-gap:clamp(32px,4vw,64px);
+    grid-template-areas:"club club" "roster owed"}
+  .memgrid > .owed{position:sticky;top:var(--sp-pad)}
+}
+
+.club{display:grid;gap:var(--sp-block);padding-bottom:var(--sp-pad);
+  border-bottom:var(--edge-frame) solid var(--ink)}
+.club__figs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:var(--sp-pad) clamp(16px,2.4vw,36px);margin:0;align-items:end}
+.club__fig{display:flex;flex-direction:column-reverse;gap:6px;min-width:0}
+.club__fig dt{font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-2);border-top:var(--edge-rule) solid var(--tint);padding-top:6px}
+.club__fig dd{margin:0;font:400 clamp(32px,3.6vw,48px)/.9 var(--f-head);color:var(--ink)}
+.club__fig--lead dd{font-family:var(--f-display);font-size:clamp(64px,8vw,120px);line-height:.8}
+.club__tiers{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr)}
+.club__tier{display:grid;grid-template-columns:clamp(48px,5vw,64px) minmax(0,1fr) auto;
+  align-items:baseline;column-gap:var(--sp-row);padding:var(--sp-tight) 0;
+  border-bottom:var(--edge-rule) solid var(--tint)}
+.club__tier:last-child{border-bottom:0}
+.club__at{font:400 clamp(24px,2.4vw,32px)/.9 var(--f-head)}
+.club__tname{font-family:var(--f-head);font-size:clamp(15px,1.3vw,18px);text-transform:uppercase;
+  overflow-wrap:anywhere}
+.club__tn{font:400 12.5px/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-2);white-space:nowrap}
+@media(min-width:760px){ .club__figs{grid-template-columns:repeat(4,minmax(0,1fr))} }
+@media(min-width:1100px){
+  .club{grid-template-columns:minmax(0,60fr) minmax(0,40fr);column-gap:clamp(32px,4vw,64px);
+    align-items:end}
+}
+
+/* the roster: a member's card as its ten seats, beside the count */
+.roster__cno{margin-right:8px;font:400 12px/1 var(--f-mono);color:var(--ink-2)}
+.roster__seats{display:inline-flex;gap:2px;vertical-align:-1px}
+.roster__seats i{display:block;width:8px;height:8px;background:var(--tint)}
+.roster__seats i.is-on{background:var(--ink)}
+@media(max-width:699px){ .roster .roster__card,.roster .roster__rw{display:none} }
+
+/* Meetings: the schedule and the minute book side by side */
+.meetgrid{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr)}
+.meetgrid > *{min-width:0}
+@media(min-width:1100px){
+  .meetgrid{grid-template-columns:minmax(0,40fr) minmax(0,60fr);column-gap:clamp(32px,4vw,64px);
+    align-items:start}
+  .meetgrid > .meetgrid__err{grid-column:1/-1}
+}
+
+/* every meeting row: its number carries it */
+.blist--meet .brow{border-bottom:var(--edge-rule) solid var(--tint)}
+.blist--meet .brow__go{display:grid;align-items:center;column-gap:var(--sp-pad);row-gap:2px;
+  grid-template-columns:clamp(62px,7vw,80px) minmax(0,1fr) auto auto;
+  grid-template-areas:"no day st n" "no when st n";padding:10px 0;min-height:44px;cursor:pointer}
+.blist--meet .brow__no{grid-area:no;flex:none;display:flex;align-items:baseline;gap:5px;min-height:0;
+  font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;color:var(--ink-2)}
+.blist--meet .brow__no b{font:400 clamp(26px,2.8vw,34px)/.9 var(--f-head);letter-spacing:0;color:var(--ink)}
+.blist--meet .brow__day{grid-area:day;min-width:0;
+  font:400 clamp(12.5px,1vw,14px)/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.blist--meet .brow__when{grid-area:when;min-width:0;overflow-wrap:anywhere;
+  font:400 11.5px/1.35 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.blist--meet .bstate{grid-area:st;justify-self:end}
+.blist--meet .brow__n{grid-area:n;display:grid;justify-items:end;gap:2px;min-width:4ch}
+.blist--meet .brow__n b{font:400 clamp(20px,2vw,26px)/1 var(--f-head)}
+.meetpanel--held .brow__nlab{position:absolute;width:1px;height:1px;overflow:hidden;
+  clip-path:inset(50%);white-space:nowrap}
+.meetpanel--held .blist--meet .brow__no{flex-direction:row}
+@media(min-width:640px){
+  .meetpanel--held .blist--meet .brow__go{grid-template-columns:clamp(62px,6vw,80px) minmax(6.5rem,auto) minmax(0,1fr) auto auto;
+    grid-template-areas:"no day when st n";padding-block:6px}
+}
+.meetpanel--held .ledger__month{margin-top:var(--sp-pad)}
+.meetpanel--held .meetband + .ledger__month{margin-top:var(--sp-tight)}
+
+/* the schedule: each meeting ahead a ticket, today's first, in ink while open */
+.meetgrid__up .blist--meet{display:grid;gap:var(--sp-row)}
+.meetgrid__up .blist--meet .brow{border:0;padding:0}
+.meetgrid__up .blist--meet .brow__go{padding:0;column-gap:0;row-gap:0;align-items:stretch;
+  grid-template-columns:clamp(84px,8vw,108px) minmax(0,1fr) auto;
+  grid-template-areas:"no day st" "no when n";
+  border:var(--edge-panel) solid var(--ink);background:var(--paper);min-height:clamp(88px,8vw,104px)}
+.meetgrid__up .blist--meet .brow__no{flex-direction:column;justify-content:space-between;align-items:flex-start;
+  padding:var(--sp-row);border-right:var(--edge-panel) dashed currentColor}
+.meetgrid__up .blist--meet .brow__no b{font-size:clamp(38px,4vw,54px);line-height:.8}
+.meetgrid__up .blist--meet .brow__day{align-self:end;padding:var(--sp-row) var(--sp-pad) 2px;
+  font-family:var(--f-head);font-size:clamp(20px,2vw,26px);line-height:1;letter-spacing:0}
+.meetgrid__up .blist--meet .brow__when{padding:0 var(--sp-pad) var(--sp-row)}
+.meetgrid__up .blist--meet .bstate{align-self:start;margin:var(--sp-row) var(--sp-row) 0 0}
+.meetgrid__up .blist--meet .brow__n{align-self:end;padding:0 var(--sp-row) var(--sp-row) 0}
+.meetgrid__up .blist--meet .brow--open .brow__go{background:var(--ink);color:var(--paper)}
+.meetgrid__up .blist--meet .brow--open .brow__no,.meetgrid__up .blist--meet .brow--open .brow__no b,
+.meetgrid__up .blist--meet .brow--open .brow__day,.meetgrid__up .blist--meet .brow--open .brow__n b{color:var(--paper)}
+.meetgrid__up .blist--meet .brow--open .brow__when,.meetgrid__up .blist--meet .brow--open .brow__nlab{color:var(--tint)}
+.meetgrid__up .blist--meet .brow--open .bstate{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+@media (hover:hover){ .meetgrid__up .blist--meet .brow:hover{background:none}
+  .meetgrid__up .blist--meet .brow:not(.brow--open) .brow__go:hover{background:var(--tint)} }
+
+/* scheduling: a blank ticket, the number on its stub */
+.bform{margin:0 0 var(--sp-row);padding:0;border:var(--edge-panel) solid var(--ink);background:var(--paper)}
+.bform .bform__grid{display:grid;gap:0;grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-areas:"no no" "date date" "start end"}
+.bform .field{padding:var(--sp-row) var(--sp-pad) var(--sp-tight)}
+.bform .bform__grid > .field:nth-child(2){grid-area:date}
+.bform .bform__grid > .field:nth-child(3){grid-area:start}
+.bform .bform__grid > .field:nth-child(4){grid-area:end}
+.bform__no{grid-area:no;border-bottom:var(--edge-panel) dashed var(--ink)}
+.bform .bform__no .input{font:400 clamp(34px,4vw,48px)/1 var(--f-head);letter-spacing:0;padding-block:4px}
+.bform #mErr{margin:0 var(--sp-pad)}
+.bform__row{padding:0 var(--sp-pad) var(--sp-pad)}
+@media(min-width:560px){
+  .bform .bform__grid{grid-template-columns:clamp(128px,13vw,168px) minmax(0,1fr) minmax(0,1fr);
+    grid-template-areas:"no date date" "no start end"}
+  .bform__no{border-bottom:0;border-right:var(--edge-panel) dashed var(--ink)}
+}
+
+/* the detail pages: who or what on the left, its record on the right */
+.bdet{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr)}
+.bdet__head,.bdet__body{min-width:0}
+.bdet__body > .bsec:first-child{margin-top:0}
+@media(min-width:1100px){
+  .bdet{grid-template-columns:minmax(0,34fr) minmax(0,66fr);column-gap:clamp(32px,4vw,64px);
+    align-items:start}
+  .bdet__head{position:sticky;top:var(--sp-pad)}
+}
+.bwho,.bmeet{display:grid;gap:6px;padding-bottom:var(--sp-pad);border-bottom:var(--edge-frame) solid var(--ink)}
+.bwho__lab{margin:0;font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.bwho .bdetail__name{margin:0;font-size:clamp(32px,4.4vw,60px);line-height:1}
+.bmeet .bdetail__name{margin:0;padding-bottom:.16em;font:400 clamp(64px,8vw,128px)/.82 var(--f-display);letter-spacing:0}
+.bmeet__when{margin:0;font:400 12.5px/1.4 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.bmeet__when b{font-weight:400;color:var(--ink)}
+.bwho__figs{display:flex;flex-wrap:wrap;gap:var(--sp-pad) var(--sp-block);margin:var(--sp-tight) 0 0}
+.bwho__figs > div{display:flex;flex-direction:column-reverse;gap:4px}
+.bwho__figs dt{font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.bwho__figs dd{margin:0;font:400 clamp(22px,2.2vw,30px)/1 var(--f-head)}
+.brow--att .brow__no{display:flex;flex-direction:row;align-items:baseline;gap:5px;font:400 10.5px/1 var(--f-mono);letter-spacing:.14em}
+.brow--att .brow__no b{font:400 clamp(22px,2.2vw,28px)/.9 var(--f-head);letter-spacing:0;color:var(--ink)}
+
+/* Check-in with no meeting today: the day, said once, and the next one */
+.bidle{display:grid;gap:var(--sp-pad);justify-items:start}
+.bidle__day{margin:0;font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.bidle__word{margin:0;font:400 clamp(48px,8vw,120px)/.85 var(--f-display);text-transform:uppercase}
+.bidle__next{max-width:min(100%,560px)}
 
 /* ══ behaviour carried from the four passes: identity data keeps its
    case, a refusal keeps its room, the camera is offered again in place,

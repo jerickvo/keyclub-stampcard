@@ -840,22 +840,6 @@ body{
 .brow__no{color:var(--ink-2)}
 .brow__n{font-family:var(--f-head)}
 
-.blist--meet .brow__go{display:grid;column-gap:var(--sp-row);row-gap:4px;align-items:center;
-  grid-template-columns:auto minmax(0,1fr) auto;
-  grid-template-areas:"no day state" "no when when" "no n n";
-  padding:var(--sp-row) 0;cursor:pointer;min-height:44px}
-/* the whole row opens the meeting */
-.blist--meet .brow__no{grid-area:no;flex:none;align-self:start;min-height:0;padding-top:2px}
-.blist--meet .brow__day{grid-area:day;
-  font-family:var(--f-head);font-weight:400;font-size:var(--t-sub);line-height:1.05;
-  letter-spacing:.01em;color:var(--ink);min-width:0;overflow-wrap:anywhere}
-.blist--meet .brow__when{grid-area:when;min-width:0;overflow-wrap:anywhere;
-  font:500 clamp(11px,.4vw + 9.7px,12.5px)/1.4 var(--f-mono);
-  letter-spacing:.04em;color:var(--ink-2)}
-.blist--meet .bstate{grid-area:state;justify-self:end;align-self:start}
-.blist--meet .brow__n{grid-area:n;display:flex;align-items:baseline;gap:6px;
-  justify-self:start;text-align:left;padding-top:2px}
-.blist--meet .brow--past .brow__day{color:var(--ink-2)}
 
 .bconfirm{display:flex;align-items:center;justify-content:flex-end;
   gap:var(--sp-tight);flex-wrap:wrap;width:100%}
@@ -878,35 +862,14 @@ body{
 @media (hover:hover){.bconfirm--heavy .btn--go:hover{
   background:var(--ink);border-color:var(--ink)}}
 .bform .field{display:flex;flex-direction:column;justify-content:flex-end;min-width:0}
-.bform .bform__grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-@media(max-width:339px){ .bform .bform__grid{grid-template-columns:minmax(0,1fr)} }
 .bform .field > .kicker{flex:none}
 .bform .field > .input{flex:none;width:100%}
 
-@media(min-width:640px){
-  .blist--meet .brow__go{grid-template-columns:auto minmax(0,1fr) auto auto;
-    grid-template-areas:"no day state n" "no when state n";row-gap:2px}
-  .blist--meet .brow__no{align-self:center;padding-top:0}
-  .blist--meet .bstate{align-self:center}
-  .blist--meet .brow__n{display:grid;justify-items:end;gap:1px;
-    text-align:right;padding-top:0}
-}
 
-/* the form opens in place, under the band that asked for it */
-.bform{padding:var(--sp-pad) 0;border-bottom:var(--edge-rule) solid var(--tint)}
-@media(min-width:640px){ .bform .bform__grid{grid-template-columns:repeat(4,minmax(0,1fr))} }
 
 .bform .input,.bfilters .input{font-family:var(--f-mono);
   color-scheme:light;accent-color:var(--ink)}
 
-.meetgrid{display:flex;flex-direction:column;gap:var(--sp-block)}
-.meetgrid > *{min-width:0}
-@media(min-width:1024px){
-  .meetgrid .blist--meet .brow__go{
-    grid-template-columns:7ch minmax(9ch,12ch) minmax(0,1fr) auto minmax(8ch,auto);
-    grid-template-areas:"no day when state n";align-items:center;row-gap:0}
-  .meetgrid .blist--meet .brow__n{display:flex;align-items:baseline;gap:6px;justify-self:end}
-}
 
 .meetband__t{margin:0;font:inherit;letter-spacing:inherit;text-transform:inherit}
 .meetband{display:flex;align-items:baseline;justify-content:space-between;
@@ -922,17 +885,6 @@ body{
 .meetband .meetband__act{min-height:44px;margin:-14px 0 -6px;padding:0;
   font-family:var(--f-body);text-transform:none;
   font-size:var(--t-body);letter-spacing:.02em;white-space:nowrap}
-/* the Held band names its count column once; each row is one line */
-/* the unit is named once in the band; each count keeps it for a reader */
-.meetpanel--held .brow__nlab{position:absolute;width:1px;height:1px;overflow:hidden;
-  clip-path:inset(50%);white-space:nowrap}
-@media(max-width:1023px){
-  .meetpanel--held .blist--meet .brow__go{grid-template-columns:auto minmax(0,1fr) auto auto;
-    grid-template-areas:"no day state n" "no when when when";row-gap:2px}
-  .meetpanel--held .blist--meet .brow__n{justify-self:end;padding-top:0}
-}
-.meetpanel--held .brow__day{font:500 clamp(12px,.4vw + 10px,14px)/1.4 var(--f-mono);
-  letter-spacing:.04em;text-transform:uppercase}
 .meetgrid .bsec::before,.bsec.meetband::before{content:none}
 .bsec.meetband{padding-top:0}
 
@@ -1000,9 +952,9 @@ div.brow__go{cursor:default}
   color:var(--ink-2);white-space:nowrap;vertical-align:bottom}
 /* the date and count columns take only what they need; the name takes the rest */
 .roster th:nth-child(n+2),.roster td:nth-child(n+2){width:1%;white-space:nowrap;padding-left:var(--sp-row)}
-.roster th:nth-child(3),.roster td:nth-child(3){text-align:right}
+.roster th:last-child,.roster td:last-child{text-align:right}
 .roster td{font:400 clamp(11px,.4vw + 9.7px,12.5px)/1.4 var(--f-mono);letter-spacing:.04em;color:var(--ink-2)}
-.roster td:nth-child(3){font-size:15px;color:var(--ink)}
+.roster td:last-child{font:400 clamp(18px,1.6vw,22px)/1 var(--f-head);color:var(--ink)}
 .roster tbody tr{cursor:pointer}
 @media (hover:hover){.roster tbody tr:hover{background:var(--tint)}}
 .roster__name{min-height:44px;margin:-12px 0;padding:0;border:0;background:none;cursor:pointer;
@@ -1011,8 +963,7 @@ div.brow__go{cursor:default}
 .roster__name:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:2px}
 .brow__none{color:var(--ink-2)}
 @media(min-width:768px){
-  .roster th:nth-child(2),.roster td:nth-child(2){width:14rem}
-  .roster th:nth-child(3),.roster td:nth-child(3){width:6rem}
+  .roster th:last-child,.roster td:last-child{width:5rem}
 }
 .bsec{border-bottom:var(--edge-thin) solid var(--ink);color:var(--ink)}
 
@@ -2068,6 +2019,155 @@ html{font-synthesis:none}
   font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;
   color:var(--ink-2)}
 .card__cardno{color:var(--tint);opacity:1}
+
+/* ══ Board. Members: the club's figures at the head of its roster, the
+   prize table beside it; Meetings: the schedule as tickets beside the
+   minute book; the detail pages: who or what, then its record ══ */
+.memgrid{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"club" "owed" "roster";align-items:start}
+.memgrid > .club{grid-area:club}
+.memgrid > .owed{grid-area:owed}
+.memgrid > .rosterpanel{grid-area:roster}
+@media(min-width:1100px){
+  .memgrid{grid-template-columns:minmax(0,60fr) minmax(0,40fr);column-gap:clamp(32px,4vw,64px);
+    grid-template-areas:"club club" "roster owed"}
+  .memgrid > .owed{position:sticky;top:var(--sp-pad)}
+}
+
+.club{display:grid;gap:var(--sp-block);padding-bottom:var(--sp-pad);
+  border-bottom:var(--edge-frame) solid var(--ink)}
+.club__figs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:var(--sp-pad) clamp(16px,2.4vw,36px);margin:0;align-items:end}
+.club__fig{display:flex;flex-direction:column-reverse;gap:6px;min-width:0}
+.club__fig dt{font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-2);border-top:var(--edge-rule) solid var(--tint);padding-top:6px}
+.club__fig dd{margin:0;font:400 clamp(32px,3.6vw,48px)/.9 var(--f-head);color:var(--ink)}
+.club__fig--lead dd{font-family:var(--f-display);font-size:clamp(64px,8vw,120px);line-height:.8}
+.club__tiers{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr)}
+.club__tier{display:grid;grid-template-columns:clamp(48px,5vw,64px) minmax(0,1fr) auto;
+  align-items:baseline;column-gap:var(--sp-row);padding:var(--sp-tight) 0;
+  border-bottom:var(--edge-rule) solid var(--tint)}
+.club__tier:last-child{border-bottom:0}
+.club__at{font:400 clamp(24px,2.4vw,32px)/.9 var(--f-head)}
+.club__tname{font-family:var(--f-head);font-size:clamp(15px,1.3vw,18px);text-transform:uppercase;
+  overflow-wrap:anywhere}
+.club__tn{font:400 12.5px/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-2);white-space:nowrap}
+@media(min-width:760px){ .club__figs{grid-template-columns:repeat(4,minmax(0,1fr))} }
+@media(min-width:1100px){
+  .club{grid-template-columns:minmax(0,60fr) minmax(0,40fr);column-gap:clamp(32px,4vw,64px);
+    align-items:end}
+}
+
+/* the roster: a member's card as its ten seats, beside the count */
+.roster__cno{margin-right:8px;font:400 12px/1 var(--f-mono);color:var(--ink-2)}
+.roster__seats{display:inline-flex;gap:2px;vertical-align:-1px}
+.roster__seats i{display:block;width:8px;height:8px;background:var(--tint)}
+.roster__seats i.is-on{background:var(--ink)}
+@media(max-width:699px){ .roster .roster__card,.roster .roster__rw{display:none} }
+
+/* Meetings: the schedule and the minute book side by side */
+.meetgrid{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr)}
+.meetgrid > *{min-width:0}
+@media(min-width:1100px){
+  .meetgrid{grid-template-columns:minmax(0,40fr) minmax(0,60fr);column-gap:clamp(32px,4vw,64px);
+    align-items:start}
+  .meetgrid > .meetgrid__err{grid-column:1/-1}
+}
+
+/* every meeting row: its number carries it */
+.blist--meet .brow{border-bottom:var(--edge-rule) solid var(--tint)}
+.blist--meet .brow__go{display:grid;align-items:center;column-gap:var(--sp-pad);row-gap:2px;
+  grid-template-columns:clamp(62px,7vw,80px) minmax(0,1fr) auto auto;
+  grid-template-areas:"no day st n" "no when st n";padding:10px 0;min-height:44px;cursor:pointer}
+.blist--meet .brow__no{grid-area:no;flex:none;display:flex;align-items:baseline;gap:5px;min-height:0;
+  font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;color:var(--ink-2)}
+.blist--meet .brow__no b{font:400 clamp(26px,2.8vw,34px)/.9 var(--f-head);letter-spacing:0;color:var(--ink)}
+.blist--meet .brow__day{grid-area:day;min-width:0;
+  font:400 clamp(12.5px,1vw,14px)/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.blist--meet .brow__when{grid-area:when;min-width:0;overflow-wrap:anywhere;
+  font:400 11.5px/1.35 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.blist--meet .bstate{grid-area:st;justify-self:end}
+.blist--meet .brow__n{grid-area:n;display:grid;justify-items:end;gap:2px;min-width:4ch}
+.blist--meet .brow__n b{font:400 clamp(20px,2vw,26px)/1 var(--f-head)}
+.meetpanel--held .brow__nlab{position:absolute;width:1px;height:1px;overflow:hidden;
+  clip-path:inset(50%);white-space:nowrap}
+.meetpanel--held .blist--meet .brow__no{flex-direction:row}
+@media(min-width:640px){
+  .meetpanel--held .blist--meet .brow__go{grid-template-columns:clamp(62px,6vw,80px) minmax(6.5rem,auto) minmax(0,1fr) auto auto;
+    grid-template-areas:"no day when st n";padding-block:6px}
+}
+.meetpanel--held .ledger__month{margin-top:var(--sp-pad)}
+.meetpanel--held .meetband + .ledger__month{margin-top:var(--sp-tight)}
+
+/* the schedule: each meeting ahead a ticket, today's first, in ink while open */
+.meetgrid__up .blist--meet{display:grid;gap:var(--sp-row)}
+.meetgrid__up .blist--meet .brow{border:0;padding:0}
+.meetgrid__up .blist--meet .brow__go{padding:0;column-gap:0;row-gap:0;align-items:stretch;
+  grid-template-columns:clamp(84px,8vw,108px) minmax(0,1fr) auto;
+  grid-template-areas:"no day st" "no when n";
+  border:var(--edge-panel) solid var(--ink);background:var(--paper);min-height:clamp(88px,8vw,104px)}
+.meetgrid__up .blist--meet .brow__no{flex-direction:column;justify-content:space-between;align-items:flex-start;
+  padding:var(--sp-row);border-right:var(--edge-panel) dashed currentColor}
+.meetgrid__up .blist--meet .brow__no b{font-size:clamp(38px,4vw,54px);line-height:.8}
+.meetgrid__up .blist--meet .brow__day{align-self:end;padding:var(--sp-row) var(--sp-pad) 2px;
+  font-family:var(--f-head);font-size:clamp(20px,2vw,26px);line-height:1;letter-spacing:0}
+.meetgrid__up .blist--meet .brow__when{padding:0 var(--sp-pad) var(--sp-row)}
+.meetgrid__up .blist--meet .bstate{align-self:start;margin:var(--sp-row) var(--sp-row) 0 0}
+.meetgrid__up .blist--meet .brow__n{align-self:end;padding:0 var(--sp-row) var(--sp-row) 0}
+.meetgrid__up .blist--meet .brow--open .brow__go{background:var(--ink);color:var(--paper)}
+.meetgrid__up .blist--meet .brow--open .brow__no,.meetgrid__up .blist--meet .brow--open .brow__no b,
+.meetgrid__up .blist--meet .brow--open .brow__day,.meetgrid__up .blist--meet .brow--open .brow__n b{color:var(--paper)}
+.meetgrid__up .blist--meet .brow--open .brow__when,.meetgrid__up .blist--meet .brow--open .brow__nlab{color:var(--tint)}
+.meetgrid__up .blist--meet .brow--open .bstate{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+@media (hover:hover){ .meetgrid__up .blist--meet .brow:hover{background:none}
+  .meetgrid__up .blist--meet .brow:not(.brow--open) .brow__go:hover{background:var(--tint)} }
+
+/* scheduling: a blank ticket, the number on its stub */
+.bform{margin:0 0 var(--sp-row);padding:0;border:var(--edge-panel) solid var(--ink);background:var(--paper)}
+.bform .bform__grid{display:grid;gap:0;grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-areas:"no no" "date date" "start end"}
+.bform .field{padding:var(--sp-row) var(--sp-pad) var(--sp-tight)}
+.bform .bform__grid > .field:nth-child(2){grid-area:date}
+.bform .bform__grid > .field:nth-child(3){grid-area:start}
+.bform .bform__grid > .field:nth-child(4){grid-area:end}
+.bform__no{grid-area:no;border-bottom:var(--edge-panel) dashed var(--ink)}
+.bform .bform__no .input{font:400 clamp(34px,4vw,48px)/1 var(--f-head);letter-spacing:0;padding-block:4px}
+.bform #mErr{margin:0 var(--sp-pad)}
+.bform__row{padding:0 var(--sp-pad) var(--sp-pad)}
+@media(min-width:560px){
+  .bform .bform__grid{grid-template-columns:clamp(128px,13vw,168px) minmax(0,1fr) minmax(0,1fr);
+    grid-template-areas:"no date date" "no start end"}
+  .bform__no{border-bottom:0;border-right:var(--edge-panel) dashed var(--ink)}
+}
+
+/* the detail pages: who or what on the left, its record on the right */
+.bdet{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr)}
+.bdet__head,.bdet__body{min-width:0}
+.bdet__body > .bsec:first-child{margin-top:0}
+@media(min-width:1100px){
+  .bdet{grid-template-columns:minmax(0,34fr) minmax(0,66fr);column-gap:clamp(32px,4vw,64px);
+    align-items:start}
+  .bdet__head{position:sticky;top:var(--sp-pad)}
+}
+.bwho,.bmeet{display:grid;gap:6px;padding-bottom:var(--sp-pad);border-bottom:var(--edge-frame) solid var(--ink)}
+.bwho__lab{margin:0;font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.bwho .bdetail__name{margin:0;font-size:clamp(32px,4.4vw,60px);line-height:1}
+.bmeet .bdetail__name{margin:0;padding-bottom:.16em;font:400 clamp(64px,8vw,128px)/.82 var(--f-display);letter-spacing:0}
+.bmeet__when{margin:0;font:400 12.5px/1.4 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.bmeet__when b{font-weight:400;color:var(--ink)}
+.bwho__figs{display:flex;flex-wrap:wrap;gap:var(--sp-pad) var(--sp-block);margin:var(--sp-tight) 0 0}
+.bwho__figs > div{display:flex;flex-direction:column-reverse;gap:4px}
+.bwho__figs dt{font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.bwho__figs dd{margin:0;font:400 clamp(22px,2.2vw,30px)/1 var(--f-head)}
+.brow--att .brow__no{display:flex;flex-direction:row;align-items:baseline;gap:5px;font:400 10.5px/1 var(--f-mono);letter-spacing:.14em}
+.brow--att .brow__no b{font:400 clamp(22px,2.2vw,28px)/.9 var(--f-head);letter-spacing:0;color:var(--ink)}
+
+/* Check-in with no meeting today: the day, said once, and the next one */
+.bidle{display:grid;gap:var(--sp-pad);justify-items:start}
+.bidle__day{margin:0;font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.bidle__word{margin:0;font:400 clamp(48px,8vw,120px)/.85 var(--f-display);text-transform:uppercase}
+.bidle__next{max-width:min(100%,560px)}
 
 /* ══ behaviour carried from the four passes: identity data keeps its
    case, a refusal keeps its room, the camera is offered again in place,
@@ -16680,6 +16780,7 @@ const Views = {
     BoardUI.deleteNote = null;
     /* a chapter opened afresh reads its prize list afresh */
     BoardUI.prizesStale = true;
+    BoardUI.clubStale = true;
     /* a fresh chapter opens on the wait panel, never on another
        chapter's data */
     BoardUI.loading = true;
@@ -16893,7 +16994,7 @@ function spanTime(start, end){
    next account's */
 const BOARD_FRESH = () => ({
   tab:'session', loading:false, shown:null, error:null,
-  prizes:null, owedAll:false, prizesStale:false, lost:new Set(),
+  prizes:null, owedAll:false, prizesStale:false, lost:new Set(), club:null, clubStale:false,
   handQ:'', handFound:null, handed:{}, meetings:null, members:null,
   memberDetail:null, meetingDetail:null, pendingId:null, refocus:null, leftFrom:null, toTop:false,
   q:'', sort:'username', page:1, confirmDelete:null, deleteNote:null, form:null, formOpen:false,
@@ -16916,6 +17017,8 @@ const BoardUI = {
   error: null,
 
   prizes: null,         /* {owed} | {code} when it could not be read | null */
+  club: null,           /* the club's totals (board-data overview) | {code} | null */
+  clubStale: false,     /* re-read the totals on the next load */
   owedAll: false,       /* the prize list unfolded past its first rows */
   prizesStale: false,   /* re-read the prize list on the next load */
   lost: new Set(),      /* hand-overs whose answer never came back */
@@ -17000,11 +17103,39 @@ const BoardUI = {
 
   progressPane(){
     return `<div class="bpanel memgrid">
+      ${this.clubHead()}
       ${this.owedBody()}
-      <section class="rosterpanel">
+      <section class="rosterpanel" aria-label="Roster">
         ${this.rosterBody()}
       </section>
     </div>`;
+  },
+
+  /* The club at a glance, at the head of its roster: how many members,
+     the stamps given, the meetings held and how many come to one, and
+     how many members stand at each prize. Counted by the server from
+     the same rows the members' own totals come from. A read that fails
+     leaves the head off; the roster stands on its own. */
+  clubHead(){
+    const c = this.club;
+    if (!c || c.code) return '';
+    const ms = c.milestones || {};
+    const avg = c.average_attendance;
+    return `<section class="club" aria-label="The club">
+      <dl class="club__figs">
+        <div class="club__fig club__fig--lead"><dt>Members</dt><dd>${Number(c.total_members) || 0}</dd></div>
+        <div class="club__fig"><dt>Stamps given</dt><dd>${Number(c.total_seals) || 0}</dd></div>
+        <div class="club__fig"><dt>Meetings held</dt><dd>${Number(c.meetings_held) || 0}</dd></div>
+        <div class="club__fig"><dt>At a meeting</dt><dd>${avg == null ? '–' : esc(String(avg))}</dd></div>
+      </dl>
+      <ol class="club__tiers" aria-label="Members at each prize">
+        ${REWARD_TIERS.map(t => `<li class="club__tier">
+          <b class="club__at">${pad(t.required)}</b>
+          <span class="club__tname">${esc(prizeName(t))}</span>
+          <span class="club__tn">${Number(ms['m' + t.required]) || 0} reached</span>
+        </li>`).join('')}
+      </ol>
+    </section>`;
   },
 
   /* The prize table's list: who is owed a prize now, the member who has
@@ -17102,12 +17233,26 @@ const BoardUI = {
       </section>
 
       <section class="meetgrid__held meetpanel meetpanel--held">
-        ${band('Held', '<span class="meetband__n" aria-hidden="true">Checked in</span>')}
-        ${past.length
-          ? `<ul class="blist blist--meet">${past.map(m => this.meetingRow(m)).join('')}</ul>`
+        ${band('Held', past.length ? `<span class="meetband__n">${past.length} ${past.length === 1 ? 'meeting' : 'meetings'} / ${
+          past.reduce((n, m) => n + (Number(m.attendance_count) || 0), 0)} check-ins</span>` : '')}
+        ${past.length ? this.byMonth(past).map(g => `
+          <h3 class="ledger__month"><span class="ledger__mname">${esc(onClock(`${g.key}-01`, { month:'long' }))}</span>
+            <span class="ledger__mcount">${g.rows.reduce((n, m) => n + (Number(m.attendance_count) || 0), 0)} checked in</span></h3>
+          <ul class="blist blist--meet">${g.rows.map(m => this.meetingRow(m)).join('')}</ul>`).join('')
           : this.empty('No meetings held yet')}
       </section>
     </div>`;
+  },
+
+  /* the meetings of one month together, in the order given */
+  byMonth(list){
+    const out = [];
+    list.forEach(m => {
+      const key = String(m.meeting_date).slice(0, 7);
+      const last = out[out.length - 1];
+      if (last && last.key === key) last.rows.push(m); else out.push({ key, rows:[m] });
+    });
+    return out;
   },
 
   meetingRow(m){
@@ -17124,8 +17269,8 @@ const BoardUI = {
     const usual = span === spanTime('12:40 PM', '1:30 PM') && room === Schedule.PLACE;
 
     return `<li class="brow brow--${state}"><button class="brow__go" type="button" data-bmeeting="${esc(m.id)}">
-      <span class="brow__no">GM ${no}</span>
-      <span class="brow__day">${esc(fmtDay(m.meeting_date))}</span>
+      <span class="brow__no">GM <b>${no}</b></span>
+      <span class="brow__day">${esc(state === 'upcoming' || state === 'today' || state === 'open' ? fmtDate(m.meeting_date) : fmtDay(m.meeting_date))}</span>
       ${usual ? '' : `<span class="brow__when">${esc(span)} / ${esc(room)}</span>`}
       ${word ? `<span class="bstate bstate--${state}">${word}</span>` : ''}
       ${upcoming ? '' : `<span class="brow__n"><b>${stamps}</b> <span class="brow__nlab">checked in</span></span>`}
@@ -17154,7 +17299,7 @@ const BoardUI = {
     const d = this.formDefaults();
     return `<form class="bform" id="meetingForm" novalidate aria-label="Schedule a meeting">
       <div class="bform__grid">
-        <label class="field"><span class="kicker">Meeting number</span>
+        <label class="field bform__no"><span class="kicker">Meeting number</span>
           <input class="input" id="mNo" type="number" min="1" max="${MEETING_NO_MAX}" step="1" inputmode="numeric"
                  value="${esc(f.no)}" placeholder="${esc(d.no)}"></label>
         <label class="field"><span class="kicker">Date</span>
@@ -17191,12 +17336,21 @@ const BoardUI = {
 
       ${rows.length ? `
         <table class="roster">
-          <thead><tr><th scope="col">Member</th><th scope="col">Last check-in</th><th scope="col">Stamps</th></tr></thead>
-          <tbody>${rows.map(m => `<tr data-bmember="${esc(m.id)}">
+          <thead><tr><th scope="col">Member</th><th scope="col" class="roster__card">Card</th>
+            <th scope="col" class="roster__rw">Prizes</th><th scope="col">Last check-in</th><th scope="col">Stamps</th></tr></thead>
+          <tbody>${rows.map(m => {
+            /* where the member's own card stands: its number and its ten seats */
+            const n = Number(m.stamps) || 0;
+            const on = n && n % 10 === 0 ? 10 : n % 10;
+            const card = n && n % 10 === 0 ? n / 10 : Math.floor(n / 10) + 1;
+            return `<tr data-bmember="${esc(m.id)}">
             <th scope="row"><button class="roster__name" type="button" data-bmember="${esc(m.id)}">${esc(m.username)}</button></th>
+            <td class="roster__card"><span class="roster__cno">${pad(card)}</span><span class="roster__seats" aria-label="${on} of 10 on card ${pad(card)}">${
+              Array.from({ length:10 }, (_, i) => `<i${i < on ? ' class="is-on"' : ''}></i>`).join('')}</span></td>
+            <td class="roster__rw">${Number(m.rewards_unlocked) || 0} of ${REWARD_TIERS.length}</td>
             <td>${m.last_attendance ? esc(fmtDay(m.last_attendance)) : '<span class="brow__none">-</span>'}</td>
-            <td>${m.stamps}</td>
-          </tr>`).join('')}</tbody>
+            <td>${n}</td>
+          </tr>`;}).join('')}</tbody>
         </table>
         ${d.pages > 1 ? `<div class="bpage">
           <button class="btn" data-bpage="${Math.max(1, d.page - 1)}" ${d.page <= 1 ? 'disabled' : ''}>Previous</button>
@@ -17213,11 +17367,23 @@ const BoardUI = {
     /* the member's total, as the server counts it; the list below is
        their most recent check-ins only */
     const total = Number(m.stamps) || d.attendance.length;
-    return `<div class="panel bpanel">
+    return `<div class="panel bpanel bdet">
+      <div class="bdet__head">
       <button class="link bback" data-bback>${this.backLabel()}</button>
 
-      <h2 class="bdetail__name bdetail__name--id">${esc(m.username)}</h2>
+      <div class="bwho">
+        <p class="bwho__lab">Member${m.created_at ? ` since ${esc(onClock(m.created_at, { month:'long', year:'numeric' }))}` : ''}</p>
+        <h2 class="bdetail__name bdetail__name--id">${esc(m.username)}</h2>
+        <dl class="bwho__figs">
+          <div><dt>Stamps</dt><dd>${total}</dd></div>
+          <div><dt>Card ${pad(total && total % 10 === 0 ? total / 10 : Math.floor(total / 10) + 1)}</dt><dd>${
+            total && total % 10 === 0 ? 10 : total % 10} of 10</dd></div>
+          <div><dt>Prizes</dt><dd>${d.rewards.filter(r => r.state !== 'locked').length} of ${d.rewards.length}</dd></div>
+        </dl>
+      </div>
+      </div>
 
+      <div class="bdet__body">
       ${d.rewards.some(r => r.state !== 'locked') ? `<h2 class="h2 bsec">Rewards</h2>
       <ul class="blist">
         ${d.rewards.filter(r => r.state !== 'locked').map(r => this.rewardRow(m, r, d.handovers)).join('')}
@@ -17228,12 +17394,13 @@ const BoardUI = {
       ${d.attendance.length
         ? `<ul class="blist">${d.attendance.map(a => `
             <li class="brow brow--att"><${a.meeting_id ? `button class="brow__go" type="button" data-bmeeting="${esc(a.meeting_id)}"` : 'div class="brow__go"'}>
-              <span class="brow__no">GM ${a.meeting_number ? pad(a.meeting_number) : '-'}</span>
+              <span class="brow__no">GM <b>${a.meeting_number ? pad(a.meeting_number) : '-'}</b></span>
               <span class="brow__mid"><b>${esc(fmtDay(a.meeting_date))}</b></span>
               <span class="brow__cell">${esc(fmtTime(a.checked_in_at))}${a.location && a.location !== Schedule.PLACE ? ` / ${esc(a.location)}` : ''}</span>
             </${a.meeting_id ? 'button' : 'div'}></li>`).join('')}</ul>${total > d.attendance.length
             ? `<p class="muted bempty">The newest ${d.attendance.length} check-ins are shown.</p>` : ''}`
         : this.empty('No attendance yet')}
+      </div>
     </div>`;
   },
 
@@ -17265,12 +17432,18 @@ const BoardUI = {
     const d = this.meetingDetail;
     const m = d.meeting;
     const today = String(m.meeting_date) === Schedule.today();
-    return `<div class="panel bpanel">
+    return `<div class="panel bpanel bdet">
+      <div class="bdet__head">
       <button class="link bback" data-bback>${this.backLabel()}</button>
 
-      <h2 class="bdetail__name">GM ${pad(m.meeting_number)}</h2>
-      <p class="muted">${esc(fmtDay(m.meeting_date))}${meetingAway(m)}${m.check_in_open ? ' / Check-in open' : ''}</p>
+      <div class="bmeet">
+        <p class="bwho__lab">General meeting</p>
+        <h2 class="bdetail__name">GM ${pad(m.meeting_number)}</h2>
+        <p class="bmeet__when">${esc(fmtDate(m.meeting_date))} / ${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || Schedule.PLACE)}${m.check_in_open ? ' / <b>Check-in open</b>' : ''}</p>
+      </div>
+      </div>
 
+      <div class="bdet__body">
       ${today ? this.handBlock(m) : ''}
 
       ${String(m.meeting_date) > Schedule.today() ? '' : `<h2 class="h2 bsec meetband"><span>Attendees</span>${d.attendees.length
@@ -17285,6 +17458,7 @@ const BoardUI = {
         : this.empty('No check-ins yet')}`}
       ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
       ${this.deleteBlock(m, d.attendees.length)}
+      </div>
     </div>`;
   },
 
@@ -17356,9 +17530,17 @@ const BoardUI = {
 
     if (!sel){
       const next = list.filter(m => String(m.meeting_date) > today).sort(meetingOrder(1))[0];
-      return `<div class="bpanel fail">
-        <p class="nowline"><b class="nowline__lab">No meeting today</b>${next
-          ? `<span>Next GM ${pad(next.meeting_number)} / ${esc(fmtDay(next.meeting_date))}</span>` : ''}</p>
+      return `<div class="bpanel bidle">
+        <p class="bidle__day">${esc(fmtDate(today))}</p>
+        <p class="bidle__word">No meeting today</p>
+        ${next ? `<div class="tkt tkt--quiet bidle__next">
+          <span class="tkt__stub"><span class="tkt__gm">GM</span> <b class="tkt__no">${pad(next.meeting_number)}</b></span>
+          <span class="tkt__body">
+            <span class="tkt__kick">Next</span>
+            <span class="tkt__day">${esc(fmtDate(next.meeting_date))}</span>
+            <span class="tkt__meta">${esc(spanTime(next.start_time, next.end_time))} / ${esc(next.location || Schedule.PLACE)}</span>
+          </span>
+        </div>` : ''}
         <button class="link" type="button" data-btab="meetings" data-mnew>Schedule a meeting</button>
       </div>`;
     }
@@ -19632,6 +19814,10 @@ async function loadBoard(){
           && !BoardUI.prizesStale ? BoardUI.prizes
           : Backend.board('prizes').catch(e => ({ code:String((e && e.message) || 'SERVER_ERROR') })),
         Backend.board('members', { q:BoardUI.q, sort:BoardUI.sort, page:BoardUI.page }),
+        /* the club's totals head the roster; read when the chapter opens,
+           and their failing leaves the roster as it is */
+        BoardUI.club && !BoardUI.club.code && !BoardUI.clubStale ? BoardUI.club
+          : Backend.board('overview').catch(e => ({ code:String((e && e.message) || 'SERVER_ERROR') })),
       ]);
     } else got = await Backend.board('meetings');
   } catch (err){
@@ -19643,7 +19829,7 @@ async function loadBoard(){
   if (!error){
     if (kind === 'member') BoardUI.memberDetail = got;
     else if (kind === 'meeting') BoardUI.meetingDetail = got;
-    else if (kind === 'progress'){ [BoardUI.prizes, BoardUI.members] = got; BoardUI.prizesStale = false; }
+    else if (kind === 'progress'){ [BoardUI.prizes, BoardUI.members, BoardUI.club] = got; BoardUI.prizesStale = false; BoardUI.clubStale = false; }
     else BoardUI.meetings = got;
   }
   if (BoardUI.error === 'NOT_AUTHENTICATED') Store.hydrate();

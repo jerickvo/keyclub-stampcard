@@ -1086,6 +1086,10 @@ async function loadBoard(){
           && !BoardUI.prizesStale ? BoardUI.prizes
           : Backend.board('prizes').catch(e => ({ code:String((e && e.message) || 'SERVER_ERROR') })),
         Backend.board('members', { q:BoardUI.q, sort:BoardUI.sort, page:BoardUI.page }),
+        /* the club's totals head the roster; read when the chapter opens,
+           and their failing leaves the roster as it is */
+        BoardUI.club && !BoardUI.club.code && !BoardUI.clubStale ? BoardUI.club
+          : Backend.board('overview').catch(e => ({ code:String((e && e.message) || 'SERVER_ERROR') })),
       ]);
     } else got = await Backend.board('meetings');
   } catch (err){
@@ -1097,7 +1101,7 @@ async function loadBoard(){
   if (!error){
     if (kind === 'member') BoardUI.memberDetail = got;
     else if (kind === 'meeting') BoardUI.meetingDetail = got;
-    else if (kind === 'progress'){ [BoardUI.prizes, BoardUI.members] = got; BoardUI.prizesStale = false; }
+    else if (kind === 'progress'){ [BoardUI.prizes, BoardUI.members, BoardUI.club] = got; BoardUI.prizesStale = false; BoardUI.clubStale = false; }
     else BoardUI.meetings = got;
   }
   if (BoardUI.error === 'NOT_AUTHENTICATED') Store.hydrate();
