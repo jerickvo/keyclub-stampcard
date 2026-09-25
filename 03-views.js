@@ -383,7 +383,7 @@ const Views = {
       const i = chrono.findIndex(x => x.meetingId === day.id);
       mast = `<div class="mast mast--set">
         ${kick(['Current chapter', `GM ${pad(day.no)}`, fmtDate(day.date), unusual(day).includes(day.place) ? day.place : ''])}
-        ${line('GM', pad(day.no), byHand(scan) ? 'Added by an officer' : `Stamped ${fmtTime(scan.at)}`, i >= 0 ? glyph(i, 'mast__imp') : '')}${more}
+        ${line('GM', pad(day.no), byHand(scan) ? 'Checked in · by an officer' : `Checked in · ${fmtTime(scan.at)}`, i >= 0 ? glyph(i, 'mast__imp') : '')}${more}
       </div>`;
     } else if (day && day.ended && !day.open){
       /* over, and no stamp: said as today's fact, not yet a "missed" one,
@@ -480,7 +480,7 @@ const Views = {
     const oldest = held[held.length - 1] || ahead[0] || null;
     const t0 = oldest ? days(oldest.date) : days(Schedule.today());
     const tN = Math.max(t0 + 1, ahead.length ? days(ahead[ahead.length - 1].date) : held.length ? days(held[0].date) : t0 + 1, days(Schedule.today()));
-    const pos = iso => Math.min(100, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
+    const pos = iso => Math.min(98.5, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
     const ticks = [...held].reverse().map(m => {
       const s = Store.state(m);
       const i = s === 'set' ? chrono.findIndex(x => x.meetingId === m.id) : -1;

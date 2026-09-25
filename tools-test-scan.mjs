@@ -82,7 +82,7 @@ test('Today sends a member to Scan only while a meeting is open and unstamped', 
   load({ meetings:[...held(3), meeting(4, { open:true, today:true })], scans:[{ meetingId:'m4', at:'2026-09-14T19:50:00Z' }] });
   assert.equal(target(Views.home()), undefined);
   assert.equal(button(Views.home()), false);
-  assert.equal(Views.home().includes('Stamped '), true);
+  assert.equal(Views.home().includes('Checked in · '), true);
   assert.equal(gm(Views.home(), '04'), true);
   // nothing open: the next meeting's date is the anchor, with no verb
   load({ meetings:[...held(3), meeting(4, { upcoming:true })] });

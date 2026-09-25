@@ -2936,7 +2936,8 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 /* nothing scheduled: the last stamp is the anchor */
 .mast--none .mast__line{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"g gm" "g date";
   column-gap:var(--sp-pad);align-items:end;border-bottom-style:dotted;border-bottom-width:3px;padding-bottom:12px}
-.mast--none .mast__line:has(.mast__no){display:flex}
+.mast--none .mast__line:has(.mast__no){display:flex;align-items:flex-end}
+.mast--none .mast__line:has(.mast__no) .mast__gm{align-self:flex-start;margin:6px 0 0}
 .mast__last{grid-area:g;width:96px;height:96px;rotate:-2deg;overflow:visible}
 .mast__last__face{fill:var(--ink)}
 .mast__last g path{fill:var(--paper)}
@@ -2997,7 +2998,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   .mast__no{font-size:clamp(220px,20vw,320px);margin-left:calc(var(--gutter) * -1 - 6px)}
   .mast__state{font-size:13px}
   .mast__cmd{font-size:clamp(32px,2.6vw,40px)}
-  .mast__more{font-size:clamp(22px,1.8vw,26px)}
+  .mast__more{font-size:clamp(22px,1.8vw,26px);text-align:right;margin-right:var(--gutter)}
   .card--field .card__field{margin:0 calc(var(--gutter) * -1) 0 0}
   .deck__side{grid-template-columns:minmax(0,1fr);gap:var(--sp-block);border-left:var(--edge-hair) solid var(--tint);padding-left:var(--sp-pad)}
   .fol--last{border-right:0;padding-right:0}
@@ -18347,7 +18348,7 @@ const Views = {
       const i = chrono.findIndex(x => x.meetingId === day.id);
       mast = `<div class="mast mast--set">
         ${kick(['Current chapter', `GM ${pad(day.no)}`, fmtDate(day.date), unusual(day).includes(day.place) ? day.place : ''])}
-        ${line('GM', pad(day.no), byHand(scan) ? 'Added by an officer' : `Stamped ${fmtTime(scan.at)}`, i >= 0 ? glyph(i, 'mast__imp') : '')}${more}
+        ${line('GM', pad(day.no), byHand(scan) ? 'Checked in · by an officer' : `Checked in · ${fmtTime(scan.at)}`, i >= 0 ? glyph(i, 'mast__imp') : '')}${more}
       </div>`;
     } else if (day && day.ended && !day.open){
       /* over, and no stamp: said as today's fact, not yet a "missed" one,
@@ -18444,7 +18445,7 @@ const Views = {
     const oldest = held[held.length - 1] || ahead[0] || null;
     const t0 = oldest ? days(oldest.date) : days(Schedule.today());
     const tN = Math.max(t0 + 1, ahead.length ? days(ahead[ahead.length - 1].date) : held.length ? days(held[0].date) : t0 + 1, days(Schedule.today()));
-    const pos = iso => Math.min(100, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
+    const pos = iso => Math.min(98.5, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
     const ticks = [...held].reverse().map(m => {
       const s = Store.state(m);
       const i = s === 'set' ? chrono.findIndex(x => x.meetingId === m.id) : -1;
@@ -19017,7 +19018,7 @@ const BoardUI = {
     const all = [...list].sort(meetingOrder(1));
     const t0 = all.length ? days(all[0].meeting_date) : days(today);
     const tN = Math.max(t0 + 1, all.length ? days(all[all.length - 1].meeting_date) : t0 + 1, days(today));
-    const pos = iso => Math.min(100, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
+    const pos = iso => Math.min(98.5, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
     const yearline = `<div class="yline yline--club" aria-hidden="true" style="--now:${pos(today)}%"><i class="yline__rule"></i><i class="yline__ahead"></i>${
       all.map(m => `<i class="yt yt--${m.state === 'OPEN' ? 'open' : m.meeting_date === today ? 'today' : String(m.meeting_date) > today ? 'up' : 'held'}" style="left:${pos(m.meeting_date)}%"></i>`).join('')}</div>`;
     const figs = !c ? [] : [
@@ -19224,7 +19225,7 @@ const BoardUI = {
     const all = [...past].reverse().concat(upcoming).sort(by(1));
     const t0 = all.length ? days(all[0].meeting_date) : days(today);
     const tN = Math.max(t0 + 1, all.length ? days(all[all.length - 1].meeting_date) : t0 + 1, days(today));
-    const pos = iso => Math.min(100, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
+    const pos = iso => Math.min(98.5, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
     const yearline = `<div class="yline yline--club" aria-hidden="true" style="--now:${pos(today)}%"><i class="yline__rule"></i><i class="yline__ahead"></i>${
       all.map(m => `<i class="yt yt--${m.state === 'OPEN' && !m.left ? 'open' : m.meeting_date === today ? 'today' : ahead(m) ? 'up' : 'held'}" style="left:${pos(m.meeting_date)}%"></i>`).join('')}</div>`;
 

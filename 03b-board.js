@@ -176,7 +176,7 @@ const BoardUI = {
     const all = [...list].sort(meetingOrder(1));
     const t0 = all.length ? days(all[0].meeting_date) : days(today);
     const tN = Math.max(t0 + 1, all.length ? days(all[all.length - 1].meeting_date) : t0 + 1, days(today));
-    const pos = iso => Math.min(100, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
+    const pos = iso => Math.min(98.5, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
     const yearline = `<div class="yline yline--club" aria-hidden="true" style="--now:${pos(today)}%"><i class="yline__rule"></i><i class="yline__ahead"></i>${
       all.map(m => `<i class="yt yt--${m.state === 'OPEN' ? 'open' : m.meeting_date === today ? 'today' : String(m.meeting_date) > today ? 'up' : 'held'}" style="left:${pos(m.meeting_date)}%"></i>`).join('')}</div>`;
     const figs = !c ? [] : [
@@ -383,7 +383,7 @@ const BoardUI = {
     const all = [...past].reverse().concat(upcoming).sort(by(1));
     const t0 = all.length ? days(all[0].meeting_date) : days(today);
     const tN = Math.max(t0 + 1, all.length ? days(all[all.length - 1].meeting_date) : t0 + 1, days(today));
-    const pos = iso => Math.min(100, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
+    const pos = iso => Math.min(98.5, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
     const yearline = `<div class="yline yline--club" aria-hidden="true" style="--now:${pos(today)}%"><i class="yline__rule"></i><i class="yline__ahead"></i>${
       all.map(m => `<i class="yt yt--${m.state === 'OPEN' && !m.left ? 'open' : m.meeting_date === today ? 'today' : ahead(m) ? 'up' : 'held'}" style="left:${pos(m.meeting_date)}%"></i>`).join('')}</div>`;
 

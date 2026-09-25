@@ -2165,7 +2165,8 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 /* nothing scheduled: the last stamp is the anchor */
 .mast--none .mast__line{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"g gm" "g date";
   column-gap:var(--sp-pad);align-items:end;border-bottom-style:dotted;border-bottom-width:3px;padding-bottom:12px}
-.mast--none .mast__line:has(.mast__no){display:flex}
+.mast--none .mast__line:has(.mast__no){display:flex;align-items:flex-end}
+.mast--none .mast__line:has(.mast__no) .mast__gm{align-self:flex-start;margin:6px 0 0}
 .mast__last{grid-area:g;width:96px;height:96px;rotate:-2deg;overflow:visible}
 .mast__last__face{fill:var(--ink)}
 .mast__last g path{fill:var(--paper)}
@@ -2226,7 +2227,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   .mast__no{font-size:clamp(220px,20vw,320px);margin-left:calc(var(--gutter) * -1 - 6px)}
   .mast__state{font-size:13px}
   .mast__cmd{font-size:clamp(32px,2.6vw,40px)}
-  .mast__more{font-size:clamp(22px,1.8vw,26px)}
+  .mast__more{font-size:clamp(22px,1.8vw,26px);text-align:right;margin-right:var(--gutter)}
   .card--field .card__field{margin:0 calc(var(--gutter) * -1) 0 0}
   .deck__side{grid-template-columns:minmax(0,1fr);gap:var(--sp-block);border-left:var(--edge-hair) solid var(--tint);padding-left:var(--sp-pad)}
   .fol--last{border-right:0;padding-right:0}
