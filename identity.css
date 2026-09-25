@@ -3021,6 +3021,53 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   .tools__record .yline{margin-right:0}
 }
 
+
+/* ══ After the judges: the standing block holds its shape without filed
+   cards; the filed prize that is ready is a printed instruction; the
+   phone's standing is a two-column ledger; the archive's miniature
+   recedes; the leader on a desk is a tick to the rule; the seats at the
+   page's edge keep their rings; sign out is the cut; the live tab is a
+   red rule, not a fill ══ */
+@media(min-width:760px){
+  .mem:not(.mem--filed) .standing-band{grid-template-columns:minmax(0,1fr);grid-template-areas:none;align-items:start}
+  .mem:not(.mem--filed) .standing-band > span{display:block;border:0;padding:0}
+}
+@media(min-width:900px){
+  .mem:not(.mem--filed) .standing-band{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;max-width:260px}
+}
+@media(max-width:479px){
+  .standing-band{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;justify-self:stretch;padding-top:10px}
+  .standing-band > span{display:block;white-space:nowrap}
+  .standing-band > span + span::before{content:none}
+  .standing-band b,.standing-band__fig b{font:400 22px/1 var(--f-head);letter-spacing:.02em;margin-right:.3em}
+  .standing-band b small{font:400 12px/1 var(--f-mono);letter-spacing:.06em;color:var(--ink-2)}
+}
+.filed__row--go .filed__prize{display:flex;align-items:center;gap:10px;justify-self:stretch;border:0;padding:0;
+  font:400 15px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
+.filed__row--go .filed__prize::after{content:'';flex:1 1 20px;height:2px;background:var(--seal);margin-right:calc((var(--gutter) + var(--safe-x)) * -1)}
+@media(min-width:900px){ .filed__row--go .filed__prize::after{margin-right:0} }
+@media (hover:hover){.filed__row--go:hover .filed__prize::after{height:3px}}
+.filed__field{max-width:78%;margin-left:auto}
+.fc-face{fill:var(--tone)}
+.fc-route{stroke:var(--tint)}
+.filed__field g:last-child .fc-face{fill:var(--ink)}
+.filed__punch{display:none}
+.seal:nth-child(1){--x:6.5%}
+.seal:nth-child(7){--x:3.5%}
+@container (min-width:480px){ .seal:nth-child(1){--x:2%} .seal:nth-child(7){--x:30.5%} }
+.seal--live .seal__no{display:none}
+.rail__out,.acct__out{border:0;background:none;padding:6px 0;min-height:36px;margin-top:var(--sp-tight);
+  font:400 16px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase;color:var(--ink);
+  text-decoration:line-through 2px var(--seal);text-underline-offset:0;transform:rotate(-3deg)}
+.rail__out::before,.acct__out::before{content:none}
+@media (hover:hover){.rail__out:hover,.acct__out:hover{background:none;color:var(--ink);text-decoration-thickness:3px}}
+.rail__out:active,.acct__out:active{background:var(--ink);color:var(--paper);transform:rotate(0deg)}
+.rail__out:focus-visible,.acct__out:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:4px;background:none;color:var(--ink)}
+.tabs .tab--live .tab__tab{background:none;border-top:3px solid var(--seal);transform:translateY(-4px);padding-inline:0}
+.tabs .tab--live[aria-current="page"] .tab__tab{transform:translateY(-4px)}
+.tabs .tab--live .tab__idx{color:var(--seal)}
+.tabs .tab--live .tab__lab{color:var(--ink)}
+
 /* ══ behaviour carried from the four passes: identity data keeps its
    case, a refusal keeps its room, the camera is offered again in place,
    a working button keeps its width, every part of a field is ringed ══ */

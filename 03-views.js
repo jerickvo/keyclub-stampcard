@@ -106,7 +106,7 @@ const C = {
           </g>
         </svg>
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
-        ${now ? '<span class="seal__go" aria-hidden="true">Check in</span>' : ''}
+        ${now ? `<span class="seal__go" aria-hidden="true">Check in · ${pad(p.floor + i + 1)}</span>` : ''}
         ${docket}
       </li>`;
     }).join('');
@@ -114,7 +114,7 @@ const C = {
     /* the route is drawn seat to seat: solid where the member has been,
        solid up to the seat they stand on, dotted beyond */
     const L = [[9.5,12.3],[28.8,24],[48,12.3],[66.8,21.5],[86.5,34.3],[59.3,44.5],[38,47.3],[12.3,57],[34.5,72.3],[74.5,71.2]];
-    const P = [[16,8.6],[46,13.3],[74,21.1],[81,40.6],[58,50],[31,54.7],[11,72.7],[34,81.3],[58,71.9],[83,83.6]];
+    const P = [[17,8.6],[46,13.3],[74,21.1],[81,40.6],[58,50],[31,54.7],[14,72.7],[34,81.3],[58,71.9],[83,83.6]];
     const segs = pts => pts.slice(1).map(([x2, y2], i) => {
       const [x1, y1] = pts[i];
       const on = full || i < p.filled - 1 ? ' card__seg--set' : i === p.filled - 1 ? ' card__seg--to' : '';

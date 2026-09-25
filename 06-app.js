@@ -639,7 +639,7 @@ const Inspect = {
       const below = r.bottom - f.top + r.height * .28, left = r.left - f.left - r.width * .25;
       lead.style.cssText = mode === 'foot'
         ? `left:${Math.round(cx)}px;top:${Math.round(below)}px;width:2px;height:${Math.max(0, Math.round(f.height - below))}px`
-        : `left:0;top:${Math.round(cy)}px;width:${Math.max(0, Math.round(left))}px;height:2px`;
+        : `left:-24px;top:${Math.round(cy)}px;width:24px;height:2px`;
     }
     if (!Motion.off && window.animate){
       aset(rec, { opacity:0 });
