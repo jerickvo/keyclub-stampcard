@@ -8,9 +8,11 @@ const MEMBER_NAV = [
   { id:'profile', label:'Member'  },
 ];
 
-/* an officer lands on Check-in: at a meeting it is the page they need,
-   and between meetings it names the next one */
+/* an officer lands on Club Tools: the day's meeting and its state, the
+   next one, what is owed, and the club's record; Check-in is the live
+   control surface one step in */
 const BOARD_NAV = [
+  { id:'board',    label:'Club Tools', short:'Club' },
   { id:'bcheckin', label:'Check-in'   },
   { id:'bmeet',    label:'Meetings'   },
   { id:'bmembers', label:'Members'    },
@@ -48,7 +50,7 @@ const AuthUI = {
 };
 
 const BOARD_ROUTES = BOARD_NAV.map(n => n.id);
-const PANE_ROUTES = ['bmeet', 'bcheckin', 'bmembers'];
+const PANE_ROUTES = ['board', 'bmeet', 'bcheckin', 'bmembers'];
 
 function gate(id){
   if (!Store.ready) return id;
@@ -64,7 +66,7 @@ function gate(id){
     return id;
   }
 
-  if (!BOARD_ROUTES.includes(id)) return 'bcheckin';
+  if (!BOARD_ROUTES.includes(id)) return 'board';
   return id;
 }
 
@@ -164,6 +166,15 @@ function paintNav(){
 
   /* the same pages as before: the buttons stay (a focused tab keeps its
      focus, a tap in progress keeps its target); only their state moves */
+  /* the chapter numeral: the page's own index, set large at the head of
+     the column; it changes as a printed thing changes, without a tween */
+  const at = nav.findIndex(n => n.id === current);
+  const folio = () => {
+    let f = $('.rail__folio', rail);
+    if (!f){ f = document.createElement('span'); f.className = 'rail__folio'; f.setAttribute('aria-hidden', 'true'); rail.prepend(f); }
+    f.textContent = at >= 0 ? pad(at + 1) : '';
+    f.classList.toggle('rail__folio--live', live && current === 'scan');
+  };
   const had = $$('.tab', tabs).map(el => el.dataset.go);
   if (had.length === nav.length && nav.every((n, i) => had[i] === n.id)){
     $$('[data-go]', tabs).concat($$('.rail__link', rail)).forEach(el => {
@@ -171,6 +182,8 @@ function paintNav(){
       else el.removeAttribute('aria-current');
     });
     $$('.tab', tabs).forEach(el => el.classList.toggle('tab--live', live && el.dataset.go === 'scan'));
+    $$('.rail__link', rail).forEach(el => el.classList.toggle('rail__link--live', live && el.dataset.go === 'scan'));
+    folio();
     return;
   }
   $$('.tab', tabs).forEach(el => el.remove());
@@ -178,11 +191,13 @@ function paintNav(){
   nav.forEach((n, i) => {
     const cur = current === n.id ? ' aria-current="page"' : '';
     const hot = live && n.id === 'scan' ? ' tab--live' : '';
+    const hotRail = live && n.id === 'scan' ? ' rail__link--live' : '';
     tabs.insertAdjacentHTML('beforeend',
-      `<button class="tab${hot}" data-go="${n.id}"${cur}><span>${n.short || n.label}</span></button>`);
+      `<button class="tab${hot}" data-go="${n.id}"${cur}><span class="tab__tab"><span class="tab__idx" aria-hidden="true">${pad(i + 1)}</span><span class="tab__lab">${n.short || n.label}</span></span></button>`);
     rail.insertAdjacentHTML('beforeend',
-      `<button class="rail__link" data-go="${n.id}"${cur}><span class="rail__idx" aria-hidden="true">${pad(i + 1)}</span><span class="rail__lab">${n.label}</span></button>`);
+      `<button class="rail__link${hotRail}" data-go="${n.id}"${cur}><span class="rail__idx" aria-hidden="true">${pad(i + 1)}</span><span class="rail__lab">${n.label}</span></button>`);
   });
+  folio();
 }
 
 async function go(id, opts = {}){
@@ -395,8 +410,10 @@ document.addEventListener('keydown', e => {
     return;
   }
   /* an open stamp closes on Escape, as any slip over the page should */
-  if (e.key === 'Escape' && e.target && e.target.matches && e.target.matches('.seal[tabindex]')){
-    e.target.blur();
+  if (e.key === 'Escape' && (Inspect.open || (e.target && e.target.matches && e.target.matches('.seal[tabindex]')))){
+    const was = Inspect.open;
+    Inspect.close();
+    if (was) was.focus({ preventScroll:true }); else e.target.blur();
     return;
   }
   if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.matches('[role="button"]')){
@@ -584,10 +601,75 @@ document.addEventListener('submit', async e => {
   }
 });
 
+/* Examining a stamp: the tapped seal is held up and the card recedes
+   behind it, with the stamp's printed record beside it. One at a time;
+   a second tap on it, Escape, or a tap anywhere else puts it back. The
+   hover preview on a desktop is CSS and needs none of this. */
+const Inspect = {
+  get open(){ return document.querySelector('.seal--held'); },
+  toggle(seal){
+    const was = this.open;
+    this.close();
+    if (was === seal) return;
+    const card = seal.closest('.card'), field = seal.closest('.card__field');
+    if (!card || !field) return;
+    seal.classList.add('seal--held');
+    seal.setAttribute('aria-expanded', 'true');
+    card.classList.add('card--inspect');
+    /* where the record prints: on a phone's sheet in the foot band, tied
+       to the stamp by a leader down the field; beside a wide sheet in the
+       page's margin, the leader running to the field's rule; on any other
+       card in the corner of the field the stamp is not in */
+    const f = field.getBoundingClientRect(), r = seal.getBoundingClientRect();
+    const cx = (r.left + r.right) / 2 - f.left, cy = (r.top + r.bottom) / 2 - f.top;
+    const foot = card.querySelector('.card__foot');
+    const mode = foot && f.width < 480 ? 'foot'
+      : card.closest('.mem') && matchMedia('(min-width:900px)').matches ? 'margin' : 'corner';
+    let rec = card.querySelector('.card__record');
+    if (!rec){ rec = document.createElement('div'); rec.className = 'card__record'; rec.setAttribute('data-layer', ''); }
+    (mode === 'foot' ? foot : field).appendChild(rec);
+    rec.dataset.at = mode === 'corner' ? (cy < f.height / 2 ? 'b' : 't') + (cx < f.width / 2 ? 'r' : 'l') : mode;
+    rec.style.top = mode === 'margin' ? `${Math.round(cy)}px` : '';
+    rec.innerHTML = (seal.querySelector('.sealmeta') || {}).innerHTML || '';
+    let lead = field.querySelector('.card__lead');
+    if (mode === 'corner'){ if (lead) lead.remove(); lead = null; }
+    else {
+      if (!lead){ lead = document.createElement('i'); lead.className = 'card__lead'; lead.setAttribute('aria-hidden', 'true'); field.appendChild(lead); }
+      /* the held stamp is drawn half as large again, so the leader starts clear of it */
+      const below = r.bottom - f.top + r.height * .28, left = r.left - f.left - r.width * .25;
+      lead.style.cssText = mode === 'foot'
+        ? `left:${Math.round(cx)}px;top:${Math.round(below)}px;width:2px;height:${Math.max(0, Math.round(f.height - below))}px`
+        : `left:0;top:${Math.round(cy)}px;width:${Math.max(0, Math.round(left))}px;height:2px`;
+    }
+    if (!Motion.off && window.animate){
+      aset(rec, { opacity:0 });
+      animate(rec, { opacity:[0, 1], duration:1, delay:90, ease:STEP(1) });
+      if (lead){ aset(lead, { opacity:0 }); animate(lead, { opacity:[0, 1], duration:1, delay:60, ease:STEP(1) }); }
+    }
+  },
+  close(){
+    const was = this.open;
+    if (!was) return;
+    was.classList.remove('seal--held');
+    was.setAttribute('aria-expanded', 'false');
+    const card = was.closest('.card');
+    if (card){
+      card.classList.remove('card--inspect');
+      card.querySelector('.card__record')?.remove();
+      card.querySelector('.card__lead')?.remove();
+    }
+  },
+};
+document.addEventListener('click', e => {
+  const seal = e.target.closest && e.target.closest('.seal[tabindex]');
+  if (seal){ Inspect.toggle(seal); return; }
+  if (Inspect.open && !(e.target.closest && e.target.closest('.card--inspect'))) Inspect.close();
+}, true);
+
 document.addEventListener('click', e => {
   const btab = e.target.closest('[data-btab]');
   if (btab){
-    const toRoute = { meetings:'bmeet', session:'bcheckin', progress:'bmembers' };
+    const toRoute = { tools:'board', meetings:'bmeet', session:'bcheckin', progress:'bmembers' };
     Object.assign(BoardUI, { memberDetail:null, meetingDetail:null, page:1, deleteNote:null, confirmDelete:null });
     /* the stage's "Schedule a meeting" opens the form, ready to type in */
     if (btab.hasAttribute('data-mnew')){ BoardUI.formOpen = true; BoardUI.refocus = '#mNo'; }
@@ -804,7 +886,8 @@ document.addEventListener('click', e => {
     input.type = show ? 'text' : 'password';
     eye.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
     eye.setAttribute('aria-pressed', String(show));
-    eye.innerHTML = show ? ICON.eyeOff : ICON.eye;
+    /* the control says what it will do next, as a printed instruction */
+    eye.textContent = show ? 'Hide' : 'Show';
     if (held && start !== null){
       const restore = () => {
         if (document.activeElement !== input) input.focus({ preventScroll:true });
@@ -860,6 +943,16 @@ document.addEventListener('click', e => {
   if (motion){
     Motion.setForced(!Motion.forced);
     paintMotion();
+    return;
+  }
+
+  /* a filed card's line opens the card it names, in place */
+  const filed = e.target.closest('.filed__row[aria-controls]');
+  if (filed){
+    const box = document.getElementById(filed.getAttribute('aria-controls'));
+    const open = filed.getAttribute('aria-expanded') === 'true';
+    filed.setAttribute('aria-expanded', String(!open));
+    if (box){ box.hidden = open; box.setAttribute('aria-hidden', String(open)); }
     return;
   }
 
@@ -1088,7 +1181,8 @@ async function loadBoard(){
      officer changed page is dropped, not shown on the new page */
   const kind = BoardUI.memberDetail === 'pending' ? 'member'
              : BoardUI.meetingDetail === 'pending' ? 'meeting'
-             : BoardUI.tab === 'progress' ? 'progress' : 'meetings';
+             : BoardUI.tab === 'progress' ? 'progress'
+             : BoardUI.tab === 'tools' ? 'tools' : 'meetings';
   let got = null, error = null;
   try {
     if (kind === 'member') got = await Backend.board('member', { id:BoardUI.pendingId });
@@ -1109,6 +1203,16 @@ async function loadBoard(){
         BoardUI.club && !BoardUI.club.code && !BoardUI.clubStale ? BoardUI.club
           : Backend.board('overview').catch(e => ({ code:String((e && e.message) || 'SERVER_ERROR') })),
       ]);
+    } else if (kind === 'tools'){
+      /* the operations sheet: the club's totals and today's state, the
+         meetings, and what is owed at the prize table */
+      got = await Promise.all([
+        Backend.board('overview'),
+        Backend.board('meetings'),
+        BoardUI.prizes && (!BoardUI.prizes.code || /^(INVALID_REQUEST|NOT_READY|NOT_INSTALLED)$/.test(BoardUI.prizes.code))
+          && !BoardUI.prizesStale ? BoardUI.prizes
+          : Backend.board('prizes').catch(e => ({ code:String((e && e.message) || 'SERVER_ERROR') })),
+      ]);
     } else got = await Backend.board('meetings');
   } catch (err){
     error = String(err.message || 'SERVER_ERROR');
@@ -1120,6 +1224,7 @@ async function loadBoard(){
     if (kind === 'member') BoardUI.memberDetail = got;
     else if (kind === 'meeting') BoardUI.meetingDetail = got;
     else if (kind === 'progress'){ [BoardUI.prizes, BoardUI.members, BoardUI.club] = got; BoardUI.prizesStale = false; BoardUI.clubStale = false; }
+    else if (kind === 'tools'){ [BoardUI.club, BoardUI.meetings, BoardUI.prizes] = got; BoardUI.prizesStale = false; BoardUI.clubStale = false; }
     else BoardUI.meetings = got;
   }
   if (BoardUI.error === 'NOT_AUTHENTICATED') Store.hydrate();
@@ -1163,6 +1268,9 @@ async function loadBoard(){
   }
   if (BoardUI.tab === 'session' && !BoardUI.error && $('#qrBox')){
     paintBoard();
+    paintAttendanceCount(boardMeeting);
+  } else if (BoardUI.tab === 'tools' && !BoardUI.error && boardMeeting && $('#attCount')){
+    /* the operations sheet keeps the live count the wall shows */
     paintAttendanceCount(boardMeeting);
   } else if (BoardUI.tab === 'session' && !BoardUI.error && boardMeeting && $('[data-bstart]')){
     watchClosedStage(boardMeeting);
@@ -1236,8 +1344,10 @@ function boardGoto(next){
 function paintMotion(){
   $$('[data-motion]').forEach(b => {
     b.setAttribute('aria-pressed', String(Motion.forced));
-    /* one control, one name: Reduce motion, pressed while it is on */
-    b.innerHTML = '<i aria-hidden="true"></i><span>Reduce motion</span>';
+    /* one control, one name (Reduce motion, pressed while it is on); the
+       line reads as a colophon setting: MOTION / FULL or MOTION / REDUCED */
+    b.setAttribute('aria-label', 'Reduce motion');
+    b.innerHTML = `<span aria-hidden="true">Motion</span><b aria-hidden="true">${Motion.forced ? 'Reduced' : 'Full'}</b>`;
   });
 }
 
@@ -1259,7 +1369,7 @@ function projector(on){
   stage.classList.toggle('proj--full', on);
   document.documentElement.classList.toggle('is-projecting', on);
   const b = $('[data-bfull]');
-  if (b) b.textContent = on ? 'Exit full screen' : 'Full screen';
+  if (b) b.textContent = on ? 'Leave the wall' : 'Project';
   try {
     if (on && document.fullscreenEnabled && !document.fullscreenElement)
       document.documentElement.requestFullscreen().catch(() => {});
@@ -1277,6 +1387,16 @@ function syncProjector(){
     try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (_) {}
   }
 }
+/* on the wall the one control is out of sight until a hand moves: a
+   touch shows it for a few seconds */
+let awakeTimer = null;
+document.addEventListener('touchstart', () => {
+  const stage = $('#proj.proj--full');
+  if (!stage) return;
+  stage.classList.add('proj--awake');
+  clearTimeout(awakeTimer);
+  awakeTimer = setTimeout(() => stage.classList.remove('proj--awake'), 4000);
+}, { passive:true });
 document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement && $('#proj')?.classList.contains('proj--full')) projector(false);
 });
@@ -1407,10 +1527,11 @@ function paintIdentity(){
   if (foot.dataset.who === who && foot.firstChild){ paintMotion(); return; }
   foot.dataset.who = who;
   foot.innerHTML = Store.signedIn
-    ? `<p class="rail__who"><span class="rail__name">${esc(Store.user.name)}</span>
-         <span class="rail__role">${Store.isBoard ? 'Board' : 'Member'}</span></p>
+    ? `<p class="rail__who"><span class="rail__held">Record held by</span>
+         <span class="rail__name">${esc(Store.user.name)}</span>
+         <span class="rail__role">${Store.isBoard ? 'Board' : 'Member'}${Store.user.joined ? ` / since ${esc(onClock(Store.user.joined, { month:'short', year:'numeric' }))}` : ''}</span></p>
        <div class="rail__util">
-         <button class="rail__motion" type="button" data-motion></button>
+         <button class="rail__motion" type="button" data-motion aria-label="Reduce motion"></button>
          <button class="rail__out" type="button" data-signout>Sign out</button>
        </div>`
     : `<p class="kicker">Not signed in</p>

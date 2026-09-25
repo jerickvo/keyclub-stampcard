@@ -56,7 +56,7 @@ test('the store counts every tier that is not locked, from the same rule', () =>
   assert.equal(Store.tierState(r3 && Store.rewards[2]), 'claimed');
 });
 
-test('a rung\'s ticks count only the stamps since the rung below, so it reads reached exactly when it is', () => {
+test('a station reads reached exactly when it is: sealed with the stamps still to come, far beyond the next, claimed once', () => {
   const vctx = vm.createContext({
     window:{}, document:{}, navigator:{}, console, setTimeout, clearTimeout,
     localStorage:{ getItem(){ return null; }, setItem(){}, removeItem(){} },
@@ -66,22 +66,21 @@ test('a rung\'s ticks count only the stamps since the rung below, so it reads re
     + '\nthis.__v = { C, Store, REWARD_TIERS };', vctx);
   const { C, Store: S, REWARD_TIERS: T } = vctx.__v;
   const scans = n => Array.from({ length:n }, (_, i) => ({ meetingId:'m' + i, at:'2026-09-01T00:00:00Z' }));
-  const on = html => (html.match(/<i class="is-on">/g) || []).length;
-  const all = html => (html.match(/<i class/g) || []).length;
+  const says = html => (html.match(/tier__say">([^<]*)</) || [])[1];
 
   S.scans = scans(9); S.rewards = T.map(r => ({ ...r, claimed:false }));
   const nine10 = C.tier(S.rewards[0], 9, 0), nine20 = C.tier(S.rewards[1], 9, 10);
-  assert.equal(on(nine10), 9);  assert.equal(all(nine10), 10);
-  assert.equal(on(nine20), 0);                                   // nothing toward 20 before 10 is reached
+  assert.equal(nine10.includes('tier--sealed'), true);
   assert.equal(nine10.includes('1 more stamp<'), true);
-  assert.equal(nine20.includes('tier--far'), true);
+  assert.equal(nine20.includes('tier--far'), true);             // nothing toward 20 before 10 is reached
+  assert.equal(says(nine20), undefined);                          // and nothing counted toward it
+  assert.equal(nine10.includes('data-claim'), false);
 
   S.scans = scans(13); S.rewards = T.map(r => ({ ...r, claimed:r.id === 'r1' }));
   const t10 = C.tier(S.rewards[0], 13, 0), t20 = C.tier(S.rewards[1], 13, 10);
-  assert.equal(all(t10), 0);                                     // a claimed rung is done: no ticks
+  assert.equal(says(t10), undefined);                             // a claimed station is done: nothing still to come
   assert.equal(t10.includes('tier--claimed'), true);
   assert.equal((t10.match(/Claimed/g) || []).length, 1);          // said once
-  assert.equal(on(t20), 3);
   assert.equal(t20.includes('7 more stamps'), true);
   assert.equal(t20.includes('tier--far'), false);
 
@@ -89,6 +88,7 @@ test('a rung\'s ticks count only the stamps since the rung below, so it reads re
   const ready = C.tier(S.rewards[0], 10, 0);
   assert.equal(ready.includes('tier--ready'), true);
   assert.equal(ready.includes('data-claim="r1"'), true);
+  assert.equal(ready.includes('tier__word">Claim<'), true);       // the claim is printed inside the stamp
 });
 
 // ── the member's day, and the join date ────────────────────────────────

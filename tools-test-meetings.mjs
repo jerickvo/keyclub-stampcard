@@ -99,8 +99,8 @@ test('the meetings register splits into coming up and already held', () => {
   const html = BoardUI.meetingsPane();
   assert.equal(html.includes('Upcoming'), true);
   assert.equal(html.includes('>Held<'), true);
-  assert.equal((html.match(/class="blist blist--meet"/g) || []).length, 2);
-  assert.equal(html.indexOf('GM <b>02</b>') < html.indexOf('GM <b>01</b>'), true);
+  assert.equal((html.match(/class="blist blist--meet minutes__list"/g) || []).length, 2);
+  assert.equal(html.indexOf('<b>02</b>') < html.indexOf('<b>01</b>'), true);
 });
 
 test('the schedule form stays folded until asked for', () => {
@@ -125,22 +125,23 @@ test('check-in is offered only for today; an open one is shown whatever its date
   const future = [mk('f3', 23, '2026-09-28'), mk('f2', 22, '2026-09-21'), mk('f1', 21, '2026-09-14')];
   BoardUI.meetings = { server_date:'2026-09-07', meetings:[...future, mk('t', 20, '2026-09-07', { state:'ENDED' })] };
   let html = BoardUI.sessionPane();
-  assert.equal(html.includes('GM 20'), true);
+  assert.equal(html.includes('<span>GM</span> <b>20</b>'), true);
   assert.equal(html.includes('data-bstart="t"'), true);
-  assert.equal(html.includes('GM 23'), false);            // never a meeting weeks away
-  assert.equal(html.includes('gmtabs'), false);           // one meeting today: nothing to pick
+  assert.equal(html.includes('<b>23</b>'), false);        // never a meeting weeks away
+  assert.equal(html.includes('gmpick'), false);           // one meeting today: nothing to pick
+  assert.equal(html.includes('<b>GM 21</b>'), true);      // the next one, as a line under the desk
 
   BoardUI.meetings = { server_date:'2026-09-07', meetings:future };
   html = BoardUI.sessionPane();
   assert.equal(html.includes('No meeting today'), true);
-  assert.equal(html.includes('GM</span> <b class="tkt__no">21</b>'), true);  // named as the next one
+  assert.equal(html.includes('<b>GM 21</b>'), true);      // named as the next one
   assert.equal(html.includes('data-bstart'), false);
 
   // left open last week: shown live so it can be closed, even with a stale pick
   BoardUI.meetings = { server_date:'2026-09-07', meetings:[...future,
     mk('old', 19, '2026-08-31', { state:'OPEN', check_in_open:true })] };
   html = BoardUI.sessionPane();
-  assert.equal(html.includes('GM 19'), true);
+  assert.equal(html.includes('<span>GM</span> <b>19</b>'), true);
   assert.equal(html.includes('data-bend="old"'), true);
   // its codes have expired: no code, no count and no full screen, only Close
   assert.equal(html.includes('Left open'), true);

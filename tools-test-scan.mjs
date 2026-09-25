@@ -43,13 +43,14 @@ test('the meeting line over the viewer follows the record', () => {
   // the Scan page prints the same line it will later refresh in place
   const page = Views.scan();
   assert.equal(page.includes('<span class="standing__lab">Checking in to</span>'), true);
-  assert.equal(page.includes('<span class="standing__at">GM 04</span>'), true);
+  assert.equal(page.includes('<span class="standing__at"><i>GM</i><b>04</b></span>'), true);
   // already stamped: no camera, one line, the way Home says it
   load({ meetings:[...held(3), meeting(4, { open:true, today:true })], scans:[{ meetingId:'m4', at:'2026-09-14T19:50:00Z' }] });
   const done = Views.scan();
   assert.equal(done.includes('id="cam"'), false);
   assert.equal(done.includes('Checked in'), true);
-  assert.match(done, /GM<\/span> <b class="tkt__no">04</);
+  assert.match(done, /<b class="stamped__no">GM 04<\/b>/);
+  assert.equal(done.includes('QR verified'), true);
 });
 
 test('the store fingerprint changes only when a page would', () => {
@@ -69,27 +70,32 @@ test('the store fingerprint changes only when a page would', () => {
 });
 
 test('Today sends a member to Scan only while a meeting is open and unstamped', () => {
-  const target = html => (html.match(/class="tkt tkt--live"[^>]*data-go="([a-z]+)"/) || [])[1];
-  const gm = (html, no) => html.includes(`GM</span> <b class="tkt__no">${no}</b>`);
+  /* the masthead is the way to Scan only while check-in is open; every
+     other day it is a line of type */
+  const target = html => (html.match(/class="mast mast--open"[^>]*data-go="([a-z]+)"/) || [])[1];
+  const button = html => /<button class="mast/.test(html);
+  const gm = (html, no) => html.includes(`class="mast__gm">GM</span><b class="mast__no">${no}`);
   load({ meetings:[...held(3), meeting(4, { open:true, today:true })] });
   assert.equal(target(Views.home()), 'scan');
   assert.equal(Views.home().includes('>Check in<'), true);
   // stamped: a line of type, not a button
   load({ meetings:[...held(3), meeting(4, { open:true, today:true })], scans:[{ meetingId:'m4', at:'2026-09-14T19:50:00Z' }] });
   assert.equal(target(Views.home()), undefined);
-  assert.equal(Views.home().includes('Checked in'), true);
+  assert.equal(button(Views.home()), false);
+  assert.equal(Views.home().includes('Stamped '), true);
   assert.equal(gm(Views.home(), '04'), true);
-  // nothing open: the next meeting, with no verb
+  // nothing open: the next meeting's date is the anchor, with no verb
   load({ meetings:[...held(3), meeting(4, { upcoming:true })] });
   assert.equal(target(Views.home()), undefined);
-  assert.equal(Views.home().includes('>Next<'), true);
-  assert.equal(gm(Views.home(), '04'), true);
-  assert.equal(Views.home().includes('Nothing open'), false);
-  // nothing scheduled: nothing is said
+  assert.equal(Views.home().includes('mast--next'), true);
+  assert.equal(Views.home().includes('>Next chapter<'), true);
+  assert.equal(Views.home().includes('>Check in<'), false);
+  // nothing scheduled: the last stamp is the anchor, nothing is promised
   load({ meetings:held(3) });
   assert.equal(target(Views.home()), undefined);
+  assert.equal(Views.home().includes('mast--none'), true);
+  assert.equal(Views.home().includes('>Nothing scheduled<'), true);
   assert.equal(Views.home().includes('nowline'), false);
-  assert.equal(Views.home().includes('class="tkt'), false);
 });
 
 test('every refusal the verifier can send has its own words; an unknown one has the safe words', () => {
@@ -141,7 +147,7 @@ test('the arrival page names the meeting and the way in, and never prints the co
   Arrival.peek = { unknown:true }; Arrival.no = null;
   page = Views.checkin();
   assert.equal(page.includes('Check-in open'), false);
-  assert.equal(page.includes('Collect your attendance stamp'), true);
+  assert.equal(page.includes('Collect your stamp'), true);
   // refused for good
   Arrival.bare = null; Arrival.phase = 'refused'; Arrival.refusal = 'EXPIRED_TOKEN';
   page = Views.checkin();

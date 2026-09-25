@@ -207,7 +207,7 @@ const Transit = {
   },
 
   ORDER: { home:0, record:1, scan:2, rewards:3, profile:4,
-           bcheckin:0, bmeet:1, bmembers:2 },
+           board:0, bcheckin:1, bmeet:2, bmembers:3 },
 
   /* one cut for every page turn: an ink slab crosses the column in tab
      order; only its direction says anything, so nothing rides on it */
