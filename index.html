@@ -3044,9 +3044,10 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 
 .lrow{display:grid;grid-template-columns:var(--line) 40px minmax(0,1fr) auto;align-items:center;gap:0 10px;
   width:100%;margin:0;padding:6px 0;border:0;border-radius:0;background:none;color:inherit;font:inherit;text-align:left;min-height:52px}
-.lrow--gap2{margin-top:14px}
-.lrow--gap3{margin-top:28px}
-.lrow--gap2::before,.lrow--gap3::before{content:'';grid-column:2/-1;height:0;margin:-10px 0 6px;border-top:var(--edge-hair) dashed var(--tone)}
+/* a gap of weeks reads as space, and a dashed hairline across the entry
+   (a pseudo grid item would push a button row's cells out of order) */
+.lrow--gap2{margin-top:14px;border-top:var(--edge-hair) dashed var(--tone);padding-top:12px}
+.lrow--gap3{margin-top:28px;border-top:var(--edge-hair) dashed var(--tone);padding-top:12px}
 .lrow__no{justify-self:end;padding:0 6px 0 12px;
   font:400 40px/1 var(--f-head);letter-spacing:.01em;color:var(--ink)}
 .lrow--miss .lrow__no{color:transparent;-webkit-text-stroke:1px var(--tone)}
@@ -3340,7 +3341,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .desk .proj__no{margin:0;display:flex;align-items:baseline;gap:.3em;
   font:400 11px/1 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
 .desk .proj__no b{font:400 clamp(56px,16vw,72px)/.82 var(--f-display);letter-spacing:-.02em;color:var(--ink)}
-.desk .proj__when{margin:0;font:400 11px/1.5 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.desk .proj__when{margin:10px 0 0;font:400 11px/1.5 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .desk .proj__word{grid-area:word;margin:0;align-self:start;justify-self:end;transform:none;text-align:right;
   font:400 clamp(32px,9vw,40px)/1 var(--f-head);letter-spacing:.02em;text-transform:uppercase;color:var(--ink)}
 .desk--open .proj__word,.desk--stale .proj__word{color:var(--seal)}
@@ -3461,8 +3462,8 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .desk .proj--full .proj__no{font-size:2vh;letter-spacing:.2em;color:var(--tone);gap:.4em}
 .desk .proj--full .proj__no b{font-size:14vh;line-height:.85;color:var(--paper)}
 .desk .proj--full .proj__when{display:none}
-.desk .proj--full .proj__word{grid-area:word;justify-self:start;align-self:start;margin-top:3vh;text-align:left;
-  font-size:9vh;line-height:1;color:var(--paper)}
+.desk .proj--full .proj__word{grid-area:word;justify-self:start;align-self:start;margin-top:2vh;text-align:left;
+  font-size:15vh;line-height:.9;color:var(--paper)}
 .desk .proj--full .proj__word::before{content:'Check-in';display:block;margin-bottom:.6vh;font:400 3vh/1.4 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--tone)}
 .desk .proj--full .proj__count{grid-area:count;align-self:end;justify-self:end;flex-direction:column;align-items:flex-end;gap:1vh;margin:0;text-align:right}
 .desk .proj--full .proj__count b{font-size:clamp(120px,42vh,520px);line-height:.8;color:var(--paper)}
@@ -3838,6 +3839,36 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .tabs .tab--live[aria-current="page"] .tab__tab{transform:translateY(-4px)}
 .tabs .tab--live .tab__idx{color:var(--seal)}
 .tabs .tab--live .tab__lab{color:var(--ink)}
+
+
+/* ══ After the judges, the pages: the empty toast rail draws nothing; a
+   live seat on the bottom row carries its word above it; the masthead's
+   second line stands clear of the numeral; a punched station keeps its
+   punch on top; the fold's number clears the archival rule; the wall in
+   portrait keeps its count; Today with nothing scheduled ends on the
+   card; the desk's camera fills its column; a desk's record is a slip ══ */
+.toasts:empty{display:none;border:0;background:none}
+.is-projecting .toasts{display:none}
+.seal:nth-child(n+7) .seal__go{top:auto;bottom:100%;translate:-50% -4px}
+@container (min-width:480px){ .seal:nth-child(n+7) .seal__go{top:auto;bottom:100%;translate:-50% -6px} }
+.mast__more{text-align:right;margin-right:0}
+.tier__punch{z-index:2}
+.tier{width:100%}
+.tier__body{left:calc(var(--x) + 96px);right:0;width:auto}
+.tier__note,.tier__say{white-space:nowrap}
+.prize__fig span{white-space:nowrap}
+.deck--none .deck__side{display:none}
+@media(min-width:1024px){
+  .minutes__fold .mrow__go{column-gap:var(--sp-block)}
+  .scanframe > .viewer{aspect-ratio:auto;height:calc(100dvh - 140px);max-height:none;min-height:360px}
+  .stamped__rec{max-width:420px}
+  .tools__acts,.tools__next,.tools__tasks{max-width:none}
+}
+@media(max-aspect-ratio:1/1){
+  .desk .proj--full .proj__plate .qrpanel__code{width:min(84vw,44vh)}
+  .desk .proj--full .proj__count b{font-size:clamp(96px,18vh,260px)}
+  .desk .proj--full .proj__count{align-self:start}
+}
 
 /* ══ behaviour carried from the four passes: identity data keeps its
    case, a refusal keeps its room, the camera is offered again in place,
@@ -18380,8 +18411,9 @@ const Views = {
     const line = (gm, no, state, extra = '') =>
       `<span class="mast__line"><span class="mast__gm">${gm}</span><b class="mast__no">${no}${extra}</b>${state ? `<span class="mast__state">${state}</span>` : ''}</span>`;
     /* the second line the masthead carries when a prize is close, or the card is full */
-    const more = full && goal && !goal.claimed ? `<p class="mast__more">Card full · ${esc(goal.name)} ready to claim</p>`
-      : near ? `<p class="mast__more">${pad(p.remaining)} to ${esc(goal.name)}</p>` : '';
+    /* a card full says so on the card's own line (the instruction); the
+       masthead adds a line only for a prize within reach */
+    const more = near ? `<p class="mast__more">${pad(p.remaining)} to ${esc(goal.name)}</p>` : '';
 
     let kind, mast;
     if (live){
@@ -18759,7 +18791,7 @@ const Views = {
     const go = (attr, label) => `<button class="authp__go" type="button" ${attr}>${label}</button>`;
     const alt = (attr, label, idx = '') => `<button class="authp__swap" type="button" ${attr}>${idx ? `<i class="authp__idx" aria-hidden="true">${idx}</i>` : ''}${label}</button>`;
     const onward = signed ? go('data-go="home"', Store.isBoard ? 'Go to Check-in' : 'Go to Today')
-      : alt('data-arrive="in"', 'Sign in');
+      : alt('data-arrive="in"', 'Sign in', '01');
     const say = (word, note = '', tail = '') => `<section class="authp arrive" aria-live="polite">
         <p class="arrive__kick">${signed ? 'Check-in' : 'Next'}</p>
         <h2 class="arrive__word">${word}</h2>

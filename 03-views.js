@@ -368,8 +368,9 @@ const Views = {
     const line = (gm, no, state, extra = '') =>
       `<span class="mast__line"><span class="mast__gm">${gm}</span><b class="mast__no">${no}${extra}</b>${state ? `<span class="mast__state">${state}</span>` : ''}</span>`;
     /* the second line the masthead carries when a prize is close, or the card is full */
-    const more = full && goal && !goal.claimed ? `<p class="mast__more">Card full · ${esc(goal.name)} ready to claim</p>`
-      : near ? `<p class="mast__more">${pad(p.remaining)} to ${esc(goal.name)}</p>` : '';
+    /* a card full says so on the card's own line (the instruction); the
+       masthead adds a line only for a prize within reach */
+    const more = near ? `<p class="mast__more">${pad(p.remaining)} to ${esc(goal.name)}</p>` : '';
 
     let kind, mast;
     if (live){
@@ -747,7 +748,7 @@ const Views = {
     const go = (attr, label) => `<button class="authp__go" type="button" ${attr}>${label}</button>`;
     const alt = (attr, label, idx = '') => `<button class="authp__swap" type="button" ${attr}>${idx ? `<i class="authp__idx" aria-hidden="true">${idx}</i>` : ''}${label}</button>`;
     const onward = signed ? go('data-go="home"', Store.isBoard ? 'Go to Check-in' : 'Go to Today')
-      : alt('data-arrive="in"', 'Sign in');
+      : alt('data-arrive="in"', 'Sign in', '01');
     const say = (word, note = '', tail = '') => `<section class="authp arrive" aria-live="polite">
         <p class="arrive__kick">${signed ? 'Check-in' : 'Next'}</p>
         <h2 class="arrive__word">${word}</h2>
