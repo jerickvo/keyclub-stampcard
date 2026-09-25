@@ -201,7 +201,7 @@ const BoardUI = {
             ? (phase === 'open'
                 ? `<button class="tools__cmd tools__cmd--nav" type="button" data-btab="session">Go to the wall</button>`
                 : phase === 'today'
-                ? `<button class="tools__cmd" type="button" data-btab="session">Open check-in</button>`
+                ? `<button class="tools__cmd" type="button" data-bstart="${esc(now.id)}" data-busy="Opening">Open check-in</button>`
                 : `<button class="tools__cmd tools__cmd--nav" type="button" data-bmeeting="${esc(now.id)}">Attendees</button>`)
               + `<button class="cmd cmd--quiet" type="button" data-bmeeting="${esc(now.id)}" data-bhandfocus>Add by hand</button>`
             : `<button class="cmd cmd--quiet" type="button" data-btab="meetings" data-mnew>Schedule a meeting</button>`}
