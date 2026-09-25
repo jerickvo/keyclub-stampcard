@@ -26,18 +26,19 @@ const FX = {
                  onComplete(){ Motion.settle(p); } });
   },
 
+  /* a code read: the seat over the camera swells, the way a stamp is
+     brought down; refused, it settles back */
   scanLock(){
     if (Motion.off) return;
-    const dirs = [[1,1],[-1,1],[1,-1],[-1,-1]];
-    $$('#reticle .reticle__c').forEach((c, i) => animate(c, { translateX:dirs[i][0] * 11, translateY:dirs[i][1] * 11,
-      duration:180, ease:EASE.CUT }));
+    const seat = $('#reticle .reticle__seat');
+    if (seat) animate(seat, { scale:[1, 1.12], duration:180, ease:EASE.CUT });
   },
 
   scanReject(){
     if (Motion.off) return;
     Impact.shake($('#viewer'), 4, 100);
-    $$('#reticle .reticle__c').forEach(c =>
-      animate(c, { translateX:0, translateY:0, duration:220, ease:EASE.CALM }));
+    const seat = $('#reticle .reticle__seat');
+    if (seat) animate(seat, { scale:1, duration:220, ease:EASE.CALM });
   },
 
   stampAcquire(meeting){
@@ -47,14 +48,15 @@ const FX = {
     const lift = (32 - 32 * STAMP_FIT).toFixed(1);
     const scene = document.createElement('div');
     scene.className = 'acq';
+    /* a paper sheet: the seal just pressed, the record line under it */
     scene.innerHTML = `
       <div class="acq__stack">
-        <p class="acq__kick">Stamp acquired</p>
+        <p class="acq__kick"><span>Stamp acquired</span><span>${pad(n + 1)}</span></p>
         <div class="acq__seal" aria-hidden="true">
           <svg viewBox="0 0 64 64"><path class="acq__face" d="${stampShape(n + 1, 0)}"/>
             <g class="acq__mark" transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(n)}</g></svg>
         </div>
-        <p class="acq__meet">GM ${pad(meeting.no)} / ${fmtDate(meeting.date || Schedule.today())}</p>
+        <p class="acq__meet"><b>GM ${pad(meeting.no)}</b><span>${fmtDate(meeting.date || Schedule.today())}</span></p>
       </div>`;
     document.body.appendChild(scene);
 
@@ -71,7 +73,9 @@ const FX = {
 
     return {
       clear(){ clearTimeout(fuse); clear(); },
-      lift(then){
+      /* the seal travels from the sheet into its seat on the card while
+         the sheet clears; without a seat in view the sheet just clears */
+      lift(then, cell = null){
         clearTimeout(fuse);
         let fired = false;
         const done = () => {
@@ -80,8 +84,18 @@ const FX = {
           if (typeof then === 'function') then();
         };
         if (Motion.off || gone){ done(); return; }
-        animate(scene, { translateY:[0, -(innerHeight + 24)], duration:300,
-          ease:cubicBezier(.7, 0, .18, 1), onComplete:done });
+        const sealEl = scene.querySelector('.acq__seal');
+        const to = cell && cell.querySelector('svg') ? cell.querySelector('svg').getBoundingClientRect() : null;
+        if (sealEl && to && to.width > 8 && to.top > -to.height && to.bottom < innerHeight + to.height){
+          const from = sealEl.getBoundingClientRect();
+          const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
+          const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+          scene.classList.add('acq--lift');
+          animate(sealEl, { translateX:[0, dx], translateY:[0, dy], scale:[1, to.width / from.width],
+            duration:320, ease:cubicBezier(.7, 0, .18, 1), onComplete:done });
+        } else {
+          animate(scene, { opacity:[1, 0], duration:220, ease:EASE.CALM, onComplete:done });
+        }
         setTimeout(done, 600);
       },
     };

@@ -139,9 +139,97 @@ const BoardUI = {
     if (this.error)   return this.failure(this.error);
     if (this.memberDetail)  return this.memberPane();
     if (this.meetingDetail) return this.meetingPane();
+    if (this.tab === 'tools') return this.toolsPane();
     if (this.tab === 'meetings') return this.meetingsPane();
     if (this.tab === 'progress') return this.progressPane();
     return this.sessionPane();
+  },
+
+  /* Club Tools: the operations sheet an officer reads first. Today's
+     meeting and where it stands, the next one, what is owed at the
+     prize table, and the club's record, all from the reads the other
+     pages already make. */
+  toolsPane(){
+    const c = this.club && !this.club.code ? this.club : null;
+    const list = (this.meetings && this.meetings.meetings) || [];
+    const today = (this.meetings && this.meetings.server_date) || (c && c.server_date) || Schedule.today();
+    const open = list.find(m => m.state === 'OPEN') || null;
+    const todays = list.filter(m => m.meeting_date === today).sort(meetingOrder(1));
+    const now = open || todays.find(m => meetingPhase(m, today) !== 'ENDED') || todays[todays.length - 1] || null;
+    const next = list.filter(m => String(m.meeting_date) > today).sort(meetingOrder(1))[0] || null;
+    const phase = now ? (now.state === 'OPEN' ? 'open' : meetingPhase(now, today) === 'ENDED' ? 'ended' : 'today') : 'none';
+    const count = now ? Number(now.attendance_count) || 0 : 0;
+    boardMeeting = open ? open.id : null;
+    const pz = this.prizes && !this.prizes.code ? this.prizes : null;
+    const owed = pz ? (pz.owed || []).length : null;
+    const claimed = pz ? (pz.owed || []).filter(o => o.claimed_at).length : 0;
+    const when = m => `${esc(fmtDate(m.meeting_date))} · ${esc(spanTime(m.start_time, m.end_time))} · ${esc(m.location || Schedule.PLACE)}`;
+
+    /* what is open: each a line that goes where it is done */
+    const tasks = [];
+    if (owed !== null && owed) tasks.push({ attr:'data-btab="progress"', fig:String(owed), text:`${owed === 1 ? 'prize' : 'prizes'} to hand over${claimed ? ` · ${claimed} asked for` : ''}` });
+    if (phase === 'today') tasks.push({ attr:'data-btab="session"', fig:`GM ${pad(now.meeting_number)}`, text:'check-in not yet opened' });
+    if (!next) tasks.push({ attr:'data-btab="meetings" data-mnew', fig:'—', text:'nothing scheduled ahead' });
+
+    /* the club's year as one line: every meeting at its true date */
+    const days = iso => Math.floor(Date.parse(iso + 'T12:00:00Z') / 864e5);
+    const all = [...list].sort(meetingOrder(1));
+    const t0 = all.length ? days(all[0].meeting_date) : days(today);
+    const tN = Math.max(t0 + 1, all.length ? days(all[all.length - 1].meeting_date) : t0 + 1, days(today));
+    const pos = iso => Math.min(98.5, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
+    const yearline = `<div class="yline yline--club" aria-hidden="true" style="--now:${pos(today)}%"><i class="yline__rule"></i><i class="yline__ahead"></i>${
+      all.map(m => `<i class="yt yt--${m.state === 'OPEN' ? 'open' : m.meeting_date === today ? 'today' : String(m.meeting_date) > today ? 'up' : 'held'}" style="left:${pos(m.meeting_date)}%"></i>`).join('')}</div>`;
+    const figs = !c ? [] : [
+      [Number(c.total_members) || 0, 'members'], [Number(c.total_seals) || 0, 'stamps'], [Number(c.meetings_held) || 0, 'meetings'],
+      [c.average_attendance == null ? '–' : esc(String(c.average_attendance)), 'at a meeting'],
+      ...REWARD_TIERS.map(t => [Number((c.milestones || {})['m' + t.required]) || 0, `at ${esc(prizeName(t))}`]),
+    ];
+
+    return `<div class="bpanel tools tools--${phase}${phase === 'open' ? ' bpanel--live' : ''}">
+      <p class="tools__day">${esc(fmtDate(today))}</p>
+
+      <section class="tools__now" aria-label="Current meeting">
+        <h2 class="tools__mark">Current meeting</h2>
+        <div class="tools__head">
+          ${now ? `<p class="tools__gm"><span>GM</span><b>${pad(now.meeting_number)}</b></p>` : ''}
+          <p class="tools__state">${phase === 'open' ? 'Open' : phase === 'ended' ? 'Ended' : phase === 'today' ? 'Not opened' : 'No meeting'}</p>
+        </div>
+        ${now ? `<p class="tools__when">${when(now)}</p>` : ''}
+        ${now && (phase === 'open' || count) ? `<p class="tools__count"><b${phase === 'open' ? ' id="attCount"' : ''}>${count}</b><span>checked in</span></p>` : ''}
+        <div class="tools__acts">
+          ${now
+            ? (phase === 'open'
+                ? `<button class="tools__cmd tools__cmd--nav" type="button" data-btab="session">Go to the wall</button>`
+                : phase === 'today'
+                ? `<button class="tools__cmd" type="button" data-bstart="${esc(now.id)}" data-busy="Opening">Open check-in</button>`
+                : `<button class="tools__cmd tools__cmd--nav" type="button" data-bmeeting="${esc(now.id)}">Attendees</button>`)
+              + `<button class="cmd cmd--quiet" type="button" data-bmeeting="${esc(now.id)}" data-bhandfocus>Add by hand</button>`
+            : `<button class="cmd cmd--quiet" type="button" data-btab="meetings" data-mnew>Schedule a meeting</button>`}
+        </div>
+      </section>
+
+      <section class="tools__next" aria-label="Next meeting">
+        <h2 class="tools__mark">Next meeting</h2>
+        ${next ? `<button class="tools__nextrow" type="button" data-bmeeting="${esc(next.id)}">
+            <span class="tools__nextgm">GM ${pad(next.meeting_number)}</span>
+            <span class="tools__nextwhen">${when(next)}</span>
+          </button>` : `<p class="tools__none">Nothing scheduled</p>`}
+      </section>
+
+      <section class="tools__tasks" aria-label="Open tasks">
+        <h2 class="tools__mark">Open tasks</h2>
+        <ol class="tools__list">
+          ${tasks.length ? tasks.map((t, i) => `<li><button class="tools__task" type="button" ${t.attr}><i>${pad(i + 1)}</i><b>${t.fig}</b><span>${t.text}</span></button></li>`).join('')
+            : '<li class="tools__nothing"><i>—</i></li>'}
+        </ol>
+      </section>
+
+      ${c ? `<section class="tools__record" aria-label="Club record">
+        <h2 class="tools__mark">Club record</h2>
+        ${yearline}
+        <p class="tools__colophon">${figs.map(([v, l]) => `<span><b>${v}</b>${l}</span>`).join('')}</p>
+      </section>` : ''}
+    </div>`;
   },
 
   skeleton(){
@@ -166,8 +254,11 @@ const BoardUI = {
   backLabel(){ return 'Back'; },
 
   progressPane(){
+    const d = this.members || {};
+    const total = Number(d.total) || (d.members || []).length;
+    const owed = this.prizes && !this.prizes.code ? (this.prizes.owed || []).length : null;
     return `<div class="bpanel memgrid">
-      ${this.clubHead()}
+      <p class="memidx"><span><b>${total}</b> on the roster</span>${owed === null ? '' : `<span><b>${owed}</b> to hand over</span>`}</p>
       ${this.owedBody()}
       <section class="rosterpanel" aria-label="Roster">
         ${this.rosterBody()}
@@ -281,29 +372,65 @@ const BoardUI = {
     const ahead = m => !m.left && (m.state === 'OPEN' || m.state === 'TODAY' || m.state === 'UPCOMING');
     const upcoming = phased.filter(ahead).sort(by(1));
     const past = phased.filter(m => !ahead(m)).sort(by(-1));
-
-    const band = (title, tail = '') => `<div class="meetband"><h2 class="meetband__t">${title}</h2>${tail}</div>`;
     const formOpen = this.formOpen || Boolean(this.form);
+    const count = m => Number(m.attendance_count) || 0;
+    const usual = m => spanTime(m.start_time, m.end_time) === spanTime('12:40 PM', '1:30 PM') && (m.location || Schedule.PLACE) === Schedule.PLACE;
+    const meta = m => usual(m) ? '' : `<span class="mrow__when">${esc(spanTime(m.start_time, m.end_time))} · ${esc(m.location || Schedule.PLACE)}</span>`;
 
-    return `<div class="bpanel meetgrid">
+    /* the year as one line: every meeting at its true date, held in ink,
+       today ringed, the ones ahead hollow, an open one in red */
+    const days = iso => Math.floor(Date.parse(iso + 'T12:00:00Z') / 864e5);
+    const all = [...past].reverse().concat(upcoming).sort(by(1));
+    const t0 = all.length ? days(all[0].meeting_date) : days(today);
+    const tN = Math.max(t0 + 1, all.length ? days(all[all.length - 1].meeting_date) : t0 + 1, days(today));
+    const pos = iso => Math.min(98.5, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
+    const yearline = `<div class="yline yline--club" aria-hidden="true" style="--now:${pos(today)}%"><i class="yline__rule"></i><i class="yline__ahead"></i>${
+      all.map(m => `<i class="yt yt--${m.state === 'OPEN' && !m.left ? 'open' : m.meeting_date === today ? 'today' : ahead(m) ? 'up' : 'held'}" style="left:${pos(m.meeting_date)}%"></i>`).join('')}</div>`;
+
+    /* one entry of the minute book; today's is the fold */
+    const row = (m, fold = false) => {
+      const state = String(m.state || '').toLowerCase();
+      const word = m.left ? 'Left open' : ({ open:'Open', ended:'Ended', today:'Not opened' }[state] || '');
+      const n = count(m);
+      const isAhead = ahead(m);
+      return `<li class="mrow mrow--${state}${fold ? ' mrow--fold' : ''}${m.left ? ' mrow--left' : ''}"><button class="mrow__go" type="button" data-bmeeting="${esc(m.id)}">
+        <span class="mrow__gm"><span>GM</span> <b>${pad(m.meeting_number)}</b></span>
+        <span class="mrow__day">${esc(fold || isAhead ? fmtDate(m.meeting_date) : fmtDay(m.meeting_date))}</span>
+        ${meta(m)}
+        ${word ? `<span class="mrow__state">${word}</span>` : ''}
+        ${n || (!isAhead && !fold) ? `<span class="mrow__n"><b>${n}</b><span>checked in</span></span>` : ''}
+      </button></li>`;
+    };
+    const todays = upcoming.filter(m => m.meeting_date === today);
+    const later = upcoming.filter(m => m.meeting_date !== today);
+    /* the blank line the next meeting is written on */
+    const nextNo = nextMeetingNumber(list);
+    const blank = `<li class="mrow mrow--blank">${formOpen ? this.createForm()
+      : `<button class="mrow__go mrow__new" type="button" data-mform aria-label="Schedule a meeting">
+          <span class="mrow__gm"><span>GM</span> <b>${nextNo ? pad(nextNo) : '—'}</b></span>
+          <span class="mrow__line" aria-hidden="true"></span>
+          <span class="mrow__sched">Schedule</span>
+        </button>`}</li>`;
+    const held = past.reduce((n, m) => n + count(m), 0);
+
+    return `<div class="bpanel minutes">
       ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
+      ${yearline}
 
-      <section class="meetgrid__up meetpanel">
-        ${band('Upcoming', formOpen ? '' : '<button class="link meetband__act" type="button" data-mform>Schedule a meeting</button>')}
-        ${formOpen ? this.createForm() : ''}
-        ${upcoming.length
-          ? `<ul class="blist blist--meet">${upcoming.map(m => this.meetingRow(m)).join('')}</ul>`
-          : this.empty('No upcoming meetings')}
+      <section class="minutes__ahead" aria-label="Upcoming">
+        <h2 class="minutes__lab">Ahead</h2>
+        <ul class="blist blist--meet minutes__list">${blank}${[...later].reverse().map(m => row(m)).join('')}</ul>
       </section>
 
-      <section class="meetgrid__held meetpanel meetpanel--held">
-        ${band('Held', past.length ? `<span class="meetband__n">${past.length} ${past.length === 1 ? 'meeting' : 'meetings'} / ${
-          past.reduce((n, m) => n + (Number(m.attendance_count) || 0), 0)} check-ins</span>` : '')}
-        ${past.length ? this.byMonth(past).map(g => `
-          <h3 class="ledger__month"><span class="ledger__mname">${esc(onClock(`${g.key}-01`, { month:'long' }))}</span>
-            <span class="ledger__mcount">${g.rows.reduce((n, m) => n + (Number(m.attendance_count) || 0), 0)} checked in</span></h3>
-          <ul class="blist blist--meet">${g.rows.map(m => this.meetingRow(m)).join('')}</ul>`).join('')
-          : this.empty('No meetings held yet')}
+      ${todays.length ? `<ul class="blist minutes__fold" aria-label="Today">${todays.map(m => row(m, true)).join('')}</ul>` : ''}
+
+      <section class="minutes__held" aria-label="Held">
+        <h2 class="minutes__lab">Held</h2>
+        <ul class="blist blist--meet minutes__list">${this.byMonth(past).map(g => `
+          <li class="mrow__month" aria-hidden="true"><span class="mrow__mname">${esc(onClock(`${g.key}-01`, { month:'long' }))}</span>
+            <span class="mrow__mtotal">${g.rows.reduce((n, m) => n + count(m), 0)} checked in</span></li>
+          ${g.rows.map(m => row(m)).join('')}`).join('')}</ul>
+        ${past.length ? `<p class="minutes__foot">${past.length} ${past.length === 1 ? 'meeting' : 'meetings'} · ${held} check-ins</p>` : ''}
       </section>
     </div>`;
   },
@@ -433,7 +560,7 @@ const BoardUI = {
     const total = Number(m.stamps) || d.attendance.length;
     return `<div class="panel bpanel bdet">
       <div class="bdet__head">
-      <button class="link bback" data-bback>${this.backLabel()}</button>
+      <p class="crumb"><button class="bback" type="button" data-bback>${this.backLabel()}</button><span class="crumb__at">${esc(m.username)}</span></p>
 
       <div class="bwho">
         <p class="bwho__lab">Member${m.created_at ? ` since ${esc(onClock(m.created_at, { month:'long', year:'numeric' }))}` : ''}</p>
@@ -498,7 +625,7 @@ const BoardUI = {
     const today = String(m.meeting_date) === Schedule.today();
     return `<div class="panel bpanel bdet">
       <div class="bdet__head">
-      <button class="link bback" data-bback>${this.backLabel()}</button>
+      <p class="crumb"><button class="bback" type="button" data-bback>${this.backLabel()}</button><span class="crumb__at">GM ${pad(m.meeting_number)}</span></p>
 
       <div class="bmeet">
         <p class="bwho__lab">General meeting</p>
@@ -591,21 +718,19 @@ const BoardUI = {
     const sel = open || todays.find(m => m.id === boardPicked)
       || todays.find(m => meetingPhase(m, today) !== 'ENDED') || todays[todays.length - 1] || null;
     boardMeeting = sel ? sel.id : null;
+    const next = list.filter(m => String(m.meeting_date) > today).sort(meetingOrder(1))[0] || null;
+    const when = m => `${esc(fmtDate(m.meeting_date))} · ${esc(spanTime(m.start_time, m.end_time))} · ${esc(m.location || Schedule.PLACE)}`;
+    const nextLine = next ? `<button class="desk__next" type="button" data-bmeeting="${esc(next.id)}">
+        <span class="desk__nextlab">Next</span><b>GM ${pad(next.meeting_number)}</b><span class="desk__nextwhen">${when(next)}</span>
+      </button>` : '';
 
+    /* no meeting today: the date is the anchor, the next meeting the line under it */
     if (!sel){
-      const next = list.filter(m => String(m.meeting_date) > today).sort(meetingOrder(1))[0];
       return `<div class="bpanel bidle">
         <p class="bidle__day">${esc(fmtDate(today))}</p>
         <p class="bidle__word">No meeting today</p>
-        ${next ? `<div class="tkt tkt--quiet bidle__next">
-          <span class="tkt__stub"><span class="tkt__gm">GM</span> <b class="tkt__no">${pad(next.meeting_number)}</b></span>
-          <span class="tkt__body">
-            <span class="tkt__kick">Next</span>
-            <span class="tkt__day">${esc(fmtDate(next.meeting_date))}</span>
-            <span class="tkt__meta">${esc(spanTime(next.start_time, next.end_time))} / ${esc(next.location || Schedule.PLACE)}</span>
-          </span>
-        </div>` : ''}
-        <button class="link" type="button" data-btab="meetings" data-mnew>Schedule a meeting</button>
+        ${nextLine}
+        <button class="cmd cmd--quiet" type="button" data-btab="meetings" data-mnew>Schedule a meeting</button>
       </div>`;
     }
 
@@ -616,41 +741,43 @@ const BoardUI = {
     const held = !isOpen && Number(sel.attendance_count) > 0 ? Number(sel.attendance_count) : 0;
     /* a check-in left open on another day says so */
     const stale = isOpen && sel.meeting_date !== today;
+    const ended = !isOpen && meetingPhase(sel, today) === 'ENDED';
+    const kind = stale ? 'stale' : isOpen ? 'open' : ended ? 'ended' : 'closed';
+    const word = stale ? 'Left open' : isOpen ? 'Open' : ended ? 'Ended' : 'Not opened';
 
-    /* a live code stays at full strength while the stage is read again */
-    return `<div class="bpanel${isOpen && !stale ? ' bpanel--live' : ''}">
-      ${!open && todays.length > 1 ? `<div class="gmtabs" role="group" aria-label="Today's meetings">
-        ${todays.map(o => `<button class="gmtab ${o.id === sel.id ? 'gmtab--on' : ''}" type="button"
-          aria-pressed="${o.id === sel.id}"
-          data-bpick="${esc(o.id)}">GM ${pad(o.meeting_number)}</button>`).join('')}
+    /* the desk: the meeting's number and its state on one line, the plate,
+       the count as the largest figure after the code, and the commands as
+       typeset lines. A live code stays at full strength while the desk is
+       read again. */
+    return `<div class="bpanel desk desk--${kind}${isOpen && !stale ? ' bpanel--live' : ''}">
+      ${!open && todays.length > 1 ? `<div class="gmpick" role="group" aria-label="Today's meetings">
+        ${todays.map(o => `<button class="gmpick__tab${o.id === sel.id ? ' gmpick__tab--on' : ''}" type="button"
+          aria-pressed="${o.id === sel.id}" data-bpick="${esc(o.id)}">GM ${pad(o.meeting_number)}</button>`).join('')}
       </div>` : ''}
 
       <section class="proj ${isOpen && !stale ? 'proj--live' : ''}" id="proj">
         <div class="proj__meet">
-          <p class="proj__no">GM ${pad(sel.meeting_number)}</p>
-          <p class="proj__when">${esc(fmtDay(sel.meeting_date))}${meetingAway(sel)}</p>
+          <p class="proj__no"><span>GM</span> <b>${pad(sel.meeting_number)}</b></p>
+          <p class="proj__when">${stale ? `Opened ${esc(fmtDate(sel.meeting_date))}` : when(sel)}</p>
         </div>
-        ${stale ? `<p class="proj__word">Left open</p>
+        <p class="proj__word">${word}</p>
+        ${isOpen && !stale ? `<div class="proj__plate"><div class="qrpanel__code" id="qrBox"></div></div>` : ''}
+        ${isOpen && !stale
+          ? `<p class="proj__count" aria-live="polite" aria-atomic="true"><b id="attCount">${Number.isFinite(sel.attendance_count) ? sel.attendance_count : ''}</b><span>checked in</span></p>`
+          : held ? `<p class="proj__count proj__count--held"><b>${held}</b><span>${ended ? 'checked in' : 'already checked in'}</span></p>` : ''}
         <div class="proj__ctls">
-          <button class="proj__ctl proj__ctl--go" type="button" data-bend="${id}" data-busy="Closing">Close check-in</button>
-        </div>` : isOpen ? `<p class="proj__word">Open</p>
-        <p class="proj__count" aria-live="polite" aria-atomic="true"><b id="attCount">${Number.isFinite(sel.attendance_count) ? sel.attendance_count : ''}</b><span>checked in</span></p>
-        <div class="proj__ctls">
-          <button class="proj__ctl proj__ctl--go" type="button" data-bfull>Full screen</button>
+          ${stale
+            ? `<button class="proj__ctl proj__ctl--cut proj__end" type="button" data-bend="${id}" data-busy="Closing">Close check-in</button>`
+            : isOpen
+            ? `<button class="proj__ctl proj__ctl--go" type="button" data-bfull>Project</button>
+               <button class="proj__ctl proj__ctl--quiet proj__hand" type="button" data-bmeeting="${id}" data-bhandfocus>Add by hand</button>
+               <button class="proj__ctl proj__ctl--cut proj__end" type="button" data-bend="${id}">Close check-in</button>`
+            : `<button class="proj__ctl proj__ctl--go" type="button" data-bstart="${id}" data-busy="Opening">${ended ? 'Reopen check-in' : 'Open check-in'}</button>
+               <button class="proj__ctl proj__ctl--quiet proj__hand" type="button" data-bmeeting="${id}" data-bhandfocus>${held ? 'Attendees and add by hand' : 'Add by hand'}</button>`}
         </div>
-        <div class="proj__side">
-          <button class="link proj__end" type="button" data-bend="${id}">Close check-in</button>
-          <button class="link proj__hand" type="button" data-bmeeting="${id}" data-bhandfocus>Add by hand</button>
-        </div>
-        <div class="proj__plate"><div class="qrpanel__code" id="qrBox"></div></div>` : `${held ? `
-        <p class="proj__count proj__count--held"><b>${held}</b><span>checked in</span></p>` : ''}
-        <div class="proj__ctls">
-          <button class="proj__ctl${held ? '' : ' proj__ctl--go'}" type="button" data-bstart="${id}" data-busy="Opening">Open check-in</button>
-        </div>
-        <div class="proj__side">
-          <button class="link proj__hand" type="button" data-bmeeting="${id}" data-bhandfocus>${held ? 'Attendees and add by hand' : 'Add by hand'}</button>
-        </div>`}
+        ${isOpen && !stale ? `<span class="proj__seal" aria-hidden="true">${brandSeal('kci')}</span>` : ''}
       </section>
+      ${!isOpen ? nextLine : ''}
     </div>`;
   },
 };

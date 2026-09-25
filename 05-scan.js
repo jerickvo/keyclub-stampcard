@@ -84,7 +84,10 @@ function paintAttendanceCount(meetingId){
     catch (_) { return; }
     const node = el();
     if (!node) return clearInterval(countTimer);
-    if (node.textContent !== text) node.textContent = text;
+    if (node.textContent !== text){
+      node.textContent = text;
+      if (!Motion.off && window.animate) animate(node, { scale:[1.3, 1], duration:240, ease:STEP(3) });
+    }
     if (open === false){ clearInterval(countTimer); boardStamp = true; loadBoard(); }
   };
   pull();
@@ -97,16 +100,18 @@ function paintAttendanceCount(meetingId){
 function scanStanding(){
   const open = Store.openMeeting();
   const done = open && Store.attended(open.id);
-  if (Store.failed || Scanner.unsure === Store.applied) return { lab:'Record not loaded', at:'Check your connection' };
+  if (Store.failed || Scanner.unsure === Store.applied) return { lab:'Record not loaded', at:'Check your connection', no:null };
   return !open || done
-    ? { lab:'Check-in', at:open ? `GM ${pad(open.no)} stamped` : 'Not open' }
-    : { lab:'Checking in to', at:`GM ${pad(open.no)}` };
+    ? { lab:'Check-in', at:open ? `GM ${pad(open.no)} stamped` : 'Not open', no:null }
+    : { lab:'Checking in to', at:`GM ${pad(open.no)}`, no:pad(open.no) };
 }
+/* the meeting's number is the page's figure: GM small over the numeral */
+const standingAt = s => `<span class="standing__at">${s.no ? `<i>GM</i><b>${s.no}</b>` : s.at}</span>`;
 function paintScanStanding(){
   const s = scanStanding();
   const lab = $('.standing__lab'), at = $('.standing__at');
   if (lab) lab.textContent = s.lab;
-  if (at) at.innerHTML = s.at;
+  if (at) at.outerHTML = standingAt(s);
 }
 
 /* The decode is the one thing on this page heavy enough to drop frames:
@@ -488,9 +493,10 @@ const Scanner = {
        camera can be offered again without a reload. */
     viewer.querySelector('.stall')?.remove();
     viewer.insertAdjacentHTML('beforeend', `<div class="stall">
+      <p class="stall__kick">Camera</p>
       <h2 class="stall__title">${copy.title}</h2>
       <p class="stall__note">${copy.body}</p>
-      ${copy.retry ? `<button class="link stall__retry" type="button" data-scan-retry>Try again</button>` : ''}
+      ${copy.retry ? `<button class="cmd stall__retry" type="button" data-scan-retry>Try again</button>` : ''}
     </div>`);
 
     viewer.classList.add('viewer--stalled');
@@ -601,11 +607,12 @@ const Landing = {
     this.active = false;
     this.scene = null;
 
+    /* the seal travels from the sheet into its seat on the card */
     scene.lift(() => {
       if (seq !== this.seq) return;
       if (cell && document.body.contains(cell)) FX.stampLand(cell);
       if (!fresh) Store.hydrate({ keep:true });
-    });
+    }, cell && document.body.contains(cell) ? cell : null);
   },
 };
 
