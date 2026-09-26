@@ -183,7 +183,7 @@ const BoardUI = {
         <h2 class="tools__mark">Current meeting</h2>
         <div class="tools__head">
           ${now ? `<p class="tools__gm"><span>GM</span><b>${pad(now.meeting_number)}</b></p>` : ''}
-          <p class="tools__state">${phase === 'open' ? 'Check-in open' : phase === 'ended' ? 'Ended' : phase === 'today' ? 'Check-in not open' : 'No meeting today'}</p>
+          <p class="tools__state">${phase === 'open' ? 'Check-in open' : phase === 'ended' ? 'Ended' : phase === 'today' ? (count ? 'Check-in closed' : 'Check-in not open') : 'No meeting today'}</p>
         </div>
         ${now ? `<p class="tools__when">${now.meeting_date === today ? hours(now) : when(now)}</p>` : ''}
         ${now && (phase === 'open' || count) ? `<p class="tools__count"><b${phase === 'open' ? ' id="attCount"' : ''}>${count}</b><span>checked in</span></p>` : ''}
@@ -367,16 +367,6 @@ const BoardUI = {
     const usual = m => spanTime(m.start_time, m.end_time) === spanTime('12:40 PM', '1:30 PM') && (m.location || Schedule.PLACE) === Schedule.PLACE;
     const meta = m => usual(m) ? '' : `<span class="mrow__when">${esc(spanTime(m.start_time, m.end_time))} · ${esc(m.location || Schedule.PLACE)}</span>`;
 
-    /* the year as one line: every meeting at its true date, held in ink,
-       today ringed, the ones ahead hollow, an open one in red */
-    const days = iso => Math.floor(Date.parse(iso + 'T12:00:00Z') / 864e5);
-    const all = [...past].reverse().concat(upcoming).sort(by(1));
-    const t0 = all.length ? days(all[0].meeting_date) : days(today);
-    const tN = Math.max(t0 + 1, all.length ? days(all[all.length - 1].meeting_date) : t0 + 1, days(today));
-    const pos = iso => Math.min(98.5, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
-    const yearline = `<div class="yline yline--club" aria-hidden="true" style="--now:${pos(today)}%"><i class="yline__rule"></i><i class="yline__ahead"></i>${
-      all.map(m => `<i class="yt yt--${m.state === 'OPEN' && !m.left ? 'open' : m.meeting_date === today ? 'today' : ahead(m) ? 'up' : 'held'}" style="left:${pos(m.meeting_date)}%"></i>`).join('')}</div>`;
-
     /* one entry of the minute book; today's is the fold */
     const row = (m, fold = false) => {
       const state = String(m.state || '').toLowerCase();
@@ -405,7 +395,6 @@ const BoardUI = {
 
     return `<div class="bpanel minutes">
       ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
-      ${yearline}
 
       <section class="minutes__ahead" aria-label="Upcoming">
         <h2 class="minutes__lab">Ahead</h2>
@@ -615,12 +604,11 @@ const BoardUI = {
     const today = String(m.meeting_date) === Schedule.today();
     return `<div class="panel bpanel bdet">
       <div class="bdet__head">
-      <p class="crumb"><button class="bback" type="button" data-bback>${this.backLabel()}</button><span class="crumb__at">GM ${pad(m.meeting_number)}</span></p>
+      <p class="crumb"><button class="bback" type="button" data-bback>${this.backLabel()}</button></p>
 
       <div class="bmeet">
-        <p class="bwho__lab">General meeting</p>
         <h2 class="bdetail__name">GM ${pad(m.meeting_number)}</h2>
-        <p class="bmeet__when">${esc(fmtDate(m.meeting_date))} / ${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || Schedule.PLACE)}${m.check_in_open ? ' / <b>Check-in open</b>' : ''}</p>
+        <p class="bmeet__when">${esc(fmtDate(m.meeting_date))} / ${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || Schedule.PLACE)}${m.check_in_open ? '<b>Check-in open</b>' : ''}</p>
       </div>
       </div>
 
@@ -733,7 +721,7 @@ const BoardUI = {
     const stale = isOpen && sel.meeting_date !== today;
     const ended = !isOpen && meetingPhase(sel, today) === 'ENDED';
     const kind = stale ? 'stale' : isOpen ? 'open' : ended ? 'ended' : 'closed';
-    const word = stale ? 'Left open' : isOpen ? 'Check-in open' : ended ? 'Ended' : 'Check-in not open';
+    const word = stale ? 'Left open' : isOpen ? 'Check-in open' : ended ? 'Ended' : held ? 'Check-in closed' : 'Check-in not open';
 
     /* the desk: the meeting's number and its state on one line, the plate,
        the count as the largest figure after the code, and the commands as
@@ -754,7 +742,7 @@ const BoardUI = {
         ${isOpen && !stale ? `<div class="proj__plate"><div class="qrpanel__code" id="qrBox"></div></div>` : ''}
         ${isOpen && !stale
           ? `<p class="proj__count" aria-live="polite" aria-atomic="true"><b id="attCount">${Number.isFinite(sel.attendance_count) ? sel.attendance_count : ''}</b><span>checked in</span></p>`
-          : held ? `<p class="proj__count proj__count--held"><b>${held}</b><span>${ended ? 'checked in' : 'already checked in'}</span></p>` : ''}
+          : held ? `<p class="proj__count proj__count--held"><b>${held}</b><span>checked in</span></p>` : ''}
         <div class="proj__ctls">
           ${stale
             ? `<button class="proj__ctl proj__ctl--cut proj__end" type="button" data-bend="${id}" data-busy="Closing">Close check-in</button>`

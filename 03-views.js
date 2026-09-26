@@ -664,7 +664,7 @@ const Views = {
   /* Check-in ends with the account block on phones, the way Member
      does; from 1024px up the rail's foot carries it instead. */
   board(){     BoardUI.tab = 'tools';    return this.boardSpread('Club Tools', C.account()); },
-  bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Check-in', C.account()); },
+  bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Check-in'); },
   bmeet(){     BoardUI.tab = 'meetings'; return this.boardSpread('Meetings'); },
   bmembers(){  BoardUI.tab = 'progress'; return this.boardSpread('Members'); },
 

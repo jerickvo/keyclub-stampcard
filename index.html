@@ -1582,25 +1582,6 @@ html{font-synthesis:none}
   padding-inline:0;margin-inline:0}
 .proj:not(.proj--live) .proj__when{color:var(--ink-2)}
 .proj:not(.proj--live) .proj__ctl--go{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-/* below 900 the stage is one column: the meeting and OPEN on one line,
-   the code, then the count and Project, and Close on a line of its own */
-@media(max-width:899px){
-  .proj{grid-template-columns:minmax(0,1fr) auto;align-items:center}
-  .proj__meet{grid-column:1;grid-row:1}
-  .proj__word{grid-column:2;grid-row:1;align-self:start;justify-self:end;
-    font-size:clamp(28px,6vw,48px)}
-  .proj__plate{grid-column:1/-1;grid-row:2}
-  .proj__count{grid-column:1/-1;grid-row:3;justify-self:start}
-  .proj__ctls{grid-column:1/-1;grid-row:3;justify-self:end}
-  .proj__side{grid-column:1/-1;grid-row:4;justify-self:end}
-  .proj:not(.proj--live) .proj__ctls{grid-row:2;justify-self:start}
-}
-@media(max-width:559px){
-  .proj__ctls{grid-row:4;justify-self:stretch}
-  .proj__ctl{flex:1 1 auto}
-  .proj__side{grid-row:5}
-}
-
 .proj__count{display:flex;align-items:baseline;gap:var(--sp-row);margin:0}
 .proj__count b{font-weight:400;font-family:var(--f-head);line-height:.9;
   font-size:clamp(48px,5.4vw,84px)}
@@ -1645,25 +1626,6 @@ html{font-synthesis:none}
 .proj__plate .qrpanel__code{width:min(78vw,calc(100dvh - 480px),640px);min-width:220px;
   max-width:none;aspect-ratio:1;margin:0;
   box-sizing:border-box;border:0;background:#fff;padding:0}
-
-@media(min-width:900px){
-  .proj{grid-template-columns:auto minmax(16rem,30rem);justify-content:start;
-    grid-template-rows:auto minmax(0,1fr) auto auto;
-    column-gap:clamp(24px,3.4vw,56px);row-gap:clamp(14px,2vw,24px);
-    margin-inline:calc(var(--gutter) * -1);border-inline:0;
-    padding-inline:var(--gutter)}
-  .proj__meet{grid-area:1/1}
-  .proj__word{grid-area:1/2;justify-self:end;align-self:center}
-  .proj__plate{grid-area:2/1/5/2;justify-self:start;align-self:start}
-  .proj__count{grid-area:2/2;align-self:start;justify-self:end;
-    flex-direction:column;align-items:flex-end;gap:var(--sp-tight)}
-  .proj__count b{font-size:clamp(88px,10vw,168px)}
-  .proj__count span{font-size:clamp(14px,1.4vw,20px)}
-  .proj__ctls{grid-area:3/2;justify-self:end;align-self:end}
-  .proj__side{grid-area:4/2;justify-self:end}
-  .proj:not(.proj--live) .proj__ctls{grid-area:2/1;justify-self:start;align-self:start}
-  .proj__plate .qrpanel__code{width:min(50vw,calc(100dvh - 350px),640px)}
-}
 
 /* projector mode: the stage over the whole window, read from the back
    of the room: the meeting, OPEN, the code and the count, nothing else;
@@ -1869,7 +1831,7 @@ html{font-synthesis:none}
 .bwho .bdetail__name{margin:0;font-size:clamp(32px,4.4vw,60px);line-height:1}
 .bmeet .bdetail__name{margin:0;padding-bottom:.16em;font:400 clamp(64px,8vw,128px)/.82 var(--f-display);letter-spacing:0}
 .bmeet__when{margin:0;font:400 12.5px/1.4 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
-.bmeet__when b{font-weight:400;color:var(--ink)}
+.bmeet__when b{display:block;margin-top:var(--sp-tight);font-weight:400;color:var(--ink)}
 .bwho__figs{display:flex;flex-wrap:wrap;gap:var(--sp-pad) var(--sp-block);margin:var(--sp-tight) 0 0}
 .bwho__figs > div{display:flex;flex-direction:column-reverse;gap:4px}
 .bwho__figs dt{font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
@@ -2891,8 +2853,10 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .desk--ended .proj__word{color:var(--ink-2)}
 /* the plate: the code at the phone's full width, an ink rule above and below */
 .desk .proj__plate{grid-area:plate;justify-self:stretch;width:auto;max-width:none;min-width:0;
-  margin:var(--sp-pad) calc(var(--cx) * -1) 0;padding:2px 0;background:var(--ink);display:grid;place-items:center}
+  margin:var(--sp-pad) calc(var(--cx) * -1) 0;padding:0;background:#fff;border-block:2px solid var(--ink);display:grid;place-items:center}
 .desk .proj__plate .qrpanel__code{width:100%;max-width:none;min-width:0;aspect-ratio:1;margin:0;border:0;padding:0;background:#fff}
+/* a tablet at the door: the code leaves the count and the controls in view */
+@media(max-width:899px){ .desk .proj__plate .qrpanel__code{width:min(100%,56dvh)} }
 .desk .proj__count{grid-area:count;display:flex;flex-direction:row;align-items:baseline;gap:12px;margin:var(--sp-pad) 0 0;justify-self:start}
 .desk .proj__count b{font:400 clamp(64px,18vw,80px)/.8 var(--f-display);letter-spacing:-.02em;color:var(--ink)}
 .desk .proj__count span{font:400 12px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
@@ -2923,11 +2887,10 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   font:400 13px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
 .gmpick__tab--on{color:var(--ink);border-bottom-color:var(--ink)}
 .gmpick__tab:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
-/* no meeting today: the date is the anchor, the next meeting the line under it */
+/* no meeting today: the date, the state, the next meeting */
 .bidle{display:grid;gap:var(--sp-pad);justify-items:start;padding:0}
-.bidle__day{justify-self:stretch;margin:0;padding-bottom:var(--sp-tight);border-bottom:1px solid var(--ink);
-  font:400 clamp(28px,7vw,36px)/1 var(--f-head);letter-spacing:.02em;text-transform:uppercase;color:var(--ink)}
-.bidle__word{margin:0;font:400 12px/1.5 var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
+.bidle__day{margin:0;padding:0;border:0;font:400 12px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.bidle__word{margin:0;font:400 12px/1.4 var(--f-mono);text-transform:uppercase;letter-spacing:.12em;color:var(--ink)}
 .bidle .desk__next{border-top:0;margin-top:var(--sp-tight)}
 @media(min-width:900px){
   .desk .proj,.desk .proj:not(.proj--live){position:relative;grid-template-columns:minmax(0,58fr) minmax(0,42fr);column-gap:var(--gap);
@@ -2968,34 +2931,30 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .desk .proj--full .proj__count b{font:400 clamp(120px,32vh,420px)/.8 var(--f-display);letter-spacing:-.02em;color:var(--paper)}
 .desk .proj--full .proj__count b:empty::before,.desk .proj--full .proj__count b[data-zero]{color:var(--tone)}
 .desk .proj--full .proj__count span{font:400 4vh/1 var(--f-mono);letter-spacing:.08em;color:var(--tone)}
-.desk .proj--full .proj__ctls{position:absolute;top:2vh;right:2vw;margin:0;display:block;width:auto;max-width:none;opacity:0;transition:opacity 3s ease}
-.desk .proj--full:hover .proj__ctls,.desk .proj--full .proj__ctls:focus-within,.desk .proj--awake .proj__ctls{opacity:1;transition:opacity 120ms}
+.desk .proj--full .proj__ctls{position:absolute;top:2vh;right:2vw;margin:0;display:block;width:auto;max-width:none}
 .desk .proj--full .proj__ctl{display:none}
 .desk .proj--full .proj__ctl--go,.desk .proj--full.proj--live .proj__ctl--go{display:flex;flex-direction:row;gap:.6em;min-height:0;padding:1vh 0;width:auto;
-  font:400 2vh/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--tone);background:none;border:0}
+  font:400 2vh/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);background:none;border:0}
 .desk .proj--full .proj__ctl--go::before{content:'Esc';position:static;inset:auto;width:auto;height:auto;background:none;border:0}
 .desk .proj--full .proj__ctl--go::after{content:none}
 .desk .proj--full .proj__ctl--go:focus-visible{outline:2px solid var(--paper);outline-offset:4px;color:var(--paper)}
 @media(max-aspect-ratio:1/1){
   .desk .proj.proj--full{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr) auto;
-    grid-template-areas:"meet" "word" "plate" "." "count";row-gap:2vh}
+    grid-template-areas:"meet" "word" "plate" "." "count";row-gap:2vh;
+    padding-top:max(5vh,env(safe-area-inset-top,0px));padding-bottom:max(5vh,env(safe-area-inset-bottom,0px))}
   .desk .proj--full .proj__no b{font-size:12vh}
   .desk .proj--full .proj__word{margin-top:0;font-size:5vh}
-  .desk .proj--full .proj__plate{justify-self:center}
-  .desk .proj--full .proj__plate .qrpanel__code{width:min(88vw,50vh)}
-  .desk .proj--full .proj__count b{font-size:clamp(96px,18vh,320px)}
+  .desk .proj--full .proj__plate{justify-self:start}
+  .desk .proj--full .proj__plate .qrpanel__code{width:min(88vw,46vh)}
+  .desk .proj--full .proj__count b{font-size:clamp(96px,14vh,320px)}
 }
-@media(prefers-reduced-motion:reduce){ .desk .proj--full .proj__ctls{transition:none} }
-:root[data-still] .desk .proj--full .proj__ctls{transition:none}
 
-/* ══ Meetings: the minute book. The year as one line at the head, then
-   one chronological ledger — the meetings ahead first, on a blank line
+/* ══ Meetings: the minute book. One chronological ledger — the meetings ahead first, on a blank line
    the next one is written on, today's entry as the fold, the ones held
    under it with the months as running heads ══ */
 .minutes{--cx:calc(var(--gutter) + var(--safe-x));display:block;padding:0;border:0;background:none}
-.minutes .yline{margin:0 calc(var(--cx) * -1) var(--sp-block) 0;height:32px}
 .yt--held{width:var(--edge-thin);height:10px;background:var(--ink)}
-.minutes__lab{margin:0 0 4px;padding:0 0 var(--sp-tight);border-bottom:1px solid var(--ink);
+.minutes__lab{margin:0 0 4px;padding:0;border:0;
   font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .minutes__ahead,.minutes__held{margin:0;padding:0;border:0;background:none}
 .minutes__held{margin-top:var(--sp-block)}
@@ -3004,7 +2963,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .mrow__go{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"gm day n" "gm when n" "gm state n";
   align-items:baseline;column-gap:var(--sp-pad);row-gap:2px;width:100%;min-height:52px;margin:0;padding:var(--sp-row) 0;
   border:0;background:none;color:var(--ink);text-align:left;font:inherit;letter-spacing:inherit;text-transform:none;cursor:pointer}
-.mrow__gm{grid-area:gm;display:flex;align-items:baseline;gap:.35em;align-self:start;
+.mrow__gm{grid-area:gm;display:flex;align-items:baseline;gap:.35em;
   font:400 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .mrow__gm b{font:400 24px/1 var(--f-mono);letter-spacing:0;color:var(--ink);min-width:2.2ch}
 .mrow__day{grid-area:day;font:400 14px/1.3 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
@@ -3062,6 +3021,8 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .minutes .bform .input::-webkit-outer-spin-button,.minutes .bform .input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .minutes .bform .input::-webkit-calendar-picker-indicator{opacity:0;position:absolute;inset:0;width:100%;height:100%;cursor:pointer}
 .minutes .bform .field{position:relative}
+/* the field's own ink rule shows focus; no box around it */
+.minutes .bform .input:focus-within,.hand .input:focus-within{outline:0}
 .minutes .bform #mErr{margin:var(--sp-pad) 0 0}
 .minutes .bform__row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-pad) var(--sp-block);padding:var(--sp-pad) 0 0}
 @media(min-width:560px){
@@ -3070,7 +3031,6 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 @media(min-width:1024px){
   .minutes{--mc:16ch;display:grid;grid-template-columns:var(--mc) minmax(0,72ch);column-gap:var(--sp-block);align-items:start;position:relative}
   .minutes > *{grid-column:2}
-  .minutes .yline{grid-column:2;margin-right:0}
   .minutes::before{content:'';position:absolute;top:0;bottom:0;left:calc(var(--mc) + var(--sp-block) / 2);width:1px;background:var(--ink)}
   .minutes__fold{grid-column:1/-1;margin:var(--sp-pad) 0}
   .minutes__fold .mrow__go{padding-right:0;grid-template-columns:var(--mc) auto minmax(0,1fr) auto;grid-template-areas:". gm day n" ". gm state n" ". when when when"}
@@ -3179,7 +3139,8 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .brow--reward .brow__mid b{font:400 13px/1.3 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
 .brow--reward .brow__mid .muted{font:400 11px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
 /* add by hand: a ruled blank line at the head of the register */
-.hand{margin:var(--sp-block) 0 0;padding:0;border:0;background:none}
+.hand{margin:0;padding:0;border:0;background:none}
+.hand .bsec{border-bottom:0;padding-bottom:0}
 .hand .field{padding:0}
 .hand .input{border-bottom:var(--edge-thin) solid var(--ink)}
 .hand .input::placeholder{color:var(--tone);text-transform:uppercase;letter-spacing:.08em;font-size:12px}
@@ -18158,7 +18119,7 @@ const Views = {
   /* Check-in ends with the account block on phones, the way Member
      does; from 1024px up the rail's foot carries it instead. */
   board(){     BoardUI.tab = 'tools';    return this.boardSpread('Club Tools', C.account()); },
-  bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Check-in', C.account()); },
+  bcheckin(){  BoardUI.tab = 'session';  return this.boardSpread('Check-in'); },
   bmeet(){     BoardUI.tab = 'meetings'; return this.boardSpread('Meetings'); },
   bmembers(){  BoardUI.tab = 'progress'; return this.boardSpread('Members'); },
 
@@ -18535,7 +18496,7 @@ const BoardUI = {
         <h2 class="tools__mark">Current meeting</h2>
         <div class="tools__head">
           ${now ? `<p class="tools__gm"><span>GM</span><b>${pad(now.meeting_number)}</b></p>` : ''}
-          <p class="tools__state">${phase === 'open' ? 'Check-in open' : phase === 'ended' ? 'Ended' : phase === 'today' ? 'Check-in not open' : 'No meeting today'}</p>
+          <p class="tools__state">${phase === 'open' ? 'Check-in open' : phase === 'ended' ? 'Ended' : phase === 'today' ? (count ? 'Check-in closed' : 'Check-in not open') : 'No meeting today'}</p>
         </div>
         ${now ? `<p class="tools__when">${now.meeting_date === today ? hours(now) : when(now)}</p>` : ''}
         ${now && (phase === 'open' || count) ? `<p class="tools__count"><b${phase === 'open' ? ' id="attCount"' : ''}>${count}</b><span>checked in</span></p>` : ''}
@@ -18719,16 +18680,6 @@ const BoardUI = {
     const usual = m => spanTime(m.start_time, m.end_time) === spanTime('12:40 PM', '1:30 PM') && (m.location || Schedule.PLACE) === Schedule.PLACE;
     const meta = m => usual(m) ? '' : `<span class="mrow__when">${esc(spanTime(m.start_time, m.end_time))} · ${esc(m.location || Schedule.PLACE)}</span>`;
 
-    /* the year as one line: every meeting at its true date, held in ink,
-       today ringed, the ones ahead hollow, an open one in red */
-    const days = iso => Math.floor(Date.parse(iso + 'T12:00:00Z') / 864e5);
-    const all = [...past].reverse().concat(upcoming).sort(by(1));
-    const t0 = all.length ? days(all[0].meeting_date) : days(today);
-    const tN = Math.max(t0 + 1, all.length ? days(all[all.length - 1].meeting_date) : t0 + 1, days(today));
-    const pos = iso => Math.min(98.5, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
-    const yearline = `<div class="yline yline--club" aria-hidden="true" style="--now:${pos(today)}%"><i class="yline__rule"></i><i class="yline__ahead"></i>${
-      all.map(m => `<i class="yt yt--${m.state === 'OPEN' && !m.left ? 'open' : m.meeting_date === today ? 'today' : ahead(m) ? 'up' : 'held'}" style="left:${pos(m.meeting_date)}%"></i>`).join('')}</div>`;
-
     /* one entry of the minute book; today's is the fold */
     const row = (m, fold = false) => {
       const state = String(m.state || '').toLowerCase();
@@ -18757,7 +18708,6 @@ const BoardUI = {
 
     return `<div class="bpanel minutes">
       ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
-      ${yearline}
 
       <section class="minutes__ahead" aria-label="Upcoming">
         <h2 class="minutes__lab">Ahead</h2>
@@ -18967,12 +18917,11 @@ const BoardUI = {
     const today = String(m.meeting_date) === Schedule.today();
     return `<div class="panel bpanel bdet">
       <div class="bdet__head">
-      <p class="crumb"><button class="bback" type="button" data-bback>${this.backLabel()}</button><span class="crumb__at">GM ${pad(m.meeting_number)}</span></p>
+      <p class="crumb"><button class="bback" type="button" data-bback>${this.backLabel()}</button></p>
 
       <div class="bmeet">
-        <p class="bwho__lab">General meeting</p>
         <h2 class="bdetail__name">GM ${pad(m.meeting_number)}</h2>
-        <p class="bmeet__when">${esc(fmtDate(m.meeting_date))} / ${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || Schedule.PLACE)}${m.check_in_open ? ' / <b>Check-in open</b>' : ''}</p>
+        <p class="bmeet__when">${esc(fmtDate(m.meeting_date))} / ${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || Schedule.PLACE)}${m.check_in_open ? '<b>Check-in open</b>' : ''}</p>
       </div>
       </div>
 
@@ -19085,7 +19034,7 @@ const BoardUI = {
     const stale = isOpen && sel.meeting_date !== today;
     const ended = !isOpen && meetingPhase(sel, today) === 'ENDED';
     const kind = stale ? 'stale' : isOpen ? 'open' : ended ? 'ended' : 'closed';
-    const word = stale ? 'Left open' : isOpen ? 'Check-in open' : ended ? 'Ended' : 'Check-in not open';
+    const word = stale ? 'Left open' : isOpen ? 'Check-in open' : ended ? 'Ended' : held ? 'Check-in closed' : 'Check-in not open';
 
     /* the desk: the meeting's number and its state on one line, the plate,
        the count as the largest figure after the code, and the commands as
@@ -19106,7 +19055,7 @@ const BoardUI = {
         ${isOpen && !stale ? `<div class="proj__plate"><div class="qrpanel__code" id="qrBox"></div></div>` : ''}
         ${isOpen && !stale
           ? `<p class="proj__count" aria-live="polite" aria-atomic="true"><b id="attCount">${Number.isFinite(sel.attendance_count) ? sel.attendance_count : ''}</b><span>checked in</span></p>`
-          : held ? `<p class="proj__count proj__count--held"><b>${held}</b><span>${ended ? 'checked in' : 'already checked in'}</span></p>` : ''}
+          : held ? `<p class="proj__count proj__count--held"><b>${held}</b><span>checked in</span></p>` : ''}
         <div class="proj__ctls">
           ${stale
             ? `<button class="proj__ctl proj__ctl--cut proj__end" type="button" data-bend="${id}" data-busy="Closing">Close check-in</button>`
