@@ -164,10 +164,12 @@ const BoardUI = {
     const owed = pz ? (pz.owed || []).length : null;
     const claimed = pz ? (pz.owed || []).filter(o => o.claimed_at).length : 0;
     const when = m => `${esc(fmtDate(m.meeting_date))} · ${esc(spanTime(m.start_time, m.end_time))} · ${esc(m.location || Schedule.PLACE)}`;
+    /* the current meeting is today's: the running head already says the date */
+    const hours = m => `${esc(spanTime(m.start_time, m.end_time))} · ${esc(m.location || Schedule.PLACE)}`;
 
     /* what is open: each a line that goes where it is done */
     const tasks = [];
-    if (owed !== null && owed) tasks.push({ attr:'data-btab="progress"', fig:String(owed), text:`${owed === 1 ? 'prize' : 'prizes'} to hand over${claimed ? ` · ${claimed} asked for` : ''}` });
+    if (owed !== null && owed) tasks.push({ attr:'data-btab="progress"', fig:String(owed), text:`${owed === 1 ? 'prize' : 'prizes'} to hand over${claimed ? `, ${claimed} asked for` : ''}` });
     if (phase === 'today') tasks.push({ attr:'data-btab="session"', fig:`GM ${pad(now.meeting_number)}`, text:'check-in not yet opened' });
     if (!next) tasks.push({ attr:'data-btab="meetings" data-mnew', fig:'—', text:'nothing scheduled ahead' });
 
@@ -182,7 +184,6 @@ const BoardUI = {
     const figs = !c ? [] : [
       [Number(c.total_members) || 0, 'members'], [Number(c.total_seals) || 0, 'stamps'], [Number(c.meetings_held) || 0, 'meetings'],
       [c.average_attendance == null ? '–' : esc(String(c.average_attendance)), 'at a meeting'],
-      ...REWARD_TIERS.map(t => [Number((c.milestones || {})['m' + t.required]) || 0, `at ${esc(prizeName(t))}`]),
     ];
 
     return `<div class="bpanel tools tools--${phase}${phase === 'open' ? ' bpanel--live' : ''}">
@@ -192,9 +193,9 @@ const BoardUI = {
         <h2 class="tools__mark">Current meeting</h2>
         <div class="tools__head">
           ${now ? `<p class="tools__gm"><span>GM</span><b>${pad(now.meeting_number)}</b></p>` : ''}
-          <p class="tools__state">${phase === 'open' ? 'Open' : phase === 'ended' ? 'Ended' : phase === 'today' ? 'Not opened' : 'No meeting'}</p>
+          <p class="tools__state">${phase === 'open' ? 'Check-in open' : phase === 'ended' ? 'Ended' : phase === 'today' ? 'Check-in not open' : 'No meeting today'}</p>
         </div>
-        ${now ? `<p class="tools__when">${when(now)}</p>` : ''}
+        ${now ? `<p class="tools__when">${now.meeting_date === today ? hours(now) : when(now)}</p>` : ''}
         ${now && (phase === 'open' || count) ? `<p class="tools__count"><b${phase === 'open' ? ' id="attCount"' : ''}>${count}</b><span>checked in</span></p>` : ''}
         <div class="tools__acts">
           ${now
@@ -219,8 +220,8 @@ const BoardUI = {
       <section class="tools__tasks" aria-label="Open tasks">
         <h2 class="tools__mark">Open tasks</h2>
         <ol class="tools__list">
-          ${tasks.length ? tasks.map((t, i) => `<li><button class="tools__task" type="button" ${t.attr}><i>${pad(i + 1)}</i><b>${t.fig}</b><span>${t.text}</span></button></li>`).join('')
-            : '<li class="tools__nothing"><i>—</i></li>'}
+          ${tasks.length ? tasks.map(t => `<li><button class="tools__task" type="button" ${t.attr}><b>${t.fig}</b><span>${t.text}</span></button></li>`).join('')
+            : '<li class="tools__nothing">Nothing open</li>'}
         </ol>
       </section>
 
@@ -743,7 +744,7 @@ const BoardUI = {
     const stale = isOpen && sel.meeting_date !== today;
     const ended = !isOpen && meetingPhase(sel, today) === 'ENDED';
     const kind = stale ? 'stale' : isOpen ? 'open' : ended ? 'ended' : 'closed';
-    const word = stale ? 'Left open' : isOpen ? 'Open' : ended ? 'Ended' : 'Not opened';
+    const word = stale ? 'Left open' : isOpen ? 'Check-in open' : ended ? 'Ended' : 'Check-in not open';
 
     /* the desk: the meeting's number and its state on one line, the plate,
        the count as the largest figure after the code, and the commands as
@@ -775,7 +776,6 @@ const BoardUI = {
             : `<button class="proj__ctl proj__ctl--go" type="button" data-bstart="${id}" data-busy="Opening">${ended ? 'Reopen check-in' : 'Open check-in'}</button>
                <button class="proj__ctl proj__ctl--quiet proj__hand" type="button" data-bmeeting="${id}" data-bhandfocus>${held ? 'Attendees and add by hand' : 'Add by hand'}</button>`}
         </div>
-        ${isOpen && !stale ? `<span class="proj__seal" aria-hidden="true">${brandSeal('kci')}</span>` : ''}
       </section>
       ${!isOpen ? nextLine : ''}
     </div>`;

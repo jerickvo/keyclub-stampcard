@@ -539,14 +539,13 @@ const Views = {
     const total = Store.totalStamps();
     const tiers = [...Store.rewards].sort((a, b) => a.required - b.required);
     const next = tiers.find(t => total < t.required) || null;
-    const left = next ? next.required - total : 0;
     const top  = tiers.length ? tiers[tiers.length - 1].required : Rules.CARD * 3;
     const fill = Math.min(1, total / top);
     const lift = (32 - 32 * STAMP_FIT).toFixed(1);
 
     /* the member's count, once, as a line of type; the route says the rest */
-    const fig = !tiers.length ? `${total} ${total === 1 ? 'stamp' : 'stamps'}`
-      : `<b>${total}</b> of ${top} stamps${next ? `<span>${esc(next.name)} in ${left}</span>` : total ? '<span>Every reward reached</span>' : ''}`;
+    const fig = !tiers.length || total > top ? `<b>${total}</b> ${total === 1 ? 'stamp' : 'stamps'}${tiers.length && !next ? '<span>Every reward reached</span>' : ''}`
+      : `<b>${total}</b> of ${top} stamps${!next && total ? '<span>Every reward reached</span>' : ''}`;
     /* where the member stands on the route: the last stamp earned, or the start */
     const me = total
       ? `<span class="route__me" aria-hidden="true" style="--at:${fill.toFixed(3)}"><svg viewBox="0 0 64 64"><path class="route__face" d="${stampShape(total, 0)}"/>
@@ -624,7 +623,6 @@ const Views = {
               <path class="reticle__face" d="${stampShape(n + 1, 0)}"/>
               <g class="reticle__mark" transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(n)}</g>
             </svg>
-            <span class="reticle__no">${pad(n + 1)}</span>
           </div>
         </div>
 
