@@ -170,17 +170,7 @@ const BoardUI = {
     /* what is open: each a line that goes where it is done */
     const tasks = [];
     if (owed !== null && owed) tasks.push({ attr:'data-btab="progress"', fig:String(owed), text:`${owed === 1 ? 'prize' : 'prizes'} to hand over${claimed ? `, ${claimed} asked for` : ''}` });
-    if (phase === 'today') tasks.push({ attr:'data-btab="session"', fig:`GM ${pad(now.meeting_number)}`, text:'check-in not yet opened' });
-    if (!next) tasks.push({ attr:'data-btab="meetings" data-mnew', fig:'—', text:'nothing scheduled ahead' });
 
-    /* the club's year as one line: every meeting at its true date */
-    const days = iso => Math.floor(Date.parse(iso + 'T12:00:00Z') / 864e5);
-    const all = [...list].sort(meetingOrder(1));
-    const t0 = all.length ? days(all[0].meeting_date) : days(today);
-    const tN = Math.max(t0 + 1, all.length ? days(all[all.length - 1].meeting_date) : t0 + 1, days(today));
-    const pos = iso => Math.min(98.5, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
-    const yearline = `<div class="yline yline--club" aria-hidden="true" style="--now:${pos(today)}%"><i class="yline__rule"></i><i class="yline__ahead"></i>${
-      all.map(m => `<i class="yt yt--${m.state === 'OPEN' ? 'open' : m.meeting_date === today ? 'today' : String(m.meeting_date) > today ? 'up' : 'held'}" style="left:${pos(m.meeting_date)}%"></i>`).join('')}</div>`;
     const figs = !c ? [] : [
       [Number(c.total_members) || 0, 'members'], [Number(c.total_seals) || 0, 'stamps'], [Number(c.meetings_held) || 0, 'meetings'],
       [c.average_attendance == null ? '–' : esc(String(c.average_attendance)), 'at a meeting'],
@@ -205,7 +195,7 @@ const BoardUI = {
                 ? `<button class="tools__cmd" type="button" data-bstart="${esc(now.id)}" data-busy="Opening">Open check-in</button>`
                 : `<button class="tools__cmd tools__cmd--nav" type="button" data-bmeeting="${esc(now.id)}">Attendees</button>`)
               + `<button class="cmd cmd--quiet" type="button" data-bmeeting="${esc(now.id)}" data-bhandfocus>Add by hand</button>`
-            : `<button class="cmd cmd--quiet" type="button" data-btab="meetings" data-mnew>Schedule a meeting</button>`}
+            : `<button class="cmd" type="button" data-btab="meetings" data-mnew>Schedule a meeting</button>`}
         </div>
       </section>
 
@@ -213,8 +203,8 @@ const BoardUI = {
         <h2 class="tools__mark">Next meeting</h2>
         ${next ? `<button class="tools__nextrow" type="button" data-bmeeting="${esc(next.id)}">
             <span class="tools__nextgm">GM ${pad(next.meeting_number)}</span>
-            <span class="tools__nextwhen">${when(next)}</span>
-          </button>` : `<p class="tools__none">Nothing scheduled</p>`}
+            <span class="tools__nextwhen">${meetingAway(next) ? when(next) : esc(fmtDate(next.meeting_date))}</span>
+          </button>` : `<button class="tools__nextrow" type="button" data-btab="meetings" data-mnew><span class="tools__nextwhen">Nothing scheduled</span></button>`}
       </section>
 
       <section class="tools__tasks" aria-label="Open tasks">
@@ -227,7 +217,6 @@ const BoardUI = {
 
       ${c ? `<section class="tools__record" aria-label="Club record">
         <h2 class="tools__mark">Club record</h2>
-        ${yearline}
         <p class="tools__colophon">${figs.map(([v, l]) => `<span><b>${v}</b>${l}</span>`).join('')}</p>
       </section>` : ''}
     </div>`;

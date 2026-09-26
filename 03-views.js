@@ -589,7 +589,6 @@ const Views = {
             <p class="stamped__rec">
               <b class="stamped__no">GM ${pad(open.no)}</b>
               <span>Checked in</span>
-              <span>Today</span>
               <span>${byHand(stamp) ? 'Added by an officer' : fmtTime(stamp.at)}</span>
               <span class="stamped__how">${byHand(stamp) ? 'By hand' : 'QR verified'}</span>
             </p>
@@ -762,7 +761,7 @@ const Views = {
         acts(go('data-arrive="in"', 'Sign in'), alt('data-arrive="up"', 'New account')));
     }
     /* a refusal that stands: the meeting's number is struck through */
-    const struck = code && code !== 'ALREADY_CHECKED_IN' && !SCAN_TRANSIENT.has(code);
+    const struck = Boolean(no) && code && code !== 'ALREADY_CHECKED_IN' && !SCAN_TRANSIENT.has(code);
 
     return `<div class="view view--auth view--arrive${struck ? ' view--arrive-struck' : ''}">
       <div class="spread">
@@ -840,12 +839,11 @@ const Views = {
             <button class="authp__go" type="submit" id="authGo" data-busy="${up ? 'Creating' : 'Signing in'}">
               ${up ? 'Create account' : 'Sign in'}
             </button>
+            <!-- a refusal is printed under the button, so the button under
+                 the finger never moves -->
+            <p class="authp__err" id="authErr" role="alert" aria-live="assertive"></p>
             <button class="authp__swap" type="button" id="authSwap">${up ? 'Sign in' : 'New account'}</button>
           </div>
-
-          <!-- a refusal is printed under the actions, so the button under
-               the finger never moves -->
-          <p class="authp__err" id="authErr" role="alert" aria-live="assertive"></p>
 
           ${AuthUI.setupNotice()}
         </form>
