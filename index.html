@@ -384,7 +384,7 @@ select.input{padding-right:var(--sp-pad)}
 
 @media(min-width:1024px){
   :root{--tabs-h:0px;--rule:3px}
-  .shell{grid-template-columns:var(--rail) 1fr}
+  .shell{grid-template-columns:var(--rail) minmax(0,1fr)}
   .rail{display:flex}
   .tabs{display:none}
 }
@@ -1092,14 +1092,14 @@ main#view:focus,main#view:focus-visible,.rechead__title:focus{outline:none}
   min-width:0;
   transform:rotate(var(--lean,0deg))}
 
-.seal:nth-child(1){--x:5.5%; --y:0.4%; --s:21%; --lean:-2deg}
+.seal:nth-child(1){--x:5.5%; --y:2%; --s:21%; --lean:-2deg}
 .seal:nth-child(2){--x:35.5%; --y:5.1%; --s:21%; --lean:1.5deg}
 .seal:nth-child(3){--x:63.5%; --y:12.9%; --s:21%; --lean:-1deg}
 .seal:nth-child(4){--x:70.3%; --y:32.2%; --s:21.5%; --lean:2deg}
 .seal:nth-child(5){--x:47.3%; --y:41.6%; --s:21.5%; --lean:-2.2deg}
 .seal:nth-child(6){--x:20.3%; --y:46.3%; --s:21.5%; --lean:1deg}
 .seal:nth-child(7){--x:0.5%; --y:64.5%; --s:21%; --lean:-1.5deg}
-.seal:nth-child(8){--x:23.5%; --y:73.0%; --s:21%; --lean:2deg}
+.seal:nth-child(8){--x:27%; --y:73.0%; --s:21%; --lean:2deg}
 .seal:nth-child(9){--x:47.5%; --y:63.7%; --s:21%; --lean:-1.8deg}
 .seal:nth-child(10){--x:71.0%; --y:74.2%; --s:24%; --lean:-2.5deg}
 
@@ -1123,7 +1123,7 @@ main#view:focus,main#view:focus-visible,.rechead__title:focus{outline:none}
   .seal:nth-child(7){--x:30.5%;--y:39%;  --s:15%;  --lean:-1.5deg}
   .seal:nth-child(8){--x:5%;   --y:49%;  --s:14.5%;--lean:2.2deg}
   .seal:nth-child(9){--x:27%;  --y:64%;  --s:15%;  --lean:-2deg}
-  .seal:nth-child(10){--x:63%; --y:58.5%;--s:23%;  --lean:-3deg}
+  .seal:nth-child(10){--x:65%; --y:60.6%;--s:19%;  --lean:-3deg}
 }
 
 .seal > svg{width:100%;height:100%;display:block;overflow:visible}
@@ -1277,7 +1277,7 @@ html{font-synthesis:none}
 
 .view--auth{display:block;width:100%;max-width:none;padding:0;margin:0}
 
-.spread{--band:clamp(230px,42svh,400px);--lap:clamp(34px,9vw,64px);
+.spread{--band:clamp(200px,32svh,320px);--lap:clamp(34px,9vw,64px);
   position:relative;width:100%;box-sizing:border-box;
   display:grid;grid-template-columns:minmax(0,1fr);
   grid-template-rows:calc(var(--band) - var(--sp-row)) auto 1fr;
@@ -1300,7 +1300,7 @@ html{font-synthesis:none}
           calc(var(--gutter) + env(safe-area-inset-left,0px));
   color:var(--paper);align-self:start}
 .spread__sub{margin:0 0 var(--sp-row);font-size:var(--t-caption);
-  letter-spacing:.16em;color:var(--tint);
+  letter-spacing:.12em;color:var(--tint);
   display:flex;align-items:center;gap:clamp(8px,1.4vw,14px)}
 
 .spread__field > span.spread__kci{position:absolute;z-index:1;
@@ -1377,8 +1377,8 @@ html{font-synthesis:none}
 /* ══ Arriving by a wall code's link: the sign-in spread, the meeting
    named in the band, and one card that says what happens next ══ */
 .arrive__status{display:inline-flex;align-items:center;gap:10px;margin:var(--sp-row) 0 0;
-  font:400 12px/1 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--paper)}
-.arrive__status::before{content:'';width:10px;height:10px;background:var(--paper)}
+  font:400 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--paper)}
+.arrive__status::before{content:none}
 .arrive{gap:var(--sp-pad)}
 .arrive__word{margin:0;font-family:var(--f-head);font-weight:400;text-transform:uppercase;
   font-size:var(--t-head);line-height:1;overflow-wrap:anywhere}
@@ -1432,305 +1432,6 @@ html{font-synthesis:none}
 
 .rechead__title{margin:0;padding-bottom:.2em}
 
-/* ══ Record: the minutes of every meeting since the member joined, kept
-   by the month; its totals at the head, as an account's are, and every
-   meeting as one mark in a line ══ */
-.recbody{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr)}
-
-.tally{display:grid;grid-template-columns:repeat(3,auto) minmax(0,1fr);align-items:baseline;
-  column-gap:clamp(16px,3vw,32px);row-gap:var(--sp-row);
-  padding-bottom:var(--sp-pad);border-bottom:var(--edge-frame) solid var(--ink)}
-.tally > p{margin:0;display:flex;align-items:baseline;gap:6px;white-space:nowrap}
-.tally b{font-family:var(--f-head);font-weight:400;line-height:.9;color:var(--ink);
-  font-size:clamp(30px,6vw,40px)}
-.tally__kept b{font-size:clamp(44px,10vw,64px)}
-.tally__gone b{color:var(--ink-2)}
-.tally > p > span,.tally__held{font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;
-  text-transform:uppercase;color:var(--ink-2)}
-.tally__held{grid-column:1/-1;white-space:normal}
-.strip{grid-column:1/-1;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
-  gap:clamp(2px,.3vw,4px);height:clamp(26px,3vw,36px)}
-.strip__m{display:block;background:var(--tint)}
-.strip__m--set{background:var(--ink)}
-.strip__m--open{background:var(--seal)}
-.strip__m--today{background:none;box-shadow:inset 0 0 0 2px var(--tone)}
-
-@media(min-width:1100px){
-  .recbody{grid-template-columns:minmax(0,30fr) minmax(0,70fr);column-gap:clamp(36px,4.4vw,72px);
-    align-items:start}
-  .tally{position:sticky;top:var(--sp-pad);grid-template-columns:auto minmax(0,1fr);
-    row-gap:var(--sp-tight);padding:0;border:0}
-  .tally > p{grid-column:1/-1;justify-content:space-between;padding:var(--sp-tight) 0;
-    border-bottom:var(--edge-rule) solid var(--tint);flex-direction:row-reverse}
-  .tally__kept{border-bottom:var(--edge-frame) solid var(--ink)!important}
-  .tally__kept b{font-size:clamp(64px,6vw,96px)}
-  .tally b{font-size:clamp(32px,2.8vw,44px)}
-  .tally__held{padding-top:var(--sp-tight)}
-  .strip{margin-top:var(--sp-tight)}
-}
-
-.ledger{display:flex;flex-direction:column}
-.ledger__month{display:flex;justify-content:space-between;align-items:baseline;gap:var(--sp-row);
-  margin:var(--sp-block) 0 0;padding:0 0 var(--sp-tight);
-  border-bottom:var(--edge-panel) solid var(--ink)}
-.ledger__month:first-child{margin-top:0}
-.ledger__mname{font-family:var(--f-head);font-weight:400;text-transform:uppercase;
-  font-size:clamp(20px,2.4vw,30px);line-height:1}
-.ledger__mcount{font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;
-  text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
-
-.ledger__mark{margin:0 0 var(--sp-tight);padding-bottom:var(--sp-tight);
-  border-bottom:var(--edge-panel) solid var(--ink);
-  font-family:var(--f-head);text-transform:uppercase;
-  font-size:clamp(19px,3.6vw,26px);line-height:1}
-
-.lrow{display:grid;
-  grid-template-columns:clamp(40px,10vw,56px) clamp(28px,7vw,38px) minmax(0,1fr) auto;
-  align-items:center;gap:var(--sp-row);
-  width:100%;text-align:left;background:none;border:0;border-radius:0;
-  color:inherit;font:inherit;
-  padding:clamp(9px,1.4vw,12px) 0;
-  border-bottom:var(--edge-rule) solid var(--tint)}
-
-/* the meeting's number carries the row, as a minute book's entry does */
-.lrow__no{font-family:var(--f-head);font-weight:400;line-height:.9;letter-spacing:0;
-  font-size:clamp(24px,5.4vw,32px);color:var(--tone)}
-.lrow__stamp{display:grid;place-items:center;aspect-ratio:1}
-.lrow__mark{width:100%;height:100%;display:block}
-.lrow__mark path{fill:var(--ink)}
-
-.lrow__slot{width:58%;aspect-ratio:1;border-radius:50%;
-  border:var(--edge-panel) solid var(--tint)}
-.lrow__body{display:flex;flex-direction:column;gap:2px;min-width:0}
-.lrow__date{font-size:var(--t-body);line-height:1.15}
-.lrow__when{font:400 12.5px/1.35 var(--f-mono);letter-spacing:.04em;
-  text-transform:uppercase;color:var(--ink-2)}
-
-.lrow--set .lrow__no{color:var(--ink)}
-
-.lrow--miss .lrow__date,.lrow--miss .lrow__when{color:var(--ink-2)}
-
-.lrow--upcoming .lrow__no{color:var(--ink-2)}
-.lrow--upcoming .lrow__date{color:var(--ink-2)}
-.lrow--upcoming .lrow__when{color:var(--ink-2)}
-
-/* the open meeting is a ledger row like the others, in full ink, with
-   its way to Scan and the club's red on its slot */
-.lrow--open{cursor:pointer}
-.lrow--open .lrow__no{color:var(--ink)}
-.lrow--open .lrow__slot{border-color:var(--seal);border-width:3px}
-.lrow--open .lrow__when{color:var(--ink)}
-.lrow__go{font:400 12.5px/1 var(--f-mono);letter-spacing:.12em;
-  text-transform:uppercase;color:var(--ink);white-space:nowrap;
-  text-decoration:underline;text-underline-offset:4px}
-@media (hover:hover){ .lrow--open:hover .lrow__go{text-decoration-thickness:2px} }
-.lrow--open:focus-visible{outline:var(--edge-panel) solid var(--ink);
-  outline-offset:3px}
-
-@media(min-width:768px){
-  .lrow{gap:var(--sp-pad)}
-}
-
-@media(min-width:900px){
-  .lrow{grid-template-columns:clamp(48px,4.4vw,60px) 32px minmax(9rem,auto)
-      minmax(0,1fr) auto;padding-block:var(--sp-tight);
-    align-items:baseline;column-gap:var(--sp-pad)}
-  .lrow__body{display:contents}
-  .lrow__stamp{align-self:center}
-  .lrow__date{grid-column:3}
-  .lrow__when{grid-column:4;justify-self:start;text-align:left}
-  .lrow__go{grid-column:5}
-}
-
-/* ══ Scan: one frame — the meeting a scan would stamp across its head,
-   the camera, and the line the scanner speaks on across its foot ══ */
-.scanframe{display:grid;grid-template-columns:minmax(0,1fr);
-  border:var(--edge-frame) solid var(--ink);background:var(--ink)}
-.scanframe > .standing{display:flex;align-items:baseline;flex-wrap:wrap;
-  gap:2px var(--sp-row);margin:0;padding:10px var(--sp-pad) 12px;
-  background:var(--ink);color:var(--paper);border:0}
-.standing__lab{font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;
-  text-transform:uppercase;color:var(--tone);white-space:nowrap}
-.standing__at{font-family:var(--f-head);font-size:clamp(20px,2.2vw,28px);line-height:1;
-  color:var(--paper);min-width:0;overflow-wrap:anywhere}
-
-.viewer{position:relative;display:grid;place-items:center;
-  grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);
-  isolation:isolate;overflow:hidden;container-type:size;
-  width:100%;height:clamp(220px,calc(100dvh - 330px),640px);
-  border:0;background:var(--ink-2)}
-
-.viewer > *{grid-column:1;grid-row:1;min-height:0;min-width:0}
-.viewer video{width:100%;height:100%;display:block;
-  object-fit:cover;object-position:center;
-  filter:grayscale(1) contrast(1.06)}
-
-.reticle{position:relative;place-self:center;
-  width:min(62cqw,74cqh,320px);aspect-ratio:1;
-  pointer-events:none;z-index:3}
-.reticle__c{position:absolute;width:16%;height:16%;
-  border:var(--edge-card) solid var(--paper);
-  /* an ink keyline, so the corners read over a white screen too */
-  filter:drop-shadow(1.5px 1.5px 0 var(--ink)) drop-shadow(-1.5px -1.5px 0 var(--ink))}
-.reticle__c--tl{top:0;left:0;border-right:0;border-bottom:0}
-.reticle__c--tr{top:0;right:0;border-left:0;border-bottom:0}
-.reticle__c--bl{bottom:0;left:0;border-right:0;border-top:0}
-.reticle__c--br{bottom:0;right:0;border-left:0;border-top:0}
-
-.reticle--good .reticle__c{width:20%;height:20%}
-.reticle--bad .reticle__c{width:12%;height:12%}
-
-.scanline{display:flex;align-items:center;gap:var(--sp-row);margin:0;min-height:48px;
-  padding:10px var(--sp-pad);background:var(--paper);
-  font:400 clamp(13px,3.6vw,15px)/1.35 var(--f-mono);letter-spacing:.1em;
-  text-transform:uppercase;color:var(--ink)}
-.scanline__dot{flex:none;width:10px;height:10px;
-  border:2px solid var(--ink);background:transparent}
-.scanline__msg{min-width:0;overflow-wrap:anywhere}
-.scanline--boot{color:var(--ink-2)}
-.scanline--boot .scanline__dot{opacity:.4}
-/* with the camera off the panel says so; the line would only repeat it */
-.viewer--stalled + .scanline{display:none}
-.scanline--live .scanline__dot{background:var(--ink)}
-.scanline--busy .scanline__dot{background:var(--tone);border-color:var(--tone)}
-.scanline--good .scanline__dot{background:var(--ink)}
-.scanline--good .scanline__msg,.scanline--busy .scanline__msg{background:var(--ink);color:var(--paper);padding:3px 8px}
-.scanline--bad .scanline__dot{background:var(--seal);border-color:var(--seal)}
-.scanline--bad .scanline__msg{text-decoration:underline 2px;text-underline-offset:4px}
-
-.zoom{position:relative;z-index:4;align-self:end;justify-self:stretch;
-  display:flex;align-items:center;gap:var(--sp-row);margin:0;padding:8px 12px;
-  background:var(--ink);color:var(--paper)}
-.zoom__lab{flex:none;font:500 10px/1 var(--f-mono);letter-spacing:.2em;
-  text-transform:uppercase}
-.zoom__val{flex:none;min-width:4ch;text-align:right;
-  font:500 11px/1 var(--f-mono);letter-spacing:.06em}
-.zoom__range{flex:1 1 auto;min-width:0;height:28px;margin:0;padding:0;
-  background:transparent;cursor:pointer;
-  -webkit-appearance:none;appearance:none;accent-color:var(--paper)}
-.zoom__range::-webkit-slider-runnable-track{height:3px;background:var(--paper)}
-.zoom__range::-moz-range-track{height:3px;background:var(--paper)}
-.zoom__range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
-  width:22px;height:22px;margin-top:-9.5px;border-radius:0;
-  background:var(--paper);border:3px solid var(--ink);
-  box-shadow:0 0 0 2px var(--paper)}
-.zoom__range::-moz-range-thumb{width:16px;height:16px;border-radius:0;
-  background:var(--paper);border:3px solid var(--ink);
-  box-shadow:0 0 0 2px var(--paper)}
-.zoom__range:focus-visible{outline:var(--edge-thin) solid var(--paper);outline-offset:2px}
-.viewer--zoom .reticle{width:min(56cqw,62cqh,290px);margin-bottom:44px}
-
-.viewer--stalled{aspect-ratio:auto;height:auto;min-height:0;border:0;
-  container-type:normal;place-items:stretch;background:var(--paper);
-  padding:var(--sp-block) var(--sp-pad)}
-
-/* a phone on its side: the frame beside the title, as tall as the window */
-@media(max-height:520px) and (min-aspect-ratio:4/3){
-  .view--scan{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);
-    align-items:start;gap:var(--sp-block)}
-  .view--scan > .rechead{grid-column:2;grid-row:1;margin:0}
-  .view--scan > .scanframe{grid-column:1;grid-row:1}
-  .scanframe .viewer{height:calc(100dvh - 150px);min-height:160px}
-}
-
-.stall{display:flex;flex-direction:column;justify-content:center;
-  gap:var(--sp-tight);padding:0;text-align:left}
-.stall__title{margin:0;font-family:var(--f-head);
-  text-transform:uppercase;line-height:1;
-  font-size:clamp(19px,3.6vw,28px)}
-.stall__note{margin:0;max-width:46ch;font-size:var(--t-caption);
-  line-height:1.45;color:var(--ink-2)}
-.stall__note:empty{display:none}
-
-/* on a desktop the camera spans the page at the shape of the stream it
-   shows, so what is in the frame is what the decoder reads */
-@media(min-width:1024px){
-  .scanframe .viewer{height:auto;aspect-ratio:16/9;
-    max-height:calc(100dvh - 330px);min-height:320px}
-  .scanframe .viewer--stalled{aspect-ratio:auto;min-height:0}
-}
-
-/* ══ Rewards: the prizes as tickets on a rail, each rung's length of
-   the rail filled as far as the member has come; the count still to go
-   is the page's figure ══ */
-.prize{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr)}
-.prize__fig{display:grid;grid-template-columns:auto minmax(0,1fr);
-  grid-template-areas:"n to" "n of";column-gap:var(--sp-pad);row-gap:var(--sp-tight);align-items:end;
-  padding-bottom:var(--sp-pad);border-bottom:var(--edge-frame) solid var(--ink)}
-.prize__n{grid-area:n;margin:0;font:400 clamp(80px,19vw,150px)/.78 var(--f-display);
-  color:var(--ink);padding-bottom:.02em}
-.prize__to{grid-area:to;margin:0;font-family:var(--f-head);text-transform:uppercase;
-  font-size:var(--t-sub);line-height:1.05;color:var(--ink-2)}
-.prize__to b{display:block;font-weight:400;color:var(--ink)}
-.prize__of{grid-area:of;margin:0 0 .4em}
-@media(min-width:1100px){
-  .prize{grid-template-columns:minmax(0,30fr) minmax(0,70fr);column-gap:clamp(36px,4.4vw,72px);
-    align-items:start}
-  .prize__fig{position:sticky;top:var(--sp-pad);grid-template-columns:minmax(0,1fr);
-    grid-template-areas:"n" "to" "of";row-gap:var(--sp-pad)}
-  .prize__n{font-size:clamp(150px,13vw,220px)}
-  .prize__to{font-size:clamp(26px,2.4vw,36px)}
-}
-
-.tiers{--rail:clamp(26px,3vw,40px);display:flex;flex-direction:column;
-  gap:var(--sp-pad);padding-left:var(--rail)}
-
-.tier{position:relative;display:grid;min-width:0;
-  grid-template-columns:clamp(74px,8vw,108px) minmax(0,1fr);
-  min-height:clamp(112px,11vw,150px);
-  border:var(--edge-panel) solid var(--ink);background:var(--paper);color:var(--ink)}
-/* the rail beside each ticket: the track, then as much of it as is earned */
-.tier::before,.tier::after{content:'';position:absolute;
-  left:calc(var(--edge-panel) * -1 - var(--rail));width:10px;top:calc(var(--edge-panel) * -1)}
-.tier::before{bottom:calc(var(--edge-panel) * -1 - var(--sp-pad));background:var(--tint)}
-.tier:last-child::before{bottom:calc(var(--edge-panel) * -1)}
-.tier::after{height:calc((100% + var(--edge-panel) * 2 + var(--sp-pad)) * var(--got,0));background:var(--ink)}
-.tier:last-child::after{height:calc((100% + var(--edge-panel) * 2) * var(--got,0))}
-
-.tier__at{display:flex;flex-direction:column;justify-content:space-between;gap:var(--sp-tight);
-  padding:var(--sp-pad) clamp(12px,1.6vw,18px);border-right:var(--edge-panel) dashed currentColor}
-.tier__at b{font:400 clamp(40px,4.6vw,60px)/.82 var(--f-head);color:inherit}
-.tier__at span{font:400 11px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;opacity:.75}
-.tier__body{display:flex;flex-direction:column;align-items:flex-start;gap:var(--sp-tight);
-  min-width:0;padding:var(--sp-pad) clamp(14px,2vw,26px)}
-.tier__name{font-family:var(--f-head);font-size:var(--t-sub);line-height:1.05;
-  text-transform:uppercase;overflow-wrap:anywhere}
-.tier__desc{font-size:var(--t-caption);color:var(--ink-2);line-height:1.35}
-.tier__ticks{display:flex;flex-wrap:wrap;gap:4px}
-.tier__ticks i{display:block;width:clamp(12px,2.2vw,16px);aspect-ratio:1;background:var(--tint)}
-.tier__ticks i.is-on{background:var(--ink)}
-.tier__say{margin-top:auto;font:400 12.5px/1.3 var(--f-mono);letter-spacing:.08em;
-  text-transform:uppercase;color:var(--ink)}
-.tier__note{margin-top:auto;font-size:var(--t-caption);line-height:1.35;color:var(--ink-2)}
-
-/* the punch pressed onto a claimed ticket; its turn and lift are their
-   own properties, so the press animation's scale adds to them */
-.tier__punch{position:absolute;right:clamp(12px,2.4vw,30px);top:50%;
-  translate:0 -50%;rotate:-9deg;
-  font-family:var(--f-head);text-transform:uppercase;line-height:1;
-  font-size:clamp(20px,3vw,34px);color:var(--ink);background:var(--paper);
-  border:var(--edge-frame) solid currentColor;padding:.14em .42em;pointer-events:none}
-.tier--claimed .tier__body{padding-right:clamp(116px,17vw,220px)}
-
-/* earned: an ink ticket, and the claim on it */
-.tier--ready{background:var(--ink);color:var(--paper)}
-.tier--ready .tier__desc{color:var(--tint)}
-.tier__claim{margin-top:auto;padding:10px var(--sp-pad);cursor:pointer;
-  border:var(--edge-panel) solid var(--paper);background:var(--paper);color:var(--ink);
-  font-family:var(--f-head);font-size:var(--t-sub);line-height:1.15;white-space:nowrap}
-@media (hover:hover){.tier__claim:hover{background:transparent;color:var(--paper)}}
-.tier__claim:focus-visible{outline:var(--edge-panel) solid var(--paper);outline-offset:3px}
-
-/* handed over: the last state a prize has — the ticket filed, greyed,
-   and struck in the club's red */
-.tier--took{background:var(--tint);border-color:var(--ink-2);color:var(--ink-2)}
-.tier--took .tier__name{color:var(--ink)}
-.tier--took .tier__punch{color:var(--seal);background:var(--tint)}
-
-/* a rung beyond the next: drawn in pencil until the one before it is reached */
-.tier--far{border-color:var(--tone);color:var(--ink-2)}
-.tier--far .tier__say{color:var(--ink-2)}
-
 /* ══ Member: the member's own record. The district's plate and the card
    side by side; the standing under the plate, the cards already filled
    under the card ══ */
@@ -1740,11 +1441,6 @@ html{font-synthesis:none}
 .mem > .card{grid-area:card}
 .mem > .standing-band{grid-area:band}
 .mem > .files{grid-area:files}
-@media(min-width:900px){
-  .mem{grid-template-columns:minmax(0,34fr) minmax(0,66fr);column-gap:clamp(20px,2.8vw,44px);
-    grid-template-areas:"who card" "band band"}
-  .mem--filed{grid-template-areas:"who card" "band files"}
-}
 
 /* the plate: black, the district's seal pressed into it and cut by its
    edge, the member's name under a rule */
@@ -2190,159 +1886,138 @@ html{font-synthesis:none}
 .bidle__word{margin:0;font:400 clamp(48px,8vw,120px)/.85 var(--f-display);text-transform:uppercase}
 .bidle__next{max-width:min(100%,560px)}
 
-/* ══ Controls. None of these is a button in the web sense: each kind of
-   action is set the way a printed record would set it. The class hooks
-   are the ones the pages and the tests already use. ══
-   primary   — a stamped instruction: a double-ruled frame, set a degree off true
-   command   — an operational line: a printed square, the words, a rule under them
-   quiet     — a marginal action: small capitals in the record face, a short rule before
-   cut       — a deletion: the words struck through by a slash before them
-   redeem    — the prize's own action, stamped onto its ticket
-   field     — a line to write on, the label above it in small capitals */
+/* ══ Controls. Three kinds and a cut, each still plainly a button, none
+   turned off true. The class hooks are the ones the pages and the tests
+   already use.
+   primary — the page's one instruction: an ink block, the words in the heavy face
+   command — an operational action: small capitals in the record face on a 2px rule
+   quiet   — a marginal action: small grey capitals, a short rule before them
+   cut     — an ending or a deletion: a quiet action with a slash before it; its
+             confirmation is the one control printed in red
+   field   — a line to write on, the label above it in small capitals ══ */
+:root{--ink-lift:#2B2A27}
 .btn,.link,.cmd,.proj__ctl,.tier__claim,.authp__go,.authp__swap,.acct__out,.rail__out,
 .owed__go,.owed__undo,.bdel__go,.bback,.stall__retry,.bform__reset,.meetband__act,.card__goal--go,
 .tools__nextrow,.tools__task,.owed__more,.proj__end,.proj__hand{
-  display:inline-flex;align-items:center;justify-content:flex-start;gap:.5em;
+  display:inline-flex;align-items:center;justify-content:flex-start;gap:8px;
   margin:0;padding:0;border:0;border-radius:0;background:none;color:var(--ink);
   font:inherit;letter-spacing:inherit;text-transform:none;text-decoration:none;text-align:left;
   cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:none;transform:none;
   min-height:44px;min-width:0;max-width:100%;overflow:visible}
 @media (hover:hover){
-  .btn:hover,.link:hover,.cmd:hover,.proj__ctl:hover{background:none;color:var(--ink);transform:none;border-color:var(--ink)}
+  .btn:hover,.link:hover,.cmd:hover,.proj__ctl:hover{background:none;color:var(--ink);transform:none}
 }
 .btn:active,.cmd:active,.link:active{transform:none}
 
-/* primary: the stamped instruction */
-.btn--go,.authp__go,.proj__ctl--go,.cmd--go,.act--stamp{
-  position:relative;isolation:isolate;justify-content:center;
-  padding:12px 22px 10px;min-height:50px;
-  font-family:var(--f-head);text-transform:uppercase;letter-spacing:.07em;
-  font-size:clamp(17px,1.3vw,20px);line-height:1;color:var(--ink);
-  border:var(--edge-panel) solid var(--ink);background:var(--paper);
-  transform:rotate(-1.4deg);transform-origin:50% 50%}
-.btn--go::before,.authp__go::before,.proj__ctl--go::before,.cmd--go::before,.act--stamp::before{
-  content:'';position:absolute;inset:3px;border:var(--edge-rule) solid var(--ink);pointer-events:none}
+/* primary: the ink block */
+.btn--go,.authp__go,.proj__ctl--go,.cmd--go,.act--stamp,.stall__retry,
+.tier__claim,.tier--ready .tier__claim{
+  position:relative;justify-content:center;width:auto;height:auto;
+  padding:13px 20px 12px;min-height:44px;
+  font:400 16px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;
+  color:var(--paper);background:var(--ink);border:2px solid var(--ink);transform:none}
+.btn--go::before,.authp__go::before,.proj__ctl--go::before,.cmd--go::before,.act--stamp::before,
+.stall__retry::before,.tier__claim::before{content:none}
 @media (hover:hover){
-  .btn--go:hover,.authp__go:hover,.proj__ctl--go:hover,.cmd--go:hover,.act--stamp:hover{
-    background:var(--ink);color:var(--paper);border-color:var(--ink);transform:rotate(-1.4deg)}
-  .btn--go:hover::before,.authp__go:hover::before,.proj__ctl--go:hover::before,.cmd--go:hover::before,.act--stamp:hover::before{border-color:var(--paper)}
+  .btn--go:hover,.authp__go:hover,.proj__ctl--go:hover,.cmd--go:hover,.act--stamp:hover,.stall__retry:hover,
+  .tier__claim:hover,.tier--ready .tier__claim:hover{background:var(--ink-lift);border-color:var(--ink-lift);color:var(--paper);transform:none}
 }
-.btn--go:active,.authp__go:active,.proj__ctl--go:active,.cmd--go:active,.act--stamp:active{
-  transform:rotate(0deg) translate(1px,1px);background:var(--ink);color:var(--paper)}
-.btn--go:focus-visible,.authp__go:focus-visible,.proj__ctl--go:focus-visible,.cmd--go:focus-visible,.act--stamp:focus-visible{
-  outline:var(--edge-panel) solid var(--ink);outline-offset:4px}
-/* on an ink ground the stamp is inked in paper */
-.proj--live .proj__ctl--go,.tier--ready .tier__claim,.tkt--live .act--stamp{
-  color:var(--paper);border-color:var(--paper);background:transparent}
-.proj--live .proj__ctl--go::before,.tier--ready .tier__claim::before{border-color:var(--paper)}
-@media (hover:hover){
-  .proj--live .proj__ctl--go:hover,.tier--ready .tier__claim:hover{background:var(--paper);color:var(--ink);border-color:var(--paper)}
-  .proj--live .proj__ctl--go:hover::before,.tier--ready .tier__claim:hover::before{border-color:var(--ink)}
-}
-.authp__go{width:auto;align-self:flex-start}
+.btn--go:active,.authp__go:active,.proj__ctl--go:active,.cmd--go:active,.act--stamp:active,.stall__retry:active,
+.tier__claim:active{transform:translateY(1px);background:var(--ink);color:var(--paper)}
+.btn--go:focus-visible,.authp__go:focus-visible,.proj__ctl--go:focus-visible,.cmd--go:focus-visible,.act--stamp:focus-visible,
+.stall__retry:focus-visible,.tier__claim:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+/* on an ink ground the block is paper */
+.proj--live .proj__ctl--go,.tkt--live .act--stamp{color:var(--ink);background:var(--paper);border-color:var(--paper)}
+@media (hover:hover){ .proj--live .proj__ctl--go:hover{color:var(--ink);background:var(--tint);border-color:var(--tint)} }
+.proj--live .proj__ctl--go:focus-visible{outline-color:var(--paper)}
+.authp__go{align-self:flex-start}
 
-/* command: the operational line */
-.btn:not(.btn--go),.cmd:not(.cmd--go),.proj__ctl:not(.proj__ctl--go),.owed__go,.bconfirm__keep{
-  padding:9px 2px 7px 0;min-height:44px;
-  font-family:var(--f-head);text-transform:uppercase;letter-spacing:.05em;
-  font-size:clamp(15px,1.15vw,18px);line-height:1;color:var(--ink);
-  border-bottom:var(--edge-panel) solid var(--ink)}
-.btn:not(.btn--go)::before,.cmd:not(.cmd--go)::before,.proj__ctl:not(.proj__ctl--go)::before,.owed__go::before,.bconfirm__keep::before{
-  content:'';flex:none;width:9px;height:9px;background:currentColor}
+/* command: small capitals on a 2px rule */
+.btn:not(.btn--go),.cmd:not(.cmd--go):not(.cmd--quiet):not(.stall__retry),.owed__go,.bconfirm__keep{
+  padding:12px 0 10px;min-height:44px;
+  font:400 12.5px/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);
+  border:0;background:linear-gradient(currentColor,currentColor) 0 100%/100% 2px no-repeat}
+.btn:not(.btn--go)::before,.cmd:not(.cmd--go)::before,.owed__go::before,.bconfirm__keep::before{content:none}
 @media (hover:hover){
-  .btn:not(.btn--go):hover,.cmd:not(.cmd--go):hover,.proj__ctl:not(.proj__ctl--go):hover,.owed__go:hover,.bconfirm__keep:hover{
-    color:var(--ink);border-bottom-color:var(--seal);border-bottom-width:3px;margin-bottom:-1px}
-  .btn:not(.btn--go):hover::before,.cmd:not(.cmd--go):hover::before,.owed__go:hover::before,.bconfirm__keep:hover::before{background:var(--seal)}
+  .btn:not(.btn--go):hover,.cmd:not(.cmd--go):not(.cmd--quiet):not(.stall__retry):hover,.owed__go:hover,.bconfirm__keep:hover{
+    color:var(--ink);background-size:100% 3px}
 }
 .btn:not(.btn--go):active,.cmd:not(.cmd--go):active,.owed__go:active{transform:translateY(1px)}
-.btn:not(.btn--go):focus-visible,.cmd:not(.cmd--go):focus-visible,.proj__ctl:focus-visible,.owed__go:focus-visible,.bconfirm__keep:focus-visible{
-  outline:var(--edge-panel) solid var(--ink);outline-offset:4px}
-.proj--live .proj__ctl:not(.proj__ctl--go){color:var(--paper);border-bottom-color:var(--paper)}
-.brow--armed .owed__go{color:var(--seal);border-bottom-color:var(--seal);border-bottom-width:3px;margin-bottom:-1px}
-.brow--armed .owed__go::before{background:var(--seal)}
-/* a stamped command, the second tap of an add-by-hand or a hand-over */
-.cmd--quiet{border-bottom:0}
+.btn:not(.btn--go):focus-visible,.cmd:not(.cmd--go):focus-visible,.owed__go:focus-visible,.bconfirm__keep:focus-visible{
+  outline:2px solid var(--ink);outline-offset:3px}
+/* the second tap of a hand-over: the command becomes the instruction */
+.brow--armed .owed__go{padding:12px 14px 10px;color:var(--paper);background:var(--ink)}
+.brow--armed .owed__go::before{content:none}
+.cmd--quiet{background:none}
 .cmd--quiet::before{content:none}
 
 /* quiet: the marginal action */
-.link,.authp__swap,.acct__out,.rail__out,.owed__undo,.bback,.stall__retry,.bform__reset,.meetband__act,
-.card__goal--go,.owed__more,.proj__end,.proj__hand,.cmd--quiet,.tools__nextrow,.tools__task{
-  padding:8px 0;min-height:44px;
-  font:400 12.5px/1.2 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
-.link::before,.authp__swap::before,.acct__out::before,.rail__out::before,.owed__undo::before,.bback::before,.stall__retry::before,
-.bform__reset::before,.meetband__act::before,.card__goal--go::before,.owed__more::before,.proj__end::before,.proj__hand::before,.cmd--quiet::before{
-  content:'';flex:none;width:14px;height:2px;background:currentColor;margin-right:4px}
+.link,.authp__swap,.acct__out,.rail__out,.owed__undo,.bback,.bform__reset,.meetband__act,
+.owed__more,.proj__hand,.proj__ctl--quiet,.cmd--quiet,.tools__nextrow,.tools__task{
+  padding:12px 0;min-height:44px;border:0;background:none;
+  font:400 12px/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.link::before,.authp__swap::before,.acct__out::before,.rail__out::before,.owed__undo::before,.bback::before,
+.bform__reset::before,.meetband__act::before,.owed__more::before,.proj__hand::before,.proj__ctl--quiet::before,.cmd--quiet::before{
+  content:'';flex:none;width:12px;height:1.5px;background:currentColor}
 @media (hover:hover){
-  .link:hover,.authp__swap:hover,.acct__out:hover,.rail__out:hover,.owed__undo:hover,.bback:hover,.stall__retry:hover,.bform__reset:hover,
-  .meetband__act:hover,.card__goal--go:hover,.owed__more:hover,.proj__end:hover,.proj__hand:hover,.cmd--quiet:hover{
-    color:var(--seal);background:none;border-color:transparent;text-decoration:none}
-  .link:hover::before,.authp__swap:hover::before,.acct__out:hover::before,.rail__out:hover::before,.owed__undo:hover::before,
-  .bback:hover::before,.stall__retry:hover::before,.bform__reset:hover::before,.meetband__act:hover::before,.card__goal--go:hover::before,
-  .owed__more:hover::before,.proj__end:hover::before,.proj__hand:hover::before,.cmd--quiet:hover::before{width:22px}
+  .link:hover,.authp__swap:hover,.acct__out:hover,.rail__out:hover,.owed__undo:hover,.bback:hover,.bform__reset:hover,
+  .meetband__act:hover,.owed__more:hover,.proj__hand:hover,.proj__ctl--quiet:hover,.cmd--quiet:hover{
+    color:var(--ink);background:none;border-color:transparent;text-decoration:none}
   .link:hover .link__t{text-decoration:none}
 }
 .link:focus-visible,.authp__swap:focus-visible,.acct__out:focus-visible,.rail__out:focus-visible,.owed__undo:focus-visible,.bback:focus-visible,
-.stall__retry:focus-visible,.bform__reset:focus-visible,.meetband__act:focus-visible,.card__goal--go:focus-visible,.owed__more:focus-visible,
+.bform__reset:focus-visible,.meetband__act:focus-visible,.card__goal--go:focus-visible,.owed__more:focus-visible,
 .proj__end:focus-visible,.proj__hand:focus-visible,.cmd--quiet:focus-visible,.tools__nextrow:focus-visible,.tools__task:focus-visible{
-  outline:var(--edge-panel) solid var(--ink);outline-offset:4px;background:none;color:var(--ink);border-color:transparent}
+  outline:2px solid var(--ink);outline-offset:3px;background:none;color:var(--ink);border-color:transparent}
 .proj--live .proj__end,.proj--live .proj__hand,.tkt--live .link{color:var(--tint)}
 .proj--live .proj__end:focus-visible,.proj--live .proj__hand:focus-visible{outline-color:var(--paper)}
 /* the card's own way to Rewards, on ink */
 .card__goal--go{color:var(--paper);font-size:12px;padding:6px 0}
 @media (hover:hover){.card__goal--go:hover{color:var(--tint)}}
 
-/* cut: a deletion */
-.bdel__go,.bconfirm__go{
-  position:relative;padding:8px 0 8px 24px;min-height:44px;
-  font:400 12.5px/1.2 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);
-  border:0;background:none}
-.bdel__go::before,.bconfirm__go::before{content:'';position:absolute;left:2px;top:50%;width:16px;height:2px;
-  background:currentColor;transform:rotate(-38deg);transform-origin:50% 50%}
-.bconfirm__go{color:var(--seal);border-bottom:var(--edge-panel) solid var(--seal)}
-@media (hover:hover){
-  .bdel__go:hover{color:var(--seal);background:none;border-color:transparent}
-  .bconfirm__go:hover{color:var(--paper);background:var(--seal);border-color:var(--seal);padding-right:10px}
-}
-.bdel__go:focus-visible,.bconfirm__go:focus-visible{outline:var(--edge-panel) solid var(--seal);outline-offset:4px}
-.bconfirm .btn--go{background:none;color:var(--seal);border:0;transform:none}
-.bconfirm .btn--go::before{border:0}
-.bconfirm--heavy .bconfirm__q{color:var(--seal)}
+/* cut: an ending or a deletion */
+.bdel__go,.proj__end,.proj__ctl--cut{
+  position:relative;padding:12px 0 12px 22px;min-height:44px;border:0;background:none;
+  font:400 12px/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.bdel__go::before,.proj__end::before,.proj__ctl--cut::before{content:'';position:absolute;left:1px;top:50%;width:14px;height:1.5px;
+  background:currentColor;transform:translateY(-50%) rotate(-45deg)}
+@media (hover:hover){ .bdel__go:hover,.proj__end:hover,.proj__ctl--cut:hover{color:var(--ink);background:none;border-color:transparent} }
+.bdel__go:focus-visible,.proj__ctl--cut:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+/* the confirmation: the one red instruction */
+.bconfirm__go,.bconfirm .btn--go{color:var(--paper);background:var(--seal);border-color:var(--seal)}
+@media (hover:hover){ .bconfirm__go:hover,.bconfirm .btn--go:hover{color:var(--paper);background:#631823;border-color:#631823} }
+.bconfirm__go:focus-visible{outline:2px solid var(--seal);outline-offset:3px}
+.bconfirm--heavy .bconfirm__q{color:var(--ink)}
 
-/* redeem: the prize's own action, stamped on its ticket */
-.tier__claim{
-  position:relative;isolation:isolate;justify-content:center;
-  padding:10px 18px 9px;min-height:46px;
-  font-family:var(--f-head);text-transform:uppercase;letter-spacing:.08em;
-  font-size:clamp(18px,1.5vw,22px);line-height:1;
-  border:var(--edge-panel) solid currentColor;transform:rotate(-3deg)}
-.tier__claim::before{content:'';position:absolute;inset:3px;border:var(--edge-rule) solid currentColor;pointer-events:none}
-.tier__claim:active{transform:rotate(0deg) translate(1px,1px)}
-.tier__claim:focus-visible{outline:var(--edge-panel) solid currentColor;outline-offset:4px}
+/* the prize's claim is the primary block; the blank stamp it once was is not drawn */
+.tier__shape{display:none}
+.tier__word{position:static;font:inherit;letter-spacing:inherit;color:inherit}
+.tier__claim[aria-busy="true"]{opacity:.7}
 
 /* fields: a line to write on */
 .input,.authp__in{display:block;width:100%;min-width:0;box-sizing:border-box;
   margin:0;padding:10px 0 8px;min-height:44px;
-  background:none;border:0;border-bottom:var(--edge-panel) solid var(--ink);border-radius:0;
+  background:none;border:0;border-bottom:2px solid var(--ink);border-radius:0;
   font:400 max(16px,var(--t-body))/1.3 var(--f-mono);letter-spacing:.02em;color:var(--ink);
   transition:none;box-shadow:none}
-.input::placeholder,.authp__in::placeholder{color:var(--tone);letter-spacing:.06em}
-.input:focus,.authp__in:focus,.input:focus-visible,.authp__in:focus-visible{outline:0;border-bottom-width:3px;margin-bottom:-1px}
+.input::placeholder,.authp__in::placeholder{color:var(--tone);letter-spacing:.02em}
+.input:focus,.authp__in:focus,.input:focus-visible,.authp__in:focus-visible{outline:0;box-shadow:inset 0 -2px 0 var(--ink)}
 .authp__pw > .authp__in{padding-right:calc(var(--tap) + 4px)}
 .authp__f,.field{position:relative}
-.authp__f:focus-within::before{content:'>';position:absolute;left:-14px;bottom:10px;
-  font:400 14px/1 var(--f-mono);color:var(--ink);pointer-events:none}
-.field:focus-within::before{left:-14px;bottom:12px}
+.authp__f:focus-within::before,.field:focus-within::before{content:none}
+.authp__f:focus-within .authp__lab,.field:focus-within > .kicker{color:var(--ink)}
 .field:focus-within > .input{padding-left:0}
-.authp__lab,.bform .kicker,.field > .kicker{font:400 11.5px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
-.authp__rule{font:400 11.5px/1.4 var(--f-mono);letter-spacing:.04em;color:var(--ink-2);text-transform:none}
+.authp__lab,.bform .kicker,.field > .kicker{font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.authp__rule{font:400 11px/1.4 var(--f-mono);letter-spacing:.02em;color:var(--ink-2);text-transform:none}
 select.input{padding-right:22px;background-position:right 6px center,right 0 center}
 .authp__err{margin:0;padding:8px 0 8px 12px;border:0;border-left:3px solid var(--seal);background:none;
   font:400 var(--t-caption)/1.4 var(--f-body);font-style:normal;color:var(--ink)}
+.authp--err .authp__in{border-bottom-color:var(--seal)}
 .authp__eye{color:var(--ink-2)}
 
 /* a working control keeps its width the way it always did */
 .cmd[data-busy],.proj__ctl[data-busy],.tier__claim[data-busy],.owed__go[data-busy],.authp__go[data-busy]{flex-direction:column;gap:0}
-.cmd[disabled],.cmd[aria-disabled="true"]{opacity:.55}
+.cmd[disabled],.cmd[aria-disabled="true"]{opacity:.45}
 
 /* ══ Examining a stamp. The tapped seal is held up, the rest of the
    card recedes, and the stamp's printed record appears in the corner
@@ -2356,23 +2031,22 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .card--inspect .sealmeta{display:none!important}
 .card__record{position:absolute;z-index:32;display:grid;gap:3px;
   max-width:min(60%,260px);padding:10px 12px 11px;
-  background:var(--paper);border:var(--edge-panel) solid var(--ink);
+  background:var(--paper);border:1px solid var(--ink);
   font:400 11px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);
   pointer-events:none}
-.card__record::before{content:'';position:absolute;left:-1px;top:-1px;width:10px;height:10px;
-  border:var(--edge-panel) solid var(--ink);border-right:0;border-bottom:0}
+.card__record::before{content:none}
 .card__record[data-at="tl"]{left:4%;top:4%}
 .card__record[data-at="tr"]{right:4%;top:4%}
 .card__record[data-at="bl"]{left:4%;bottom:5%}
 .card__record[data-at="br"]{right:4%;bottom:5%}
 .card__record[data-at$="r"]::before{left:auto;right:-1px;border-left:0;border-right:var(--edge-panel) solid var(--ink)}
-.card__record .sealmeta__no{display:block;font:400 clamp(24px,5cqw,34px)/1 var(--f-head);letter-spacing:.02em;color:var(--ink);
+.card__record .sealmeta__no{display:block;font:400 18px/1 var(--f-mono);letter-spacing:.04em;color:var(--ink);
   padding-bottom:6px;margin-bottom:4px;border-bottom:var(--edge-panel) solid var(--ink)}
 .card__record .sealmeta__day{display:block;color:var(--ink);font-size:12px}
 .card__record .sealmeta__row{display:flex;justify-content:space-between;gap:12px}
 .card__record .sealmeta__row i{font-style:normal;color:var(--ink)}
-.card__record .sealmeta__how{display:inline-block;margin-top:4px;padding:2px 6px;border:var(--edge-rule) solid var(--seal);
-  color:var(--seal);letter-spacing:.14em;font-size:10px;transform:rotate(-2deg);justify-self:start}
+.card__record .sealmeta__how{display:inline-block;margin-top:4px;padding:0;border:0;
+  color:var(--ink-2);letter-spacing:.12em;font-size:10.5px;transform:none;justify-self:start}
 /* the hover preview carries the same lines, smaller */
 .sealmeta__day,.sealmeta__row,.sealmeta__how{display:block}
 .sealmeta__row i{font-style:normal;margin-left:8px}
@@ -2429,129 +2103,106 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   .tools__record{padding-top:var(--sp-pad);border-top:var(--edge-frame) solid var(--ink)}
 }
 
-/* ══ The shell: an index column bound to the page on a torn seam; on a
-   phone, printed thumb-tabs rising from the torn foot of the page ══ */
-:root{--shell-angle:6deg;--folio:clamp(96px,9vw,136px)}
-/* the torn edge is the binding: between rail and page from 1024 up,
-   above the tabs below that; never loose at the window's edge */
+/* ══ The shell: an index column bound to the page by one ink rule, the
+   page being read marked on the binding; on a phone, a folio bar at the
+   foot. The navigation is quiet; the page is the thing read ══ */
 .ground__bleed{display:none}
-.rail{padding:var(--sp-pad) 0 var(--sp-pad) var(--sp-pad);overflow:hidden}
-.rail::after{content:"";position:absolute;top:-2%;bottom:-2%;right:0;width:clamp(7px,1vw,15px);background:var(--ink);
-  clip-path:polygon(28% 0,100% 0,100% 100%,40% 100%,12% 88%,52% 74%,22% 61%,58% 47%,18% 34%,50% 22%,20% 10%)}
-.rail__brand{padding:2px 0 0}
-.rail__brand .mark{display:block;font:400 10.5px/1.4 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
+.rail{padding:var(--sp-block) 0 var(--sp-pad) var(--sp-pad);overflow:hidden;border-right:2px solid var(--ink)}
+.rail::after{content:none}
+.rail__brand{padding:0}
+.rail__brand .mark{display:block;font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
 .rail__brand .mark__word b{font-weight:400}
-.rail__brand .mark::after{content:' · Key Club';color:var(--tone)}
-.rail__nav{position:relative;display:flex;flex-direction:column;gap:0;padding-top:clamp(18px,3vh,32px);padding-right:var(--sp-pad);flex:1}
-.rail__folio{display:block;margin:0 0 clamp(8px,1.6vh,18px) -4px;
-  font:400 var(--folio)/.78 var(--f-display);letter-spacing:-.02em;color:var(--ink);
-  white-space:nowrap;pointer-events:none;user-select:none}
-.rail__folio--live{color:var(--seal)}
+.rail__brand .mark::after{content:none}
+.rail__nav{position:relative;display:flex;flex-direction:column;gap:0;padding-top:var(--sp-block);padding-right:var(--sp-pad);flex:1}
+.rail__folio{display:none}
 .rail__link{display:grid;grid-template-columns:2.6ch minmax(0,1fr);column-gap:var(--sp-row);align-items:baseline;
-  position:relative;margin:0;padding:10px 0 9px;border:0;border-bottom:var(--edge-rule) solid var(--tint);border-radius:0;
+  position:relative;margin:0;padding:13px 0 12px;border:0;border-bottom:1px solid var(--tint);border-radius:0;
   background:none;text-align:left;cursor:pointer;color:var(--ink);min-height:44px}
 .rail__link::before{content:none}
-.rail__idx{font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;color:var(--ink-2)}
-.rail__lab{font:400 clamp(17px,1.3vw,20px)/1 var(--f-head);text-transform:uppercase;letter-spacing:.02em;color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
-.rail__link[aria-current="page"]{border-bottom:3px solid var(--ink);margin-bottom:-2px;z-index:1}
+.rail__idx{font:400 11px/1 var(--f-mono);letter-spacing:.08em;color:var(--tone)}
+.rail__lab{font:400 13px/1 var(--f-mono);text-transform:uppercase;letter-spacing:.12em;color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
+.rail__link[aria-current="page"]{border-bottom-color:var(--tint)}
 .rail__link[aria-current="page"] .rail__idx,.rail__link[aria-current="page"] .rail__lab{color:var(--ink)}
-.rail__link[aria-current="page"]::after{content:'';position:absolute;right:calc(var(--sp-pad) * -1 - 4px);bottom:-3px;width:calc(var(--sp-pad) + 4px);height:3px;background:var(--ink)}
+/* the page being read: the binding thickens beside it */
+.rail__link[aria-current="page"]::after{content:'';position:absolute;right:calc(var(--sp-pad) * -1);top:0;bottom:-1px;width:3px;background:var(--ink)}
 @media (hover:hover){.rail__link:hover .rail__lab{color:var(--ink);text-decoration:none}}
-.rail__link:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:-3px}
-/* check-in open: the Scan row is the burgundy line of the index */
+.rail__link:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+/* check-in open: the Scan line says so, in the one live colour */
 .rail__link--live .rail__lab{color:var(--ink)}
-.rail__link--live .rail__lab::after{content:'Open';margin-left:.6em;font:400 10.5px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--seal);vertical-align:.2em}
-.rail__link--live{border-bottom-color:var(--seal)}
-.rail__link--live[aria-current="page"]{border-bottom-color:var(--seal)}
-.rail__link--live[aria-current="page"]::after{background:var(--seal)}
+.rail__link--live .rail__lab::after{content:'Open';margin-left:.8em;font:400 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--seal)}
 /* the colophon at the foot of the index */
-.rail__foot{margin:var(--sp-pad) var(--sp-pad) 0 0;padding-top:var(--sp-pad);border-top:var(--edge-panel) solid var(--ink)}
-.rail__who{display:grid;gap:3px;margin:0 0 var(--sp-row)}
-.rail__held{font:400 10px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
-.rail__name{font:400 clamp(18px,1.4vw,22px)/1.1 var(--f-mono);letter-spacing:.01em;text-transform:none;color:var(--ink);overflow-wrap:anywhere}
-.rail__role{font:400 10px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.rail__util{display:grid;gap:2px;justify-items:start;margin:0}
-.rail__motion,.acct .rail__motion{display:inline-flex;align-items:baseline;gap:.5em;min-height:40px;padding:0;margin:0;background:none;border:0;cursor:pointer;
-  font:400 11.5px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.rail__foot{margin:var(--sp-pad) var(--sp-pad) 0 0;padding-top:var(--sp-pad);border-top:1px solid var(--ink)}
+.rail__who{display:grid;gap:4px;margin:0 0 var(--sp-tight)}
+.rail__held{display:none}
+.rail__name{font:400 15px/1.2 var(--f-mono);letter-spacing:.01em;text-transform:none;color:var(--ink);overflow-wrap:anywhere}
+.rail__role{font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.rail__util{display:grid;gap:0;justify-items:start;margin:0}
+.rail__motion,.acct .rail__motion{display:inline-flex;align-items:baseline;gap:.5em;min-height:44px;padding:0;margin:0;background:none;border:0;cursor:pointer;
+  font:400 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .rail__motion i{display:none}
 .rail__motion span::after{content:' /';color:var(--tone)}
-.rail__motion b{font-weight:400;color:var(--ink);border-bottom:var(--edge-rule) solid transparent;padding-bottom:1px}
+.rail__motion b{font-weight:400;color:var(--ink);border-bottom:1px solid transparent;padding-bottom:1px}
 @media (hover:hover){.rail__motion:hover b{border-bottom-color:var(--ink)}}
-.rail__motion:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:3px}
-.rail__motion[aria-pressed="true"] b{color:var(--seal)}
-/* sign out: a small hollow stamp, the record closed */
-.rail__out,.acct__out{min-height:36px;padding:7px 10px 6px;margin-top:var(--sp-tight);
-  font:400 14px/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);
-  border:var(--edge-panel) solid var(--ink);transform:rotate(-2deg);transform-origin:0 100%;position:relative}
-.rail__out::before,.acct__out::before{content:'';position:absolute;inset:2px;border:var(--edge-rule) solid var(--ink);width:auto;height:auto;background:none;margin:0}
-@media (hover:hover){.rail__out:hover,.acct__out:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-  .rail__out:hover::before,.acct__out:hover::before{border-color:var(--paper);width:auto}}
-.rail__out:active,.acct__out:active{transform:rotate(0deg)}
-.rail__out:focus-visible,.acct__out:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:4px;background:none;color:var(--ink)}
-/* the same colophon on a phone, closing a record */
-.acct{display:grid;gap:var(--sp-row);border-top:var(--edge-panel) solid var(--ink);padding-top:var(--sp-pad);margin-top:var(--sp-block)}
-.acct__who{display:grid;gap:3px;margin:0}
-.acct__held{font:400 10px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
-.acct__name{font:400 18px/1.1 var(--f-mono);color:var(--ink);overflow-wrap:anywhere}
-.acct__role{font:400 10px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.acct__row{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-pad);flex-wrap:wrap;padding:0;border:0}
+.rail__motion:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.rail__motion[aria-pressed="true"] b{color:var(--ink)}
+.rail__out,.acct__out{margin:0}
+/* the same colophon closing a phone page: who is signed in, and the two settings */
+.acct{display:grid;gap:4px;border-top:1px solid var(--ink);padding-top:var(--sp-pad);margin-top:var(--sp-page)}
+.acct__who{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:0}
+.acct__held{display:none}
+.acct__name{font:400 15px/1.2 var(--f-mono);color:var(--ink);overflow-wrap:anywhere}
+.acct__role{font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.view--member .acct__who{display:none}
+.acct__row{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-pad);flex-wrap:wrap;padding:0;border:0}
 .acct__mark{display:none}
 @media(min-width:1024px){ .view--member .acct,.view--board .acct{display:none} }
-@media(min-width:1600px){ :root{--folio:150px} }
 
-/* the folio bar: thumb-tabs on the torn foot of the page */
-.tabs{background:var(--paper);padding-top:0;align-items:flex-end}
-.tabs::before{content:"";position:absolute;left:-2%;right:-2%;top:-1px;height:7px;background:var(--ink);
-  clip-path:polygon(0 38%,10% 12%,52% 0,86% 18%,100% 46%,99% 60%,55% 100%,12% 78%,0 64%)}
-.tabs button{flex:1 1 0;min-width:44px;padding:0 2px;background:none;color:var(--ink);overflow:visible;
-  align-items:stretch;justify-content:flex-end}
-.tabs button[aria-current="page"]{flex:1.8 1 0;background:transparent}
+/* the folio bar: one rule above, the page being read marked on it */
+.tabs{background:var(--paper);padding-top:0;align-items:stretch;border-top:1px solid var(--ink)}
+.tabs::before{content:none}
+.tabs button{flex:1 1 0;min-width:0;padding:0 2px;background:none;color:var(--ink);overflow:visible;
+  align-items:stretch;justify-content:flex-start}
+.tabs button[aria-current="page"]{flex:1 1 0;background:transparent}
 .tabs button[aria-current="page"]::after{content:none}
 .tabs .tab--live,.tabs .tab--live[aria-current="page"]{background:none;color:var(--ink)}
-.tab__tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  min-height:44px;margin:6px 2px 4px;padding:6px 4px 5px;border-top:var(--edge-panel) solid var(--tone);
-  transition:transform 100ms steps(2,end)}
-.tab__idx{font:400 10px/1 var(--f-mono);letter-spacing:.14em;color:var(--ink-2)}
-.tab__lab{font:400 11px/1.1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
-.tabs button[aria-current="page"] .tab__tab{border-top:3px solid var(--ink);margin-top:0;transform:translateY(-4px);
-  background:var(--paper)}
-.tabs button[aria-current="page"] .tab__idx{color:var(--ink)}
-.tabs button[aria-current="page"] .tab__lab{font:400 clamp(15px,4.2vw,18px)/1 var(--f-head);letter-spacing:.03em;color:var(--ink)}
-/* check-in open: the Scan tab is inked, and rises */
-.tabs .tab--live .tab__tab{background:var(--ink);border-top-color:var(--ink);transform:translateY(-5px);padding-inline:8px}
-.tabs .tab--live .tab__idx,.tabs .tab--live .tab__lab{color:var(--paper)}
-.tabs .tab--live[aria-current="page"] .tab__tab{transform:translateY(-8px)}
-.tabs button:active .tab__tab{transform:translateY(0)}
+.tab__tab{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:0;
+  min-height:44px;margin:0;padding:0;border-top:3px solid transparent;margin-top:-1px;transition:none;transform:none}
+.tab__idx{display:none}
+.tabs button .tab__lab,.tab__lab{font:400 10.5px/1.1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.tabs button[aria-current="page"] .tab__tab{border-top-color:var(--ink);transform:none;background:none}
+.tabs button[aria-current="page"] .tab__lab{font:400 10.5px/1.1 var(--f-mono);letter-spacing:.08em;color:var(--ink)}
+/* check-in open: a red dot before Scan, nothing more */
+.tabs .tab--live .tab__tab{background:none;transform:none;padding-inline:0}
+.tabs .tab--live .tab__lab{color:var(--ink)}
+.tabs .tab--live .tab__lab::before{content:'';display:inline-block;width:6px;height:6px;margin:0 5px 1px 0;border-radius:50%;background:var(--seal);vertical-align:middle}
+.tabs button:active .tab__tab{transform:none}
 .tabs button:focus-visible{outline:none}
-.tabs button:focus-visible .tab__tab{outline:var(--edge-panel) solid var(--ink);outline-offset:-3px}
-.tabs button span{font-size:inherit;font-family:inherit;letter-spacing:inherit}
-@media(prefers-reduced-motion:reduce){ .tab__tab{transition:none} }
-:root[data-still] .tab__tab{transition:none}
+.tabs button:focus-visible .tab__tab{outline:2px solid var(--ink);outline-offset:-3px}
 
 /* messages are margin notes at the page foot, not cards */
 .toast{display:grid;grid-template-columns:minmax(0,1fr);gap:2px;padding:10px 0 10px 12px;
   border:0;border-left:3px solid var(--ink);background:var(--paper);color:var(--ink)}
 .toast__dot{display:none}
-.toast__t{font:400 16px/1.15 var(--f-head);letter-spacing:.02em;text-transform:uppercase}
-.toast__d{margin:0;font:400 11.5px/1.45 var(--f-mono);letter-spacing:.04em;color:var(--ink-2)}
+.toast__t{font:400 15px/1.2 var(--f-body);letter-spacing:.02em;text-transform:uppercase}
+.toast__d{margin:0;font:400 11.5px/1.45 var(--f-mono);letter-spacing:.02em;color:var(--ink-2)}
 .toast--bad{background:var(--paper);color:var(--ink);border-left-color:var(--seal)}
 .toast--bad .toast__d{color:var(--ink-2)}
 .toasts{gap:var(--sp-tight)}
-@media(max-width:1023px){ .toasts{left:0;right:0;padding:0 var(--gutter);background:var(--paper);border-top:var(--edge-panel) solid var(--ink)}
+@media(max-width:1023px){ .toasts{left:0;right:0;padding:0 var(--gutter);background:var(--paper);border-top:1px solid var(--ink)}
   .toast{border-left:0;padding-left:0} .toast--bad .toast__t{color:var(--seal)} }
 
-/* page openings: the running head is a folio line; the brush rule opens
-   chapters only (Today and Club Tools) */
+/* page openings: the running head is a folio line */
 .folio{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-row);flex-wrap:wrap;
-  margin:0;padding:0 0 var(--sp-tight);border-bottom:var(--edge-rule) solid var(--ink);
-  font:400 10.5px/1.4 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+  margin:0;padding:0 0 var(--sp-tight);border-bottom:1px solid var(--ink);
+  font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .folio b{font-weight:400;color:var(--ink)}
+.folio__word{color:var(--ink)}
 .folio__meta{white-space:nowrap}
 .folio__back{display:inline-flex;align-items:baseline;gap:.6em;min-height:32px;padding:0;margin:0;border:0;background:none;
   font:inherit;letter-spacing:inherit;text-transform:inherit;color:var(--ink);cursor:pointer}
-.folio__back::before{content:'';width:14px;height:2px;background:currentColor;align-self:center}
-@media (hover:hover){.folio__back:hover{color:var(--seal)}}
-.folio__back:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:3px}
+.folio__back::before{content:'';width:12px;height:1.5px;background:currentColor;align-self:center}
+@media (hover:hover){.folio__back:hover{color:var(--ink)}}
+.folio__back:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .rechead:not(.rechead--chapter){padding-bottom:0}
 .rechead:not(.rechead--chapter)::after{content:none}
 
@@ -2582,7 +2233,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .authp__rule{text-align:right}
 /* the instruction is stamped across the foot of the form */
 .authp__act{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-pad) var(--sp-block);margin:calc(var(--sp-tight) * -1) 0 0}
-.authp__go{margin-left:-6px}
+.authp__go{margin-left:0}
 #authErr{display:none}
 #authErr.is-on{display:block;margin:0}
 @media(min-width:820px){
@@ -2590,12 +2241,12 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   .authp{grid-row:1;grid-column:2;margin:0 calc(var(--gutter) + env(safe-area-inset-right,0px)) 0 clamp(28px,4vw,64px);
     max-width:520px;align-self:center}
   .authp__f{grid-template-columns:11ch minmax(0,1fr);align-items:end;column-gap:var(--sp-pad)}
-  .authp__f > .authp__lab{grid-column:1;padding-bottom:9px;border-bottom:var(--edge-panel) solid var(--ink)}
+  .authp__f > .authp__lab{grid-column:1;padding-bottom:12px;border-bottom:0}
   .authp__f > .authp__in,.authp__f > .authp__pw{grid-column:2}
   .authp__f > .authp__rule{grid-column:2}
   .authp #authErr.is-on{position:static}
   /* stamped across the fold */
-  .authp__go{margin-left:calc(clamp(28px,4vw,64px) * -1 - 12px)}
+  .authp__go{margin-left:0}
 }
 /* arriving by the wall code */
 .arrive{gap:var(--sp-row)}
@@ -2624,15 +2275,14 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .mem > .files{grid-area:files}
 
 /* the name, on the paper; the line under it runs out through the gutter */
-.mem .who{display:grid;gap:10px;grid-template-rows:none;padding:0;margin:0;background:none;color:var(--ink);
+.mem .who{display:grid;gap:8px;grid-template-rows:none;padding:0;margin:0;background:none;color:var(--ink);
   overflow:visible;isolation:auto;container-type:inline-size;align-self:start;min-width:0}
-.mem .who__name{margin:0;font:400 clamp(40px,12cqw,60px)/.92 var(--f-display);letter-spacing:-.01em;
-  text-transform:none;color:var(--ink);overflow-wrap:anywhere;max-width:100%}
-.mem .who__line{display:flex;flex-wrap:wrap;align-items:center;gap:4px .6em;margin:0;min-width:0;
+.mem .who__name{margin:0;font:400 clamp(36px,10cqw,48px)/.92 var(--f-display);letter-spacing:-.01em;
+  text-transform:uppercase;color:var(--ink);overflow-wrap:anywhere;max-width:100%}
+.mem .who__line{display:flex;flex-wrap:wrap;align-items:center;gap:4px 1.2em;margin:0;min-width:0;
   font:400 11px/1.5 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
-.mem .who__line span + span::before{content:'·';margin-right:.6em;color:var(--tone)}
-.mem .who__line::after{content:'';flex:1 1 24px;min-width:24px;height:2px;background:var(--ink);
-  margin-right:calc((var(--gutter) + var(--safe-x)) * -1)}
+.mem .who__line span + span::before{content:none}
+.mem .who__line::after{content:none}
 
 /* the sheet: full-bleed on a phone, the head band bound into the torn edge */
 .card--sheet{--band:84px;--cx:calc(var(--gutter) + var(--safe-x));
@@ -2646,10 +2296,10 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 
 .card--sheet .card__id{position:relative;min-height:var(--band);
   display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"no kci" "num kci";
-  align-items:end;gap:0 var(--sp-pad);padding:10px var(--cx) 8px;
+  align-items:end;gap:0 var(--sp-pad);padding:8px var(--cx);
   background:var(--ink);color:var(--paper)}
 .card--sheet.card--full .card__id{padding-bottom:20px}
-.card--sheet .card__cardno{grid-area:no;align-self:start;font:400 11px/1 var(--f-mono);letter-spacing:.22em;
+.card--sheet .card__cardno{grid-area:no;align-self:start;font:400 11px/1 var(--f-mono);letter-spacing:.12em;
   text-transform:uppercase;opacity:.7}
 .card--sheet .card__num{grid-area:num;align-self:end;margin:0;display:flex;align-items:baseline;gap:.18em;
   font-family:var(--f-display);line-height:.82;letter-spacing:-.01em}
@@ -2663,22 +2313,22 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 
 .card--sheet .card__field{position:relative;aspect-ratio:5/6;background:none;border:0;isolation:isolate}
 .card--sheet .card__field::before,.card--sheet .card__field::after{content:none}
-.card__wm{position:absolute;left:50%;top:50%;width:76%;translate:-50% -50%;rotate:-8deg;opacity:.06;
+.card__wm{position:absolute;left:50%;top:50%;width:76%;translate:-50% -50%;rotate:0deg;opacity:.035;
   z-index:0;pointer-events:none}
 .card__wm .brandseal{display:block;width:100%;height:auto;--si:var(--ink);--sp:transparent}
 
 /* the foot band: the goal line, right-aligned, its rule leaving the page */
 .card--sheet .card__foot{position:relative;min-height:48px;display:flex;align-items:center;justify-content:flex-end;
   border-top:var(--edge-hair) solid var(--ink);padding:0 0 0 var(--cx)}
-.card--sheet .card__goal{position:relative;margin:0;padding:8px calc(var(--cx) + 10px) 8px 0;max-width:none;opacity:1;
+.card--sheet .card__goal{position:relative;margin:0;padding:8px var(--cx) 8px 0;max-width:none;opacity:1;
   font:400 12px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink);text-align:right}
-.card--sheet .card__goal::after{content:'';position:absolute;right:0;top:50%;width:var(--cx);height:var(--edge-hair);background:var(--ink)}
+.card--sheet .card__goal::after{content:none}
 /* the prize that is ready: a printed instruction, the burgundy rule after it running off the page */
 .card--sheet .card__goal--go{display:inline-flex;align-items:center;gap:10px;min-height:44px;
   padding:6px calc(var(--cx) + 12px) 6px 0;border:0;background:none;cursor:pointer;color:var(--ink);
   font:400 20px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase;text-decoration:none;text-align:left}
 .card--sheet .card__goal--go::before{content:none}
-.card--sheet .card__goal--go::after{top:auto;bottom:12px;height:2px;background:var(--seal);width:var(--cx)}
+.card--sheet .card__goal--go::after{content:none}
 .card__goal__arrow{display:inline-block;position:relative;width:22px;height:2px;background:currentColor;
   font-size:0;line-height:0;overflow:visible;flex:none}
 .card__goal__arrow::after{content:'';position:absolute;right:0;top:-3px;width:8px;height:8px;
@@ -2692,8 +2342,8 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .card--sheet .card__goal--go:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px;
   background:none;color:var(--ink);border-color:transparent}
 
-/* card full: a marginal note along the field's edge, reading upward */
-.card--sheet .card__punch{position:absolute;z-index:3;right:auto;top:auto;
+/* card full: the closed count says it; no second label */
+.card--sheet .card__punch{display:none;position:absolute;z-index:3;right:auto;top:auto;
   left:calc(100% - 36px - var(--safe-x));bottom:28%;margin:0;padding:0;border:0;background:none;
   font:400 16px/1 var(--f-head);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);
   white-space:nowrap;transform:rotate(-90deg);transform-origin:0 0;pointer-events:none}
@@ -2724,15 +2374,15 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .seal.seal--live .seal__mark path{fill:var(--ink)}
 .seal--live .seal__no{color:var(--ink)}
 .seal__go{position:absolute;left:50%;top:100%;translate:-50% 4px;
-  font:500 10px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--seal);white-space:nowrap}
+  font:400 10.5px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--seal);white-space:nowrap}
 @media (hover:hover){.seal--live:hover::after{border-width:3px}}
 .seal--live:focus-visible{outline:var(--edge-thin) solid var(--seal);outline-offset:6px}
-.seal--hero::after{content:'';position:absolute;inset:-8%;border:1px solid var(--ink);
+.seal--hero::after{content:none;position:absolute;inset:-8%;border:1px solid var(--ink);
   border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;transform:rotate(-5deg);pointer-events:none}
-.seal--hero .seal__no{font:400 14px/1 var(--f-head);letter-spacing:.02em;color:var(--ink)}
-.seal--mile .sf-back{stroke:var(--ink);stroke-width:1.6;stroke-opacity:1}
-.seal--mile.seal--set .sf-back{stroke-width:3}
-.seal--mile .seal__no{font:400 16px/1 var(--f-head);letter-spacing:.02em}
+.seal--hero .seal__no{color:var(--ink)}
+.seal--mile .sf-back{stroke:var(--ink);stroke-width:1;stroke-opacity:1}
+.seal--mile.seal--set .sf-back{stroke-width:2}
+.seal--mile .seal__no{color:var(--ink)}
 .seal--mile:not(.seal--set) .seal__no{color:var(--ink)}
 .seal--mile.seal--set .seal__no{color:var(--ink)}
 /* a pointer over a pressed stamp lifts it a little; the record waits for a tap */
@@ -2744,17 +2394,17 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 
 /* a stamp held up: square to the reader, half as large again, rimmed */
 .card--inspect .card__route,.card--inspect .seal:not(.seal--held){opacity:.4}
-.card--inspect .card__wm{opacity:.03}
+.card--inspect .card__wm{opacity:.02}
 .card--inspect .seal:not(.seal--held) .seal__no{opacity:1}
-.seal.seal--held .sf-press{transform:rotate(0deg) scale(1.5)}
+.seal.seal--held .sf-press{transform:rotate(0deg) scale(1.3)}
 /* a held seat at the paper's edge is drawn a little inward, so the enlarged face is not cut */
 .seal--held{translate:var(--hx,0) var(--hy,0)}
 .seal--held:nth-child(10){--hx:-30%}
 .seal--held:nth-child(7){--hx:12%}
 @container (min-width:480px){ .seal--held:nth-child(10){--hx:0} .seal--held:nth-child(7){--hx:0} .seal--held:nth-child(5){--hx:-16%} .seal--held:nth-child(1){--hx:10%} }
-.seal--held::after{content:'';position:absolute;inset:-32%;border:1px solid var(--ink);
+.seal--held::after{content:'';position:absolute;inset:-22%;border:1px solid var(--ink);
   border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;transform:rotate(-5deg);pointer-events:none}
-.seal--held .seal__no{font:400 14px/1 var(--f-head);color:var(--ink);right:-26%;bottom:-24%}
+.seal--held .seal__no{font:400 13px/1 var(--f-mono);color:var(--ink);right:-18%;bottom:-16%}
 .card--inspect .card__goal{visibility:hidden}
 .card__lead{position:absolute;z-index:31;background:var(--ink);pointer-events:none}
 /* the record in the foot band */
@@ -2764,40 +2414,40 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   font:400 11px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
 .card__record[data-at="foot"]::before{content:none}
 .card__record[data-at="foot"] .sealmeta__no{grid-area:no;align-self:center;margin:0 4px 0 0;padding:0;border:0;
-  font:400 22px/1 var(--f-head);letter-spacing:.02em;color:var(--ink)}
+  font:400 15px/1 var(--f-mono);letter-spacing:.04em;color:var(--ink)}
 .card__record[data-at="foot"] .sealmeta__day{grid-area:day;color:var(--ink);font-size:11px;align-self:end}
 .card__record[data-at="foot"] .sealmeta__row{grid-area:row;display:block;align-self:end;white-space:nowrap}
 .card__record[data-at="foot"] .sealmeta__row i{margin-left:8px;color:var(--ink)}
-.card__record[data-at="foot"] .sealmeta__how{grid-area:how;justify-self:start;margin:1px 0 0;font-size:9.5px;padding:1px 5px}
+.card__record[data-at="foot"] .sealmeta__how{grid-area:how;justify-self:start;margin:1px 0 0}
 /* the record in the margin beside a wide sheet, right-aligned to the field's rule */
-.card__record[data-at="margin"]{position:absolute;z-index:32;right:calc(100% + 24px);translate:0 -50%;width:200px;max-width:none;
+.card__record[data-at="margin"]{position:absolute;z-index:32;right:calc(100% + 24px);translate:0 -50%;width:max-content;max-width:200px;
   display:grid;gap:2px;justify-items:end;text-align:right;padding:0;background:var(--paper);border:0;
   font:400 11.5px/1.5 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
 .card__record[data-at="margin"]::before{content:none}
 .card__record[data-at="margin"] .sealmeta__no{margin:0;padding:0 0 4px;border:0;
-  font:400 26px/1 var(--f-head);letter-spacing:.02em;color:var(--ink)}
+  font:400 18px/1 var(--f-mono);letter-spacing:.04em;color:var(--ink)}
 .card__record[data-at="margin"] .sealmeta__day{color:var(--ink);font-size:11.5px}
 .card__record[data-at="margin"] .sealmeta__row{display:grid;justify-items:end;gap:2px}
 .card__record[data-at="margin"] .sealmeta__row i{margin:0;color:var(--ink)}
 .card__record[data-at="margin"] .sealmeta__how{justify-self:end;margin-top:4px}
 
 /* the standing: one ledger line, the count in the head face */
-.standing-band{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px .7em;justify-self:start;
+.standing-band{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 1.4em;justify-self:start;
   grid-template-areas:none;grid-template-columns:none;
-  margin:0;padding:8px 0 0;border:0;border-top:var(--edge-hair) solid var(--ink);
-  font:400 12px/1.5 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+  margin:0;padding:0;border:0;
+  font:400 12px/1.5 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
 .standing-band > span{display:inline;white-space:nowrap}
-.standing-band > span + span::before{content:'·';margin-right:.7em;color:var(--tone)}
+.standing-band > span + span::before{content:none}
 .standing-band__fig{grid-area:auto;margin:0;padding:0;font:inherit;line-height:inherit;color:inherit}
 .standing-band b{font-weight:400;color:var(--ink)}
 .standing-band b small{font-size:inherit}
 .standing-band i{font-style:normal}
-.standing-band__fig b{font:400 18px/1 var(--f-head);letter-spacing:.02em}
+.standing-band__fig b{font:inherit;letter-spacing:inherit}
 
 /* the cards already filled: an index, each line opening the card it names */
 .files{display:grid;gap:0;border:0;padding:0;min-width:0;justify-self:stretch}
-.files__mark{margin:0;padding:0 0 6px;border-bottom:var(--edge-hair) solid var(--ink);
-  font:400 10.5px/1.4 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.files__mark{margin:0;padding:0 0 var(--sp-tight);border-bottom:1px solid var(--ink);
+  font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .files__list{display:block;list-style:none;margin:0;padding:0}
 .filed{display:block;border-bottom:var(--edge-hair) solid var(--tint)}
 .filed__row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:baseline;column-gap:12px;width:100%;
@@ -2811,15 +2461,13 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   .filed__row > .filed__when{grid-area:when}
   .filed__row > .filed__prize{grid-area:prize;justify-self:start}
 }
-.filed__no{margin:0;font:400 18px/1 var(--f-head);letter-spacing:.02em;color:var(--ink)}
+.filed__no{margin:0;font:400 13px/1.4 var(--f-mono);letter-spacing:.06em;color:var(--ink)}
 .filed__when{margin:0;color:var(--ink);letter-spacing:.06em}
 .filed__prize{margin:0;color:var(--ink);white-space:nowrap;justify-self:end}
-.filed__prize--took::after{content:'';display:inline-block;width:7px;height:7px;margin-left:8px;background:var(--seal)}
-.filed__row--go .filed__prize{color:var(--seal);padding-bottom:2px;border-bottom:2px solid var(--seal)}
 .filed__row:active{background:var(--ink)}
 .filed__row:active .filed__no,.filed__row:active .filed__when,.filed__row:active .filed__prize{color:var(--paper);border-color:var(--paper)}
 .filed__row:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:2px}
-.filed__row[aria-expanded="true"] .filed__no{color:var(--seal)}
+.filed__row[aria-expanded="true"] .filed__no{color:var(--ink)}
 .filed__card{position:relative;display:block;margin:0 0 var(--sp-pad);padding:0;border:0;box-shadow:none;background:none;
   container-type:normal;grid-template-columns:none}
 .filed__card[hidden]{display:none}
@@ -2843,16 +2491,14 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
     padding:8px var(--sp-pad) 10px clamp(18px,3cqw,28px)}
   .card--sheet.card--full .card__id{padding-bottom:20px}
   .card--sheet .card__num b{font-size:80px}
-  .card--sheet .card__kci{position:absolute;z-index:3;right:clamp(16px,3cqw,28px);top:calc(var(--band) - 48px)}
-  .card--sheet .card__kci .brandseal{width:56px}
+  .card--sheet .card__kci{position:absolute;z-index:3;right:clamp(18px,3cqw,28px);top:calc((var(--band) - 40px) / 2)}
+  .card--sheet .card__kci .brandseal{width:40px}
   .card--sheet .card__field{aspect-ratio:10/9;border-left:var(--edge-heavy) solid var(--ink)}
   .card--sheet .card__foot{min-height:var(--band);background:var(--ink);color:var(--paper);border:0;
     align-items:end;justify-content:flex-end;padding:0 0 12px var(--sp-pad)}
   .card--sheet.card--full .card__foot{padding-bottom:20px}
-  .card--sheet .card__goal{color:var(--paper);padding:8px calc(56px + clamp(16px,3cqw,28px) + 24px) 8px 0}
-  .card--sheet .card__goal::after{width:calc(56px + clamp(16px,3cqw,28px) + 12px);background:var(--paper);opacity:.7}
-  .card--sheet .card__goal--go{color:var(--paper);font-size:24px;padding:6px calc(56px + clamp(16px,3cqw,28px) + 24px) 6px 0}
-  .card--sheet .card__goal--go::after{background:var(--seal);height:3px;opacity:1;width:calc(56px + clamp(16px,3cqw,28px) + 12px)}
+  .card--sheet .card__goal{color:var(--paper);padding:8px calc(40px + clamp(18px,3cqw,28px) + 20px) 8px 0}
+  .card--sheet .card__goal--go{color:var(--paper);font-size:18px;padding:6px calc(40px + clamp(18px,3cqw,28px) + 20px) 6px 0}
   .card--sheet .card__goal--go:hover{color:var(--paper)}
   .card--sheet .card__goal--go:focus-visible{outline-color:var(--paper);color:var(--paper)}
   .card--sheet .card__punch{left:calc(var(--edge-heavy) + 8px);bottom:24px;font-size:22px}
@@ -2863,35 +2509,33 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   .seal__go{font-size:11px;translate:-50% 6px}
 }
 
-/* from 900 the record is two columns: the name, the standing and the index
-   at the left, the card at the right, the wider the page the wider the margin */
-@media(min-width:900px){
+/* the record is two columns only where both fit beside each other: the
+   name, the standing and the index at the left, the card at the right */
+@media(min-width:1180px){
   .mem,.mem--filed{grid-template-columns:minmax(312px,1fr) minmax(480px,800px);column-gap:clamp(32px,4vw,48px);row-gap:var(--sp-block);
     grid-template-areas:"who card" "band card" "files card" ". card";grid-template-rows:auto auto auto minmax(0,1fr)}
   .mem .who{margin:0;padding:0;align-self:start}
-  .mem .who__name{font-size:clamp(56px,5vw,72px);line-height:.9}
+  .mem .who__name{font-size:clamp(44px,3.5vw,52px);line-height:.9}
   .mem .who__line{flex-direction:column;align-items:flex-start;gap:2px}
   .mem .who__line span + span::before{content:none;margin:0}
   .mem .who__line::after{content:none}
-  .mem .who::after{content:'';display:block;width:96px;height:2px;background:var(--ink);margin-top:2px}
   .card--sheet{margin-inline:0}
   .mem .standing-band{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:none;gap:8px;justify-self:stretch;max-width:260px;
-    border-top:0;padding:0;margin-top:calc(var(--sp-block) * -1 + var(--sp-pad))}
+    border-top:0;padding:0;margin-top:0}
   .standing-band > span{display:block;white-space:normal}
   .standing-band > span + span::before{content:none}
-  .standing-band b{font:400 20px/1 var(--f-head);letter-spacing:.02em;margin-right:6px}
-  .standing-band b small{font:400 12px/1 var(--f-mono);letter-spacing:.06em;color:var(--ink-2)}
-  .standing-band__fig b{font-size:20px}
+  .standing-band b{font:inherit;letter-spacing:inherit;margin-right:.4em}
+  .standing-band b small{font:inherit;letter-spacing:inherit;color:var(--ink-2)}
   .files{max-width:360px}
 }
 
 /* ══ Today: the opening page of the member's year. The meeting's number
-   is the masthead, set on one heavy rule that runs off the page; what
-   the day is — check-in open, checked in, still to come, closed,
-   nothing today — is a different masthead, not a different label. Under
-   it the card as the open page it is printed on, and the last stamp
-   and the meetings ahead as folios on one hairline. ══ */
-.view--home .folio,.view--record .folio,.view--rewards .folio{margin-bottom:var(--sp-pad)}
+   is the masthead, standing on one rule that runs off the page; what the
+   day is — check-in open, checked in, still to come, closed, nothing
+   today — changes the masthead's form, not a label. The one instruction
+   is the ink block beside the number. Under it the card, printed on the
+   page, and the meetings ahead as a short list. ══ */
+.view--home .folio,.view--record .folio,.view--rewards .folio{margin-bottom:var(--sp-block)}
 .deck{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr);grid-template-areas:"act" "card" "side";align-items:start}
 .deck__act{grid-area:act;min-width:0}
 
@@ -2899,275 +2543,243 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   border:0;border-radius:0;background:none;color:var(--ink);text-align:left;font:inherit;letter-spacing:inherit;
   text-transform:none;cursor:default;min-width:0}
 .mast--open{cursor:pointer;-webkit-tap-highlight-color:transparent}
-.mast__kick{display:flex;flex-wrap:wrap;gap:2px .6em;margin:0 0 6px;
-  font:400 11px/1.5 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
-.mast__kick span + span::before{content:'·';margin-right:.6em;color:var(--tone)}
-/* the rule the numeral stands on, to the right edge of the page */
-.mast__line{position:relative;display:flex;align-items:flex-end;flex-wrap:wrap;gap:0 var(--sp-pad);min-width:0;
-  margin-right:calc(var(--cx) * -1);padding-right:var(--cx);
-  border-bottom:var(--edge-heavy) solid var(--ink)}
-.mast__gm{align-self:flex-start;margin-top:6px;font:400 11px/1 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
-.mast__no{position:relative;display:inline-block;margin:0 0 -.04em calc(var(--cx) * -1);padding-left:6px;
-  font:400 clamp(120px,38vw,168px)/.8 var(--f-display);letter-spacing:-.02em;color:var(--ink);font-weight:400}
-.mast__state{margin-left:auto;align-self:flex-end;padding:0 0 10px;text-align:right;
-  font:400 12px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
-/* check-in open: the command stands on the rule, which thickens under it */
-.mast__cmd{position:relative;display:inline-block;padding-bottom:6px;
-  font:400 clamp(26px,7vw,32px)/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
-.mast__cmd::after{content:'';position:absolute;left:0;right:calc(var(--cx) * -1);bottom:calc(var(--edge-heavy) * -1 - 4px);height:4px;background:var(--ink)}
-@media (hover:hover){.mast--open:hover .mast__cmd::after{height:8px;bottom:calc(var(--edge-heavy) * -1 - 8px)}}
-.mast--open:active .mast__cmd{translate:1px 0}
-.mast--open:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:6px}
+.mast__kick{display:flex;flex-wrap:wrap;gap:2px 1.2em;margin:0 0 var(--sp-tight);
+  font:400 11px/1.5 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.mast__kick span + span::before{content:none}
+/* the rule the numeral stands on, out to the page's right edge */
+.mast__line{position:relative;display:flex;align-items:flex-end;flex-wrap:wrap;gap:var(--sp-tight) var(--sp-block);min-width:0;
+  margin-right:calc(var(--cx) * -1);padding-right:var(--cx);padding-bottom:var(--sp-pad);
+  border-bottom:2px solid var(--ink)}
+.mast__gm{align-self:flex-start;margin:.9em -.6em 0 0;font:400 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.mast__no{position:relative;display:inline-block;margin:0 0 -.1em;padding:0;
+  font:400 clamp(112px,34vw,150px)/.8 var(--f-display);letter-spacing:-.02em;color:var(--ink);font-weight:400}
+.mast__state{align-self:flex-end;padding:0 0 4px;text-align:left;
+  font:400 12px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+/* check-in open: the instruction, an ink block beside the number */
+.mast__cmd{display:inline-flex;align-items:center;min-height:44px;padding:13px 20px 12px;
+  font:400 18px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;color:var(--paper);background:var(--ink)}
+.mast--open .mast__state{padding-bottom:0}
+@media (hover:hover){.mast--open:hover .mast__cmd{background:var(--ink-lift)}}
+.mast--open:active .mast__cmd{translate:0 1px}
+.mast--open:focus-visible{outline:2px solid var(--ink);outline-offset:6px}
 /* checked in: the stamp it earned, pressed over the numeral's foot */
-.mast__imp{position:absolute;right:-.3em;bottom:-.06em;width:.52em;height:.52em;rotate:-8deg;overflow:visible;pointer-events:none}
+.mast__imp{position:absolute;right:-.14em;bottom:-.04em;width:.5em;height:.5em;rotate:-8deg;overflow:visible;pointer-events:none}
+.mast--set .mast__state{margin-left:.3em}
 .mast__imp__face{fill:var(--ink)}
 .mast__imp g path{fill:var(--paper)}
-/* today, not open: a numeral not yet pressed */
-.mast--today .mast__no{color:transparent;-webkit-text-stroke:2px var(--ink)}
-/* closed without a stamp: the number in grey, the ledger's line drawn through it */
+/* closed without a stamp: the number in grey, one line drawn through it */
 .mast--closed .mast__no{color:var(--tone)}
-.mast--closed .mast__no::after{content:'';position:absolute;left:0;right:-.04em;top:44%;height:1.5px;background:var(--ink)}
-/* nothing today: the date is the anchor, on a dotted rule */
-.mast--next .mast__line{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"gm gm" "date state";
-  align-items:end;border-bottom-style:dotted;border-bottom-width:3px;padding-bottom:10px}
-.mast--next .mast__gm{grid-area:gm;margin:0 0 8px}
-.mast__date{grid-area:date;font:400 clamp(34px,9vw,44px)/1 var(--f-head);letter-spacing:.02em;text-transform:uppercase;color:var(--ink);font-weight:400}
-.mast--next .mast__state{grid-area:state;padding-bottom:4px}
+/* nothing today: the next meeting's date is the anchor, on a dotted rule */
+.mast--next .mast__line{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"date state";
+  align-items:end;border-bottom-width:1px;padding-bottom:var(--sp-row)}
+.mast__date{grid-area:date;font:400 clamp(30px,8.4vw,40px)/1 var(--f-head);letter-spacing:.02em;text-transform:uppercase;color:var(--ink);font-weight:400}
+.mast--next .mast__state{grid-area:state;padding-bottom:4px;text-align:right}
 /* nothing scheduled: the last stamp is the anchor */
-.mast--none .mast__line{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"g gm" "g date";
-  column-gap:var(--sp-pad);align-items:end;border-bottom-style:dotted;border-bottom-width:3px;padding-bottom:12px}
+.mast--none .mast__line{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"gm" "date";
+  align-items:end;border-bottom-width:1px;padding-bottom:var(--sp-row)}
 .mast--none .mast__line:has(.mast__no){display:flex;align-items:flex-end}
-.mast--none .mast__line:has(.mast__no) .mast__gm{align-self:flex-start;margin:6px 0 0}
-.mast__last{grid-area:g;width:96px;height:96px;rotate:-2deg;overflow:visible}
-.mast__last__face{fill:var(--ink)}
-.mast__last g path{fill:var(--paper)}
+.mast--none .mast__line:has(.mast__no) .mast__gm{align-self:flex-start;margin:.9em -.6em 0 0}
 .mast--none .mast__gm{grid-area:gm;align-self:end;margin:0 0 6px}
-.mast--none .mast__date{grid-area:date;font-size:clamp(24px,6vw,30px)}
-.mast--none .mast__no{color:transparent;-webkit-text-stroke:2px var(--ink)}
-/* a prize within reach, or a card full: a second line under the rule */
-.mast__more{margin:10px 0 0;font:400 clamp(18px,5vw,22px)/1.1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;color:var(--ink)}
-.deck--near .seal--mile::after{content:'';position:absolute;inset:-9%;border:2px solid var(--seal);
+.mast--none .mast__date{grid-area:date;font-size:clamp(22px,6vw,28px)}
+.mast--none .mast__no{color:var(--tone)}
+/* a prize within reach: one line under the rule */
+.mast__more{margin:var(--sp-tight) 0 0;font:400 12px/1.5 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);text-align:left}
+.deck--near .seal--mile::after{content:'';position:absolute;inset:-9%;border:2px solid var(--ink);
   border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;transform:rotate(-5deg);pointer-events:none}
 
-/* the card on the page: an identity line, then the seats on bare paper */
+/* the card on the page: one line of what it holds, then the seats on bare paper */
 .card--field{--cx:calc(var(--gutter) + var(--safe-x));position:relative;display:block;width:auto;
   border:0;box-shadow:none;background:none}
-.card--field .card__line{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:flex-end;gap:2px .7em;margin:0 0 4px;
-  font:400 11px/1.5 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
-.card--field .card__line > * + *::before{content:'·';margin-right:.7em;color:var(--tone)}
+.card--field .card__line{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:flex-start;gap:2px 1.2em;margin:0;
+  font:400 11px/1.5 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.card--field .card__line > * + *::before{content:none}
 .card--field .card__cardno{font:inherit;letter-spacing:inherit;opacity:1;color:var(--ink)}
 .card--field .card__num{display:inline;margin:0;font:inherit;letter-spacing:inherit;color:var(--ink)}
-.card--field .card__num b{font:400 15px/1 var(--f-head);letter-spacing:.02em}
-.card--field .card__num span{font:inherit;letter-spacing:inherit;opacity:1;color:var(--ink-2);margin-left:.35em}
+.card--field .card__num b{font:inherit;letter-spacing:inherit}
+.card--field .card__num span{font:inherit;letter-spacing:inherit;opacity:1;color:var(--ink-2)}
 .card--field .card__goal{margin:0;font:inherit;letter-spacing:inherit;opacity:1;max-width:none;color:var(--ink-2)}
-.card--field .card__goal--go{display:inline-flex;align-items:center;gap:8px;min-height:32px;padding:4px 0 2px;
-  border:0;border-bottom:2px solid var(--seal);background:none;cursor:pointer;
-  font:400 15px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase;color:var(--ink);text-decoration:none}
+.card--field .card__goal--go{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:4px 0 2px;
+  border:0;border-bottom:2px solid var(--ink);background:none;cursor:pointer;
+  font:400 12px/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);text-decoration:none}
 .card--field .card__goal--go::before{content:none}
 @media (hover:hover){.card--field .card__goal--go:hover{color:var(--ink);border-bottom-width:3px;background:none}}
-.card--field .card__goal--go:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px;color:var(--ink);background:none}
+.card--field .card__goal--go:focus-visible{outline:2px solid var(--ink);outline-offset:3px;color:var(--ink);background:none}
 .card--field .card__field{position:relative;aspect-ratio:5/6;margin:0 calc(var(--cx) * -1);border:0;background:none;isolation:isolate}
 .card--field .card__field::before,.card--field .card__field::after{content:none}
 .card--field .card__punch{display:none}
+/* the masthead carries the instruction; the live seat needs no word of its own here */
+.card--field .seal__go{display:none}
 @container (min-width:480px){ .card--field .card__field{aspect-ratio:10/9} }
 
-/* the last stamp and the meetings ahead: two folios on one hairline */
-.deck__side{grid-area:side;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:0 var(--sp-pad);align-content:start;min-width:0}
-.fol{position:relative;min-width:0;padding:2px 0 0}
-.fol--last{border-right:var(--edge-hair) solid var(--tint);padding-right:var(--sp-pad)}
-.fol__lab{margin:0 0 8px;font:400 10.5px/1.4 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
-.fol__glyph{display:block;width:40px;height:40px;rotate:-2deg;overflow:visible}
-.fol__glyph__face{fill:var(--ink)}
-.fol__glyph g path{fill:var(--paper)}
-.fol__blank svg{display:block;width:40px;height:40px;overflow:visible}
-.fol__blank path{fill:none;stroke:var(--ink);stroke-width:1}
-.fol__line{margin:6px 0 0;font:400 12px/1.5 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
-.fol__list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-.fol__row{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 10px;min-width:0}
-.fol__no{font:400 22px/1 var(--f-head);letter-spacing:.02em;color:var(--ink)}
-.fol__day{font:400 12px/1.5 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
-.fol__at{flex-basis:100%;font:400 11px/1.4 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+@media(min-width:1024px){ .card--sheet{margin-inline:0} }
+
+/* a portrait seat 7 keeps its number clear of seat 8's face */
+@container (max-width:479px){ .seal:nth-child(7) .seal__no{right:auto;left:-3%} }
+
+/* the meetings ahead: a short list */
+.deck__side{grid-area:side;display:block;min-width:0}
+.fol{position:relative;min-width:0;padding:0}
+.fol__lab{margin:0 0 var(--sp-tight);padding-bottom:var(--sp-tight);border-bottom:1px solid var(--ink);
+  font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.fol__line{margin:0;font:400 12px/1.5 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.fol__list{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.fol__row{display:grid;grid-template-columns:6ch minmax(0,1fr);align-items:baseline;gap:0 var(--sp-row);min-width:0;
+  padding:var(--sp-tight) 0;border-bottom:1px solid var(--tint)}
+.fol__no{font:400 13px/1.3 var(--f-mono);letter-spacing:.06em;color:var(--ink)}
+.fol__day{font:400 13px/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.fol__at{grid-column:2;font:400 11px/1.4 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
 
 @media(min-width:480px){
-  .mast__no{font-size:clamp(168px,22vw,240px)}
+  .mast__no{font-size:clamp(150px,20vw,190px)}
 }
 @media(min-width:1100px){
-  .deck{grid-template-columns:minmax(200px,30%) minmax(0,1fr);column-gap:clamp(28px,3.2vw,56px);
+  .deck{grid-template-columns:minmax(200px,26%) minmax(0,1fr);column-gap:clamp(32px,4vw,64px);row-gap:var(--sp-page);
     grid-template-areas:"act act" "side card";grid-template-rows:auto minmax(0,1fr)}
-  .deck > .card{grid-area:card;max-width:none}
-  .mast__no{font-size:clamp(220px,20vw,320px);margin-left:calc(var(--gutter) * -1 - 6px)}
-  .mast__state{font-size:13px}
-  .mast__cmd{font-size:clamp(32px,2.6vw,40px)}
-  .mast__more{font-size:clamp(22px,1.8vw,26px);text-align:right;margin-right:var(--gutter)}
-  .card--field .card__field{margin:0 calc(var(--gutter) * -1) 0 0}
-  .deck__side{grid-template-columns:minmax(0,1fr);gap:var(--sp-block);border-left:var(--edge-hair) solid var(--tint);padding-left:var(--sp-pad)}
-  .fol--last{border-right:0;padding-right:0}
+  .deck > .card{grid-area:card;width:100%;max-width:680px;justify-self:end}
+  .mast__line{margin-right:0;padding-right:0}
+  .mast__no{font-size:clamp(190px,14vw,230px)}
+  .mast__cmd{font-size:20px;padding:15px 24px 14px}
+  .card--field .card__field{margin:0}
+  .deck__side{padding-top:2px}
 }
 
 /* ══ Record: the year as one line, every meeting at its true date; under
-   it the minute book — the meeting's number hung from one archival
-   hairline, the stamp beside it, a missed meeting left blank, the
-   space between entries growing with the weeks between them, a card
-   filled ruled across the page as a chapter ══ */
+   it the minute book in the record face — number, stamp, date, time —
+   a missed meeting left blank and grey, the space between entries
+   growing with the weeks between them, a card filled ruled across the
+   page as a chapter. The quietest page: the stamps are the only ink ══ */
 .view--record{--cx:calc(var(--gutter) + var(--safe-x))}
-.yline{position:relative;height:36px;margin:var(--sp-tight) calc(var(--cx) * -1) 4px 0}
-.yline__rule{position:absolute;left:0;top:50%;width:var(--now);height:var(--edge-thin);background:var(--ink);translate:0 -50%}
-.yline__ahead{position:absolute;left:var(--now);right:0;top:50%;height:0;border-top:var(--edge-hair) dotted var(--tone)}
+.yline{position:relative;height:32px;margin:var(--sp-tight) calc(var(--cx) * -1) var(--sp-tight) 6px}
+.yline__rule{position:absolute;left:0;top:50%;width:var(--now);height:2px;background:var(--ink);translate:0 -50%}
+.yline__ahead{position:absolute;left:var(--now);right:0;top:50%;height:0;border-top:1px dotted var(--tone)}
 .yt{position:absolute;top:50%;translate:-50% -50%;display:block}
-.yt--set{width:13px;height:13px;z-index:1}
-.yt--set svg{display:block;width:100%;height:100%;overflow:visible;rotate:var(--lean,-2deg)}
-.yt--set:nth-child(5n+1) svg{--lean:-2.1deg} .yt--set:nth-child(5n+2) svg{--lean:1.4deg} .yt--set:nth-child(5n+3) svg{--lean:-1.2deg}
-.yt--set:nth-child(5n+4) svg{--lean:2.3deg} .yt--set:nth-child(5n) svg{--lean:-1.7deg}
+.yt--set{width:11px;height:11px;z-index:1}
+.yt--set svg{display:block;width:100%;height:100%;overflow:visible}
 .yt--set path{fill:var(--ink)}
-.yt--set g path{fill:var(--paper)}
-.yt--miss{width:1px;height:8px;background:var(--ink);translate:-50% 1px}
-.yt--open,.yt--today{width:11px;height:11px;border:1.5px solid var(--seal);border-radius:50%;background:var(--paper);z-index:1}
-.yt--up{width:6px;height:6px;border:1px solid var(--tone);border-radius:50%;background:var(--paper)}
-.yt--card{width:var(--edge-thin);height:22px;background:var(--ink);translate:calc(-50% + 11px) -50%}
-.tally{display:block;margin:0;padding:0;border:0;text-align:right;
-  font:400 11px/1.5 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.yt--set g{display:none}
+.yt--miss{width:1px;height:8px;background:var(--ink-2);translate:-50% 1px}
+.yt--today{width:10px;height:10px;border:1.5px solid var(--ink);border-radius:50%;background:var(--paper);z-index:1}
+.yt--open{width:10px;height:10px;border:1.5px solid var(--seal);border-radius:50%;background:var(--paper);z-index:1}
+.yt--up{width:5px;height:5px;border:1px solid var(--tone);border-radius:50%;background:var(--paper)}
+.yt--card{width:2px;height:18px;background:var(--ink);translate:calc(-50% + 9px) -50%}
+.tally{display:block;margin:0;padding:0;border:0;text-align:left;
+  font:400 12px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .tally b{font:inherit;color:var(--ink)}
 
-.ledger{--line:56px;position:relative;display:block;margin-top:var(--sp-block);padding:0}
-.ledger::before{content:'';position:absolute;left:var(--line);top:0;bottom:0;width:var(--edge-hair);background:var(--tint)}
+.ledger{--line:44px;position:relative;display:block;max-width:640px;margin-top:var(--sp-block);padding:0}
+.ledger::before{content:'';position:absolute;left:calc(var(--line) + 6px);top:0;bottom:0;width:1px;background:var(--tint)}
 .ledger__group{position:relative}
-.ledger__month{position:absolute;left:0;top:10px;margin:0;padding:0;border:0;width:auto;height:auto;
-  writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;
-  font:400 9.5px/1 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
-.ledger__month:first-child{margin-top:0}
+.ledger__month{position:relative;margin:0;padding:var(--sp-block) 0 var(--sp-tight);border:0;background:var(--paper);
+  writing-mode:horizontal-tb;transform:none;white-space:nowrap;
+  font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.ledger__group:first-child .ledger__month{padding-top:0}
 .ledger__mname{font:inherit;letter-spacing:inherit;text-transform:inherit}
-.ledger__chapter{display:flex;flex-wrap:wrap;gap:2px 1em;margin:16px calc(var(--cx) * -1) 16px 0;padding:8px 0 0;
-  border-top:var(--edge-thin) solid var(--ink);
-  font:400 11px/1.5 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.ledger__chapter{display:flex;flex-wrap:wrap;gap:2px 1.2em;margin:var(--sp-pad) 0;padding:var(--sp-tight) 0 0;position:relative;background:var(--paper);
+  border-top:2px solid var(--ink);
+  font:400 11px/1.5 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .ledger__chapter span:first-child{color:var(--ink)}
-.ledger__chapter span + span::before{content:'·';margin-right:1em;color:var(--tone)}
+.ledger__chapter span + span::before{content:none}
 
-.lrow{display:grid;grid-template-columns:var(--line) 40px minmax(0,1fr) auto;align-items:center;gap:0 10px;
-  width:100%;margin:0;padding:6px 0;border:0;border-radius:0;background:none;color:inherit;font:inherit;text-align:left;min-height:52px}
-/* a gap of weeks reads as space, and a dashed hairline across the entry
-   (a pseudo grid item would push a button row's cells out of order) */
-.lrow--gap2{margin-top:14px;border-top:var(--edge-hair) dashed var(--tone);padding-top:12px}
-.lrow--gap3{margin-top:28px;border-top:var(--edge-hair) dashed var(--tone);padding-top:12px}
-.lrow__no{justify-self:end;padding:0 6px 0 12px;
-  font:400 40px/1 var(--f-head);letter-spacing:.01em;color:var(--ink)}
-.lrow--miss .lrow__no{color:transparent;-webkit-text-stroke:1px var(--tone)}
-.lrow--upcoming .lrow__no{color:var(--ink-2)}
-.lrow--miss.lrow--today .lrow__no,.lrow--open .lrow__no,.lrow--blank .lrow__no{color:transparent;-webkit-text-stroke:1.2px var(--ink)}
+.lrow{display:grid;grid-template-columns:var(--line) 32px minmax(0,1fr) auto;align-items:center;gap:0 var(--sp-row);
+  width:100%;margin:0;padding:6px 0;border:0;border-radius:0;background:none;color:inherit;font:inherit;text-align:left;min-height:44px}
+/* a gap of weeks reads as space */
+.lrow--gap2{margin-top:var(--sp-tight);border-top:0;padding-top:6px}
+.lrow--gap3{margin-top:var(--sp-pad);border-top:0;padding-top:6px}
+.lrow__no{justify-self:end;padding:0;
+  font:400 14px/1 var(--f-mono);letter-spacing:.04em;color:var(--ink);-webkit-text-stroke:0}
+.lrow--miss .lrow__no,.lrow--upcoming .lrow__no{color:var(--tone);-webkit-text-stroke:0}
+.lrow--miss.lrow--today .lrow__no,.lrow--open .lrow__no,.lrow--blank .lrow__no{color:var(--ink);-webkit-text-stroke:0}
 .lrow--set .lrow__no{color:var(--ink);-webkit-text-stroke:0}
-.lrow__stamp{display:block;width:40px;height:40px;aspect-ratio:auto;place-items:unset}
-.lrow__mark{display:block;width:40px;height:40px;overflow:visible}
+.lrow__stamp{position:relative;z-index:1;display:block;width:32px;height:32px;aspect-ratio:auto;place-items:unset}
+.lrow__mark{display:block;width:32px;height:32px;overflow:visible}
 .lrow__face{fill:var(--ink)}
 .lrow__mark path{fill:var(--ink)}
 .lrow__mark g path{fill:var(--paper)}
 .lrow__slot{display:none}
-.lrow__body{display:flex;flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:0 10px;min-width:0}
-.lrow__date{font:400 18px/1 var(--f-head);letter-spacing:.02em;text-transform:uppercase;color:var(--ink)}
+.lrow__body{display:flex;flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:2px var(--sp-row);min-width:0}
+.lrow__date{font:400 14px/1.2 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
 .lrow--miss .lrow__date,.lrow--upcoming .lrow__date{color:var(--ink-2)}
-.lrow__when,.lrow__at{font:400 12px/1.4 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
-.lrow--open .lrow__when{color:var(--ink-2)}
-/* the open meeting: the empty position ringed in red, the command on the row */
+.lrow__when,.lrow__at{font:400 12px/1.4 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+/* the open meeting: the empty place ringed in the live colour, the instruction on the row */
 .lrow--open{cursor:pointer}
-.lrow--open .lrow__stamp::before{content:'';display:block;width:30px;height:30px;margin:5px;
-  border:2px solid var(--seal);border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;transform:rotate(-5deg)}
-.lrow__go{padding:0 0 4px;border-bottom:var(--edge-thin) solid var(--ink);
-  font:400 22px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase;color:var(--ink);text-decoration:none}
-@media (hover:hover){.lrow--open:hover .lrow__go{border-bottom-width:4px;margin-bottom:-2px}}
-.lrow--open:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:4px}
-.ledger--blank .nowline{margin:var(--sp-pad) 0 0 calc(var(--line) + 50px)}
+.lrow--open .lrow__stamp::before{content:'';display:block;width:26px;height:26px;margin:3px;
+  border:2px solid var(--seal);border-radius:53% 47% 50% 46% / 48% 54% 45% 52%}
+.lrow__go{display:inline-flex;align-items:center;min-height:36px;padding:10px 14px 9px;border:0;background:var(--ink);
+  font:400 15px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;color:var(--paper);text-decoration:none}
+@media (hover:hover){.lrow--open:hover .lrow__go{background:var(--ink-lift)}}
+.lrow--open:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+.ledger--blank .nowline{margin:var(--sp-pad) 0 0 calc(var(--line) + 44px)}
 @media(min-width:1024px){
-  .yline{height:44px;margin-right:0}
-  .yt--set{width:20px;height:20px}
-  .ledger{--line:72px;max-width:880px}
-  .lrow{grid-template-columns:var(--line) 44px minmax(0,1fr) auto;min-height:60px}
-  .lrow__no{font-size:52px}
-  .lrow__stamp,.lrow__mark{width:44px;height:44px}
-  .lrow--open .lrow__stamp::before{width:34px;height:34px}
-  .ledger__chapter{margin-right:calc(var(--gutter) * -1 - (100% - 880px))}
-  .ledger__month{font-size:10.5px}
+  .yline{height:40px;margin-right:0;margin-left:7px}
+  .yt--set{width:14px;height:14px}
+  .ledger{--line:48px;max-width:640px}
+  .lrow{min-height:48px}
+  .lrow__no,.lrow__date{font-size:15px}
 }
 
 /* ══ Rewards: three stations on one route line, the member's stamp
-   pressed where they stand on it. Sealed is hollow, ready is solid and
-   carries a blank stamp with the claim inside it, claimed is punched,
-   collected is punched in red and struck through ══ */
+   pressed where they stand on it. A station not yet reached is grey;
+   the one that is ready is ink and carries the claim; a claimed or
+   collected station is set back in grey with its note. Nothing turned,
+   nothing red ══ */
 .view--rewards{--cx:calc(var(--gutter) + var(--safe-x))}
-.prize__fig{display:block;margin:0 0 var(--sp-block);padding:0;border:0;
-  font:400 11px/1.5 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
-.tiers{--st:clamp(176px,24vh,224px);--x:28px;position:relative;display:grid;grid-template-rows:repeat(var(--n,3),var(--st));
-  gap:0;padding:0;margin:0 0 calc(var(--sp-block) + 44px)}
+.prize__fig{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 1.2em;margin:0 0 var(--sp-block);padding:0;border:0;
+  font:400 12px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.prize__fig b{font:inherit;color:var(--ink)}
+.prize__fig span{color:var(--ink);white-space:nowrap}
+.tiers{--st:clamp(152px,21vh,188px);--x:12px;position:relative;display:grid;grid-template-rows:repeat(var(--n,3),var(--st));
+  gap:0;padding:0;margin:0 0 var(--sp-page)}
 .tiers::before,.tiers::after{content:none}
-.route__line{position:absolute;left:var(--x);top:0;bottom:0;width:var(--edge-thin);translate:-50% 0;
+.route__line{position:absolute;left:var(--x);top:0;bottom:0;width:2px;translate:-50% 0;
   background:linear-gradient(to bottom,var(--ink) calc(var(--fill,0) * 100%),var(--tint) calc(var(--fill,0) * 100%))}
-.route__me{position:absolute;left:var(--x);top:calc(var(--at,0) * 100%);translate:-50% -50%;width:30px;height:30px;z-index:3;pointer-events:none}
-.route__me svg{display:block;width:100%;height:100%;overflow:visible;rotate:-6deg}
+.route__me{position:absolute;left:var(--x);top:calc(var(--at,0) * 100%);translate:-50% -50%;width:24px;height:24px;z-index:3;pointer-events:none}
+.route__me svg{display:block;width:100%;height:100%;overflow:visible;rotate:-4deg}
 .route__face{fill:var(--ink)}
 .route__me g path{fill:var(--paper)}
 .route__me b{display:none}
-.route__me--start{width:14px;height:14px;border:2px solid var(--seal);border-radius:50%;background:var(--paper);translate:-50% 0}
-.route__end{position:absolute;left:calc(var(--x) + 16px);bottom:-44px;z-index:3;rotate:-4deg;
-  padding:4px 8px;border:var(--edge-thin) solid var(--ink);
-  font:400 14px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.route__me--start{width:10px;height:10px;border:2px solid var(--ink);border-radius:50%;background:var(--paper);translate:-50% 0}
+.route__end{display:none}
 
-.tier{position:relative;display:block;grid-template-columns:none;min-height:0;min-width:0;
+.tier{position:relative;display:block;grid-template-columns:none;min-height:0;min-width:0;width:100%;
   margin:0;padding:0;border:0;background:none;color:var(--ink)}
-.tier::before,.tier::after{content:none}
+.tier::before{content:none}
+/* the station: a short tick on the line where the row ends */
+.tier::after{content:'';position:absolute;left:calc(var(--x) - 7px);bottom:-1px;width:14px;height:2px;background:var(--ink)}
+.tier--sealed::after,.tier--far::after{background:var(--tone)}
 .tier--ready,.tier--took,.tier--far,.tier--claimed{background:none;border:0;color:var(--ink)}
-/* the station's numeral, cropped by the page edge, the line through its right third */
-.tier__at{position:absolute;left:calc(var(--cx) * -1 + 6px);bottom:-.02em;z-index:1;display:block;padding:0;border:0;
-  font:400 96px/.8 var(--f-display);letter-spacing:-.02em;color:var(--ink);pointer-events:none}
+.tier__at{position:absolute;left:calc(var(--x) + 20px);bottom:-.08em;z-index:1;display:block;padding:0;border:0;
+  font:400 64px/.8 var(--f-display);letter-spacing:-.02em;color:var(--ink);pointer-events:none;-webkit-text-stroke:0}
 .tier__at b{font:inherit;font-weight:400;color:inherit}
 .tier__at span{display:none}
-.tier--sealed .tier__at{color:transparent;-webkit-text-stroke:1.5px var(--ink)}
-.tier--far .tier__at{-webkit-text-stroke-color:var(--tone)}
-.tier--ready .tier__at{font-size:120px;color:var(--ink);-webkit-text-stroke:0}
-.tier--claimed .tier__at{color:var(--ink)}
-.tier--took .tier__at{color:var(--ink-2)}
-.tier--took .tier__at::after{content:'';position:absolute;left:.1em;right:0;top:48%;height:1px;background:var(--ink-2)}
-.tier__body{position:absolute;left:calc(var(--x) + 92px);right:0;bottom:6px;display:grid;gap:4px;justify-items:start;
+.tier--sealed .tier__at,.tier--far .tier__at{color:var(--tone);-webkit-text-stroke:0}
+.tier--ready .tier__at{font-size:64px;color:var(--ink);-webkit-text-stroke:0}
+.tier--claimed .tier__at,.tier--took .tier__at{color:var(--ink-2)}
+.tier--took .tier__at::after{content:none}
+.tier__body{position:absolute;left:calc(var(--x) + 104px);right:0;bottom:2px;width:auto;display:grid;gap:6px;justify-items:start;
   padding:0;min-width:0}
-.tier__name{font:400 24px/1 var(--f-head);letter-spacing:.02em;text-transform:uppercase;color:var(--ink);overflow-wrap:anywhere}
-.tier--sealed .tier__name{color:var(--ink-2)}
+.tier__name{font:400 20px/1.05 var(--f-head);letter-spacing:.02em;text-transform:uppercase;color:var(--ink);overflow-wrap:anywhere}
+.tier--sealed .tier__name,.tier--claimed .tier__name{color:var(--ink-2)}
 .tier--far .tier__name{color:var(--tone)}
-.tier__desc{font:400 12px/1.4 var(--f-body);color:var(--ink-2)}
-.tier__say,.tier__note{margin:0;font:400 11px/1.5 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.tier__desc{font:400 13px/1.4 var(--f-body);color:var(--ink-2)}
+.tier__say,.tier__note{margin:0;font:400 11px/1.5 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:normal}
 .tier--far .tier__say{display:none}
-.tier__punch{position:absolute;left:calc(var(--x) - 12px);top:auto;bottom:34px;right:auto;translate:0 0;rotate:-9deg;z-index:2;
-  padding:4px 8px;border:var(--edge-thin) solid currentColor;background:none;
-  font:400 22px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;color:var(--ink);pointer-events:none}
-.tier--took .tier__punch{color:var(--seal);background:none}
-/* the claim: a blank stamp waiting to be pressed, the word inside it */
-.tier__claim,.tier--ready .tier__claim{position:relative;display:grid;place-items:center;width:96px;height:96px;
-  margin:4px 0 0;padding:0;border:0;background:none;color:var(--ink);min-height:0;
-  transform:rotate(-4deg);cursor:pointer;white-space:nowrap}
-.tier__claim::before{content:none}
-.tier__shape{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-.tier__shape path{fill:var(--paper);stroke:var(--ink);stroke-width:1.6}
-.tier__word{position:relative;font:400 22px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
-@media (hover:hover){
-  .tier__claim:hover,.tier--ready .tier__claim:hover{background:none;color:var(--ink);border-color:transparent}
-  .tier__claim:hover .tier__shape path{stroke-width:3.2}
-}
-.tier__claim:active{transform:rotate(-4deg) scale(.96)}
-.tier__claim:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:4px}
-.tier__claim[aria-busy="true"] .tier__shape path{stroke-dasharray:4 3}
-.tier__claim[aria-busy="true"] .tier__word{font-size:14px;letter-spacing:.14em}
+.tier__punch{display:none}
+/* the claim: the page's one instruction */
+.tier__claim,.tier--ready .tier__claim{margin:6px 0 0}
 .tier__claim[data-busy]{flex-direction:row;gap:0}
 @media(min-width:1024px){
-  .tiers{--y:58%;grid-template-rows:none;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));height:clamp(320px,46vh,440px);
-    margin-right:calc(var(--gutter) * -1)}
-  .route__line{left:0;right:0;top:var(--y);bottom:auto;width:auto;height:var(--edge-thin);translate:0 -50%;
+  .tiers{--y:56%;grid-template-rows:none;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));height:clamp(260px,34vh,320px);
+    margin-right:0}
+  .route__line{left:0;right:0;top:var(--y);bottom:auto;width:auto;height:2px;translate:0 -50%;
     background:linear-gradient(to right,var(--ink) calc(var(--fill,0) * 100%),var(--tint) calc(var(--fill,0) * 100%))}
-  .route__me{left:calc(var(--at,0) * 100%);top:var(--y);width:40px;height:40px}
-  .route__me b{display:none}
+  .route__me{left:calc(var(--at,0) * 100%);top:var(--y);width:32px;height:32px}
   .route__me--start{translate:-50% -50%}
-  .tier__at{left:auto;right:16px;bottom:auto;top:var(--y);translate:0 -100%;font-size:clamp(150px,13vw,200px)}
-  .tier--ready .tier__at{font-size:clamp(180px,15vw,240px)}
-  .tier__body{left:auto;right:16px;top:calc(var(--y) + 18px);bottom:auto;justify-items:end;text-align:right}
-  .tier__name{font-size:32px}
-  .tier__punch{left:auto;right:56px;bottom:auto;top:calc(var(--y) - 96px)}
-  .tier__claim,.tier--ready .tier__claim{margin-top:8px;width:112px;height:112px}
-  .tier__word{font-size:26px}
-  .route__end{left:auto;right:16px;bottom:auto;top:calc(var(--y) + 16px)}
+  /* the station sits at its column's right end, where its count is reached */
+  .tier::after{left:auto;right:-1px;bottom:auto;top:calc(var(--y) - 7px);width:2px;height:14px}
+  .tier__at{left:auto;right:16px;bottom:auto;top:var(--y);translate:0 calc(-100% - 12px);font-size:96px}
+  .tier--ready .tier__at{font-size:96px}
+  .tier__body{left:auto;right:16px;top:calc(var(--y) + 20px);bottom:auto;justify-items:end;text-align:right;max-width:calc(100% - 32px)}
+  .tier__name{font-size:24px}
 }
 
 /* ══ Scan: the checkpoint. The camera is the page — edge to edge on a
@@ -3180,20 +2792,21 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .view--scan .folio{margin-bottom:var(--sp-tight)}
 .scanframe{position:relative;display:block;border:0;background:none;margin:0 calc(var(--cx) * -1)}
 /* the figure over the picture */
-.scanframe > .standing{position:absolute;right:var(--cx);top:14px;z-index:5;margin:0;padding:0;border:0;
-  display:grid;justify-items:end;gap:2px;background:none;color:var(--paper);text-align:right;pointer-events:none;
-  filter:drop-shadow(1px 1px 0 var(--ink)) drop-shadow(-1px -1px 0 var(--ink)) drop-shadow(0 0 2px var(--ink))}
-.standing__lab{font:400 11px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--paper);white-space:nowrap}
-.standing__at{display:grid;justify-items:end;font:400 clamp(20px,5vw,26px)/1 var(--f-head);text-transform:uppercase;letter-spacing:.02em;color:var(--paper)}
-.standing__at i{font:400 11px/1 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;font-style:normal;color:var(--tint)}
-.standing__at b{font:400 clamp(72px,22vw,110px)/.82 var(--f-display);letter-spacing:-.02em;color:var(--paper)}
+.scanframe > .standing{position:static;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px .8em;margin:0;
+  padding:var(--sp-tight) var(--cx) var(--sp-row);border:0;background:none;color:var(--ink);text-align:left;pointer-events:none;filter:none}
+.standing__lab{font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.standing__at{display:inline-flex;align-items:baseline;gap:.4em;font:400 13px/1.3 var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--ink)}
+.standing__at i{font:inherit;letter-spacing:inherit;font-style:normal;color:inherit}
+.standing__at b{font:inherit;letter-spacing:inherit;color:inherit}
 .viewer{position:relative;display:grid;place-items:center;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);
   isolation:isolate;overflow:hidden;container-type:size;width:100%;
   height:clamp(260px,calc(100dvh - 300px),640px);border:0;background:var(--ink)}
+.viewer > *{grid-column:1;grid-row:1;min-height:0;min-width:0}
+.viewer video{width:100%;height:100%;display:block;object-fit:cover;object-position:center;filter:grayscale(1) contrast(1.06)}
 /* the reticle: the seat the stamp will take */
 .reticle{position:relative;place-self:center;width:min(58cqw,66cqh,300px);aspect-ratio:1;pointer-events:none;z-index:3}
 .reticle__seat{display:block;width:100%;height:100%;overflow:visible;transform-origin:50% 50%;
-  filter:drop-shadow(0 0 1.5px var(--ink)) drop-shadow(0 0 1px var(--ink))}
+  filter:drop-shadow(0 0 1px var(--ink))}
 .reticle__face{fill:none;stroke:var(--paper);stroke-width:2.2;stroke-linejoin:round;transition:stroke-width 120ms steps(2,end),stroke 120ms steps(2,end)}
 .reticle__mark path{fill:var(--paper);opacity:.22;transition:opacity 120ms steps(2,end)}
 .reticle__no{position:absolute;right:2%;bottom:0;font:400 12px/1 var(--f-mono);letter-spacing:.1em;color:var(--paper);
@@ -3204,8 +2817,8 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 :root[data-still] .reticle__face,:root[data-still] .reticle__mark path{transition:none}
 /* the row the scanner speaks on: one heavy paper rule on ink, then the words */
 .scanline{display:flex;align-items:center;gap:var(--sp-row);margin:0;min-height:52px;
-  padding:12px var(--cx) 12px;border-top:var(--edge-heavy) solid var(--paper);background:var(--ink);color:var(--paper);
-  font:400 clamp(12px,3.2vw,14px)/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase}
+  padding:12px var(--cx) 12px;border-top:2px solid var(--paper);background:var(--ink);color:var(--paper);
+  font:400 13px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase}
 .scanline__dot{display:none}
 .scanline__msg{min-width:0;overflow-wrap:anywhere;background:none;color:inherit;padding:0;text-decoration:none}
 .scanline--boot{color:var(--tone);border-top-width:var(--edge-hair);border-top-color:var(--tone)}
@@ -3219,16 +2832,10 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   background:var(--paper);padding:var(--sp-block) var(--cx) var(--sp-block)}
 .stall{display:flex;flex-direction:column;justify-content:center;gap:var(--sp-tight);padding:0;text-align:left;
   border:0;background:none}
-.stall__kick{margin:0 0 4px;font:400 11px/1.4 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
-.stall__title{margin:0;font:400 clamp(40px,9vw,72px)/.9 var(--f-display);letter-spacing:-.01em;text-transform:none;color:var(--ink);overflow-wrap:anywhere}
-.stall__note{margin:0;max-width:46ch;font:400 12px/1.5 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.stall__title{margin:0;font:400 clamp(26px,7vw,36px)/1.05 var(--f-head);letter-spacing:.02em;text-transform:uppercase;color:var(--ink);overflow-wrap:anywhere}
+.stall__note{margin:0;max-width:46ch;font:400 12px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .stall__note:empty{display:none}
-.stall__retry{align-self:flex-start;margin-top:var(--sp-pad);padding:9px 2px 7px 0;min-height:44px;
-  font:400 clamp(15px,1.15vw,18px)/1 var(--f-head);letter-spacing:.05em;text-transform:uppercase;color:var(--ink);
-  border:0;border-bottom:var(--edge-thin) solid var(--ink);background:none}
-.stall__retry::before{content:'';flex:none;width:9px;height:9px;background:currentColor;margin:0}
-@media (hover:hover){.stall__retry:hover{color:var(--ink);border-bottom-color:var(--seal);border-bottom-width:3px;margin-bottom:-1px}
-  .stall__retry:hover::before{background:var(--seal);width:9px}}
+.stall__retry{align-self:flex-start;margin-top:var(--sp-pad)}
 .viewer--stalled .standing,.scanframe:has(.viewer--stalled) > .standing{color:var(--ink);filter:none}
 .scanframe:has(.viewer--stalled) > .standing .standing__lab,.scanframe:has(.viewer--stalled) > .standing .standing__at,
 .scanframe:has(.viewer--stalled) > .standing .standing__at b{color:var(--ink)}
@@ -3237,15 +2844,14 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 
 /* checked in already: the stamp printed large, its record beside it */
 .view--scan-done .deck__act{margin-top:var(--sp-block)}
-.stamped{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:end;column-gap:var(--sp-block);
-  margin-left:calc(var(--cx) * -1 - 12px)}
-.stamped__imp{display:block;width:clamp(150px,44vw,220px);height:auto;overflow:visible;rotate:var(--lean,-6deg)}
+.stamped{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:end;column-gap:var(--sp-block);margin-left:0}
+.stamped__imp{display:block;width:clamp(128px,38vw,200px);height:auto;overflow:visible;rotate:var(--lean,-3deg)}
 .stamped__face{fill:var(--ink)}
 .stamped__imp g path{fill:var(--paper)}
-.stamped__rec{display:grid;gap:0;margin:0;padding-bottom:8px;font:400 11.5px/1.6 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.stamped__rec{display:grid;gap:0;margin:0;padding-bottom:8px;font:400 12px/1.6 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
 .stamped__rec > span{padding:5px 0;border-top:var(--edge-hair) solid var(--tint)}
 .stamped__no{display:block;padding-bottom:6px;font:400 clamp(28px,7vw,40px)/1 var(--f-head);letter-spacing:.02em;color:var(--ink)}
-.stamped__how{color:var(--seal);letter-spacing:.16em}
+.stamped__how{color:var(--ink-2)}
 
 /* a phone on its side: the picture beside the figure, as tall as the window */
 @media(max-height:520px) and (min-aspect-ratio:4/3){
@@ -3261,17 +2867,19 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
     column-gap:clamp(28px,3vw,56px);align-items:start}
   .view--scan > .rechead{grid-column:2;grid-row:1;margin:0 0 var(--sp-pad)}
   .scanframe{display:contents}
-  .scanframe > .standing{position:static;grid-column:2;grid-row:2;justify-items:start;text-align:left;
+  .scanframe > .standing{position:static;display:grid;grid-column:2;grid-row:2;justify-items:start;text-align:left;
     color:var(--ink);filter:none;padding:0;margin:0 0 var(--sp-block)}
+  .scanframe > .standing .standing__at{display:flex;align-items:flex-start;gap:8px}
+  .scanframe > .standing .standing__at i{font:400 11px/1 var(--f-mono);letter-spacing:.12em;margin-top:.9em;color:var(--ink-2)}
   .scanframe > .standing .standing__lab{color:var(--ink-2)}
   .scanframe > .standing .standing__at{justify-items:start;color:var(--ink)}
   .scanframe > .standing .standing__at i{color:var(--ink-2)}
-  .scanframe > .standing .standing__at b{color:var(--ink);font-size:clamp(150px,13vw,220px)}
+  .scanframe > .standing .standing__at b{font:400 clamp(112px,9vw,150px)/.8 var(--f-display);letter-spacing:-.02em;color:var(--ink)}
   .scanframe > .viewer{grid-column:1;grid-row:1/5;height:auto;aspect-ratio:16/9;max-height:calc(100dvh - 120px);min-height:320px;
     margin:0 0 0 calc(var(--gutter) * -1)}
   .scanframe > .viewer--stalled{aspect-ratio:auto;min-height:0;padding-left:var(--gutter)}
   .scanframe > .scanline{grid-column:2;grid-row:4;align-self:end;background:none;color:var(--ink);padding:12px 0 0;
-    border-top:var(--edge-heavy) solid var(--ink)}
+    border-top:2px solid var(--ink)}
   .scanline--boot{color:var(--ink-2);border-top-color:var(--tone)}
   .scanline--busy{color:var(--ink-2)}
   .scanline--bad .scanline__msg,.scanline--good .scanline__msg{color:var(--ink)}
@@ -3289,13 +2897,13 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .acq--lift .acq__kick,.acq--lift .acq__meet{opacity:0;transition:opacity 120ms steps(2,end)}
 .acq__stack{display:grid;grid-template-rows:auto minmax(0,1fr) auto;justify-items:start;gap:0;max-width:none;height:100%;
   padding:calc(var(--sp-pad) + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x,0px)) calc(var(--sp-block) + env(safe-area-inset-bottom,0px))}
-.acq__kick{display:flex;justify-content:space-between;width:100%;padding-bottom:var(--sp-tight);border-bottom:var(--edge-hair) solid var(--ink);
-  font:400 11px/1.4 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);opacity:1}
+.acq__kick{display:flex;justify-content:space-between;width:100%;padding-bottom:var(--sp-tight);border-bottom:1px solid var(--ink);
+  font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);opacity:1}
 .acq__seal{place-self:center;width:min(60vmin,300px);aspect-ratio:1;display:grid;place-items:center;will-change:transform}
 .acq__seal .acq__face{fill:var(--ink);stroke:none}
 .acq__seal .acq__mark path{fill:var(--paper);stroke:none}
 .acq__meet{display:grid;gap:2px;width:100%;margin:0;padding-top:var(--sp-tight);border-top:var(--edge-thin) solid var(--ink);
-  font:400 11.5px/1.5 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);opacity:1;max-width:none}
+  font:400 12px/1.5 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);opacity:1;max-width:none}
 .acq__meet b{font:400 clamp(28px,7vw,40px)/1 var(--f-head);letter-spacing:.02em;color:var(--ink)}
 @media(prefers-reduced-motion:reduce){ .acq,.acq--lift .acq__kick,.acq--lift .acq__meet{transition:none} }
 :root[data-still] .acq,:root[data-still] .acq--lift .acq__kick,:root[data-still] .acq--lift .acq__meet{transition:none}
@@ -3304,15 +2912,8 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
    of the first page are index lines — the open one printed as a heading,
    the other as the way across; a field's rule of thumb sits on its
    label's line; a refusal strikes the meeting's number ══ */
-.authp__chapter{display:flex;align-items:baseline;gap:.7em;margin:0 0 4px;
-  font:400 clamp(24px,3vw,32px)/1 var(--f-head);letter-spacing:.02em;text-transform:uppercase;color:var(--ink)}
-.authp__chapter i{font:400 11px/1 var(--f-mono);letter-spacing:.16em;font-style:normal;color:var(--ink-2)}
-.authp__swap,.arrive .authp__swap{gap:.7em;padding:8px 0;
-  font:400 clamp(17px,1.3vw,20px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;color:var(--ink-2)}
-.authp__swap::before{content:none}
-.authp__idx{font:400 11px/1 var(--f-mono);letter-spacing:.16em;font-style:normal;color:var(--ink-2)}
-@media (hover:hover){.authp__swap:hover{color:var(--ink)} .authp__swap:hover .authp__idx{color:var(--seal)}}
-.authp__swap:focus-visible{color:var(--ink)}
+.authp__chapter{display:block;margin:0;
+  font:400 clamp(24px,2.6vw,30px)/1 var(--f-head);letter-spacing:.02em;text-transform:uppercase;color:var(--ink)}
 /* the rule of thumb on the label's line, in the margin's grey */
 .authp__f{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"lab rule" "in in";align-items:end;column-gap:var(--sp-pad)}
 .authp__f > .authp__lab{grid-area:lab;grid-column:auto}
@@ -3326,7 +2927,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 /* the landing: the number struck through when the code cannot be taken */
 .view--arrive-struck .spread__wm{position:relative;display:inline-block}
 .view--arrive-struck .spread__wm::after{content:'';position:absolute;left:-.06em;right:-.06em;top:54%;height:.06em;min-height:3px;
-  background:var(--paper);transform:rotate(-6deg)}
+  background:var(--paper);transform:none}
 .arrive .authp__act{align-items:baseline}
 
 /* ══ Check-in: a desk beside a wall. The meeting's number and its state
@@ -3807,13 +3408,6 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 @media(min-width:900px){
   .mem:not(.mem--filed) .standing-band{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;max-width:260px}
 }
-@media(max-width:479px){
-  .standing-band{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;justify-self:stretch;padding-top:10px}
-  .standing-band > span{display:block;white-space:nowrap}
-  .standing-band > span + span::before{content:none}
-  .standing-band b,.standing-band__fig b{font:400 22px/1 var(--f-head);letter-spacing:.02em;margin-right:.3em}
-  .standing-band b small{font:400 12px/1 var(--f-mono);letter-spacing:.06em;color:var(--ink-2)}
-}
 .filed__row--go .filed__prize{display:flex;align-items:center;gap:10px;justify-self:stretch;border:0;padding:0;
   font:400 15px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
 .filed__row--go .filed__prize::after{content:'';flex:1 1 20px;height:2px;background:var(--seal);margin-right:calc((var(--gutter) + var(--safe-x)) * -1)}
@@ -3828,17 +3422,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .seal:nth-child(7){--x:3.5%}
 @container (min-width:480px){ .seal:nth-child(1){--x:2%} .seal:nth-child(7){--x:30.5%} }
 .seal--live .seal__no{display:none}
-.rail__out,.acct__out{border:0;background:none;padding:6px 0;min-height:36px;margin-top:var(--sp-tight);
-  font:400 16px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase;color:var(--ink);
-  text-decoration:line-through 2px var(--seal);text-underline-offset:0;transform:rotate(-3deg)}
-.rail__out::before,.acct__out::before{content:none}
-@media (hover:hover){.rail__out:hover,.acct__out:hover{background:none;color:var(--ink);text-decoration-thickness:3px}}
-.rail__out:active,.acct__out:active{background:var(--ink);color:var(--paper);transform:rotate(0deg)}
-.rail__out:focus-visible,.acct__out:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:4px;background:none;color:var(--ink)}
-.tabs .tab--live .tab__tab{background:none;border-top:3px solid var(--seal);transform:translateY(-4px);padding-inline:0}
-.tabs .tab--live[aria-current="page"] .tab__tab{transform:translateY(-4px)}
-.tabs .tab--live .tab__idx{color:var(--seal)}
-.tabs .tab--live .tab__lab{color:var(--ink)}
+
 
 
 /* ══ After the judges, the pages: the empty toast rail draws nothing; a
@@ -3849,14 +3433,8 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
    card; the desk's camera fills its column; a desk's record is a slip ══ */
 .toasts:empty{display:none;border:0;background:none}
 .is-projecting .toasts{display:none}
-.seal:nth-child(n+7) .seal__go{top:auto;bottom:100%;translate:-50% -4px}
+.seal:nth-child(7) .seal__go,.seal:nth-child(n+9) .seal__go{top:auto;bottom:100%;translate:-50% -4px}
 @container (min-width:480px){ .seal:nth-child(n+7) .seal__go{top:auto;bottom:100%;translate:-50% -6px} }
-.mast__more{text-align:right;margin-right:0}
-.tier__punch{z-index:2}
-.tier{width:100%}
-.tier__body{left:calc(var(--x) + 96px);right:0;width:auto}
-.tier__note,.tier__say{white-space:nowrap}
-.prize__fig span{white-space:nowrap}
 .deck--none .deck__side{display:none}
 @media(min-width:1024px){
   .minutes__fold .mrow__go{column-gap:var(--sp-block)}
@@ -18079,8 +17657,11 @@ const C = {
        has handed it over. A club that does not record hand-overs sees
        only Claimed, as before */
     const took  = at === 'claimed' && r.handedAt;
-    const note  = at !== 'claimed' || !Store.handovers ? ''
-      : took ? `Collected ${fmtClubDay(r.handedAt)}` : 'Collect it from an officer';
+    /* a claim is said once, as a line of type: collected (with its day),
+       or claimed and waiting for an officer */
+    const note  = at !== 'claimed' ? ''
+      : took ? `Collected ${fmtClubDay(r.handedAt)}`
+      : Store.handovers ? 'Claimed; collect it from an officer' : 'Claimed';
     const left  = r.required - total;
     const far   = state === 'sealed' && total < prev;
     const say   = state === 'sealed' && !far ? `${left} more ${left === 1 ? 'stamp' : 'stamps'}` : '';
@@ -18100,7 +17681,6 @@ const C = {
         ${note ? `<span class="tier__note">${esc(note)}</span>` : ''}
         ${claim}
       </span>
-      ${at === 'claimed' ? `<span class="tier__punch">${took ? 'Collected' : 'Claimed'}</span>` : ''}
     </div>`;
   },
 
@@ -18123,7 +17703,7 @@ const C = {
       /* the next seat is where the member stands on the route; while a
          check-in is open for it, the seat itself is the way in */
       const state = i < p.filled ? 'set' : i === p.filled ? 'next' : '';
-      const hero = state === 'set' && i === p.filled - 1 ? ' seal--hero' : '';
+      const hero = form === 'sheet' && state === 'set' && i === p.filled - 1 ? ' seal--hero' : '';
       const mile = i === p.span - 1 ? ' seal--mile' : '';
       const now  = state === 'next' && live ? ' seal--live' : '';
 
@@ -18142,14 +17722,14 @@ const C = {
       const fit  = STAMP_FIT;
       return `<li class="seal ${state ? 'seal--' + state : ''}${hero}${mile}${now}" data-seal="${state || 'empty'}" style="${tilt}"${control}>
         <svg viewBox="0 0 64 64" aria-hidden="true">
-          ${mile ? `<path class="sf-back" d="${stampShape(seed * 3 + 1, 3.4)}"/>` : ''}
+          ${mile ? `<path class="sf-back" d="${stampShape(seed, 3.4)}"/>` : ''}
           <g class="sf-press">
             <path class="sf-face" d="${stampShape(seed, 0)}"/>
             <g class="seal__mark" transform="translate(${(32 - 32 * fit).toFixed(1)} ${(32 - 32 * fit).toFixed(1)}) scale(${fit})">${stampMark(p.floor + i)}</g>
           </g>
         </svg>
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
-        ${now ? `<span class="seal__go" aria-hidden="true">Check in · ${pad(p.floor + i + 1)}</span>` : ''}
+        ${now && form === 'sheet' ? `<span class="seal__go" aria-hidden="true">Check in · ${pad(p.floor + i + 1)}</span>` : ''}
         ${docket}
       </li>`;
     }).join('');
@@ -18157,7 +17737,7 @@ const C = {
     /* the route is drawn seat to seat: solid where the member has been,
        solid up to the seat they stand on, dotted beyond */
     const L = [[9.5,12.3],[28.8,24],[48,12.3],[66.8,21.5],[86.5,34.3],[59.3,44.5],[38,47.3],[12.3,57],[34.5,72.3],[74.5,71.2]];
-    const P = [[17,8.6],[46,13.3],[74,21.1],[81,40.6],[58,50],[31,54.7],[14,72.7],[34,81.3],[58,71.9],[83,83.6]];
+    const P = [[17,10.2],[46,13.3],[74,21.1],[81,40.6],[58,50],[31,54.7],[14,72.7],[37.5,81.3],[58,71.9],[83,83.6]];
     const segs = pts => pts.slice(1).map(([x2, y2], i) => {
       const [x1, y1] = pts[i];
       const on = full || i < p.filled - 1 ? ' card__seg--set' : i === p.filled - 1 ? ' card__seg--to' : '';
@@ -18173,7 +17753,7 @@ const C = {
          : goal ? `${goal.name} ${goal.handedAt ? 'collected' : 'claimed'}` : '')
       /* a prize already claimed (stamps taken away after the claim) is
          not held out as the thing to reach */
-      : goal && !goal.claimed ? `${pad(p.remaining)} to ${goal.name}` : `${pad(p.remaining)} to a full card`;
+      : goal && !goal.claimed ? `${p.remaining} to ${goal.name}` : `${p.remaining} to a full card`;
     /* the prize that is ready is a printed instruction, the card's one action */
     const goalLine = ready
       ? `<button class="card__goal card__goal--go" type="button" data-go="rewards"><span class="card__goal__arrow" aria-hidden="true">→</span>${esc(goal.name)} · ready to claim</button>`
@@ -18189,8 +17769,7 @@ const C = {
 
     if (form === 'field') return `<section class="${cls}">
       <div class="card__line">
-        <span class="card__cardno">Card ${pad(cardNo)}</span>
-        <span class="card__num"><b>${p.filled}</b><span>/ ${p.span}</span></span>
+        <span class="card__num"><b>${p.filled}</b> <span>of ${p.span}</span></span>
         ${goalLine}
       </div>
       ${field}${punch}
@@ -18206,7 +17785,6 @@ const C = {
       </div>
       ${field}
       <div class="card__foot">${goalLine}</div>
-      ${punch}
     </section>`;
   },
 
@@ -18266,7 +17844,7 @@ const C = {
         ${detail ? `<span class="lrow__when">${detail}</span>` : ''}
         ${away ? `<span class="lrow__at">${away}</span>` : ''}
       </span>
-      ${state === 'open' ? '<span class="lrow__go">Scan</span>' : ''}
+      ${state === 'open' ? '<span class="lrow__go">Check in</span>' : ''}
       ${sr ? `<span class="sr-only">${sr}</span>` : ''}
     </${el}>`;
   },
@@ -18410,23 +17988,22 @@ const Views = {
     const kick = parts => `<p class="mast__kick">${parts.filter(Boolean).map(t => `<span>${esc(t)}</span>`).join('')}</p>`;
     const line = (gm, no, state, extra = '') =>
       `<span class="mast__line"><span class="mast__gm">${gm}</span><b class="mast__no">${no}${extra}</b>${state ? `<span class="mast__state">${state}</span>` : ''}</span>`;
-    /* the second line the masthead carries when a prize is close, or the card is full */
-    /* a card full says so on the card's own line (the instruction); the
-       masthead adds a line only for a prize within reach */
-    const more = near ? `<p class="mast__more">${pad(p.remaining)} to ${esc(goal.name)}</p>` : '';
+    /* a prize within reach is said once, on the card's own line under the
+       masthead, and by the ring on its seat */
+    const more = '';
 
     let kind, mast;
     if (live){
       kind = 'open';
       mast = `<button class="mast mast--open" type="button" data-go="scan" aria-label="Check in at general meeting ${day.no}">
-        ${kick(['Current chapter', `GM ${pad(day.no)}`, fmtDate(day.date), unusual(day).includes(day.place) ? day.place : ''])}
+        ${kick([fmtDate(day.date), unusual(day).includes(day.place) ? day.place : ''])}
         ${line('GM', pad(day.no), '<span class="mast__cmd">Check in</span>')}${more}
       </button>`;
     } else if (scan){
       kind = 'set';
       const i = chrono.findIndex(x => x.meetingId === day.id);
       mast = `<div class="mast mast--set">
-        ${kick(['Current chapter', `GM ${pad(day.no)}`, fmtDate(day.date), unusual(day).includes(day.place) ? day.place : ''])}
+        ${kick([fmtDate(day.date), unusual(day).includes(day.place) ? day.place : ''])}
         ${line('GM', pad(day.no), byHand(scan) ? 'Checked in · by an officer' : `Checked in · ${fmtTime(scan.at)}`, i >= 0 ? glyph(i, 'mast__imp') : '')}${more}
       </div>`;
     } else if (day && day.ended && !day.open){
@@ -18434,7 +18011,7 @@ const Views = {
          since an officer can still add a stamp by hand */
       kind = 'closed';
       mast = `<div class="mast mast--closed">
-        ${kick(['Current chapter', `GM ${pad(day.no)}`, fmtDate(day.date), 'Meeting closed'])}
+        ${kick([fmtDate(day.date), 'Meeting closed'])}
         ${line('GM', pad(day.no), 'Not checked in')}${more}
       </div>`;
     } else if (day){
@@ -18442,14 +18019,14 @@ const Views = {
          which a member cannot tell apart, so only what is true now */
       kind = 'today';
       mast = `<div class="mast mast--today">
-        ${kick(['Current chapter', `GM ${pad(day.no)}`, fmtDate(day.date)])}
+        ${kick([fmtDate(day.date)])}
         ${line('GM', pad(day.no), day.started && !day.open ? 'Check-in not open' : `${esc(day.time || '')} · ${esc(room(day))}`)}${more}
       </div>`;
     } else if (next){
       kind = 'next';
       mast = `<div class="mast mast--next">
-        ${kick(['Next chapter'])}
-        <span class="mast__line"><span class="mast__gm">GM ${pad(next.no)}</span><b class="mast__date">${fmtDate(next.date)}</b><span class="mast__state">${esc(next.time)}${unusual(next).includes(next.place) ? ` · ${esc(next.place)}` : ''}</span></span>${more}
+        ${kick(['Next meeting', `GM ${pad(next.no)}`])}
+        <span class="mast__line"><b class="mast__date">${fmtDate(next.date)}</b><span class="mast__state">${esc(next.time)}${unusual(next).includes(next.place) ? ` · ${esc(next.place)}` : ''}</span></span>${more}
       </div>`;
     } else {
       kind = 'none';
@@ -18457,8 +18034,8 @@ const Views = {
       const lastM = last && Store.meeting(last.meetingId);
       mast = `<div class="mast mast--none">
         ${kick(['Nothing scheduled'])}
-        ${lastM ? `<span class="mast__line">${glyph(chrono.length - 1, 'mast__last')}<span class="mast__gm">Last stamp</span><b class="mast__date">GM ${pad(lastM.no)} · ${fmtDay(lastM.date)}</b></span>`
-                : line('GM', '01', 'First meeting not yet held')}${more}
+        ${lastM ? `<span class="mast__line"><span class="mast__gm">Last stamp</span><b class="mast__date">GM ${pad(lastM.no)} · ${fmtDay(lastM.date)}</b></span>`
+                : line('GM', '01', 'Not yet held')}${more}
       </div>`;
     }
 
@@ -18468,21 +18045,11 @@ const Views = {
       .sort(soonest)
       .slice(0, 3);
 
-    /* the last stamp, or the one before it when the masthead is about it */
-    let li = chrono.length - 1;
-    if (li >= 0 && scan && chrono[li].meetingId === day.id) li -= 1;
-    const lastM = li >= 0 ? Store.meeting(chrono[li].meetingId) : null;
-
     const side = `<div class="deck__side">
-        <section class="fol fol--last" aria-label="Last stamp">
-          <h2 class="fol__lab">Last</h2>
-          ${lastM ? `${glyph(li, 'fol__glyph')}<p class="fol__line">GM ${pad(lastM.no)} · ${fmtDay(lastM.date)}</p>`
-                  : `<span class="fol__blank" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="${stampShape(1, 0)}"/></svg></span><p class="fol__line">No stamp yet</p>`}
-        </section>
         <section class="fol fol--ahead" aria-label="Meetings ahead">
           <h2 class="fol__lab">Ahead</h2>
           ${ahead.length ? `<ol class="fol__list">${ahead.map(m => `<li class="fol__row">
-              <b class="fol__no">${pad(m.no)}</b><span class="fol__day">${fmtDate(m.date)}</span>
+              <b class="fol__no">GM ${pad(m.no)}</b><span class="fol__day">${fmtDate(m.date)}</span>
               ${unusual(m).length ? `<span class="fol__at">${unusual(m).map(esc).join(' / ')}</span>` : ''}
             </li>`).join('')}</ol>`
           : `<p class="fol__line">${next && !day ? 'Nothing after it' : 'Nothing scheduled'}</p>`}
@@ -18531,23 +18098,23 @@ const Views = {
       const card = i >= 0 && (i + 1) % Rules.CARD === 0 ? `<i class="yt yt--card" style="left:${pos(m.date)}%"></i>` : '';
       return card + (i >= 0
         ? `<i class="yt yt--set" style="left:${pos(m.date)}%"><svg viewBox="0 0 64 64"><path d="${stampShape(i + 1, 0)}"/><g transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(i)}</g></svg></i>`
-        : `<i class="yt yt--${s}${m.today ? ' yt--today' : ''}" style="left:${pos(m.date)}%"></i>`);
+        : `<i class="yt yt--${s}${m.today && s !== 'open' ? ' yt--today' : ''}" style="left:${pos(m.date)}%"></i>`);
     }).join('') + ahead.map(m => `<i class="yt yt--up" style="left:${pos(m.date)}%"></i>`).join('');
     const yearline = `<div class="yline" aria-hidden="true" style="--now:${pos(Schedule.today())}%">
         <i class="yline__rule"></i><i class="yline__ahead"></i>${ticks}
       </div>`;
     const tally = held.length
-      ? `<p class="tally"><b>${kept}</b> stamped · <b>${gone}</b> missed · since ${fmtDay(held[held.length - 1].date)}</p>`
-      : `<p class="tally">${ahead.length ? `First meeting GM ${pad(ahead[0].no)} · ${fmtDate(ahead[0].date)}` : 'First meeting not yet held'}</p>`;
+      ? `<p class="tally"><b>${kept}</b> stamped, <b>${gone}</b> missed</p>`
+      : `<p class="tally">${ahead.length ? `First meeting: GM ${pad(ahead[0].no)}, ${fmtDate(ahead[0].date)}` : 'First meeting not yet held'}</p>`;
 
     /* the ledger is kept by the month, the way a club's minutes are; a
        card filled is a chapter closed, ruled across the page */
     const prize = k => Store.rewards.find(r => r.required === k * Rules.CARD) || null;
     const chapter = k => {
-      const r = prize(k), rec = chrono[k * Rules.CARD - 1];
+      const r = prize(k);
       const word = !r ? '' : r.handedAt ? `${esc(r.name)} collected` : r.claimed ? `${esc(r.name)} claimed`
         : Store.tierState(r) === 'unlocked' ? `${esc(r.name)} ready to claim` : '';
-      return `<p class="ledger__chapter"><span>Card ${pad(k)} · full</span><span>${fmtDay(rec.at)}</span>${word ? `<span>${word}</span>` : ''}</p>`;
+      return `<p class="ledger__chapter"><span>Card ${pad(k)} full</span>${word ? `<span>${word}</span>` : ''}</p>`;
     };
     const months = [];
     held.forEach((m, n) => {
@@ -18599,8 +18166,8 @@ const Views = {
     const lift = (32 - 32 * STAMP_FIT).toFixed(1);
 
     /* the member's count, once, as a line of type; the route says the rest */
-    const fig = !tiers.length ? `Stamps · ${total}`
-      : `Stamps · ${total} of ${top} · ${next ? `next ${esc(next.name)} in ${left}` : total ? 'every reward reached' : ''}`;
+    const fig = !tiers.length ? `${total} ${total === 1 ? 'stamp' : 'stamps'}`
+      : `<b>${total}</b> of ${top} stamps${next ? `<span>${esc(next.name)} in ${left}</span>` : total ? '<span>Every reward reached</span>' : ''}`;
     /* where the member stands on the route: the last stamp earned, or the start */
     const me = total
       ? `<span class="route__me" aria-hidden="true" style="--at:${fill.toFixed(3)}"><svg viewBox="0 0 64 64"><path class="route__face" d="${stampShape(total, 0)}"/>
@@ -18619,7 +18186,6 @@ const Views = {
         <span class="route__line" aria-hidden="true"></span>
         ${me}
         ${tiers.map((t, i) => C.tier(t, total, i ? tiers[i - 1].required : 0, i)).join('')}
-        ${!next && total ? '<span class="route__end" aria-hidden="true">Every reward reached</span>' : ''}
       </section>` : C.empty('No rewards set up yet')}
     </div>`;
   },
@@ -18730,7 +18296,6 @@ const Views = {
     if (Store.failed) return this.loadFailure('Member');
     const held     = Store.countedMeetings();
     const attended = held.filter(m => Store.attended(m.id)).length;
-    const total    = Store.totalStamps();
     const name     = memberName();
     const handle   = (Store.user && Store.user.username) || name;
     const joined   = Store.user && Store.user.joined;
@@ -18752,16 +18317,14 @@ const Views = {
       <div class="mem${filed.length ? ' mem--filed' : ''}">
         <section class="who" aria-label="Member">
           <p class="who__name">${esc(name)}</p>
-          <p class="who__line"><span>Cali-Nev-Ha</span><span>Key Club</span>${since ? `<span>Since ${esc(since)}</span>` : ''}${Store.isBoard ? '<span>Board</span>' : ''}</p>
+          <p class="who__line"><span>Cali-Nev-Ha</span>${since ? `<span>Since ${esc(since)}</span>` : ''}${Store.isBoard ? '<span>Board</span>' : ''}</p>
         </section>
 
         ${C.sealGrid(live, 'sheet')}
 
         <p class="standing-band">
-          <span class="standing-band__fig"><b>${total}</b> <i>${total === 1 ? 'stamp' : 'stamps'}</i></span>
-          <span><b>${attended}<small>/${held.length}</small></b> <i>meetings</i></span>
-          <span><b>${held.length ? Store.attendanceRate() : 0}<small>%</small></b> <i>attendance</i></span>
-          <span><b>${Store.rewardsUnlocked()}<small>/${Store.rewards.length}</small></b> <i>prizes</i></span>
+          <span><b>${attended}</b> <i>of ${held.length} ${held.length === 1 ? 'meeting' : 'meetings'}</i></span>
+          <span><b>${held.length ? Store.attendanceRate() : 0}%</b> <i>attendance</i></span>
         </p>
 
         ${filed.length ? `<section class="files" aria-label="Cards filed">
@@ -18789,11 +18352,10 @@ const Views = {
 
     const acts = (...b) => `<div class="authp__act">${b.join('')}</div>`;
     const go = (attr, label) => `<button class="authp__go" type="button" ${attr}>${label}</button>`;
-    const alt = (attr, label, idx = '') => `<button class="authp__swap" type="button" ${attr}>${idx ? `<i class="authp__idx" aria-hidden="true">${idx}</i>` : ''}${label}</button>`;
+    const alt = (attr, label) => `<button class="authp__swap" type="button" ${attr}>${label}</button>`;
     const onward = signed ? go('data-go="home"', Store.isBoard ? 'Go to Check-in' : 'Go to Today')
-      : alt('data-arrive="in"', 'Sign in', '01');
+      : alt('data-arrive="in"', 'Sign in');
     const say = (word, note = '', tail = '') => `<section class="authp arrive" aria-live="polite">
-        <p class="arrive__kick">${signed ? 'Check-in' : 'Next'}</p>
         <h2 class="arrive__word">${word}</h2>
         ${note ? `<p class="arrive__note">${note}</p>` : ''}
         ${tail}
@@ -18820,7 +18382,7 @@ const Views = {
     } else {
       status = A.peek.ok ? 'Check-in open' : '';
       card = say('Collect your stamp', '',
-        acts(go('data-arrive="in"', 'Sign in'), alt('data-arrive="up"', 'New account', '02')));
+        acts(go('data-arrive="in"', 'Sign in'), alt('data-arrive="up"', 'New account')));
     }
     /* a refusal that stands: the meeting's number is struck through */
     const struck = code && code !== 'ALREADY_CHECKED_IN' && !SCAN_TRANSIENT.has(code);
@@ -18879,7 +18441,7 @@ const Views = {
 
         <form class="authp" id="authForm" novalidate>
 
-          <p class="authp__chapter"><i>${up ? '02' : '01'}</i>${up ? 'New account' : 'Sign in'}</p>
+          <p class="authp__chapter">${up ? 'New account' : 'Sign in'}</p>
           ${Arrival.bare ? `<p class="authp__arrive">Then: ${Arrival.no ? `check in to GM ${pad(Arrival.no)}` : 'check in'}</p>` : ''}
 
           <div class="authp__f">
@@ -18901,7 +18463,7 @@ const Views = {
             <button class="authp__go" type="submit" id="authGo" data-busy="${up ? 'Creating' : 'Signing in'}">
               ${up ? 'Create account' : 'Sign in'}
             </button>
-            <button class="authp__swap" type="button" id="authSwap"><i class="authp__idx" aria-hidden="true">${up ? '01' : '02'}</i>${up ? 'Sign in' : 'New account'}</button>
+            <button class="authp__swap" type="button" id="authSwap">${up ? 'Sign in' : 'New account'}</button>
           </div>
 
           <!-- a refusal is printed under the actions, so the button under
@@ -20622,7 +20184,6 @@ const Scanner = {
        camera can be offered again without a reload. */
     viewer.querySelector('.stall')?.remove();
     viewer.insertAdjacentHTML('beforeend', `<div class="stall">
-      <p class="stall__kick">Camera</p>
       <h2 class="stall__title">${copy.title}</h2>
       <p class="stall__note">${copy.body}</p>
       ${copy.retry ? `<button class="cmd stall__retry" type="button" data-scan-retry>Try again</button>` : ''}
@@ -21393,6 +20954,9 @@ function authErr(msg){
   if (!box) return;
   box.classList.toggle('is-on', Boolean(msg));
   box.textContent = msg || '';
+  /* the fields' rules turn with it, so the refusal reads where the typing was */
+  const form = $('#authForm');
+  if (form) form.classList.toggle('authp--err', Boolean(msg));
 }
 
 function authBusy(on, label){
@@ -21625,7 +21189,7 @@ const Inspect = {
     const cx = (r.left + r.right) / 2 - f.left, cy = (r.top + r.bottom) / 2 - f.top;
     const foot = card.querySelector('.card__foot');
     const mode = foot && f.width < 480 ? 'foot'
-      : card.closest('.mem') && matchMedia('(min-width:900px)').matches ? 'margin' : 'corner';
+      : card.closest('.mem') && matchMedia('(min-width:1180px)').matches ? 'margin' : 'corner';
     let rec = card.querySelector('.card__record');
     if (!rec){ rec = document.createElement('div'); rec.className = 'card__record'; rec.setAttribute('data-layer', ''); }
     (mode === 'foot' ? foot : field).appendChild(rec);
@@ -21633,7 +21197,7 @@ const Inspect = {
     rec.style.top = mode === 'margin' ? `${Math.round(cy)}px` : '';
     rec.innerHTML = (seal.querySelector('.sealmeta') || {}).innerHTML || '';
     let lead = field.querySelector('.card__lead');
-    if (mode === 'corner'){ if (lead) lead.remove(); lead = null; }
+    if (mode !== 'margin'){ if (lead) lead.remove(); lead = null; }
     else {
       if (!lead){ lead = document.createElement('i'); lead.className = 'card__lead'; lead.setAttribute('aria-hidden', 'true'); field.appendChild(lead); }
       /* the held stamp is drawn half as large again, so the leader starts clear of it */

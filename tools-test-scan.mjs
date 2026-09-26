@@ -88,7 +88,7 @@ test('Today sends a member to Scan only while a meeting is open and unstamped', 
   load({ meetings:[...held(3), meeting(4, { upcoming:true })] });
   assert.equal(target(Views.home()), undefined);
   assert.equal(Views.home().includes('mast--next'), true);
-  assert.equal(Views.home().includes('>Next chapter<'), true);
+  assert.equal(Views.home().includes('>Next meeting<'), true);
   assert.equal(Views.home().includes('>Check in<'), false);
   // nothing scheduled: the last stamp is the anchor, nothing is promised
   load({ meetings:held(3) });

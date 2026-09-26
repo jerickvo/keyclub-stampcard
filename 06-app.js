@@ -392,6 +392,9 @@ function authErr(msg){
   if (!box) return;
   box.classList.toggle('is-on', Boolean(msg));
   box.textContent = msg || '';
+  /* the fields' rules turn with it, so the refusal reads where the typing was */
+  const form = $('#authForm');
+  if (form) form.classList.toggle('authp--err', Boolean(msg));
 }
 
 function authBusy(on, label){
@@ -624,7 +627,7 @@ const Inspect = {
     const cx = (r.left + r.right) / 2 - f.left, cy = (r.top + r.bottom) / 2 - f.top;
     const foot = card.querySelector('.card__foot');
     const mode = foot && f.width < 480 ? 'foot'
-      : card.closest('.mem') && matchMedia('(min-width:900px)').matches ? 'margin' : 'corner';
+      : card.closest('.mem') && matchMedia('(min-width:1180px)').matches ? 'margin' : 'corner';
     let rec = card.querySelector('.card__record');
     if (!rec){ rec = document.createElement('div'); rec.className = 'card__record'; rec.setAttribute('data-layer', ''); }
     (mode === 'foot' ? foot : field).appendChild(rec);
@@ -632,7 +635,7 @@ const Inspect = {
     rec.style.top = mode === 'margin' ? `${Math.round(cy)}px` : '';
     rec.innerHTML = (seal.querySelector('.sealmeta') || {}).innerHTML || '';
     let lead = field.querySelector('.card__lead');
-    if (mode === 'corner'){ if (lead) lead.remove(); lead = null; }
+    if (mode !== 'margin'){ if (lead) lead.remove(); lead = null; }
     else {
       if (!lead){ lead = document.createElement('i'); lead.className = 'card__lead'; lead.setAttribute('aria-hidden', 'true'); field.appendChild(lead); }
       /* the held stamp is drawn half as large again, so the leader starts clear of it */
