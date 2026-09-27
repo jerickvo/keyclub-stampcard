@@ -308,7 +308,7 @@ select.input{padding-right:var(--sp-pad)}
 
 @media(min-width:1024px){
   :root{--tabs-h:0px;--rule:3px}
-  .shell{grid-template-columns:var(--rail) 1fr}
+  .shell{grid-template-columns:var(--rail) minmax(0,1fr)}
   .rail{display:flex}
   .tabs{display:none}
 }

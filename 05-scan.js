@@ -493,7 +493,6 @@ const Scanner = {
        camera can be offered again without a reload. */
     viewer.querySelector('.stall')?.remove();
     viewer.insertAdjacentHTML('beforeend', `<div class="stall">
-      <p class="stall__kick">Camera</p>
       <h2 class="stall__title">${copy.title}</h2>
       <p class="stall__note">${copy.body}</p>
       ${copy.retry ? `<button class="cmd stall__retry" type="button" data-scan-retry>Try again</button>` : ''}

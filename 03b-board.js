@@ -164,25 +164,16 @@ const BoardUI = {
     const owed = pz ? (pz.owed || []).length : null;
     const claimed = pz ? (pz.owed || []).filter(o => o.claimed_at).length : 0;
     const when = m => `${esc(fmtDate(m.meeting_date))} · ${esc(spanTime(m.start_time, m.end_time))} · ${esc(m.location || Schedule.PLACE)}`;
+    /* the current meeting is today's: the running head already says the date */
+    const hours = m => `${esc(spanTime(m.start_time, m.end_time))} · ${esc(m.location || Schedule.PLACE)}`;
 
     /* what is open: each a line that goes where it is done */
     const tasks = [];
-    if (owed !== null && owed) tasks.push({ attr:'data-btab="progress"', fig:String(owed), text:`${owed === 1 ? 'prize' : 'prizes'} to hand over${claimed ? ` · ${claimed} asked for` : ''}` });
-    if (phase === 'today') tasks.push({ attr:'data-btab="session"', fig:`GM ${pad(now.meeting_number)}`, text:'check-in not yet opened' });
-    if (!next) tasks.push({ attr:'data-btab="meetings" data-mnew', fig:'—', text:'nothing scheduled ahead' });
+    if (owed !== null && owed) tasks.push({ attr:'data-btab="progress"', fig:String(owed), text:`${owed === 1 ? 'prize' : 'prizes'} to hand over${claimed ? `, ${claimed} asked for` : ''}` });
 
-    /* the club's year as one line: every meeting at its true date */
-    const days = iso => Math.floor(Date.parse(iso + 'T12:00:00Z') / 864e5);
-    const all = [...list].sort(meetingOrder(1));
-    const t0 = all.length ? days(all[0].meeting_date) : days(today);
-    const tN = Math.max(t0 + 1, all.length ? days(all[all.length - 1].meeting_date) : t0 + 1, days(today));
-    const pos = iso => Math.min(98.5, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
-    const yearline = `<div class="yline yline--club" aria-hidden="true" style="--now:${pos(today)}%"><i class="yline__rule"></i><i class="yline__ahead"></i>${
-      all.map(m => `<i class="yt yt--${m.state === 'OPEN' ? 'open' : m.meeting_date === today ? 'today' : String(m.meeting_date) > today ? 'up' : 'held'}" style="left:${pos(m.meeting_date)}%"></i>`).join('')}</div>`;
     const figs = !c ? [] : [
       [Number(c.total_members) || 0, 'members'], [Number(c.total_seals) || 0, 'stamps'], [Number(c.meetings_held) || 0, 'meetings'],
       [c.average_attendance == null ? '–' : esc(String(c.average_attendance)), 'at a meeting'],
-      ...REWARD_TIERS.map(t => [Number((c.milestones || {})['m' + t.required]) || 0, `at ${esc(prizeName(t))}`]),
     ];
 
     return `<div class="bpanel tools tools--${phase}${phase === 'open' ? ' bpanel--live' : ''}">
@@ -192,9 +183,9 @@ const BoardUI = {
         <h2 class="tools__mark">Current meeting</h2>
         <div class="tools__head">
           ${now ? `<p class="tools__gm"><span>GM</span><b>${pad(now.meeting_number)}</b></p>` : ''}
-          <p class="tools__state">${phase === 'open' ? 'Open' : phase === 'ended' ? 'Ended' : phase === 'today' ? 'Not opened' : 'No meeting'}</p>
+          <p class="tools__state">${phase === 'open' ? 'Check-in open' : phase === 'ended' ? 'Ended' : phase === 'today' ? (count ? 'Check-in closed' : 'Check-in not open') : 'No meeting today'}</p>
         </div>
-        ${now ? `<p class="tools__when">${when(now)}</p>` : ''}
+        ${now ? `<p class="tools__when">${now.meeting_date === today ? hours(now) : when(now)}</p>` : ''}
         ${now && (phase === 'open' || count) ? `<p class="tools__count"><b${phase === 'open' ? ' id="attCount"' : ''}>${count}</b><span>checked in</span></p>` : ''}
         <div class="tools__acts">
           ${now
@@ -204,7 +195,7 @@ const BoardUI = {
                 ? `<button class="tools__cmd" type="button" data-bstart="${esc(now.id)}" data-busy="Opening">Open check-in</button>`
                 : `<button class="tools__cmd tools__cmd--nav" type="button" data-bmeeting="${esc(now.id)}">Attendees</button>`)
               + `<button class="cmd cmd--quiet" type="button" data-bmeeting="${esc(now.id)}" data-bhandfocus>Add by hand</button>`
-            : `<button class="cmd cmd--quiet" type="button" data-btab="meetings" data-mnew>Schedule a meeting</button>`}
+            : `<button class="cmd" type="button" data-btab="meetings" data-mnew>Schedule a meeting</button>`}
         </div>
       </section>
 
@@ -212,21 +203,20 @@ const BoardUI = {
         <h2 class="tools__mark">Next meeting</h2>
         ${next ? `<button class="tools__nextrow" type="button" data-bmeeting="${esc(next.id)}">
             <span class="tools__nextgm">GM ${pad(next.meeting_number)}</span>
-            <span class="tools__nextwhen">${when(next)}</span>
-          </button>` : `<p class="tools__none">Nothing scheduled</p>`}
+            <span class="tools__nextwhen">${meetingAway(next) ? when(next) : esc(fmtDate(next.meeting_date))}</span>
+          </button>` : `<button class="tools__nextrow" type="button" data-btab="meetings" data-mnew><span class="tools__nextwhen">Nothing scheduled</span></button>`}
       </section>
 
       <section class="tools__tasks" aria-label="Open tasks">
         <h2 class="tools__mark">Open tasks</h2>
         <ol class="tools__list">
-          ${tasks.length ? tasks.map((t, i) => `<li><button class="tools__task" type="button" ${t.attr}><i>${pad(i + 1)}</i><b>${t.fig}</b><span>${t.text}</span></button></li>`).join('')
-            : '<li class="tools__nothing"><i>—</i></li>'}
+          ${tasks.length ? tasks.map(t => `<li><button class="tools__task" type="button" ${t.attr}><b>${t.fig}</b><span>${t.text}</span></button></li>`).join('')
+            : '<li class="tools__nothing">Nothing open</li>'}
         </ol>
       </section>
 
       ${c ? `<section class="tools__record" aria-label="Club record">
         <h2 class="tools__mark">Club record</h2>
-        ${yearline}
         <p class="tools__colophon">${figs.map(([v, l]) => `<span><b>${v}</b>${l}</span>`).join('')}</p>
       </section>` : ''}
     </div>`;
@@ -331,7 +321,7 @@ const BoardUI = {
       const key = o.user_id + ':' + o.reward_id;
       return `<li class="brow brow--owed">
         <span class="brow__mid"><b>${esc(o.username)}</b>
-          <span class="muted">${esc(prizeName(o))} / ${o.claimed_at ? `claimed ${esc(fmtClubDay(o.claimed_at))}` : 'earned, not claimed'}</span></span>
+          <span class="muted">${esc(prizeName(o))} / ${o.claimed_at ? `claimed ${esc(fmtClubDay(o.claimed_at))}` : 'not claimed'}</span></span>
         ${o.user_id === (Store.user && Store.user.id)
           ? '<span class="muted owed__self">Another officer hands this over</span>'
           : `<button class="btn owed__go" type="button" data-bhand="${esc(key)}"
@@ -377,21 +367,11 @@ const BoardUI = {
     const usual = m => spanTime(m.start_time, m.end_time) === spanTime('12:40 PM', '1:30 PM') && (m.location || Schedule.PLACE) === Schedule.PLACE;
     const meta = m => usual(m) ? '' : `<span class="mrow__when">${esc(spanTime(m.start_time, m.end_time))} · ${esc(m.location || Schedule.PLACE)}</span>`;
 
-    /* the year as one line: every meeting at its true date, held in ink,
-       today ringed, the ones ahead hollow, an open one in red */
-    const days = iso => Math.floor(Date.parse(iso + 'T12:00:00Z') / 864e5);
-    const all = [...past].reverse().concat(upcoming).sort(by(1));
-    const t0 = all.length ? days(all[0].meeting_date) : days(today);
-    const tN = Math.max(t0 + 1, all.length ? days(all[all.length - 1].meeting_date) : t0 + 1, days(today));
-    const pos = iso => Math.min(98.5, Math.max(0, (days(iso) - t0) / (tN - t0) * 100)).toFixed(2);
-    const yearline = `<div class="yline yline--club" aria-hidden="true" style="--now:${pos(today)}%"><i class="yline__rule"></i><i class="yline__ahead"></i>${
-      all.map(m => `<i class="yt yt--${m.state === 'OPEN' && !m.left ? 'open' : m.meeting_date === today ? 'today' : ahead(m) ? 'up' : 'held'}" style="left:${pos(m.meeting_date)}%"></i>`).join('')}</div>`;
-
     /* one entry of the minute book; today's is the fold */
     const row = (m, fold = false) => {
       const state = String(m.state || '').toLowerCase();
-      const word = m.left ? 'Left open' : ({ open:'Open', ended:'Ended', today:'Not opened' }[state] || '');
       const n = count(m);
+      const word = m.left ? 'Left open' : ({ open:'Check-in open', ended:'Ended', today: n ? 'Check-in closed' : 'Check-in not open' }[state] || '');
       const isAhead = ahead(m);
       return `<li class="mrow mrow--${state}${fold ? ' mrow--fold' : ''}${m.left ? ' mrow--left' : ''}"><button class="mrow__go" type="button" data-bmeeting="${esc(m.id)}">
         <span class="mrow__gm"><span>GM</span> <b>${pad(m.meeting_number)}</b></span>
@@ -415,7 +395,6 @@ const BoardUI = {
 
     return `<div class="bpanel minutes">
       ${this.deleteNote ? `<p class="authp__err meetgrid__err" role="alert">${esc(this.message(this.deleteNote))}</p>` : ''}
-      ${yearline}
 
       <section class="minutes__ahead" aria-label="Upcoming">
         <h2 class="minutes__lab">Ahead</h2>
@@ -528,7 +507,7 @@ const BoardUI = {
       ${rows.length ? `
         <table class="roster">
           <thead><tr><th scope="col">Member</th><th scope="col" class="roster__card">Card</th>
-            <th scope="col" class="roster__rw">Prizes</th><th scope="col">Last check-in</th><th scope="col">Stamps</th></tr></thead>
+            <th scope="col">Last check-in</th><th scope="col">Stamps</th></tr></thead>
           <tbody>${rows.map(m => {
             /* where the member's own card stands: its number and its ten seats */
             const n = Number(m.stamps) || 0;
@@ -538,7 +517,6 @@ const BoardUI = {
             <th scope="row"><button class="roster__name" type="button" data-bmember="${esc(m.id)}">${esc(m.username)}</button></th>
             <td class="roster__card"><span class="roster__cno">${pad(card)}</span><span class="roster__seats" aria-label="${on} of 10 on card ${pad(card)}">${
               Array.from({ length:10 }, (_, i) => `<i${i < on ? ' class="is-on"' : ''}></i>`).join('')}</span></td>
-            <td class="roster__rw">${Number(m.rewards_unlocked) || 0} of ${REWARD_TIERS.length}</td>
             <td>${m.last_attendance ? esc(fmtDay(m.last_attendance)) : '<span class="brow__none">-</span>'}</td>
             <td>${n}</td>
           </tr>`;}).join('')}</tbody>
@@ -560,17 +538,11 @@ const BoardUI = {
     const total = Number(m.stamps) || d.attendance.length;
     return `<div class="panel bpanel bdet">
       <div class="bdet__head">
-      <p class="crumb"><button class="bback" type="button" data-bback>${this.backLabel()}</button><span class="crumb__at">${esc(m.username)}</span></p>
+      <p class="crumb"><button class="bback" type="button" data-bback>${this.backLabel()}</button></p>
 
       <div class="bwho">
         <p class="bwho__lab">Member${m.created_at ? ` since ${esc(onClock(m.created_at, { month:'long', year:'numeric' }))}` : ''}</p>
         <h2 class="bdetail__name bdetail__name--id">${esc(m.username)}</h2>
-        <dl class="bwho__figs">
-          <div><dt>Stamps</dt><dd>${total}</dd></div>
-          <div><dt>Card ${pad(total && total % 10 === 0 ? total / 10 : Math.floor(total / 10) + 1)}</dt><dd>${
-            total && total % 10 === 0 ? 10 : total % 10} of 10</dd></div>
-          <div><dt>Prizes</dt><dd>${d.rewards.filter(r => r.state !== 'locked').length} of ${d.rewards.length}</dd></div>
-        </dl>
       </div>
       </div>
 
@@ -604,7 +576,7 @@ const BoardUI = {
        says it; the one action beside it */
     const when = handed ? `Handed over ${fmtClubDay(handed)}`
       : r.state === 'claimed' ? (r.claimed_at ? `Claimed ${fmtClubDay(r.claimed_at)}` : 'Claimed')
-      : 'Earned, not claimed';
+      : 'Not claimed';
     const undo = handed && (r.can_undo || (this.handed[key] && Date.now() - this.handed[key].when < HANDOVER_UNDO_MS));
     return `<li class="brow brow--reward${handed ? ' brow--handed' : ''}">
       <span class="brow__mid"><b>${esc(prizeName(r))}</b>
@@ -625,12 +597,11 @@ const BoardUI = {
     const today = String(m.meeting_date) === Schedule.today();
     return `<div class="panel bpanel bdet">
       <div class="bdet__head">
-      <p class="crumb"><button class="bback" type="button" data-bback>${this.backLabel()}</button><span class="crumb__at">GM ${pad(m.meeting_number)}</span></p>
+      <p class="crumb"><button class="bback" type="button" data-bback>${this.backLabel()}</button></p>
 
       <div class="bmeet">
-        <p class="bwho__lab">General meeting</p>
         <h2 class="bdetail__name">GM ${pad(m.meeting_number)}</h2>
-        <p class="bmeet__when">${esc(fmtDate(m.meeting_date))} / ${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || Schedule.PLACE)}${m.check_in_open ? ' / <b>Check-in open</b>' : ''}</p>
+        <p class="bmeet__when">${esc(fmtDate(m.meeting_date))} · ${esc(spanTime(m.start_time, m.end_time))} · ${esc(m.location || Schedule.PLACE)}${m.check_in_open ? '<b>Check-in open</b>' : ''}</p>
       </div>
       </div>
 
@@ -743,7 +714,7 @@ const BoardUI = {
     const stale = isOpen && sel.meeting_date !== today;
     const ended = !isOpen && meetingPhase(sel, today) === 'ENDED';
     const kind = stale ? 'stale' : isOpen ? 'open' : ended ? 'ended' : 'closed';
-    const word = stale ? 'Left open' : isOpen ? 'Open' : ended ? 'Ended' : 'Not opened';
+    const word = stale ? 'Left open' : isOpen ? 'Check-in open' : ended ? 'Ended' : held ? 'Check-in closed' : 'Check-in not open';
 
     /* the desk: the meeting's number and its state on one line, the plate,
        the count as the largest figure after the code, and the commands as
@@ -764,7 +735,7 @@ const BoardUI = {
         ${isOpen && !stale ? `<div class="proj__plate"><div class="qrpanel__code" id="qrBox"></div></div>` : ''}
         ${isOpen && !stale
           ? `<p class="proj__count" aria-live="polite" aria-atomic="true"><b id="attCount">${Number.isFinite(sel.attendance_count) ? sel.attendance_count : ''}</b><span>checked in</span></p>`
-          : held ? `<p class="proj__count proj__count--held"><b>${held}</b><span>${ended ? 'checked in' : 'already checked in'}</span></p>` : ''}
+          : held ? `<p class="proj__count proj__count--held"><b>${held}</b><span>checked in</span></p>` : ''}
         <div class="proj__ctls">
           ${stale
             ? `<button class="proj__ctl proj__ctl--cut proj__end" type="button" data-bend="${id}" data-busy="Closing">Close check-in</button>`
@@ -775,7 +746,6 @@ const BoardUI = {
             : `<button class="proj__ctl proj__ctl--go" type="button" data-bstart="${id}" data-busy="Opening">${ended ? 'Reopen check-in' : 'Open check-in'}</button>
                <button class="proj__ctl proj__ctl--quiet proj__hand" type="button" data-bmeeting="${id}" data-bhandfocus>${held ? 'Attendees and add by hand' : 'Add by hand'}</button>`}
         </div>
-        ${isOpen && !stale ? `<span class="proj__seal" aria-hidden="true">${brandSeal('kci')}</span>` : ''}
       </section>
       ${!isOpen ? nextLine : ''}
     </div>`;

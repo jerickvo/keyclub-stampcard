@@ -86,7 +86,7 @@ function dropToast(key, immediate){
   liveToasts.delete(key);
   const el = rec.el;
   if (immediate || Motion.off) return el.remove();
-  animate(el, { opacity:0, translateY:8, duration:200, ease:'inQuad',
+  animate(el, { opacity:0, duration:160, ease:'inQuad',
                 onComplete:() => el.remove() });
 }
 
@@ -105,7 +105,7 @@ function toast({ title, detail, bad = false, key, about }){
     while (liveToasts.size >= TOAST_LIMIT) dropToast(liveToasts.keys().next().value, true);
     el = document.createElement('div');
     host.appendChild(el);
-    if (!Motion.off) animate(el, { opacity:[0,1], translateY:[14,0], duration:240, ease:'outQuad' });
+    if (!Motion.off) animate(el, { opacity:[0,1], translateY:[6,0], duration:160, ease:'outQuad' });
   }
 
   el.className = 'toast' + (bad ? ' toast--bad' : '');

@@ -4,7 +4,6 @@
   --pnl-off:clamp(5px,.9vw,9px);
   --ink-w:2.8}
 
-.authp__f{display:block;margin-bottom:var(--sp-pad)}
 .authp__f .kicker{display:block;margin-bottom:6px}
 .authp .input{width:100%;box-sizing:border-box;min-width:0}
 

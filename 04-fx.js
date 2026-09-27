@@ -18,9 +18,9 @@ const Impact = {
 };
 
 const FX = {
-  /* the CLAIMED punch is pressed onto the rung, the way a stamp lands */
+  /* the claim's note is pressed onto the station, the way a stamp lands */
   claimStamp(row){
-    const p = row && row.querySelector('.tier__punch');
+    const p = row && row.querySelector('.tier__note');
     if (!p || Motion.off) return;
     animate(p, { scale:[1.3, 1], duration:120, ease:STEP(3),
                  onComplete(){ Motion.settle(p); } });
