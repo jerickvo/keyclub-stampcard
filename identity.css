@@ -66,7 +66,6 @@ body{
 
 .brow{border-bottom:var(--edge-hair) solid var(--tone)}
 .brow:focus-visible{background:var(--tint)}
-@media (hover:hover){.brow:hover{background:var(--tint)}}
 .brow:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:-2px}
 .brow__no{color:var(--ink-2)}
 .brow__n{font-family:var(--f-head)}
@@ -188,7 +187,6 @@ div.brow__go{cursor:default}
 .roster td{font:400 clamp(11px,.4vw + 9.7px,12.5px)/1.4 var(--f-mono);letter-spacing:.04em;color:var(--ink-2)}
 .roster td:last-child{font:400 clamp(18px,1.6vw,22px)/1 var(--f-head);color:var(--ink)}
 .roster tbody tr{cursor:pointer}
-@media (hover:hover){.roster tbody tr:hover{background:var(--tint)}}
 .roster__name{min-height:44px;margin:-12px 0;padding:0;border:0;background:none;cursor:pointer;
   font:400 var(--t-body)/1.2 var(--f-mono);letter-spacing:.01em;color:var(--ink);
   text-align:left;overflow-wrap:anywhere}
@@ -529,7 +527,7 @@ html{font-synthesis:none}
           calc(var(--gutter) + env(safe-area-inset-right,0px)) 0
           calc(var(--gutter) + env(safe-area-inset-left,0px));
   color:var(--paper);align-self:start}
-.spread__sub{margin:0 0 var(--sp-row);font:400 11.5px/1.3 var(--f-mono);text-transform:uppercase;
+.spread__sub{margin:0 0 var(--sp-row);font:400 11px/1.3 var(--f-mono);text-transform:uppercase;
   letter-spacing:.12em;color:var(--tint);
   display:flex;align-items:center;gap:clamp(8px,1.4vw,14px)}
 
@@ -614,8 +612,12 @@ html{font-synthesis:none}
   font-size:var(--t-head);line-height:1;overflow-wrap:anywhere}
 .arrive__note{margin:0;font-size:var(--t-body);line-height:1.4;color:var(--ink-2)}
 .authp__arrive{margin:0;padding:0;border:0;
-  font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
+  font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
 
+@media(max-width:819px){
+  .spread__head{align-self:stretch;display:flex;flex-direction:column;padding-bottom:var(--sp-pad)}
+  .spread__sub{margin-bottom:auto}
+}
 @media(min-width:600px) and (max-width:819px){
   .authp{margin-inline:auto}
 }
@@ -1061,12 +1063,9 @@ html{font-synthesis:none}
 .bwho__lab{margin:0;font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .bwho .bdetail__name{margin:0;font-size:clamp(32px,4.4vw,60px);line-height:1}
 .bmeet .bdetail__name{margin:0;padding-bottom:.16em;font:400 clamp(64px,8vw,128px)/.82 var(--f-display);letter-spacing:0}
-.bmeet__when{margin:0;font:400 12.5px/1.4 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.bmeet__when{margin:0;font:400 12px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .bmeet__when b{display:block;margin-top:var(--sp-tight);font-weight:400;color:var(--ink)}
-.bwho__figs{display:flex;flex-wrap:wrap;gap:var(--sp-pad) var(--sp-block);margin:var(--sp-tight) 0 0}
-.bwho__figs > div{display:flex;flex-direction:column-reverse;gap:4px}
-.bwho__figs dt{font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.bwho__figs dd{margin:0;font:400 clamp(22px,2.2vw,30px)/1 var(--f-head)}
+.bmeet__when b::before{content:'';display:inline-block;width:6px;height:6px;margin:0 8px 1px 0;border-radius:50%;background:var(--seal);vertical-align:middle}
 .brow--att .brow__no{display:flex;flex-direction:row;align-items:baseline;gap:5px;font:400 10.5px/1 var(--f-mono);letter-spacing:.14em}
 .brow--att .brow__no b{font:400 clamp(22px,2.2vw,28px)/.9 var(--f-head);letter-spacing:0;color:var(--ink)}
 
@@ -1125,7 +1124,7 @@ html{font-synthesis:none}
 /* command: small capitals on a 2px rule */
 .btn:not(.btn--go),.cmd:not(.cmd--go):not(.cmd--quiet):not(.stall__retry),.owed__go,.bconfirm__keep{
   padding:12px 0 10px;min-height:44px;
-  font:400 12.5px/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);
+  font:400 12px/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);
   border:0;background:linear-gradient(currentColor,currentColor) 0 100%/100% 2px no-repeat}
 .btn:not(.btn--go)::before,.cmd:not(.cmd--go)::before,.owed__go::before,.bconfirm__keep::before{content:none}
 @media (hover:hover){
@@ -1192,7 +1191,7 @@ html{font-synthesis:none}
   background:none;border:0;border-bottom:2px solid var(--ink);border-radius:0;
   font:400 max(16px,var(--t-body))/1.3 var(--f-mono);letter-spacing:.02em;color:var(--ink);
   transition:none;box-shadow:none}
-.input::placeholder,.authp__in::placeholder{color:var(--tone);letter-spacing:.02em}
+.input::placeholder,.authp__in::placeholder{color:var(--ink-2);letter-spacing:.02em}
 .input:focus,.authp__in:focus,.input:focus-visible,.authp__in:focus-visible{outline:0;box-shadow:inset 0 -2px 0 var(--ink)}
 .authp__pw > .authp__in{padding-right:calc(var(--tap) + 4px)}
 .authp__f,.field{position:relative}
@@ -1210,7 +1209,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 
 /* a working control keeps its width the way it always did */
 .cmd[data-busy],.proj__ctl[data-busy],.tier__claim[data-busy],.owed__go[data-busy],.authp__go[data-busy]{flex-direction:column;gap:0}
-.cmd[disabled],.cmd[aria-disabled="true"]{opacity:.45}
+.cmd[disabled],.cmd[aria-disabled="true"]{opacity:.55}
 
 /* ══ Examining a stamp. The tapped seal is held up, the rest of the
    card recedes, and the stamp's printed record appears in the corner
@@ -1250,7 +1249,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
    page being read marked on the binding; on a phone, a folio bar at the
    foot. The navigation is quiet; the page is the thing read ══ */
 .ground__bleed{display:none}
-.rail{padding:var(--sp-block) 0 var(--sp-pad) var(--sp-pad);overflow:hidden;border-right:2px solid var(--ink)}
+.rail{padding:calc(var(--sp-pad) + env(safe-area-inset-top,0px)) 0 var(--sp-pad) var(--sp-pad);overflow:hidden;border-right:1px solid var(--ink)}
 .rail::after{content:none}
 .rail__brand{padding:0}
 .rail__brand .mark{display:block;font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
@@ -1259,25 +1258,24 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .rail__nav{position:relative;display:flex;flex-direction:column;gap:0;padding-top:var(--sp-block);padding-right:var(--sp-pad);flex:1}
 .rail__folio{display:none}
 .rail__link{display:grid;grid-template-columns:2.6ch minmax(0,1fr);column-gap:var(--sp-row);align-items:baseline;
-  position:relative;margin:0;padding:13px 0 12px;border:0;border-radius:0;
+  position:relative;margin:0;padding:12px 0;border:0;border-radius:0;
   background:none;text-align:left;cursor:pointer;color:var(--ink);min-height:44px}
 .rail__link::before{content:none}
 .rail__idx{font:400 11px/1 var(--f-mono);letter-spacing:.08em;color:var(--tone)}
-.rail__lab{font:400 13px/1 var(--f-mono);text-transform:uppercase;letter-spacing:.12em;color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
+.rail__lab{font:400 12px/1 var(--f-mono);text-transform:uppercase;letter-spacing:.12em;color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
 .rail__link[aria-current="page"] .rail__idx,.rail__link[aria-current="page"] .rail__lab{color:var(--ink)}
 /* the page being read: the binding thickens beside it */
 .rail__link[aria-current="page"]::after{content:'';position:absolute;right:calc(var(--sp-pad) * -1);top:0;bottom:0;width:3px;background:var(--ink)}
 @media (hover:hover){.rail__link:hover .rail__lab{color:var(--ink);text-decoration:none}}
 .rail__link:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
 /* check-in open: the Scan line says so, in the one live colour */
-.rail__link--live .rail__lab{color:var(--ink)}
 .rail__link--live .rail__lab::after{content:'Open';margin-left:.8em;font:400 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--seal)}
 /* the colophon at the foot of the index */
 .rail__foot{margin:var(--sp-pad) var(--sp-pad) 0 0;padding-top:var(--sp-pad);border-top:1px solid var(--ink)}
 .rail__who{display:grid;gap:4px;margin:0 0 var(--sp-tight)}
 .rail__held{display:none}
 .rail__name{font:400 15px/1.2 var(--f-mono);letter-spacing:.01em;text-transform:none;color:var(--ink);overflow-wrap:anywhere}
-.rail__role{font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.rail__role{font:400 11px/1.3 var(--f-mono);letter-spacing:.06em;white-space:nowrap;text-transform:uppercase;color:var(--ink-2)}
 .rail__util{display:grid;gap:0;justify-items:start;margin:0}
 .rail__motion,.acct .rail__motion{display:inline-flex;align-items:baseline;gap:.5em;min-height:44px;padding:0;margin:0;background:none;border:0;cursor:pointer;
   font:400 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
@@ -1293,7 +1291,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .acct__who{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:0}
 .acct__held{display:none}
 .acct__name{font:400 15px/1.2 var(--f-mono);color:var(--ink);overflow-wrap:anywhere}
-.acct__role{font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.acct__role{font:400 11px/1.3 var(--f-mono);letter-spacing:.06em;white-space:nowrap;text-transform:uppercase;color:var(--ink-2)}
 .view--member .acct__who{display:none}
 .acct__row{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-pad);flex-wrap:wrap;padding:0;border:0}
 .acct__mark{display:none}
@@ -1310,12 +1308,11 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .tab__tab{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:0;
   min-height:44px;margin:0;padding:0;border-top:3px solid transparent;margin-top:-1px;transition:none;transform:none}
 .tab__idx{display:none}
-.tabs button .tab__lab,.tab__lab{font:400 10.5px/1.1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.tabs button .tab__lab,.tab__lab{font:400 11px/1.1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
 .tabs button[aria-current="page"] .tab__tab{border-top-color:var(--ink);transform:none;background:none}
-.tabs button[aria-current="page"] .tab__lab{font:400 10.5px/1.1 var(--f-mono);letter-spacing:.08em;color:var(--ink)}
+.tabs button[aria-current="page"] .tab__lab{font:400 11px/1.1 var(--f-mono);letter-spacing:.06em;color:var(--ink)}
 /* check-in open: a red dot before Scan, nothing more */
 .tabs .tab--live .tab__tab{background:none;transform:none;padding-inline:0}
-.tabs .tab--live .tab__lab{color:var(--ink)}
 .tabs .tab--live .tab__lab::before{content:'';display:inline-block;width:6px;height:6px;margin:0 5px 1px 0;border-radius:50%;background:var(--seal);vertical-align:middle}
 .tabs button:active .tab__tab{transform:none}
 .tabs button:focus-visible{outline:none}
@@ -1457,7 +1454,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 /* the prize that is ready: a printed instruction, the burgundy rule after it running off the page */
 .card--sheet .card__goal--go{display:inline-flex;align-items:center;gap:10px;min-height:44px;
   padding:6px calc(var(--cx) + 12px) 6px 0;border:0;background:none;cursor:pointer;color:var(--ink);
-  font:400 20px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase;text-decoration:none;text-align:left}
+  font:400 18px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;text-decoration:none;text-align:left}
 .card--sheet .card__goal--go::before{content:none}
 .card--sheet .card__goal--go::after{content:none}
 .card__goal__arrow{display:inline-block;position:relative;width:22px;height:2px;background:currentColor;
@@ -1698,9 +1695,9 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .mast--set .mast__state{margin-left:.3em}
 .mast__imp__face{fill:var(--ink)}
 .mast__imp g path{fill:var(--paper)}
-/* closed without a stamp: the number in grey, one line drawn through it */
+/* closed without a stamp: the number in grey */
 .mast--closed .mast__no{color:var(--tone)}
-/* nothing today: the next meeting's date is the anchor, on a dotted rule */
+/* nothing today: the next meeting's date is the anchor */
 .mast--next .mast__line{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"date state";
   align-items:end;border-bottom-width:1px;padding-bottom:var(--sp-row)}
 .mast__date{grid-area:date;font:400 clamp(30px,8.4vw,40px)/1 var(--f-head);letter-spacing:.02em;text-transform:uppercase;color:var(--ink);font-weight:400}
@@ -1713,10 +1710,6 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .mast--none .mast__gm{grid-area:gm;align-self:end;margin:0 0 6px}
 .mast--none .mast__date{grid-area:date;font-size:clamp(22px,6vw,28px)}
 .mast--none .mast__no{color:var(--tone)}
-/* a prize within reach: one line under the rule */
-.mast__more{margin:var(--sp-tight) 0 0;font:400 12px/1.5 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);text-align:left}
-.deck--near .seal--mile::after{content:'';position:absolute;inset:-9%;border:2px solid var(--ink);
-  border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;transform:rotate(-5deg);pointer-events:none}
 
 /* the card on the page: one line of what it holds, then the seats on bare paper */
 .card--field{--cx:calc(var(--gutter) + var(--safe-x));position:relative;display:block;width:auto;
@@ -1763,8 +1756,8 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 @media(min-width:480px){
   .mast__no{font-size:clamp(150px,20vw,190px)}
 }
-@media(min-width:1100px){
-  .deck{grid-template-columns:minmax(200px,26%) minmax(0,1fr);column-gap:clamp(32px,4vw,64px);row-gap:var(--sp-page);
+@media(min-width:1024px){
+  .deck{grid-template-columns:minmax(180px,26%) minmax(0,1fr);column-gap:clamp(32px,4vw,64px);row-gap:var(--sp-page);
     grid-template-areas:"act act" "side card";grid-template-rows:auto minmax(0,1fr)}
   .deck > .card{grid-area:card;width:100%;max-width:680px;justify-self:end}
   .mast__line{margin-right:0;padding-right:0}
@@ -1780,7 +1773,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
    growing with the weeks between them, a card filled ruled across the
    page as a chapter. The quietest page: the stamps are the only ink ══ */
 .view--record{--cx:calc(var(--gutter) + var(--safe-x))}
-.yline{position:relative;height:32px;margin:var(--sp-tight) calc(var(--cx) * -1) var(--sp-tight) 6px}
+.yline{position:relative;height:32px;margin:0 calc(var(--cx) * -1) 0 6px}
 .yline__rule{position:absolute;left:0;top:50%;width:var(--now);height:2px;background:var(--ink);translate:0 -50%}
 .yline__ahead{position:absolute;left:var(--now);right:0;top:50%;height:0;border-top:1px dotted var(--tone)}
 .yt{position:absolute;top:50%;translate:-50% -50%;display:block}
@@ -1793,11 +1786,11 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .yt--open{width:10px;height:10px;border:1.5px solid var(--seal);border-radius:50%;background:var(--paper);z-index:1}
 .yt--up{width:5px;height:5px;border:1px solid var(--tone);border-radius:50%;background:var(--paper)}
 .yt--card{width:2px;height:18px;background:var(--ink);translate:calc(-50% + 9px) -50%}
-.tally{display:block;margin:0;padding:0;border:0;text-align:left;
+.tally{display:block;margin:calc(var(--sp-tight) - var(--sp-block)) 0 0;padding:0;border:0;text-align:left;
   font:400 12px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .tally b{font:inherit;color:var(--ink)}
 
-.ledger{--line:44px;position:relative;display:block;max-width:640px;margin-top:var(--sp-block);padding:0}
+.ledger{--line:44px;position:relative;display:block;max-width:640px;margin-top:0;padding:0}
 .ledger::before{content:'';position:absolute;left:calc(var(--line) + 6px);top:0;bottom:0;width:1px;background:var(--tint)}
 .ledger__group{position:relative}
 .ledger__month{position:relative;margin:0;padding:var(--sp-block) 0 var(--sp-tight);border:0;background:var(--paper);
@@ -1836,7 +1829,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .lrow--open .lrow__stamp::before{content:'';display:block;width:26px;height:26px;margin:3px;
   border:2px solid var(--seal);border-radius:53% 47% 50% 46% / 48% 54% 45% 52%}
 .lrow__go{display:inline-flex;align-items:center;min-height:36px;padding:10px 14px 9px;border:0;background:var(--ink);
-  font:400 15px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;color:var(--paper);text-decoration:none}
+  font:400 16px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;color:var(--paper);text-decoration:none}
 @media (hover:hover){.lrow--open:hover .lrow__go{background:var(--ink-lift)}}
 .lrow--open:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
 .ledger--blank .nowline{margin:var(--sp-pad) 0 0 calc(var(--line) + 44px)}
@@ -1854,7 +1847,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
    collected station is set back in grey with its note. Nothing turned,
    nothing red ══ */
 .view--rewards{--cx:calc(var(--gutter) + var(--safe-x))}
-.prize__fig{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 1.2em;margin:0 0 var(--sp-block);padding:0;border:0;
+.prize__fig{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 1.2em;margin:0;padding:0;border:0;
   font:400 12px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .prize__fig b{font:inherit;color:var(--ink)}
 .prize__fig span{color:var(--ink);white-space:nowrap}
@@ -1881,12 +1874,15 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .tier__at{position:absolute;left:calc(var(--x) + 20px);bottom:-.08em;z-index:1;display:block;padding:0;border:0;
   font:400 64px/.8 var(--f-display);letter-spacing:-.02em;color:var(--ink);pointer-events:none;-webkit-text-stroke:0}
 .tier__at b{font:inherit;font-weight:400;color:inherit}
-.tier__at span{display:none}
 .tier--sealed .tier__at,.tier--far .tier__at{color:var(--tone);-webkit-text-stroke:0}
 .tier--ready .tier__at{font-size:64px;color:var(--ink);-webkit-text-stroke:0}
 .tier--claimed .tier__at,.tier--took .tier__at{color:var(--tone)}
 .tier--sealed:not(.tier--far) .tier__at{color:var(--ink)}
 .tier--sealed:not(.tier--far)::after{background:var(--ink)}
+/* a prize ready to claim is the one strong station; the next returns to ink once it is claimed */
+.tiers:has(.tier--ready) .tier--sealed .tier__at{color:var(--tone)}
+.tiers:has(.tier--ready) .tier--sealed::after{background:var(--tone)}
+.tiers:has(.tier--ready) .tier--sealed .tier__name{color:var(--ink-2)}
 .tier--took .tier__at::after{content:none}
 .tier__body{position:absolute;left:calc(var(--x) + 104px);right:0;bottom:2px;width:auto;display:grid;gap:6px;justify-items:start;
   padding:0;min-width:0}
@@ -1909,9 +1905,9 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   .route__me--start{translate:-50% -50%}
   /* the station sits at its column's right end, where its count is reached */
   .tier::after{left:auto;right:-1px;bottom:auto;top:calc(var(--y) - 7px);width:2px;height:14px}
-  .tier__at{left:auto;right:16px;bottom:auto;top:var(--y);translate:0 calc(-100% - 12px);font-size:96px}
+  .tier__at{left:auto;right:0;bottom:auto;top:var(--y);translate:0 calc(-100% - 12px);font-size:96px}
   .tier--ready .tier__at{font-size:96px}
-  .tier__body{left:auto;right:16px;top:calc(var(--y) + 20px);bottom:auto;justify-items:end;text-align:right;max-width:calc(100% - 32px)}
+  .tier__body{left:auto;right:0;top:calc(var(--y) + 20px);bottom:auto;justify-items:end;text-align:right;max-width:calc(100% - 16px)}
   .tier__name{font-size:24px}
 }
 
@@ -2016,6 +2012,10 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   .scanframe > .viewer{grid-column:1;grid-row:1/5;height:auto;aspect-ratio:16/9;max-height:calc(100dvh - 120px);min-height:320px;
     margin:0}
   .scanframe > .viewer--stalled{aspect-ratio:auto;height:auto;min-height:0;padding:0}
+  /* no camera: nothing to hold the left column, so the running head spans
+     the page and the message stands under it, the meeting at its right */
+  .view--scan:has(.viewer--stalled) > .rechead{grid-column:1/-1}
+  .scanframe > .viewer--stalled{grid-row:2/5}
   .scanframe > .scanline{grid-column:2;grid-row:4;align-self:end;background:none;color:var(--ink);padding:12px 0 0;
     border-top:2px solid var(--ink)}
   .scanline--boot{color:var(--ink-2);border-top-color:var(--tone)}
@@ -2024,7 +2024,6 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   .view--scan-done{display:block}
   .stamped{margin-left:0;column-gap:var(--sp-page)}
   .stamped__imp{width:clamp(220px,20vw,300px)}
-  .stamped__rec{font-size:12.5px}
 }
 
 /* the sheet a stamp is announced on: paper, the seal, the record line;
@@ -2079,7 +2078,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .desk .proj__when{margin:var(--sp-tight) 0 0;font:400 12px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .desk .proj__word{grid-area:word;margin:var(--sp-tight) 0 0;justify-self:start;transform:none;text-align:left;
   font:400 12px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
-.desk--open .proj__word::before,.desk--stale .proj__word::before{content:'';display:inline-block;width:7px;height:7px;margin:0 8px 1px 0;border-radius:50%;background:var(--seal);vertical-align:middle}
+.desk--open .proj__word::before,.desk--stale .proj__word::before{content:'';display:inline-block;width:6px;height:6px;margin:0 8px 1px 0;border-radius:50%;background:var(--seal);vertical-align:middle}
 .desk--ended .proj__word{color:var(--ink-2)}
 /* the plate: the code at the phone's full width, an ink rule above and below */
 .desk .proj__plate{grid-area:plate;justify-self:stretch;width:auto;max-width:none;min-width:0;
@@ -2099,7 +2098,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 @media (hover:hover){ .desk .proj__ctl--go:hover{background:var(--ink-lift);border-color:var(--ink-lift);color:var(--paper)} }
 .desk .proj--live .proj__ctl:not(.proj__ctl--go),.desk .proj--live .proj__hand,.desk .proj--live .proj__end{color:var(--ink-2)}
 @media (hover:hover){ .desk .proj--live .proj__hand:hover,.desk .proj--live .proj__end:hover{color:var(--ink)} }
-.desk .proj__ctl[disabled]{opacity:.45}
+.desk .proj__ctl[disabled]{opacity:.55}
 .desk .proj__ctl--go[data-busy]{flex-direction:column;gap:0}
 .desk .proj__seal{display:none}
 /* the next meeting, one line */
@@ -2131,7 +2130,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   .desk .proj__plate{grid-area:plate;margin:var(--sp-block) 0 0;justify-self:start;width:min(100%,56vw,calc(100dvh - 320px));
     padding:0;border:2px solid var(--ink);background:#fff}
   .desk .proj__count{grid-area:count;justify-self:start;flex-direction:column;align-items:flex-start;gap:8px;margin-top:var(--sp-block);text-align:left}
-  .desk .proj__count b{font-size:clamp(104px,9vw,136px)}
+  .desk .proj__count b{font-size:clamp(88px,7vw,104px)}
   .desk .proj__ctls{grid-area:ctls;flex-direction:column;align-items:flex-start;gap:4px;margin-top:var(--sp-block)}
   .desk:not(.desk--open) .proj,.desk:not(.desk--open) .proj:not(.proj--live){grid-template-areas:"meet meet" "word word" "count count" "ctls ctls";grid-template-rows:auto auto auto auto}
   .desk:not(.desk--open) .proj__count{flex-direction:row;align-items:baseline}
@@ -2143,14 +2142,14 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
    read from the back of a room — the meeting, the state, the count */
 .desk .proj.proj--full{position:fixed;inset:0;z-index:400;display:grid;margin:0;width:auto;height:auto;border:0;
   background:var(--ink);color:var(--paper);
-  padding:max(8vh,env(safe-area-inset-top,0px)) max(6vw,env(safe-area-inset-right,0px)) max(8vh,env(safe-area-inset-bottom,0px)) max(6vw,env(safe-area-inset-left,0px));
+  padding:max(10vh,env(safe-area-inset-top,0px)) max(6vw,env(safe-area-inset-right,0px)) max(10vh,env(safe-area-inset-bottom,0px)) max(6vw,env(safe-area-inset-left,0px));
   grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;
   grid-template-areas:"plate meet" "plate word" "plate ." "plate count";column-gap:6vw;row-gap:0;align-items:start}
 .desk .proj--full::after{content:none}
 .desk .proj--full .proj__plate{grid-area:plate;align-self:center;justify-self:start;margin:0;width:auto;max-width:none;border:0;padding:0;background:#fff}
 .desk .proj--full .proj__plate .qrpanel__code{width:min(80vh,56vw);min-width:0;max-width:none}
 .desk .proj--full .proj__meet{grid-area:meet;gap:0;align-self:start}
-.desk .proj--full .proj__no{align-items:flex-start;gap:.3em;font:400 5vh/1 var(--f-mono);letter-spacing:.06em;color:var(--tone)}
+.desk .proj--full .proj__no{align-items:flex-start;gap:.3em;font:400 4vh/1 var(--f-mono);letter-spacing:.08em;color:var(--tone)}
 .desk .proj--full .proj__no span{margin-top:.4em}
 .desk .proj--full .proj__no b{font-size:18vh;line-height:.8;color:var(--paper)}
 .desk .proj--full .proj__when{display:none}
@@ -2200,10 +2199,10 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .mrow__when{grid-area:when;font:400 12px/1.5 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
 .mrow__state{grid-area:state;font:400 11px/1.5 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .mrow--open .mrow__state,.mrow--left .mrow__state{color:var(--ink)}
-.mrow--open .mrow__state::before,.mrow--left .mrow__state::before{content:'';display:inline-block;width:6px;height:6px;margin:0 7px 1px 0;border-radius:50%;background:var(--seal);vertical-align:middle}
+.mrow--open .mrow__state::before,.mrow--left .mrow__state::before{content:'';display:inline-block;width:6px;height:6px;margin:0 8px 1px 0;border-radius:50%;background:var(--seal);vertical-align:middle}
 .mrow__n{grid-area:n;display:flex;align-items:baseline;gap:6px;justify-self:end;text-align:right}
 .mrow__n b{font:400 14px/1 var(--f-mono);letter-spacing:.04em;color:var(--ink)}
-.mrow__n span{display:none}
+.mrow__n span{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* ahead: the date is the anchor, the number quiet */
 .minutes__ahead .mrow__gm{color:var(--ink-2)}
 .minutes__ahead .mrow__gm b{color:var(--ink-2)}
@@ -2212,7 +2211,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 /* today: the fold, ruled heavy above and below */
 .minutes__fold{margin:var(--sp-pad) calc(var(--cx) * -1) var(--sp-pad) 0;border-top:2px solid var(--ink);border-bottom:2px solid var(--ink)}
 .minutes__fold .mrow{border-bottom:0}
-.minutes__fold .mrow__go{min-height:96px;padding:14px var(--cx) 14px 0;grid-template-columns:auto minmax(0,1fr);
+.minutes__fold .mrow__go{min-height:96px;padding:var(--sp-pad) var(--cx) var(--sp-pad) 0;grid-template-columns:auto minmax(0,1fr);
   grid-template-areas:"gm day" "gm state" "gm n" "when when";row-gap:4px}
 .minutes__fold .mrow__n{justify-self:start;margin-top:4px}
 .minutes__fold .mrow__when{margin-top:6px}
@@ -2221,10 +2220,10 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .minutes__fold .mrow__day{align-self:end}
 .minutes__fold .mrow__state{font:400 12px/1.4 var(--f-mono);letter-spacing:.12em;color:var(--ink);align-self:start}
 .minutes__fold .mrow--ended .mrow__state{color:var(--ink-2)}
-.minutes__fold .mrow__n span{display:inline;font:400 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);margin-left:.5em}
+.minutes__fold .mrow__n span{display:inline;position:static;width:auto;height:auto;overflow:visible;clip:auto;font:400 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);margin-left:.5em}
 /* the months, as running heads */
 .mrow__month{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:var(--sp-block) 0 4px 0;
-  padding:0 0 var(--sp-tight) 0;border-bottom:1px solid var(--ink)}
+  padding:0;border-bottom:0}
 .mrow__month:first-child{margin-top:var(--sp-tight)}
 .mrow__mname{font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
 .mrow__mtotal{font:400 11px/1.4 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
@@ -2242,7 +2241,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .minutes__foot{margin:var(--sp-block) 0 0;padding:var(--sp-tight) 0 0;border-top:1px solid var(--ink);
   font:400 11px/1.4 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 /* the form, written on the line: ruled fields, the instruction stamped */
-.minutes .bform{margin:var(--sp-tight) 0 var(--sp-pad);padding:0;border:0;background:none}
+.minutes .bform{margin:var(--sp-pad) 0;padding:0;border:0;background:none}
 .minutes .bform .bform__grid{display:grid;gap:var(--sp-pad) var(--sp-block);grid-template-columns:minmax(0,1fr) minmax(0,1fr);
   grid-template-areas:"no date" "start end"}
 .minutes .bform .field{padding:0;border:0}
@@ -2251,8 +2250,6 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .minutes .bform .input::-webkit-outer-spin-button,.minutes .bform .input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .minutes .bform .input::-webkit-calendar-picker-indicator{opacity:0;position:absolute;inset:0;width:100%;height:100%;cursor:pointer}
 .minutes .bform .field{position:relative}
-/* the field's own ink rule shows focus; no box around it */
-.minutes .bform .input:focus-within,.hand .input:focus-within{outline:0}
 .minutes .bform #mErr{margin:var(--sp-pad) 0 0}
 .minutes .bform__row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-pad) var(--sp-block);padding:var(--sp-pad) 0 0}
 @media(min-width:560px){
@@ -2319,7 +2316,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .owed{display:block;padding:0;border:0;background:none}
 .owed .meetband{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px var(--sp-pad);margin:0 0 4px;padding:0 0 var(--sp-tight);border-bottom:1px solid var(--ink)}
 .owed .meetband__t{margin:0;font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
-.owed .meetband__n{text-align:left;font:400 11px/1.4 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.owed .meetband__n{text-align:left;text-wrap:balance;font:400 11px/1.4 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .brow--owed{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:var(--sp-pad);padding:var(--sp-tight) 0;border-bottom:1px solid var(--tint)}
 .brow--owed .brow__mid{display:grid;gap:2px;justify-self:start;justify-items:start;text-align:left}
 .brow--owed .brow__mid b{font:400 15px/1.3 var(--f-mono);color:var(--ink)}
@@ -2338,16 +2335,10 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 /* the detail pages: a folio line to go back on, the name or the number as the page's figure */
 .crumb{display:flex;align-items:center;gap:.6em;margin:0 0 var(--sp-block);padding:0;border:0;
   font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.crumb .bback{margin:0;padding:0;min-height:32px;font:inherit;letter-spacing:inherit;color:var(--ink)}
+.crumb .bback{margin:-8px 0;padding:8px 0;min-height:0;font:inherit;letter-spacing:inherit;color:var(--ink)}
 .bdet{padding:0;border:0;background:none;box-shadow:none}
 .bwho,.bmeet{border-bottom:0;padding-bottom:0}
 .bdet .bwho .bdetail__name--id{font:400 clamp(26px,3vw,34px)/1.1 var(--f-mono);letter-spacing:0;text-transform:none;color:var(--ink);overflow-wrap:anywhere}
-.bwho__figs{display:flex;flex-wrap:wrap;gap:2px 1.4em;margin:var(--sp-row) 0 0;padding:var(--sp-tight) 0 0;border-top:1px solid var(--ink)}
-.bwho__figs > div{display:inline-flex;flex-direction:row;align-items:baseline;gap:.4em;
-  font:400 12px/1.6 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
-.bwho__figs > div + div::before{content:none}
-.bwho__figs dt{font:inherit;letter-spacing:inherit;color:var(--ink-2)}
-.bwho__figs dd{margin:0;font:inherit;letter-spacing:inherit;color:var(--ink)}
 .bdet .bsec{margin:var(--sp-block) 0 4px;padding:0 0 var(--sp-tight);border-bottom:1px solid var(--ink);
   font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);display:flex;justify-content:space-between;gap:12px}
 .bdet .bsec .meetband__n{font:inherit;color:var(--ink)}
@@ -2378,11 +2369,12 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .handlist .muted{font:400 11px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
 .handlist .bstate{border:0;padding:0;background:none;font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .bempty{font:400 11px/1.5 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
-.bdel{margin-top:var(--sp-block);padding-top:var(--sp-pad);border-top:var(--edge-hair) solid var(--ink)}
+.bdel{margin-top:var(--sp-block);padding-top:var(--sp-pad);border-top:0}
 @media(min-width:1100px){
   .bdet{grid-template-columns:minmax(0,34fr) minmax(0,66fr);column-gap:clamp(32px,4vw,64px)}
   .bdet__head{position:sticky;top:var(--sp-pad)}
   .bdet__body > .bsec:first-child{margin-top:0}
+  .bdet__body > .hand:first-child .bsec{margin-top:0}
 }
 
 /* ══ Club Tools: one printed operations sheet. The date as a running
@@ -2405,7 +2397,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .tools__gm b{font:400 clamp(72px,20vw,88px)/.8 var(--f-display);letter-spacing:-.02em;color:var(--ink)}
 .tools__state{margin:0;padding:0 0 4px;border:0;font:400 12px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
 /* check-in open: the one live mark, a red dot before the words */
-.tools--open .tools__state::before{content:'';display:inline-block;width:7px;height:7px;margin:0 8px 1px 0;border-radius:50%;background:var(--seal);vertical-align:middle}
+.tools--open .tools__state::before{content:'';display:inline-block;width:6px;height:6px;margin:0 8px 1px 0;border-radius:50%;background:var(--seal);vertical-align:middle}
 .tools--ended .tools__state,.tools--none .tools__state{color:var(--ink-2)}
 .tools__when{margin:var(--sp-row) 0 0;font:400 12px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .tools__count{margin:0;display:flex;align-items:baseline;gap:.6em;font:400 12px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
@@ -2470,16 +2462,9 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
    recedes; the leader on a desk is a tick to the rule; the seats at the
    page's edge keep their rings; sign out is the cut; the live tab is a
    red rule, not a fill ══ */
-@media(min-width:760px){
-  .mem:not(.mem--filed) .standing-band{grid-template-columns:minmax(0,1fr);grid-template-areas:none;align-items:start}
-  .mem:not(.mem--filed) .standing-band > span{display:block;border:0;padding:0}
-}
-@media(min-width:900px){
-  .mem:not(.mem--filed) .standing-band{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;max-width:260px}
-}
 .filed__row--go .filed__prize{display:flex;align-items:center;gap:10px;justify-self:stretch;border:0;padding:0;
-  font:400 15px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
-.filed__row--go .filed__prize::after{content:'';flex:1 1 20px;height:2px;background:var(--seal);margin-right:calc((var(--gutter) + var(--safe-x)) * -1)}
+  font:400 16px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
+.filed__row--go .filed__prize::after{content:'';flex:1 1 20px;height:2px;background:var(--ink);margin-right:calc((var(--gutter) + var(--safe-x)) * -1)}
 @media(min-width:900px){ .filed__row--go .filed__prize::after{margin-right:0} }
 @media (hover:hover){.filed__row--go:hover .filed__prize::after{height:3px}}
 .filed__field{max-width:78%;margin-left:auto}
@@ -2529,7 +2514,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   opacity:.55;pointer-events:none}
 /* a button mid-save keeps the keyboard's focus; taps on it are not taken */
 button[aria-disabled="true"]{opacity:.55;cursor:progress}
-.input:focus-within{outline:2px solid var(--ink);outline-offset:3px}
+.input[type="date"]:focus-within,.input[type="time"]:focus-within{outline:2px solid var(--ink);outline-offset:3px}
 .toast{cursor:pointer}
 .toast:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:3px}
 select.input:focus-visible{outline:2px solid var(--ink);outline-offset:3px}

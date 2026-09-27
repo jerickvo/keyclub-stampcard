@@ -370,8 +370,8 @@ const BoardUI = {
     /* one entry of the minute book; today's is the fold */
     const row = (m, fold = false) => {
       const state = String(m.state || '').toLowerCase();
-      const word = m.left ? 'Left open' : ({ open:'Open', ended:'Ended', today:'Not opened' }[state] || '');
       const n = count(m);
+      const word = m.left ? 'Left open' : ({ open:'Check-in open', ended:'Ended', today: n ? 'Check-in closed' : 'Check-in not open' }[state] || '');
       const isAhead = ahead(m);
       return `<li class="mrow mrow--${state}${fold ? ' mrow--fold' : ''}${m.left ? ' mrow--left' : ''}"><button class="mrow__go" type="button" data-bmeeting="${esc(m.id)}">
         <span class="mrow__gm"><span>GM</span> <b>${pad(m.meeting_number)}</b></span>
@@ -601,7 +601,7 @@ const BoardUI = {
 
       <div class="bmeet">
         <h2 class="bdetail__name">GM ${pad(m.meeting_number)}</h2>
-        <p class="bmeet__when">${esc(fmtDate(m.meeting_date))} / ${esc(spanTime(m.start_time, m.end_time))} / ${esc(m.location || Schedule.PLACE)}${m.check_in_open ? '<b>Check-in open</b>' : ''}</p>
+        <p class="bmeet__when">${esc(fmtDate(m.meeting_date))} · ${esc(spanTime(m.start_time, m.end_time))} · ${esc(m.location || Schedule.PLACE)}${m.check_in_open ? '<b>Check-in open</b>' : ''}</p>
       </div>
       </div>
 

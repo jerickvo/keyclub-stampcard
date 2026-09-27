@@ -135,7 +135,7 @@ const C = {
       : goal && !goal.claimed ? `${p.remaining} to ${goal.name}` : `${p.remaining} to a full card`;
     /* the prize that is ready is a printed instruction, the card's one action */
     const goalLine = ready
-      ? `<button class="card__goal card__goal--go" type="button" data-go="rewards"><span class="card__goal__arrow" aria-hidden="true">→</span>${esc(goal.name)} · ready to claim</button>`
+      ? `<button class="card__goal card__goal--go" type="button" data-go="rewards"><span class="card__goal__arrow" aria-hidden="true">→</span>${esc(goal.name)}, ready to claim</button>`
       : say ? `<p class="card__goal">${esc(say)}</p>` : '';
 
     const cls = `card card--${form}${full ? ' card--full' : ''}${live ? ' card--live' : ''}`;
@@ -278,7 +278,7 @@ C.filed = (k, run) => {
   const head = ready
     ? `<button class="filed__row filed__row--go" type="button" data-go="rewards" aria-label="${esc(`Card ${pad(k + 1)}, ${span}: ${prize.name} ready to claim`)}">
         <b class="filed__no">${pad(k + 1)}</b><span class="filed__when">${span}</span>
-        <span class="filed__prize filed__prize--go">${esc(prize.name)} · ready to claim</span></button>`
+        <span class="filed__prize filed__prize--go">${esc(prize.name)}, ready to claim</span></button>`
     : `<button class="filed__row" type="button" aria-expanded="false" aria-controls="${id}">
         <b class="filed__no">${pad(k + 1)}</b><span class="filed__when">${span}</span>
         ${prize ? `<span class="filed__prize${prize.handedAt ? ' filed__prize--took' : ''}">${esc(prize.name)}${word ? ` · ${word.toLowerCase()}` : ''}</span>` : ''}</button>`;
@@ -369,21 +369,20 @@ const Views = {
       `<span class="mast__line"><span class="mast__gm">${gm}</span><b class="mast__no">${no}${extra}</b>${state ? `<span class="mast__state">${state}</span>` : ''}</span>`;
     /* a prize within reach is said once, on the card's own line under the
        masthead, and by the ring on its seat */
-    const more = '';
 
     let kind, mast;
     if (live){
       kind = 'open';
       mast = `<button class="mast mast--open" type="button" data-go="scan" aria-label="Check in at general meeting ${day.no}">
         ${kick([fmtDate(day.date), unusual(day).includes(day.place) ? day.place : ''])}
-        ${line('GM', pad(day.no), '<span class="mast__cmd">Check in</span>')}${more}
+        ${line('GM', pad(day.no), '<span class="mast__cmd">Check in</span>')}
       </button>`;
     } else if (scan){
       kind = 'set';
       const i = chrono.findIndex(x => x.meetingId === day.id);
       mast = `<div class="mast mast--set">
         ${kick([fmtDate(day.date), unusual(day).includes(day.place) ? day.place : ''])}
-        ${line('GM', pad(day.no), byHand(scan) ? 'Checked in · by an officer' : `Checked in · ${fmtTime(scan.at)}`, i >= 0 ? glyph(i, 'mast__imp') : '')}${more}
+        ${line('GM', pad(day.no), byHand(scan) ? 'Checked in · by an officer' : `Checked in · ${fmtTime(scan.at)}`, i >= 0 ? glyph(i, 'mast__imp') : '')}
       </div>`;
     } else if (day && day.ended && !day.open){
       /* over, and no stamp: said as today's fact, not yet a "missed" one,
@@ -391,7 +390,7 @@ const Views = {
       kind = 'closed';
       mast = `<div class="mast mast--closed">
         ${kick([fmtDate(day.date), 'Meeting closed'])}
-        ${line('GM', pad(day.no), 'Not checked in')}${more}
+        ${line('GM', pad(day.no), 'Not checked in')}
       </div>`;
     } else if (day){
       /* under way and not open: before opening or after an early close,
@@ -399,13 +398,13 @@ const Views = {
       kind = 'today';
       mast = `<div class="mast mast--today">
         ${kick([fmtDate(day.date)])}
-        ${line('GM', pad(day.no), day.started && !day.open ? 'Check-in not open' : `${esc(day.time || '')} · ${esc(room(day))}`)}${more}
+        ${line('GM', pad(day.no), day.started && !day.open ? 'Check-in not open' : `${esc(day.time || '')} · ${esc(room(day))}`)}
       </div>`;
     } else if (next){
       kind = 'next';
       mast = `<div class="mast mast--next">
         ${kick(['Next meeting', `GM ${pad(next.no)}`])}
-        <span class="mast__line"><b class="mast__date">${fmtDate(next.date)}</b><span class="mast__state">${esc(next.time)}${unusual(next).includes(next.place) ? ` · ${esc(next.place)}` : ''}</span></span>${more}
+        <span class="mast__line"><b class="mast__date">${fmtDate(next.date)}</b><span class="mast__state">${esc(next.time)}${unusual(next).includes(next.place) ? ` · ${esc(next.place)}` : ''}</span></span>
       </div>`;
     } else {
       kind = 'none';
@@ -414,7 +413,7 @@ const Views = {
       mast = `<div class="mast mast--none">
         ${kick(['Nothing scheduled'])}
         ${lastM ? `<span class="mast__line"><span class="mast__gm">Last stamp</span><b class="mast__date">GM ${pad(lastM.no)} · ${fmtDay(lastM.date)}</b></span>`
-                : line('GM', '01', 'Not yet held')}${more}
+                : line('GM', '01', 'Not yet held')}
       </div>`;
     }
 
@@ -429,7 +428,7 @@ const Views = {
           <h2 class="fol__lab">Ahead</h2>
           ${ahead.length ? `<ol class="fol__list">${ahead.map(m => `<li class="fol__row">
               <b class="fol__no">GM ${pad(m.no)}</b><span class="fol__day">${fmtDate(m.date)}</span>
-              ${unusual(m).length ? `<span class="fol__at">${unusual(m).map(esc).join(' / ')}</span>` : ''}
+              ${unusual(m).length ? `<span class="fol__at">${unusual(m).map(esc).join(' · ')}</span>` : ''}
             </li>`).join('')}</ol>`
           : `<p class="fol__line">${next && !day ? 'Nothing after it' : 'Nothing scheduled'}</p>`}
         </section>
