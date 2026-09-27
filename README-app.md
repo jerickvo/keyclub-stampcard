@@ -19,7 +19,9 @@ build.py              rebuilds index.html from dev.html + the sources
 fonts.css             the faces (Keystamp Mono among them), embedded as data URIs
 keystamp.css          layout, shell, motion primitives, sign-out scene
 artdirection.css      screentone, panels, buttons, board furniture
-identity.css          design tokens, card face, stamps, spreads
+identity.css          the shell's last shared rules (focus, motion, sr-only)
+press.css             the design system and every page: paper, ink, controls,
+                      the card, the member pages, the board (loaded last)
 00-guard.js           error handling + boot watchdog (loads first)
 jsQR.js               vendored — reads QR codes from the camera
 qrcode.js             vendored — draws the code on the board screen
@@ -87,19 +89,42 @@ member set.
 
 Navigation is the page's left margin from 1024px up (`.rail`) and a tab bar
 below that. Sign-out and the motion setting live in the rail's foot; below
-1024px they sit at the foot of Member and of Check-in, so neither role has
+1024px they sit at the foot of Member and of Club Tools, so neither role has
 a page that exists only to hold them.
 
-The rail reuses what the other screens already do: the wordmark
-over the same hand-cut rule the page titles use, then the screens as a mono
-number column beside heading-face labels, the way the Meetings lists set
-"GM 07" beside a date. The current screen is marked by a small burgundy ink
-dab in the gutter and its number in the same colour (`--seal`, the one accent
-in the palette). The account block sits on a straight 2px rule like a panel
-header: the signed-in name in the mono face with the role beside it, the
-motion toggle as a filled or hollow square with its word, and Sign out as
-the same small outlined button the lists use for row actions.
-No icons, no boxes, no decoration.
+The rail is the book's contents column, bound to the page by a double rule:
+the wordmark, the chapter being read set large in the brush face (`Nº 05`),
+then the contents, each line a number, a name in the head face and a dotted
+leader out to the binding. The open chapter is an ink tab pulled out of the
+binding; Scan says *Check-in open* in crimson while a meeting is open and not
+yet stamped. The foot is a colophon: who holds the record, MOTION / FULL as a
+box on the form, and Sign out. On a phone the tab bar is a strip of
+thumb-index tabs; the open chapter's tab is raised in ink (crimson for Scan
+while check-in is live).
+
+## The design system (press.css)
+
+One publication, many spreads. Warm newsprint for the page, brighter card
+stock for objects, one black ink, burgundy (`--seal`) for what is the
+member's or active, crimson (`--crimson`) only for the rare moment (check-in
+live, a reward unlocked, a stamp landed). Four faces with fixed jobs: the
+brush face (Jujutsu Kaisen) for chapter titles and figures, the comic head
+face (BadaBoom) for anything read at once, manga lettering (CC Wild Words)
+for sentences, and Keystamp Mono for dates, times and numbers of record.
+
+Every page has a running head (`C.run`), a chapter title on the brush rule,
+and a folio at its foot (`C.folio`). Controls are one family (`.act`): *ink*
+for the page's one action (an ink block with a clipped corner and a
+screentone plate printed off register behind it, burgundy when pointed at),
+*rule* for the way on, *quiet* for housekeeping, *seal* for what cannot be
+taken back. A control's words live in `.act__lab`, so `hold()`/`release()`
+change the words without losing the ink.
+
+The stamp card is drawn from one seat map (`SEAT_MAP` in `03-views.js`), so
+the route always meets the seat it names; a wide map and a tall map are
+chosen by the card's own width. Stamps are impressions under an SVG ink
+filter (`#ks-ink` in `dev.html`): sparse pin-holes, a faint mottle and a
+rough edge, pressed slightly off their printed blanks.
 
 One rule decides what a reward tier is to a member, and it reads two
 facts: the stamp count and whether a claim row is on file. A tier is

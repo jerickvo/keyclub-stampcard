@@ -1,28 +1,15 @@
 :root{
-  --paper:  #F7F7F5;
-  --tint:   #E2DFD8;
-  --tone:   #A9A8A2;
-  --ink-2:  #5E5D58;
-  --ink:    #0A0A0A;
-  --seal:   #7A1F2B;
-
+  /* the palette and faces are set in press.css; these are the rule
+     weights the shell's remaining rules still read */
   --edge-frame:3px;
   --edge-panel:2px;
   --edge-rule:1px;
-
   --edge-card:5px;
-
   --edge-hair:var(--edge-rule);
   --edge-thin:var(--edge-panel);
   --edge-heavy:var(--edge-panel);
   --rule:var(--edge-panel); --rule-hair:var(--edge-rule);
-
-  --f-display:'Jujutsu Kaisen',ui-sans-serif,system-ui,sans-serif;
-  --f-head:'BadaBoom BB',var(--f-display);
-  --f-body:'CC Wild Words',ui-rounded,'Comic Sans MS',ui-sans-serif,sans-serif;
-  --f-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
-
-  }
+}
 
 body{
   background-color:var(--paper);
@@ -36,21 +23,15 @@ body{
 }
 .kicker{color:var(--ink-2);letter-spacing:.26em}
 
-.rail__link[aria-current],
-.tab[aria-current]{color:var(--ink)}
-
 :focus-visible{outline-color:var(--ink)}
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;animation-iteration-count:1!important}
 }
 :root[data-still] *{animation-duration:.01ms!important;animation-iteration-count:1!important}
 
-.meetpanel{min-width:0}
-
 .kicker{font-size:clamp(11px,.55vw + 9.2px,13px)}
 
-.rail,.rail__brand,.rail__nav,.rail__foot{min-width:0}
-.rail__brand .mark,.rail__brand .mark__word{min-width:0;overflow-wrap:anywhere}
+.rail,.rail__nav{min-width:0}
 
 .muted{color:var(--ink-2)}
 
@@ -66,26 +47,7 @@ main#view:focus,main#view:focus-visible{outline:none}
   [data-screen="auth"] .shell,[data-screen="checkin"] .shell{grid-template-columns:1fr}
 }
 
-.ahead{position:relative;display:flex;flex-direction:column}
-.ahead__mark{margin:0 0 var(--sp-tight);padding-bottom:var(--sp-tight);
-  border-bottom:var(--edge-panel) solid var(--ink);
-  font-family:var(--f-head);text-transform:uppercase;
-  font-size:clamp(19px,2.2vw,26px);line-height:1}
-.ahead__list{list-style:none;margin:0;padding:0;
-  display:flex;flex-direction:column}
-.ahead__row{display:grid;
-  grid-template-columns:auto minmax(0,1fr) auto;
-  align-items:baseline;gap:var(--sp-row);
-  padding:clamp(9px,1.4vw,13px) 0;
-  border-bottom:var(--edge-rule) solid var(--tint)}
-.ahead__row:last-child{border-bottom:0}
-.ahead__no{font:400 14px/1 var(--f-mono);letter-spacing:.04em;
-  color:var(--ink-2);min-width:2ch}
-.ahead__day{font-size:var(--t-body);color:var(--ink)}
-.ahead__at{font:400 12.5px/1.35 var(--f-mono);letter-spacing:.04em;
-  text-transform:uppercase;color:var(--ink-2);justify-self:end;text-align:right}
-
-.h2,.ahead__mark{font-family:var(--f-head)}
+.h2{font-family:var(--f-head)}
 .h2{font-size:var(--t-sub);line-height:1.05;letter-spacing:0;
   text-transform:none;font-weight:400}
 
@@ -97,49 +59,11 @@ html{font-synthesis:none}
 
 .brandseal{--si:var(--ink);--sp:var(--paper)}
 
-.mark__word b{font-weight:inherit}
-
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
   overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 
-.acct{display:grid;gap:var(--sp-row);justify-items:start;
-  border-top:var(--edge-panel) solid var(--ink);padding-top:var(--sp-pad)}
-.acct__mark{margin:0;font-family:var(--f-head);text-transform:uppercase;
-  font-size:var(--t-sub);line-height:1}
-.acct__row{justify-self:stretch;display:flex;align-items:center;
-  justify-content:space-between;gap:var(--sp-row);padding:var(--sp-tight) 0;
-  border-bottom:var(--edge-rule) solid var(--tint)}
-.acct__lab{font-size:var(--t-body)}
-.acct__out{min-height:44px;padding:10px var(--sp-pad);cursor:pointer;
-  border:var(--edge-panel) solid var(--ink);
-  background:var(--paper);color:var(--ink);
-  font:400 14px/1.1 var(--f-body);letter-spacing:.04em}
-@media (hover:hover){.acct__out:hover{background:var(--ink);color:var(--paper)}}
-.acct__out:focus-visible{outline:var(--edge-panel) solid var(--ink);
-  outline-offset:3px}
-/* from 1024px up the rail's foot carries the account block */
-@media(min-width:1024px){ .view--member .acct{display:none} }
-
-.crop{overflow:hidden;isolation:isolate}
-:where(.crop){position:relative}
-.crop > .crop__art{position:absolute;pointer-events:none;z-index:0}
-
-:where(.crop) > :where(.crop__art){fill:var(--ink)}
-.crop > :not(.crop__art){position:relative;z-index:1}
-
-.gmtabs{display:flex;flex-wrap:wrap;gap:0;position:relative;z-index:1}
-.gmtab{border:var(--edge-panel) solid var(--ink);border-bottom:0;
-  background:var(--paper);color:var(--ink);cursor:pointer;
-  padding:10px 15px;margin-bottom:calc(var(--edge-panel) * -1);
-  font:500 clamp(11px,1.2vw,13px)/1 var(--f-mono);letter-spacing:.06em}
-.gmtab + .gmtab{border-left:0}
-.gmtab--on{background:var(--ink);color:var(--paper)}
-@media (pointer:coarse){ .gmtab{min-height:44px} }
-.gmtab:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:2px}
-
 /* one label: small caps of record, in the record face */
-.kicker,
-.rail__role{
+.kicker{
   font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;
   color:var(--ink-2)}
 
@@ -153,152 +77,27 @@ html{font-synthesis:none}
              confirmation is the one control printed in red
    field   — a line to write on, the label above it in small capitals ══ */
 :root{--ink-lift:#2B2A27}
-.acct__out,.rail__out{
-  display:inline-flex;align-items:center;justify-content:flex-start;gap:8px;
-  margin:0;padding:0;border:0;border-radius:0;background:none;color:var(--ink);
-  font:inherit;letter-spacing:inherit;text-transform:none;text-decoration:none;text-align:left;
-  cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:none;transform:none;
-  min-height:44px;min-width:0;max-width:100%;overflow:visible}
-
-/* primary: the ink block */
-.act--stamp{
-  position:relative;justify-content:center;width:auto;height:auto;
-  padding:13px 20px 12px;min-height:44px;
-  font:400 16px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;
-  color:var(--paper);background:var(--ink);border:2px solid var(--ink);transform:none}
-.act--stamp::before{content:none}
-@media (hover:hover){
-  .act--stamp:hover{background:var(--ink-lift);border-color:var(--ink-lift);color:var(--paper);transform:none}
-}
-.act--stamp:active{transform:translateY(1px);background:var(--ink);color:var(--paper)}
-.act--stamp:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
-
-/* quiet: the marginal action */
-.acct__out,.rail__out{
-  padding:12px 0;min-height:44px;border:0;background:none;
-  font:400 12px/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.acct__out::before,.rail__out::before{
-  content:'';flex:none;width:12px;height:1.5px;background:currentColor}
-@media (hover:hover){
-  .acct__out:hover,.rail__out:hover{
-    color:var(--ink);background:none;border-color:transparent;text-decoration:none}
-}
-.acct__out:focus-visible,.rail__out:focus-visible{
-  outline:2px solid var(--ink);outline-offset:3px;background:none;color:var(--ink);border-color:transparent}
 
 /* ══ The shell: an index column bound to the page by one ink rule, the
    page being read marked on the binding; on a phone, a folio bar at the
    foot. The navigation is quiet; the page is the thing read ══ */
 .ground__bleed{display:none}
 .rail{padding:calc(var(--sp-pad) + env(safe-area-inset-top,0px)) 0 var(--sp-pad) var(--sp-pad);overflow:hidden;border-right:1px solid var(--ink)}
-.rail::after{content:none}
-.rail__brand{padding:0}
-.rail__brand .mark{display:block;font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
-.rail__brand .mark__word b{font-weight:400}
-.rail__brand .mark::after{content:none}
 .rail__nav{position:relative;display:flex;flex-direction:column;gap:0;padding-top:var(--sp-block);padding-right:var(--sp-pad);flex:1}
-.rail__folio{display:none}
-.rail__link{display:grid;grid-template-columns:2.6ch minmax(0,1fr);column-gap:var(--sp-row);align-items:baseline;
-  position:relative;margin:0;padding:12px 0;border:0;border-radius:0;
-  background:none;text-align:left;cursor:pointer;color:var(--ink);min-height:44px}
-.rail__link::before{content:none}
-.rail__idx{font:400 11px/1 var(--f-mono);letter-spacing:.08em;color:var(--tone)}
-.rail__lab{font:400 12px/1 var(--f-mono);text-transform:uppercase;letter-spacing:.12em;color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
-.rail__link[aria-current="page"] .rail__idx,.rail__link[aria-current="page"] .rail__lab{color:var(--ink)}
-/* the page being read: the binding thickens beside it */
-.rail__link[aria-current="page"]::after{content:'';position:absolute;right:calc(var(--sp-pad) * -1);top:0;bottom:0;width:3px;background:var(--ink)}
-@media (hover:hover){.rail__link:hover .rail__lab{color:var(--ink);text-decoration:none}}
-.rail__link:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
-/* check-in open: the Scan line says so, in the one live colour */
-.rail__link--live .rail__lab::after{content:'Open';margin-left:.8em;font:400 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--seal)}
-/* the colophon at the foot of the index */
-.rail__foot{margin:var(--sp-pad) var(--sp-pad) 0 0;padding-top:var(--sp-pad);border-top:1px solid var(--ink)}
-.rail__who{display:grid;gap:4px;margin:0 0 var(--sp-tight)}
-.rail__held{display:none}
-.rail__name{font:400 15px/1.2 var(--f-mono);letter-spacing:.01em;text-transform:none;color:var(--ink);overflow-wrap:anywhere}
-.rail__role{font:400 11px/1.3 var(--f-mono);letter-spacing:.06em;white-space:nowrap;text-transform:uppercase;color:var(--ink-2)}
-.rail__util{display:grid;gap:0;justify-items:start;margin:0}
-.rail__motion,.acct .rail__motion{display:inline-flex;align-items:baseline;gap:.5em;min-height:44px;padding:0;margin:0;background:none;border:0;cursor:pointer;
-  font:400 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.rail__motion i{display:none}
-.rail__motion span::after{content:' /';color:var(--tone)}
-.rail__motion b{font-weight:400;color:var(--ink);border-bottom:1px solid transparent;padding-bottom:1px}
-@media (hover:hover){.rail__motion:hover b{border-bottom-color:var(--ink)}}
-.rail__motion:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
-.rail__motion[aria-pressed="true"] b{color:var(--ink)}
-.rail__out,.acct__out{margin:0}
-/* the same colophon closing a phone page: who is signed in, and the two settings */
-.acct{display:grid;gap:4px;border-top:1px solid var(--ink);padding-top:var(--sp-pad);margin-top:var(--sp-page)}
-.acct__who{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:0}
-.acct__held{display:none}
-.acct__name{font:400 15px/1.2 var(--f-mono);color:var(--ink);overflow-wrap:anywhere}
-.acct__role{font:400 11px/1.3 var(--f-mono);letter-spacing:.06em;white-space:nowrap;text-transform:uppercase;color:var(--ink-2)}
-.view--member .acct__who{display:none}
-.acct__row{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-pad);flex-wrap:wrap;padding:0;border:0}
-.acct__mark{display:none}
-@media(min-width:1024px){ .view--member .acct{display:none} }
 
 /* the folio bar: one rule above, the page being read marked on it */
 .tabs{background:var(--paper);padding-top:0;align-items:stretch;border-top:1px solid var(--ink)}
-.tabs::before{content:none}
-.tabs button{flex:1 1 0;min-width:0;padding:0 2px;background:none;color:var(--ink);overflow:visible;
-  align-items:stretch;justify-content:flex-start}
-.tabs button[aria-current="page"]{flex:1 1 0;background:transparent}
-.tabs button[aria-current="page"]::after{content:none}
-.tabs .tab--live,.tabs .tab--live[aria-current="page"]{background:none;color:var(--ink)}
-.tab__tab{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:0;
-  min-height:44px;margin:0;padding:0;border-top:3px solid transparent;margin-top:-1px;transition:none;transform:none}
-.tab__idx{display:none}
-.tabs button .tab__lab,.tab__lab{font:400 11px/1.1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
-.tabs button[aria-current="page"] .tab__tab{border-top-color:var(--ink);transform:none;background:none}
-.tabs button[aria-current="page"] .tab__lab{font:400 11px/1.1 var(--f-mono);letter-spacing:.06em;color:var(--ink)}
-/* check-in open: a red dot before Scan, nothing more */
-.tabs .tab--live .tab__tab{background:none;transform:none;padding-inline:0}
-.tabs .tab--live .tab__lab::before{content:'';display:inline-block;width:6px;height:6px;margin:0 5px 1px 0;border-radius:50%;background:var(--seal);vertical-align:middle}
-.tabs button:active .tab__tab{transform:none}
-.tabs button:focus-visible{outline:none}
-.tabs button:focus-visible .tab__tab{outline:2px solid var(--ink);outline-offset:-3px}
 
-/* messages are margin notes at the page foot, not cards */
-.toast{display:grid;grid-template-columns:minmax(0,1fr);gap:2px;padding:10px 0 10px 12px;
-  border:0;border-left:3px solid var(--ink);background:var(--paper);color:var(--ink)}
-.toast__dot{display:none}
-.toast__t{font:400 15px/1.2 var(--f-body);letter-spacing:.02em;text-transform:uppercase}
-.toast__d{margin:0;font:400 11.5px/1.45 var(--f-mono);letter-spacing:.02em;color:var(--ink-2)}
 .toast--bad{background:var(--paper);color:var(--ink);border-left-color:var(--seal)}
-.toast--bad .toast__d{color:var(--ink-2)}
-.toasts{gap:var(--sp-tight)}
-@media(max-width:1023px){ .toasts{left:0;right:0;padding:0 var(--gutter);background:var(--paper);border-top:1px solid var(--ink)}
-  .toast{border-left:0;padding-left:0} .toast--bad .toast__t{color:var(--seal)} }
-
-/* ══ Sign in, create account, and arriving by the wall code: a printed
-   form on the spread. No card: the ink field above (or beside), and on
-   the paper three ruled lines, the instruction stamped over the last ══ */
-.rail__link[aria-current="page"]::before{content:none}
 
 /* a wide sheet: the head band one strip with the goal line at its right end,
    the district's seal pressed over the fold, the field on a heavy left rule */
 
-/* ══ After the judges, the pages: the empty toast rail draws nothing; a
-   live seat on the bottom row carries its word above it; the masthead's
-   second line stands clear of the numeral; a punched station keeps its
-   punch on top; the fold's number clears the archival rule; the wall in
-   portrait keeps its count; Today with nothing scheduled ends on the
-   card; the desk's camera fills its column; a desk's record is a slip ══ */
-.toasts:empty{display:none;border:0;background:none}
-
 /* ══ behaviour carried from the four passes: identity data keeps its
    case, a refusal keeps its room, the camera is offered again in place,
    a working button keeps its width, every part of a field is ringed ══ */
-:root{--f-mono:'Keystamp Mono',ui-monospace,'SF Mono',Menlo,monospace}
-.rail__name{
-  font-family:var(--f-mono);font-weight:400;text-transform:none;letter-spacing:.01em}
 
 [data-busy]::after{content:attr(data-busy);display:block;height:0;overflow:hidden;visibility:hidden}
-.rail__out[disabled],.acct__out[disabled]{
-  opacity:.55;pointer-events:none}
 /* a button mid-save keeps the keyboard's focus; taps on it are not taken */
 button[aria-disabled="true"]{opacity:.55;cursor:progress}
-.toast{cursor:pointer}
-.toast:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:3px}
 

@@ -108,7 +108,7 @@ body{background:var(--paper);color:var(--ink)}
 .act{position:relative;display:inline-flex;align-items:center;gap:10px;min-height:44px;
   margin:0;padding:0;border:0;background:none;color:var(--ink);cursor:pointer;
   font:400 17px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase;
-  text-decoration:none;-webkit-tap-highlight-color:transparent;isolation:isolate}
+  text-decoration:none;white-space:nowrap;-webkit-tap-highlight-color:transparent;isolation:isolate}
 .act > span{position:relative;z-index:1}
 .act[disabled],.act[aria-disabled="true"]{cursor:default}
 
@@ -1525,3 +1525,123 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 }
 .view--board .acct{margin-top:clamp(40px,6vw,64px)}
 @media(min-width:1024px){ .view--board .acct{display:none} }
+
+/* ═══════════════════════════════════════════════════════════════════
+   THE BOOK'S FURNITURE. The navigation is part of the publication: on a
+   desk, a contents column bound to the page by a double rule, the
+   chapter being read set large at its head and pulled out as an ink tab
+   from the binding; on a phone, a strip of thumb-index tabs at the foot
+   of the page, the open chapter's tab raised in ink.
+   ═══════════════════════════════════════════════════════════════════ */
+.rail{padding:22px 0 18px 20px;overflow:visible;background:var(--paper);isolation:isolate}
+.rail::after{content:'';position:absolute;top:0;bottom:0;right:0;width:9px;pointer-events:none;
+  background:linear-gradient(90deg,var(--ink) 0 1px,transparent 1px 5px,var(--ink) 5px 9px)}
+.rail__brand{position:relative;padding:0 26px 14px 0;margin:0 0 4px}
+.rail__brand .mark{display:block;font:400 clamp(28px,2.2vw,34px)/.85 var(--f-display);letter-spacing:-.01em;text-transform:uppercase;color:var(--ink)}
+.rail__brand .mark__word b{font-weight:400}
+.rail__brand::after{content:'Key Club · Cali-Nev-Ha';display:block;margin-top:8px;
+  font:400 9.5px/1.2 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
+.rail__nav{position:relative;display:flex;flex-direction:column;flex:1;gap:0;padding-top:10px}
+/* the chapter being read, set large at the head of the contents */
+.rail__folio{display:block;margin:0 0 6px;padding-right:26px;font:400 clamp(84px,6.4vw,112px)/.8 var(--f-display);
+  letter-spacing:-.03em;color:var(--ink)}
+.rail__folio::before{content:'Nº';display:block;margin-bottom:6px;font:400 10px/1 var(--f-mono);letter-spacing:.18em;color:var(--seal)}
+.rail__folio--live{color:var(--crimson)}
+.rail__nav::before{content:'Contents';order:1;display:block;margin:10px 26px 6px 0;padding-bottom:6px;border-bottom:1px solid var(--ink);
+  font:400 9.5px/1 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
+.rail__folio{order:0}
+.rail__link{order:2;position:relative;display:grid;grid-template-columns:3ch minmax(0,1fr) auto;align-items:baseline;column-gap:10px;
+  min-height:44px;margin:0;padding:10px 18px 9px 0;border:0;background:none;cursor:pointer;text-align:left;color:var(--ink)}
+.rail__idx{font:400 10.5px/1 var(--f-mono);letter-spacing:.1em;color:var(--ink-3)}
+.rail__lab{font:400 clamp(18px,1.5vw,21px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;color:var(--ink);min-width:0;overflow-wrap:anywhere}
+/* a dotted leader out to the binding, the way a contents page runs */
+.rail__link::after{content:'';grid-column:3;align-self:end;width:clamp(12px,2vw,34px);height:2px;margin-bottom:3px;
+  background:linear-gradient(90deg,var(--ink-3) 0 2px,transparent 2px) 0 0/5px 2px repeat-x}
+@media (hover:hover){ .rail__link:hover .rail__lab{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px} }
+.rail__link:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+/* the open chapter: an ink tab pulled out of the binding */
+.rail__link[aria-current="page"]{margin-left:-20px;padding-left:20px;background:var(--ink);color:var(--paper-card);
+  clip-path:polygon(0 0,100% 0,100% 100%,10px 100%,0 calc(100% - 10px))}
+.rail__link[aria-current="page"] .rail__lab{color:var(--paper-card)}
+.rail__link[aria-current="page"] .rail__idx{color:#E8A0A8}
+.rail__link[aria-current="page"]::after{background:linear-gradient(90deg,#6A655E 0 2px,transparent 2px) 0 0/5px 2px repeat-x}
+.rail__link[aria-current="page"]:focus-visible{outline-color:var(--crimson);outline-offset:-4px}
+/* check-in open and not yet stamped: Scan says so */
+.rail__link--live .rail__lab::after{content:'Check-in open';display:block;margin-top:5px;font:400 9.5px/1 var(--f-mono);letter-spacing:.16em;color:var(--crimson)}
+.rail__link--live[aria-current="page"] .rail__lab::after{color:#F2A7B0}
+.rail__link--live::before{content:'';position:absolute;left:-13px;top:50%;width:8px;height:8px;border-radius:50%;translate:0 -50%;
+  background:var(--crimson);box-shadow:0 0 0 3px rgba(193,31,51,.22)}
+.rail__link--live[aria-current="page"]::before{left:7px}
+
+/* the colophon at the foot of the column: who holds the record */
+.rail__foot{margin:12px 26px 0 0;padding-top:12px;border-top:3px solid var(--ink);position:relative}
+.rail__foot::before{content:'';position:absolute;left:0;right:0;top:3px;height:3px;border-bottom:1px solid var(--ink)}
+.rail__who{display:grid;gap:4px;margin:6px 0 0;min-width:0}
+.rail__held{font:400 9.5px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
+.rail__name{font:400 20px/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;color:var(--ink);overflow-wrap:anywhere}
+.rail__role{font:400 9.5px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.rail__util{display:grid;justify-items:start;gap:0;margin-top:8px}
+.rail__note{margin:6px 0 0;font:400 12px/1.4 var(--f-body);color:var(--ink-2)}
+
+/* the two settings, wherever they are printed: motion as a box on the
+   form, sign out as a quiet line with a rule before it */
+.rail__motion{display:inline-flex;align-items:center;gap:8px;min-height:40px;margin:0;padding:0;border:0;background:none;cursor:pointer;
+  font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.rail__motion::before{content:'';width:10px;height:10px;border:1.5px solid var(--ink)}
+.rail__motion[aria-pressed="true"]::before{background:var(--ink)}
+.rail__motion span::after{content:' /';color:var(--ink-3)}
+.rail__motion b{font-weight:400;color:var(--ink)}
+.rail__motion:focus-visible,.rail__out:focus-visible,.acct__out:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.rail__out,.acct__out{display:inline-flex;align-items:center;gap:8px;min-height:40px;margin:0;padding:0;border:0;background:none;cursor:pointer;
+  font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.rail__out::before,.acct__out::before{content:'';width:14px;height:1.5px;background:currentColor}
+@media (hover:hover){ .rail__out:hover,.acct__out:hover,.rail__motion:hover{color:var(--ink)} }
+
+/* the colophon at the foot of Member and Club Tools on a phone */
+.acct{display:grid;gap:8px;justify-items:start;padding-top:12px;border-top:3px solid var(--ink);position:relative}
+.acct::before{content:'';position:absolute;left:0;right:0;top:3px;height:3px;border-bottom:1px solid var(--ink)}
+.acct__who{display:grid;gap:4px;margin:6px 0 0}
+.acct__held{font:400 9.5px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
+.acct__name{font:400 22px/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;overflow-wrap:anywhere}
+.acct__role{font:400 10px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.acct__row{display:flex;flex-wrap:wrap;align-items:center;gap:4px 24px;width:100%}
+@media(min-width:1024px){ .view--member .acct,.view--board .acct{display:none} }
+
+/* the thumb-index tabs at the foot of a phone's page */
+.tabs{background:var(--paper);padding-top:0;border:0;overflow:visible}
+.tabs::before{content:'';position:absolute;left:0;right:0;top:0;height:6px;pointer-events:none;
+  background:linear-gradient(var(--ink),var(--ink)) 0 0/100% 3px no-repeat,linear-gradient(var(--ink),var(--ink)) 0 5px/100% 1px no-repeat}
+.tab{position:relative;flex:1 1 0;min-width:0;display:flex;align-items:stretch;justify-content:center;min-height:var(--tabs-h);
+  margin:0;padding:6px 2px 6px;border:0;background:none;cursor:pointer;color:var(--ink);overflow:visible;-webkit-tap-highlight-color:transparent}
+.tab + .tab::after{content:'';position:absolute;left:0;top:14px;bottom:12px;width:1px;background:var(--tint)}
+.tab__tab{display:grid;justify-items:center;align-content:center;gap:4px;width:100%;min-width:0}
+.tab__idx{font:400 9px/1 var(--f-mono);letter-spacing:.12em;color:var(--ink-3)}
+.tab__lab{font:400 clamp(13px,3.6vw,15px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:100%}
+/* the open chapter's tab, raised in ink above the strip */
+.tab[aria-current="page"] .tab__tab{position:relative;margin:-12px 3px 0;padding:8px 2px 6px;background:var(--ink);color:var(--paper-card);
+  clip-path:polygon(0 8px,8px 0,100% 0,100% 100%,0 100%)}
+.tab[aria-current="page"] .tab__idx{color:#E8A0A8}
+.tab:focus-visible{outline:2px solid var(--ink);outline-offset:-4px}
+.tab:active .tab__tab{translate:0 1px}
+/* check-in open: the Scan tab carries the crimson light */
+.tab--live .tab__idx{color:var(--crimson)}
+.tab--live .tab__lab::before{content:'';display:inline-block;width:7px;height:7px;margin-right:5px;border-radius:50%;background:var(--crimson);vertical-align:.15em}
+.tab--live[aria-current="page"] .tab__tab{background:var(--crimson)}
+.tab--live[aria-current="page"] .tab__idx{color:var(--paper-card)}
+.tab--live[aria-current="page"] .tab__lab::before{background:var(--paper-card)}
+@media(max-width:359px){ .tab__lab{font-size:12px;letter-spacing:.01em} }
+
+/* ── toasts: a slip of paper laid on the page ────────────────────── */
+.toasts{position:fixed;z-index:45;display:flex;flex-direction:column;gap:10px;pointer-events:none;
+  left:var(--gutter);right:var(--gutter);bottom:calc(var(--tabs-h) + 14px + env(safe-area-inset-bottom,0px))}
+.toasts > *{pointer-events:auto}
+@media(min-width:1024px){ .toasts{left:auto;right:22px;bottom:22px;max-width:min(340px,32vw)} }
+.toast{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;padding:12px 14px 12px 12px;
+  background:var(--paper-card);color:var(--ink);border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);rotate:-.4deg}
+.toast__dot{width:10px;height:10px;margin-top:4px;background:var(--ink);rotate:45deg}
+.toast__t{margin:0;font:400 16px/1.2 var(--f-head);letter-spacing:.03em;text-transform:uppercase;overflow-wrap:anywhere;min-width:0}
+.toast__d{margin:4px 0 0;font:400 11px/1.45 var(--f-mono);letter-spacing:.06em;color:var(--ink-2)}
+.toast--bad{border-color:var(--seal);box-shadow:4px 4px 0 var(--seal)}
+.toast--bad .toast__dot{background:var(--crimson)}
+.toast--bad .toast__t{color:var(--seal)}

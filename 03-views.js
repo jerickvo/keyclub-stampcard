@@ -192,10 +192,6 @@ const C = {
     </div></section>`;
   },
 
-  /* a state that asks nothing of the member is a line of type */
-  line(lab, text){
-    return `<p class="nowline"><b class="nowline__lab">${esc(lab)}</b><span>${text}</span></p>`;
-  },
 
   sealMeta(rec, m){
     const hand = byHand(rec);
@@ -207,9 +203,6 @@ const C = {
     </span>`;
   },
 
-  empty(title){
-    return C.line(title, '');
-  },
 
   ledgerRow(m, gap = 1){
     const state = Store.state(m);
