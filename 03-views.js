@@ -686,32 +686,41 @@ const Views = {
     </div>`;
   },
 
+  /* Scan: the checkpoint, purpose-built. The camera is the page's
+     object: a viewfinder in a heavy frame, registration marks at its
+     corners, and at its centre the very seat on the card the stamp will
+     take, as the reticle. Under it one strip where the scanner speaks,
+     its state set as a tag. Already stamped: the impression it earned,
+     printed large with its record. */
   scan(){
-    /* already stamped for the open meeting: nothing to scan; the stamp
-       it earned is printed large with its record beside it */
     const open = Store.openMeeting();
     const stamp = open && Store.scanFor(open.id);
+    const head = extra => `<header class="scanhead">
+        ${C.run('03', 'Scan')}
+        <div class="scanhead__row">
+          <h1 class="chap__title rechead__title">Scan</h1>
+          ${extra}
+        </div>
+      </header>`;
     if (stamp){
       const chrono = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
       const i = chrono.findIndex(x => x.meetingId === open.id);
       const lift = (32 - 32 * STAMP_FIT).toFixed(1);
       return `<div class="view view--scan view--scan-done">
-        <header class="rechead folio">
-          <h1 class="title rechead__title folio__word">Scan</h1>
-          <span class="folio__meta">03</span>
-        </header>
-        <div class="deck__act">
-          <section class="stamped" aria-label="Checked in">
-            ${i >= 0 ? `<svg class="stamped__imp" viewBox="0 0 64 64" aria-hidden="true"><path class="stamped__face" d="${stampShape(i + 1, 0)}"/>
-              <g transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(i)}</g></svg>` : ''}
-            <p class="stamped__rec">
-              <b class="stamped__no">GM ${pad(open.no)}</b>
-              <span>Checked in</span>
-              <span>${byHand(stamp) ? 'Added by an officer' : fmtTime(stamp.at)}</span>
-              <span class="stamped__how">${byHand(stamp) ? 'By hand' : 'QR verified'}</span>
-            </p>
-          </section>
-        </div>
+        ${head('')}
+        <section class="stamped" aria-label="Checked in">
+          ${i >= 0 ? `<svg class="stamped__imp" viewBox="0 0 64 64" aria-hidden="true"><path class="stamped__face" d="${stampShape(i + 1, 0)}"/>
+            <g transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(i)}</g></svg>` : ''}
+          <p class="stamped__rec">
+            <b class="stamped__no">GM ${pad(open.no)}</b>
+            <span class="stamped__word">Checked in</span>
+            <span>${byHand(stamp) ? 'Added by an officer' : fmtTime(stamp.at)}</span>
+            <span class="stamped__how">${byHand(stamp) ? 'By hand' : 'QR verified'}</span>
+          </p>
+          ${i >= 0 ? `<p class="stamped__seat">Stamp ${pad(i + 1)} · card ${pad(Math.floor(i / Rules.CARD) + 1)}</p>` : ''}
+        </section>
+        <button class="act act--rule stamped__go" type="button" data-go="home"><span>See it on your card</span></button>
+        ${C.folio('03', 'Scan')}
       </div>`;
     }
 
@@ -722,24 +731,18 @@ const Views = {
     const lift = (32 - 32 * STAMP_FIT).toFixed(1);
 
     return `<div class="view view--scan">
-      <header class="rechead folio">
-        <h1 class="title rechead__title folio__word">Scan</h1>
-        <span class="folio__meta">03</span>
-      </header>
+      ${head(`<p class="standing"><span class="standing__lab">${standing.lab}</span>${standingAt(standing)}</p>`)}
 
       <div class="scanframe">
-        <p class="standing">
-          <span class="standing__lab">${standing.lab}</span>
-          ${standingAt(standing)}
-        </p>
-
         <div class="viewer" id="viewer">
           <video id="cam" playsinline muted autoplay></video>
+          <span class="viewer__marks" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           <div class="reticle" id="reticle" aria-hidden="true">
             <svg class="reticle__seat" viewBox="0 0 64 64">
               <path class="reticle__face" d="${stampShape(n + 1, 0)}"/>
               <g class="reticle__mark" transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(n)}</g>
             </svg>
+            <span class="reticle__no">${pad(n + 1)}</span>
           </div>
         </div>
 
@@ -748,6 +751,8 @@ const Views = {
           <span class="scanline__msg" id="scanMsg">Starting camera</span>
         </p>
       </div>
+      <p class="scanhint">Point the camera at the code on the wall. It reads on its own.</p>
+      ${C.folio('03', 'Scan')}
     </div>`;
   },
 
@@ -867,8 +872,8 @@ const Views = {
     const no = A.no || (signed && A.bare ? (Store.meeting(arrivalMeeting(A.bare)) || {}).no : null) || null;
 
     const acts = (...b) => `<div class="authp__act">${b.join('')}</div>`;
-    const go = (attr, label) => `<button class="authp__go" type="button" ${attr}>${label}</button>`;
-    const alt = (attr, label) => `<button class="authp__swap" type="button" ${attr}>${label}</button>`;
+    const go = (attr, label) => `<button class="act act--ink authp__go" type="button" ${attr}><span class="act__lab">${label}</span></button>`;
+    const alt = (attr, label) => `<button class="act act--rule authp__swap" type="button" ${attr}><span>${label}</span></button>`;
     const onward = signed ? go('data-go="home"', Store.isBoard ? 'Go to Check-in' : 'Go to Today')
       : alt('data-arrive="in"', 'Sign in');
     const say = (word, note = '', tail = '') => `<section class="authp arrive" aria-live="polite">
@@ -877,9 +882,9 @@ const Views = {
         ${tail}
       </section>`;
 
-    let status = '', card;
+    let status = '', card, tone = 'wait';
     if (code === 'ALREADY_CHECKED_IN'){
-      status = 'Checked in';
+      status = 'Checked in'; tone = 'done';
       card = say('Already checked in', '', acts(onward));
     } else if (code && SCAN_TRANSIENT.has(code)){
       card = say(scanMessage(code)[0], 'Try again in a moment.',
@@ -889,6 +894,7 @@ const Views = {
     } else if (code === 'NOT_AUTHORIZED'){
       card = say('Not allowed', 'This account cannot check in.', acts(onward));
     } else if (code){
+      tone = 'shut';
       const [what, todo] = scanMessage(code);
       card = say('Check-in unavailable', [what, todo].filter(Boolean).join('. ') + '.', acts(onward));
     } else if (signed){
@@ -896,25 +902,26 @@ const Views = {
     } else if (!A.peek){
       card = say('Reading the code');
     } else {
-      status = A.peek.ok ? 'Check-in open' : '';
+      status = A.peek.ok ? 'Check-in open' : ''; tone = A.peek.ok ? 'open' : 'wait';
+      /* someone new is the likelier reader here: an account is the first way in */
       card = say('Collect your stamp', '',
-        acts(go('data-arrive="in"', 'Sign in'), alt('data-arrive="up"', 'New account')));
+        acts(go('data-arrive="up"', 'Create account'), alt('data-arrive="in"', 'Sign in')));
     }
     /* a refusal that stands: the meeting's number is struck through */
     const struck = Boolean(no) && code && code !== 'ALREADY_CHECKED_IN' && !SCAN_TRANSIENT.has(code);
 
-    return `<div class="view view--auth view--arrive${struck ? ' view--arrive-struck' : ''}">
-      <div class="spread">
-        <div class="spread__field crop" aria-hidden="true">
-          <svg class="spread__seal crop__art" viewBox="0 0 100 100">${sealArt()}</svg>
-          <span class="spread__kci">${brandSeal('kci')}</span>
-        </div>
-
-        <header class="spread__head">
-          <p class="spread__sub"><span>Keystamp</span></p>
-          <h1 class="spread__wm">${no ? `GM ${pad(no)}` : 'Check-in'}</h1>
-          ${status ? `<p class="arrive__status">${status}</p>` : ''}
+    return `<div class="view view--auth view--arrive view--arrive-${tone}${struck ? ' view--arrive-struck' : ''}">
+      <div class="entry">
+        <header class="entry__head">
+          <p class="entry__wm">Keystamp</p>
+          <p class="entry__sub">Key Club attendance · Cali-Nev-Ha</p>
         </header>
+
+        <div class="entry__seat">
+          <svg class="entry__blank" viewBox="0 0 64 64" aria-hidden="true"><path d="${stampShape(no || 7, 0)}"/></svg>
+          <h1 class="entry__gm rechead__title">${no ? `<span class="sr-only">GM ${pad(no)}</span><span class="entry__gmv" aria-hidden="true"><span>GM</span><b>${pad(no)}</b></span>` : '<b class="entry__gm--word">Check-in</b>'}</h1>
+          ${status ? `<p class="arrive__status">${status}</p>` : ''}
+        </div>
 
         ${card}
       </div>
@@ -926,9 +933,9 @@ const Views = {
        member is asked to retry, not to type the password again */
     if (Store.loadError === 'SESSION') return this.loadFailure('Keystamp');
     const mode = AuthUI.mode;
-    const passwordField = ({ id, name, label, autocomplete, rule = '' }) => `
+    const passwordField = ({ id, name, label, n, autocomplete, rule = '' }) => `
           <div class="authp__f">
-            <label class="authp__lab" for="${id}">${label}</label>
+            <label class="authp__lab" for="${id}"><i>${n}</i>${label}</label>
             <div class="authp__pw">
               <input class="authp__in" id="${id}" name="${name}" type="password"
                      autocomplete="${autocomplete}" autocapitalize="none"
@@ -942,52 +949,50 @@ const Views = {
     const up = mode === 'up';
 
     return `<div class="view view--auth">
-
-      <div class="spread">
-
-        <div class="spread__field crop" aria-hidden="true">
-          <svg class="spread__seal crop__art" viewBox="0 0 100 100">${sealArt()}</svg>
-          <span class="spread__kci">${brandSeal('kci')}</span>
+      <div class="cover">
+        <div class="cover__panel" aria-hidden="true">
+          <span class="cover__lines"></span>
+          <svg class="cover__seal" viewBox="0 0 100 100">${sealArt()}</svg>
+          <span class="cover__kci">${brandSeal('kci')}</span>
         </div>
-
-        <header class="spread__head">
-          <p class="spread__sub"><span>Key Club attendance</span></p>
-          <h1 class="spread__wm">Keystamp</h1>
+        <header class="cover__head">
+          <p class="cover__sub">Key Club attendance · Cali-Nev-Ha</p>
+          <h1 class="cover__wm">Keystamp</h1>
         </header>
 
-        <form class="authp" id="authForm" novalidate>
-
-          <p class="authp__chapter">${up ? 'New account' : 'Sign in'}</p>
-          ${Arrival.bare ? `<p class="authp__arrive">Then: ${Arrival.no ? `check in to GM ${pad(Arrival.no)}` : 'check in'}</p>` : ''}
+        <form class="authp regcard" id="authForm" novalidate>
+          <div class="regcard__band">
+            <span class="regcard__kind">Membership record</span>
+            <p class="authp__chapter">${up ? 'New account' : 'Sign in'}</p>
+            <span class="regcard__no">Form ${up ? '02' : '01'}</span>
+          </div>
+          ${Arrival.bare ? `<p class="authp__arrive"><b>Then</b> ${Arrival.no ? `check in to GM ${pad(Arrival.no)}` : 'check in'} — no second scan</p>` : ''}
 
           <div class="authp__f">
-            <label class="authp__lab" for="authUser">Username</label>
+            <label class="authp__lab" for="authUser"><i>01</i>Username</label>
             <input class="authp__in" id="authUser" name="username" type="text"
                    autocomplete="username" autocapitalize="none" spellcheck="false"
                    inputmode="latin" maxlength="${Config.USERNAME_MAX}"${up ? ' aria-describedby="userRule"' : ''}>
             ${up ? '<span class="authp__rule" id="userRule">Letters, numbers, _ and .</span>' : ''}
           </div>
 
-          ${passwordField({ id:'authPass', name:'password', label:'Password',
+          ${passwordField({ id:'authPass', name:'password', label:'Password', n:'02',
                             autocomplete: up ? 'new-password' : 'current-password',
                             rule: up ? '8 characters or more' : '' })}
 
-          ${up ? passwordField({ id:'authPass2', name:'confirm', label:'Confirm password',
+          ${up ? passwordField({ id:'authPass2', name:'confirm', label:'Confirm password', n:'03',
                                  autocomplete:'new-password' }) : ''}
 
           <div class="authp__act">
-            <button class="authp__go" type="submit" id="authGo" data-busy="${up ? 'Creating' : 'Signing in'}">
-              ${up ? 'Create account' : 'Sign in'}
-            </button>
+            <button class="act act--ink authp__go" type="submit" id="authGo" data-busy="${up ? 'Creating' : 'Signing in'}"><span class="act__lab">${up ? 'Create account' : 'Sign in'}</span></button>
             <!-- a refusal is printed under the button, so the button under
                  the finger never moves -->
             <p class="authp__err" id="authErr" role="alert" aria-live="assertive"></p>
-            <button class="authp__swap" type="button" id="authSwap">${up ? 'Sign in' : 'New account'}</button>
+            <button class="act act--rule authp__swap" type="button" id="authSwap"><span>${up ? 'I have an account' : 'New account'}</span></button>
           </div>
 
           ${AuthUI.setupNotice()}
         </form>
-
       </div>
     </div>`;
   },

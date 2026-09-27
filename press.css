@@ -116,7 +116,7 @@ body{background:var(--paper);color:var(--ink)}
 .act--ink::before{content:'';position:absolute;z-index:0;left:5px;top:5px;right:0;bottom:0;
   background:var(--dot) 0 0/4px 4px;
   clip-path:polygon(0 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%)}
-.act--ink > span{display:inline-flex;align-items:center;gap:10px;min-height:44px;
+.act--ink > span{flex:1 1 auto;display:inline-flex;align-items:center;gap:10px;min-height:44px;
   padding:12px 20px 11px;background:var(--ink);color:var(--paper-card);
   clip-path:polygon(0 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%)}
 .act--ink > span::after{content:'';flex:none;width:18px;height:2px;background:currentColor;
@@ -130,6 +130,9 @@ body{background:var(--paper);color:var(--ink)}
 .act--ink:focus-visible::before{background:var(--seal)}
 .act--ink:focus-visible > span{outline:2px solid var(--paper-card);outline-offset:-5px}
 .act--ink:active > span{translate:2px 2px}
+/* the page reserves a busy word's width with a hidden line under a
+   button; a printed control keeps its own width, so it has none */
+.act[data-busy]::after{content:none}
 .act--ink[aria-busy="true"] > span{background:var(--ink-2)}
 
 .act--rule{padding:10px 0 12px}
@@ -866,4 +869,270 @@ body{background:var(--paper);color:var(--ink)}
   .tier--ready::before,.tier--claimed::before,.tier--took::before{border-left:2px solid var(--ink)}
   .tier__body{justify-items:center;padding-top:6px}
   .tier__ticks{justify-content:center}
+}
+
+/* ══ SCAN. The checkpoint, purpose-built: a viewfinder in a heavy frame
+   with registration marks at its corners, the next seat on the card as
+   the reticle, and one strip where the scanner speaks, its state set as
+   a tag. On a phone the picture is bled to the edges. ══ */
+.view--scan{gap:0;container:page / inline-size;--cx:calc(var(--gutter) + var(--safe-x,0px))}
+.scanhead{display:grid;gap:10px;margin-bottom:clamp(14px,2.4vw,26px)}
+.scanhead__row{display:flex;align-items:flex-end;justify-content:space-between;gap:10px 20px;flex-wrap:wrap}
+.view--scan .chap__title{font-size:clamp(52px,10vw,104px)}
+.standing{display:grid;justify-items:end;gap:4px;margin:0;padding-bottom:6px;text-align:right}
+.standing__lab{font:400 10.5px/1.2 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
+.standing__at{display:flex;align-items:flex-end;gap:6px;font:400 clamp(16px,2vw,20px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.standing__at i{font:400 clamp(16px,2vw,22px)/1 var(--f-head);font-style:normal;padding-bottom:.3em}
+.standing__at b{font:400 clamp(52px,8vw,84px)/.76 var(--f-display);font-weight:400}
+
+.scanframe{position:relative;margin:0 calc(var(--cx) * -1)}
+.viewer{position:relative;display:grid;place-items:center;grid-template:minmax(0,1fr) / minmax(0,1fr);
+  isolation:isolate;overflow:hidden;container-type:size;width:100%;
+  height:clamp(300px,calc(100dvh - 300px - env(safe-area-inset-bottom,0px)),660px);background:var(--ink)}
+.viewer > *{grid-area:1 / 1;min-width:0;min-height:0}
+.viewer video{width:100%;height:100%;display:block;object-fit:cover;filter:grayscale(1) contrast(1.08) brightness(.92)}
+/* registration marks: heavy L-shaped corners, a tick at each edge's middle */
+.viewer__marks{position:absolute!important;inset:14px;z-index:2;pointer-events:none}
+.viewer__marks i{position:absolute;width:30px;height:30px;border:0 solid var(--paper-card)}
+.viewer__marks i:nth-child(1){left:0;top:0;border-left-width:5px;border-top-width:5px}
+.viewer__marks i:nth-child(2){right:0;top:0;border-right-width:5px;border-top-width:5px}
+.viewer__marks i:nth-child(3){left:0;bottom:0;border-left-width:5px;border-bottom-width:5px}
+.viewer__marks i:nth-child(4){right:0;bottom:0;border-right-width:5px;border-bottom-width:5px}
+.viewer__marks::before,.viewer__marks::after{content:'';position:absolute;background:var(--paper-card);opacity:.7}
+.viewer__marks::before{left:50%;top:0;width:2px;height:12px;box-shadow:0 calc(100cqh - 40px) 0 var(--paper-card)}
+.viewer__marks::after{top:50%;left:0;height:2px;width:12px;box-shadow:calc(100cqw - 40px) 0 0 var(--paper-card)}
+/* the reticle: the seat on the card this stamp will take */
+.reticle{position:relative;place-self:center;z-index:3;width:min(54cqw,62cqh,280px);aspect-ratio:1;pointer-events:none}
+.reticle__seat{display:block;width:100%;height:100%;overflow:visible}
+.reticle__face{fill:rgba(19,18,17,.18);stroke:var(--paper-card);stroke-width:1.8;stroke-dasharray:5 3.5;
+  transition:stroke-width 120ms steps(2,end)}
+.reticle__mark path{fill:var(--paper-card);opacity:.2}
+.reticle__no{position:absolute;right:-4%;bottom:-2%;padding:3px 6px 2px;background:var(--paper-card);color:var(--ink);
+  font:400 12px/1 var(--f-head);letter-spacing:.04em}
+.reticle--good .reticle__face{stroke-dasharray:none;stroke-width:3.4;fill:rgba(19,18,17,.4)}
+.reticle--good .reticle__mark path{opacity:1}
+.reticle--good .reticle__no{background:var(--crimson);color:var(--paper-card)}
+.reticle--bad .reticle__face{stroke:var(--crimson);stroke-dasharray:none;stroke-width:3}
+.reticle--bad .reticle__no{background:var(--ink);color:var(--paper-card);text-decoration:line-through}
+:root[data-still] .reticle__face{transition:none}
+
+/* the strip the scanner speaks on: a tag for the state, then the words */
+.scanline{display:flex;align-items:center;gap:14px;margin:0;min-height:54px;padding:10px var(--cx);
+  background:var(--ink);color:var(--paper-card);border-top:3px solid var(--paper-card);
+  font:400 12.5px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase}
+.scanline__dot{display:none}
+.scanline::before{flex:none;padding:6px 10px 5px 9px;background:var(--paper-card);color:var(--ink);
+  font:400 14px/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase;
+  clip-path:polygon(0 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+.scanline--boot::before{content:'Camera' / '';background:#4A4640;color:var(--paper-card)}
+.scanline--live::before{content:'Ready' / ''}
+.scanline--busy::before{content:'Checking' / ''}
+.scanline--good::before{content:'Stamped' / '';background:var(--crimson);color:var(--paper-card)}
+.scanline--bad::before{content:'Refused' / '';background:var(--crimson);color:var(--paper-card)}
+.scanline--off::before{content:'Off' / '';background:#4A4640;color:var(--paper-card)}
+.scanline--boot{color:#BDB6AA}
+.scanline__msg{min-width:0;overflow-wrap:anywhere}
+.viewer--stalled + .scanline{display:none}
+.scanhint{margin:14px 0 0;max-width:52ch;font:400 var(--t-caption)/1.45 var(--f-body);color:var(--ink-2)}
+
+/* no camera: the frame is paper and says so */
+.viewer--stalled{height:auto;min-height:0;container-type:normal;place-items:stretch;background:var(--paper-card);
+  padding:clamp(24px,4vw,40px) var(--cx);border-block:3px solid var(--ink)}
+.viewer--stalled .viewer__marks i{border-color:var(--ink)}
+.viewer--stalled .viewer__marks::before,.viewer--stalled .viewer__marks::after,.viewer--stalled .reticle{display:none}
+.stall{display:flex;flex-direction:column;justify-content:center;gap:10px;position:relative;z-index:3}
+.stall__title{margin:0;font:400 clamp(28px,4vw,40px)/1 var(--f-head);letter-spacing:.02em;text-transform:uppercase;color:var(--ink)}
+.stall__note{margin:0;max-width:46ch;font:400 11.5px/1.5 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.stall__note:empty{display:none}
+.stall__retry{align-self:flex-start;margin-top:10px}
+
+/* a zoom row, when the camera offers one */
+.zoom{position:relative;z-index:4;align-self:end;justify-self:stretch;display:flex;align-items:center;gap:12px;
+  margin:0;padding:8px var(--cx);background:rgba(19,18,17,.86);color:var(--paper-card)}
+
+/* checked in already: the impression printed large, its record beside it */
+.stamped{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"imp rec" "imp seat";
+  align-items:end;gap:6px clamp(18px,4vw,48px);padding:clamp(18px,3vw,30px) 0;border-block:3px solid var(--ink)}
+.stamped__imp{grid-area:imp;display:block;width:clamp(128px,34vw,240px);height:auto;overflow:visible;rotate:-6deg;filter:url(#ks-ink)}
+.stamped__face{fill:var(--ink)}
+.stamped__imp g path{fill:var(--paper)}
+.stamped__rec{grid-area:rec;display:grid;gap:4px;margin:0;font:400 11.5px/1.5 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.stamped__no{display:block;font:400 clamp(44px,8vw,80px)/.8 var(--f-display);font-weight:400;color:var(--ink)}
+.stamped__word{font:400 clamp(20px,2.6vw,28px)/1 var(--f-head);letter-spacing:.04em;color:var(--seal)}
+.stamped__how{justify-self:start;padding:3px 6px 2px;border:1.5px solid var(--seal);color:var(--seal);rotate:-2deg}
+.stamped__seat{grid-area:seat;margin:0;font:400 10.5px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.stamped__go{margin-top:18px}
+
+/* wide: the picture at the left, the meeting and the strip in the margin */
+@container page (min-width:900px){
+  .scanframe{margin:0;display:grid;grid-template-columns:minmax(0,1fr);border:4px solid var(--ink)}
+  .viewer{height:auto;aspect-ratio:16/9;max-height:calc(100dvh - 260px);min-height:340px}
+  .scanline{border-top-width:0;padding-inline:18px}
+}
+/* a phone on its side: the picture as tall as the window */
+@media(max-height:520px) and (min-aspect-ratio:4/3){
+  .viewer{height:calc(100dvh - 150px);min-height:180px}
+}
+
+/* ══ Stamp acquired: the impact frame. Focus lines drawn in from the
+   page's edges to the new impression, its tag in crimson, the record
+   under it; then the stamp leaves the frame for its seat on the card. ══ */
+.acq{position:fixed;inset:0;z-index:160;display:grid;place-items:stretch;padding:0;
+  background:var(--paper-card);color:var(--ink);text-align:left;transition:background-color 220ms steps(3,end)}
+.acq__lines{position:absolute;inset:0;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg at 50% 46%,var(--ink) 0 .55deg,transparent .55deg 3.2deg);
+  -webkit-mask:radial-gradient(ellipse 70% 62% at 50% 46%,transparent 0 44%,#000 78%);
+          mask:radial-gradient(ellipse 70% 62% at 50% 46%,transparent 0 44%,#000 78%);opacity:.9}
+.acq--lift{background:transparent;pointer-events:none}
+.acq--lift .acq__lines,.acq--lift .acq__kick,.acq--lift .acq__meet{opacity:0;transition:opacity 120ms steps(2,end)}
+.acq__stack{position:relative;display:grid;grid-template-rows:auto minmax(0,1fr) auto;justify-items:center;height:100%;
+  padding:calc(24px + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x,0px)) calc(32px + env(safe-area-inset-bottom,0px))}
+.acq__kick{display:flex;align-items:center;gap:12px;margin:0;opacity:1}
+.acq__kick span:first-child{padding:8px 14px 7px;background:var(--crimson);color:var(--paper-card);rotate:-3deg;
+  font:400 clamp(22px,5vw,34px)/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase}
+.acq__kick span:last-child{padding:6px 8px 5px;background:var(--paper-card);font:400 12px/1 var(--f-mono);letter-spacing:.16em}
+.acq__seal{place-self:center;width:min(58vmin,300px);aspect-ratio:1;display:grid;place-items:center;will-change:transform;
+  filter:url(#ks-ink)}
+.acq__seal svg{position:absolute;inset:0;width:100%;height:100%}
+.acq__seal .acq__face{fill:var(--ink);stroke:none}
+.acq__seal .acq__mark path{fill:var(--paper-card);stroke:none}
+.acq__meet{display:flex;align-items:baseline;gap:14px;margin:0;padding:10px 16px 8px;background:var(--paper-card);
+  border-top:3px solid var(--ink);font:400 12px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);opacity:1}
+.acq__meet b{font:400 clamp(28px,6vw,40px)/1 var(--f-head);letter-spacing:.03em;color:var(--ink)}
+@media(prefers-reduced-motion:reduce){ .acq,.acq--lift .acq__lines,.acq--lift .acq__kick,.acq--lift .acq__meet{transition:none} }
+:root[data-still] .acq,:root[data-still] .acq--lift .acq__lines,:root[data-still] .acq--lift .acq__kick,:root[data-still] .acq--lift .acq__meet{transition:none}
+
+/* ══ SIGN IN. A chapter title page and a printed registration card: the
+   cover is an ink panel with the club's swirl cut by its edge and the
+   book's name; the form is card stock under an ink band, each field a
+   numbered line of the record. The card overlaps the cover's foot on a
+   phone and stands beside it on a desk. ══ */
+.view--auth{display:block;width:100%;max-width:none;padding:0;margin:0;gap:0}
+.cover{position:relative;min-height:100dvh;padding:0 calc(var(--gutter) + var(--safe-x,0px)) 48px;isolation:isolate}
+.cover__panel{position:absolute;z-index:0;left:0;right:0;top:0;height:clamp(250px,40vh,330px);overflow:hidden;
+  background:var(--ink)}
+.cover__lines{position:absolute;inset:0;
+  background:repeating-conic-gradient(from 0deg at 80% 110%,rgba(251,249,244,.07) 0 .6deg,transparent .6deg 3deg)}
+.cover__seal{position:absolute;right:-18%;bottom:-38%;width:min(92vw,520px);height:auto;fill:#2B2926;rotate:-12deg}
+.cover__kci{position:absolute;right:calc(var(--gutter) + 2px);top:calc(18px + env(safe-area-inset-top,0px))}
+.cover__kci .brandseal{display:block;width:46px;height:auto;--si:var(--paper-card);--sp:var(--ink)}
+.cover__head{position:relative;z-index:1;display:grid;align-content:end;gap:8px;
+  height:calc(clamp(250px,40vh,330px) - 56px);padding-top:calc(20px + env(safe-area-inset-top,0px));color:var(--paper-card)}
+.cover__sub{margin:0;font:400 10.5px/1.3 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:#BDB6AA}
+.cover__wm{margin:0;font:400 clamp(58px,17vw,132px)/.8 var(--f-display);letter-spacing:-.01em;text-transform:uppercase;color:var(--paper-card)}
+
+/* the registration card */
+.regcard{position:relative;z-index:2;display:grid;gap:0;max-width:480px;margin:20px auto 0;padding:0 0 22px;
+  background:var(--paper-card);border-radius:5px;box-shadow:0 0 0 1px rgba(40,28,16,.16),var(--press-shadow)}
+.regcard::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:var(--grain) 0 0/180px 180px;opacity:.28;mix-blend-mode:multiply}
+.regcard > *{position:relative}
+.regcard__band{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"kind no" "chap chap";
+  position:relative;gap:8px 12px;margin:0 20px 26px;padding:18px 0 12px;border-bottom:3px solid var(--ink)}
+.regcard__band::after{content:'';position:absolute;left:0;right:0;bottom:-7px;height:1px;background:var(--ink)}
+.regcard__kind{grid-area:kind;font:400 10px/1.2 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
+.regcard__no{grid-area:no;font:400 10px/1.2 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--seal)}
+.authp__chapter{grid-area:chap;margin:0;font:400 clamp(30px,6vw,40px)/.9 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.authp__arrive{margin:0 20px 18px;padding:9px 12px 8px;border:1.5px solid var(--crimson);color:var(--crimson);
+  font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase}
+.authp__arrive b{font:400 14px/1 var(--f-head);letter-spacing:.06em;margin-right:6px}
+
+/* a field of the record: its number and name on the line above, the
+   writing on a ruled line; the rule thickens where the pen is */
+.authp__f{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"lab rule" "in in";
+  align-items:end;gap:6px 12px;margin:0 20px 20px}
+.authp__lab{grid-area:lab;display:flex;align-items:baseline;gap:8px;
+  font:400 11px/1.2 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.authp__lab i{font-style:normal;color:var(--seal)}
+.authp__rule{grid-area:rule;font:400 10px/1.2 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+.authp__f > .authp__in,.authp__f > .authp__pw{grid-area:in}
+.authp__in{display:block;width:100%;min-width:0;margin:0;padding:10px 2px 8px 18px;border:0;border-radius:0;
+  border-bottom:2px solid var(--ink);background:
+    linear-gradient(var(--paper-deep),var(--paper-deep)) 0 100%/100% 0 no-repeat,transparent;
+  color:var(--ink);font:400 18px/1.3 var(--f-mono);letter-spacing:.04em;outline:0;
+  transition:border-bottom-width 80ms steps(2,end)}
+.authp__in::placeholder{color:var(--ink-3)}
+.authp__in:focus{border-bottom-width:4px;padding-bottom:6px;background-size:100% 100%}
+.authp__f:focus-within .authp__lab{color:var(--ink)}
+.authp__f:focus-within::before{content:'';position:absolute;left:2px;bottom:17px;width:9px;height:12px;background:var(--crimson);
+  clip-path:polygon(0 0,100% 50%,0 100%)}
+.authp__pw{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end}
+.authp__pw > .authp__in{grid-column:1 / -1;grid-row:1;padding-right:calc(var(--tap) + 10px)}
+.authp__eye{grid-column:2;grid-row:1;position:relative;min-width:var(--tap);min-height:var(--tap);padding:0 4px;
+  border:0;background:none;cursor:pointer;color:var(--ink-2);
+  font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase}
+.authp__eye[aria-pressed="true"]{color:var(--ink)}
+@media (hover:hover){ .authp__eye:hover{color:var(--ink)} }
+.authp__eye:focus-visible{outline:2px solid var(--ink);outline-offset:-4px}
+.authp--err .authp__in{border-bottom-color:var(--seal)}
+.authp--err .authp__in:focus{border-bottom-color:var(--ink)}
+
+.authp__act{display:grid;justify-items:start;gap:12px;margin:8px 20px 0}
+.authp__go{min-width:200px}
+.authp__go > .act__lab{justify-content:space-between;width:100%}
+.authp__err{margin:0;min-height:0;font:400 12px/1.45 var(--f-mono);letter-spacing:.04em;color:var(--seal)}
+#authErr.is-on{display:block;padding:8px 0 8px 12px;border-left:3px solid var(--seal)}
+.authp__swap{margin-top:2px}
+
+/* the setup notice, when the build has no project */
+.setupbox{margin:20px 20px 0;padding:14px 16px;border:2px solid var(--ink);background:var(--paper)}
+.setupbox .kicker{display:block;margin-bottom:6px;font:400 11px/1.2 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--seal)}
+.setupbox p{margin:0 0 6px;font:400 13px/1.45 var(--f-body)}
+.setupbox--warn{border-color:var(--seal)}
+
+@media(min-width:900px){
+  .cover{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);grid-template-rows:minmax(0,1fr);
+    align-items:center;padding:0}
+  .cover__panel{position:relative;grid-area:1 / 1;height:auto;align-self:stretch;min-height:100dvh}
+  .cover__seal{right:auto;left:-24%;bottom:-20%;width:min(92%,640px)}
+  .cover__kci{right:32px;top:32px}
+  .cover__head{grid-area:1 / 1;align-self:end;height:auto;padding:0 clamp(32px,4vw,64px) clamp(44px,8vh,90px)}
+  .cover__wm{font-size:clamp(84px,9vw,150px)}
+  .regcard{grid-area:1 / 2;width:min(460px,80%);margin:40px auto;rotate:.4deg}
+}
+
+/* ══ ARRIVING BY THE WALL CODE: the book's front cover. Paper inside a
+   ruled cover frame, the book's name at the head, and one graphic: the
+   empty seat the stamp will take, the meeting's number set in it. Very
+   little text, and the way in. ══ */
+.view--arrive{min-height:100dvh}
+.entry{position:relative;display:grid;grid-template-rows:auto minmax(0,1fr) auto;justify-items:center;gap:18px;
+  min-height:100dvh;padding:calc(34px + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x,0px)) calc(40px + env(safe-area-inset-bottom,0px));
+  text-align:center}
+.entry::before{content:'';position:absolute;inset:10px;border:3px solid var(--ink);outline:1px solid var(--ink);outline-offset:-8px;pointer-events:none}
+.entry__head{display:grid;gap:6px;justify-items:center}
+.entry__wm{margin:0;font:400 clamp(40px,11vw,64px)/.85 var(--f-display);text-transform:uppercase;letter-spacing:-.01em}
+.entry__sub{margin:0;font:400 10px/1.3 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
+.entry__seat{position:relative;display:grid;place-items:center;align-self:center;width:min(76vw,52vh,420px);aspect-ratio:1}
+.entry__blank{position:absolute;inset:0;width:100%;height:100%;overflow:visible;rotate:-4deg}
+.entry__blank path{fill:var(--paper-card);stroke:var(--ink);stroke-width:1.1;stroke-dasharray:3.2 2.4}
+.entry__gm{position:relative;margin:0;display:grid;justify-items:center;line-height:.8}
+.entry__gmv{display:grid;justify-items:center;gap:2px}
+.entry__gmv span{font:400 clamp(20px,5vw,30px)/1 var(--f-head);letter-spacing:.08em}
+.entry__gmv b{font:400 clamp(110px,30vw,220px)/.78 var(--f-display);font-weight:400;letter-spacing:-.03em}
+.entry__gm--word{font:400 clamp(40px,11vw,80px)/.9 var(--f-display);font-weight:400;text-transform:uppercase}
+.arrive__status{position:absolute;right:-2%;bottom:6%;margin:0;padding:8px 12px 7px;rotate:-6deg;
+  background:var(--crimson);color:var(--paper-card);font:400 clamp(16px,3.4vw,22px)/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase}
+.view--arrive-done .arrive__status{background:var(--ink)}
+.view--arrive-open .entry__blank path{stroke-width:1.5}
+.view--arrive-done .entry__blank path{fill:var(--ink);stroke-dasharray:none;filter:url(#ks-ink)}
+.view--arrive-done .entry__gmv,.view--arrive-done .entry__gm--word{color:var(--paper-card)}
+.view--arrive-shut .entry__blank path{stroke:var(--ink-3)}
+.view--arrive-struck .entry__gmv b{position:relative}
+.view--arrive-struck .entry__gmv b::after{content:'';position:absolute;left:-6%;right:-6%;top:48%;height:.08em;min-height:4px;
+  background:var(--crimson);rotate:-8deg}
+
+.arrive{display:grid;justify-items:center;gap:12px;width:min(100%,360px)}
+.arrive__word{margin:0;font:400 clamp(28px,7vw,40px)/.95 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.arrive__note{margin:0;font:400 11.5px/1.5 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.arrive .authp__act{justify-items:center;margin:6px 0 0;width:100%}
+.arrive .authp__go{width:100%}
+@media(min-width:900px) and (min-height:600px){
+  .entry{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:clamp(32px,6vw,96px);
+    align-items:center;padding-inline:clamp(40px,7vw,120px)}
+  .entry__head{grid-column:1 / -1}
+  .entry__seat{justify-self:end;width:min(40vw,62vh,460px)}
+  .arrive{justify-self:start;justify-items:start;text-align:left}
+  .arrive .authp__act{justify-items:start}
+  .arrive__word{font-size:clamp(40px,4vw,56px)}
 }

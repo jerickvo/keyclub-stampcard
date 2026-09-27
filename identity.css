@@ -217,7 +217,7 @@ div.brow__go{cursor:default}
 
 .brow__no{font-size:clamp(11px,.4vw + 9.7px,12.5px)}
 
-.muted,.setupbox__hint,.brow__no,.brow__mid .muted{color:var(--ink-2)}
+.muted,.brow__no,.brow__mid .muted{color:var(--ink-2)}
 
 .rig > *,.brow__mid{min-width:0}
 .brow__mid b{overflow-wrap:anywhere}
@@ -261,7 +261,7 @@ main#view:focus,main#view:focus-visible,.rechead__title:focus{outline:none}
 .ahead__at{font:400 12.5px/1.35 var(--f-mono);letter-spacing:.04em;
   text-transform:uppercase;color:var(--ink-2);justify-self:end;text-align:right}
 
-.h2,.ahead__mark,.stall__title,.authp__title,.bsec{font-family:var(--f-head)}
+.h2,.ahead__mark,.bsec{font-family:var(--f-head)}
 .h2,.bsec{font-size:var(--t-sub);line-height:1.05;letter-spacing:0;
   text-transform:none;font-weight:400}
 
@@ -271,151 +271,10 @@ button,input,select,textarea{font-family:inherit}
 /* each face ships one upright weight; never let the browser fake a bold */
 html{font-synthesis:none}
 
-.view--auth{display:block;width:100%;max-width:none;padding:0;margin:0}
-
-.spread{--band:clamp(176px,24svh,232px);--lap:clamp(34px,9vw,64px);
-  position:relative;width:100%;box-sizing:border-box;
-  display:grid;grid-template-columns:minmax(0,1fr);
-  grid-template-rows:calc(var(--band) - var(--sp-row)) auto 1fr;
-  align-content:start;isolation:isolate;overflow:hidden;
-  min-height:100dvh}
-
-.spread__field{position:absolute;
-  left:0;right:0;
-  top:0;height:var(--band);
-  background:var(--ink);z-index:0}
-
-.spread__seal{position:absolute;--swirl:min(86vw,430px,calc(var(--band) * .95));
-  left:calc(var(--swirl) * -.3);top:auto;bottom:calc(var(--swirl) * -.42);
-  width:var(--swirl);aspect-ratio:1;height:auto;
-  fill:var(--paper);opacity:1;display:none}
-
-.spread__head{grid-row:1;position:relative;z-index:2;
-  padding:calc(clamp(26px,7vw,44px) + env(safe-area-inset-top,0px))
-          calc(var(--gutter) + env(safe-area-inset-right,0px)) 0
-          calc(var(--gutter) + env(safe-area-inset-left,0px));
-  color:var(--paper);align-self:start}
-.spread__sub{margin:0 0 var(--sp-row);font:400 11px/1.3 var(--f-mono);text-transform:uppercase;
-  letter-spacing:.12em;color:var(--tint);
-  display:flex;align-items:center;gap:clamp(8px,1.4vw,14px)}
-
-.spread__field > span.spread__kci{position:absolute;z-index:1;
-  top:calc(clamp(26px,7vw,44px) + env(safe-area-inset-top,0px));right:clamp(14px,2.6vw,34px);
-  width:clamp(52px,8.5vw,132px)}
-@media(min-width:820px){
-  .spread__field > span.spread__kci{
-    right:calc(var(--lap,40px) + clamp(16px,2vw,34px))}
-}
-.spread__kci .brandseal{width:100%;height:auto;display:block;
-  --si:var(--paper);--sp:var(--ink)}
-
 .brandseal{--si:var(--ink);--sp:var(--paper)}
 
 .bform__head{display:flex;align-items:center;
   justify-content:space-between;gap:12px}
-/* on a short landscape phone the wordmark is sized by the band it sits
-   in too, so the card below never covers it */
-.spread__wm{font-family:var(--f-display);text-transform:uppercase;
-  font-size:clamp(46px,min(15vw,calc(var(--band) * .3)),124px);line-height:.9;letter-spacing:.01em;
-  margin:0;padding-bottom:.06em}
-
-.authp{grid-row:2;position:relative;z-index:2;
-  margin:calc(var(--lap) * -1) calc(var(--gutter) + env(safe-area-inset-right,0px))
-         calc(clamp(14px,3dvh,32px) + env(safe-area-inset-bottom,0px))
-         calc(var(--gutter) + env(safe-area-inset-left,0px));
-  background:var(--paper);
-  border:var(--edge-frame) solid var(--ink);
-  padding:clamp(20px,5vw,32px);
-  display:flex;flex-direction:column;gap:var(--sp-pad);
-  max-width:460px;width:auto;box-sizing:border-box;
-  box-shadow:0 0 0 var(--edge-panel) var(--paper),
-             var(--pnl-off) var(--pnl-off) 0 var(--edge-panel) var(--ink)}
-.authp__title{font-family:var(--f-head);text-transform:none;
-  font-size:var(--t-head);line-height:1;margin:0}
-.authp__f{display:flex;flex-direction:column;gap:5px;min-width:0}
-.authp__lab{font-size:var(--t-caption);color:var(--ink-2);letter-spacing:.08em}
-.authp__rule{font-size:var(--t-caption);color:var(--ink-2);line-height:1.35}
-.authp__in{display:block;width:100%;box-sizing:border-box;min-width:0;
-  min-height:var(--tap);padding:10px 12px;
-  border:var(--edge-panel) solid var(--ink);border-radius:0;
-  background:var(--paper);color:var(--ink);
-  font-family:var(--f-mono);font-size:max(16px,var(--t-body))}
-.authp__in::placeholder{color:var(--tone)}
-.authp__in:focus-visible{outline:var(--edge-panel) solid var(--ink);
-  outline-offset:2px}
-.authp__pw{position:relative;min-width:0}
-.authp__pw > .authp__in{padding-right:calc(var(--tap) + 6px)}
-.authp__eye{position:absolute;top:0;right:0;bottom:0;width:var(--tap);
-  min-height:var(--tap);display:flex;align-items:center;justify-content:center;
-  margin:0;padding:0;border:0;border-radius:0;background:none;
-  color:var(--ink-2);cursor:pointer;-webkit-tap-highlight-color:transparent}
-.authp__eye svg{width:22px;height:22px;display:block}
-.authp__eye[aria-pressed="true"]{color:var(--ink)}
-@media (hover:hover){.authp__eye:hover{color:var(--ink)}}
-.authp__eye:focus-visible{outline:var(--edge-panel) solid var(--ink);
-  outline-offset:-5px}
-
-.authp__err{margin:0;color:var(--ink);font-style:italic;font-weight:700;
-  border-left:var(--edge-frame) solid var(--ink);padding-left:10px}
-.authp__act{display:flex;flex-direction:column;gap:var(--sp-row);margin-top:var(--sp-tight)}
-.authp__go{display:block;width:100%;min-height:54px;box-sizing:border-box;
-  padding:12px 16px;border:0;border-radius:0;cursor:pointer;
-  background:var(--ink);color:var(--paper);
-  font-family:var(--f-head);text-transform:none;
-  font-size:var(--t-verb);line-height:1;letter-spacing:.01em}
-@media (hover:hover){.authp__go:hover{background:var(--ink-2)}}
-.authp__go[disabled]{opacity:.55;cursor:progress}
-.authp__swap{display:block;min-height:var(--tap);
-  background:none;border:0;cursor:pointer;padding:0;
-  color:var(--ink);font-family:var(--f-body);font-size:var(--t-body);
-  text-decoration:underline;text-underline-offset:3px;text-align:left}
-
-/* ══ Arriving by a wall code's link: the sign-in spread, the meeting
-   named in the band, and one card that says what happens next ══ */
-.arrive__status{display:inline-flex;align-items:center;gap:10px;margin:var(--sp-row) 0 0;
-  font:400 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--paper)}
-.arrive__status::before{content:none}
-.arrive{gap:var(--sp-pad)}
-.arrive__word{margin:0;font-family:var(--f-head);font-weight:400;text-transform:uppercase;
-  font-size:var(--t-head);line-height:1;overflow-wrap:anywhere}
-.arrive__note{margin:0;font-size:var(--t-body);line-height:1.4;color:var(--ink-2)}
-.authp__arrive{margin:0;padding:0;border:0;
-  font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
-
-@media(max-width:819px){
-  .spread__head{align-self:stretch;display:flex;flex-direction:column;padding-bottom:var(--sp-pad)}
-  .spread__sub{margin-bottom:auto}
-}
-@media(min-width:600px) and (max-width:819px){
-  .authp{margin-inline:auto}
-}
-@media(min-width:820px){
-  .spread{--lap:clamp(40px,5vw,84px);
-    grid-template-columns:calc(54% - var(--lap)) minmax(0,1fr);
-    grid-template-rows:auto;
-    column-gap:0;align-content:center;
-    padding-block:clamp(40px,7vh,96px) calc(clamp(40px,7vh,96px) + env(safe-area-inset-bottom,0px))}
-
-  .spread__head{
-    grid-row:1;
-    grid-column:1;
-    padding:0 var(--gutter) 0 calc(var(--gutter) + env(safe-area-inset-left,0px));
-    align-self:center}
-  .spread__field{right:auto;bottom:0;height:auto;
-    width:54%}
-
-  .spread__seal{--swirl:min(48vw,560px,56dvh);display:block;
-    left:calc(var(--swirl) * -.3);bottom:calc(var(--swirl) * -.36)}
-
-  /* the notch inset pushes the wordmark right, toward the seal: it is
-     set smaller by as much, so the two stay apart */
-  .spread__wm{font-size:clamp(44px,calc(7.4vw - env(safe-area-inset-left,0px) * .26),104px)}
-  /* the card fills its column less its right margin (width:100% ran it
-     past the margin to the window's edge), up to its measure */
-  .authp{grid-row:1;grid-column:2;margin:0 calc(var(--gutter) + env(safe-area-inset-right,0px)) 0 0;
-    justify-self:stretch;width:auto;max-width:460px}
-
-}
 
 .mark__word b{font-weight:inherit}
 
@@ -589,8 +448,7 @@ html{font-synthesis:none}
 
 /* one label: small caps of record, in the record face */
 .kicker,.meetband__n,
-.rail__role,.brow__nlab,
-.authp__lab{
+.rail__role,.brow__nlab{
   font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;
   color:var(--ink-2)}
 
@@ -755,8 +613,8 @@ html{font-synthesis:none}
              confirmation is the one control printed in red
    field   — a line to write on, the label above it in small capitals ══ */
 :root{--ink-lift:#2B2A27}
-.btn,.link,.cmd,.proj__ctl,.authp__go,.authp__swap,.acct__out,.rail__out,
-.owed__go,.owed__undo,.bdel__go,.bback,.stall__retry,.bform__reset,.meetband__act,
+.btn,.link,.cmd,.proj__ctl,.acct__out,.rail__out,
+.owed__go,.owed__undo,.bdel__go,.bback,.bform__reset,.meetband__act,
 .tools__nextrow,.tools__task,.owed__more,.proj__end,.proj__hand{
   display:inline-flex;align-items:center;justify-content:flex-start;gap:8px;
   margin:0;padding:0;border:0;border-radius:0;background:none;color:var(--ink);
@@ -769,33 +627,30 @@ html{font-synthesis:none}
 .btn:active,.cmd:active,.link:active{transform:none}
 
 /* primary: the ink block */
-.btn--go,.authp__go,.proj__ctl--go,.cmd--go,.act--stamp,.stall__retry{
+.btn--go,.proj__ctl--go,.cmd--go,.act--stamp{
   position:relative;justify-content:center;width:auto;height:auto;
   padding:13px 20px 12px;min-height:44px;
   font:400 16px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;
   color:var(--paper);background:var(--ink);border:2px solid var(--ink);transform:none}
-.btn--go::before,.authp__go::before,.proj__ctl--go::before,.cmd--go::before,.act--stamp::before,
-.stall__retry::before{content:none}
+.btn--go::before,.proj__ctl--go::before,.cmd--go::before,.act--stamp::before{content:none}
 @media (hover:hover){
-  .btn--go:hover,.authp__go:hover,.proj__ctl--go:hover,.cmd--go:hover,.act--stamp:hover,.stall__retry:hover{background:var(--ink-lift);border-color:var(--ink-lift);color:var(--paper);transform:none}
+  .btn--go:hover,.proj__ctl--go:hover,.cmd--go:hover,.act--stamp:hover{background:var(--ink-lift);border-color:var(--ink-lift);color:var(--paper);transform:none}
 }
-.btn--go:active,.authp__go:active,.proj__ctl--go:active,.cmd--go:active,.act--stamp:active,.stall__retry:active{transform:translateY(1px);background:var(--ink);color:var(--paper)}
-.btn--go:focus-visible,.authp__go:focus-visible,.proj__ctl--go:focus-visible,.cmd--go:focus-visible,.act--stamp:focus-visible,
-.stall__retry:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.btn--go:active,.proj__ctl--go:active,.cmd--go:active,.act--stamp:active{transform:translateY(1px);background:var(--ink);color:var(--paper)}
+.btn--go:focus-visible,.proj__ctl--go:focus-visible,.cmd--go:focus-visible,.act--stamp:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 /* on an ink ground the block is paper */
 .proj--live .proj__ctl--go{color:var(--ink);background:var(--paper);border-color:var(--paper)}
 @media (hover:hover){ .proj--live .proj__ctl--go:hover{color:var(--ink);background:var(--tint);border-color:var(--tint)} }
 .proj--live .proj__ctl--go:focus-visible{outline-color:var(--paper)}
-.authp__go{align-self:flex-start}
 
 /* command: small capitals on a 2px rule */
-.btn:not(.btn--go),.cmd:not(.cmd--go):not(.cmd--quiet):not(.stall__retry),.owed__go,.bconfirm__keep{
+.btn:not(.btn--go),.owed__go,.bconfirm__keep{
   padding:12px 0 10px;min-height:44px;
   font:400 12px/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);
   border:0;background:linear-gradient(currentColor,currentColor) 0 100%/100% 2px no-repeat}
 .btn:not(.btn--go)::before,.cmd:not(.cmd--go)::before,.owed__go::before,.bconfirm__keep::before{content:none}
 @media (hover:hover){
-  .btn:not(.btn--go):hover,.cmd:not(.cmd--go):not(.cmd--quiet):not(.stall__retry):hover,.owed__go:hover,.bconfirm__keep:hover{
+  .btn:not(.btn--go):hover,.owed__go:hover,.bconfirm__keep:hover{
     color:var(--ink);background-size:100% 3px}
 }
 .btn:not(.btn--go):active,.cmd:not(.cmd--go):active,.owed__go:active{transform:translateY(1px)}
@@ -808,20 +663,20 @@ html{font-synthesis:none}
 .cmd--quiet::before{content:none}
 
 /* quiet: the marginal action */
-.link,.authp__swap,.acct__out,.rail__out,.owed__undo,.bback,.bform__reset,.meetband__act,
+.link,.acct__out,.rail__out,.owed__undo,.bback,.bform__reset,.meetband__act,
 .owed__more,.proj__hand,.proj__ctl--quiet,.cmd--quiet,.tools__nextrow,.tools__task{
   padding:12px 0;min-height:44px;border:0;background:none;
   font:400 12px/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.link::before,.authp__swap::before,.acct__out::before,.rail__out::before,.owed__undo::before,.bback::before,
+.link::before,.acct__out::before,.rail__out::before,.owed__undo::before,.bback::before,
 .bform__reset::before,.meetband__act::before,.owed__more::before,.proj__hand::before,.proj__ctl--quiet::before,.cmd--quiet::before{
   content:'';flex:none;width:12px;height:1.5px;background:currentColor}
 @media (hover:hover){
-  .link:hover,.authp__swap:hover,.acct__out:hover,.rail__out:hover,.owed__undo:hover,.bback:hover,.bform__reset:hover,
+  .link:hover,.acct__out:hover,.rail__out:hover,.owed__undo:hover,.bback:hover,.bform__reset:hover,
   .meetband__act:hover,.owed__more:hover,.proj__hand:hover,.proj__ctl--quiet:hover,.cmd--quiet:hover{
     color:var(--ink);background:none;border-color:transparent;text-decoration:none}
   .link:hover .link__t{text-decoration:none}
 }
-.link:focus-visible,.authp__swap:focus-visible,.acct__out:focus-visible,.rail__out:focus-visible,.owed__undo:focus-visible,.bback:focus-visible,
+.link:focus-visible,.acct__out:focus-visible,.rail__out:focus-visible,.owed__undo:focus-visible,.bback:focus-visible,
 .bform__reset:focus-visible,.meetband__act:focus-visible,.owed__more:focus-visible,
 .proj__end:focus-visible,.proj__hand:focus-visible,.cmd--quiet:focus-visible,.tools__nextrow:focus-visible,.tools__task:focus-visible{
   outline:2px solid var(--ink);outline-offset:3px;background:none;color:var(--ink);border-color:transparent}
@@ -845,29 +700,22 @@ html{font-synthesis:none}
 .bconfirm--heavy .bconfirm__q{color:var(--ink)}
 
 /* fields: a line to write on */
-.input,.authp__in{display:block;width:100%;min-width:0;box-sizing:border-box;
+.input{display:block;width:100%;min-width:0;box-sizing:border-box;
   margin:0;padding:10px 0 8px;min-height:44px;
   background:none;border:0;border-bottom:2px solid var(--ink);border-radius:0;
   font:400 max(16px,var(--t-body))/1.3 var(--f-mono);letter-spacing:.02em;color:var(--ink);
   transition:none;box-shadow:none}
-.input::placeholder,.authp__in::placeholder{color:var(--ink-2);letter-spacing:.02em}
-.input:focus,.authp__in:focus,.input:focus-visible,.authp__in:focus-visible{outline:0;box-shadow:inset 0 -2px 0 var(--ink)}
-.authp__pw > .authp__in{padding-right:calc(var(--tap) + 4px)}
-.authp__f,.field{position:relative}
-.authp__f:focus-within::before,.field:focus-within::before{content:none}
-.authp__f:focus-within .authp__lab,.field:focus-within > .kicker{color:var(--ink)}
+.input::placeholder{color:var(--ink-2);letter-spacing:.02em}
+.input:focus,.input:focus-visible{outline:0;box-shadow:inset 0 -2px 0 var(--ink)}
+.field{position:relative}
+.field:focus-within::before{content:none}
+.field:focus-within > .kicker{color:var(--ink)}
 .field:focus-within > .input{padding-left:0}
-.authp__lab,.bform .kicker,.field > .kicker{font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.authp__rule{font:400 11px/1.4 var(--f-mono);letter-spacing:.02em;color:var(--ink-2);text-transform:none}
+.bform .kicker,.field > .kicker{font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 select.input{padding-right:22px;background-position:right 6px center,right 0 center}
-.authp__err{margin:0;padding:8px 0 8px 12px;border:0;border-left:3px solid var(--seal);background:none;
-  font:400 var(--t-caption)/1.4 var(--f-body);font-style:normal;color:var(--ink)}
-.authp--err .authp__in{border-bottom-color:var(--seal)}
-.authp--err .authp__in:focus{border-bottom-color:var(--ink)}
-.authp__eye{color:var(--ink-2)}
 
 /* a working control keeps its width the way it always did */
-.cmd[data-busy],.proj__ctl[data-busy],.owed__go[data-busy],.authp__go[data-busy]{flex-direction:column;gap:0}
+.cmd[data-busy],.proj__ctl[data-busy],.owed__go[data-busy]{flex-direction:column;gap:0}
 .cmd[disabled],.cmd[aria-disabled="true"]{opacity:.55}
 
 /* ══ The shell: an index column bound to the page by one ink rule, the
@@ -974,42 +822,6 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
    form on the spread. No card: the ink field above (or beside), and on
    the paper three ruled lines, the instruction stamped over the last ══ */
 .rail__link[aria-current="page"]::before{content:none}
-.spread{--lap:0px;grid-template-rows:var(--band) auto 1fr}
-.authp{grid-row:2;position:relative;z-index:2;
-  margin:clamp(22px,4dvh,40px) calc(var(--gutter) + env(safe-area-inset-right,0px))
-         calc(clamp(14px,3dvh,32px) + env(safe-area-inset-bottom,0px))
-         calc(var(--gutter) + env(safe-area-inset-left,0px));
-  padding:0;border:0;background:none;box-shadow:none;
-  display:flex;flex-direction:column;gap:clamp(18px,3dvh,26px);max-width:460px;width:auto}
-.authp__f{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;min-width:0}
-.authp__f > .authp__lab,.authp__f > .authp__rule{grid-column:1}
-.authp__in{padding:9px 0 7px}
-.authp__pw{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;column-gap:8px}
-.authp__pw > .authp__in{grid-column:1/-1;grid-row:1;padding-right:calc(var(--tap) + 8px)}
-.authp__eye{grid-column:2;grid-row:1;position:relative;top:auto;right:auto;bottom:auto;width:auto;min-width:var(--tap);min-height:var(--tap);
-  align-self:end;justify-self:end;padding:0 0 4px;margin:0;border:0;background:none;
-  font:400 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);cursor:pointer}
-.authp__eye svg{display:none}
-@media (hover:hover){.authp__eye:hover{color:var(--ink)}}
-.authp__eye[aria-pressed="true"]{color:var(--ink)}
-.authp__eye:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:-2px}
-.authp__rule{text-align:right}
-.authp__act{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:flex-start;gap:var(--sp-pad) var(--sp-block);margin:calc(var(--sp-tight) * -1) 0 0}
-.authp__go{margin-left:0}
-#authErr{display:none}
-#authErr.is-on{display:block;margin:0}
-@media(min-width:820px){
-  .spread{grid-template-columns:calc(54% - var(--lap)) minmax(0,1fr);grid-template-rows:auto}
-  .authp{grid-row:1;grid-column:2;margin:0 calc(var(--gutter) + env(safe-area-inset-right,0px)) 0 clamp(28px,4vw,64px);
-    max-width:520px;align-self:center}
-}
-/* arriving by the wall code */
-.arrive{gap:var(--sp-row)}
-.arrive__word{margin:0;font:400 clamp(24px,2.6vw,30px)/1 var(--f-head);text-transform:uppercase;letter-spacing:.02em}
-.arrive__note{margin:0;font:400 var(--t-body)/1.4 var(--f-body);color:var(--ink-2);max-width:40ch}
-.arrive .authp__act{margin-top:var(--sp-tight)}
-.arrive__status{margin-top:var(--sp-row)}
-.spread__wm{padding-bottom:.08em}
 
 /* ══ Member: the record itself. A running head, the name set on the
    paper, then the card as one object — an ink head band, the paper
@@ -1022,158 +834,6 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 
 /* a wide sheet: the head band one strip with the goal line at its right end,
    the district's seal pressed over the fold, the field on a heavy left rule */
-
-/* ══ Scan: the checkpoint. The camera is the page — edge to edge on a
-   phone, the meeting's number printed over it as the page's figure, the
-   next empty seat of the card floated over the picture as the reticle,
-   and under the picture one ruled row on ink where the scanner speaks.
-   Checked in already: the stamp it earned, printed large, its record
-   beside it. ══ */
-.view--scan{--cx:calc(var(--gutter) + var(--safe-x))}
-.view--scan .folio{margin-bottom:var(--sp-tight)}
-.scanframe{position:relative;display:block;border:0;background:none;margin:0 calc(var(--cx) * -1)}
-/* the figure over the picture */
-.scanframe > .standing{position:static;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px .8em;margin:0;
-  padding:var(--sp-tight) var(--cx) var(--sp-row);border:0;background:none;color:var(--ink);text-align:left;pointer-events:none;filter:none}
-.standing__lab{font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
-.standing__at{display:inline-flex;align-items:baseline;gap:.4em;font:400 13px/1.3 var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--ink)}
-.standing__at i{font:inherit;letter-spacing:inherit;font-style:normal;color:inherit}
-.standing__at b{font:inherit;letter-spacing:inherit;color:inherit}
-.viewer{position:relative;display:grid;place-items:center;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);
-  isolation:isolate;overflow:hidden;container-type:size;width:100%;
-  height:clamp(260px,calc(100dvh - 256px - env(safe-area-inset-bottom,0px)),640px);border:0;background:var(--ink)}
-.viewer > *{grid-column:1;grid-row:1;min-height:0;min-width:0}
-.viewer video{width:100%;height:100%;display:block;object-fit:cover;object-position:center;filter:grayscale(1) contrast(1.06)}
-/* the reticle: the seat the stamp will take */
-.reticle{position:relative;place-self:center;width:min(58cqw,66cqh,300px);aspect-ratio:1;pointer-events:none;z-index:3}
-.reticle__seat{display:block;width:100%;height:100%;overflow:visible;transform-origin:50% 50%;
-  filter:drop-shadow(0 0 1px var(--ink))}
-.reticle__face{fill:none;stroke:var(--paper);stroke-width:2.2;stroke-linejoin:round;transition:stroke-width 120ms steps(2,end),stroke 120ms steps(2,end)}
-.reticle__mark path{fill:var(--paper);opacity:.22;transition:opacity 120ms steps(2,end)}
-.reticle--good .reticle__face{stroke-width:4}
-.reticle--good .reticle__mark path{opacity:1}
-.reticle--bad .reticle__face{stroke:var(--seal);stroke-width:3}
-:root[data-still] .reticle__face,:root[data-still] .reticle__mark path{transition:none}
-/* the row the scanner speaks on: one heavy paper rule on ink, then the words */
-.scanline{display:flex;align-items:center;gap:var(--sp-row);margin:0;min-height:52px;
-  padding:12px var(--cx) 12px;border-top:2px solid var(--paper);background:var(--ink);color:var(--paper);
-  font:400 13px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase}
-.scanline__dot{display:none}
-.scanline__msg{min-width:0;overflow-wrap:anywhere;background:none;color:inherit;padding:0;text-decoration:none}
-.scanline--boot{color:var(--tone);border-top-width:var(--edge-hair);border-top-color:var(--tone)}
-.scanline--good .scanline__msg,.scanline--busy .scanline__msg{background:none;color:var(--paper);padding:0}
-.scanline--busy{color:var(--tint)}
-.scanline--bad{border-top-color:var(--seal)}
-.scanline--bad .scanline__msg{text-decoration:none;color:var(--paper)}
-.viewer--stalled + .scanline{display:none}
-/* with no camera the picture is paper, and says so */
-.viewer--stalled{aspect-ratio:auto;height:auto;min-height:0;container-type:normal;place-items:stretch;
-  background:var(--paper);padding:var(--sp-block) var(--cx) var(--sp-block)}
-.stall{display:flex;flex-direction:column;justify-content:center;gap:var(--sp-tight);padding:0;text-align:left;
-  border:0;background:none}
-.stall__title{margin:0;font:400 clamp(24px,2.6vw,30px)/1.05 var(--f-head);letter-spacing:.02em;text-transform:uppercase;color:var(--ink);overflow-wrap:anywhere}
-.stall__note{margin:0;max-width:46ch;font:400 12px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
-.stall__note:empty{display:none}
-.stall__retry{align-self:flex-start;margin-top:var(--sp-pad)}
-.zoom{position:relative;z-index:4;align-self:end;justify-self:stretch;
-  display:flex;align-items:center;gap:var(--sp-row);margin:0;padding:8px var(--cx);background:var(--ink);color:var(--paper)}
-.zoom__lab{flex:none;font:400 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase}
-.zoom__val{flex:none;min-width:4ch;text-align:right;font:400 12px/1 var(--f-mono);letter-spacing:.04em}
-.zoom__range{flex:1 1 auto;min-width:0;height:28px;margin:0;padding:0;background:transparent;cursor:pointer;
-  -webkit-appearance:none;appearance:none;accent-color:var(--paper)}
-.zoom__range::-webkit-slider-runnable-track{height:2px;background:var(--paper)}
-.zoom__range::-moz-range-track{height:2px;background:var(--paper)}
-.zoom__range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;margin-top:-9px;border-radius:0;
-  background:var(--paper);border:3px solid var(--ink);box-shadow:0 0 0 2px var(--paper)}
-.zoom__range::-moz-range-thumb{width:14px;height:14px;border-radius:0;background:var(--paper);border:3px solid var(--ink);box-shadow:0 0 0 2px var(--paper)}
-.zoom__range:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
-.viewer--zoom .reticle{width:min(52cqw,58cqh,270px);margin-bottom:44px}
-
-/* checked in already: the stamp printed large, its record beside it */
-.stamped{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:end;column-gap:var(--sp-block);margin-left:0}
-.stamped__imp{display:block;width:clamp(128px,38vw,200px);height:auto;overflow:visible;rotate:var(--lean,-1.5deg)}
-.stamped__face{fill:var(--ink)}
-.stamped__imp g path{fill:var(--paper)}
-.stamped__rec{display:grid;gap:2px;margin:0;padding-bottom:8px;font:400 12px/1.5 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
-.stamped__rec > span{padding:0;border-top:0}
-.stamped__no{display:block;padding-bottom:6px;font:400 clamp(28px,7vw,40px)/1 var(--f-head);letter-spacing:.02em;color:var(--ink)}
-.stamped__how{color:var(--ink-2)}
-
-/* a phone on its side: the picture beside the figure, as tall as the window */
-@media(max-height:520px) and (min-aspect-ratio:4/3){
-  .view--scan{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);align-items:start;gap:var(--sp-block)}
-  .view--scan > .rechead{grid-column:2;grid-row:1;margin:0}
-  .view--scan > .scanframe{grid-column:1;grid-row:1;margin:0 0 0 calc(var(--cx) * -1)}
-  .scanframe .viewer{height:calc(100dvh - 130px);min-height:160px}
-}
-/* a desktop: the picture on the left, bleeding to the page's left edge; the
-   margin column at the right carries the figure and the scanner's row */
-@media(min-width:1024px){
-  .view--scan{display:grid;grid-template-columns:minmax(0,8fr) minmax(240px,4fr);grid-template-rows:auto auto minmax(0,1fr) auto;
-    column-gap:clamp(28px,3vw,56px);align-items:start}
-  .view--scan > .rechead{grid-column:2;grid-row:1;margin:0 0 var(--sp-pad)}
-  .scanframe{display:contents}
-  .scanframe > .standing{position:static;display:grid;grid-column:2;grid-row:2;justify-items:start;text-align:left;
-    color:var(--ink);filter:none;padding:0;margin:0 0 var(--sp-block)}
-  .scanframe > .standing .standing__at{display:flex;align-items:flex-start;gap:8px}
-  .scanframe > .standing .standing__at i{font:400 11px/1 var(--f-mono);letter-spacing:.12em;margin-top:.9em;color:var(--ink-2)}
-  .scanframe > .standing .standing__lab{color:var(--ink-2)}
-  .scanframe > .standing .standing__at{justify-items:start;color:var(--ink)}
-  .scanframe > .standing .standing__at i{color:var(--ink-2)}
-  .scanframe > .standing .standing__at b{font:400 clamp(112px,9vw,150px)/.8 var(--f-display);letter-spacing:-.02em;color:var(--ink)}
-  .scanframe > .viewer{grid-column:1;grid-row:1/5;height:auto;aspect-ratio:16/9;max-height:calc(100dvh - 120px);min-height:320px;
-    margin:0}
-  .scanframe > .viewer--stalled{aspect-ratio:auto;height:auto;min-height:0;padding:0}
-  /* no camera: nothing to hold the left column, so the running head spans
-     the page and the message stands under it, the meeting at its right */
-  .view--scan:has(.viewer--stalled) > .rechead{grid-column:1/-1}
-  .scanframe > .viewer--stalled{grid-row:2/5}
-  .scanframe > .scanline{grid-column:2;grid-row:4;align-self:end;background:none;color:var(--ink);padding:12px 0 0;
-    border-top:2px solid var(--ink)}
-  .scanline--boot{color:var(--ink-2);border-top-color:var(--tone)}
-  .scanline--busy{color:var(--ink-2)}
-  .scanline--bad .scanline__msg,.scanline--good .scanline__msg{color:var(--ink)}
-  .view--scan-done{display:block}
-  .stamped{margin-left:0;column-gap:var(--sp-page)}
-  .stamped__imp{width:clamp(220px,20vw,300px)}
-}
-
-/* the sheet a stamp is announced on: paper, the seal, the record line;
-   on its way out the seal travels into its seat on the card */
-.acq{background:var(--paper);color:var(--ink);text-align:left;place-items:stretch;padding:0;
-  transition:background-color 220ms steps(3,end)}
-.acq--lift{background:transparent;pointer-events:none}
-.acq--lift .acq__kick,.acq--lift .acq__meet{opacity:0;transition:opacity 120ms steps(2,end)}
-.acq__stack{display:grid;grid-template-rows:auto minmax(0,1fr) auto;justify-items:start;gap:0;max-width:none;height:100%;
-  padding:calc(var(--sp-pad) + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x,0px)) calc(var(--sp-block) + env(safe-area-inset-bottom,0px))}
-.acq__kick{display:flex;justify-content:space-between;width:100%;padding-bottom:var(--sp-tight);border-bottom:1px solid var(--ink);
-  font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);opacity:1}
-.acq__seal{place-self:center;width:min(60vmin,300px);aspect-ratio:1;display:grid;place-items:center;will-change:transform}
-.acq__seal .acq__face{fill:var(--ink);stroke:none}
-.acq__seal .acq__mark path{fill:var(--paper);stroke:none}
-.acq__meet{display:grid;gap:2px;width:100%;margin:0;padding-top:var(--sp-tight);border-top:var(--edge-thin) solid var(--ink);
-  font:400 12px/1.5 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);opacity:1;max-width:none}
-.acq__meet b{font:400 clamp(28px,7vw,40px)/1 var(--f-head);letter-spacing:.02em;color:var(--ink)}
-@media(prefers-reduced-motion:reduce){ .acq,.acq--lift .acq__kick,.acq--lift .acq__meet{transition:none} }
-:root[data-still] .acq,:root[data-still] .acq--lift .acq__kick,:root[data-still] .acq--lift .acq__meet{transition:none}
-
-/* ══ Sign in and the wall code's landing, continued: the two chapters
-   of the first page are index lines — the open one printed as a heading,
-   the other as the way across; a field's rule of thumb sits on its
-   label's line; a refusal strikes the meeting's number ══ */
-.authp__chapter{display:block;margin:0;
-  font:400 clamp(24px,2.6vw,30px)/1 var(--f-head);letter-spacing:.02em;text-transform:uppercase;color:var(--ink)}
-/* the rule of thumb on the label's line, in the margin's grey */
-.authp__f{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"lab rule" "in in";align-items:end;column-gap:var(--sp-pad)}
-.authp__f > .authp__lab{grid-area:lab;grid-column:auto}
-.authp__f > .authp__in,.authp__f > .authp__pw{grid-area:in}
-.authp__f > .authp__rule{grid-area:rule;grid-column:auto;text-align:right;color:var(--ink-2);white-space:nowrap}
-.authp__f{margin-bottom:var(--sp-block)}
-/* the landing: the number struck through when the code cannot be taken */
-.view--arrive-struck .spread__wm{position:relative;display:inline-block}
-.view--arrive-struck .spread__wm::after{content:'';position:absolute;left:-.06em;right:-.06em;top:54%;height:.06em;min-height:3px;
-  background:var(--paper);transform:none}
-.arrive .authp__act{align-items:baseline}
 
 /* ══ Check-in: the meeting, its state, the code, the count, the
    controls — nothing else. On a phone the code runs the page's width
@@ -1577,25 +1237,19 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .is-projecting .toasts{display:none}
 @media(min-width:1024px){
   .minutes__fold .mrow__go{column-gap:var(--sp-block)}
-  .scanframe > .viewer:not(.viewer--stalled){aspect-ratio:auto;height:calc(100dvh - 140px);max-height:none;min-height:360px}
-  .stamped__rec{max-width:420px}
 }
 
 /* ══ behaviour carried from the four passes: identity data keeps its
    case, a refusal keeps its room, the camera is offered again in place,
    a working button keeps its width, every part of a field is ringed ══ */
 :root{--f-mono:'Keystamp Mono',ui-monospace,'SF Mono',Menlo,monospace}
-.rail__name,.brow--member .brow__mid b,.brow--owed .brow__mid b,.brow--hand .brow__mid b,.bdetail__name--id,.authp__in{
+.rail__name,.brow--member .brow__mid b,.brow--owed .brow__mid b,.brow--hand .brow__mid b,.bdetail__name--id{
   font-family:var(--f-mono);font-weight:400;text-transform:none;letter-spacing:.01em}
 /* a long username breaks, rather than widening a phone page past its edge */
 .bdetail__name--id{overflow-wrap:anywhere;min-width:0}
-#authErr{display:none;margin-top:var(--sp-pad)}
-#authErr.is-on{display:block}
-.viewer--stalled video,.viewer--stalled .reticle{display:none}
-.stall__retry{align-self:flex-start;margin-top:var(--sp-row)}
 .btn[data-busy],.link[data-busy]{flex-direction:column;gap:0}
 [data-busy]::after{content:attr(data-busy);display:block;height:0;overflow:hidden;visibility:hidden}
-.btn[disabled],.proj__ctl[disabled],.authp__go[disabled],.rail__out[disabled],.acct__out[disabled]{
+.btn[disabled],.proj__ctl[disabled],.rail__out[disabled],.acct__out[disabled]{
   opacity:.55;pointer-events:none}
 /* a button mid-save keeps the keyboard's focus; taps on it are not taken */
 button[aria-disabled="true"]{opacity:.55;cursor:progress}
@@ -1603,9 +1257,4 @@ button[aria-disabled="true"]{opacity:.55;cursor:progress}
 .toast{cursor:pointer}
 .toast:focus-visible{outline:var(--edge-panel) solid var(--ink);outline-offset:3px}
 select.input:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
-/* On the wide spread the box is centred in its column, so a refusal
-   printed inside it would re-centre the box; there it hangs under the
-   frame instead. */
-@media(min-width:820px){
-  .authp #authErr.is-on{position:absolute;top:calc(100% + var(--edge-frame) + var(--sp-row));left:0;right:0;margin:0}
-}
+

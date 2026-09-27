@@ -88,18 +88,21 @@ let painted = null;   /* Store.stamp() as of the last paint */
 /* A held button is not disabled, which would drop the keyboard's focus
    to the page: it says it is busy and unavailable, and its taps are
    not taken (below). */
+/* the words of a control: a printed control keeps its words in a label
+   inside the block of ink, so only the words change */
+const labelOf = btn => btn.querySelector(':scope > .act__lab') || btn;
 function hold(btn, label){
   if (!btn || btn.hasAttribute('aria-busy')) return;
   const word = btn.dataset.busy || label;
   if (btn.dataset.busy !== undefined){
-    btn.dataset.rest = btn.textContent.trim();
+    btn.dataset.rest = labelOf(btn).textContent.trim();
     btn.dataset.busy = btn.dataset.rest;
   } else {
     btn.style.minWidth = btn.getBoundingClientRect().width + 'px';
   }
   btn.setAttribute('aria-disabled', 'true');
   btn.setAttribute('aria-busy', 'true');
-  btn.textContent = word;
+  labelOf(btn).textContent = word;
 }
 /* a control mid-save: taps on it are not taken */
 function busy(btn){ return Boolean(btn) && (btn.disabled || btn.hasAttribute('aria-busy')); }
@@ -127,15 +130,15 @@ function arm(btn, disarm){
 }
 function release(btn, label){
   if (!btn) return;
-  const word = label !== undefined ? label : (btn.dataset.rest || btn.textContent);
+  const word = label !== undefined ? label : (btn.dataset.rest || labelOf(btn).textContent);
   if (btn.dataset.rest !== undefined){
-    btn.dataset.busy = btn.textContent;
+    btn.dataset.busy = labelOf(btn).textContent;
     delete btn.dataset.rest;
   }
   btn.removeAttribute('aria-disabled');
   btn.removeAttribute('aria-busy');
   btn.style.minWidth = '';
-  btn.textContent = word;
+  labelOf(btn).textContent = word;
 }
 
 function syncHash(id){
