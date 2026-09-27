@@ -88,18 +88,21 @@ let painted = null;   /* Store.stamp() as of the last paint */
 /* A held button is not disabled, which would drop the keyboard's focus
    to the page: it says it is busy and unavailable, and its taps are
    not taken (below). */
+/* the words of a control: a printed control keeps its words in a label
+   inside the block of ink, so only the words change */
+const labelOf = btn => btn.querySelector(':scope > .act__lab') || btn;
 function hold(btn, label){
   if (!btn || btn.hasAttribute('aria-busy')) return;
   const word = btn.dataset.busy || label;
   if (btn.dataset.busy !== undefined){
-    btn.dataset.rest = btn.textContent.trim();
+    btn.dataset.rest = labelOf(btn).textContent.trim();
     btn.dataset.busy = btn.dataset.rest;
   } else {
     btn.style.minWidth = btn.getBoundingClientRect().width + 'px';
   }
   btn.setAttribute('aria-disabled', 'true');
   btn.setAttribute('aria-busy', 'true');
-  btn.textContent = word;
+  labelOf(btn).textContent = word;
 }
 /* a control mid-save: taps on it are not taken */
 function busy(btn){ return Boolean(btn) && (btn.disabled || btn.hasAttribute('aria-busy')); }
@@ -127,15 +130,15 @@ function arm(btn, disarm){
 }
 function release(btn, label){
   if (!btn) return;
-  const word = label !== undefined ? label : (btn.dataset.rest || btn.textContent);
+  const word = label !== undefined ? label : (btn.dataset.rest || labelOf(btn).textContent);
   if (btn.dataset.rest !== undefined){
-    btn.dataset.busy = btn.textContent;
+    btn.dataset.busy = labelOf(btn).textContent;
     delete btn.dataset.rest;
   }
   btn.removeAttribute('aria-disabled');
   btn.removeAttribute('aria-busy');
   btn.style.minWidth = '';
-  btn.textContent = word;
+  labelOf(btn).textContent = word;
 }
 
 function syncHash(id){
@@ -619,15 +622,13 @@ const Inspect = {
     seal.classList.add('seal--held');
     seal.setAttribute('aria-expanded', 'true');
     card.classList.add('card--inspect');
-    /* where the record prints: on a phone's sheet in the foot band, tied
-       to the stamp by a leader down the field; beside a wide sheet in the
-       page's margin, the leader running to the field's rule; on any other
-       card in the corner of the field the stamp is not in */
+    /* where the record prints: on the card's stub, the way a ticket
+       carries its own particulars; a card without a stub prints it in
+       the corner of the field the stamp is not in */
     const f = field.getBoundingClientRect(), r = seal.getBoundingClientRect();
     const cx = (r.left + r.right) / 2 - f.left, cy = (r.top + r.bottom) / 2 - f.top;
     const foot = card.querySelector('.card__foot');
-    const mode = foot && f.width < 480 ? 'foot'
-      : card.closest('.mem') && matchMedia('(min-width:1180px)').matches ? 'margin' : 'corner';
+    const mode = foot ? 'foot' : 'corner';
     let rec = card.querySelector('.card__record');
     if (!rec){ rec = document.createElement('div'); rec.className = 'card__record'; rec.setAttribute('data-layer', ''); }
     (mode === 'foot' ? foot : field).appendChild(rec);
@@ -704,11 +705,11 @@ document.addEventListener('click', e => {
     const who = stamp.dataset.who, no = stamp.dataset.no;
     if (!stamp.dataset.armed){
       arm(stamp, () => {
-        stamp.textContent = 'Add';
+        labelOf(stamp).textContent = 'Add';
         stamp.setAttribute('aria-label', `Add ${who} to GM ${no}`);
         stamp.closest('.brow')?.classList.remove('brow--armed');
       });
-      stamp.textContent = 'Confirm';
+      labelOf(stamp).textContent = 'Confirm';
       stamp.setAttribute('aria-label', `Confirm: check ${who} in to GM ${no}`);
       stamp.closest('.brow')?.classList.add('brow--armed');
       return;
@@ -972,11 +973,11 @@ document.addEventListener('click', e => {
     const who = hand.dataset.who, prize = hand.dataset.prize;
     if (!hand.dataset.armed){
       arm(hand, () => {
-        hand.textContent = 'Hand over';
+        labelOf(hand).textContent = 'Hand over';
         hand.setAttribute('aria-label', `Hand ${prize} to ${who}`);
         hand.closest('.brow')?.classList.remove('brow--armed');
       });
-      hand.textContent = 'Confirm';
+      labelOf(hand).textContent = 'Confirm';
       hand.setAttribute('aria-label', `Confirm: hand ${prize} to ${who}`);
       hand.closest('.brow')?.classList.add('brow--armed');
       return;
@@ -1372,7 +1373,7 @@ function projector(on){
   stage.classList.toggle('proj--full', on);
   document.documentElement.classList.toggle('is-projecting', on);
   const b = $('[data-bfull]');
-  if (b) b.textContent = on ? 'Leave the wall' : 'Project';
+  if (b) labelOf(b).textContent = on ? 'Leave the wall' : 'Project';
   try {
     if (on && document.fullscreenEnabled && !document.fullscreenElement)
       document.documentElement.requestFullscreen().catch(() => {});

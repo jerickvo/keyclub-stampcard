@@ -50,8 +50,9 @@ const FX = {
     scene.className = 'acq';
     /* a paper sheet: the seal just pressed, the record line under it */
     scene.innerHTML = `
+      <span class="acq__lines" aria-hidden="true"></span>
       <div class="acq__stack">
-        <p class="acq__kick"><span>Stamp acquired</span><span>${pad(n + 1)}</span></p>
+        <p class="acq__kick"><span>Stamp acquired</span><span>Nº ${pad(n + 1)}</span></p>
         <div class="acq__seal" aria-hidden="true">
           <svg viewBox="0 0 64 64"><path class="acq__face" d="${stampShape(n + 1, 0)}"/>
             <g class="acq__mark" transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(n)}</g></svg>

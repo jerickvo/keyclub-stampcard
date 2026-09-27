@@ -495,7 +495,7 @@ const Scanner = {
     viewer.insertAdjacentHTML('beforeend', `<div class="stall">
       <h2 class="stall__title">${copy.title}</h2>
       <p class="stall__note">${copy.body}</p>
-      ${copy.retry ? `<button class="cmd stall__retry" type="button" data-scan-retry>Try again</button>` : ''}
+      ${copy.retry ? `<button class="act act--ink stall__retry" type="button" data-scan-retry><span>Try again</span></button>` : ''}
     </div>`);
 
     viewer.classList.add('viewer--stalled');

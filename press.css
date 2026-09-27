@@ -1,0 +1,1647 @@
+/* ═══════════════════════════════════════════════════════════════════
+   KEYSTAMP — THE PRESS
+   The product is printed, not rendered. Every page is a spread from one
+   publication: warm stock, one black ink, one burgundy, a rare crimson;
+   a brush face for chapters and figures, a comic head face for things
+   that must be read at once, manga lettering for sentences and a mono
+   record face for dates, times and numbers of record.
+
+   Loaded last. The rules here own the parts of the product they name;
+   older layers only carry what nothing here redraws.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root{
+  /* stock */
+  --paper:#F2EEE5;          /* the page: warm newsprint */
+  --paper-card:#FBF9F4;     /* card stock: brighter, heavier */
+  --paper-deep:#E7E1D4;     /* a second sheet, a filled field */
+  --tint:#DDD6C8;           /* hairline rules on the page */
+  --tone:#A39D93;           /* decorative grey: never small text */
+
+  /* ink */
+  --ink:#131211;
+  --ink-2:#45423D;          /* charcoal: secondary text (9:1 on paper) */
+  --ink-3:#6E6962;          /* grey: tertiary text, 5:1 on paper */
+  --seal:#7A1F2B;           /* burgundy: what is yours, what is active */
+  --seal-deep:#5A1620;
+  --crimson:#C11F33;        /* the rare moment: live, unlocked, landed */
+
+  --press-shadow:0 1px 0 rgba(40,28,16,.10),0 2px 3px -1px rgba(40,28,16,.16),
+                 0 22px 34px -22px rgba(40,28,16,.55);
+
+  /* the screentone: one dot, one pitch, everywhere it appears */
+  --dot:radial-gradient(circle at 50% 50%,var(--ink) 0 .95px,transparent 1.25px);
+  --dot-pitch:5px;
+
+  /* the brush rule every chapter title stands on: heavy at the pen's
+     landing, dragged thin to the right */
+  --brush:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 14' preserveAspectRatio='none'%3E%3Cpath d='M0 5.6 C 4 2.2 18 1.3 60 1.6 L 420 3.1 C 640 4 820 5.2 998 6.4 L 1000 7.1 C 820 8.2 640 9.2 420 10.4 L 70 12.2 C 26 12.6 6 12 1.2 9.4 Z' fill='%23131211'/%3E%3C/svg%3E");
+
+  /* paper grain: a fine tooth and a slow cloud, printed with the page */
+  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .16  0 0 0 0 .12  0 0 0 0 .07  0 0 0 .36 -.1'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23g)'/%3E%3C/svg%3E");
+  --cloud:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='900'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004' numOctaves='3' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45  0 0 0 0 .36  0 0 0 0 .22  0 0 0 .32 -.13'/%3E%3C/filter%3E%3Crect width='900' height='900' filter='url(%23c)'/%3E%3C/svg%3E");
+
+  --f-display:'Jujutsu Kaisen',ui-sans-serif,system-ui,sans-serif;
+  --f-head:'BadaBoom BB','Jujutsu Kaisen',ui-sans-serif,sans-serif;
+  --f-body:'CC Wild Words',ui-rounded,'Comic Sans MS',ui-sans-serif,sans-serif;
+  --f-mono:'Keystamp Mono',ui-monospace,'SF Mono',Menlo,monospace;
+}
+
+/* ── the stock ───────────────────────────────────────────────────── */
+body{background:var(--paper);color:var(--ink)}
+.ground{background-color:var(--paper);
+  background-image:var(--cloud),var(--grain);
+  background-size:900px 900px,220px 220px;
+  background-blend-mode:multiply,multiply}
+/* the page's torn outer edge: ink bled off the trim */
+.ground__bleed{width:clamp(6px,.9vw,13px)}
+
+/* ── record labels: small capitals in the record face ────────────── */
+.lab{font:400 11px/1.35 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+
+/* ── the running head: chapter number, what this page is, the book ─ */
+.run{display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap;margin:0;
+  padding-bottom:7px;border-bottom:1px solid var(--ink);
+  font:400 10.5px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.run__no{color:var(--ink)}
+.run__no b{font-weight:400;color:var(--seal)}
+.run__what{color:var(--ink)}
+.run__book{margin-left:auto;text-align:right}
+@media(max-width:519px){ .run__book{display:none} }
+
+/* ── the chapter title: the brush face on its brush rule ─────────── */
+.chap{position:relative;display:grid;gap:10px;min-width:0}
+.chap__title{margin:0;font:400 clamp(46px,9.5vw,112px)/.84 var(--f-display);
+  letter-spacing:-.015em;text-transform:uppercase;color:var(--ink);overflow-wrap:anywhere}
+/* a page's heading takes focus on a page turn so a screen reader reads
+   it; it is not a control, so it draws no ring */
+.rechead__title:focus,.rechead__title:focus-visible{outline:0}
+.brush{display:block;height:clamp(9px,1.2vw,14px);background:var(--brush) 0 0/100% 100% no-repeat}
+
+/* ── the folio: the foot of every page ───────────────────────────── */
+.folio-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
+  margin-top:clamp(28px,5vw,64px);padding-top:10px;border-top:1px solid var(--ink);
+  font:400 10px/1.4 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
+.folio-foot__no{font:400 clamp(30px,3vw,40px)/.8 var(--f-display);letter-spacing:0;color:var(--ink)}
+.folio-foot__no::before{content:'— ';font:400 12px/1 var(--f-mono);vertical-align:.8em;color:var(--ink-3)}
+
+/* ── a section inside a page ─────────────────────────────────────── */
+.sect{display:flex;align-items:baseline;gap:12px;margin:0;min-width:0}
+.sect__name{flex:none;font:400 clamp(20px,2.2vw,26px)/1 var(--f-head);letter-spacing:.02em;
+  text-transform:uppercase;color:var(--ink)}
+.sect__rule{flex:1 1 auto;align-self:center;height:3px;min-width:24px;
+  background:linear-gradient(var(--ink),var(--ink)) 0 0/100% 2px no-repeat,
+             linear-gradient(var(--ink),var(--ink)) 0 100%/100% 1px no-repeat;
+  translate:0 .15em}
+.sect__n{flex:none;font:400 10.5px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+
+/* ══ Controls. Four kinds, one family: every control is a printed
+   word, set in the head face, never a rounded rectangle.
+     ink    the page's one action: a block of ink, one corner clipped
+            like a ticket, a screentone plate printed off register
+            behind it; pointed at, the plate takes the burgundy
+     rule   the way on: a word on a heavy rule that runs out into an
+            arrow; pointed at, the rule reaches further
+     quiet  housekeeping: the record face in small capitals behind a
+            small square, like a box on a form
+     seal   a word that cannot be taken back, in burgundy ══ */
+.act{position:relative;display:inline-flex;align-items:center;gap:10px;min-height:44px;
+  margin:0;padding:0;border:0;background:none;color:var(--ink);cursor:pointer;
+  font:400 17px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase;
+  text-decoration:none;white-space:nowrap;-webkit-tap-highlight-color:transparent;isolation:isolate}
+.act > span{position:relative;z-index:1}
+.act[disabled],.act[aria-disabled="true"]{cursor:default}
+
+.act--ink{padding:0 5px 5px 0}
+.act--ink::before{content:'';position:absolute;z-index:0;left:5px;top:5px;right:0;bottom:0;
+  background:var(--dot) 0 0/4px 4px;
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%)}
+.act--ink > span{flex:1 1 auto;display:inline-flex;align-items:center;gap:10px;min-height:44px;
+  padding:12px 20px 11px;background:var(--ink);color:var(--paper-card);
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%)}
+.act--ink > span::after{content:'';flex:none;width:18px;height:2px;background:currentColor;
+  -webkit-mask:linear-gradient(#000,#000) 0 50%/12px 2px no-repeat,
+    conic-gradient(from -135deg at 100% 50%,#000 90deg,transparent 0) 100% 50%/8px 8px no-repeat;
+          mask:linear-gradient(#000,#000) 0 50%/12px 2px no-repeat,
+    conic-gradient(from -135deg at 100% 50%,#000 90deg,transparent 0) 100% 50%/8px 8px no-repeat;
+  height:8px}
+@media (hover:hover){ .act--ink:hover::before{background:var(--seal)} }
+.act--ink:focus-visible{outline:0}
+.act--ink:focus-visible::before{background:var(--seal)}
+.act--ink:focus-visible > span{outline:2px solid var(--paper-card);outline-offset:-5px}
+.act--ink:active > span{translate:2px 2px}
+/* the page reserves a busy word's width with a hidden line under a
+   button; a printed control keeps its own width, so it has none */
+.act[data-busy]::after{content:none}
+.act--ink[aria-busy="true"] > span{background:var(--ink-2)}
+
+.act--rule{padding:10px 0 12px}
+.act--rule > span{display:inline-flex;align-items:center;gap:10px}
+.act--rule::after{content:'';position:absolute;left:0;bottom:6px;height:3px;width:calc(100% - 10px);
+  background:var(--ink);transition:width 120ms steps(3,end)}
+.act--rule > span::after{content:'';width:14px;height:14px;margin-right:-4px;
+  border-top:3px solid currentColor;border-right:3px solid currentColor;rotate:45deg;scale:.62;
+  translate:-2px 0}
+@media (hover:hover){ .act--rule:hover::after{width:calc(100% + 8px)} }
+.act--rule:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+
+.act--quiet{gap:8px;font:400 11.5px/1 var(--f-mono);letter-spacing:.14em;color:var(--ink-2)}
+.act--quiet::before{content:'';flex:none;width:9px;height:9px;border:1.5px solid currentColor}
+@media (hover:hover){ .act--quiet:hover{color:var(--ink)} .act--quiet:hover::before{background:currentColor} }
+.act--quiet:focus-visible{outline:2px solid var(--ink);outline-offset:3px;color:var(--ink)}
+
+.act--seal{color:var(--seal)}
+.act--seal.act--rule::after{background:var(--seal)}
+
+@media (prefers-reduced-motion:reduce){ .act--rule::after{transition:none} }
+:root[data-still] .act--rule::after{transition:none}
+
+/* ══ THE CARD. The product's own object, drawn the same on every page
+   it appears on: an ink spine, a field of card stock where the ten
+   seats wait along the route, and a stub past a perforation. On its
+   side where there is room (the spine at the left), stood up on a
+   phone (the spine across the top). ══ */
+.card{--stub:58px;position:relative;min-width:0;isolation:isolate;
+  container:card / inline-size;
+  background:var(--paper-card);color:var(--ink);border-radius:5px;
+  box-shadow:0 0 0 1px rgba(40,28,16,.16),var(--press-shadow)}
+.card__in{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"id" "field" "foot"}
+/* the stock's own tooth, finer than the page's */
+.card::before{content:'';position:absolute;inset:0;z-index:0;border-radius:inherit;pointer-events:none;
+  background:var(--grain) 0 0/180px 180px;opacity:.28;mix-blend-mode:multiply}
+.card__in{position:relative;z-index:1}
+.card__id{grid-area:id}
+.card__field{grid-area:field}
+.card__foot{grid-area:foot}
+
+/* the spine: the card's number, the count, who holds it, the club */
+.card__id{position:relative;display:grid;align-items:end;gap:0 14px;overflow:hidden;
+  grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"no no kci" "num who kci";
+  padding:14px 16px 14px 18px;background:var(--ink);color:var(--paper-card);
+  border-radius:5px 5px 0 0}
+.card__id p{margin:0}
+.card__cardno{grid-area:no;margin-bottom:4px!important;font:400 10.5px/1 var(--f-mono);
+  letter-spacing:.2em;text-transform:uppercase;color:#BDB6AA}
+.card__cardno b{font-weight:400;color:var(--paper-card)}
+.card__num{grid-area:num;display:flex;align-items:baseline;gap:4px;line-height:.78}
+.card__num b{font:400 clamp(58px,17cqw,76px)/.78 var(--f-display);letter-spacing:-.02em}
+.card__num span{font:400 14px/1 var(--f-mono);letter-spacing:.06em;color:#BDB6AA}
+.card__issued{grid-area:who;align-self:end;display:grid;gap:4px;min-width:0;padding-bottom:3px}
+.card__issued span{font:400 9.5px/1 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:#BDB6AA}
+.card__issued b{display:block;padding-bottom:4px;border-bottom:1px solid #6A655E;
+  font:400 clamp(16px,4.6cqw,20px)/1.05 var(--f-head);letter-spacing:.03em;text-transform:uppercase;
+  font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card__kci{grid-area:kci;align-self:center}
+.card__kci .brandseal{display:block;width:44px;height:auto;--si:var(--paper-card);--sp:var(--ink)}
+
+/* the field: card stock, the district's seal printed faintly under it */
+.card__field{position:relative;aspect-ratio:5/6;margin:0 3%;isolation:isolate}
+.card__wm{position:absolute;left:50%;top:52%;width:74%;translate:-50% -50%;opacity:.04;
+  z-index:0;pointer-events:none}
+.card__wm .brandseal{display:block;width:100%;height:auto;--si:var(--ink);--sp:transparent}
+
+/* the route */
+.card__route{position:absolute;inset:0;width:100%;height:100%;z-index:0;overflow:visible}
+.card__route--wide{display:none}
+.card__seg{fill:none;stroke:var(--tone);stroke-width:1.5;stroke-dasharray:.5 6;stroke-linecap:round;
+  vector-effect:non-scaling-stroke}
+.card__seg--set{stroke:var(--ink);stroke-width:2.2;stroke-dasharray:none}
+.card__seg--to{stroke:var(--ink);stroke-width:1.8;stroke-dasharray:7 5;stroke-linecap:butt}
+
+/* the seats */
+.seals{position:absolute;inset:0;list-style:none;margin:0;padding:0;z-index:1}
+.seal{--x:var(--tx);--y:var(--ty);--s:var(--ts);
+  position:absolute;left:var(--x);top:var(--y);width:var(--s);aspect-ratio:1;
+  translate:-50% -50%;rotate:var(--lean);outline:0;-webkit-tap-highlight-color:transparent}
+.seal > svg{display:block;width:100%;height:100%;overflow:visible}
+.seal__no{position:absolute;right:-12%;bottom:-8%;rotate:calc(var(--lean) * -1);
+  padding:1px 2px;background:var(--paper-card);
+  font:400 11px/1 var(--f-mono);letter-spacing:.04em;color:var(--ink-3)}
+
+/* the seven states of a seat, told by ink rather than by colour
+   empty      the blank printed on the stock: a hairline, the treasure a ghost
+   next       the blank inked a little heavier; the route runs to it dashed
+   live       check-in is open for it: a crimson ring and the word, the way in
+   stamped    the impression: solid ink, pressed a little off the blank,
+              its edge and body broken by the stock
+   newest     the last one pressed: a thin second ring, still wet
+   milestone  the tenth: larger, a second rim; the prize printed under it;
+              pressed in the club's burgundy
+   full       the card struck with its rubber stamp */
+.sf-blank{fill:var(--paper-card);stroke:var(--ink);stroke-width:.9;stroke-opacity:.42}
+.sf-back{fill:none;stroke:var(--ink);stroke-width:.8;opacity:.42}
+.sf-press{transform-box:fill-box;transform-origin:50% 50%}
+.sf-face{fill:none}
+.seal__mark path{fill:var(--ink)}
+.seal:not(.seal--set) .seal__mark{opacity:.09}
+
+.seal--next .sf-blank{stroke-width:1.6;stroke-opacity:1}
+.seal--next .seal__mark{opacity:.16}
+.seal--next .seal__no{color:var(--ink)}
+
+.seal--set .sf-blank{stroke-opacity:.5}
+.seal--set .sf-press{filter:url(#ks-ink);translate:.9px -.6px;rotate:1.2deg}
+.seal--set .sf-face{fill:var(--ink)}
+.seal--set .seal__mark{opacity:1}
+.seal--set .seal__mark path{fill:var(--paper-card)}
+.seal--set .seal__no{color:var(--ink)}
+.seal--hero::after{content:'';position:absolute;inset:-9%;pointer-events:none;
+  border:1.2px solid var(--ink);border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;rotate:-6deg}
+
+.seal--mile .sf-back{opacity:.9;stroke-width:1.1}
+.seal--mile.seal--set .sf-face{fill:var(--seal)}
+.seal--mile.seal--set .sf-back{stroke:var(--seal);stroke-width:2;opacity:1}
+.seal__prize{position:absolute;left:50%;top:100%;translate:-50% 6px;rotate:calc(var(--lean) * -1);
+  width:max-content;max-width:150%;text-align:center;
+  font:400 11px/1.05 var(--f-head);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+
+.seal--live{cursor:pointer}
+.seal--live::before{content:'';position:absolute;inset:-12%;pointer-events:none;border-radius:50%;
+  border:2px solid var(--crimson);box-shadow:0 0 0 3px var(--paper-card),0 0 0 4.5px var(--crimson)}
+.seal--live .sf-blank{stroke:var(--crimson);stroke-opacity:1;stroke-width:1.4}
+.seal--live .sf-press{opacity:1}
+.seal--live .sf-face{fill:var(--crimson);opacity:.14}
+.seal--live .seal__mark{opacity:.3}
+.seal--live .seal__mark path{fill:var(--crimson)}
+.seal--live .seal__no{color:var(--crimson)}
+.seal__go{position:absolute;left:50%;top:100%;translate:-50% 12px;rotate:calc(var(--lean) * -1);
+  white-space:nowrap;padding:4px 7px 3px;background:var(--crimson);color:var(--paper-card);
+  font:400 12px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase}
+.seal--live:focus-visible::before{box-shadow:0 0 0 3px var(--paper-card),0 0 0 6px var(--ink)}
+@media (hover:hover){
+  .seal--live:hover::before{border-width:3px}
+  .seal[tabindex]:not(.seal--live):hover .sf-press{scale:1.06}
+}
+.seal[tabindex]:not(.seal--live):focus-visible::after{content:'';position:absolute;inset:-14%;
+  border:2px solid var(--ink);border-radius:50%;rotate:0deg}
+
+/* the seats a stamp is printed from at the top of the field, near the
+   edge, say their number on the inner side */
+.seal:nth-child(7) .seal__no{right:auto;left:-10%}
+
+/* a full card: struck across with the club's rubber stamp */
+.card__done{position:absolute;z-index:4;left:50%;top:48%;translate:-50% -50%;rotate:-9deg;
+  display:grid;justify-items:center;gap:2px;padding:10px 18px 9px;
+  border:3px solid var(--seal);outline:1.5px solid var(--seal);outline-offset:3px;
+  color:var(--seal);background:rgba(251,249,244,.55);filter:url(#ks-rough);pointer-events:none}
+.card__done b{font:400 clamp(30px,11cqw,58px)/.9 var(--f-head);letter-spacing:.06em;text-transform:uppercase}
+.card__done i{font:400 10.5px/1.2 var(--f-mono);font-style:normal;letter-spacing:.2em;text-transform:uppercase}
+.card__done--ready{color:var(--crimson);border-color:var(--crimson);outline-color:var(--crimson)}
+.card--full .card__num span{color:var(--paper-card)}
+
+/* the stub, past the perforation: what the card is for */
+.card__foot{position:relative;min-height:var(--stub);display:flex;align-items:center;padding:12px 18px 12px;
+  border-top:0;background:
+    radial-gradient(circle at 0 0,transparent 7px,var(--paper-card) 7.5px) 0 0/51% 100% no-repeat,
+    radial-gradient(circle at 100% 0,transparent 7px,var(--paper-card) 7.5px) 100% 0/51% 100% no-repeat;
+  border-radius:0 0 5px 5px}
+.card__foot::before{content:'';position:absolute;left:10px;right:10px;top:0;height:1.5px;
+  background:linear-gradient(90deg,var(--ink-3) 0 5px,transparent 5px) 0 0/9px 100% repeat-x}
+.card__goal{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;margin:0;min-width:0}
+.card__goal__n{font:400 26px/.9 var(--f-display);color:var(--ink)}
+.card__goal__lab{font:400 11px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.card__goal__what{font:400 17px/1.1 var(--f-head);letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
+.card__goal--done .card__goal__lab{color:var(--seal)}
+/* the prize ready: the stub itself is the way to it */
+.card__goal--go{width:100%;min-height:44px;margin:-6px 0;padding:6px 0;border:0;background:none;cursor:pointer;
+  display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"lab arrow" "what arrow";
+  align-items:center;text-align:left;color:var(--ink)}
+.card__goal--go .card__goal__lab{grid-area:lab;color:var(--crimson)}
+.card__goal--go .card__goal__what{grid-area:what;font-size:20px}
+.card__goal__arrow{grid-area:arrow;width:38px;height:38px;background:var(--crimson);
+  clip-path:polygon(0 40%,55% 40%,55% 18%,100% 50%,55% 82%,55% 60%,0 60%)}
+@media (hover:hover){ .card__goal--go:hover .card__goal__what{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px} }
+.card__goal--go:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+
+/* ── the card on its side: the spine at the left ─────────────────── */
+@container card (min-width:600px){
+  .card__in{grid-template-columns:minmax(150px,21%) minmax(0,1fr);grid-template-areas:"id field" "id foot"}
+  .card__id{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;
+    grid-template-areas:"no" "num" "." "who";align-items:start;gap:0;padding:18px 18px 18px 20px;
+    border-radius:5px 0 0 5px}
+  .card__num{margin-top:6px}
+  .card__num b{font-size:clamp(76px,15cqw,118px)}
+  .card__kci{position:absolute;right:16px;top:16px}
+  .card__kci .brandseal{width:40px}
+  .card__issued{margin-top:18px}
+  .card__id::after{content:'Keystamp';position:absolute;left:50%;top:54%;translate:-50% -50%;rotate:-90deg;
+    font:400 clamp(30px,5cqw,46px)/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;
+    color:#2A2825;white-space:nowrap;pointer-events:none}
+  .card__field{aspect-ratio:16/10;margin:3% 4% 1% 3.5%}
+  .card__route--tall{display:none}
+  .card__route--wide{display:block}
+  .seal{--x:var(--wx);--y:var(--wy);--s:var(--ws)}
+  .seal:nth-child(7) .seal__no{right:-12%;left:auto}
+  .card__foot{padding:12px 22px 14px 22px;background:none}
+  .card__foot::before{left:0;right:14px}
+  .card__done{top:50%}
+}
+
+/* ══ MEMBER. The identity is a manga panel: a heavy ink frame, the name
+   in the brush face, a screentone rising from the right with the
+   district's seal cut out of it, the club's rubber stamp on the name.
+   The card is laid across the panel's foot and breaks its frame; the
+   standing is set in the margin beside it. ══ */
+.view--member{gap:0;container:page / inline-size}
+.idp{position:relative;display:grid;align-content:start;gap:clamp(14px,2vw,20px);min-width:0;
+  padding:clamp(14px,2vw,22px) clamp(16px,2.6vw,30px) calc(var(--overlap) + clamp(20px,3vw,34px));
+  border:3px solid var(--ink);background:none;isolation:isolate;overflow:hidden;
+  --overlap:clamp(64px,11vw,150px);
+  margin-inline:calc((var(--gutter) + var(--safe-x,0px)) * -1 + 8px)}
+.idp > *{position:relative;z-index:1}
+.idp .run{border-bottom-color:var(--ink)}
+/* the tone: dots at one pitch, faded from the right edge inward; the
+   district's seal reversed out of it in the stock's own colour */
+.idp__tone{position:absolute!important;z-index:0!important;inset:clamp(44px,5vw,56px) 0 0 30%;pointer-events:none;
+  background:var(--dot) 0 0/var(--dot-pitch) var(--dot-pitch);
+  -webkit-mask:linear-gradient(100deg,transparent 0%,rgba(0,0,0,.35) 30%,#000 78%);
+          mask:linear-gradient(100deg,transparent 0%,rgba(0,0,0,.35) 30%,#000 78%)}
+.idp__seal{position:absolute;right:-9%;top:50%;translate:0 -54%;rotate:-9deg;width:min(64%,540px)}
+.idp__seal .brandseal{display:block;width:100%;height:auto;--si:var(--paper);--sp:transparent}
+.idp{container:idp / inline-size}
+/* as large as the panel allows on one line: the brush face runs about
+   half an em a letter */
+.idp__name{margin:clamp(8px,3vw,40px) 0 0;max-width:100%;
+  font:400 min(176px,19vw,calc((100cqi - 8px) / (var(--len,6) * .52)))/.8 var(--f-display);
+  letter-spacing:-.02em;text-transform:uppercase;
+  color:var(--ink);overflow-wrap:anywhere;text-shadow:0 0 1px var(--paper)}
+.idp__name:focus{outline:0}
+.idp__line{display:flex;flex-wrap:wrap;gap:4px 18px;margin:0;
+  font:400 11px/1.5 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.idp__line span{background:var(--paper);padding-right:2px;white-space:nowrap}
+/* the club's rubber stamp, pressed once on the record, in the burgundy */
+.idp__stamp{position:absolute!important;right:clamp(16px,3vw,40px);top:clamp(44px,6vw,64px);rotate:-7deg;
+  padding:6px 12px 5px;border:2.5px solid var(--seal);outline:1px solid var(--seal);outline-offset:2px;
+  font:400 clamp(16px,2vw,22px)/1 var(--f-head);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--seal);background:rgba(242,238,229,.7);filter:url(#ks-rough)}
+/* on a phone the stamp is pressed beside the particulars, clear of the name */
+@container idp (max-width:560px){
+  .idp__stamp{top:auto;bottom:calc(var(--overlap) + 22px);right:14px;font-size:14px}
+  .idp__line{padding-right:96px}
+}
+@container idp (max-width:400px){
+  .idp__stamp{position:relative!important;inset:auto;justify-self:end;margin:-4px 2px 0 0}
+  .idp__line{padding-right:0;flex-direction:column}
+}
+
+.mem{position:relative;z-index:2;display:grid;gap:clamp(22px,3vw,34px);min-width:0;
+  grid-template-columns:minmax(0,1fr);grid-template-areas:"card" "stand";
+  margin-top:calc(var(--overlap) * -1);
+  --overlap:clamp(64px,11vw,150px)}
+.mem > .card{grid-area:card;margin-inline:clamp(0px,1vw,8px)}
+.mem > .stand{grid-area:stand}
+
+/* the standing: one figure in the brush face, the rest as a ledger */
+.stand{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:end;gap:0 20px;min-width:0}
+.stand__fig{display:grid;margin:0}
+.stand__fig b{font:400 clamp(92px,24vw,150px)/.74 var(--f-display);letter-spacing:-.03em;font-weight:400}
+.stand__fig span{margin-top:18px;font:400 11px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.stand__ledger{margin:0;display:grid;align-self:end}
+.stand__ledger div{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  padding:8px 0 7px;border-bottom:1px solid var(--tint)}
+.stand__ledger div:first-child{border-top:2px solid var(--ink)}
+.stand__ledger dt{font:400 10.5px/1.2 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.stand__ledger dd{margin:0;font:400 11px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.stand__ledger dd b{font:400 21px/1 var(--f-head);letter-spacing:.02em;color:var(--ink);margin-right:3px}
+
+@container page (min-width:900px){
+  .mem{grid-template-columns:minmax(200px,1fr) minmax(0,2.9fr);grid-template-areas:"stand card";
+    column-gap:clamp(28px,3.4vw,48px);align-items:end}
+  .mem > .card{margin:0;rotate:-.6deg}
+  /* the figure breaks the panel's frame the way the card does: the
+     numeral set over the rule, the ledger below it on the page */
+  .stand{grid-template-columns:minmax(0,1fr);align-self:start;padding-top:calc(var(--overlap) - .42em)}
+  .stand__fig b{font-size:clamp(120px,11vw,172px)}
+  .stand__ledger{margin-top:26px}
+}
+
+/* ── past cards: miniatures of the same card, struck ─────────────── */
+.files,.prizes{display:grid;gap:clamp(16px,2vw,22px);margin-top:clamp(40px,6vw,76px);min-width:0}
+.files__list{list-style:none;margin:0;padding:0;display:grid;gap:26px 22px;
+  grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr))}
+.files__list > .filed{max-width:340px}
+.filed{display:grid;gap:10px;align-content:start;min-width:0}
+.filed:nth-child(3n+1) .mini{rotate:-1.4deg}
+.filed:nth-child(3n+2) .mini{rotate:.9deg}
+.filed:nth-child(3n) .mini{rotate:-.4deg}
+.mini{position:relative;display:grid;grid-template-columns:21% minmax(0,1fr);align-items:center;
+  background:var(--paper-card);border-radius:3px;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(40,28,16,.16),0 10px 18px -12px rgba(40,28,16,.5)}
+.mini__id{align-self:stretch;display:grid;align-content:space-between;padding:8px 7px;background:var(--ink);color:var(--paper-card)}
+.mini__id i{font:400 7.5px/1 var(--f-mono);font-style:normal;letter-spacing:.16em;text-transform:uppercase;color:#BDB6AA}
+.mini__id b{font:400 34px/.8 var(--f-display);font-weight:400}
+.mini__field{display:block;width:92%;height:auto;margin:6% 4% 6%;overflow:visible}
+.fc-route{fill:none;stroke:var(--ink);stroke-width:1.2}
+.fc-face{fill:var(--ink)}
+.fc-mark path{fill:var(--paper-card)}
+.fc-back{fill:none;stroke:var(--ink);stroke-width:2}
+.filed--took .fc-face{fill:var(--ink-2)}
+.mini__punch{position:absolute;left:58%;top:50%;translate:-50% -50%;rotate:-10deg;
+  padding:4px 9px 3px;border:2px solid var(--ink);outline:1px solid var(--ink);outline-offset:2px;
+  background:rgba(251,249,244,.8);filter:url(#ks-rough);
+  font:400 17px/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
+.filed--claimed .mini__punch,.filed--ready .mini__punch{color:var(--seal);border-color:var(--seal);outline-color:var(--seal)}
+.filed--ready .mini__punch{color:var(--crimson);border-color:var(--crimson);outline-color:var(--crimson)}
+.filed--took .mini{filter:grayscale(1)}
+.filed--took .mini__punch{color:var(--ink-2);border-color:var(--ink-2);outline-color:var(--ink-2)}
+.filed__cap{display:grid;gap:3px;margin:0;padding-left:2px}
+.filed__no{font:400 16px/1 var(--f-head);font-weight:400;letter-spacing:.04em;text-transform:uppercase}
+.filed__when,.filed__prize{font:400 10.5px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.filed__go{justify-self:start}
+
+/* ── the reward set: three medallions on one line ────────────────── */
+.pset{position:relative;list-style:none;margin:0;padding:0;display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.pset::before{content:'';position:absolute;left:12%;right:12%;top:clamp(28px,6vw,40px);height:2px;
+  background:linear-gradient(90deg,var(--ink) 0 4px,transparent 4px) 0 0/8px 2px repeat-x;z-index:0}
+.pset__t{position:relative;z-index:1;display:grid;justify-items:center;text-align:center;gap:6px;min-width:0}
+.pset__medal{position:relative;display:grid;place-items:center;width:clamp(56px,12vw,80px);aspect-ratio:1}
+.pset__medal svg{position:absolute;inset:0;width:100%;height:100%}
+.pset__medal path{fill:var(--paper);stroke:var(--ink);stroke-width:1.6}
+.pset__medal b{position:relative;font:400 clamp(24px,5vw,34px)/1 var(--f-display);font-weight:400;color:var(--ink)}
+.pset__name{font:400 clamp(14px,1.6vw,17px)/1.05 var(--f-head);letter-spacing:.03em;text-transform:uppercase;overflow-wrap:anywhere}
+.pset__say{font:400 10px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.pset__t--locked .pset__medal path{fill:var(--paper);stroke:var(--tone);stroke-dasharray:3 3}
+.pset__t--locked .pset__medal::before{content:'';position:absolute;inset:14%;border-radius:50%;
+  background:var(--dot) 0 0/4px 4px;opacity:.35}
+.pset__t--locked .pset__medal b{color:var(--ink-3)}
+.pset__t--locked .pset__name{color:var(--ink-2)}
+.pset__t--ready .pset__medal path{fill:var(--ink);stroke:var(--ink);filter:url(#ks-ink)}
+.pset__t--ready .pset__medal b{color:var(--paper-card)}
+.pset__t--ready .pset__say{color:var(--crimson)}
+.pset__t--claimed .pset__medal path{fill:var(--seal);stroke:var(--seal);filter:url(#ks-ink)}
+.pset__t--claimed .pset__medal b{color:var(--paper-card)}
+.pset__t--claimed .pset__say{color:var(--seal)}
+.pset__t--took .pset__medal path{fill:var(--paper-deep);stroke:var(--ink-2);stroke-width:2.4}
+.pset__t--took .pset__medal b{color:var(--ink-2)}
+.pset__t--took .pset__medal::after{content:'';position:absolute;left:8%;right:8%;top:50%;height:2px;background:var(--ink-2);rotate:-24deg}
+.prizes__go{justify-self:start}
+
+/* the colophon on a phone: who holds the record, the two settings */
+.view--member .acct{margin-top:clamp(40px,6vw,64px)}
+
+/* ══ Examining a stamp. The tapped impression is held up, square to
+   the reader and larger; the rest of the card recedes; the stamp's
+   record is printed on the stub, the way a ticket carries its own
+   particulars. ══ */
+.card--inspect .card__route,.card--inspect .card__done{opacity:.14}
+.card--inspect .card__wm{opacity:.02}
+.card--inspect .seal:not(.seal--held){opacity:.22}
+.seal--held{z-index:6;rotate:0deg}
+.seal--held .sf-press{scale:1.34;rotate:0deg;translate:0 0}
+.seal--held .sf-blank,.seal--held .sf-back{opacity:0}
+.seal--held::after{content:'';position:absolute;inset:-26%;pointer-events:none;border-radius:50%;
+  border:1px solid var(--ink);box-shadow:0 0 0 5px var(--paper-card),0 0 0 6px var(--ink)}
+.seal--held.seal--hero::after{inset:-26%;border-radius:50%;rotate:0deg}
+.seal--held .seal__no{opacity:0}
+.card__record{z-index:8;pointer-events:none}
+.card__record[data-at="foot"]{position:absolute;inset:0;display:flex;align-items:center;flex-wrap:wrap;
+  gap:2px 16px;padding:8px 18px;background:var(--paper-card);border-radius:0 0 5px 5px;
+  font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.card__record .sealmeta__no{font:400 22px/1 var(--f-head);letter-spacing:.04em;color:var(--ink)}
+.card__record .sealmeta__day{color:var(--ink)}
+.card__record .sealmeta__row i{font-style:normal;margin-left:10px}
+.card__record .sealmeta__how{padding:3px 6px 2px;border:1.5px solid var(--seal);color:var(--seal);rotate:-2deg}
+.card__record[data-at]:not([data-at="foot"]){position:absolute;display:grid;gap:3px;padding:10px 12px;
+  max-width:62%;background:var(--paper-card);border:1.5px solid var(--ink);
+  font:400 11px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.card__record[data-at="tl"]{left:3%;top:3%}
+.card__record[data-at="tr"]{right:3%;top:3%}
+.card__record[data-at="bl"]{left:3%;bottom:3%}
+.card__record[data-at="br"]{right:3%;bottom:3%}
+.sealmeta{display:none}
+.card__record .sealmeta__no,.card__record .sealmeta__day,.card__record .sealmeta__row,.card__record .sealmeta__how{display:inline-block}
+@media (prefers-reduced-motion:no-preference){
+  :root:not([data-still]) .card--inspect .seal,:root:not([data-still]) .card--inspect .card__route{transition:opacity 140ms steps(3,end)}
+  :root:not([data-still]) .seal--held .sf-press{transition:scale 140ms steps(4,end)}
+}
+
+/* ══ TODAY. The member's current chapter: a dateline, then the head of
+   the page recomposed by what is true now, the card under it, the
+   schedule and the record in the margin. ══ */
+.view--home{gap:0;container:page / inline-size}
+.daybook{display:grid;gap:10px;margin-bottom:clamp(22px,3.4vw,40px)}
+.daybook__head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;min-width:0}
+.daybook__title{margin:0;font:400 clamp(58px,13vw,128px)/.8 var(--f-display);letter-spacing:-.02em;
+  text-transform:uppercase;color:var(--ink)}
+.daybook__title:focus{outline:0}
+.daybook__date{display:grid;justify-items:end;margin:0;text-align:right;padding-bottom:4px}
+.daybook__date i{font:400 10.5px/1.2 var(--f-mono);font-style:normal;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
+.daybook__date b{font:400 clamp(26px,4.6vw,44px)/.9 var(--f-head);letter-spacing:.02em;text-transform:uppercase;font-weight:400}
+
+.deck{display:grid;gap:clamp(24px,3vw,36px);min-width:0;
+  grid-template-columns:minmax(0,1fr);grid-template-areas:"act" "card" "side"}
+.deck > .deck__act{grid-area:act;min-width:0}
+.deck > .deck__card{grid-area:card;min-width:0}
+.deck > .deck__side{grid-area:side;min-width:0}
+@container page (min-width:880px){
+  .deck{grid-template-columns:minmax(0,2.3fr) minmax(210px,1fr);column-gap:clamp(28px,3.4vw,52px);
+    grid-template-areas:"act side" "card side";align-items:start}
+  .deck--open{grid-template-areas:"act act" "card side"}
+}
+
+/* the masthead, whatever the state: a kicker, the meeting's number in
+   the brush face, a line of state */
+.mast{position:relative;display:grid;justify-items:start;gap:8px;width:100%;margin:0;min-width:0;
+  border:0;background:none;color:var(--ink);text-align:left;font:inherit}
+.mast__kick{display:flex;flex-wrap:wrap;gap:4px 16px;font:400 11px/1.3 var(--f-mono);
+  letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
+.mast__line{position:relative;display:flex;align-items:flex-end;gap:10px;line-height:.78}
+.mast__gm{font:400 clamp(20px,3vw,30px)/1 var(--f-head);letter-spacing:.04em;padding-bottom:.35em}
+.mast__no{font:400 clamp(120px,32vw,220px)/.76 var(--f-display);letter-spacing:-.03em;font-weight:400}
+.mast__state{font:400 clamp(17px,2vw,22px)/1.1 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.mast__note{font:400 10.5px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+
+/* open: an ink slab, bled to the edge on a phone, focus lines drawn in
+   from the number; the slab is the way in */
+.mast--open{cursor:pointer;padding:clamp(18px,3vw,30px) clamp(18px,3vw,34px) clamp(20px,3vw,30px);
+  background:var(--ink);color:var(--paper-card);overflow:hidden;isolation:isolate;
+  grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"kick kick" "line cmd";align-items:end;
+  margin-inline:calc((var(--gutter) + var(--safe-x,0px)) * -1);width:calc(100% + (var(--gutter) + var(--safe-x,0px)) * 2);
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%)}
+.mast--open > *{position:relative;z-index:1}
+.mast--open .mast__kick{grid-area:kick;color:#CFC8BC}
+.mast--open .mast__kick span:first-child{display:inline-flex;align-items:center;gap:9px;color:var(--paper-card)}
+.mast--open .mast__kick span:first-child::before{content:'';width:10px;height:10px;border-radius:50%;
+  background:var(--crimson);box-shadow:0 0 0 3px rgba(193,31,51,.28)}
+.mast--open .mast__line{grid-area:line}
+.mast--open .mast__cmd{grid-area:cmd;justify-self:end;display:inline-flex;align-items:center;gap:12px;
+  padding:12px 16px 11px 18px;background:var(--crimson);color:var(--paper-card);
+  font:400 clamp(20px,3vw,30px)/1 var(--f-head);letter-spacing:.05em;text-transform:uppercase}
+.mast--open .mast__cmd::after{content:'';width:22px;height:18px;background:currentColor;
+  clip-path:polygon(0 38%,56% 38%,56% 6%,100% 50%,56% 94%,56% 62%,0 62%)}
+.mast__lines{position:absolute!important;inset:0;z-index:0!important;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg at 26% 62%,rgba(251,249,244,.085) 0 .5deg,transparent .5deg 2.6deg);
+  -webkit-mask:radial-gradient(ellipse at 26% 62%,transparent 0 22%,#000 70%);
+          mask:radial-gradient(ellipse at 26% 62%,transparent 0 22%,#000 70%)}
+@media (hover:hover){ .mast--open:hover .mast__cmd{background:var(--paper-card);color:var(--ink)} }
+.mast--open:focus-visible{outline:3px solid var(--crimson);outline-offset:4px}
+.mast--open:active .mast__cmd{translate:2px 2px}
+@container page (min-width:880px){
+  .mast--open{margin-inline:0;width:100%;padding-inline:clamp(28px,3.4vw,44px)}
+  .mast--open .mast__no{font-size:clamp(160px,17vw,250px)}
+}
+
+/* checked in: the stamp pressed over the meeting's number */
+.mast--set .mast__imp{position:absolute;left:62%;top:-12%;width:clamp(96px,22vw,150px);height:auto;
+  rotate:-9deg;filter:url(#ks-ink);overflow:visible}
+.mast__imp__face{fill:var(--ink)}
+.mast--set .mast__imp g path{fill:var(--paper)}
+.mast--set .mast__no{color:var(--ink)}
+.mast--set .mast__kick span:first-child{color:var(--seal)}
+
+/* later today: an outline waiting to be filled */
+.mast--today{padding:clamp(16px,2.4vw,24px) clamp(16px,2.4vw,26px);border:2px dashed var(--ink)}
+.mast--today .mast__state{color:var(--ink-2)}
+
+/* over without a stamp: the number printed hollow */
+.mast--closed .mast__no{color:transparent;-webkit-text-stroke:2px var(--ink-2)}
+.mast--closed .mast__state{color:var(--ink-2)}
+
+/* another day: a rubber date stamp */
+.mast__date{display:block;padding:8px 0 4px}
+.dstamp{display:inline-grid;justify-items:center;gap:4px;padding:12px 22px 10px;rotate:-4deg;
+  border:3px solid var(--ink);outline:1.5px solid var(--ink);outline-offset:3px;filter:url(#ks-rough)}
+.dstamp i{font:400 12px/1 var(--f-mono);font-style:normal;letter-spacing:.3em;text-transform:uppercase}
+.dstamp b{font:400 clamp(54px,11vw,96px)/.85 var(--f-head);letter-spacing:.02em;text-transform:uppercase;font-weight:400}
+
+.mast--none{padding:8px 0;border-top:3px solid var(--ink);border-bottom:1px solid var(--ink)}
+.mast--none .mast__state{font:400 var(--t-body)/1.4 var(--f-body);text-transform:none;letter-spacing:0;color:var(--ink-2)}
+
+/* ── the margin ──────────────────────────────────────────────────── */
+.deck__side{display:grid;gap:clamp(22px,3vw,30px);align-content:start}
+.fol{display:grid;gap:8px}
+.fol__lab{margin:0;padding-bottom:6px;border-bottom:2px solid var(--ink);
+  font:400 18px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase}
+.fol__list{list-style:none;margin:0;padding:0}
+.fol__row{display:grid;grid-template-columns:3ch minmax(0,1fr) auto;align-items:baseline;gap:4px 10px;
+  padding:9px 0 8px;border-bottom:1px solid var(--tint)}
+.fol__d{font:400 32px/.8 var(--f-display);font-weight:400}
+.fol__day{font:400 11px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.fol__no{font:400 15px/1 var(--f-head);letter-spacing:.04em}
+.fol__at{grid-column:2 / -1;font:400 10.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--seal)}
+.fol__line{margin:0;font:400 11px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.fol__stamp{display:flex;align-items:center;gap:12px;margin:4px 0 0}
+.fol__imp{width:46px;height:46px;flex:none;rotate:-5deg;filter:url(#ks-ink)}
+.fol__imp__face{fill:var(--ink)}
+.fol__imp g path{fill:var(--paper)}
+.fol__stamp > span{display:grid;gap:3px}
+.fol__stamp b{font:400 20px/1 var(--f-head);letter-spacing:.03em}
+.fol__stamp span span{font:400 10.5px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+
+/* a prize ready: a ticket in the margin, the one crimson thing on it */
+.prizeband{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"lab go" "what go";
+  align-items:center;gap:2px 12px;width:100%;padding:14px 14px 14px 16px;margin:0;cursor:pointer;text-align:left;
+  background:var(--paper-card);color:var(--ink);border:2px solid var(--crimson);
+  box-shadow:4px 4px 0 var(--crimson)}
+.prizeband__lab{grid-area:lab;font:400 10.5px/1.2 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--crimson)}
+.prizeband__what{grid-area:what;font:400 22px/1.05 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.prizeband__go{grid-area:go;padding:9px 12px 8px;background:var(--crimson);color:var(--paper-card);
+  font:400 16px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase}
+@media (hover:hover){ .prizeband:hover{box-shadow:6px 6px 0 var(--crimson)} }
+.prizeband:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+.prizeband:active{translate:2px 2px;box-shadow:2px 2px 0 var(--crimson)}
+
+/* ══ RECORD. The archive: the year as a printed timeline, the tally set
+   large beside the title, the ledger kept by the month with the month
+   in the margin like a yearbook's index, dense and ruled. ══ */
+.view--record{gap:0;container:page / inline-size}
+.rec__head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px 24px;flex-wrap:wrap}
+.view--record .chap__title{font-size:clamp(56px,11vw,120px)}
+.tally{display:flex;gap:clamp(16px,3vw,36px);margin:0;padding-bottom:6px}
+.tally div{display:grid;justify-items:end;gap:6px}
+.tally dt{order:2;font:400 10px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
+.tally dd{margin:0;font:400 clamp(40px,6vw,64px)/.78 var(--f-display)}
+.tally div:nth-child(2) dd{color:var(--ink-3)}
+.tally--first{margin:14px 0 0;font:400 11px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+
+/* the year line: one rule, a mark at every meeting's true date */
+.yline{position:relative;height:66px;margin:clamp(26px,4vw,40px) 6px 6px 4px}
+.yline__rule{position:absolute;left:0;right:calc(100% - var(--now));top:22px;height:2px;background:var(--ink)}
+.yline__ahead{position:absolute;left:var(--now);right:0;top:22px;height:2px;
+  background:linear-gradient(90deg,var(--ink-3) 0 3px,transparent 3px) 0 0/7px 2px repeat-x}
+.yline__now{position:absolute;left:var(--now);top:-4px;translate:-50% 0;padding:0 4px;
+  font:400 9.5px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--seal)}
+.yline__now::after{content:'';position:absolute;left:50%;top:14px;width:1.5px;height:22px;background:var(--seal)}
+.yt{position:absolute;top:23px;translate:-50% -50%;display:block}
+.yt--set{width:18px;height:18px}
+.yt--set svg{display:block;width:100%;height:100%;filter:url(#ks-ink)}
+.yt--set path{fill:var(--ink)}
+.yt--set g path{fill:var(--paper)}
+.yt--miss,.yt--open{width:11px;height:11px;border-radius:50%;background:var(--paper);border:1.5px solid var(--ink-3)}
+.yt--open{border-color:var(--crimson);border-width:2px;width:14px;height:14px}
+.yt--up{width:1.5px;height:9px;background:var(--ink-3)}
+.yt--card{top:6px;width:2px;height:34px;translate:-50% 0;background:var(--seal)}
+.yline__m{position:absolute;top:44px;translate:0 0;padding-left:5px;border-left:1px solid var(--ink-3);
+  font:400 10px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+
+/* the ledger */
+.ledger{display:grid;gap:clamp(22px,3vw,34px);margin-top:clamp(24px,3.4vw,40px)}
+.ledger__cols{display:none}
+.ledger__group{display:grid;gap:0;min-width:0}
+.ledger__month{display:flex;align-items:baseline;gap:10px;margin:0 0 4px;padding-bottom:6px;border-bottom:3px solid var(--ink)}
+.ledger__mname{font:400 clamp(24px,3vw,32px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.ledger__my{font:400 10.5px/1 var(--f-mono);letter-spacing:.16em;color:var(--ink-3)}
+.ledger__mn{margin-left:auto;font:400 10.5px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.ledger__rows{display:grid;min-width:0}
+.ledger__none{margin:0;padding:18px 0;border-top:3px solid var(--ink);border-bottom:1px solid var(--ink);
+  font:400 var(--t-body)/1.4 var(--f-body);color:var(--ink-2)}
+
+/* a row of the register: number, mark, date, time in, how */
+.lrow{display:grid;grid-template-columns:4.2ch 34px minmax(0,1fr) auto 5.8ch;align-items:center;gap:0 12px;
+  min-height:46px;padding:5px 0;border:0;border-bottom:1px solid var(--tint);background:none;width:100%;
+  text-align:left;color:var(--ink);font:inherit}
+.lrow--gap2{margin-top:6px}
+.lrow--gap3{margin-top:14px}
+.lrow__no{font:400 19px/1 var(--f-head);letter-spacing:.02em;white-space:nowrap}
+.lrow__no i{font:400 9px/1 var(--f-mono);font-style:normal;letter-spacing:.1em;color:var(--ink-3);margin-right:2px;vertical-align:.35em}
+.lrow__stamp{display:block;width:34px;height:34px}
+.lrow__mark,.lrow__blank{display:block;width:100%;height:100%;overflow:visible}
+.lrow__mark{rotate:-4deg;filter:url(#ks-ink)}
+.lrow__face{fill:var(--ink)}
+.lrow__mark g path{fill:var(--paper)}
+.lrow__blank path{fill:none;stroke:var(--ink-3);stroke-width:1.6;stroke-dasharray:3 3.4}
+.lrow__date{display:flex;align-items:baseline;gap:8px;min-width:0}
+.lrow__date b{font:400 16px/1.1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;font-weight:400}
+.lrow__date i{font:400 10px/1 var(--f-mono);font-style:normal;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.lrow__when{font:400 12px/1 var(--f-mono);letter-spacing:.06em;color:var(--ink);white-space:nowrap;text-align:right}
+.lrow__via{font:400 10px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);text-align:right;white-space:nowrap}
+.lrow--miss .lrow__no,.lrow--miss .lrow__date b{color:var(--ink-3)}
+.lrow--miss .lrow__when{color:var(--ink-3)}
+.lrow--miss .lrow__via{color:var(--ink-3)}
+.lrow--open{cursor:pointer;background:var(--ink);color:var(--paper-card);border-bottom-color:var(--ink);
+  padding-inline:10px;margin-inline:-10px;width:calc(100% + 20px)}
+.lrow--open .lrow__no i,.lrow--open .lrow__date i{color:#BDB6AA}
+.lrow--open .lrow__blank path{stroke:var(--crimson);stroke-dasharray:none;stroke-width:2.4}
+.lrow--open .lrow__when{color:var(--paper-card)}
+.lrow__go{display:inline-block;padding:6px 8px 5px;background:var(--crimson);color:var(--paper-card);
+  font:400 13px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase}
+.lrow--open:focus-visible{outline:3px solid var(--crimson);outline-offset:3px}
+@media (hover:hover){ .lrow--open:hover .lrow__go{background:var(--paper-card);color:var(--ink)} }
+
+/* a card filled: a chapter closed, double-ruled across the page */
+.ledger__chapter{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 14px;margin:10px 0 8px;padding:9px 0 8px;
+  border-top:3px solid var(--seal);border-bottom:1px solid var(--seal);color:var(--seal);
+  font:400 10.5px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase}
+.ledger__chapter b{font:400 18px/1 var(--f-head);letter-spacing:.04em;font-weight:400}
+/* a narrow register keeps each row on one line: the weekday and the
+   open row's "Open now" (its button says it) give way first */
+@container page (max-width:400px){
+  .lrow{grid-template-columns:4ch 30px minmax(0,1fr) auto 4.6ch;gap:0 8px}
+  .lrow__stamp{width:30px;height:30px}
+  .lrow__date i{display:none}
+  .lrow--open .lrow__when{display:none}
+  .lrow__via{letter-spacing:.08em}
+}
+
+/* wide: the month in the margin, the register in columns that every
+   row shares with the head of the ledger (subgrid) */
+@container page (min-width:760px){
+  .ledger{gap:0;grid-template-columns:minmax(130px,1fr) 4.4ch 34px minmax(0,2.2fr) 9ch 8ch;column-gap:16px}
+  .ledger > *{grid-column:1 / -1}
+  .ledger__cols{display:grid;grid-template-columns:subgrid;padding:0 0 8px;border-bottom:3px solid var(--ink);
+    font:400 9.5px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
+  .ledger__cols span:first-child{grid-column:2}
+  .ledger__cols span:nth-child(4),.ledger__cols span:nth-child(5){text-align:right}
+  .ledger__group{grid-template-columns:subgrid;padding-top:4px}
+  .ledger__group + .ledger__group{border-top:1px solid var(--ink)}
+  .ledger__month{grid-column:1;position:sticky;top:12px;align-self:start;display:grid;gap:6px;margin:0;padding:12px 0 0;border:0}
+  .ledger__mname{font:400 clamp(28px,3.1vw,44px)/.8 var(--f-display);letter-spacing:-.01em}
+  .ledger__mn{margin:0}
+  .ledger__rows{grid-column:2 / -1;grid-template-columns:subgrid}
+  .ledger__rows > *{grid-column:1 / -1}
+  .lrow{grid-template-columns:subgrid;gap:0 16px}
+  .lrow--open{width:auto;margin-inline:-10px}
+  .ledger__rows > :last-child{border-bottom:0}
+}
+
+/* ══ REWARDS. The set: three prizes on one route, each a slot in a
+   collector's page. The member's own last stamp stands on the route
+   where their count falls. Locked is a printed blank under a tone;
+   unlocked is inked; claimed carries the burgundy; collected is filed,
+   dated, and greyed like an archive. ══ */
+.view--rewards{gap:0;container:page / inline-size}
+.view--rewards .chap__title{font-size:clamp(56px,11vw,120px)}
+.prize__fig{display:grid;justify-items:end;gap:14px 6px;margin:0;padding-bottom:6px;text-align:right}
+.prize__fig b{font:400 clamp(64px,10vw,110px)/.74 var(--f-display);font-weight:400}
+.prize__fig span{font:400 10.5px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
+.prize__fig i{font:400 clamp(15px,1.7vw,19px)/1 var(--f-head);font-style:normal;letter-spacing:.04em;text-transform:uppercase}
+
+.set{display:grid;gap:clamp(20px,3vw,32px);margin-top:clamp(28px,4vw,48px)}
+.tiers{--medal:clamp(92px,11vw,132px);position:relative;display:grid;gap:clamp(26px,4vw,40px);
+  grid-template-columns:minmax(0,1fr)}
+
+/* the route: solid ink to where the member stands, dotted beyond */
+/* stacked on a phone the slots are not to scale, so the route is only
+   the thread between them and the ticks carry the count */
+.route__line{position:absolute;z-index:0;left:calc(var(--medal) / 2 - 1px);top:calc(var(--medal) / 2);bottom:40px;width:2px;
+  background:linear-gradient(var(--ink-3) 0 3px,transparent 3px) 0 0/2px 7px repeat-y}
+.route__me{position:absolute;z-index:3;left:calc(var(--medal) / 2);top:calc(var(--at) * 100%);translate:-50% -50%;
+  display:none;place-items:center;width:40px;height:40px}
+.route__me svg{position:absolute;inset:0;width:100%;height:100%;rotate:-8deg;filter:url(#ks-ink)}
+.route__face{fill:var(--ink)}
+.route__me g path{fill:var(--paper)}
+.route__me b{position:absolute;left:calc(100% + 6px);top:50%;translate:0 -50%;padding:3px 6px 2px;background:var(--ink);color:var(--paper-card);
+  font:400 12px/1 var(--f-head);letter-spacing:.04em;white-space:nowrap}
+.route__me b::after{content:' · you';font:400 9px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:#BDB6AA}
+.route__me--start{width:12px;height:12px;border:2px solid var(--ink);border-radius:50%;background:var(--paper)}
+
+/* a slot */
+.tier{position:relative;z-index:1;display:grid;grid-template-columns:var(--medal) minmax(0,1fr);
+  grid-template-areas:"medal body" "at body";align-items:start;align-content:start;gap:6px 18px;min-width:0}
+.tier__medal{grid-area:medal;position:relative;display:grid;place-items:center;width:var(--medal);aspect-ratio:1}
+.tier__medal svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.tier__rim{fill:none;stroke:var(--ink);stroke-width:1;opacity:.5}
+.tier__face{fill:var(--paper);stroke:var(--ink);stroke-width:1.4}
+.tier__medal b{position:relative;font:400 calc(var(--medal) * .44)/1 var(--f-display);font-weight:400;color:var(--ink)}
+.tier__at{grid-area:at;justify-self:center;display:flex;gap:5px;align-items:baseline;position:relative;padding:2px 4px;background:var(--paper);
+  font:400 9.5px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.tier__at b{font-weight:400;color:var(--ink)}
+.tier__body{grid-area:body;display:grid;justify-items:start;gap:8px;padding-top:clamp(8px,2vw,22px);min-width:0}
+.tier__name{font:400 clamp(24px,3vw,34px)/.95 var(--f-head);letter-spacing:.02em;text-transform:uppercase;overflow-wrap:anywhere}
+.tier__desc{font:400 var(--t-caption)/1.4 var(--f-body);color:var(--ink-2)}
+.tier__ticks{display:flex;gap:3px;flex-wrap:wrap;max-width:200px}
+.tier__ticks i{width:12px;height:12px;border:1.5px solid var(--ink-3);background:var(--paper)}
+.tier__ticks i.on{border-color:var(--ink);background:var(--ink)}
+.tier__say{font:400 11px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.tier__note{font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--seal)}
+.tier__unl{padding:4px 8px 3px;border:2px solid var(--crimson);color:var(--crimson);rotate:-3deg;
+  font:400 14px/1 var(--f-head);letter-spacing:.1em;text-transform:uppercase}
+
+/* locked: a printed blank under a tone */
+.tier--sealed .tier__face{stroke:var(--ink-3);stroke-dasharray:3 3}
+.tier--sealed .tier__rim{opacity:0}
+.tier--sealed .tier__medal::before{content:'';position:absolute;inset:16%;border-radius:50%;
+  background:var(--dot) 0 0/4px 4px;opacity:.32}
+.tier--sealed .tier__medal b{color:var(--ink-3)}
+.tier--far{opacity:.62}
+.tier--far .tier__ticks i{border-style:dashed}
+
+/* unlocked: inked, the claim waiting to be pressed */
+.tier--ready .tier__face{fill:var(--ink);stroke:var(--ink);filter:url(#ks-ink)}
+.tier--ready .tier__rim{opacity:1;stroke-width:1.6}
+.tier--ready .tier__medal b{color:var(--paper-card)}
+.tier__claim{position:relative;display:inline-grid;place-items:center;min-width:132px;min-height:52px;margin-top:4px;
+  padding:10px 22px 9px;cursor:pointer;background:var(--paper-card);color:var(--crimson);
+  border:3px solid var(--crimson);border-radius:48% 52% 46% 54% / 56% 44% 58% 42%;outline:1.5px solid var(--crimson);outline-offset:3px;
+  rotate:-2deg;font:400 22px/1 var(--f-head);letter-spacing:.1em;text-transform:uppercase}
+@media (hover:hover){ .tier__claim:hover{background:var(--crimson);color:var(--paper-card)} }
+.tier__claim[data-armed]{background:var(--crimson);color:var(--paper-card);font-size:18px}
+.tier__claim[aria-busy="true"]{border-color:var(--ink-3);outline-color:var(--ink-3);color:var(--ink-3);background:var(--paper-card);cursor:progress}
+.tier__claim:focus-visible{outline:3px solid var(--ink);outline-offset:4px}
+.tier__claim:active{translate:1px 2px}
+
+/* claimed: the club's burgundy */
+.tier--claimed .tier__face{fill:var(--seal);stroke:var(--seal);filter:url(#ks-ink)}
+.tier--claimed .tier__rim{stroke:var(--seal);opacity:1;stroke-width:1.6}
+.tier--claimed .tier__medal b{color:var(--paper-card)}
+.tier--claimed .tier__ticks i.on{background:var(--seal);border-color:var(--seal)}
+
+/* collected: filed away, dated, grey as an archive */
+.tier--took .tier__face{fill:var(--paper-deep);stroke:var(--ink-2);stroke-width:2;filter:none}
+.tier--took .tier__rim{stroke:var(--ink-2);opacity:.6}
+.tier--took .tier__medal b{color:var(--ink-2)}
+.tier--took .tier__medal::after{content:'Filed';position:absolute;left:50%;bottom:12%;translate:-50% 0;rotate:-8deg;
+  padding:2px 6px 1px;border:1.5px solid var(--ink-2);background:var(--paper-deep);
+  font:400 11px/1 var(--f-head);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.tier--took .tier__name{color:var(--ink-2)}
+.tier--took .tier__note{color:var(--ink-2)}
+.tier--took .tier__ticks i.on{background:var(--ink-2);border-color:var(--ink-2)}
+
+.set__rule{max-width:62ch;margin:clamp(26px,4vw,40px) 0 0;padding-top:12px;border-top:1px solid var(--ink);
+  font:400 var(--t-caption)/1.5 var(--f-body);color:var(--ink-2)}
+.set__rule b{font-weight:700;color:var(--ink)}
+
+/* wide: the three slots side by side, hung from one rail that runs the
+   stamps from nothing to the last prize; the member rides the rail */
+@container page (min-width:720px){
+  .tiers{grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:24px;padding-top:58px}
+  .route__line{left:0;right:0;top:22px;bottom:auto;width:auto;height:3px;
+    background:linear-gradient(var(--ink),var(--ink)) 0 0/calc(var(--fill) * 100%) 3px no-repeat,
+               linear-gradient(90deg,var(--ink-3) 0 3px,transparent 3px) 0 1px/7px 1.5px repeat-x}
+  .route__me{display:grid;left:calc(var(--at) * 100%);top:23px;width:34px;height:34px}
+  .route__me b{left:50%;top:auto;bottom:calc(100% + 4px);translate:-50% 0}
+  .tier{grid-template-columns:minmax(0,1fr);grid-template-areas:"medal" "at" "body";justify-items:center;
+    align-content:start;text-align:center}
+  /* each slot hangs from its station on the rail */
+  .tier::before{content:'';position:absolute;left:50%;top:-36px;height:36px;width:0;
+    border-left:1.5px dashed var(--ink-3)}
+  .tier--ready::before,.tier--claimed::before,.tier--took::before{border-left:2px solid var(--ink)}
+  .tier__body{justify-items:center;padding-top:6px}
+  .tier__ticks{justify-content:center}
+}
+
+/* ══ SCAN. The checkpoint, purpose-built: a viewfinder in a heavy frame
+   with registration marks at its corners, the next seat on the card as
+   the reticle, and one strip where the scanner speaks, its state set as
+   a tag. On a phone the picture is bled to the edges. ══ */
+.view--scan{gap:0;container:page / inline-size;--cx:calc(var(--gutter) + var(--safe-x,0px))}
+.scanhead{display:grid;gap:10px;margin-bottom:clamp(14px,2.4vw,26px)}
+.scanhead__row{display:flex;align-items:flex-end;justify-content:space-between;gap:10px 20px;flex-wrap:wrap}
+.view--scan .chap__title{font-size:clamp(52px,10vw,104px)}
+.standing{display:grid;justify-items:end;gap:4px;margin:0;padding-bottom:6px;text-align:right}
+.standing__lab{font:400 10.5px/1.2 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
+.standing__at{display:flex;align-items:flex-end;gap:6px;font:400 clamp(16px,2vw,20px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.standing__at i{font:400 clamp(16px,2vw,22px)/1 var(--f-head);font-style:normal;padding-bottom:.3em}
+.standing__at b{font:400 clamp(52px,8vw,84px)/.76 var(--f-display);font-weight:400}
+
+.scanframe{position:relative;margin:0 calc(var(--cx) * -1)}
+.viewer{position:relative;display:grid;place-items:center;grid-template:minmax(0,1fr) / minmax(0,1fr);
+  isolation:isolate;overflow:hidden;container-type:size;width:100%;
+  height:clamp(300px,calc(100dvh - 300px - env(safe-area-inset-bottom,0px)),660px);background:var(--ink)}
+.viewer > *{grid-area:1 / 1;min-width:0;min-height:0}
+.viewer video{width:100%;height:100%;display:block;object-fit:cover;filter:grayscale(1) contrast(1.08) brightness(.92)}
+/* registration marks: heavy L-shaped corners, a tick at each edge's middle */
+.viewer__marks{position:absolute!important;inset:14px;z-index:2;pointer-events:none}
+.viewer__marks i{position:absolute;width:30px;height:30px;border:0 solid var(--paper-card)}
+.viewer__marks i:nth-child(1){left:0;top:0;border-left-width:5px;border-top-width:5px}
+.viewer__marks i:nth-child(2){right:0;top:0;border-right-width:5px;border-top-width:5px}
+.viewer__marks i:nth-child(3){left:0;bottom:0;border-left-width:5px;border-bottom-width:5px}
+.viewer__marks i:nth-child(4){right:0;bottom:0;border-right-width:5px;border-bottom-width:5px}
+.viewer__marks::before,.viewer__marks::after{content:'';position:absolute;background:var(--paper-card);opacity:.7}
+.viewer__marks::before{left:50%;top:0;width:2px;height:12px;box-shadow:0 calc(100cqh - 40px) 0 var(--paper-card)}
+.viewer__marks::after{top:50%;left:0;height:2px;width:12px;box-shadow:calc(100cqw - 40px) 0 0 var(--paper-card)}
+/* the reticle: the seat on the card this stamp will take */
+.reticle{position:relative;place-self:center;z-index:3;width:min(54cqw,62cqh,280px);aspect-ratio:1;pointer-events:none}
+.reticle__seat{display:block;width:100%;height:100%;overflow:visible}
+.reticle__face{fill:rgba(19,18,17,.18);stroke:var(--paper-card);stroke-width:1.8;stroke-dasharray:5 3.5;
+  transition:stroke-width 120ms steps(2,end)}
+.reticle__mark path{fill:var(--paper-card);opacity:.2}
+.reticle__no{position:absolute;right:-4%;bottom:-2%;padding:3px 6px 2px;background:var(--paper-card);color:var(--ink);
+  font:400 12px/1 var(--f-head);letter-spacing:.04em}
+.reticle--good .reticle__face{stroke-dasharray:none;stroke-width:3.4;fill:rgba(19,18,17,.4)}
+.reticle--good .reticle__mark path{opacity:1}
+.reticle--good .reticle__no{background:var(--crimson);color:var(--paper-card)}
+.reticle--bad .reticle__face{stroke:var(--crimson);stroke-dasharray:none;stroke-width:3}
+.reticle--bad .reticle__no{background:var(--ink);color:var(--paper-card);text-decoration:line-through}
+:root[data-still] .reticle__face{transition:none}
+
+/* the strip the scanner speaks on: a tag for the state, then the words */
+.scanline{display:flex;align-items:center;gap:14px;margin:0;min-height:54px;padding:10px var(--cx);
+  background:var(--ink);color:var(--paper-card);border-top:3px solid var(--paper-card);
+  font:400 12.5px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase}
+.scanline__dot{display:none}
+.scanline::before{flex:none;padding:6px 10px 5px 9px;background:var(--paper-card);color:var(--ink);
+  font:400 14px/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase;
+  clip-path:polygon(0 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+.scanline--boot::before{content:'Camera' / '';background:#4A4640;color:var(--paper-card)}
+.scanline--live::before{content:'Ready' / ''}
+.scanline--busy::before{content:'Checking' / ''}
+.scanline--good::before{content:'Stamped' / '';background:var(--crimson);color:var(--paper-card)}
+.scanline--bad::before{content:'Refused' / '';background:var(--crimson);color:var(--paper-card)}
+.scanline--off::before{content:'Off' / '';background:#4A4640;color:var(--paper-card)}
+.scanline--boot{color:#BDB6AA}
+.scanline__msg{min-width:0;overflow-wrap:anywhere}
+.viewer--stalled + .scanline{display:none}
+.scanhint{margin:14px 0 0;max-width:52ch;font:400 var(--t-caption)/1.45 var(--f-body);color:var(--ink-2)}
+
+/* no camera: the frame is paper and says so */
+.viewer--stalled{height:auto;min-height:0;container-type:normal;place-items:stretch;background:var(--paper-card);
+  padding:clamp(24px,4vw,40px) var(--cx);border-block:3px solid var(--ink)}
+.viewer--stalled .viewer__marks i{border-color:var(--ink)}
+.viewer--stalled .viewer__marks::before,.viewer--stalled .viewer__marks::after,.viewer--stalled .reticle{display:none}
+.stall{display:flex;flex-direction:column;justify-content:center;gap:10px;position:relative;z-index:3}
+.stall__title{margin:0;font:400 clamp(28px,4vw,40px)/1 var(--f-head);letter-spacing:.02em;text-transform:uppercase;color:var(--ink)}
+.stall__note{margin:0;max-width:46ch;font:400 11.5px/1.5 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.stall__note:empty{display:none}
+.stall__retry{align-self:flex-start;margin-top:10px}
+
+/* a zoom row, when the camera offers one */
+.zoom{position:relative;z-index:4;align-self:end;justify-self:stretch;display:flex;align-items:center;gap:12px;
+  margin:0;padding:8px var(--cx);background:rgba(19,18,17,.86);color:var(--paper-card)}
+
+/* checked in already: the impression printed large, its record beside it */
+.stamped{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"imp rec" "imp seat";
+  align-items:end;gap:6px clamp(18px,4vw,48px);padding:clamp(18px,3vw,30px) 0;border-block:3px solid var(--ink)}
+.stamped__imp{grid-area:imp;display:block;width:clamp(128px,34vw,240px);height:auto;overflow:visible;rotate:-6deg;filter:url(#ks-ink)}
+.stamped__face{fill:var(--ink)}
+.stamped__imp g path{fill:var(--paper)}
+.stamped__rec{grid-area:rec;display:grid;gap:4px;margin:0;font:400 11.5px/1.5 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.stamped__no{display:block;font:400 clamp(44px,8vw,80px)/.8 var(--f-display);font-weight:400;color:var(--ink)}
+.stamped__word{font:400 clamp(20px,2.6vw,28px)/1 var(--f-head);letter-spacing:.04em;color:var(--seal)}
+.stamped__how{justify-self:start;padding:3px 6px 2px;border:1.5px solid var(--seal);color:var(--seal);rotate:-2deg}
+.stamped__seat{grid-area:seat;margin:0;font:400 10.5px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.stamped__go{margin-top:18px}
+
+/* wide: the picture at the left, the meeting and the strip in the margin */
+@container page (min-width:900px){
+  .scanframe{margin:0;display:grid;grid-template-columns:minmax(0,1fr);border:4px solid var(--ink)}
+  .viewer{height:auto;aspect-ratio:16/9;max-height:calc(100dvh - 260px);min-height:340px}
+  .scanline{border-top-width:0;padding-inline:18px}
+}
+/* a phone on its side: the picture as tall as the window */
+@media(max-height:520px) and (min-aspect-ratio:4/3){
+  .viewer{height:calc(100dvh - 150px);min-height:180px}
+}
+
+/* ══ Stamp acquired: the impact frame. Focus lines drawn in from the
+   page's edges to the new impression, its tag in crimson, the record
+   under it; then the stamp leaves the frame for its seat on the card. ══ */
+.acq{position:fixed;inset:0;z-index:160;display:grid;place-items:stretch;padding:0;
+  background:var(--paper-card);color:var(--ink);text-align:left;transition:background-color 220ms steps(3,end)}
+.acq__lines{position:absolute;inset:0;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg at 50% 46%,var(--ink) 0 .55deg,transparent .55deg 3.2deg);
+  -webkit-mask:radial-gradient(ellipse 70% 62% at 50% 46%,transparent 0 44%,#000 78%);
+          mask:radial-gradient(ellipse 70% 62% at 50% 46%,transparent 0 44%,#000 78%);opacity:.9}
+.acq--lift{background:transparent;pointer-events:none}
+.acq--lift .acq__lines,.acq--lift .acq__kick,.acq--lift .acq__meet{opacity:0;transition:opacity 120ms steps(2,end)}
+.acq__stack{position:relative;display:grid;grid-template-rows:auto minmax(0,1fr) auto;justify-items:center;height:100%;
+  padding:calc(24px + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x,0px)) calc(32px + env(safe-area-inset-bottom,0px))}
+.acq__kick{display:flex;align-items:center;gap:12px;margin:0;opacity:1}
+.acq__kick span:first-child{padding:8px 14px 7px;background:var(--crimson);color:var(--paper-card);rotate:-3deg;
+  font:400 clamp(22px,5vw,34px)/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase}
+.acq__kick span:last-child{padding:6px 8px 5px;background:var(--paper-card);font:400 12px/1 var(--f-mono);letter-spacing:.16em}
+.acq__seal{place-self:center;width:min(58vmin,300px);aspect-ratio:1;display:grid;place-items:center;will-change:transform;
+  filter:url(#ks-ink)}
+.acq__seal svg{position:absolute;inset:0;width:100%;height:100%}
+.acq__seal .acq__face{fill:var(--ink);stroke:none}
+.acq__seal .acq__mark path{fill:var(--paper-card);stroke:none}
+.acq__meet{display:flex;align-items:baseline;gap:14px;margin:0;padding:10px 16px 8px;background:var(--paper-card);
+  border-top:3px solid var(--ink);font:400 12px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);opacity:1}
+.acq__meet b{font:400 clamp(28px,6vw,40px)/1 var(--f-head);letter-spacing:.03em;color:var(--ink)}
+@media(prefers-reduced-motion:reduce){ .acq,.acq--lift .acq__lines,.acq--lift .acq__kick,.acq--lift .acq__meet{transition:none} }
+:root[data-still] .acq,:root[data-still] .acq--lift .acq__lines,:root[data-still] .acq--lift .acq__kick,:root[data-still] .acq--lift .acq__meet{transition:none}
+
+/* ══ SIGN IN. A chapter title page and a printed registration card: the
+   cover is an ink panel with the club's swirl cut by its edge and the
+   book's name; the form is card stock under an ink band, each field a
+   numbered line of the record. The card overlaps the cover's foot on a
+   phone and stands beside it on a desk. ══ */
+.view--auth{display:block;width:100%;max-width:none;padding:0;margin:0;gap:0}
+.cover{position:relative;min-height:100dvh;padding:0 calc(var(--gutter) + var(--safe-x,0px)) 48px;isolation:isolate}
+.cover__panel{position:absolute;z-index:0;left:0;right:0;top:0;height:clamp(250px,40vh,330px);overflow:hidden;
+  background:var(--ink)}
+.cover__lines{position:absolute;inset:0;
+  background:repeating-conic-gradient(from 0deg at 80% 110%,rgba(251,249,244,.07) 0 .6deg,transparent .6deg 3deg)}
+.cover__seal{position:absolute;right:-18%;bottom:-38%;width:min(92vw,520px);height:auto;fill:#2B2926;rotate:-12deg}
+.cover__kci{position:absolute;right:calc(var(--gutter) + 2px);top:calc(18px + env(safe-area-inset-top,0px))}
+.cover__kci .brandseal{display:block;width:46px;height:auto;--si:var(--paper-card);--sp:var(--ink)}
+.cover__head{position:relative;z-index:1;display:grid;align-content:end;gap:8px;
+  height:calc(clamp(250px,40vh,330px) - 56px);padding-top:calc(20px + env(safe-area-inset-top,0px));color:var(--paper-card)}
+.cover__sub{margin:0;font:400 10.5px/1.3 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:#BDB6AA}
+.cover__wm{margin:0;font:400 clamp(58px,17vw,132px)/.8 var(--f-display);letter-spacing:-.01em;text-transform:uppercase;color:var(--paper-card)}
+
+/* the registration card */
+.regcard{position:relative;z-index:2;display:grid;gap:0;max-width:480px;margin:20px auto 0;padding:0 0 22px;
+  background:var(--paper-card);border-radius:5px;box-shadow:0 0 0 1px rgba(40,28,16,.16),var(--press-shadow)}
+.regcard::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:var(--grain) 0 0/180px 180px;opacity:.28;mix-blend-mode:multiply}
+.regcard > *{position:relative}
+.regcard__band{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"kind no" "chap chap";
+  position:relative;gap:8px 12px;margin:0 20px 26px;padding:18px 0 12px;border-bottom:3px solid var(--ink)}
+.regcard__band::after{content:'';position:absolute;left:0;right:0;bottom:-7px;height:1px;background:var(--ink)}
+.regcard__kind{grid-area:kind;font:400 10px/1.2 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
+.regcard__no{grid-area:no;font:400 10px/1.2 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--seal)}
+.authp__chapter{grid-area:chap;margin:0;font:400 clamp(30px,6vw,40px)/.9 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.authp__arrive{margin:0 20px 18px;padding:9px 12px 8px;border:1.5px solid var(--crimson);color:var(--crimson);
+  font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase}
+.authp__arrive b{font:400 14px/1 var(--f-head);letter-spacing:.06em;margin-right:6px}
+
+/* a field of the record: its number and name on the line above, the
+   writing on a ruled line; the rule thickens where the pen is */
+.authp__f{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"lab rule" "in in";
+  align-items:end;gap:6px 12px;margin:0 20px 20px}
+.authp__lab{grid-area:lab;display:flex;align-items:baseline;gap:8px;
+  font:400 11px/1.2 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.authp__lab i{font-style:normal;color:var(--seal)}
+.authp__rule{grid-area:rule;font:400 10px/1.2 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+.authp__f > .authp__in,.authp__f > .authp__pw{grid-area:in}
+.authp__in{display:block;width:100%;min-width:0;margin:0;padding:10px 2px 8px 18px;border:0;border-radius:0;
+  border-bottom:2px solid var(--ink);background:
+    linear-gradient(var(--paper-deep),var(--paper-deep)) 0 100%/100% 0 no-repeat,transparent;
+  color:var(--ink);font:400 18px/1.3 var(--f-mono);letter-spacing:.04em;outline:0;
+  transition:border-bottom-width 80ms steps(2,end)}
+.authp__in::placeholder{color:var(--ink-3)}
+.authp__in:focus{border-bottom-width:4px;padding-bottom:6px;background-size:100% 100%}
+.authp__f:focus-within .authp__lab{color:var(--ink)}
+.authp__f:focus-within::before{content:'';position:absolute;left:2px;bottom:17px;width:9px;height:12px;background:var(--crimson);
+  clip-path:polygon(0 0,100% 50%,0 100%)}
+.authp__pw{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end}
+.authp__pw > .authp__in{grid-column:1 / -1;grid-row:1;padding-right:calc(var(--tap) + 10px)}
+.authp__eye{grid-column:2;grid-row:1;position:relative;min-width:var(--tap);min-height:var(--tap);padding:0 4px;
+  border:0;background:none;cursor:pointer;color:var(--ink-2);
+  font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase}
+.authp__eye[aria-pressed="true"]{color:var(--ink)}
+@media (hover:hover){ .authp__eye:hover{color:var(--ink)} }
+.authp__eye:focus-visible{outline:2px solid var(--ink);outline-offset:-4px}
+.authp--err .authp__in{border-bottom-color:var(--seal)}
+.authp--err .authp__in:focus{border-bottom-color:var(--ink)}
+
+.authp__act{display:grid;justify-items:start;gap:12px;margin:8px 20px 0}
+.authp__go{min-width:200px}
+.authp__go > .act__lab{justify-content:space-between;width:100%}
+.authp__err{margin:0;min-height:0;font:400 12px/1.45 var(--f-mono);letter-spacing:.04em;color:var(--seal)}
+#authErr.is-on{display:block;padding:8px 0 8px 12px;border-left:3px solid var(--seal)}
+.authp__swap{margin-top:2px}
+
+/* the setup notice, when the build has no project */
+.setupbox{margin:20px 20px 0;padding:14px 16px;border:2px solid var(--ink);background:var(--paper)}
+.setupbox .kicker{display:block;margin-bottom:6px;font:400 11px/1.2 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--seal)}
+.setupbox p{margin:0 0 6px;font:400 13px/1.45 var(--f-body)}
+.setupbox--warn{border-color:var(--seal)}
+
+@media(min-width:900px){
+  .cover{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);grid-template-rows:minmax(0,1fr);
+    align-items:center;padding:0}
+  .cover__panel{position:relative;grid-area:1 / 1;height:auto;align-self:stretch;min-height:100dvh}
+  .cover__seal{right:auto;left:-24%;bottom:-20%;width:min(92%,640px)}
+  .cover__kci{right:32px;top:32px}
+  .cover__head{grid-area:1 / 1;align-self:end;height:auto;padding:0 clamp(32px,4vw,64px) clamp(44px,8vh,90px)}
+  .cover__wm{font-size:clamp(84px,9vw,150px)}
+  .regcard{grid-area:1 / 2;width:min(460px,80%);margin:40px auto;rotate:.4deg}
+}
+
+/* ══ ARRIVING BY THE WALL CODE: the book's front cover. Paper inside a
+   ruled cover frame, the book's name at the head, and one graphic: the
+   empty seat the stamp will take, the meeting's number set in it. Very
+   little text, and the way in. ══ */
+.view--arrive{min-height:100dvh}
+.entry{position:relative;display:grid;grid-template-rows:auto minmax(0,1fr) auto;justify-items:center;gap:18px;
+  min-height:100dvh;padding:calc(34px + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x,0px)) calc(40px + env(safe-area-inset-bottom,0px));
+  text-align:center}
+.entry::before{content:'';position:absolute;inset:10px;border:3px solid var(--ink);outline:1px solid var(--ink);outline-offset:-8px;pointer-events:none}
+.entry__head{display:grid;gap:6px;justify-items:center}
+.entry__wm{margin:0;font:400 clamp(40px,11vw,64px)/.85 var(--f-display);text-transform:uppercase;letter-spacing:-.01em}
+.entry__sub{margin:0;font:400 10px/1.3 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
+.entry__seat{position:relative;display:grid;place-items:center;align-self:center;width:min(76vw,52vh,420px);aspect-ratio:1}
+.entry__blank{position:absolute;inset:0;width:100%;height:100%;overflow:visible;rotate:-4deg}
+.entry__blank path{fill:var(--paper-card);stroke:var(--ink);stroke-width:1.1;stroke-dasharray:3.2 2.4}
+.entry__gm{position:relative;margin:0;display:grid;justify-items:center;line-height:.8}
+.entry__gmv{display:grid;justify-items:center;gap:2px}
+.entry__gmv span{font:400 clamp(20px,5vw,30px)/1 var(--f-head);letter-spacing:.08em}
+.entry__gmv b{font:400 clamp(110px,30vw,220px)/.78 var(--f-display);font-weight:400;letter-spacing:-.03em}
+.entry__gm--word{font:400 clamp(40px,11vw,80px)/.9 var(--f-display);font-weight:400;text-transform:uppercase}
+.arrive__status{position:absolute;right:-2%;bottom:6%;margin:0;padding:8px 12px 7px;rotate:-6deg;
+  background:var(--crimson);color:var(--paper-card);font:400 clamp(16px,3.4vw,22px)/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase}
+.view--arrive-done .arrive__status{background:var(--ink)}
+.view--arrive-open .entry__blank path{stroke-width:1.5}
+.view--arrive-done .entry__blank path{fill:var(--ink);stroke-dasharray:none;filter:url(#ks-ink)}
+.view--arrive-done .entry__gmv,.view--arrive-done .entry__gm--word{color:var(--paper-card)}
+.view--arrive-shut .entry__blank path{stroke:var(--ink-3)}
+.view--arrive-struck .entry__gmv b{position:relative}
+.view--arrive-struck .entry__gmv b::after{content:'';position:absolute;left:-6%;right:-6%;top:48%;height:.08em;min-height:4px;
+  background:var(--crimson);rotate:-8deg}
+
+.arrive{display:grid;justify-items:center;gap:12px;width:min(100%,360px)}
+.arrive__word{margin:0;font:400 clamp(28px,7vw,40px)/.95 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.arrive__note{margin:0;font:400 11.5px/1.5 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.arrive .authp__act{justify-items:center;margin:6px 0 0;width:100%}
+.arrive .authp__go{width:100%}
+@media(min-width:900px) and (min-height:600px){
+  .entry{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:clamp(32px,6vw,96px);
+    align-items:center;padding-inline:clamp(40px,7vw,120px)}
+  .entry__head{grid-column:1 / -1}
+  .entry__seat{justify-self:end;width:min(40vw,62vh,460px)}
+  .arrive{justify-self:start;justify-items:start;text-align:left}
+  .arrive .authp__act{justify-items:start}
+  .arrive__word{font-size:clamp(40px,4vw,56px)}
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   THE OFFICERS' COPY. The board works from the same book: the same
+   running head, chapter titles, rules, controls and ink, set for
+   operating a meeting rather than reading a record.
+   ═══════════════════════════════════════════════════════════════════ */
+.view--board{gap:0;container:page / inline-size}
+.view--board .chap__title{font-size:clamp(50px,9vw,104px)}
+.bhead{margin-bottom:clamp(20px,3vw,34px)}
+.rig{position:relative;min-width:0;isolation:isolate}
+#boardPane[aria-busy="true"] > *{opacity:.55;cursor:progress}
+#boardPane[aria-busy="true"] > .bpanel--live{opacity:1}
+.bpanel{position:relative;display:grid;gap:clamp(22px,3vw,34px);min-width:0;margin:0;padding:0;border:0;background:none}
+.bpanel--wait{min-height:180px;align-content:start;padding-top:10px;border-top:3px solid var(--ink)}
+.bpanel--wait .kicker{font:400 11px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
+.bpanel--wait::after{content:'';display:block;height:110px;margin-top:14px;background:var(--dot) 0 0/5px 5px;opacity:.14;
+  -webkit-mask:linear-gradient(90deg,#000,transparent);mask:linear-gradient(90deg,#000,transparent)}
+.fail{display:grid;justify-items:start;gap:10px;padding:18px 0;border-block:3px solid var(--ink)}
+.fail .kicker{font:400 11px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--seal)}
+.fail p{margin:0;font:400 var(--t-body)/1.4 var(--f-body)}
+.muted{color:var(--ink-2)}
+
+/* a smaller ink control for a row, and one that deletes */
+.act--sm{font-size:14px;min-height:40px}
+.act--sm.act--ink > span{min-height:38px;padding:9px 13px 8px}
+.act--sm.act--ink > span::after{display:none}
+.act--danger.act--ink > span{background:var(--seal)}
+.act[disabled]{opacity:.35}
+
+/* a band over a list: its name in the head face, a count at its end */
+.meetband{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 4px;padding:0 0 8px;
+  border-bottom:3px solid var(--ink);font:400 clamp(20px,2.2vw,26px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.meetband__t{margin:0;font:inherit;letter-spacing:inherit}
+.meetband__t:focus{outline:0}
+.meetband{flex-wrap:wrap}
+.meetband__n{font:400 10.5px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);text-align:right}
+.owed .meetband__n{flex:1 1 100%;text-align:left;margin-top:2px}
+.bsec{margin:0}
+
+/* a row of a list */
+.blist{list-style:none;margin:0;padding:0}
+.brow{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;min-height:52px;padding:8px 0;
+  border-bottom:1px solid var(--tint)}
+.brow__go{display:flex;align-items:center;gap:10px 16px;width:100%;min-height:44px;margin:0;padding:0;border:0;background:none;
+  color:var(--ink);text-align:left;cursor:pointer;font:inherit}
+.brow__go:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+@media (hover:hover){ .brow__go:hover b{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px} }
+.brow__mid{display:grid;gap:2px;min-width:0;flex:1 1 auto}
+.brow__mid b{font:400 19px/1.1 var(--f-head);letter-spacing:.03em;font-weight:400;overflow-wrap:anywhere}
+.brow__mid .muted,.brow > .muted,.brow__go > .muted{font:400 10.5px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.brow__no{flex:none;font:400 10px/1 var(--f-mono);letter-spacing:.1em;color:var(--ink-3)}
+.brow__no b{font:400 20px/1 var(--f-head);color:var(--ink);letter-spacing:.02em}
+.brow__cell{margin-left:auto;font:400 12px/1 var(--f-mono);letter-spacing:.06em;white-space:nowrap}
+.brow--armed{background:linear-gradient(90deg,rgba(193,31,51,.08),transparent)}
+.brow--handed .brow__mid b{color:var(--ink-2)}
+.bstate{padding:3px 7px 2px;border:1.5px solid currentColor;font:400 11px/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase}
+.bstate--ended{color:var(--ink-2)}
+.bempty{margin:0;padding:14px 0}
+.bempty p{margin:0;font:400 11px/1.5 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.meetgrid__err,.bpanel > .authp__err{margin:0;padding:8px 0 8px 12px;border-left:3px solid var(--seal);
+  font:400 12px/1.45 var(--f-mono);letter-spacing:.04em;color:var(--seal)}
+
+/* a second word before something that cannot be taken back */
+.bconfirm{display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-end;gap:8px 14px;width:100%;
+  padding:10px 12px;border:2px solid var(--ink);background:var(--paper-card)}
+.bconfirm__q{flex:1 1 auto;font:400 17px/1.15 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.bconfirm__why{flex:1 1 100%;order:3;font:400 10.5px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--seal)}
+.bconfirm--heavy{border-color:var(--seal)}
+.bconfirm--heavy .bconfirm__q{color:var(--seal)}
+
+/* fields of the board's forms: the same printed line as sign-in */
+.field{position:relative;display:grid;gap:6px;min-width:0}
+.field > .kicker{font:400 10.5px/1.2 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.input{display:block;width:100%;min-width:0;margin:0;padding:9px 2px 7px;border:0;border-radius:0;border-bottom:2px solid var(--ink);
+  background:transparent;color:var(--ink);font:400 16px/1.3 var(--f-mono);letter-spacing:.04em;outline:0;color-scheme:light}
+.input::placeholder{color:var(--ink-3)}
+.input:focus{border-bottom-width:4px;padding-bottom:5px;background:var(--paper-deep)}
+.field:focus-within > .kicker{color:var(--ink)}
+select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearance:none;
+  background:linear-gradient(45deg,transparent 50%,var(--ink) 50%) calc(100% - 10px) 50%/6px 6px no-repeat,
+             linear-gradient(135deg,var(--ink) 50%,transparent 50%) calc(100% - 4px) 50%/6px 6px no-repeat}
+.bform{display:grid;gap:14px;padding:16px;border:2px dashed var(--ink);background:var(--paper-card)}
+.bform__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px 16px}
+.bform__row{display:flex;align-items:center;flex-wrap:wrap;gap:12px 18px}
+.bform .authp__err{margin:0;padding:6px 0 6px 10px;border-left:3px solid var(--seal);font:400 12px/1.4 var(--f-mono);color:var(--seal)}
+
+/* ══ CLUB TOOLS. The club's control page: the current meeting set as the
+   page's slab, the next meeting and what is open in the margin, the
+   club's record as a line of figures at the foot. ══ */
+.tools{grid-template-columns:minmax(0,1fr);grid-template-areas:"now" "side" "record"}
+.tools__now{grid-area:now;position:relative;display:grid;justify-items:start;gap:10px;min-width:0;overflow:hidden;
+  padding:clamp(18px,3vw,30px) clamp(18px,3vw,32px) clamp(20px,3vw,30px);border:3px solid var(--ink);isolation:isolate}
+.tools__now > *{position:relative;z-index:1}
+.tools__kick{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;margin:0;
+  font:400 11px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.tools__state{display:inline-flex;align-items:center;gap:8px;font:400 clamp(17px,2vw,22px)/1 var(--f-head);letter-spacing:.05em;color:var(--ink)}
+.tools__gm{display:flex;align-items:flex-end;gap:8px;margin:0;line-height:.78}
+.tools__gm span{font:400 clamp(18px,2.6vw,26px)/1 var(--f-head);letter-spacing:.04em;padding-bottom:.35em}
+.tools__gm b{font:400 clamp(104px,20vw,190px)/.76 var(--f-display);font-weight:400;letter-spacing:-.03em}
+.tools__none{margin:0;font:400 clamp(40px,7vw,72px)/.9 var(--f-head);letter-spacing:.02em;text-transform:uppercase}
+.tools__count{display:flex;align-items:baseline;gap:10px;margin:0}
+.tools__count b{font:400 clamp(44px,6vw,64px)/.8 var(--f-display);font-weight:400}
+.tools__count span{font:400 11px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.tools__acts{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;margin-top:6px}
+/* open: ink, focus lines, the crimson light */
+.tools--open .tools__now{background:var(--ink);color:var(--paper-card)}
+.tools--open .tools__kick,.tools--open .tools__count span{color:#BDB6AA}
+.tools--open .tools__state{color:var(--paper-card)}
+.tools--open .tools__state::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--crimson);box-shadow:0 0 0 3px rgba(193,31,51,.3)}
+.tools--open .act--ink::before{background:radial-gradient(circle,var(--paper-card) 0 .95px,transparent 1.25px) 0 0/4px 4px}
+.tools--open .act--ink > span{background:var(--paper-card);color:var(--ink)}
+.tools--open .act--rule{color:var(--paper-card)}
+.tools--open .act--rule::after{background:var(--paper-card)}
+.tools__lines{position:absolute!important;inset:0;z-index:0!important;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg at 18% 70%,rgba(251,249,244,.08) 0 .5deg,transparent .5deg 2.6deg);
+  -webkit-mask:radial-gradient(ellipse at 18% 70%,transparent 0 24%,#000 72%);mask:radial-gradient(ellipse at 18% 70%,transparent 0 24%,#000 72%)}
+.tools--today .tools__now{border-style:dashed}
+.tools--ended .tools__gm b{color:transparent;-webkit-text-stroke:2px var(--ink-2)}
+.tools--none .tools__now{border-width:3px 0 1px;padding-inline:0}
+
+.tools__side{grid-area:side;display:grid;gap:clamp(22px,3vw,30px);align-content:start;min-width:0}
+.tools__mark{margin:0 0 8px;padding-bottom:6px;border-bottom:2px solid var(--ink);
+  font:400 18px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase}
+.tools__nextrow{display:flex;align-items:center;flex-wrap:wrap;gap:10px 18px;width:100%;min-height:44px;padding:8px 0;margin:0;
+  border:0;background:none;cursor:pointer;color:var(--ink);text-align:left;font:inherit}
+.dstamp--sm{padding:7px 12px 6px;border-width:2px;outline-width:1px;outline-offset:2px;rotate:-3deg}
+.dstamp--sm b{font-size:30px}
+.dstamp--sm i{font-size:10px}
+.tools__nextgm{font:400 22px/1 var(--f-head);letter-spacing:.03em}
+.tools__nextwhen{font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.tools__nextgo{font:400 16px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.tools__nextrow:focus-visible,.tools__task:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.tools__list{list-style:none;margin:0;padding:0}
+.tools__task{display:flex;align-items:baseline;gap:12px;width:100%;min-height:44px;padding:6px 0;margin:0;border:0;background:none;
+  cursor:pointer;text-align:left;color:var(--ink);font:inherit}
+.tools__task b{font:400 44px/.8 var(--f-display);font-weight:400;color:var(--seal)}
+.tools__task span{font:400 16px/1.2 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+@media (hover:hover){ .tools__task:hover span,.tools__nextrow:hover .tools__nextgm{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px} }
+.tools__nothing{padding:8px 0;font:400 11px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+
+/* the club's record: a line of figures, like a box score */
+.tools__record{grid-area:record;min-width:0}
+.tools__colophon{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));margin:0;border-bottom:1px solid var(--ink)}
+.tools__colophon span{display:grid;gap:6px;padding:10px 14px 12px 0;
+  font:400 10.5px/1.2 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.tools__colophon span + span{padding-left:14px;border-left:1px solid var(--tint)}
+.tools__colophon b{font:400 clamp(40px,5vw,60px)/.8 var(--f-display);font-weight:400;color:var(--ink)}
+
+@container page (min-width:860px){
+  .tools{grid-template-columns:minmax(0,2.2fr) minmax(220px,1fr);grid-template-areas:"now side" "record record";column-gap:clamp(28px,3.4vw,48px)}
+}
+
+/* ══ CHECK-IN. The live desk: the meeting and its state, the code on
+   its white plate, the count as the largest figure after the code, and
+   the commands under it with Close set apart. Open, it is an ink stage;
+   otherwise paper, waiting. ══ */
+.desk{gap:18px}
+.gmpick{display:flex;flex-wrap:wrap;gap:0}
+.gmpick__tab{min-height:44px;padding:10px 16px;margin:0 -2px 0 0;border:2px solid var(--ink);background:var(--paper);cursor:pointer;
+  font:400 16px/1 var(--f-head);letter-spacing:.04em}
+.gmpick__tab--on{background:var(--ink);color:var(--paper-card)}
+.gmpick__tab:focus-visible{outline:2px solid var(--crimson);outline-offset:2px}
+
+.proj{position:relative;display:grid;gap:14px 28px;min-width:0;overflow:hidden;isolation:isolate;
+  grid-template-columns:minmax(0,1fr);grid-template-areas:"meet" "word" "plate" "count" "ctls";
+  padding:clamp(18px,3vw,30px);border:3px solid var(--ink);background:var(--paper)}
+.proj > *{position:relative;z-index:1}
+.proj__meet{grid-area:meet;display:grid;gap:6px;min-width:0}
+.proj__no{display:flex;align-items:flex-end;gap:8px;margin:0;line-height:.78}
+.proj__no span{font:400 clamp(18px,2.6vw,26px)/1 var(--f-head);letter-spacing:.04em;padding-bottom:.35em}
+.proj__no b{font:400 clamp(96px,16vw,170px)/.76 var(--f-display);font-weight:400;letter-spacing:-.03em}
+.proj__when{margin:0;font:400 11px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.proj__word{grid-area:word;justify-self:start;margin:0;padding:8px 14px 7px;border:2.5px solid var(--ink);rotate:-2deg;
+  font:400 clamp(20px,3vw,32px)/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase}
+.proj__plate{grid-area:plate;justify-self:center;display:grid;justify-items:center;gap:10px;width:100%}
+.qrpanel__code{display:grid;place-items:center;width:min(100%,380px);aspect-ratio:1;margin:0;padding:14px;background:#fff;
+  box-shadow:0 0 0 3px var(--paper-card),0 0 0 6px var(--ink)}
+.qrpanel__code canvas,.qrpanel__code img,.qrpanel__code svg{width:100%;height:auto;display:block;image-rendering:pixelated}
+.proj__how{margin:0;font:400 10.5px/1.4 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:#BDB6AA;text-align:center}
+.proj__count{grid-area:count;display:flex;align-items:baseline;gap:12px;margin:0}
+.proj__count b{font:400 clamp(72px,11vw,128px)/.78 var(--f-display);font-weight:400}
+.proj__count span{font:400 12px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
+.proj__ctls{grid-area:ctls;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px}
+.proj__end{margin-left:auto}
+
+.proj--live{background:var(--ink);color:var(--paper-card)}
+.proj--live .proj__when,.proj--live .proj__count span{color:#BDB6AA}
+.proj--live .proj__word{border-color:var(--crimson);background:var(--crimson);color:var(--paper-card)}
+.proj--live .act--ink::before{background:radial-gradient(circle,var(--paper-card) 0 .95px,transparent 1.25px) 0 0/4px 4px}
+.proj--live .act--ink > span{background:var(--paper-card);color:var(--ink)}
+.proj--live .act--rule{color:var(--paper-card)}
+.proj--live .act--rule::after{background:var(--paper-card)}
+.proj--live .act--seal{color:#E8A0A8}
+.proj--live .act--seal::after{background:#E8A0A8}
+.proj__lines{position:absolute!important;inset:0;z-index:0!important;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(251,249,244,.06) 0 .5deg,transparent .5deg 2.8deg);
+  -webkit-mask:radial-gradient(ellipse at 50% 50%,transparent 0 30%,#000 80%);mask:radial-gradient(ellipse at 50% 50%,transparent 0 30%,#000 80%)}
+.desk--ended .proj__no b{color:transparent;-webkit-text-stroke:2px var(--ink-2)}
+.desk--closed .proj{border-style:dashed}
+.desk--stale .proj__word{border-color:var(--seal);color:var(--seal)}
+.desk__next{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 14px;width:100%;min-height:44px;padding:10px 0;margin:0;
+  border:0;border-top:1px solid var(--ink);background:none;cursor:pointer;text-align:left;color:var(--ink);font:inherit}
+.desk__nextlab{font:400 10.5px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.desk__next b{font:400 20px/1 var(--f-head);letter-spacing:.03em;font-weight:400}
+.desk__nextwhen{font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.bidle{justify-items:start;gap:12px;padding:18px 0;border-block:3px solid var(--ink)}
+.bidle__day{margin:0;font:400 11px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
+.bidle__word{margin:0;font:400 clamp(40px,7vw,72px)/.9 var(--f-head);letter-spacing:.02em;text-transform:uppercase}
+
+/* wide: the code at the left, the meeting, state, count and commands in
+   the column beside it; a live code never shows names (Add by hand
+   leaves the stage for a page of names that is not projected) */
+@container page (min-width:860px){
+  .proj{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto 1fr auto;
+    grid-template-areas:"plate meet" "plate word" "plate count" "plate ctls";align-items:start;column-gap:clamp(28px,4vw,56px)}
+  .proj:not(.proj--live){grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"meet count" "word count" "ctls ctls"}
+  .proj__plate{align-self:center;width:auto}
+  .qrpanel__code{width:min(40cqw,calc(100dvh - 330px),460px);min-width:260px}
+  .proj__count{align-self:end}
+  .proj--live .proj__hand{display:none}
+}
+
+/* projector mode: the stage over the whole window, read from the back of
+   the room: the meeting, OPEN, the code and the count, nothing else */
+.is-projecting,.is-projecting body{overflow:hidden}
+.is-projecting .tabs,.is-projecting .rail{visibility:hidden}
+.is-projecting .rig{isolation:auto}
+.proj.proj--full{position:fixed;inset:0;z-index:400;margin:0;border:0;width:auto;height:auto;background:var(--ink);color:var(--paper-card);
+  padding:max(4vh,env(safe-area-inset-top,0px)) max(4vw,env(safe-area-inset-right,0px)) max(4vh,env(safe-area-inset-bottom,0px)) max(4vw,env(safe-area-inset-left,0px));
+  grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;
+  grid-template-areas:"plate meet" "plate word" "plate count" "plate ctls";column-gap:6vw;row-gap:2.4vh;align-items:start}
+.proj--full .proj__meet{align-self:start}
+.proj--full .proj__no span{font-size:clamp(28px,4vh,48px)}
+.proj--full .proj__no b{font-size:clamp(110px,22vh,280px)}
+.proj--full .proj__when{display:none}
+.proj--full .proj__word{justify-self:start;font-size:clamp(28px,5vh,60px);padding:1.4vh 2vh}
+.proj--full .proj__plate{align-self:center;justify-self:start}
+.proj--full .qrpanel__code{width:min(84vh,52vw);min-width:0;padding:2.4vh}
+.proj--full .proj__how{font-size:clamp(12px,1.8vh,20px);color:#CFC8BC}
+.proj--full .proj__count{align-self:center;flex-direction:column;align-items:flex-start;gap:3.4vh}
+.proj--full .proj__count b{font-size:clamp(140px,32vh,400px)}
+.proj--full .proj__count span{font-size:clamp(18px,3vh,34px);color:#CFC8BC}
+.proj--full .proj__ctls{align-self:end;justify-self:end;opacity:.4;transition:opacity 200ms steps(3,end)}
+.proj--full.proj--awake .proj__ctls,.proj--full .proj__ctls:focus-within{opacity:1}
+.proj--full .proj__hand{display:none}
+@media (max-aspect-ratio:1/1){
+  .proj.proj--full{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto minmax(0,1fr) auto;
+    grid-template-areas:"meet word" "count count" "plate plate" "ctls ctls"}
+  .proj--full .proj__word{justify-self:end}
+  .proj--full .proj__count{flex-direction:row;align-items:baseline;gap:3vw;margin-top:1vh}
+  .proj--full .proj__count b{font-size:clamp(90px,14vh,190px)}
+  .proj--full .proj__plate{justify-self:center}
+  .proj--full .qrpanel__code{width:min(84vw,50vh)}
+}
+:root[data-still] .proj--full .proj__ctls{transition:none}
+
+/* ══ MEETINGS. The club's calendar and minute book: the meetings ahead
+   as a printed schedule with large numbers and strong dates, the blank
+   line the next one is written on, today's meeting as the fold, and the
+   meetings held kept by the month, quieter and denser. ══ */
+.minutes{gap:clamp(26px,4vw,40px)}
+.minutes__lab{margin:0 0 4px;padding-bottom:8px;border-bottom:3px solid var(--ink);
+  font:400 clamp(20px,2.2vw,26px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.minutes__list{display:grid}
+.mrow{border-bottom:1px solid var(--tint)}
+.mrow__go{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"gm day n" "gm when state";
+  align-items:center;gap:2px 16px;width:100%;min-height:52px;padding:8px 0;margin:0;border:0;background:none;cursor:pointer;
+  color:var(--ink);text-align:left;font:inherit}
+.mrow__go:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.mrow__gm{grid-area:gm;display:flex;align-items:flex-end;gap:4px;line-height:.8}
+.mrow__gm span{font:400 10px/1 var(--f-mono);letter-spacing:.1em;color:var(--ink-3);padding-bottom:.2em}
+.mrow__gm b{font:400 30px/.8 var(--f-display);font-weight:400}
+.mrow__day{grid-area:day;font:400 16px/1.1 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.mrow__when{grid-area:when;font:400 10.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--seal)}
+.mrow__state{grid-area:state;justify-self:end;font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.mrow__n{grid-area:n;justify-self:end;display:flex;align-items:baseline;gap:6px;white-space:nowrap}
+.mrow__n b{font:400 18px/1 var(--f-head);font-weight:400}
+.mrow__n span{font:400 9.5px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+@media (hover:hover){ .mrow__go:hover .mrow__day{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px} }
+/* ahead: the schedule, large */
+.minutes__ahead .mrow__go{min-height:70px}
+.minutes__ahead .mrow__gm b{font-size:clamp(44px,6vw,60px)}
+.minutes__ahead .mrow__day{font-size:clamp(20px,2.4vw,26px)}
+/* the blank line the next meeting is written on */
+.mrow--blank{border-bottom:0}
+.mrow__new{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"gm line sched"}
+.mrow__new .mrow__gm b{color:var(--ink-3)}
+.mrow__line{grid-area:line;align-self:end;height:0;margin-bottom:12px;border-bottom:2px dashed var(--ink-3)}
+.mrow__sched{grid-area:sched;font:400 17px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;
+  padding:7px 12px 6px;border:2px solid var(--ink)}
+@media (hover:hover){ .mrow__new:hover .mrow__sched{background:var(--ink);color:var(--paper-card)} }
+.mrow--blank .bform{margin:8px 0 14px}
+/* today: the fold, an ink strip */
+.minutes__fold{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.minutes__fold .mrow{border:0}
+.minutes__fold .mrow__go{min-height:84px;padding:14px 18px;background:var(--ink);color:var(--paper-card)}
+.minutes__fold .mrow__gm span,.minutes__fold .mrow__n span{color:#BDB6AA}
+.minutes__fold .mrow__gm b{font-size:clamp(52px,7vw,72px)}
+.minutes__fold .mrow__day{font-size:clamp(20px,2.4vw,26px)}
+.minutes__fold .mrow__state{color:var(--paper-card)}
+.minutes__fold .mrow--open .mrow__state{padding:5px 8px 4px;background:var(--crimson);color:var(--paper-card);font:400 13px/1 var(--f-head);letter-spacing:.06em}
+.minutes__fold .mrow__n b{font-size:clamp(30px,3.4vw,40px);font-family:var(--f-display)}
+.minutes__fold .mrow__go:focus-visible{outline:3px solid var(--crimson)}
+/* held: the minute book, quieter */
+.mrow__month{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:18px 0 6px;border-bottom:2px solid var(--ink)}
+.mrow__month:first-child{padding-top:6px}
+.mrow__mname{font:400 clamp(26px,3vw,36px)/.8 var(--f-display);text-transform:uppercase}
+.mrow__mtotal{font:400 10px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.minutes__held .mrow__go{min-height:46px;padding:6px 0}
+.minutes__held .mrow__gm b{font-size:24px;color:var(--ink-2)}
+.minutes__held .mrow__day{font-size:15px;color:var(--ink-2)}
+.mrow--left .mrow__state{color:var(--seal)}
+.minutes__foot{margin:10px 0 0;font:400 10.5px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+@container page (min-width:860px){
+  .minutes{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:clamp(28px,4vw,56px);align-items:start}
+  .minutes > .meetgrid__err{grid-column:1 / -1}
+  .minutes__fold{grid-column:1 / -1;grid-row:1}
+  .minutes__ahead{grid-column:1}
+  .minutes__held{grid-column:2}
+}
+
+/* ══ MEMBERS. The club's register: the index figures, the prize table
+   (who is owed a prize, and the hand-over), then the roster itself, its
+   names the visual content, indexed by letter, each with the ten seats
+   of the card they hold. ══ */
+.memgrid{grid-template-columns:minmax(0,1fr);gap:clamp(26px,4vw,40px)}
+.memidx{display:flex;flex-wrap:wrap;gap:6px 28px;margin:0}
+.memidx span{display:flex;align-items:baseline;gap:8px;font:400 10.5px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.memidx b{font:400 clamp(44px,6vw,64px)/.8 var(--f-display);font-weight:400;color:var(--ink)}
+.owed{min-width:0}
+.brow--owed .brow__mid b{font-size:21px}
+.owed__self{font:400 10.5px/1.3 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);text-align:right}
+.owed__more{margin-top:8px}
+.rosterpanel{min-width:0}
+.bfilters{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:10px 20px;margin-bottom:10px}
+.bfilters__q::before{content:'Find';position:absolute;left:0;bottom:10px;font:400 16px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink);pointer-events:none}
+.bfilters__q .input{padding-left:52px;font-size:18px}
+.roster{width:100%;border-collapse:collapse}
+.roster thead th{padding:8px 10px 8px 0;border-bottom:3px solid var(--ink);text-align:left;
+  font:400 9.5px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+.roster thead th:last-child,.roster td:last-child{text-align:right;padding-right:0}
+.roster tbody tr[data-bmember]{border-bottom:1px solid var(--tint);cursor:pointer}
+@media (hover:hover){ .roster tbody tr[data-bmember]:hover{background:rgba(19,18,17,.035)} }
+.roster td,.roster tbody th{padding:6px 10px 6px 0;text-align:left;vertical-align:middle;
+  font:400 12px/1 var(--f-mono);letter-spacing:.06em;color:var(--ink-2)}
+.roster td:last-child{font:400 22px/1 var(--f-head);color:var(--ink)}
+.roster__name{min-height:44px;padding:0;margin:0;border:0;background:none;cursor:pointer;text-align:left;color:var(--ink);
+  font:400 clamp(19px,2vw,22px)/1.1 var(--f-head);letter-spacing:.03em;overflow-wrap:anywhere}
+.roster__name:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.roster__letter td{padding:14px 0 2px;border-bottom:1px solid var(--ink);text-align:left!important}
+.roster__letter b{font:400 28px/.8 var(--f-display);color:var(--seal)}
+.roster__card{white-space:nowrap}
+.roster__cno{margin-right:8px;font:400 10px/1 var(--f-mono);color:var(--ink-3)}
+.roster__seats{display:inline-flex;gap:2px;vertical-align:middle}
+.roster__seats i{width:8px;height:8px;border-radius:50%;border:1px solid var(--ink-3)}
+.roster__seats i.is-on{background:var(--ink);border-color:var(--ink)}
+.brow__none{color:var(--ink-3)}
+.bpage{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding-top:10px;border-top:1px solid var(--ink)}
+.bpage .muted{font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase}
+@container page (max-width:560px){ .roster__card,.roster thead .roster__card{display:none} }
+@container page (min-width:1000px){
+  .memgrid{grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);grid-template-areas:"idx idx" "roster owed";column-gap:clamp(28px,4vw,56px);align-items:start}
+  .memgrid > .memidx{grid-area:idx}
+  .memgrid > .owed{grid-area:owed}
+  .memgrid > .rosterpanel{grid-area:roster}
+}
+
+/* ══ A member or a meeting, opened from a list ══ */
+.bdet{display:grid;gap:clamp(22px,3vw,34px)}
+.bdet__head{display:grid;gap:10px;min-width:0}
+.crumb{margin:0}
+.bwho{display:grid;gap:8px}
+.bwho__lab{margin:0;font:400 10.5px/1.2 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.bdetail__name{margin:0;font:400 clamp(52px,10vw,110px)/.82 var(--f-display);letter-spacing:-.02em;text-transform:uppercase;overflow-wrap:anywhere}
+.bmeet{display:grid;gap:10px}
+.bmeet__when{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:0;font:400 11px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.bmeet__when b{padding:4px 8px 3px;background:var(--crimson);color:var(--paper-card);font:400 13px/1 var(--f-head);letter-spacing:.06em}
+.bdet__body{display:grid;gap:clamp(22px,3vw,30px);min-width:0}
+.hand{display:grid;gap:10px;padding:14px 16px;border:2px solid var(--ink);background:var(--paper-card)}
+.hand .field::before{content:'Find';position:absolute;left:0;bottom:10px;font:400 16px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;pointer-events:none}
+.hand .input{padding-left:52px;font-size:18px}
+.bdel{padding-top:12px;border-top:1px solid var(--ink)}
+@container page (min-width:860px){
+  .bdet{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);column-gap:clamp(28px,4vw,56px);align-items:start}
+  .bdet__head{position:sticky;top:20px}
+}
+.view--board .acct{margin-top:clamp(40px,6vw,64px)}
+@media(min-width:1024px){ .view--board .acct{display:none} }
+
+/* ═══════════════════════════════════════════════════════════════════
+   THE BOOK'S FURNITURE. The navigation is part of the publication: on a
+   desk, a contents column bound to the page by a double rule, the
+   chapter being read set large at its head and pulled out as an ink tab
+   from the binding; on a phone, a strip of thumb-index tabs at the foot
+   of the page, the open chapter's tab raised in ink.
+   ═══════════════════════════════════════════════════════════════════ */
+.rail{padding:22px 0 18px 20px;overflow:visible;background:var(--paper);isolation:isolate}
+.rail::after{content:'';position:absolute;top:0;bottom:0;right:0;width:9px;pointer-events:none;
+  background:linear-gradient(90deg,var(--ink) 0 1px,transparent 1px 5px,var(--ink) 5px 9px)}
+.rail__brand{position:relative;padding:0 26px 14px 0;margin:0 0 4px}
+.rail__brand .mark{display:block;font:400 clamp(28px,2.2vw,34px)/.85 var(--f-display);letter-spacing:-.01em;text-transform:uppercase;color:var(--ink)}
+.rail__brand .mark__word b{font-weight:400}
+.rail__brand::after{content:'Key Club · Cali-Nev-Ha';display:block;margin-top:8px;
+  font:400 9.5px/1.2 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
+.rail__nav{position:relative;display:flex;flex-direction:column;flex:1;gap:0;padding-top:10px}
+/* the chapter being read, set large at the head of the contents */
+.rail__folio{display:block;margin:0 0 6px;padding-right:26px;font:400 clamp(84px,6.4vw,112px)/.8 var(--f-display);
+  letter-spacing:-.03em;color:var(--ink)}
+.rail__folio::before{content:'Nº';display:block;margin-bottom:6px;font:400 10px/1 var(--f-mono);letter-spacing:.18em;color:var(--seal)}
+.rail__folio--live{color:var(--crimson)}
+.rail__nav::before{content:'Contents';order:1;display:block;margin:10px 26px 6px 0;padding-bottom:6px;border-bottom:1px solid var(--ink);
+  font:400 9.5px/1 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
+.rail__folio{order:0}
+.rail__link{order:2;position:relative;display:grid;grid-template-columns:3ch minmax(0,1fr) auto;align-items:baseline;column-gap:10px;
+  min-height:44px;margin:0;padding:10px 18px 9px 0;border:0;background:none;cursor:pointer;text-align:left;color:var(--ink)}
+.rail__idx{font:400 10.5px/1 var(--f-mono);letter-spacing:.1em;color:var(--ink-3)}
+.rail__lab{font:400 clamp(18px,1.5vw,21px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;color:var(--ink);min-width:0;overflow-wrap:anywhere}
+/* a dotted leader out to the binding, the way a contents page runs */
+.rail__link::after{content:'';grid-column:3;align-self:end;width:clamp(12px,2vw,34px);height:2px;margin-bottom:3px;
+  background:linear-gradient(90deg,var(--ink-3) 0 2px,transparent 2px) 0 0/5px 2px repeat-x}
+@media (hover:hover){ .rail__link:hover .rail__lab{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px} }
+.rail__link:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+/* the open chapter: an ink tab pulled out of the binding */
+.rail__link[aria-current="page"]{margin-left:-20px;padding-left:20px;background:var(--ink);color:var(--paper-card);
+  clip-path:polygon(0 0,100% 0,100% 100%,10px 100%,0 calc(100% - 10px))}
+.rail__link[aria-current="page"] .rail__lab{color:var(--paper-card)}
+.rail__link[aria-current="page"] .rail__idx{color:#E8A0A8}
+.rail__link[aria-current="page"]::after{background:linear-gradient(90deg,#6A655E 0 2px,transparent 2px) 0 0/5px 2px repeat-x}
+.rail__link[aria-current="page"]:focus-visible{outline-color:var(--crimson);outline-offset:-4px}
+/* check-in open and not yet stamped: Scan says so */
+.rail__link--live .rail__lab::after{content:'Check-in open';display:block;margin-top:5px;font:400 9.5px/1 var(--f-mono);letter-spacing:.16em;color:var(--crimson)}
+.rail__link--live[aria-current="page"] .rail__lab::after{color:#F2A7B0}
+.rail__link--live::before{content:'';position:absolute;left:-13px;top:50%;width:8px;height:8px;border-radius:50%;translate:0 -50%;
+  background:var(--crimson);box-shadow:0 0 0 3px rgba(193,31,51,.22)}
+.rail__link--live[aria-current="page"]::before{left:7px}
+
+/* the colophon at the foot of the column: who holds the record */
+.rail__foot{margin:12px 26px 0 0;padding-top:12px;border-top:3px solid var(--ink);position:relative}
+.rail__foot::before{content:'';position:absolute;left:0;right:0;top:3px;height:3px;border-bottom:1px solid var(--ink)}
+.rail__who{display:grid;gap:4px;margin:6px 0 0;min-width:0}
+.rail__held{font:400 9.5px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
+.rail__name{font:400 20px/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;color:var(--ink);overflow-wrap:anywhere}
+.rail__role{font:400 9.5px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.rail__util{display:grid;justify-items:start;gap:0;margin-top:8px}
+.rail__note{margin:6px 0 0;font:400 12px/1.4 var(--f-body);color:var(--ink-2)}
+
+/* the two settings, wherever they are printed: motion as a box on the
+   form, sign out as a quiet line with a rule before it */
+.rail__motion{display:inline-flex;align-items:center;gap:8px;min-height:40px;margin:0;padding:0;border:0;background:none;cursor:pointer;
+  font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.rail__motion::before{content:'';width:10px;height:10px;border:1.5px solid var(--ink)}
+.rail__motion[aria-pressed="true"]::before{background:var(--ink)}
+.rail__motion span::after{content:' /';color:var(--ink-3)}
+.rail__motion b{font-weight:400;color:var(--ink)}
+.rail__motion:focus-visible,.rail__out:focus-visible,.acct__out:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.rail__out,.acct__out{display:inline-flex;align-items:center;gap:8px;min-height:40px;margin:0;padding:0;border:0;background:none;cursor:pointer;
+  font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.rail__out::before,.acct__out::before{content:'';width:14px;height:1.5px;background:currentColor}
+@media (hover:hover){ .rail__out:hover,.acct__out:hover,.rail__motion:hover{color:var(--ink)} }
+
+/* the colophon at the foot of Member and Club Tools on a phone */
+.acct{display:grid;gap:8px;justify-items:start;padding-top:12px;border-top:3px solid var(--ink);position:relative}
+.acct::before{content:'';position:absolute;left:0;right:0;top:3px;height:3px;border-bottom:1px solid var(--ink)}
+.acct__who{display:grid;gap:4px;margin:6px 0 0}
+.acct__held{font:400 9.5px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
+.acct__name{font:400 22px/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;overflow-wrap:anywhere}
+.acct__role{font:400 10px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.acct__row{display:flex;flex-wrap:wrap;align-items:center;gap:4px 24px;width:100%}
+@media(min-width:1024px){ .view--member .acct,.view--board .acct{display:none} }
+
+/* the thumb-index tabs at the foot of a phone's page */
+.tabs{background:var(--paper);padding-top:0;border:0;overflow:visible}
+.tabs::before{content:'';position:absolute;left:0;right:0;top:0;height:6px;pointer-events:none;
+  background:linear-gradient(var(--ink),var(--ink)) 0 0/100% 3px no-repeat,linear-gradient(var(--ink),var(--ink)) 0 5px/100% 1px no-repeat}
+.tab{position:relative;flex:1 1 0;min-width:0;display:flex;align-items:stretch;justify-content:center;min-height:var(--tabs-h);
+  margin:0;padding:6px 2px 6px;border:0;background:none;cursor:pointer;color:var(--ink);overflow:visible;-webkit-tap-highlight-color:transparent}
+.tab + .tab::after{content:'';position:absolute;left:0;top:14px;bottom:12px;width:1px;background:var(--tint)}
+.tab__tab{display:grid;justify-items:center;align-content:center;gap:4px;width:100%;min-width:0}
+.tab__idx{font:400 9px/1 var(--f-mono);letter-spacing:.12em;color:var(--ink-3)}
+.tab__lab{font:400 clamp(13px,3.6vw,15px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:100%}
+/* the open chapter's tab, raised in ink above the strip */
+.tab[aria-current="page"] .tab__tab{position:relative;margin:-12px 3px 0;padding:8px 2px 6px;background:var(--ink);color:var(--paper-card);
+  clip-path:polygon(0 8px,8px 0,100% 0,100% 100%,0 100%)}
+.tab[aria-current="page"] .tab__idx{color:#E8A0A8}
+.tab:focus-visible{outline:2px solid var(--ink);outline-offset:-4px}
+.tab:active .tab__tab{translate:0 1px}
+/* check-in open: the Scan tab carries the crimson light */
+.tab--live .tab__idx{color:var(--crimson)}
+.tab--live .tab__lab::before{content:'';display:inline-block;width:7px;height:7px;margin-right:5px;border-radius:50%;background:var(--crimson);vertical-align:.15em}
+.tab--live[aria-current="page"] .tab__tab{background:var(--crimson)}
+.tab--live[aria-current="page"] .tab__idx{color:var(--paper-card)}
+.tab--live[aria-current="page"] .tab__lab::before{background:var(--paper-card)}
+@media(max-width:359px){ .tab__lab{font-size:12px;letter-spacing:.01em} }
+
+/* ── toasts: a slip of paper laid on the page ────────────────────── */
+.toasts{position:fixed;z-index:45;display:flex;flex-direction:column;gap:10px;pointer-events:none;
+  left:var(--gutter);right:var(--gutter);bottom:calc(var(--tabs-h) + 14px + env(safe-area-inset-bottom,0px))}
+.toasts > *{pointer-events:auto}
+@media(min-width:1024px){ .toasts{left:auto;right:22px;bottom:22px;max-width:min(340px,32vw)} }
+.toast{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;padding:12px 14px 12px 12px;
+  background:var(--paper-card);color:var(--ink);border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);rotate:-.4deg}
+.toast__dot{width:10px;height:10px;margin-top:4px;background:var(--ink);rotate:45deg}
+.toast__t{margin:0;font:400 16px/1.2 var(--f-head);letter-spacing:.03em;text-transform:uppercase;overflow-wrap:anywhere;min-width:0}
+.toast__d{margin:4px 0 0;font:400 11px/1.45 var(--f-mono);letter-spacing:.06em;color:var(--ink-2)}
+.toast--bad{border-color:var(--seal);box-shadow:4px 4px 0 var(--seal)}
+.toast--bad .toast__dot{background:var(--crimson)}
+.toast--bad .toast__t{color:var(--seal)}
