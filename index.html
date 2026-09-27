@@ -886,7 +886,7 @@ body{
 .meetband .meetband__act{min-height:44px;margin:-14px 0 -6px;padding:0;
   font-family:var(--f-body);text-transform:none;
   font-size:var(--t-body);letter-spacing:.02em;white-space:nowrap}
-.meetgrid .bsec::before,.bsec.meetband::before{content:none}
+.meetgrid .bsec::before,.bsec.meetband::before,.bdet .bsec::before{content:none}
 .bsec.meetband{padding-top:0}
 
 .meetpanel{min-width:0}
@@ -924,6 +924,7 @@ body{
 .owed__go{flex:none;min-width:10ch;min-height:44px;padding:0 var(--sp-row)}
 .brow--armed .owed__go{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .owed__undo{flex:none;color:var(--ink-2)}
+.owed__undo::before{content:none}
 .owed__more{color:var(--ink-2);font-size:var(--t-caption)}
 .owed__self{flex:0 1 14ch;text-align:right;font-size:var(--t-caption)}
 .brow--handed .brow__mid b{color:var(--ink-2)}
@@ -2028,15 +2029,14 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .rail__nav{position:relative;display:flex;flex-direction:column;gap:0;padding-top:var(--sp-block);padding-right:var(--sp-pad);flex:1}
 .rail__folio{display:none}
 .rail__link{display:grid;grid-template-columns:2.6ch minmax(0,1fr);column-gap:var(--sp-row);align-items:baseline;
-  position:relative;margin:0;padding:13px 0 12px;border:0;border-bottom:1px solid var(--tint);border-radius:0;
+  position:relative;margin:0;padding:13px 0 12px;border:0;border-radius:0;
   background:none;text-align:left;cursor:pointer;color:var(--ink);min-height:44px}
 .rail__link::before{content:none}
 .rail__idx{font:400 11px/1 var(--f-mono);letter-spacing:.08em;color:var(--tone)}
 .rail__lab{font:400 13px/1 var(--f-mono);text-transform:uppercase;letter-spacing:.12em;color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
-.rail__link[aria-current="page"]{border-bottom-color:var(--tint)}
 .rail__link[aria-current="page"] .rail__idx,.rail__link[aria-current="page"] .rail__lab{color:var(--ink)}
 /* the page being read: the binding thickens beside it */
-.rail__link[aria-current="page"]::after{content:'';position:absolute;right:calc(var(--sp-pad) * -1);top:0;bottom:-1px;width:3px;background:var(--ink)}
+.rail__link[aria-current="page"]::after{content:'';position:absolute;right:calc(var(--sp-pad) * -1);top:0;bottom:0;width:3px;background:var(--ink)}
 @media (hover:hover){.rail__link:hover .rail__lab{color:var(--ink);text-decoration:none}}
 .rail__link:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
 /* check-in open: the Scan line says so, in the one live colour */
@@ -3049,15 +3049,15 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .memgrid > .memidx{grid-area:idx}
 .memgrid > .owed{grid-area:owed}
 .memgrid > .rosterpanel{grid-area:roster}
-.memidx{display:flex;flex-wrap:wrap;gap:2px 1.4em;margin:0;padding:0 0 var(--sp-tight);border-bottom:1px solid var(--ink);
+.memidx{display:flex;flex-wrap:wrap;gap:2px 1.4em;margin:0;padding:0;border:0;
   font:400 12px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .memidx b{font:inherit;letter-spacing:inherit;color:var(--ink);margin-right:.4em}
 .memidx span + span::before{content:none}
 /* the search is the roster's head */
-.bfilters{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 var(--sp-block);align-items:end;margin:0 0 4px;padding:0;border:0;background:none}
+.bfilters{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 var(--sp-block);align-items:end;margin:0 0 var(--sp-pad);padding:0;border:0;background:none}
 .bfilters .field{padding:0;border:0}
 .bfilters .input{border-bottom:var(--edge-thin) solid var(--ink);font:400 max(16px,var(--t-body))/1.3 var(--f-mono);padding:8px 0 6px}
-.bfilters .input::placeholder{color:var(--tone);text-transform:uppercase;letter-spacing:.08em;font-size:12px}
+.bfilters .input::placeholder{color:var(--ink-2);text-transform:uppercase;letter-spacing:.08em;font-size:12px}
 .bfilters select.input{-webkit-appearance:none;appearance:none;background:none;padding:8px 20px 6px 0;border-bottom:var(--edge-thin) solid var(--ink);
   font:400 12px/1.3 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);cursor:pointer;min-width:12ch}
 .bfilters .field:last-child{position:relative}
@@ -3070,7 +3070,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .roster td:last-child,.roster th:last-child{text-align:right;font:400 13px/1.4 var(--f-mono);letter-spacing:.04em;color:var(--ink)}
 .roster thead th:last-child{font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;color:var(--ink-2)}
 .roster tbody th{font:400 15px/1.3 var(--f-mono);letter-spacing:.01em;text-transform:none;color:var(--ink)}
-.roster__name{margin:0;padding:0;border:0;background:none;font:inherit;color:inherit;letter-spacing:inherit;text-transform:none;cursor:pointer;text-align:left}
+.roster__name{margin:-8px 0;padding:0;border:0;background:none;font:inherit;color:inherit;letter-spacing:inherit;text-transform:none;cursor:pointer;text-align:left}
 .roster__name:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px}
 @media (hover:hover){.roster tr:hover .roster__name{color:var(--ink);text-decoration:underline;text-underline-offset:3px}}
 /* the member's card as a tally: ten ticks, the pressed ones heavier */
@@ -3089,7 +3089,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .owed{display:block;padding:0;border:0;background:none}
 .owed .meetband{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px var(--sp-pad);margin:0 0 4px;padding:0 0 var(--sp-tight);border-bottom:1px solid var(--ink)}
 .owed .meetband__t{margin:0;font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
-.owed .meetband__n{font:400 11px/1.4 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.owed .meetband__n{text-align:left;font:400 11px/1.4 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .brow--owed{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:var(--sp-pad);padding:var(--sp-tight) 0;border-bottom:1px solid var(--tint)}
 .brow--owed .brow__mid{display:grid;gap:2px;justify-self:start;justify-items:start;text-align:left}
 .brow--owed .brow__mid b{font:400 15px/1.3 var(--f-mono);color:var(--ink)}
@@ -3098,18 +3098,17 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .owed__self{font:400 11px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--tone);max-width:16ch;text-align:right}
 @media(min-width:1100px){
   .memgrid{grid-template-columns:minmax(0,64fr) minmax(0,36fr);column-gap:clamp(32px,4vw,64px);grid-template-areas:"idx idx" "roster owed"}
-  .memgrid > .owed{position:sticky;top:var(--sp-pad);padding-left:clamp(20px,2vw,32px);border-left:1px solid var(--ink)}
+  .memgrid > .owed{position:sticky;top:var(--sp-pad)}
   .roster{max-width:96ch}
   .roster th,.roster td{padding-block:6px}
-  .roster__name{min-height:40px}
+  .roster__name{min-height:40px;margin:-6px 0}
+  .bdet__body{max-width:72ch}
 }
 
 /* the detail pages: a folio line to go back on, the name or the number as the page's figure */
-.crumb{display:flex;align-items:baseline;gap:.6em;margin:0 0 var(--sp-block);padding:0 0 var(--sp-tight);border-bottom:1px solid var(--ink);
+.crumb{display:flex;align-items:center;gap:.6em;margin:0 0 var(--sp-block);padding:0;border:0;
   font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.crumb .bback{padding:0;min-height:32px;font:inherit;letter-spacing:inherit;color:var(--ink)}
-.crumb__at{color:var(--ink-2)}
-.crumb__at::before{content:'/';margin-right:.6em;color:var(--tone)}
+.crumb .bback{margin:0;padding:0;min-height:32px;font:inherit;letter-spacing:inherit;color:var(--ink)}
 .bdet{padding:0;border:0;background:none;box-shadow:none}
 .bwho,.bmeet{border-bottom:0;padding-bottom:0}
 .bdet .bwho .bdetail__name--id{font:400 clamp(26px,3vw,34px)/1.1 var(--f-mono);letter-spacing:0;text-transform:none;color:var(--ink);overflow-wrap:anywhere}
@@ -3130,7 +3129,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .brow--member .muted{font:400 11px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);text-align:right}
 .brow--att .brow__go{grid-template-columns:auto minmax(0,1fr) auto}
 .brow--att .brow__no{font:400 10px/1 var(--f-mono);letter-spacing:.12em;color:var(--ink-2)}
-.brow--att .brow__no b{font:400 15px/1 var(--f-mono);letter-spacing:.04em;color:var(--ink)}
+.brow--att .brow__no b{font:400 15px/1 var(--f-mono);letter-spacing:.04em;color:var(--ink);min-width:2.2ch}
 .brow--att .brow__mid b{font:400 13px/1.3 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
 .brow--att .brow__cell{font:400 11px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);text-align:right}
 @media (hover:hover){.brow--member .brow__go:hover .brow__mid b,.brow--att .brow__go:hover .brow__mid b{color:var(--ink);text-decoration:underline;text-underline-offset:3px}}
@@ -3143,7 +3142,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .hand .bsec{border-bottom:0;padding-bottom:0}
 .hand .field{padding:0}
 .hand .input{border-bottom:var(--edge-thin) solid var(--ink)}
-.hand .input::placeholder{color:var(--tone);text-transform:uppercase;letter-spacing:.08em;font-size:12px}
+.hand .input::placeholder{color:var(--ink-2);text-transform:uppercase;letter-spacing:.08em;font-size:12px}
 .handlist .brow--hand{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:var(--sp-pad);padding:10px 0;border-bottom:var(--edge-hair) solid var(--tint)}
 .handlist .brow__mid b{font:400 15px/1.3 var(--f-mono);color:var(--ink)}
 .handlist .muted{font:400 11px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
@@ -18634,7 +18633,7 @@ const BoardUI = {
       const key = o.user_id + ':' + o.reward_id;
       return `<li class="brow brow--owed">
         <span class="brow__mid"><b>${esc(o.username)}</b>
-          <span class="muted">${esc(prizeName(o))} / ${o.claimed_at ? `claimed ${esc(fmtClubDay(o.claimed_at))}` : 'earned, not claimed'}</span></span>
+          <span class="muted">${esc(prizeName(o))} / ${o.claimed_at ? `claimed ${esc(fmtClubDay(o.claimed_at))}` : 'not claimed'}</span></span>
         ${o.user_id === (Store.user && Store.user.id)
           ? '<span class="muted owed__self">Another officer hands this over</span>'
           : `<button class="btn owed__go" type="button" data-bhand="${esc(key)}"
@@ -18820,7 +18819,7 @@ const BoardUI = {
       ${rows.length ? `
         <table class="roster">
           <thead><tr><th scope="col">Member</th><th scope="col" class="roster__card">Card</th>
-            <th scope="col" class="roster__rw">Prizes</th><th scope="col">Last check-in</th><th scope="col">Stamps</th></tr></thead>
+            <th scope="col">Last check-in</th><th scope="col">Stamps</th></tr></thead>
           <tbody>${rows.map(m => {
             /* where the member's own card stands: its number and its ten seats */
             const n = Number(m.stamps) || 0;
@@ -18830,7 +18829,6 @@ const BoardUI = {
             <th scope="row"><button class="roster__name" type="button" data-bmember="${esc(m.id)}">${esc(m.username)}</button></th>
             <td class="roster__card"><span class="roster__cno">${pad(card)}</span><span class="roster__seats" aria-label="${on} of 10 on card ${pad(card)}">${
               Array.from({ length:10 }, (_, i) => `<i${i < on ? ' class="is-on"' : ''}></i>`).join('')}</span></td>
-            <td class="roster__rw">${Number(m.rewards_unlocked) || 0} of ${REWARD_TIERS.length}</td>
             <td>${m.last_attendance ? esc(fmtDay(m.last_attendance)) : '<span class="brow__none">-</span>'}</td>
             <td>${n}</td>
           </tr>`;}).join('')}</tbody>
@@ -18852,17 +18850,11 @@ const BoardUI = {
     const total = Number(m.stamps) || d.attendance.length;
     return `<div class="panel bpanel bdet">
       <div class="bdet__head">
-      <p class="crumb"><button class="bback" type="button" data-bback>${this.backLabel()}</button><span class="crumb__at">${esc(m.username)}</span></p>
+      <p class="crumb"><button class="bback" type="button" data-bback>${this.backLabel()}</button></p>
 
       <div class="bwho">
         <p class="bwho__lab">Member${m.created_at ? ` since ${esc(onClock(m.created_at, { month:'long', year:'numeric' }))}` : ''}</p>
         <h2 class="bdetail__name bdetail__name--id">${esc(m.username)}</h2>
-        <dl class="bwho__figs">
-          <div><dt>Stamps</dt><dd>${total}</dd></div>
-          <div><dt>Card ${pad(total && total % 10 === 0 ? total / 10 : Math.floor(total / 10) + 1)}</dt><dd>${
-            total && total % 10 === 0 ? 10 : total % 10} of 10</dd></div>
-          <div><dt>Prizes</dt><dd>${d.rewards.filter(r => r.state !== 'locked').length} of ${d.rewards.length}</dd></div>
-        </dl>
       </div>
       </div>
 
@@ -18896,7 +18888,7 @@ const BoardUI = {
        says it; the one action beside it */
     const when = handed ? `Handed over ${fmtClubDay(handed)}`
       : r.state === 'claimed' ? (r.claimed_at ? `Claimed ${fmtClubDay(r.claimed_at)}` : 'Claimed')
-      : 'Earned, not claimed';
+      : 'Not claimed';
     const undo = handed && (r.can_undo || (this.handed[key] && Date.now() - this.handed[key].when < HANDOVER_UNDO_MS));
     return `<li class="brow brow--reward${handed ? ' brow--handed' : ''}">
       <span class="brow__mid"><b>${esc(prizeName(r))}</b>

@@ -321,7 +321,7 @@ const BoardUI = {
       const key = o.user_id + ':' + o.reward_id;
       return `<li class="brow brow--owed">
         <span class="brow__mid"><b>${esc(o.username)}</b>
-          <span class="muted">${esc(prizeName(o))} / ${o.claimed_at ? `claimed ${esc(fmtClubDay(o.claimed_at))}` : 'earned, not claimed'}</span></span>
+          <span class="muted">${esc(prizeName(o))} / ${o.claimed_at ? `claimed ${esc(fmtClubDay(o.claimed_at))}` : 'not claimed'}</span></span>
         ${o.user_id === (Store.user && Store.user.id)
           ? '<span class="muted owed__self">Another officer hands this over</span>'
           : `<button class="btn owed__go" type="button" data-bhand="${esc(key)}"
@@ -507,7 +507,7 @@ const BoardUI = {
       ${rows.length ? `
         <table class="roster">
           <thead><tr><th scope="col">Member</th><th scope="col" class="roster__card">Card</th>
-            <th scope="col" class="roster__rw">Prizes</th><th scope="col">Last check-in</th><th scope="col">Stamps</th></tr></thead>
+            <th scope="col">Last check-in</th><th scope="col">Stamps</th></tr></thead>
           <tbody>${rows.map(m => {
             /* where the member's own card stands: its number and its ten seats */
             const n = Number(m.stamps) || 0;
@@ -517,7 +517,6 @@ const BoardUI = {
             <th scope="row"><button class="roster__name" type="button" data-bmember="${esc(m.id)}">${esc(m.username)}</button></th>
             <td class="roster__card"><span class="roster__cno">${pad(card)}</span><span class="roster__seats" aria-label="${on} of 10 on card ${pad(card)}">${
               Array.from({ length:10 }, (_, i) => `<i${i < on ? ' class="is-on"' : ''}></i>`).join('')}</span></td>
-            <td class="roster__rw">${Number(m.rewards_unlocked) || 0} of ${REWARD_TIERS.length}</td>
             <td>${m.last_attendance ? esc(fmtDay(m.last_attendance)) : '<span class="brow__none">-</span>'}</td>
             <td>${n}</td>
           </tr>`;}).join('')}</tbody>
@@ -539,17 +538,11 @@ const BoardUI = {
     const total = Number(m.stamps) || d.attendance.length;
     return `<div class="panel bpanel bdet">
       <div class="bdet__head">
-      <p class="crumb"><button class="bback" type="button" data-bback>${this.backLabel()}</button><span class="crumb__at">${esc(m.username)}</span></p>
+      <p class="crumb"><button class="bback" type="button" data-bback>${this.backLabel()}</button></p>
 
       <div class="bwho">
         <p class="bwho__lab">Member${m.created_at ? ` since ${esc(onClock(m.created_at, { month:'long', year:'numeric' }))}` : ''}</p>
         <h2 class="bdetail__name bdetail__name--id">${esc(m.username)}</h2>
-        <dl class="bwho__figs">
-          <div><dt>Stamps</dt><dd>${total}</dd></div>
-          <div><dt>Card ${pad(total && total % 10 === 0 ? total / 10 : Math.floor(total / 10) + 1)}</dt><dd>${
-            total && total % 10 === 0 ? 10 : total % 10} of 10</dd></div>
-          <div><dt>Prizes</dt><dd>${d.rewards.filter(r => r.state !== 'locked').length} of ${d.rewards.length}</dd></div>
-        </dl>
       </div>
       </div>
 
@@ -583,7 +576,7 @@ const BoardUI = {
        says it; the one action beside it */
     const when = handed ? `Handed over ${fmtClubDay(handed)}`
       : r.state === 'claimed' ? (r.claimed_at ? `Claimed ${fmtClubDay(r.claimed_at)}` : 'Claimed')
-      : 'Earned, not claimed';
+      : 'Not claimed';
     const undo = handed && (r.can_undo || (this.handed[key] && Date.now() - this.handed[key].when < HANDOVER_UNDO_MS));
     return `<li class="brow brow--reward${handed ? ' brow--handed' : ''}">
       <span class="brow__mid"><b>${esc(prizeName(r))}</b>
