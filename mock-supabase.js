@@ -129,6 +129,10 @@ function mkClient(){
         return { data:{ user:{ id, email }, session:db.session }, error:null };
       },
       async signOut(){ db.session = null; saveDB(); return { error:null }; },
+      /* the real client tells the page about sessions changing under it;
+         the test double has nothing to tell */
+      onAuthStateChange(){ return { data:{ subscription:{ unsubscribe(){} } } }; },
+      storageKey: 'sb-mock-auth-token',
     },
 
     from(table){
@@ -137,6 +141,9 @@ function mkClient(){
       q.select = function(_cols, opts){ if (opts && opts.count) this._count = true; if (opts && opts.head) this._head = true; return this; };
       q.eq = function(col, val){ this._f.push([col, val]); return this; };
       q.order = function(){ return this; };
+      /* PostgREST's or() filter is not modelled; callers filter the rows
+         they get back themselves */
+      q.or = function(){ return this; };
       q._rows = function(){
         return rows().filter(r => this._f.every(([c, v]) => r[c] === v));
       };
@@ -352,7 +359,10 @@ function mkClient(){
                is an opaque marker here because the browser must not be able
                to make one either way. */
             const exp = Date.parse(meeting.meeting_date + 'T23:59:59-08:00');
-            const token = `keystamp://a/${btoa(sess.id+'.'+mid+'.'+exp)}.SERVERSIG`;
+            /* base64url and a signature as long as a real one, so the page's own
+               shape check (QRFormat.BARE) takes it from a link as well */
+            const b64u = t => btoa(t).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            const token = `keystamp://a/${b64u(sess.id+'.'+mid+'.'+exp)}.SERVERSIGNATURE0000`;
             return { data:{ ok:true, token, expires_at:new Date(exp).toISOString(),
                             static:true }, error:null };
           }
@@ -515,9 +525,9 @@ function mkClient(){
           const bare = raw.replace(/^keystamp:\/\/a\//i, '').replace(/^https?:\/\/[^#]*#\/a\//i, '');
           const dot = bare.lastIndexOf('.');
           if (dot < 1) return { data:{ ok:false, code:'INVALID_TOKEN' }, error:null };
-          if (bare.slice(dot+1) !== 'SERVERSIG')
+          if (!bare.slice(dot+1).startsWith('SERVERSIG'))
             return { data:{ ok:false, code:'INVALID_TOKEN' }, error:null };
-          let payload; try { payload = atob(bare.slice(0,dot)); }
+          let payload; try { payload = atob(bare.slice(0,dot).replace(/-/g, '+').replace(/_/g, '/')); }
           catch(e){ return { data:{ ok:false, code:'INVALID_TOKEN' }, error:null }; }
           const [sid, mid, expStr] = payload.split('.');
           if (Date.now() > Number(expStr))
