@@ -153,7 +153,8 @@ body{
 .owed__go{flex:none;min-width:10ch;min-height:44px;padding:0 var(--sp-row)}
 .brow--armed .owed__go{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .owed__undo{flex:none;color:var(--ink-2)}
-.owed__undo::before{content:none}
+.owed__undo[data-busy]{align-items:flex-end}
+.link.owed__undo::before{content:none}
 .owed__more{color:var(--ink-2);font-size:var(--t-caption)}
 .owed__self{flex:0 1 14ch;text-align:right;font-size:var(--t-caption)}
 .brow--handed .brow__mid b{color:var(--ink-2)}
@@ -1060,7 +1061,7 @@ html{font-synthesis:none}
   .bdet__head{position:sticky;top:var(--sp-pad)}
 }
 .bwho,.bmeet{display:grid;gap:6px;padding-bottom:var(--sp-pad);border-bottom:var(--edge-frame) solid var(--ink)}
-.bwho__lab{margin:0;font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.bwho__lab{margin:0;font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .bwho .bdetail__name{margin:0;font-size:clamp(32px,4.4vw,60px);line-height:1}
 .bmeet .bdetail__name{margin:0;padding-bottom:.16em;font:400 clamp(64px,8vw,128px)/.82 var(--f-display);letter-spacing:0}
 .bmeet__when{margin:0;font:400 12px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
@@ -1145,7 +1146,7 @@ html{font-synthesis:none}
 .owed__more,.proj__hand,.proj__ctl--quiet,.cmd--quiet,.tools__nextrow,.tools__task{
   padding:12px 0;min-height:44px;border:0;background:none;
   font:400 12px/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.link::before,.authp__swap::before,.acct__out::before,.rail__out::before,.owed__undo::before,.bback::before,
+.link::before,.authp__swap::before,.acct__out::before,.rail__out::before,.bback::before,
 .bform__reset::before,.meetband__act::before,.owed__more::before,.proj__hand::before,.proj__ctl--quiet::before,.cmd--quiet::before{
   content:'';flex:none;width:12px;height:1.5px;background:currentColor}
 @media (hover:hover){
@@ -1261,7 +1262,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   position:relative;margin:0;padding:12px 0;border:0;border-radius:0;
   background:none;text-align:left;cursor:pointer;color:var(--ink);min-height:44px}
 .rail__link::before{content:none}
-.rail__idx{font:400 11px/1 var(--f-mono);letter-spacing:.08em;color:var(--tone)}
+.rail__idx{font:400 11px/1 var(--f-mono);letter-spacing:.12em;color:var(--tone)}
 .rail__lab{font:400 12px/1 var(--f-mono);text-transform:uppercase;letter-spacing:.12em;color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
 .rail__link[aria-current="page"] .rail__idx,.rail__link[aria-current="page"] .rail__lab{color:var(--ink)}
 /* the page being read: the binding thickens beside it */
@@ -1560,7 +1561,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .card__record[data-at="margin"] .sealmeta__how{justify-self:end;margin-top:4px}
 
 /* the standing: one ledger line, the count in the head face */
-.standing-band{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 1.4em;justify-self:start;
+.standing-band{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 1.2em;justify-self:start;
   grid-template-areas:none;grid-template-columns:none;
   margin:0;padding:0;border:0;
   font:400 12px/1.5 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
@@ -1579,8 +1580,8 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .files__list{display:block;list-style:none;margin:0;padding:0}
 .filed{display:block;border-bottom:var(--edge-hair) solid var(--tint)}
 .filed__row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:baseline;column-gap:12px;width:100%;
-  min-height:44px;margin:0;padding:10px 0;border:0;background:none;text-align:left;cursor:pointer;
-  font:400 12px/1.4 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+  min-height:44px;margin:0;padding:8px 0;border:0;background:none;text-align:left;cursor:pointer;
+  font:400 12px/1.4 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 /* in a narrow index the prize takes the entry's second line */
 .files__list{container-type:inline-size}
 @container (max-width:460px){
@@ -1589,7 +1590,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   .filed__row > .filed__when{grid-area:when}
   .filed__row > .filed__prize{grid-area:prize;justify-self:start}
 }
-.filed__no{margin:0;font:400 13px/1.4 var(--f-mono);letter-spacing:.06em;color:var(--ink)}
+.filed__no{margin:0;font:400 12px/1.4 var(--f-mono);letter-spacing:.06em;color:var(--ink)}
 .filed__when{margin:0;color:var(--ink);letter-spacing:.06em}
 .filed__prize{margin:0;color:var(--ink);white-space:nowrap;justify-self:end}
 .filed__row:active{background:var(--ink)}
@@ -1700,7 +1701,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 /* nothing today: the next meeting's date is the anchor */
 .mast--next .mast__line{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"date state";
   align-items:end;border-bottom-width:1px;padding-bottom:var(--sp-row)}
-.mast__date{grid-area:date;font:400 clamp(30px,8.4vw,40px)/1 var(--f-head);letter-spacing:.02em;text-transform:uppercase;color:var(--ink);font-weight:400}
+.mast__date{grid-area:date;font:400 clamp(28px,7vw,40px)/1 var(--f-head);letter-spacing:.02em;text-transform:uppercase;color:var(--ink);font-weight:400}
 .mast--next .mast__state{grid-area:state;padding-bottom:4px;text-align:right}
 /* nothing scheduled: the last stamp is the anchor */
 .mast--none .mast__line{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"gm" "date";
@@ -1708,7 +1709,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .mast--none .mast__line:has(.mast__no){display:flex;align-items:flex-end}
 .mast--none .mast__line:has(.mast__no) .mast__gm{align-self:flex-start;margin:.9em -.6em 0 0}
 .mast--none .mast__gm{grid-area:gm;align-self:end;margin:0 0 6px}
-.mast--none .mast__date{grid-area:date;font-size:clamp(22px,6vw,28px)}
+.mast--none .mast__date{grid-area:date;font-size:clamp(24px,2.6vw,30px)}
 .mast--none .mast__no{color:var(--tone)}
 
 /* the card on the page: one line of what it holds, then the seats on bare paper */
@@ -1745,12 +1746,12 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .fol{position:relative;min-width:0;padding:0}
 .fol__lab{margin:0 0 var(--sp-tight);padding-bottom:var(--sp-tight);border-bottom:1px solid var(--ink);
   font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.fol__line{margin:0;font:400 12px/1.5 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.fol__line{margin:0;font:400 12px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .fol__list{list-style:none;margin:0;padding:0;display:grid;gap:0}
 .fol__row{display:grid;grid-template-columns:6ch minmax(0,1fr);align-items:baseline;gap:0 var(--sp-row);min-width:0;
   padding:var(--sp-tight) 0;border-bottom:1px solid var(--tint)}
-.fol__no{font:400 13px/1.3 var(--f-mono);letter-spacing:.06em;color:var(--ink)}
-.fol__day{font:400 13px/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.fol__no{font:400 12px/1.3 var(--f-mono);letter-spacing:.06em;color:var(--ink)}
+.fol__day{font:400 12px/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
 .fol__at{grid-column:2;font:400 11px/1.4 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
 
 @media(min-width:480px){
@@ -1810,7 +1811,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .lrow--gap2{margin-top:var(--sp-tight);border-top:0;padding-top:6px}
 .lrow--gap3{margin-top:var(--sp-pad);border-top:0;padding-top:6px}
 .lrow__no{justify-self:end;padding:0;
-  font:400 14px/1 var(--f-mono);letter-spacing:.04em;color:var(--ink);-webkit-text-stroke:0}
+  font:400 15px/1 var(--f-mono);letter-spacing:.04em;color:var(--ink);-webkit-text-stroke:0}
 .lrow--miss .lrow__no,.lrow--upcoming .lrow__no{color:var(--tone);-webkit-text-stroke:0}
 .lrow--miss.lrow--today .lrow__no,.lrow--open .lrow__no,.lrow--blank .lrow__no{color:var(--ink);-webkit-text-stroke:0}
 .lrow--set .lrow__no{color:var(--ink);-webkit-text-stroke:0}
@@ -1821,7 +1822,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .lrow__mark g path{fill:var(--paper)}
 .lrow__slot{display:none}
 .lrow__body{display:flex;flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:2px var(--sp-row);min-width:0}
-.lrow__date{font:400 14px/1.2 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
+.lrow__date{font:400 15px/1.2 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
 .lrow--miss .lrow__date,.lrow--upcoming .lrow__date{color:var(--ink-2)}
 .lrow__when,.lrow__at{font:400 12px/1.4 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
 /* the open meeting: the empty place ringed in the live colour, the instruction on the row */
@@ -1838,7 +1839,6 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   .yt--set{width:14px;height:14px}
   .ledger{--line:48px;max-width:640px}
   .lrow{min-height:48px}
-  .lrow__no,.lrow__date{font-size:15px}
 }
 
 /* ══ Rewards: three stations on one route line, the member's stamp
@@ -1890,7 +1890,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .tier--claimed .tier__name{color:var(--ink-2)}
 .tier--far .tier__name{color:var(--ink-2)}
 .tier__desc{font:400 13px/1.4 var(--f-body);color:var(--ink-2)}
-.tier__say,.tier__note{margin:0;font:400 11px/1.5 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:normal}
+.tier__say,.tier__note{margin:0;font:400 11px/1.5 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);white-space:normal}
 .tier--far .tier__say{display:none}
 .tier__punch{display:none}
 /* the claim: the page's one instruction */
@@ -1924,7 +1924,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .scanframe > .standing{position:static;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px .8em;margin:0;
   padding:var(--sp-tight) var(--cx) var(--sp-row);border:0;background:none;color:var(--ink);text-align:left;pointer-events:none;filter:none}
 .standing__lab{font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
-.standing__at{display:inline-flex;align-items:baseline;gap:.4em;font:400 13px/1.3 var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--ink)}
+.standing__at{display:inline-flex;align-items:baseline;gap:.4em;font:400 12px/1.3 var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--ink)}
 .standing__at i{font:inherit;letter-spacing:inherit;font-style:normal;color:inherit}
 .standing__at b{font:inherit;letter-spacing:inherit;color:inherit}
 .viewer{position:relative;display:grid;place-items:center;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);
@@ -1945,7 +1945,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 /* the row the scanner speaks on: one heavy paper rule on ink, then the words */
 .scanline{display:flex;align-items:center;gap:var(--sp-row);margin:0;min-height:52px;
   padding:12px var(--cx) 12px;border-top:2px solid var(--paper);background:var(--ink);color:var(--paper);
-  font:400 13px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase}
+  font:400 12px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase}
 .scanline__dot{display:none}
 .scanline__msg{min-width:0;overflow-wrap:anywhere;background:none;color:inherit;padding:0;text-decoration:none}
 .scanline--boot{color:var(--tone);border-top-width:var(--edge-hair);border-top-color:var(--tone)}
@@ -1982,7 +1982,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .stamped__imp{display:block;width:clamp(128px,38vw,200px);height:auto;overflow:visible;rotate:var(--lean,-1.5deg)}
 .stamped__face{fill:var(--ink)}
 .stamped__imp g path{fill:var(--paper)}
-.stamped__rec{display:grid;gap:2px;margin:0;padding-bottom:8px;font:400 12px/1.5 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.stamped__rec{display:grid;gap:2px;margin:0;padding-bottom:8px;font:400 12px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .stamped__rec > span{padding:0;border-top:0}
 .stamped__no{display:block;padding-bottom:6px;font:400 clamp(28px,7vw,40px)/1 var(--f-head);letter-spacing:.02em;color:var(--ink)}
 .stamped__how{color:var(--ink-2)}
@@ -2040,7 +2040,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .acq__seal .acq__face{fill:var(--ink);stroke:none}
 .acq__seal .acq__mark path{fill:var(--paper);stroke:none}
 .acq__meet{display:grid;gap:2px;width:100%;margin:0;padding-top:var(--sp-tight);border-top:var(--edge-thin) solid var(--ink);
-  font:400 12px/1.5 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);opacity:1;max-width:none}
+  font:400 12px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);opacity:1;max-width:none}
 .acq__meet b{font:400 clamp(28px,7vw,40px)/1 var(--f-head);letter-spacing:.02em;color:var(--ink)}
 @media(prefers-reduced-motion:reduce){ .acq,.acq--lift .acq__kick,.acq--lift .acq__meet{transition:none} }
 :root[data-still] .acq,:root[data-still] .acq--lift .acq__kick,:root[data-still] .acq--lift .acq__meet{transition:none}
@@ -2113,7 +2113,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 /* two meetings today: an index line, the one picked carrying the rule */
 .gmpick{display:flex;gap:var(--sp-block);position:static;z-index:auto}
 .gmpick__tab{margin:0;min-height:44px;padding:12px 0 8px;border:0;border-bottom:2px solid transparent;background:none;cursor:pointer;
-  font:400 13px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+  font:400 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .gmpick__tab--on{color:var(--ink);border-bottom-color:var(--ink)}
 .gmpick__tab:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 /* no meeting today: the date, the state, the next meeting */
@@ -2154,7 +2154,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .desk .proj--full .proj__no b{font-size:18vh;line-height:.8;color:var(--paper)}
 .desk .proj--full .proj__when{display:none}
 .desk .proj--full .proj__word{grid-area:word;justify-self:start;align-self:start;margin-top:4vh;text-align:left;
-  font:400 8vh/1 var(--f-head);letter-spacing:.03em;color:var(--paper)}
+  font:400 8vh/1 var(--f-head);letter-spacing:.02em;color:var(--paper)}
 .desk .proj--full .proj__word::before{content:none}
 .desk .proj--full .proj__count{grid-area:count;align-self:end;justify-self:start;flex-direction:column;align-items:flex-start;gap:1.5vh;margin:0;text-align:left}
 .desk .proj--full .proj__count b{font:400 clamp(120px,32vh,420px)/.8 var(--f-display);letter-spacing:-.02em;color:var(--paper)}
@@ -2195,13 +2195,13 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .mrow__gm{grid-area:gm;display:flex;align-items:baseline;gap:.35em;
   font:400 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .mrow__gm b{font:400 24px/1 var(--f-mono);letter-spacing:0;color:var(--ink);min-width:2.2ch}
-.mrow__day{grid-area:day;font:400 14px/1.3 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
+.mrow__day{grid-area:day;font:400 15px/1.3 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
 .mrow__when{grid-area:when;font:400 12px/1.5 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
 .mrow__state{grid-area:state;font:400 11px/1.5 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .mrow--open .mrow__state,.mrow--left .mrow__state{color:var(--ink)}
 .mrow--open .mrow__state::before,.mrow--left .mrow__state::before{content:'';display:inline-block;width:6px;height:6px;margin:0 8px 1px 0;border-radius:50%;background:var(--seal);vertical-align:middle}
 .mrow__n{grid-area:n;display:flex;align-items:baseline;gap:6px;justify-self:end;text-align:right}
-.mrow__n b{font:400 14px/1 var(--f-mono);letter-spacing:.04em;color:var(--ink)}
+.mrow__n b{font:400 15px/1 var(--f-mono);letter-spacing:.04em;color:var(--ink)}
 .mrow__n span{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* ahead: the date is the anchor, the number quiet */
 .minutes__ahead .mrow__gm{color:var(--ink-2)}
@@ -2276,7 +2276,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .memgrid > .memidx{grid-area:idx}
 .memgrid > .owed{grid-area:owed}
 .memgrid > .rosterpanel{grid-area:roster}
-.memidx{display:flex;flex-wrap:wrap;gap:2px 1.4em;margin:0;padding:0;border:0;
+.memidx{display:flex;flex-wrap:wrap;gap:2px 1.2em;margin:0;padding:0;border:0;
   font:400 12px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .memidx b{font:inherit;letter-spacing:inherit;color:var(--ink);margin-right:.4em}
 .memidx span + span::before{content:none}
@@ -2284,7 +2284,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .bfilters{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 var(--sp-block);align-items:end;margin:0 0 var(--sp-pad);padding:0;border:0;background:none}
 .bfilters .field{padding:0;border:0}
 .bfilters .input{border-bottom:var(--edge-thin) solid var(--ink);font:400 max(16px,var(--t-body))/1.3 var(--f-mono);padding:8px 0 6px}
-.bfilters .input::placeholder{color:var(--ink-2);text-transform:uppercase;letter-spacing:.08em;font-size:12px}
+.bfilters .input::placeholder{color:var(--ink-2);text-transform:uppercase;letter-spacing:.12em;font-size:12px}
 .bfilters select.input{-webkit-appearance:none;appearance:none;background:none;padding:8px 20px 6px 0;border-bottom:var(--edge-thin) solid var(--ink);
   font:400 12px/1.3 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);cursor:pointer;min-width:12ch}
 .bfilters .field:last-child{position:relative}
@@ -2294,14 +2294,14 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   font:400 12px/1.4 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .roster thead th{padding:0 0 var(--sp-tight);border-bottom:1px solid var(--ink);font-size:11px;letter-spacing:.12em}
 .roster th + th,.roster td + td{padding-left:var(--sp-pad)}
-.roster td:last-child,.roster th:last-child{text-align:right;font:400 13px/1.4 var(--f-mono);letter-spacing:.04em;color:var(--ink)}
+.roster td:last-child,.roster th:last-child{text-align:right;font:400 15px/1.4 var(--f-mono);letter-spacing:.04em;color:var(--ink)}
 .roster thead th:last-child{font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;color:var(--ink-2)}
 .roster tbody th{font:400 15px/1.3 var(--f-mono);letter-spacing:.01em;text-transform:none;color:var(--ink)}
 .roster__name{margin:-8px 0;padding:0;border:0;background:none;font:inherit;color:inherit;letter-spacing:inherit;text-transform:none;cursor:pointer;text-align:left}
 .roster__name:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px}
 @media (hover:hover){.roster tr:hover .roster__name{color:var(--ink);text-decoration:underline;text-underline-offset:3px}}
 /* the member's card as a tally: ten ticks, the pressed ones heavier */
-.roster__cno{margin-right:8px;font:400 11px/1 var(--f-mono);letter-spacing:.1em;color:var(--ink-2)}
+.roster__cno{margin-right:8px;font:400 11px/1 var(--f-mono);letter-spacing:.12em;color:var(--ink-2)}
 .roster__seats{display:inline-flex;gap:3px;vertical-align:-1px}
 .roster__seats i{display:block;width:1px;height:10px;background:var(--tone)}
 .roster__seats i.is-on{width:2px;background:var(--ink)}
@@ -2322,7 +2322,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .brow--owed .brow__mid b{font:400 15px/1.3 var(--f-mono);color:var(--ink)}
 .brow--owed .brow__mid .muted{font:400 11px/1.4 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .brow--handed .brow__mid b{color:var(--ink-2)}
-.owed__self{font:400 11px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--tone);max-width:16ch;text-align:right}
+.owed__self{font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--tone);max-width:16ch;text-align:right}
 @media(min-width:1100px){
   .memgrid{grid-template-columns:minmax(0,64fr) minmax(0,36fr);column-gap:clamp(32px,4vw,64px);grid-template-areas:"idx idx" "roster owed"}
   .memgrid > .owed{position:sticky;top:var(--sp-pad)}
@@ -2345,30 +2345,30 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 /* the register: a name, the time, by hand as a tag */
 .brow--member,.brow--att{display:grid;grid-template-columns:minmax(0,1fr);padding:0;border-bottom:var(--edge-hair) solid var(--tint)}
 .brow--member .brow__go,.brow--att .brow__go{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;column-gap:var(--sp-pad);
-  width:100%;min-height:44px;padding:10px 0;margin:0;border:0;background:none;text-align:left;font:inherit;cursor:pointer}
+  width:100%;min-height:44px;padding:8px 0;margin:0;border:0;background:none;text-align:left;font:inherit;cursor:pointer}
 .brow--member .brow__mid b{font:400 15px/1.3 var(--f-mono);text-transform:none;letter-spacing:.01em;color:var(--ink)}
-.brow--member .muted{font:400 11px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);text-align:right}
+.brow--member .muted{font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);text-align:right}
 .brow--att .brow__go{grid-template-columns:auto minmax(0,1fr) auto}
-.brow--att .brow__no{font:400 10px/1 var(--f-mono);letter-spacing:.12em;color:var(--ink-2)}
+.brow--att .brow__no{font:400 11px/1 var(--f-mono);letter-spacing:.12em;color:var(--ink-2)}
 .brow--att .brow__no b{font:400 15px/1 var(--f-mono);letter-spacing:.04em;color:var(--ink);min-width:2.2ch}
-.brow--att .brow__mid b{font:400 13px/1.3 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
-.brow--att .brow__cell{font:400 11px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);text-align:right}
+.brow--att .brow__mid b{font:400 15px/1.3 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
+.brow--att .brow__cell{font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);text-align:right}
 @media (hover:hover){.brow--member .brow__go:hover .brow__mid b,.brow--att .brow__go:hover .brow__mid b{color:var(--ink);text-decoration:underline;text-underline-offset:3px}}
 /* the prize stations on a member's page */
-.brow--reward{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:var(--sp-pad);padding:10px 0;border-bottom:var(--edge-hair) solid var(--tint)}
-.brow--reward .brow__mid b{font:400 13px/1.3 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
+.brow--reward{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:var(--sp-pad);padding:8px 0;border-bottom:var(--edge-hair) solid var(--tint)}
+.brow--reward .brow__mid b{font:400 12px/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
 .brow--reward .brow__mid .muted{font:400 11px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
 /* add by hand: a ruled blank line at the head of the register */
 .hand{margin:0;padding:0;border:0;background:none}
 .hand .bsec{border-bottom:0;padding-bottom:0}
 .hand .field{padding:0}
 .hand .input{border-bottom:var(--edge-thin) solid var(--ink)}
-.hand .input::placeholder{color:var(--ink-2);text-transform:uppercase;letter-spacing:.08em;font-size:12px}
-.handlist .brow--hand{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:var(--sp-pad);padding:10px 0;border-bottom:var(--edge-hair) solid var(--tint)}
+.hand .input::placeholder{color:var(--ink-2);text-transform:uppercase;letter-spacing:.12em;font-size:12px}
+.handlist .brow--hand{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:var(--sp-pad);padding:8px 0;border-bottom:var(--edge-hair) solid var(--tint)}
 .handlist .brow__mid b{font:400 15px/1.3 var(--f-mono);color:var(--ink)}
-.handlist .muted{font:400 11px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.handlist .muted{font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .handlist .bstate{border:0;padding:0;background:none;font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.bempty{font:400 11px/1.5 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.bempty{font:400 11px/1.5 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .bdel{margin-top:var(--sp-block);padding-top:var(--sp-pad);border-top:0}
 @media(min-width:1100px){
   .bdet{grid-template-columns:minmax(0,34fr) minmax(0,66fr);column-gap:clamp(32px,4vw,64px)}
