@@ -1136,3 +1136,392 @@ body{background:var(--paper);color:var(--ink)}
   .arrive .authp__act{justify-items:start}
   .arrive__word{font-size:clamp(40px,4vw,56px)}
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   THE OFFICERS' COPY. The board works from the same book: the same
+   running head, chapter titles, rules, controls and ink, set for
+   operating a meeting rather than reading a record.
+   ═══════════════════════════════════════════════════════════════════ */
+.view--board{gap:0;container:page / inline-size}
+.view--board .chap__title{font-size:clamp(50px,9vw,104px)}
+.bhead{margin-bottom:clamp(20px,3vw,34px)}
+.rig{position:relative;min-width:0;isolation:isolate}
+#boardPane[aria-busy="true"] > *{opacity:.55;cursor:progress}
+#boardPane[aria-busy="true"] > .bpanel--live{opacity:1}
+.bpanel{position:relative;display:grid;gap:clamp(22px,3vw,34px);min-width:0;margin:0;padding:0;border:0;background:none}
+.bpanel--wait{min-height:180px;align-content:start;padding-top:10px;border-top:3px solid var(--ink)}
+.bpanel--wait .kicker{font:400 11px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
+.bpanel--wait::after{content:'';display:block;height:110px;margin-top:14px;background:var(--dot) 0 0/5px 5px;opacity:.14;
+  -webkit-mask:linear-gradient(90deg,#000,transparent);mask:linear-gradient(90deg,#000,transparent)}
+.fail{display:grid;justify-items:start;gap:10px;padding:18px 0;border-block:3px solid var(--ink)}
+.fail .kicker{font:400 11px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--seal)}
+.fail p{margin:0;font:400 var(--t-body)/1.4 var(--f-body)}
+.muted{color:var(--ink-2)}
+
+/* a smaller ink control for a row, and one that deletes */
+.act--sm{font-size:14px;min-height:40px}
+.act--sm.act--ink > span{min-height:38px;padding:9px 13px 8px}
+.act--sm.act--ink > span::after{display:none}
+.act--danger.act--ink > span{background:var(--seal)}
+.act[disabled]{opacity:.35}
+
+/* a band over a list: its name in the head face, a count at its end */
+.meetband{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 4px;padding:0 0 8px;
+  border-bottom:3px solid var(--ink);font:400 clamp(20px,2.2vw,26px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.meetband__t{margin:0;font:inherit;letter-spacing:inherit}
+.meetband__t:focus{outline:0}
+.meetband{flex-wrap:wrap}
+.meetband__n{font:400 10.5px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);text-align:right}
+.owed .meetband__n{flex:1 1 100%;text-align:left;margin-top:2px}
+.bsec{margin:0}
+
+/* a row of a list */
+.blist{list-style:none;margin:0;padding:0}
+.brow{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;min-height:52px;padding:8px 0;
+  border-bottom:1px solid var(--tint)}
+.brow__go{display:flex;align-items:center;gap:10px 16px;width:100%;min-height:44px;margin:0;padding:0;border:0;background:none;
+  color:var(--ink);text-align:left;cursor:pointer;font:inherit}
+.brow__go:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+@media (hover:hover){ .brow__go:hover b{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px} }
+.brow__mid{display:grid;gap:2px;min-width:0;flex:1 1 auto}
+.brow__mid b{font:400 19px/1.1 var(--f-head);letter-spacing:.03em;font-weight:400;overflow-wrap:anywhere}
+.brow__mid .muted,.brow > .muted,.brow__go > .muted{font:400 10.5px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.brow__no{flex:none;font:400 10px/1 var(--f-mono);letter-spacing:.1em;color:var(--ink-3)}
+.brow__no b{font:400 20px/1 var(--f-head);color:var(--ink);letter-spacing:.02em}
+.brow__cell{margin-left:auto;font:400 12px/1 var(--f-mono);letter-spacing:.06em;white-space:nowrap}
+.brow--armed{background:linear-gradient(90deg,rgba(193,31,51,.08),transparent)}
+.brow--handed .brow__mid b{color:var(--ink-2)}
+.bstate{padding:3px 7px 2px;border:1.5px solid currentColor;font:400 11px/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase}
+.bstate--ended{color:var(--ink-2)}
+.bempty{margin:0;padding:14px 0}
+.bempty p{margin:0;font:400 11px/1.5 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.meetgrid__err,.bpanel > .authp__err{margin:0;padding:8px 0 8px 12px;border-left:3px solid var(--seal);
+  font:400 12px/1.45 var(--f-mono);letter-spacing:.04em;color:var(--seal)}
+
+/* a second word before something that cannot be taken back */
+.bconfirm{display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-end;gap:8px 14px;width:100%;
+  padding:10px 12px;border:2px solid var(--ink);background:var(--paper-card)}
+.bconfirm__q{flex:1 1 auto;font:400 17px/1.15 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.bconfirm__why{flex:1 1 100%;order:3;font:400 10.5px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--seal)}
+.bconfirm--heavy{border-color:var(--seal)}
+.bconfirm--heavy .bconfirm__q{color:var(--seal)}
+
+/* fields of the board's forms: the same printed line as sign-in */
+.field{position:relative;display:grid;gap:6px;min-width:0}
+.field > .kicker{font:400 10.5px/1.2 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.input{display:block;width:100%;min-width:0;margin:0;padding:9px 2px 7px;border:0;border-radius:0;border-bottom:2px solid var(--ink);
+  background:transparent;color:var(--ink);font:400 16px/1.3 var(--f-mono);letter-spacing:.04em;outline:0;color-scheme:light}
+.input::placeholder{color:var(--ink-3)}
+.input:focus{border-bottom-width:4px;padding-bottom:5px;background:var(--paper-deep)}
+.field:focus-within > .kicker{color:var(--ink)}
+select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearance:none;
+  background:linear-gradient(45deg,transparent 50%,var(--ink) 50%) calc(100% - 10px) 50%/6px 6px no-repeat,
+             linear-gradient(135deg,var(--ink) 50%,transparent 50%) calc(100% - 4px) 50%/6px 6px no-repeat}
+.bform{display:grid;gap:14px;padding:16px;border:2px dashed var(--ink);background:var(--paper-card)}
+.bform__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px 16px}
+.bform__row{display:flex;align-items:center;flex-wrap:wrap;gap:12px 18px}
+.bform .authp__err{margin:0;padding:6px 0 6px 10px;border-left:3px solid var(--seal);font:400 12px/1.4 var(--f-mono);color:var(--seal)}
+
+/* ══ CLUB TOOLS. The club's control page: the current meeting set as the
+   page's slab, the next meeting and what is open in the margin, the
+   club's record as a line of figures at the foot. ══ */
+.tools{grid-template-columns:minmax(0,1fr);grid-template-areas:"now" "side" "record"}
+.tools__now{grid-area:now;position:relative;display:grid;justify-items:start;gap:10px;min-width:0;overflow:hidden;
+  padding:clamp(18px,3vw,30px) clamp(18px,3vw,32px) clamp(20px,3vw,30px);border:3px solid var(--ink);isolation:isolate}
+.tools__now > *{position:relative;z-index:1}
+.tools__kick{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;margin:0;
+  font:400 11px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.tools__state{display:inline-flex;align-items:center;gap:8px;font:400 clamp(17px,2vw,22px)/1 var(--f-head);letter-spacing:.05em;color:var(--ink)}
+.tools__gm{display:flex;align-items:flex-end;gap:8px;margin:0;line-height:.78}
+.tools__gm span{font:400 clamp(18px,2.6vw,26px)/1 var(--f-head);letter-spacing:.04em;padding-bottom:.35em}
+.tools__gm b{font:400 clamp(104px,20vw,190px)/.76 var(--f-display);font-weight:400;letter-spacing:-.03em}
+.tools__none{margin:0;font:400 clamp(40px,7vw,72px)/.9 var(--f-head);letter-spacing:.02em;text-transform:uppercase}
+.tools__count{display:flex;align-items:baseline;gap:10px;margin:0}
+.tools__count b{font:400 clamp(44px,6vw,64px)/.8 var(--f-display);font-weight:400}
+.tools__count span{font:400 11px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.tools__acts{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;margin-top:6px}
+/* open: ink, focus lines, the crimson light */
+.tools--open .tools__now{background:var(--ink);color:var(--paper-card)}
+.tools--open .tools__kick,.tools--open .tools__count span{color:#BDB6AA}
+.tools--open .tools__state{color:var(--paper-card)}
+.tools--open .tools__state::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--crimson);box-shadow:0 0 0 3px rgba(193,31,51,.3)}
+.tools--open .act--ink::before{background:radial-gradient(circle,var(--paper-card) 0 .95px,transparent 1.25px) 0 0/4px 4px}
+.tools--open .act--ink > span{background:var(--paper-card);color:var(--ink)}
+.tools--open .act--rule{color:var(--paper-card)}
+.tools--open .act--rule::after{background:var(--paper-card)}
+.tools__lines{position:absolute!important;inset:0;z-index:0!important;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg at 18% 70%,rgba(251,249,244,.08) 0 .5deg,transparent .5deg 2.6deg);
+  -webkit-mask:radial-gradient(ellipse at 18% 70%,transparent 0 24%,#000 72%);mask:radial-gradient(ellipse at 18% 70%,transparent 0 24%,#000 72%)}
+.tools--today .tools__now{border-style:dashed}
+.tools--ended .tools__gm b{color:transparent;-webkit-text-stroke:2px var(--ink-2)}
+.tools--none .tools__now{border-width:3px 0 1px;padding-inline:0}
+
+.tools__side{grid-area:side;display:grid;gap:clamp(22px,3vw,30px);align-content:start;min-width:0}
+.tools__mark{margin:0 0 8px;padding-bottom:6px;border-bottom:2px solid var(--ink);
+  font:400 18px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase}
+.tools__nextrow{display:flex;align-items:center;flex-wrap:wrap;gap:10px 18px;width:100%;min-height:44px;padding:8px 0;margin:0;
+  border:0;background:none;cursor:pointer;color:var(--ink);text-align:left;font:inherit}
+.dstamp--sm{padding:7px 12px 6px;border-width:2px;outline-width:1px;outline-offset:2px;rotate:-3deg}
+.dstamp--sm b{font-size:30px}
+.dstamp--sm i{font-size:10px}
+.tools__nextgm{font:400 22px/1 var(--f-head);letter-spacing:.03em}
+.tools__nextwhen{font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.tools__nextgo{font:400 16px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.tools__nextrow:focus-visible,.tools__task:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.tools__list{list-style:none;margin:0;padding:0}
+.tools__task{display:flex;align-items:baseline;gap:12px;width:100%;min-height:44px;padding:6px 0;margin:0;border:0;background:none;
+  cursor:pointer;text-align:left;color:var(--ink);font:inherit}
+.tools__task b{font:400 44px/.8 var(--f-display);font-weight:400;color:var(--seal)}
+.tools__task span{font:400 16px/1.2 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+@media (hover:hover){ .tools__task:hover span,.tools__nextrow:hover .tools__nextgm{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px} }
+.tools__nothing{padding:8px 0;font:400 11px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+
+/* the club's record: a line of figures, like a box score */
+.tools__record{grid-area:record;min-width:0}
+.tools__colophon{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));margin:0;border-bottom:1px solid var(--ink)}
+.tools__colophon span{display:grid;gap:6px;padding:10px 14px 12px 0;
+  font:400 10.5px/1.2 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.tools__colophon span + span{padding-left:14px;border-left:1px solid var(--tint)}
+.tools__colophon b{font:400 clamp(40px,5vw,60px)/.8 var(--f-display);font-weight:400;color:var(--ink)}
+
+@container page (min-width:860px){
+  .tools{grid-template-columns:minmax(0,2.2fr) minmax(220px,1fr);grid-template-areas:"now side" "record record";column-gap:clamp(28px,3.4vw,48px)}
+}
+
+/* ══ CHECK-IN. The live desk: the meeting and its state, the code on
+   its white plate, the count as the largest figure after the code, and
+   the commands under it with Close set apart. Open, it is an ink stage;
+   otherwise paper, waiting. ══ */
+.desk{gap:18px}
+.gmpick{display:flex;flex-wrap:wrap;gap:0}
+.gmpick__tab{min-height:44px;padding:10px 16px;margin:0 -2px 0 0;border:2px solid var(--ink);background:var(--paper);cursor:pointer;
+  font:400 16px/1 var(--f-head);letter-spacing:.04em}
+.gmpick__tab--on{background:var(--ink);color:var(--paper-card)}
+.gmpick__tab:focus-visible{outline:2px solid var(--crimson);outline-offset:2px}
+
+.proj{position:relative;display:grid;gap:14px 28px;min-width:0;overflow:hidden;isolation:isolate;
+  grid-template-columns:minmax(0,1fr);grid-template-areas:"meet" "word" "plate" "count" "ctls";
+  padding:clamp(18px,3vw,30px);border:3px solid var(--ink);background:var(--paper)}
+.proj > *{position:relative;z-index:1}
+.proj__meet{grid-area:meet;display:grid;gap:6px;min-width:0}
+.proj__no{display:flex;align-items:flex-end;gap:8px;margin:0;line-height:.78}
+.proj__no span{font:400 clamp(18px,2.6vw,26px)/1 var(--f-head);letter-spacing:.04em;padding-bottom:.35em}
+.proj__no b{font:400 clamp(96px,16vw,170px)/.76 var(--f-display);font-weight:400;letter-spacing:-.03em}
+.proj__when{margin:0;font:400 11px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.proj__word{grid-area:word;justify-self:start;margin:0;padding:8px 14px 7px;border:2.5px solid var(--ink);rotate:-2deg;
+  font:400 clamp(20px,3vw,32px)/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase}
+.proj__plate{grid-area:plate;justify-self:center;display:grid;justify-items:center;gap:10px;width:100%}
+.qrpanel__code{display:grid;place-items:center;width:min(100%,380px);aspect-ratio:1;margin:0;padding:14px;background:#fff;
+  box-shadow:0 0 0 3px var(--paper-card),0 0 0 6px var(--ink)}
+.qrpanel__code canvas,.qrpanel__code img,.qrpanel__code svg{width:100%;height:auto;display:block;image-rendering:pixelated}
+.proj__how{margin:0;font:400 10.5px/1.4 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:#BDB6AA;text-align:center}
+.proj__count{grid-area:count;display:flex;align-items:baseline;gap:12px;margin:0}
+.proj__count b{font:400 clamp(72px,11vw,128px)/.78 var(--f-display);font-weight:400}
+.proj__count span{font:400 12px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
+.proj__ctls{grid-area:ctls;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px}
+.proj__end{margin-left:auto}
+
+.proj--live{background:var(--ink);color:var(--paper-card)}
+.proj--live .proj__when,.proj--live .proj__count span{color:#BDB6AA}
+.proj--live .proj__word{border-color:var(--crimson);background:var(--crimson);color:var(--paper-card)}
+.proj--live .act--ink::before{background:radial-gradient(circle,var(--paper-card) 0 .95px,transparent 1.25px) 0 0/4px 4px}
+.proj--live .act--ink > span{background:var(--paper-card);color:var(--ink)}
+.proj--live .act--rule{color:var(--paper-card)}
+.proj--live .act--rule::after{background:var(--paper-card)}
+.proj--live .act--seal{color:#E8A0A8}
+.proj--live .act--seal::after{background:#E8A0A8}
+.proj__lines{position:absolute!important;inset:0;z-index:0!important;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(251,249,244,.06) 0 .5deg,transparent .5deg 2.8deg);
+  -webkit-mask:radial-gradient(ellipse at 50% 50%,transparent 0 30%,#000 80%);mask:radial-gradient(ellipse at 50% 50%,transparent 0 30%,#000 80%)}
+.desk--ended .proj__no b{color:transparent;-webkit-text-stroke:2px var(--ink-2)}
+.desk--closed .proj{border-style:dashed}
+.desk--stale .proj__word{border-color:var(--seal);color:var(--seal)}
+.desk__next{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 14px;width:100%;min-height:44px;padding:10px 0;margin:0;
+  border:0;border-top:1px solid var(--ink);background:none;cursor:pointer;text-align:left;color:var(--ink);font:inherit}
+.desk__nextlab{font:400 10.5px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.desk__next b{font:400 20px/1 var(--f-head);letter-spacing:.03em;font-weight:400}
+.desk__nextwhen{font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.bidle{justify-items:start;gap:12px;padding:18px 0;border-block:3px solid var(--ink)}
+.bidle__day{margin:0;font:400 11px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
+.bidle__word{margin:0;font:400 clamp(40px,7vw,72px)/.9 var(--f-head);letter-spacing:.02em;text-transform:uppercase}
+
+/* wide: the code at the left, the meeting, state, count and commands in
+   the column beside it; a live code never shows names (Add by hand
+   leaves the stage for a page of names that is not projected) */
+@container page (min-width:860px){
+  .proj{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto 1fr auto;
+    grid-template-areas:"plate meet" "plate word" "plate count" "plate ctls";align-items:start;column-gap:clamp(28px,4vw,56px)}
+  .proj:not(.proj--live){grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"meet count" "word count" "ctls ctls"}
+  .proj__plate{align-self:center;width:auto}
+  .qrpanel__code{width:min(40cqw,calc(100dvh - 330px),460px);min-width:260px}
+  .proj__count{align-self:end}
+  .proj--live .proj__hand{display:none}
+}
+
+/* projector mode: the stage over the whole window, read from the back of
+   the room: the meeting, OPEN, the code and the count, nothing else */
+.is-projecting,.is-projecting body{overflow:hidden}
+.is-projecting .tabs,.is-projecting .rail{visibility:hidden}
+.is-projecting .rig{isolation:auto}
+.proj.proj--full{position:fixed;inset:0;z-index:400;margin:0;border:0;width:auto;height:auto;background:var(--ink);color:var(--paper-card);
+  padding:max(4vh,env(safe-area-inset-top,0px)) max(4vw,env(safe-area-inset-right,0px)) max(4vh,env(safe-area-inset-bottom,0px)) max(4vw,env(safe-area-inset-left,0px));
+  grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;
+  grid-template-areas:"plate meet" "plate word" "plate count" "plate ctls";column-gap:6vw;row-gap:2.4vh;align-items:start}
+.proj--full .proj__meet{align-self:start}
+.proj--full .proj__no span{font-size:clamp(28px,4vh,48px)}
+.proj--full .proj__no b{font-size:clamp(110px,22vh,280px)}
+.proj--full .proj__when{display:none}
+.proj--full .proj__word{justify-self:start;font-size:clamp(28px,5vh,60px);padding:1.4vh 2vh}
+.proj--full .proj__plate{align-self:center;justify-self:start}
+.proj--full .qrpanel__code{width:min(84vh,52vw);min-width:0;padding:2.4vh}
+.proj--full .proj__how{font-size:clamp(12px,1.8vh,20px);color:#CFC8BC}
+.proj--full .proj__count{align-self:center;flex-direction:column;align-items:flex-start;gap:3.4vh}
+.proj--full .proj__count b{font-size:clamp(140px,32vh,400px)}
+.proj--full .proj__count span{font-size:clamp(18px,3vh,34px);color:#CFC8BC}
+.proj--full .proj__ctls{align-self:end;justify-self:end;opacity:.4;transition:opacity 200ms steps(3,end)}
+.proj--full.proj--awake .proj__ctls,.proj--full .proj__ctls:focus-within{opacity:1}
+.proj--full .proj__hand{display:none}
+@media (max-aspect-ratio:1/1){
+  .proj.proj--full{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto minmax(0,1fr) auto;
+    grid-template-areas:"meet word" "count count" "plate plate" "ctls ctls"}
+  .proj--full .proj__word{justify-self:end}
+  .proj--full .proj__count{flex-direction:row;align-items:baseline;gap:3vw;margin-top:1vh}
+  .proj--full .proj__count b{font-size:clamp(90px,14vh,190px)}
+  .proj--full .proj__plate{justify-self:center}
+  .proj--full .qrpanel__code{width:min(84vw,50vh)}
+}
+:root[data-still] .proj--full .proj__ctls{transition:none}
+
+/* ══ MEETINGS. The club's calendar and minute book: the meetings ahead
+   as a printed schedule with large numbers and strong dates, the blank
+   line the next one is written on, today's meeting as the fold, and the
+   meetings held kept by the month, quieter and denser. ══ */
+.minutes{gap:clamp(26px,4vw,40px)}
+.minutes__lab{margin:0 0 4px;padding-bottom:8px;border-bottom:3px solid var(--ink);
+  font:400 clamp(20px,2.2vw,26px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.minutes__list{display:grid}
+.mrow{border-bottom:1px solid var(--tint)}
+.mrow__go{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"gm day n" "gm when state";
+  align-items:center;gap:2px 16px;width:100%;min-height:52px;padding:8px 0;margin:0;border:0;background:none;cursor:pointer;
+  color:var(--ink);text-align:left;font:inherit}
+.mrow__go:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.mrow__gm{grid-area:gm;display:flex;align-items:flex-end;gap:4px;line-height:.8}
+.mrow__gm span{font:400 10px/1 var(--f-mono);letter-spacing:.1em;color:var(--ink-3);padding-bottom:.2em}
+.mrow__gm b{font:400 30px/.8 var(--f-display);font-weight:400}
+.mrow__day{grid-area:day;font:400 16px/1.1 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.mrow__when{grid-area:when;font:400 10.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--seal)}
+.mrow__state{grid-area:state;justify-self:end;font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.mrow__n{grid-area:n;justify-self:end;display:flex;align-items:baseline;gap:6px;white-space:nowrap}
+.mrow__n b{font:400 18px/1 var(--f-head);font-weight:400}
+.mrow__n span{font:400 9.5px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+@media (hover:hover){ .mrow__go:hover .mrow__day{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px} }
+/* ahead: the schedule, large */
+.minutes__ahead .mrow__go{min-height:70px}
+.minutes__ahead .mrow__gm b{font-size:clamp(44px,6vw,60px)}
+.minutes__ahead .mrow__day{font-size:clamp(20px,2.4vw,26px)}
+/* the blank line the next meeting is written on */
+.mrow--blank{border-bottom:0}
+.mrow__new{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"gm line sched"}
+.mrow__new .mrow__gm b{color:var(--ink-3)}
+.mrow__line{grid-area:line;align-self:end;height:0;margin-bottom:12px;border-bottom:2px dashed var(--ink-3)}
+.mrow__sched{grid-area:sched;font:400 17px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;
+  padding:7px 12px 6px;border:2px solid var(--ink)}
+@media (hover:hover){ .mrow__new:hover .mrow__sched{background:var(--ink);color:var(--paper-card)} }
+.mrow--blank .bform{margin:8px 0 14px}
+/* today: the fold, an ink strip */
+.minutes__fold{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.minutes__fold .mrow{border:0}
+.minutes__fold .mrow__go{min-height:84px;padding:14px 18px;background:var(--ink);color:var(--paper-card)}
+.minutes__fold .mrow__gm span,.minutes__fold .mrow__n span{color:#BDB6AA}
+.minutes__fold .mrow__gm b{font-size:clamp(52px,7vw,72px)}
+.minutes__fold .mrow__day{font-size:clamp(20px,2.4vw,26px)}
+.minutes__fold .mrow__state{color:var(--paper-card)}
+.minutes__fold .mrow--open .mrow__state{padding:5px 8px 4px;background:var(--crimson);color:var(--paper-card);font:400 13px/1 var(--f-head);letter-spacing:.06em}
+.minutes__fold .mrow__n b{font-size:clamp(30px,3.4vw,40px);font-family:var(--f-display)}
+.minutes__fold .mrow__go:focus-visible{outline:3px solid var(--crimson)}
+/* held: the minute book, quieter */
+.mrow__month{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:18px 0 6px;border-bottom:2px solid var(--ink)}
+.mrow__month:first-child{padding-top:6px}
+.mrow__mname{font:400 clamp(26px,3vw,36px)/.8 var(--f-display);text-transform:uppercase}
+.mrow__mtotal{font:400 10px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.minutes__held .mrow__go{min-height:46px;padding:6px 0}
+.minutes__held .mrow__gm b{font-size:24px;color:var(--ink-2)}
+.minutes__held .mrow__day{font-size:15px;color:var(--ink-2)}
+.mrow--left .mrow__state{color:var(--seal)}
+.minutes__foot{margin:10px 0 0;font:400 10.5px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+@container page (min-width:860px){
+  .minutes{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:clamp(28px,4vw,56px);align-items:start}
+  .minutes > .meetgrid__err{grid-column:1 / -1}
+  .minutes__fold{grid-column:1 / -1;grid-row:1}
+  .minutes__ahead{grid-column:1}
+  .minutes__held{grid-column:2}
+}
+
+/* ══ MEMBERS. The club's register: the index figures, the prize table
+   (who is owed a prize, and the hand-over), then the roster itself, its
+   names the visual content, indexed by letter, each with the ten seats
+   of the card they hold. ══ */
+.memgrid{grid-template-columns:minmax(0,1fr);gap:clamp(26px,4vw,40px)}
+.memidx{display:flex;flex-wrap:wrap;gap:6px 28px;margin:0}
+.memidx span{display:flex;align-items:baseline;gap:8px;font:400 10.5px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.memidx b{font:400 clamp(44px,6vw,64px)/.8 var(--f-display);font-weight:400;color:var(--ink)}
+.owed{min-width:0}
+.brow--owed .brow__mid b{font-size:21px}
+.owed__self{font:400 10.5px/1.3 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);text-align:right}
+.owed__more{margin-top:8px}
+.rosterpanel{min-width:0}
+.bfilters{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:10px 20px;margin-bottom:10px}
+.bfilters__q::before{content:'Find';position:absolute;left:0;bottom:10px;font:400 16px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink);pointer-events:none}
+.bfilters__q .input{padding-left:52px;font-size:18px}
+.roster{width:100%;border-collapse:collapse}
+.roster thead th{padding:8px 10px 8px 0;border-bottom:3px solid var(--ink);text-align:left;
+  font:400 9.5px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+.roster thead th:last-child,.roster td:last-child{text-align:right;padding-right:0}
+.roster tbody tr[data-bmember]{border-bottom:1px solid var(--tint);cursor:pointer}
+@media (hover:hover){ .roster tbody tr[data-bmember]:hover{background:rgba(19,18,17,.035)} }
+.roster td,.roster tbody th{padding:6px 10px 6px 0;text-align:left;vertical-align:middle;
+  font:400 12px/1 var(--f-mono);letter-spacing:.06em;color:var(--ink-2)}
+.roster td:last-child{font:400 22px/1 var(--f-head);color:var(--ink)}
+.roster__name{min-height:44px;padding:0;margin:0;border:0;background:none;cursor:pointer;text-align:left;color:var(--ink);
+  font:400 clamp(19px,2vw,22px)/1.1 var(--f-head);letter-spacing:.03em;overflow-wrap:anywhere}
+.roster__name:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.roster__letter td{padding:14px 0 2px;border-bottom:1px solid var(--ink);text-align:left!important}
+.roster__letter b{font:400 28px/.8 var(--f-display);color:var(--seal)}
+.roster__card{white-space:nowrap}
+.roster__cno{margin-right:8px;font:400 10px/1 var(--f-mono);color:var(--ink-3)}
+.roster__seats{display:inline-flex;gap:2px;vertical-align:middle}
+.roster__seats i{width:8px;height:8px;border-radius:50%;border:1px solid var(--ink-3)}
+.roster__seats i.is-on{background:var(--ink);border-color:var(--ink)}
+.brow__none{color:var(--ink-3)}
+.bpage{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding-top:10px;border-top:1px solid var(--ink)}
+.bpage .muted{font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase}
+@container page (max-width:560px){ .roster__card,.roster thead .roster__card{display:none} }
+@container page (min-width:1000px){
+  .memgrid{grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);grid-template-areas:"idx idx" "roster owed";column-gap:clamp(28px,4vw,56px);align-items:start}
+  .memgrid > .memidx{grid-area:idx}
+  .memgrid > .owed{grid-area:owed}
+  .memgrid > .rosterpanel{grid-area:roster}
+}
+
+/* ══ A member or a meeting, opened from a list ══ */
+.bdet{display:grid;gap:clamp(22px,3vw,34px)}
+.bdet__head{display:grid;gap:10px;min-width:0}
+.crumb{margin:0}
+.bwho{display:grid;gap:8px}
+.bwho__lab{margin:0;font:400 10.5px/1.2 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.bdetail__name{margin:0;font:400 clamp(52px,10vw,110px)/.82 var(--f-display);letter-spacing:-.02em;text-transform:uppercase;overflow-wrap:anywhere}
+.bmeet{display:grid;gap:10px}
+.bmeet__when{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:0;font:400 11px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.bmeet__when b{padding:4px 8px 3px;background:var(--crimson);color:var(--paper-card);font:400 13px/1 var(--f-head);letter-spacing:.06em}
+.bdet__body{display:grid;gap:clamp(22px,3vw,30px);min-width:0}
+.hand{display:grid;gap:10px;padding:14px 16px;border:2px solid var(--ink);background:var(--paper-card)}
+.hand .field::before{content:'Find';position:absolute;left:0;bottom:10px;font:400 16px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;pointer-events:none}
+.hand .input{padding-left:52px;font-size:18px}
+.bdel{padding-top:12px;border-top:1px solid var(--ink)}
+@container page (min-width:860px){
+  .bdet{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);column-gap:clamp(28px,4vw,56px);align-items:start}
+  .bdet__head{position:sticky;top:20px}
+}
+.view--board .acct{margin-top:clamp(40px,6vw,64px)}
+@media(min-width:1024px){ .view--board .acct{display:none} }

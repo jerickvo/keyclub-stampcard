@@ -373,14 +373,16 @@ function arrivalMeeting(bare){
 const Views = {
   loadFailure(title){
     return `<div class="view">
-      <header class="rechead">
-        <h1 class="title rechead__title">${title}</h1>
+      <header class="rechead chap">
+        ${C.run('—', title)}
+        <h1 class="chap__title rechead__title">${title}</h1>
+        <i class="brush" aria-hidden="true"></i>
       </header>
       <section class="rig">
-        <div class="panel bpanel fail">
+        <div class="bpanel fail">
           <p class="kicker">Could not load</p>
           <p>Check your connection.</p>
-          <button class="btn btn--go" type="button" data-reload data-busy="Retrying">Try again</button>
+          <button class="act act--ink" type="button" data-reload data-busy="Retrying"><span class="act__lab">Try again</span></button>
         </div>
       </section>
     </div>`;
@@ -772,15 +774,24 @@ const Views = {
     BoardUI.loading = true;
     BoardUI.shown = null;
     const idx = { 'Club Tools':'01', 'Check-in':'02', 'Meetings':'03', 'Members':'04' }[title] || '';
-    return `<div class="view view--board">
-      <header class="rechead folio">
-        <h1 class="title rechead__title folio__word">${title}</h1>
-        ${idx ? `<span class="folio__meta">${idx}</span>` : ''}
+    const key = { 'Club Tools':'tools', 'Check-in':'desk', 'Meetings':'meet', 'Members':'members' }[title] || 'x';
+    const today = Schedule.today();
+    /* the officers' copy of the same book: the same running head, chapter
+       title and folio, the date at the head of every page */
+    return `<div class="view view--board view--b-${key}">
+      <header class="rechead chap bhead">
+        ${C.run(idx, title, "Keystamp · Officers' copy")}
+        <div class="rec__head">
+          <h1 class="chap__title rechead__title">${title}</h1>
+          <p class="daybook__date"><i>${esc(onClock(today, { weekday:'long' }))}</i><b>${esc(onClock(today, { month:'short', day:'numeric' }))}</b></p>
+        </div>
+        <i class="brush" aria-hidden="true"></i>
       </header>
       <section class="rig">
         <div id="boardPane">${BoardUI.pane()}</div>
       </section>
       ${tail}
+      ${C.folio(idx, title)}
     </div>`;
   },
 

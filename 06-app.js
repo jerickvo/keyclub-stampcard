@@ -705,11 +705,11 @@ document.addEventListener('click', e => {
     const who = stamp.dataset.who, no = stamp.dataset.no;
     if (!stamp.dataset.armed){
       arm(stamp, () => {
-        stamp.textContent = 'Add';
+        labelOf(stamp).textContent = 'Add';
         stamp.setAttribute('aria-label', `Add ${who} to GM ${no}`);
         stamp.closest('.brow')?.classList.remove('brow--armed');
       });
-      stamp.textContent = 'Confirm';
+      labelOf(stamp).textContent = 'Confirm';
       stamp.setAttribute('aria-label', `Confirm: check ${who} in to GM ${no}`);
       stamp.closest('.brow')?.classList.add('brow--armed');
       return;
@@ -973,11 +973,11 @@ document.addEventListener('click', e => {
     const who = hand.dataset.who, prize = hand.dataset.prize;
     if (!hand.dataset.armed){
       arm(hand, () => {
-        hand.textContent = 'Hand over';
+        labelOf(hand).textContent = 'Hand over';
         hand.setAttribute('aria-label', `Hand ${prize} to ${who}`);
         hand.closest('.brow')?.classList.remove('brow--armed');
       });
-      hand.textContent = 'Confirm';
+      labelOf(hand).textContent = 'Confirm';
       hand.setAttribute('aria-label', `Confirm: hand ${prize} to ${who}`);
       hand.closest('.brow')?.classList.add('brow--armed');
       return;
@@ -1373,7 +1373,7 @@ function projector(on){
   stage.classList.toggle('proj--full', on);
   document.documentElement.classList.toggle('is-projecting', on);
   const b = $('[data-bfull]');
-  if (b) b.textContent = on ? 'Leave the wall' : 'Project';
+  if (b) labelOf(b).textContent = on ? 'Leave the wall' : 'Project';
   try {
     if (on && document.fullscreenEnabled && !document.fullscreenElement)
       document.documentElement.requestFullscreen().catch(() => {});

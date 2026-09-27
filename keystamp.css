@@ -81,16 +81,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .view{position:relative;display:flex;flex-direction:column;gap:var(--sp-block)}
 .view > *{min-width:0}
 
-.rig{position:relative;min-width:0}
-.rig > .panel{margin-block:0}
-
-.panel{
-  position:relative;
-  z-index:1;
-  background:var(--paper);
-  border:var(--rule) solid var(--ink);
-  height:100%}
-
 .kicker{font:400 13px/1 var(--f-body);letter-spacing:.1em;color:var(--ink-2)}
 
 .title{
@@ -103,17 +93,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   font:400 15px/1.25 var(--f-body)}
 
 .muted{color:var(--ink-2)}
-
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  min-height:var(--tap);padding:10px var(--sp-pad);
-  border:var(--rule-hair) solid var(--ink);background:var(--paper);color:var(--ink);
-  cursor:pointer;border-radius:0;font:400 14px/1.1 var(--f-body);
-  letter-spacing:.04em;position:relative;overflow:hidden}
-@media (hover:hover){.btn:hover{transform:translate(-1px,-1px)}}
-
-.link{background:none;border:0;cursor:pointer;
-  color:var(--ink);font:500 var(--t-body)/1.2 var(--f-body);letter-spacing:0;
-  text-decoration:underline;text-underline-offset:3px}
 
 .toasts{
   position:fixed;
@@ -147,37 +126,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
                       to  {transform:translate(-50%,-50%) rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){ .loader{animation:none} }
 :root[data-still] .loader{animation:none}
-
-.field{
-  display:flex;
-  gap:var(--sp-tight);
-  flex-wrap:wrap;
-  align-items:stretch;
-  position:relative}
-
-.field > .kicker{flex:1 0 100%;margin-bottom:2px}
-
-.field > .btn{flex:1 1 auto;min-width:max-content}
-.field > .input{flex:999 1 min(100%,13ch)}
-
-.input{flex:1 1 min(100%,13ch);min-width:0;
-  padding:11px var(--sp-tight) 9px;
-  background:transparent;color:var(--ink);
-  border:0;border-bottom:var(--edge-thin) solid var(--ink);border-radius:0;
-  font:500 clamp(13px,.4vw + 11.7px,14.5px)/1.2 var(--f-mono);
-  letter-spacing:.08em;transition:none}
-/* a placeholder is the visible label of the search fields: it keeps text contrast */
-.input::placeholder{color:var(--ink-2);letter-spacing:.06em}
-
-.input:focus{outline:0;border-bottom-color:var(--ink);
-  border-bottom-width:var(--edge-heavy)}
-.field:focus-within::before{content:">";position:absolute;left:2px;bottom:11px;
-  font:400 13px/1 var(--f-mono);color:var(--ink);pointer-events:none;z-index:2}
-.field:focus-within > .input{padding-left:var(--sp-pad)}
-select.input{padding-right:var(--sp-pad)}
-
-.qrpanel__code{display:grid;place-items:center;padding:var(--sp-pad);background:#fff;
-  margin-top:var(--sp-pad);border:var(--rule) solid var(--ink)}
 
 .fx{position:fixed;inset:0;z-index:125;pointer-events:none;overflow:hidden;
   contain:layout paint}
@@ -332,23 +280,8 @@ html,body{overflow-x:clip;max-width:100%}
 /* a control reached by Tab is scrolled clear of the fixed tab bar (the
    bar is 0 tall where it is hidden) */
 html{scroll-padding-bottom:calc(var(--tabs-h) + env(safe-area-inset-bottom, 0px) + 8px)}
-/* a board page being read again says so under the reader's tap */
-#boardPane[aria-busy="true"] > *{opacity:.55;cursor:progress}
-/* but not a live check-in code, which members are scanning */
-#boardPane[aria-busy="true"] > .bpanel--live{opacity:1}
 
-.rig{isolation:isolate}
-
-.panel{
-  border-width:calc(var(--ink-w, 2.8) * 1px);
-  border-style:solid;
-  border-radius:0;
-}
-
-.panel > *:not([data-layer]){
-  position:relative;z-index:1}
-
-.h2,.tabs button,.btn,.link{font-family:var(--f-body);font-weight:500}
+.h2,.tabs button{font-family:var(--f-body);font-weight:500}
 body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
 .title{letter-spacing:-.035em}
 .h2{font-size:clamp(14px,1.05vw,16px);letter-spacing:0}
@@ -414,33 +347,15 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
   font-size:clamp(12px,3.2vw,14px);letter-spacing:0}
 .tabs button[aria-current="page"]{background:transparent;color:var(--ink)}
 
-.panel{padding:var(--sp-pad)}
-
 .h2 + *{margin-top:var(--sp-tight)}
 .kicker + *{margin-top:4px}
-
-.qrpanel__code{
-  margin-inline:auto;
-  max-width:min(420px,100%)}
-.qrpanel__code canvas,.qrpanel__code img,.qrpanel__code svg{
-  width:100%;height:auto;display:block;image-rendering:pixelated}
-@media(min-width:768px){.qrpanel__code{max-width:min(420px,58vw)}}
 
 @media(max-width:1023px){
   .shell > div{display:flex;flex-direction:column}
   main#view{position:relative;flex:1 0 auto}
 }
 
-.link{display:inline-flex;align-items:center;
-  min-height:32px;padding-block:6px}
-@media(pointer:coarse){
-  .link{min-height:44px;padding-block:11px}
-}
-
 :where(svg:not(.fxdefs):not([width])){width:22px;height:22px;flex:none}
-
-.qrpanel__code svg{width:100%;height:100%}
-.btn svg{width:16px;height:16px}
 .rail__link svg,.tabs button svg{width:18px;height:18px}
 
 .kicker{display:inline-block}
