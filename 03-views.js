@@ -67,6 +67,11 @@ const unusual = m => (m.time && m.time !== '12:40 PM') || (m.place && m.place !=
   ? [m.time, m.place].filter(Boolean) : [];
 
 const C = {
+  /* A prize in the set: a medallion pressed when it is earned, a row of
+     ten ticks for the stamps that lead to it, and where it stands. Locked
+     is a printed blank under a tone; unlocked is inked, with the claim
+     as a blank stamp waiting to be pressed; claimed carries the club's
+     burgundy; collected is filed away, dated. */
   tier(r, total, prev = 0, k = 0){
     /* one rule for a tier, read from the store (rewardState) */
     const at    = Store.tierState(r);
@@ -76,8 +81,6 @@ const C = {
        has handed it over. A club that does not record hand-overs sees
        only Claimed, as before */
     const took  = at === 'claimed' && r.handedAt;
-    /* a claim is said once, as a line of type: collected (with its day),
-       or claimed and waiting for an officer */
     const note  = at !== 'claimed' ? ''
       : took ? `Collected ${fmtClubDay(r.handedAt)}`
       : Store.handovers ? 'Claimed; collect it from an officer' : 'Claimed';
@@ -86,16 +89,23 @@ const C = {
     const say   = state === 'sealed' && !far ? `${left} more ${left === 1 ? 'stamp' : 'stamps'}` : '';
     const busy  = ready && Store.claiming.has(`${Store.user && Store.user.id}:${r.id}`);
     /* the claim is a blank stamp waiting to be pressed, the word inside it */
-    const claim = !ready ? '' : `<button class="tier__claim" type="button" data-claim="${r.id}"${busy ? ' aria-busy="true" aria-disabled="true"' : ''} aria-label="${esc(`${busy ? 'Claiming' : 'Claim'} ${r.name}`)}">
-        <svg class="tier__shape" viewBox="0 0 64 64" aria-hidden="true"><path d="${stampShape(r.required * 3 + 1, 3.4)}"/></svg>
-        <span class="tier__word">${busy ? 'Claiming' : 'Claim'}</span>
-      </button>`;
+    const claim = !ready ? '' : `<button class="tier__claim" type="button" data-claim="${r.id}"${busy ? ' aria-busy="true" aria-disabled="true"' : ''} aria-label="${esc(`${busy ? 'Claiming' : 'Claim'} ${r.name}`)}"><span class="tier__word">${busy ? 'Claiming' : 'Claim'}</span></button>`;
+    /* the stamps that lead to this prize, from the one before it */
+    const span = r.required - prev, got = Math.max(0, Math.min(span, total - prev));
+    const ticks = `<span class="tier__ticks" aria-hidden="true">${Array.from({ length:span }, (_, i) =>
+      `<i${i < got ? ' class="on"' : ''}></i>`).join('')}</span>`;
 
     return `<div class="tier tier--${state}${took ? ' tier--took' : ''}${far ? ' tier--far' : ''}" data-reward="${r.id}" style="--k:${k}">
-      <span class="tier__at"><b>${pad(r.required)}</b><span class="sr-only"> stamps</span></span>
+      <span class="tier__medal" aria-hidden="true">
+        <svg viewBox="0 0 64 64"><path class="tier__rim" d="${stampShape(r.required * 3 + 1, 3.6)}"/><path class="tier__face" d="${stampShape(r.required * 3 + 1, 0)}"/></svg>
+        <b>${r.required}</b>
+      </span>
+      <span class="tier__at"><b>${pad(r.required)}</b> <span>stamps</span></span>
       <span class="tier__body">
         <span class="tier__name">${esc(r.name)}</span>
         ${r.desc ? `<span class="tier__desc">${esc(r.desc)}</span>` : ''}
+        ${ticks}
+        ${ready ? '<span class="tier__unl">Unlocked</span>' : ''}
         ${say ? `<span class="tier__say">${say}</span>` : ''}
         ${note ? `<span class="tier__note">${esc(note)}</span>` : ''}
         ${claim}
@@ -210,35 +220,33 @@ const C = {
           .findIndex(x => x.meetingId === m.id)
       : -1;
     /* the stamp, pressed beside the line; a meeting missed leaves its
-       place blank — the blank is the mark */
+       blank printed and empty — the blank is the mark */
     const mark = idx >= 0
       ? `<svg class="lrow__mark" viewBox="0 0 64 64" aria-hidden="true"><path class="lrow__face" d="${stampShape(idx + 1, 0)}"/>
           <g transform="translate(${(32 - 32 * STAMP_FIT).toFixed(1)} ${(32 - 32 * STAMP_FIT).toFixed(1)}) scale(${STAMP_FIT})">${stampMark(idx)}</g></svg>`
-      : '';
+      : `<svg class="lrow__blank" viewBox="0 0 64 64" aria-hidden="true"><path d="${stampShape(m.no + 40, 0)}"/></svg>`;
 
     /* the room is said only when it is not the usual one */
     const away = m.place && m.place !== Schedule.PLACE ? esc(m.place) : '';
-    const detail = {
-      set:  scan ? (byHand(scan) ? 'By an officer' : fmtTime(scan.at)) : '',
-      open: '',
+    const when = {
+      set:  scan ? (byHand(scan) ? '—' : fmtTime(scan.at)) : '',
+      open: 'Open now',
       /* today's is still the day's: an officer can add a stamp by hand */
-      miss: m.today ? 'Not checked in' : '',
+      miss: m.today ? 'Not yet' : '—',
       upcoming: esc(m.time),
     }[state];
+    const via = { set: scan && byHand(scan) ? 'By hand' : 'QR', open:'', miss: m.today ? '' : 'Missed', upcoming:'' }[state];
     const sr = { set:'Stamped', miss:m.today ? '' : 'Missed', open:'Check-in open', upcoming:'Ahead' }[state];
 
     const el   = state === 'open' ? 'button' : 'div';
     const attr = state === 'open' ? ' type="button" data-go="scan"' : '';
 
     return `<${el} class="lrow lrow--${state}${gap > 1 ? ` lrow--gap${gap}` : ''}"${attr}>
-      <span class="lrow__no">${pad(m.no)}</span>
+      <span class="lrow__no"><i>GM</i>${pad(m.no)}</span>
       <span class="lrow__stamp">${mark}</span>
-      <span class="lrow__body">
-        <span class="lrow__date">${m.today ? 'Today' : fmtDay(m.date)}</span>
-        ${detail ? `<span class="lrow__when">${detail}</span>` : ''}
-        ${away ? `<span class="lrow__at">${away}</span>` : ''}
-      </span>
-      ${state === 'open' ? '<span class="lrow__go">Check in</span>' : ''}
+      <span class="lrow__date"><b>${m.today ? 'Today' : esc(onClock(m.date, { month:'short', day:'numeric' }))}</b><i>${esc(onClock(m.date, { weekday:'short' }))}</i></span>
+      <span class="lrow__when">${when}</span>
+      <span class="lrow__via">${state === 'open' ? '<span class="lrow__go">Check in</span>' : via}${away ? ` · ${away}` : ''}</span>
       ${sr ? `<span class="sr-only">${sr}</span>` : ''}
     </${el}>`;
   },
@@ -378,12 +386,18 @@ const Views = {
     </div>`;
   },
 
+  /* Today: the member's current chapter. The head of the page is
+     recomposed by what is true now, each state its own weight: check-in
+     open is an ink slab that is itself the way in; checked in is the
+     stamp pressed over the meeting's number; a meeting later today is
+     an outline waiting to be filled; a meeting over without a stamp is
+     the number printed hollow; another day is a rubber date stamp;
+     nothing scheduled is a line of type. Under it the card, and in the
+     margin the schedule, the last stamp, and a prize ready to claim. */
   home(){
     if (Store.failed) return this.loadFailure('Today');
-    /* the masthead answers "what now": check in, checked in, today's
-       meeting still to come, or the next one. Only what the record
-       says is printed; a member cannot see when check-in will open, so
-       the page never guesses */
+    /* Only what the record says is printed; a member cannot see when
+       check-in will open, so the page never guesses */
     const day  = Store.todayMeeting();
     const scan = day && Store.scanFor(day.id);
     const live = Boolean(day && day.open && !scan);
@@ -392,101 +406,127 @@ const Views = {
     const soonest = (a, b) => String(a.date).localeCompare(String(b.date)) || at(a) - at(b) || a.no - b.no;
     const next = Store.meetings.filter(m => m.upcoming && (!day || m.id !== day.id)).sort(soonest)[0] || null;
     const room = m => m.place || Schedule.PLACE;
-
-    const p    = Rules.progress();
-    const goal = Store.rewards.find(r => r.required === p.floor + p.span) || null;
-    const full = p.filled >= p.span;
-    const near = goal && !goal.claimed && !full && p.remaining <= 2;
+    const away = m => unusual(m).includes(m.place) ? m.place : '';
 
     const chrono = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
     const lift = (32 - 32 * STAMP_FIT).toFixed(1);
     const glyph = (i, cls) => `<svg class="${cls}" viewBox="0 0 64 64" aria-hidden="true"><path class="${cls}__face" d="${stampShape(i + 1, 0)}"/>
       <g transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(i)}</g></svg>`;
-
-    const kick = parts => `<p class="mast__kick">${parts.filter(Boolean).map(t => `<span>${esc(t)}</span>`).join('')}</p>`;
-    const line = (gm, no, state, extra = '') =>
-      `<span class="mast__line"><span class="mast__gm">${gm}</span><b class="mast__no">${no}${extra}</b>${state ? `<span class="mast__state">${state}</span>` : ''}</span>`;
-    /* a prize within reach is said once, on the card's own line under the
-       masthead, and by the ring on its seat */
+    const kick = parts => `<span class="mast__kick">${parts.filter(Boolean).map(t => `<span>${esc(t)}</span>`).join('')}</span>`;
+    const line = (no, extra = '') =>
+      `<span class="mast__line"><span class="mast__gm">GM</span><b class="mast__no">${no}</b>${extra}</span>`;
+    const daysTo = iso => Math.round((Date.parse(iso + 'T12:00:00Z') - Date.parse(Schedule.today() + 'T12:00:00Z')) / 864e5);
 
     let kind, mast;
     if (live){
       kind = 'open';
       mast = `<button class="mast mast--open" type="button" data-go="scan" aria-label="Check in at general meeting ${day.no}">
-        ${kick([fmtDate(day.date), unusual(day).includes(day.place) ? day.place : ''])}
-        ${line('GM', pad(day.no), '<span class="mast__cmd">Check in</span>')}
+        <span class="mast__lines" aria-hidden="true"></span>
+        ${kick(['Check-in open', away(day)])}
+        ${line(pad(day.no))}
+        <span class="mast__cmd">Check in</span>
       </button>`;
     } else if (scan){
       kind = 'set';
       const i = chrono.findIndex(x => x.meetingId === day.id);
       mast = `<div class="mast mast--set">
-        ${kick([fmtDate(day.date), unusual(day).includes(day.place) ? day.place : ''])}
-        ${line('GM', pad(day.no), byHand(scan) ? 'Checked in · by an officer' : `Checked in · ${fmtTime(scan.at)}`, i >= 0 ? glyph(i, 'mast__imp') : '')}
+        ${kick(['Checked in', away(day)])}
+        ${line(pad(day.no), i >= 0 ? glyph(i, 'mast__imp') : '')}
+        <span class="mast__state">${byHand(scan) ? 'Checked in · by an officer' : `Checked in · ${fmtTime(scan.at)}`}</span>
+        ${i >= 0 ? `<span class="mast__note">Stamp ${pad(i + 1)} · ${byHand(scan) ? 'added by hand' : 'QR verified'}</span>` : ''}
       </div>`;
     } else if (day && day.ended && !day.open){
       /* over, and no stamp: said as today's fact, not yet a "missed" one,
          since an officer can still add a stamp by hand */
       kind = 'closed';
       mast = `<div class="mast mast--closed">
-        ${kick([fmtDate(day.date), 'Meeting closed'])}
-        ${line('GM', pad(day.no), 'Not checked in')}
+        ${kick(['Meeting closed', away(day)])}
+        ${line(pad(day.no))}
+        <span class="mast__state">Not checked in</span>
       </div>`;
     } else if (day){
       /* under way and not open: before opening or after an early close,
          which a member cannot tell apart, so only what is true now */
       kind = 'today';
       mast = `<div class="mast mast--today">
-        ${kick([fmtDate(day.date)])}
-        ${line('GM', pad(day.no), day.started && !day.open ? 'Check-in not open' : `${esc(day.time || '')} · ${esc(room(day))}`)}
+        ${kick(['Today', `${day.time || ''} · ${room(day)}`])}
+        ${line(pad(day.no))}
+        <span class="mast__state">${day.started && !day.open ? 'Check-in not open' : `Starts ${esc(day.time || '')}`}</span>
       </div>`;
     } else if (next){
       kind = 'next';
+      const n = daysTo(next.date);
       mast = `<div class="mast mast--next">
         ${kick(['Next meeting', `GM ${pad(next.no)}`])}
-        <span class="mast__line"><b class="mast__date">${fmtDate(next.date)}</b><span class="mast__state">${esc(next.time)}${unusual(next).includes(next.place) ? ` · ${esc(next.place)}` : ''}</span></span>
+        <span class="mast__date" aria-label="${esc(fmtDate(next.date))}">
+          <span class="dstamp"><i>${esc(onClock(next.date, { weekday:'short' }))}</i><b>${esc(onClock(next.date, { month:'short', day:'numeric' }))}</b></span>
+        </span>
+        <span class="mast__state">${n === 1 ? 'Tomorrow' : n > 1 ? `In ${n} days` : ''}${n >= 1 ? ' · ' : ''}${esc(next.time)}${away(next) ? ` · ${esc(next.place)}` : ''}</span>
       </div>`;
     } else {
       kind = 'none';
-      const last = chrono[chrono.length - 1];
-      const lastM = last && Store.meeting(last.meetingId);
       mast = `<div class="mast mast--none">
         ${kick(['Nothing scheduled'])}
-        ${lastM ? `<span class="mast__line"><span class="mast__gm">Last stamp</span><b class="mast__date">GM ${pad(lastM.no)} · ${fmtDay(lastM.date)}</b></span>`
-                : line('GM', '01', 'Not yet held')}
+        <span class="mast__state">The board has not set the next meeting.</span>
       </div>`;
     }
 
+    /* the margin: the schedule, the last stamp, a prize ready */
     const showing = day ? day.id : next ? next.id : null;
-    const ahead = Store.meetings
-      .filter(m => m.upcoming && m.id !== showing)
-      .sort(soonest)
-      .slice(0, 3);
+    const ahead = Store.meetings.filter(m => m.upcoming && m.id !== showing).sort(soonest).slice(0, 3);
+    const last = chrono[chrono.length - 1];
+    const lastM = last && Store.meeting(last.meetingId);
+    const ready = [...Store.rewards].sort((a, b) => a.required - b.required)
+      .find(r => Store.tierState(r) === 'unlocked') || null;
 
-    const side = `<div class="deck__side">
+    const side = `<aside class="deck__side" aria-label="The club's schedule and your record">
+        ${ready ? `<button class="prizeband" type="button" data-go="rewards">
+            <span class="prizeband__lab">Reward unlocked</span>
+            <span class="prizeband__what">${esc(ready.name)}</span>
+            <span class="prizeband__go">Claim</span>
+          </button>` : ''}
         <section class="fol fol--ahead" aria-label="Meetings ahead">
           <h2 class="fol__lab">Ahead</h2>
           ${ahead.length ? `<ol class="fol__list">${ahead.map(m => `<li class="fol__row">
-              <b class="fol__no">GM ${pad(m.no)}</b><span class="fol__day">${fmtDate(m.date)}</span>
+              <b class="fol__d">${esc(onClock(m.date, { day:'numeric' }))}</b>
+              <span class="fol__day">${esc(onClock(m.date, { month:'short' }))} · ${esc(onClock(m.date, { weekday:'short' }))}</span>
+              <span class="fol__no">GM ${pad(m.no)}</span>
               ${unusual(m).length ? `<span class="fol__at">${unusual(m).map(esc).join(' · ')}</span>` : ''}
             </li>`).join('')}</ol>`
           : `<p class="fol__line">${next && !day ? 'Nothing after it' : 'Nothing scheduled'}</p>`}
         </section>
-      </div>`;
+        ${lastM ? `<section class="fol fol--last" aria-label="Last stamp">
+          <h2 class="fol__lab">Last stamp</h2>
+          <p class="fol__stamp">${glyph(chrono.length - 1, 'fol__imp')}
+            <span><b>GM ${pad(lastM.no)}</b><span>${esc(fmtDay(lastM.date))} · ${byHand(last) ? 'by an officer' : fmtTime(last.at)}</span></span></p>
+        </section>` : ''}
+      </aside>`;
 
+    const today = Schedule.today();
     return `<div class="view view--home">
-      <header class="rechead folio">
-        <h1 class="title rechead__title folio__word">Today</h1>
-        <span class="folio__meta">01</span>
+      <header class="daybook">
+        ${C.run('01', 'Today', 'Keystamp · Key Club · Cali-Nev-Ha')}
+        <div class="daybook__head">
+          <h1 class="daybook__title rechead__title">Today</h1>
+          <p class="daybook__date"><i>${esc(onClock(today, { weekday:'long' }))}</i><b>${esc(onClock(today, { month:'short', day:'numeric' }))}</b></p>
+        </div>
+        <i class="brush" aria-hidden="true"></i>
       </header>
 
-      <div class="deck deck--${kind}${live ? ' deck--live' : ''}${near ? ' deck--near' : ''}">
+      <div class="deck deck--${kind}${live ? ' deck--live' : ''}">
         <div class="deck__act">${mast}</div>
-        ${C.sealGrid(live, 'field')}
+        <div class="deck__card">${C.sealGrid(live)}</div>
         ${side}
       </div>
+      ${C.folio('01', 'Today')}
     </div>`;
   },
 
+  /* Record: the member's archive. The year as one printed timeline,
+     every meeting at its true date; the tally set large; then the
+     ledger kept by the month, the way a club's minutes are, each month
+     with its own count, and a card filled ruled across the page as a
+     chapter closed. Quiet and dense on purpose. */
   record(){
     if (Store.failed) return this.loadFailure('Record');
 
@@ -504,7 +544,7 @@ const Views = {
 
     /* the year line: every meeting since the member joined placed at its
        true date; the line runs past today, dotted, to the last meeting
-       scheduled */
+       scheduled; each month is named under the rule where it begins */
     const oldest = held[held.length - 1] || ahead[0] || null;
     const t0 = oldest ? days(oldest.date) : days(Schedule.today());
     const tN = Math.max(t0 + 1, ahead.length ? days(ahead[ahead.length - 1].date) : held.length ? days(held[0].date) : t0 + 1, days(Schedule.today()));
@@ -517,26 +557,35 @@ const Views = {
         ? `<i class="yt yt--set" style="left:${pos(m.date)}%"><svg viewBox="0 0 64 64"><path d="${stampShape(i + 1, 0)}"/><g transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(i)}</g></svg></i>`
         : `<i class="yt yt--${s}${m.today && s !== 'open' ? ' yt--today' : ''}" style="left:${pos(m.date)}%"></i>`);
     }).join('') + ahead.map(m => `<i class="yt yt--up" style="left:${pos(m.date)}%"></i>`).join('');
+    /* the first of every month the line crosses */
+    const months = [];
+    if (oldest){
+      const d = new Date(Date.UTC(...oldest.date.split('-').map((v, k) => k === 1 ? v - 1 : +v)));
+      d.setUTCDate(1);
+      for (let k = 0; k < 24; k++){
+        const iso = d.toISOString().slice(0, 10);
+        if (days(iso) > tN) break;
+        if (days(iso) >= t0) months.push(`<span class="yline__m" style="left:${pos(iso)}%">${esc(onClock(iso, { month:'short' }).split(' ')[0])}</span>`);
+        d.setUTCMonth(d.getUTCMonth() + 1);
+      }
+    }
     const yearline = `<div class="yline" aria-hidden="true" style="--now:${pos(Schedule.today())}%">
-        <i class="yline__rule"></i><i class="yline__ahead"></i>${ticks}
+        <i class="yline__rule"></i><i class="yline__ahead"></i><span class="yline__now">Today</span>${ticks}${months.join('')}
       </div>`;
-    const tally = held.length
-      ? `<p class="tally"><b>${kept}</b> stamped, <b>${gone}</b> missed</p>`
-      : `<p class="tally">${ahead.length ? `First meeting: GM ${pad(ahead[0].no)}, ${fmtDate(ahead[0].date)}` : 'First meeting not yet held'}</p>`;
 
-    /* the ledger is kept by the month, the way a club's minutes are; a
-       card filled is a chapter closed, ruled across the page */
+    /* the ledger is kept by the month; a card filled is a chapter closed,
+       ruled across the page */
     const prize = k => Store.rewards.find(r => r.required === k * Rules.CARD) || null;
     const chapter = k => {
       const r = prize(k);
       const word = !r ? '' : r.handedAt ? `${esc(r.name)} collected` : r.claimed ? `${esc(r.name)} claimed`
         : Store.tierState(r) === 'unlocked' ? `${esc(r.name)} ready to claim` : '';
-      return `<p class="ledger__chapter"><span>Card ${pad(k)} full</span>${word ? `<span>${word}</span>` : ''}</p>`;
+      return `<p class="ledger__chapter"><b>Card ${pad(k)}</b><span>Complete</span>${word ? `<span>${word}</span>` : ''}</p>`;
     };
-    const months = [];
+    const groups = [];
     held.forEach((m, n) => {
       const key = String(m.date).slice(0, 7);
-      const last = months[months.length - 1];
+      const last = groups[groups.length - 1];
       /* the gap to the meeting before it: two weeks reads twice as deep, a month three times */
       const older = held[n + 1];
       const d = older ? days(m.date) - days(older.date) : 0;
@@ -544,46 +593,68 @@ const Views = {
       const i = Store.attended(m.id) ? chrono.findIndex(x => x.meetingId === m.id) : -1;
       const rule = i >= 0 && (i + 1) % Rules.CARD === 0 ? chapter((i + 1) / Rules.CARD) : '';
       const row = rule + C.ledgerRow(m, gap);
-      if (last && last.key === key) last.rows.push(row);
-      else months.push({ key, rows:[row] });
+      const got = Store.attended(m.id) ? 1 : 0;
+      if (last && last.key === key){ last.rows.push(row); last.n++; last.got += got; }
+      else groups.push({ key, rows:[row], n:1, got });
     });
-    const monthName = key => onClock(`${key}-01`, { month:'long' });
+    const monthName = key => onClock(`${key}-01`, { month:'long' }).split(' ')[0];
+    const monthYear = key => key.slice(0, 4);
 
     return `<div class="view view--record">
-      <header class="rechead folio">
-        <h1 class="title rechead__title folio__word">Record</h1>
-        <span class="folio__meta">02</span>
+      <header class="rechead chap">
+        ${C.run('02', 'Record')}
+        <div class="rec__head">
+          <h1 class="chap__title rechead__title">Record</h1>
+          ${held.length ? `<dl class="tally">
+            <div><dt>Stamped</dt><dd>${kept}</dd></div>
+            <div><dt>Missed</dt><dd>${gone}</dd></div>
+            <div><dt>Held</dt><dd>${counted.length}</dd></div>
+          </dl>` : ''}
+        </div>
+        <i class="brush" aria-hidden="true"></i>
       </header>
 
       ${yearline}
-      ${tally}
+      ${held.length ? `<p class="sr-only">${kept} stamped, ${gone} missed</p>`
+        : `<p class="tally tally--first">${ahead.length ? `First meeting: GM ${pad(ahead[0].no)}, ${fmtDate(ahead[0].date)}` : 'First meeting not yet held'}</p>`}
 
       ${held.length ? `<section class="ledger" aria-label="Meetings, newest first">
-          ${months.map(g => `<div class="ledger__group">
-              <h2 class="ledger__month"><span class="ledger__mname">${monthName(g.key)}</span></h2>
-              ${g.rows.join('')}
+          <div class="ledger__cols" aria-hidden="true"><span>Nº</span><span>Mark</span><span>Date</span><span>In</span><span>How</span></div>
+          ${groups.map(g => `<div class="ledger__group">
+              <h2 class="ledger__month"><span class="ledger__mname">${monthName(g.key)}</span><span class="ledger__my">${monthYear(g.key)}</span>
+                <span class="ledger__mn">${g.got} of ${g.n}</span></h2>
+              <div class="ledger__rows">${g.rows.join('')}</div>
             </div>`).join('')}
         </section>`
       : `<section class="ledger ledger--blank" aria-label="Meetings">
-          <div class="lrow lrow--blank"><span class="lrow__no">01</span><span class="lrow__stamp"></span>
-            <span class="lrow__body"><span class="lrow__date">${ahead.length ? `${fmtDate(ahead[0].date)} · ${esc(ahead[0].time)}` : 'First meeting not yet held'}</span></span></div>
-          ${C.empty('No meetings held yet')}
+          <p class="ledger__none">No meetings held yet. The first stamp starts the record.</p>
         </section>`}
+      ${C.folio('02', 'Record')}
     </div>`;
   },
 
+  /* Rewards: the set. Three prizes on one route, the member's own last
+     stamp standing on it where they are; each prize a slot in a
+     collector's page that fills as the stamps come in. */
   rewards(){
     if (Store.failed) return this.loadFailure('Rewards');
     const total = Store.totalStamps();
     const tiers = [...Store.rewards].sort((a, b) => a.required - b.required);
     const next = tiers.find(t => total < t.required) || null;
     const top  = tiers.length ? tiers[tiers.length - 1].required : Rules.CARD * 3;
-    const fill = Math.min(1, total / top);
     const lift = (32 - 32 * STAMP_FIT).toFixed(1);
+    const reached = tiers.filter(t => Store.tierState(t) !== 'locked').length;
+    /* the route runs from the page's edge through each prize's slot, the
+       slots evenly set; the member stands where their count falls
+       between the two prizes either side of it */
+    const n = tiers.length || 1;
+    const slot = i => (2 * i + 1) / (2 * n);
+    const fill = !tiers.length ? 0 : total >= top ? Math.min(1, slot(n - 1) + (total - top) / Rules.CARD * (1 - slot(n - 1))) : (() => {
+      const i = tiers.findIndex(t => total < t.required);
+      const lo = i ? tiers[i - 1].required : 0, from = i ? slot(i - 1) : 0;
+      return from + (total - lo) / (tiers[i].required - lo) * (slot(i) - from);
+    })();
 
-    /* the member's count, once, as a line of type; the route says the rest */
-    const fig = !tiers.length || total > top ? `<b>${total}</b> ${total === 1 ? 'stamp' : 'stamps'}${tiers.length && !next ? '<span>Every reward reached</span>' : ''}`
-      : `<b>${total}</b> of ${top} stamps${!next && total ? '<span>Every reward reached</span>' : ''}`;
     /* where the member stands on the route: the last stamp earned, or the start */
     const me = total
       ? `<span class="route__me" aria-hidden="true" style="--at:${fill.toFixed(3)}"><svg viewBox="0 0 64 64"><path class="route__face" d="${stampShape(total, 0)}"/>
@@ -591,18 +662,27 @@ const Views = {
       : `<span class="route__me route__me--start" aria-hidden="true" style="--at:0"></span>`;
 
     return `<div class="view view--rewards">
-      <header class="rechead folio">
-        <h1 class="title rechead__title folio__word">Rewards</h1>
-        <span class="folio__meta">04</span>
+      <header class="rechead chap">
+        ${C.run('04', 'Rewards')}
+        <div class="rec__head">
+          <h1 class="chap__title rechead__title">Rewards</h1>
+          <p class="prize__fig"><b>${total}</b><span>${tiers.length && total <= top ? `of ${top} stamps` : total === 1 ? 'stamp' : 'stamps'}</span>
+            <i>${!tiers.length ? '' : next ? `${next.required - total} to ${esc(next.name)}` : 'Every reward reached'}</i></p>
+        </div>
+        <i class="brush" aria-hidden="true"></i>
       </header>
 
-      <p class="prize__fig">${fig}</p>
+      ${tiers.length ? `<section class="set" aria-label="Rewards, by the stamps they take">
+        ${C.sect('The set', `${reached} of ${tiers.length} reached`)}
+        <div class="tiers" style="--fill:${fill.toFixed(3)};--n:${tiers.length}">
+          <span class="route__line" aria-hidden="true"></span>
+          ${me}
+          ${tiers.map((t, i) => C.tier(t, total, i ? tiers[i - 1].required : 0, i)).join('')}
+        </div>
+      </section>` : `<p class="ledger__none">No rewards set up yet.</p>`}
 
-      ${tiers.length ? `<section class="tiers" style="--fill:${fill.toFixed(3)};--n:${tiers.length}" aria-label="Rewards, by the stamps they take">
-        <span class="route__line" aria-hidden="true"></span>
-        ${me}
-        ${tiers.map((t, i) => C.tier(t, total, i ? tiers[i - 1].required : 0, i)).join('')}
-      </section>` : C.empty('No rewards set up yet')}
+      ${Store.handovers && tiers.length ? `<p class="set__rule"><b>How a prize is kept.</b> Claim it here when it is unlocked; an officer hands it over at a meeting and it is filed as collected.</p>` : ''}
+      ${C.folio('04', 'Rewards')}
     </div>`;
   },
 

@@ -72,7 +72,6 @@ body{
 .rail__link svg{width:17px;height:17px;stroke-width:1.9}
 .rail__foot{padding-top:var(--sp-pad);border-top:var(--rule-hair) solid var(--ink)}
 
-
 main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   --safe-x:max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
   padding:calc(var(--sp-pad) + env(safe-area-inset-top, 0px)) calc(var(--gutter) + var(--safe-x))
