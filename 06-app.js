@@ -619,15 +619,13 @@ const Inspect = {
     seal.classList.add('seal--held');
     seal.setAttribute('aria-expanded', 'true');
     card.classList.add('card--inspect');
-    /* where the record prints: on a phone's sheet in the foot band, tied
-       to the stamp by a leader down the field; beside a wide sheet in the
-       page's margin, the leader running to the field's rule; on any other
-       card in the corner of the field the stamp is not in */
+    /* where the record prints: on the card's stub, the way a ticket
+       carries its own particulars; a card without a stub prints it in
+       the corner of the field the stamp is not in */
     const f = field.getBoundingClientRect(), r = seal.getBoundingClientRect();
     const cx = (r.left + r.right) / 2 - f.left, cy = (r.top + r.bottom) / 2 - f.top;
     const foot = card.querySelector('.card__foot');
-    const mode = foot && f.width < 480 ? 'foot'
-      : card.closest('.mem') && matchMedia('(min-width:1180px)').matches ? 'margin' : 'corner';
+    const mode = foot ? 'foot' : 'corner';
     let rec = card.querySelector('.card__record');
     if (!rec){ rec = document.createElement('div'); rec.className = 'card__record'; rec.setAttribute('data-layer', ''); }
     (mode === 'foot' ? foot : field).appendChild(rec);

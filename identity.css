@@ -70,7 +70,6 @@ body{
 .brow__no{color:var(--ink-2)}
 .brow__n{font-family:var(--f-head)}
 
-
 .bconfirm{display:flex;align-items:center;justify-content:flex-end;
   gap:var(--sp-tight);flex-wrap:wrap;width:100%}
 .bconfirm__q{flex:1 1 auto;font-size:var(--t-body);letter-spacing:.02em;
@@ -95,11 +94,8 @@ body{
 .bform .field > .kicker{flex:none}
 .bform .field > .input{flex:none;width:100%}
 
-
-
 .bform .input,.bfilters .input{font-family:var(--f-mono);
   color-scheme:light;accent-color:var(--ink)}
-
 
 .meetband__t{margin:0;font:inherit;letter-spacing:inherit;text-transform:inherit}
 .meetband{display:flex;align-items:baseline;justify-content:space-between;
@@ -231,7 +227,6 @@ div.brow__go{cursor:default}
   .input{padding-inline:var(--sp-pad)}
 }
 
-
 .bsec{margin-top:var(--sp-block)}
 
 @media (hover:hover){.btn:hover{
@@ -247,153 +242,6 @@ main#view:focus,main#view:focus-visible,.rechead__title:focus{outline:none}
   [data-screen="auth"] .shell,[data-screen="checkin"] .shell{grid-template-columns:1fr}
 }
 
-
-.card{position:relative;border:var(--edge-card) solid var(--ink);
-  background:var(--paper);width:100%;
-  container-type:inline-size;display:flex;flex-direction:column;
-
-  box-shadow:var(--pnl-off) var(--pnl-off) 0 var(--tone)}
-.card__punch{position:absolute;z-index:3;right:4%;top:4.5%;
-  transform:rotate(-9deg);transform-origin:100% 0;
-  font-family:var(--f-head);text-transform:uppercase;line-height:1;
-  font-size:clamp(20px,6.2cqw,42px);color:var(--ink);
-  border:var(--edge-frame) solid var(--ink);background:var(--paper);
-  padding:.16em .45em;
-  pointer-events:none;white-space:nowrap}
-
-.card__id{background:var(--ink);color:var(--paper);
-  padding:clamp(14px,3.4cqw,26px) clamp(16px,4cqw,28px);
-  display:flex;flex-direction:column;gap:clamp(4px,1cqw,10px)}
-.card__cardno{font:500 clamp(11px,1.9cqw,12px)/1 var(--f-mono);
-  text-transform:uppercase;letter-spacing:.22em;opacity:.7}
-.card__num{margin:0;display:flex;align-items:baseline;gap:.2em;
-  font-family:var(--f-display);line-height:.82;letter-spacing:-.01em}
-.card__num b{font-weight:inherit;font-size:clamp(58px,15cqw,124px)}
-.card__num span{font:400 clamp(13px,2.4cqw,16px)/1 var(--f-mono);
-  letter-spacing:.04em;opacity:.7}
-
-.card__idrule{display:block;width:clamp(52px,42%,120px);height:5px;
-  background:var(--paper);opacity:.9;
-  clip-path:polygon(0 40%,14% 6%,58% 0,90% 26%,100% 60%,55% 100%,8% 72%)}
-.card__goal{margin:0;font-size:var(--t-body);opacity:.85;
-  max-width:22ch}
-.card__goal--go{align-self:flex-start;color:var(--paper);opacity:1;text-align:left;
-  font-family:var(--f-body);text-transform:uppercase}
-
-.card__kci{display:block;margin-top:auto;padding-top:clamp(8px,2cqw,16px)}
-@container (max-width:479px){
-  .card__id{position:relative}
-  .card__kci{position:absolute;top:clamp(14px,3.4cqw,26px);right:clamp(16px,4cqw,28px);
-    margin:0;padding:0}
-  .card__kci .brandseal{width:44px}
-  .card--full .card__kci{display:none}
-}
-.card__kci .brandseal{display:block;height:auto;
-  width:clamp(54px,11cqw,84px);opacity:.92;
-  --si:var(--paper);--sp:var(--ink)}
-
-.card__field{position:relative;aspect-ratio:100/128}
-
-.card__field::before,
-.card__field::after{content:'';position:absolute;width:15px;height:15px;
-  pointer-events:none;z-index:0}
-.card__field::before{right:6px;top:6px;
-  border-right:var(--edge-panel) solid var(--ink);
-  border-top:var(--edge-panel) solid var(--ink)}
-.card__field::after{right:6px;bottom:6px;
-  border-right:var(--edge-panel) solid var(--ink);
-  border-bottom:var(--edge-panel) solid var(--ink)}
-
-
-.card__route{position:absolute;inset:0;width:100%;height:100%;
-  pointer-events:none;z-index:0}
-.card__route polyline{fill:none;stroke:var(--tone);stroke-width:2;
-  stroke-dasharray:.5 8;stroke-linecap:round;
-  vector-effect:non-scaling-stroke}
-.card__route--l{display:none}
-
-.seals{position:absolute;inset:0;list-style:none;margin:0;padding:0;
-  z-index:1}
-
-.seal{position:absolute;display:grid;place-items:center;
-  width:var(--s);aspect-ratio:1;left:var(--x);top:var(--y);
-  min-width:0;
-  transform:rotate(var(--lean,0deg))}
-
-.seal:nth-child(1){--x:5.5%; --y:2%; --s:21%; --lean:-2deg}
-.seal:nth-child(2){--x:35.5%; --y:5.1%; --s:21%; --lean:1.5deg}
-.seal:nth-child(3){--x:63.5%; --y:12.9%; --s:21%; --lean:-1deg}
-.seal:nth-child(4){--x:70.3%; --y:32.2%; --s:21.5%; --lean:2deg}
-.seal:nth-child(5){--x:47.3%; --y:41.6%; --s:21.5%; --lean:-2.2deg}
-.seal:nth-child(6){--x:20.3%; --y:46.3%; --s:21.5%; --lean:1deg}
-.seal:nth-child(7){--x:0.5%; --y:64.5%; --s:21%; --lean:-1.5deg}
-.seal:nth-child(8){--x:27%; --y:73.0%; --s:21%; --lean:2deg}
-.seal:nth-child(9){--x:47.5%; --y:63.7%; --s:21%; --lean:-1.8deg}
-.seal:nth-child(10){--x:71.0%; --y:74.2%; --s:24%; --lean:-2.5deg}
-
-@container (min-width:480px){
-  .card__face{display:grid;flex:1 1 auto;min-height:0;
-    grid-template-columns:minmax(150px,30%) minmax(0,1fr);
-    align-items:stretch}
-
-  /* the landscape seat map and its route are drawn for this ratio */
-  .card__field{aspect-ratio:10/9}
-  .card__punch{right:2.5%;top:3.5%;font-size:clamp(14px,3cqw,24px)}
-  .card__route--l{display:block}
-  .card__route--p{display:none}
-
-  .seal:nth-child(1){--x:2%;   --y:4%;   --s:15%;  --lean:-2.5deg}
-  .seal:nth-child(2){--x:21.5%;--y:16%;  --s:14.5%;--lean:1.5deg}
-  .seal:nth-child(3){--x:40.5%;--y:4%;   --s:15%;  --lean:-1deg}
-  .seal:nth-child(4){--x:59.5%;--y:13.5%;--s:14.5%;--lean:2deg}
-  .seal:nth-child(5){--x:79%;  --y:26%;  --s:15%;  --lean:-2deg}
-  .seal:nth-child(6){--x:52%;  --y:36.5%;--s:14.5%;--lean:1deg}
-  .seal:nth-child(7){--x:30.5%;--y:39%;  --s:15%;  --lean:-1.5deg}
-  .seal:nth-child(8){--x:5%;   --y:49%;  --s:14.5%;--lean:2.2deg}
-  .seal:nth-child(9){--x:27%;  --y:64%;  --s:15%;  --lean:-2deg}
-  .seal:nth-child(10){--x:65%; --y:60.6%;--s:19%;  --lean:-3deg}
-}
-
-.seal > svg{width:100%;height:100%;display:block;overflow:visible}
-.sf-back,.sf-face{fill:none}
-.seal__mark path{stroke:none}
-
-.seal:not(.seal--set) .sf-face{fill:var(--paper);
-  stroke:var(--ink);stroke-width:1.1;stroke-opacity:.5}
-.seal:not(.seal--set) .seal__mark{opacity:.12}
-.seal:not(.seal--set) .seal__mark path{fill:var(--ink)}
-
-.seal--set .sf-face{fill:var(--ink)}
-.seal--set .sf-press{transform-box:fill-box;transform-origin:center;
-  transform:rotate(var(--press-tilt,0deg))}
-.seal--set .seal__mark path{fill:var(--paper)}
-
-/* the tenth seal, the one a prize hangs on, carries a second rim */
-.seal--mile .sf-back{stroke:var(--ink);stroke-width:1.2;stroke-opacity:.5}
-.seal--mile.seal--set .sf-back{stroke-opacity:1}
-
-.seal--hero{z-index:1}
-.seal[tabindex]{cursor:pointer}
-
-.seal--next{z-index:2}
-.seal--next .seal__mark{opacity:.22}
-
-.seal--next::after{content:'';position:absolute;inset:-6%;
-  border:2.5px solid var(--ink);
-  border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;
-  transform:rotate(-5deg);pointer-events:none}
-
-/* a check-in is open: the slot the member stands on is marked in the
-   club's red, the one colour the card keeps for now */
-.seal--live::after{border-color:var(--seal);border-width:3px}
-.seal--live .sf-face{stroke:var(--seal);stroke-opacity:1;stroke-width:1.6}
-.seal--live .seal__mark{opacity:.34}
-.seal--live .seal__mark path{fill:var(--seal)}
-.seal--live .seal__no{color:var(--seal)}
-
-.seal__no{position:absolute;right:-3%;bottom:-5%;
-  font:500 clamp(11px,1.9cqw,12px)/1 var(--f-mono);color:var(--ink-2)}
-
 .nowline{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px var(--sp-row);margin:0;
   font:500 clamp(11px,.5vw + 9.4px,13px)/1.4 var(--f-mono);letter-spacing:.1em;
   text-transform:uppercase;color:var(--ink-2)}
@@ -404,7 +252,6 @@ main#view:focus,main#view:focus-visible,.rechead__title:focus{outline:none}
    it; the last stamp and the meetings ahead under the ticket ══ */
 .deck{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr);
   grid-template-areas:"act" "card" "side";align-items:start}
-.deck > .card{grid-area:card}
 .deck__act{grid-area:act;min-width:0}
 .deck__side{grid-area:side;display:grid;gap:var(--sp-block);min-width:0;align-content:start}
 
@@ -414,7 +261,6 @@ main#view:focus,main#view:focus-visible,.rechead__title:focus{outline:none}
   .deck:not(:has(.deck__act)){grid-template-areas:"card side" "card side"}
   .deck:not(:has(.deck__act,.deck__side)){grid-template-columns:minmax(0,1fr);
     grid-template-areas:"card";grid-template-rows:auto}
-  .deck:not(:has(.deck__act,.deck__side)) > .card{max-width:min(100%,1080px)}
   .deck .tkt{min-height:clamp(200px,17vw,280px)}
   .deck .tkt__no{font-size:clamp(96px,8.4vw,150px)}
   .deck .tkt__day{font-size:clamp(30px,2.8vw,44px)}
@@ -662,100 +508,6 @@ html{font-synthesis:none}
 
 .rechead__title{margin:0;padding-bottom:.2em}
 
-/* ══ Member: the member's own record. The district's plate and the card
-   side by side; the standing under the plate, the cards already filled
-   under the card ══ */
-.mem{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr);
-  grid-template-areas:"who" "card" "band" "files";align-items:start}
-.mem > .who{grid-area:who}
-.mem > .card{grid-area:card}
-.mem > .standing-band{grid-area:band}
-.mem > .files{grid-area:files}
-
-/* the plate: black, the district's seal pressed into it and cut by its
-   edge, the member's name under a rule */
-.who{position:relative;display:grid;gap:var(--sp-pad);
-  grid-template-rows:minmax(clamp(84px,22vw,220px),1fr) auto;
-  container-type:inline-size;isolation:isolate;overflow:hidden;
-  background:var(--ink);color:var(--paper);
-  padding:clamp(18px,3vw,32px);
-  margin-left:calc(var(--gutter) * -1);
-  padding-left:max(var(--gutter),clamp(18px,3vw,32px))}
-.who__org{grid-row:1;align-self:start;position:relative;z-index:1;margin:0;
-  font:400 11.5px/1.7 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--paper)}
-/* the seal is cut by the plate's own box: it runs off the plate's edge,
-   never off the page */
-.who__emblem{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
-.who__emblem .brandseal{position:absolute;right:-24%;top:42%;display:block;height:auto;
-  width:clamp(200px,72cqw,460px);translate:0 -50%;rotate:-8deg;opacity:.34;
-  --si:var(--tone);--sp:transparent}
-@container (min-width:420px){ .who__emblem .brandseal{right:-18%;top:50%;width:clamp(210px,84cqw,460px)} }
-.who__id{grid-row:2;position:relative;z-index:1;align-self:end;display:grid;gap:5px;
-  border-top:var(--edge-rule) solid var(--ink-2);padding-top:clamp(10px,1.6vw,16px)}
-.who__tag,.who__since{margin:0;font:400 11.5px/1.4 var(--f-mono);letter-spacing:.12em;
-  text-transform:uppercase;color:var(--tint);overflow-wrap:anywhere}
-.who__since{color:var(--tone)}
-.who__name{margin:0;color:var(--paper);line-height:1;
-  font-size:clamp(28px,11cqw,52px);overflow-wrap:anywhere}
-@media(min-width:900px){
-  .who{margin-left:0;padding-left:clamp(18px,3vw,32px);align-self:stretch}
-}
-
-/* the standing: one figure in the display face, the rest set as a ledger */
-.standing-band{display:grid;grid-template-columns:auto minmax(0,1fr);
-  grid-template-areas:"fig of" "rest rest";align-items:end;column-gap:var(--sp-row);
-  border-top:var(--edge-frame) solid var(--ink);padding-top:var(--sp-pad)}
-.standing-band__fig{grid-area:fig;margin:0;padding-bottom:.04em;
-  font-family:var(--f-display);line-height:.78;
-  font-size:clamp(72px,17vw,132px);color:var(--ink)}
-.standing-band__of{grid-area:of;margin:0 0 .5em}
-.standing-band__rest{grid-area:rest;display:grid;margin:var(--sp-pad) 0 0;
-  grid-template-columns:minmax(0,1fr)}
-.standing-band__rest > div{display:grid;grid-template-columns:minmax(0,1fr) auto;
-  align-items:baseline;gap:var(--sp-row);padding:10px 0;
-  border-bottom:var(--edge-rule) solid var(--tint)}
-.standing-band__rest > div:last-child{border-bottom:0}
-.standing-band__rest dd{margin:0;justify-self:end;font-family:var(--f-head);
-  font-size:clamp(19px,2vw,24px);line-height:1;color:var(--ink)}
-@media(min-width:760px){
-  .mem:not(.mem--filed) .standing-band{grid-template-columns:auto auto minmax(0,1fr);
-    grid-template-areas:"fig of rest";align-items:end}
-  .mem:not(.mem--filed) .standing-band__of{margin-right:clamp(24px,4vw,56px)}
-  .mem:not(.mem--filed) .standing-band__rest{margin:0;
-    grid-template-columns:repeat(3,minmax(0,1fr));column-gap:clamp(16px,2.4vw,36px)}
-  .mem:not(.mem--filed) .standing-band__rest > div{grid-template-columns:minmax(0,1fr);gap:4px;
-    border-bottom:0;border-top:var(--edge-rule) solid var(--tint);padding:var(--sp-tight) 0 0}
-  .mem:not(.mem--filed) .standing-band__rest dd{justify-self:start}
-}
-
-/* the cards already filled, filed side by side under the one in hand */
-.files{display:grid;gap:var(--sp-pad);border-top:var(--edge-frame) solid var(--ink);
-  padding-top:var(--sp-pad);min-width:0}
-.files__mark{margin:0;font-family:var(--f-head);font-weight:400;text-transform:uppercase;
-  font-size:clamp(19px,2.2vw,26px);line-height:1}
-.files__list{list-style:none;margin:0;padding:0;display:grid;gap:var(--sp-block) var(--sp-pad);
-  grid-template-columns:repeat(auto-fill,minmax(min(100%,148px),1fr))}
-@media(min-width:900px){ .files__list{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))} }
-.filed{display:flex;flex-direction:column;gap:3px;min-width:0}
-.filed__card{position:relative;display:grid;grid-template-columns:22% minmax(0,1fr);
-  margin:0 0 var(--sp-tight);container-type:inline-size;
-  border:var(--edge-frame) solid var(--ink);background:var(--paper);
-  box-shadow:4px 4px 0 var(--tone)}
-.filed__id{display:block;background:var(--ink);color:var(--paper);padding:10% 12%}
-.filed__id b{display:block;font:400 clamp(20px,13cqw,40px)/.8 var(--f-display)}
-.filed__field{display:block;width:90%;height:auto;margin:5%;overflow:visible}
-.fc-route{fill:none;stroke:var(--tone);stroke-width:.7;stroke-dasharray:.2 2.6;stroke-linecap:round}
-.fc-face{fill:var(--ink)}
-.fc-mark path{fill:var(--paper)}
-.fc-back{fill:none;stroke:var(--ink);stroke-width:3}
-.filed__punch{position:absolute;right:5%;bottom:9%;rotate:-8deg;
-  font-family:var(--f-head);text-transform:uppercase;line-height:1;
-  font-size:clamp(12px,8.4cqw,20px);color:var(--ink);background:var(--paper);
-  border:var(--edge-panel) solid currentColor;padding:.18em .4em;pointer-events:none;white-space:nowrap}
-.filed--took .filed__punch{color:var(--seal)}
-.filed__no{margin:0;font:400 15px/1.2 var(--f-mono);letter-spacing:.04em;text-transform:uppercase}
-.filed__when,.filed__prize{margin:0}
-
 .acct{display:grid;gap:var(--sp-row);justify-items:start;
   border-top:var(--edge-panel) solid var(--ink);padding-top:var(--sp-pad)}
 .acct__mark{margin:0;font-family:var(--f-head);text-transform:uppercase;
@@ -773,7 +525,6 @@ html{font-synthesis:none}
   outline-offset:3px}
 /* from 1024px up the rail's foot carries the account block */
 @media(min-width:1024px){ .view--member .acct,.view--board .acct{display:none} }
-
 
 .crop{overflow:hidden;isolation:isolate}
 :where(.crop){position:relative}
@@ -915,12 +666,11 @@ html{font-synthesis:none}
 .bback{align-self:flex-start;margin-bottom:var(--sp-pad)}
 
 /* one label: small caps of record, in the record face */
-.kicker,.meetband__n,.card__cardno,
-.rail__role,.standing-band__of,.standing-band__rest dt,.brow__nlab,
-.authp__lab,.filed__when,.filed__prize,.prize__of,.deck__lab{
+.kicker,.meetband__n,
+.rail__role,.brow__nlab,
+.authp__lab,.prize__of,.deck__lab{
   font:400 11.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;
   color:var(--ink-2)}
-.card__cardno{color:var(--tint);opacity:1}
 
 /* ══ Board. Members: the club's figures at the head of its roster, the
    prize table beside it; Meetings: the schedule as tickets beside the
@@ -1086,7 +836,7 @@ html{font-synthesis:none}
    field   — a line to write on, the label above it in small capitals ══ */
 :root{--ink-lift:#2B2A27}
 .btn,.link,.cmd,.proj__ctl,.tier__claim,.authp__go,.authp__swap,.acct__out,.rail__out,
-.owed__go,.owed__undo,.bdel__go,.bback,.stall__retry,.bform__reset,.meetband__act,.card__goal--go,
+.owed__go,.owed__undo,.bdel__go,.bback,.stall__retry,.bform__reset,.meetband__act,
 .tools__nextrow,.tools__task,.owed__more,.proj__end,.proj__hand{
   display:inline-flex;align-items:center;justify-content:flex-start;gap:8px;
   margin:0;padding:0;border:0;border-radius:0;background:none;color:var(--ink);
@@ -1155,14 +905,11 @@ html{font-synthesis:none}
   .link:hover .link__t{text-decoration:none}
 }
 .link:focus-visible,.authp__swap:focus-visible,.acct__out:focus-visible,.rail__out:focus-visible,.owed__undo:focus-visible,.bback:focus-visible,
-.bform__reset:focus-visible,.meetband__act:focus-visible,.card__goal--go:focus-visible,.owed__more:focus-visible,
+.bform__reset:focus-visible,.meetband__act:focus-visible,.owed__more:focus-visible,
 .proj__end:focus-visible,.proj__hand:focus-visible,.cmd--quiet:focus-visible,.tools__nextrow:focus-visible,.tools__task:focus-visible{
   outline:2px solid var(--ink);outline-offset:3px;background:none;color:var(--ink);border-color:transparent}
 .proj--live .proj__end,.proj--live .proj__hand,.tkt--live .link{color:var(--tint)}
 .proj--live .proj__end:focus-visible,.proj--live .proj__hand:focus-visible{outline-color:var(--paper)}
-/* the card's own way to Rewards, on ink */
-.card__goal--go{color:var(--paper);font-size:12px;padding:6px 0}
-@media (hover:hover){.card__goal--go:hover{color:var(--tint)}}
 
 .cmd.cmd--quiet::before{content:'';flex:none;width:12px;height:1.5px;background:currentColor}
 
@@ -1210,40 +957,6 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 /* a working control keeps its width the way it always did */
 .cmd[data-busy],.proj__ctl[data-busy],.tier__claim[data-busy],.owed__go[data-busy],.authp__go[data-busy]{flex-direction:column;gap:0}
 .cmd[disabled],.cmd[aria-disabled="true"]{opacity:.55}
-
-/* ══ Examining a stamp. The tapped seal is held up, the rest of the
-   card recedes, and the stamp's printed record appears in the corner
-   the stamp is not in. ══ */
-.card--inspect .card__route,.card--inspect .seal:not(.seal--held){opacity:.22;transition:opacity 120ms steps(3,end)}
-.card--inspect .seal:not(.seal--held) .seal__no{opacity:0}
-.seal--held{z-index:31}
-.seal--held .sf-press{transform:rotate(var(--press-tilt,0deg)) scale(1.34);transition:transform 140ms steps(4,end)}
-.seal--held .seal__no{font-size:clamp(13px,2.4cqw,15px);color:var(--ink);right:-8%;bottom:-10%}
-/* the hover preview stands down while the record is out */
-.card--inspect .sealmeta{display:none!important}
-.card__record{position:absolute;z-index:32;display:grid;gap:3px;
-  max-width:min(60%,260px);padding:10px 12px 11px;
-  background:var(--paper);border:1px solid var(--ink);
-  font:400 11px/1.5 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);
-  pointer-events:none}
-.card__record::before{content:none}
-.card__record[data-at="tl"]{left:4%;top:4%}
-.card__record[data-at="tr"]{right:4%;top:4%}
-.card__record[data-at="bl"]{left:4%;bottom:5%}
-.card__record[data-at="br"]{right:4%;bottom:5%}
-.card__record[data-at$="r"]::before{left:auto;right:-1px;border-left:0;border-right:var(--edge-panel) solid var(--ink)}
-.card__record .sealmeta__no{display:block;font:400 18px/1 var(--f-mono);letter-spacing:.04em;color:var(--ink);
-  padding-bottom:6px;margin-bottom:4px;border-bottom:var(--edge-panel) solid var(--ink)}
-.card__record .sealmeta__day{display:block;color:var(--ink);font-size:12px}
-.card__record .sealmeta__row{display:flex;justify-content:space-between;gap:12px}
-.card__record .sealmeta__row i{font-style:normal;color:var(--ink)}
-.card__record .sealmeta__how{display:inline-block;margin-top:4px;padding:0;border:0;
-  color:var(--ink-2);letter-spacing:.12em;font-size:10.5px;transform:none;justify-self:start}
-/* the hover preview carries the same lines, smaller */
-.sealmeta__day,.sealmeta__row,.sealmeta__how{display:block}
-.sealmeta__row i{font-style:normal;margin-left:8px}
-@media(prefers-reduced-motion:reduce){ .card--inspect .card__route,.card--inspect .seal,.seal--held .sf-press{transition:none} }
-:root[data-still] .card--inspect .seal,:root[data-still] .seal--held .sf-press{transition:none}
 
 /* ══ The shell: an index column bound to the page by one ink rule, the
    page being read marked on the binding; on a phone, a folio bar at the
@@ -1395,267 +1108,8 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .folio__word{margin:0;font:inherit;letter-spacing:inherit;text-transform:inherit;color:var(--ink);line-height:inherit}
 .view--member .folio{margin-bottom:var(--sp-block)}
 
-.mem{display:grid;gap:var(--sp-block);grid-template-columns:minmax(0,1fr);
-  grid-template-areas:"who" "card" "band" "files";align-items:start}
-.mem > .who{grid-area:who}
-.mem > .card{grid-area:card}
-.mem > .standing-band{grid-area:band}
-.mem > .files{grid-area:files}
-
-/* the name, on the paper; the line under it runs out through the gutter */
-.mem .who{display:grid;gap:8px;grid-template-rows:none;padding:0;margin:0;background:none;color:var(--ink);
-  overflow:visible;isolation:auto;container-type:inline-size;align-self:start;min-width:0}
-.mem .who__name{margin:0;font:400 clamp(36px,10cqw,48px)/.92 var(--f-display);letter-spacing:-.01em;
-  text-transform:uppercase;color:var(--ink);overflow-wrap:anywhere;max-width:100%}
-.mem .who__line{display:flex;flex-wrap:wrap;align-items:center;gap:4px 1.2em;margin:0;min-width:0;
-  font:400 11px/1.5 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.mem .who__line span + span::before{content:none}
-.mem .who__line::after{content:none}
-
-/* the sheet: full-bleed on a phone, the head band bound into the torn edge */
-.card--sheet{--band:84px;--cx:calc(var(--gutter) + var(--safe-x));
-  position:relative;border:0;box-shadow:none;background:none;width:auto;
-  display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"id" "field" "foot";
-  margin-inline:calc(var(--cx) * -1)}
-.card--sheet.card--full{--band:96px}
-.card--sheet > .card__id{grid-area:id}
-.card--sheet > .card__field{grid-area:field}
-.card--sheet > .card__foot{grid-area:foot}
-
-.card--sheet .card__id{position:relative;min-height:var(--band);
-  display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"no kci" "num kci";
-  align-items:end;gap:0 var(--sp-pad);padding:8px var(--cx);
-  background:var(--ink);color:var(--paper)}
-.card--sheet.card--full .card__id{padding-bottom:20px}
-.card--sheet .card__cardno{grid-area:no;align-self:start;font:400 11px/1 var(--f-mono);letter-spacing:.12em;
-  text-transform:uppercase;opacity:.7}
-.card--sheet .card__num{grid-area:num;align-self:end;margin:0;display:flex;align-items:baseline;gap:.18em;
-  font-family:var(--f-display);line-height:.82;letter-spacing:-.01em}
-.card--sheet .card__num b{font-weight:400;font-size:64px}
-.card--sheet .card__num span{font:400 13px/1 var(--f-mono);letter-spacing:.06em;opacity:.7}
-.card--sheet .card__kci{grid-area:kci;position:static;display:block;margin:0;padding:0;align-self:end;justify-self:end}
-.card--sheet .card__kci .brandseal{display:block;width:40px;height:auto;opacity:1;--si:var(--paper);--sp:var(--ink)}
-/* the count closed: a paper rule the width of the band under the numeral */
-.card--sheet.card--full::before{content:'';position:absolute;z-index:2;left:0;right:0;
-  top:calc(var(--band) - 14px);height:4px;background:var(--paper)}
-
-.card--sheet .card__field{position:relative;aspect-ratio:5/6;background:none;border:0;isolation:isolate}
-.card--sheet .card__field::before,.card--sheet .card__field::after{content:none}
-.card__wm{position:absolute;left:50%;top:50%;width:76%;translate:-50% -50%;rotate:0deg;opacity:.035;
-  z-index:0;pointer-events:none}
-.card__wm .brandseal{display:block;width:100%;height:auto;--si:var(--ink);--sp:transparent}
-
-/* the foot band: the goal line, right-aligned, its rule leaving the page */
-.card--sheet .card__foot{position:relative;min-height:48px;display:flex;align-items:center;justify-content:flex-end;
-  border-top:var(--edge-hair) solid var(--ink);padding:0 0 0 var(--cx)}
-.card--sheet .card__goal{position:relative;margin:0;padding:8px var(--cx) 8px 0;max-width:none;opacity:1;
-  font:400 12px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);text-align:right}
-.card--sheet .card__goal::after{content:none}
-/* the prize that is ready: a printed instruction, the burgundy rule after it running off the page */
-.card--sheet .card__goal--go{display:inline-flex;align-items:center;gap:10px;min-height:44px;
-  padding:6px calc(var(--cx) + 12px) 6px 0;border:0;background:none;cursor:pointer;color:var(--ink);
-  font:400 18px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;text-decoration:none;text-align:left}
-.card--sheet .card__goal--go::before{content:none}
-.card--sheet .card__goal--go::after{content:none}
-.card__goal__arrow{display:inline-block;position:relative;width:22px;height:2px;background:currentColor;
-  font-size:0;line-height:0;overflow:visible;flex:none}
-.card__goal__arrow::after{content:'';position:absolute;right:0;top:-3px;width:8px;height:8px;
-  border-top:2px solid currentColor;border-right:2px solid currentColor;transform:rotate(45deg)}
-@media (hover:hover){
-  .card--sheet .card__goal--go:hover{color:var(--ink);background:none}
-  .card--sheet .card__goal--go:hover::before{content:none}
-  .card--sheet .card__goal--go:hover::after{height:3px}
-}
-.card--sheet .card__goal--go:active{transform:translateX(1px)}
-.card--sheet .card__goal--go:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:3px;
-  background:none;color:var(--ink);border-color:transparent}
-
-/* card full: the closed count says it; no second label */
-.card--sheet .card__punch{display:none;position:absolute;z-index:3;right:auto;top:auto;
-  left:calc(100% - 36px - var(--safe-x));bottom:28%;margin:0;padding:0;border:0;background:none;
-  font:400 16px/1 var(--f-head);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);
-  white-space:nowrap;transform:rotate(-90deg);transform-origin:0 0;pointer-events:none}
-
-/* the route: dotted where the member has yet to go, solid where they have been */
-.card__seg{fill:none;stroke:var(--tone);stroke-width:1.6;stroke-dasharray:.5 7;stroke-linecap:round;
-  vector-effect:non-scaling-stroke}
-.card__seg--to,.card__seg--set{stroke:var(--ink);stroke-dasharray:none;stroke-width:2}
-
-/* the seven states of a seat, by ink weight and mark
-   empty      a printed blank: a hairline in full ink, the glyph barely there, the number in grey
-   next       the outline heavier, a thin ring around it, the number in ink
-   live       the ring in the club's red and the word under it: the seat is the way in
-   stamped    ink, pressed
-   hero       the newest: a paper gap then a thin outer rim, its number in the head face
-   milestone  the tenth: a second rim, heavier still once pressed
-   full       said by the card: every segment solid, the count closed */
-.seal:not(.seal--set) .sf-face{fill:var(--paper);stroke:var(--ink);stroke-width:.8;stroke-opacity:1}
-.seal:not(.seal--set) .seal__mark{opacity:.07}
-.seal[data-seal="empty"] .seal__no{color:var(--tone)}
-.seal.seal--next .sf-face{stroke-width:1.4}
-.seal.seal--next .seal__mark{opacity:.14}
-.seal--next .seal__no{color:var(--ink)}
-.seal--next::after{inset:-4%;border-width:1.2px;border-color:var(--ink)}
-.seal--live::after{border-color:var(--seal);border-width:2px}
-.seal.seal--live .sf-face{stroke:var(--ink);stroke-opacity:1;stroke-width:1.4}
-.seal.seal--live .seal__mark{opacity:.14}
-.seal.seal--live .seal__mark path{fill:var(--ink)}
-.seal--live .seal__no{color:var(--ink)}
-.seal__go{position:absolute;left:50%;top:100%;translate:-50% 4px;
-  font:400 10.5px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--seal);white-space:nowrap}
-@media (hover:hover){.seal--live:hover::after{border-width:3px}}
-.seal--live:focus-visible{outline:var(--edge-thin) solid var(--seal);outline-offset:6px}
-.seal--hero::after{content:none;position:absolute;inset:-8%;border:1px solid var(--ink);
-  border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;transform:rotate(-5deg);pointer-events:none}
-.seal--hero .seal__no{color:var(--ink)}
-.seal--mile .sf-back{stroke:var(--ink);stroke-width:1;stroke-opacity:1}
-.seal--mile.seal--set .sf-back{stroke-width:2}
-.seal--mile .seal__no{color:var(--ink)}
-.seal--mile:not(.seal--set) .seal__no{color:var(--ink)}
-.seal--mile.seal--set .seal__no{color:var(--ink)}
-/* a pointer over a pressed stamp lifts it a little; the record waits for a tap */
-@media (hover:hover){
-  .seal[tabindex]:hover .sf-press{transform:rotate(var(--press-tilt,0deg)) scale(1.06)}
-  .seal[tabindex]:hover .seal__no{color:var(--ink)}
-}
-.seal .sealmeta,.seal:focus .sealmeta,.seal:hover .sealmeta{display:none}
-
-/* a stamp held up: square to the reader, half as large again, rimmed */
-.card--inspect .card__route,.card--inspect .seal:not(.seal--held){opacity:.4}
-.card--inspect .card__wm{opacity:.02}
-.card--inspect .seal:not(.seal--held) .seal__no{opacity:1}
-.seal.seal--held .sf-press{transform:rotate(0deg) scale(1.3)}
-/* a held seat at the paper's edge is drawn a little inward, so the enlarged face is not cut */
-.seal--held{translate:var(--hx,0) var(--hy,0)}
-.seal--held:nth-child(10){--hx:-30%}
-.seal--held:nth-child(7){--hx:12%}
-@container (min-width:480px){ .seal--held:nth-child(10){--hx:0} .seal--held:nth-child(7){--hx:0} .seal--held:nth-child(5){--hx:-16%} .seal--held:nth-child(1){--hx:10%} }
-.seal--held::after{content:'';position:absolute;inset:-22%;border:1px solid var(--ink);
-  border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;transform:rotate(-5deg);pointer-events:none}
-.seal--held .seal__no{font:400 13px/1 var(--f-mono);color:var(--ink);right:-18%;bottom:-16%}
-.card--inspect .card__goal{visibility:hidden}
-.card__lead{position:absolute;z-index:31;background:var(--ink);pointer-events:none}
-/* the record in the foot band */
-.card__record[data-at="foot"]{position:absolute;inset:0;z-index:32;max-width:none;padding:6px var(--cx);
-  display:grid;grid-template-columns:auto auto minmax(0,1fr);grid-template-areas:"no day row" "no how how";
-  align-items:center;gap:1px 10px;background:var(--paper);border:0;
-  font:400 11px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
-.card__record[data-at="foot"]::before{content:none}
-.card__record[data-at="foot"] .sealmeta__no{grid-area:no;align-self:center;margin:0 4px 0 0;padding:0;border:0;
-  font:400 15px/1 var(--f-mono);letter-spacing:.04em;color:var(--ink)}
-.card__record[data-at="foot"] .sealmeta__day{grid-area:day;color:var(--ink);font-size:11px;align-self:end}
-.card__record[data-at="foot"] .sealmeta__row{grid-area:row;display:block;align-self:end;white-space:nowrap}
-.card__record[data-at="foot"] .sealmeta__row i{margin-left:8px;color:var(--ink)}
-.card__record[data-at="foot"] .sealmeta__how{grid-area:how;justify-self:start;margin:1px 0 0}
-/* the record in the margin beside a wide sheet, right-aligned to the field's rule */
-.card__record[data-at="margin"]{position:absolute;z-index:32;right:calc(100% + 24px);translate:0 -50%;width:max-content;max-width:200px;
-  display:grid;gap:2px;justify-items:end;text-align:right;padding:0;background:var(--paper);border:0;
-  font:400 11.5px/1.5 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
-.card__record[data-at="margin"]::before{content:none}
-.card__record[data-at="margin"] .sealmeta__no{margin:0;padding:0 0 4px;border:0;
-  font:400 18px/1 var(--f-mono);letter-spacing:.04em;color:var(--ink)}
-.card__record[data-at="margin"] .sealmeta__day{color:var(--ink);font-size:11.5px}
-.card__record[data-at="margin"] .sealmeta__row{display:grid;justify-items:end;gap:2px}
-.card__record[data-at="margin"] .sealmeta__row i{margin:0;color:var(--ink)}
-.card__record[data-at="margin"] .sealmeta__how{justify-self:end;margin-top:4px}
-
-/* the standing: one ledger line, the count in the head face */
-.standing-band{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 1.4em;justify-self:start;
-  grid-template-areas:none;grid-template-columns:none;
-  margin:0;padding:0;border:0;
-  font:400 12px/1.5 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
-.standing-band > span{display:inline;white-space:nowrap}
-.standing-band > span + span::before{content:none}
-.standing-band__fig{grid-area:auto;margin:0;padding:0;font:inherit;line-height:inherit;color:inherit}
-.standing-band b{font-weight:400;color:var(--ink)}
-.standing-band b small{font-size:inherit}
-.standing-band i{font-style:normal}
-.standing-band__fig b{font:inherit;letter-spacing:inherit}
-
-/* the cards already filled: an index, each line opening the card it names */
-.files{display:grid;gap:0;border:0;padding:0;min-width:0;justify-self:stretch}
-.files__mark{margin:0;padding:0 0 var(--sp-tight);border-bottom:1px solid var(--ink);
-  font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.files__list{display:block;list-style:none;margin:0;padding:0}
-.filed{display:block;border-bottom:var(--edge-hair) solid var(--tint)}
-.filed__row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:baseline;column-gap:12px;width:100%;
-  min-height:44px;margin:0;padding:10px 0;border:0;background:none;text-align:left;cursor:pointer;
-  font:400 12px/1.4 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
-/* in a narrow index the prize takes the entry's second line */
-.files__list{container-type:inline-size}
-@container (max-width:460px){
-  .filed__row{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"no when" "no prize";row-gap:3px}
-  .filed__row > .filed__no{grid-area:no}
-  .filed__row > .filed__when{grid-area:when}
-  .filed__row > .filed__prize{grid-area:prize;justify-self:start}
-}
-.filed__no{margin:0;font:400 13px/1.4 var(--f-mono);letter-spacing:.06em;color:var(--ink)}
-.filed__when{margin:0;color:var(--ink);letter-spacing:.06em}
-.filed__prize{margin:0;color:var(--ink);white-space:nowrap;justify-self:end}
-.filed__row:active{background:var(--ink)}
-.filed__row:active .filed__no,.filed__row:active .filed__when,.filed__row:active .filed__prize{color:var(--paper);border-color:var(--paper)}
-.filed__row:focus-visible{outline:var(--edge-thin) solid var(--ink);outline-offset:2px}
-.filed__row[aria-expanded="true"] .filed__no{color:var(--ink)}
-.filed__card{position:relative;display:block;margin:0 0 var(--sp-pad);padding:0;border:0;box-shadow:none;background:none;
-  container-type:normal;grid-template-columns:none}
-.filed__card[hidden]{display:none}
-.filed__field{display:block;width:100%;max-width:420px;height:auto;margin:0;overflow:visible}
-.fc-route{stroke:var(--ink);stroke-width:.6;stroke-dasharray:none}
-.fc-no{font:400 12px var(--f-mono);fill:var(--ink-2);letter-spacing:.04em}
-.filed__punch{position:static;rotate:0;margin:4px 0 0;padding:0;border:0;background:none;
-  font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);white-space:normal}
-.filed--took .filed__punch{color:var(--seal)}
-
 /* a wide sheet: the head band one strip with the goal line at its right end,
    the district's seal pressed over the fold, the field on a heavy left rule */
-/* (the sheet's own layout cannot query the sheet: it answers to the
-   page's width, which the .mem columns keep in step with the card's) */
-@media(min-width:480px){
-  .card--sheet{--band:96px;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"id foot" "field field"}
-  .card--sheet.card--full{--band:108px}
-}
-@container (min-width:480px){
-  .card--sheet .card__id{position:static;grid-template-columns:auto;grid-template-areas:"no" "num";gap:0;
-    padding:8px var(--sp-pad) 10px clamp(18px,3cqw,28px)}
-  .card--sheet.card--full .card__id{padding-bottom:20px}
-  .card--sheet .card__num b{font-size:80px}
-  .card--sheet .card__kci{position:absolute;z-index:3;right:clamp(18px,3cqw,28px);top:calc((var(--band) - 40px) / 2)}
-  .card--sheet .card__kci .brandseal{width:40px}
-  .card--sheet .card__field{aspect-ratio:10/9;border-left:var(--edge-heavy) solid var(--ink)}
-  .card--sheet .card__foot{min-height:var(--band);background:var(--ink);color:var(--paper);border:0;
-    align-items:end;justify-content:flex-end;padding:0 0 12px var(--sp-pad)}
-  .card--sheet.card--full .card__foot{padding-bottom:20px}
-  .card--sheet .card__goal{color:var(--paper);padding:8px calc(40px + clamp(18px,3cqw,28px) + 20px) 8px 0}
-  .card--sheet .card__goal--go{color:var(--paper);font-size:18px;padding:6px calc(40px + clamp(18px,3cqw,28px) + 20px) 6px 0}
-  .card--sheet .card__goal--go:hover{color:var(--paper)}
-  .card--sheet .card__goal--go:focus-visible{outline-color:var(--paper);color:var(--paper)}
-  .card--sheet .card__punch{left:calc(var(--edge-heavy) + 8px);bottom:24px;font-size:22px}
-  .card--sheet .card__wm{width:52%}
-  .seal--next::after{border-width:1.4px}
-  .seal--live::after{border-width:2.2px}
-  .seal--hero::after{border-width:1.4px}
-  .seal__go{font-size:11px;translate:-50% 6px}
-}
-
-/* the record is two columns only where both fit beside each other: the
-   name, the standing and the index at the left, the card at the right */
-@media(min-width:1180px){
-  .mem,.mem--filed{grid-template-columns:minmax(312px,1fr) minmax(480px,800px);column-gap:clamp(32px,4vw,48px);row-gap:var(--sp-block);
-    grid-template-areas:"who card" "band card" "files card" ". card";grid-template-rows:auto auto auto minmax(0,1fr)}
-  .mem .who{margin:0;padding:0;align-self:start}
-  .mem .who__name{font-size:clamp(44px,3.5vw,52px);line-height:.9}
-  .mem .who__line{flex-direction:column;align-items:flex-start;gap:2px}
-  .mem .who__line span + span::before{content:none;margin:0}
-  .mem .who__line::after{content:none}
-  .card--sheet{margin-inline:0}
-  .mem .standing-band{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:none;gap:8px;justify-self:stretch;max-width:260px;
-    border-top:0;padding:0;margin-top:0}
-  .standing-band > span{display:block;white-space:normal}
-  .standing-band > span + span::before{content:none}
-  .standing-band b{font:inherit;letter-spacing:inherit;margin-right:.4em}
-  .standing-band b small{font:inherit;letter-spacing:inherit;color:var(--ink-2)}
-  .files{max-width:360px}
-}
 
 /* ══ Today: the opening page of the member's year. The meeting's number
    is the masthead, standing on one rule that runs off the page; what the
@@ -1711,35 +1165,6 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 .mast--none .mast__date{grid-area:date;font-size:clamp(22px,6vw,28px)}
 .mast--none .mast__no{color:var(--tone)}
 
-/* the card on the page: one line of what it holds, then the seats on bare paper */
-.card--field{--cx:calc(var(--gutter) + var(--safe-x));position:relative;display:block;width:auto;
-  border:0;box-shadow:none;background:none}
-.card--field .card__line{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:flex-start;gap:2px 1.2em;margin:0;
-  font:400 11px/1.5 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.card--field .card__line > * + *::before{content:none}
-.card--field .card__cardno{font:inherit;letter-spacing:inherit;opacity:1;color:var(--ink)}
-.card--field .card__num{display:inline;margin:0;font:inherit;letter-spacing:inherit;color:var(--ink)}
-.card--field .card__num b{font:inherit;letter-spacing:inherit}
-.card--field .card__num span{font:inherit;letter-spacing:inherit;opacity:1;color:var(--ink-2)}
-.card--field .card__goal{margin:0;font:inherit;letter-spacing:inherit;opacity:1;max-width:none;color:var(--ink-2)}
-.card--field .card__goal--go{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:4px 0 2px;
-  border:0;border-bottom:2px solid var(--ink);background:none;cursor:pointer;
-  font:400 12px/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);text-decoration:none}
-.card--field .card__goal--go::before{content:none}
-@media (hover:hover){.card--field .card__goal--go:hover{color:var(--ink);border-bottom-width:3px;background:none}}
-.card--field .card__goal--go:focus-visible{outline:2px solid var(--ink);outline-offset:3px;color:var(--ink);background:none}
-.card--field .card__field{position:relative;aspect-ratio:5/6;margin:0 calc(var(--cx) * -1);border:0;background:none;isolation:isolate}
-.card--field .card__field::before,.card--field .card__field::after{content:none}
-.card--field .card__punch{display:none}
-/* the masthead carries the instruction; the live seat needs no word of its own here */
-.card--field .seal__go{display:none}
-@container (min-width:480px){ .card--field .card__field{aspect-ratio:10/9} }
-
-@media(min-width:1024px){ .card--sheet{margin-inline:0} }
-
-/* a portrait seat 7 keeps its number clear of seat 8's face */
-@container (max-width:479px){ .seal:nth-child(7) .seal__no{right:auto;left:-3%} }
-
 /* the meetings ahead: a short list */
 .deck__side{grid-area:side;display:block;min-width:0}
 .fol{position:relative;min-width:0;padding:0}
@@ -1759,11 +1184,9 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
 @media(min-width:1024px){
   .deck{grid-template-columns:minmax(180px,26%) minmax(0,1fr);column-gap:clamp(32px,4vw,64px);row-gap:var(--sp-page);
     grid-template-areas:"act act" "side card";grid-template-rows:auto minmax(0,1fr)}
-  .deck > .card{grid-area:card;width:100%;max-width:680px;justify-self:end}
   .mast__line{margin-right:0;padding-right:0}
   .mast__no{font-size:clamp(190px,14vw,230px)}
   .mast__cmd{font-size:20px;padding:15px 24px 14px}
-  .card--field .card__field{margin:0}
   .deck__side{padding-top:2px}
 }
 
@@ -2456,29 +1879,6 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
   .tools__now > .tools__mark{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 }
 
-/* ══ After the judges: the standing block holds its shape without filed
-   cards; the filed prize that is ready is a printed instruction; the
-   phone's standing is a two-column ledger; the archive's miniature
-   recedes; the leader on a desk is a tick to the rule; the seats at the
-   page's edge keep their rings; sign out is the cut; the live tab is a
-   red rule, not a fill ══ */
-.filed__row--go .filed__prize{display:flex;align-items:center;gap:10px;justify-self:stretch;border:0;padding:0;
-  font:400 16px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
-.filed__row--go .filed__prize::after{content:'';flex:1 1 20px;height:2px;background:var(--ink);margin-right:calc((var(--gutter) + var(--safe-x)) * -1)}
-@media(min-width:900px){ .filed__row--go .filed__prize::after{margin-right:0} }
-@media (hover:hover){.filed__row--go:hover .filed__prize::after{height:3px}}
-.filed__field{max-width:78%;margin-left:auto}
-.fc-face{fill:var(--tone)}
-.fc-route{stroke:var(--tint)}
-.filed__field g:last-child .fc-face{fill:var(--ink)}
-.filed__punch{display:none}
-.seal:nth-child(1){--x:6.5%}
-.seal:nth-child(7){--x:3.5%}
-@container (min-width:480px){ .seal:nth-child(1){--x:2%} .seal:nth-child(7){--x:30.5%} }
-.seal--live .seal__no{display:none}
-
-
-
 /* ══ After the judges, the pages: the empty toast rail draws nothing; a
    live seat on the bottom row carries its word above it; the masthead's
    second line stands clear of the numeral; a punched station keeps its
@@ -2487,8 +1887,6 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
    card; the desk's camera fills its column; a desk's record is a slip ══ */
 .toasts:empty{display:none;border:0;background:none}
 .is-projecting .toasts{display:none}
-.seal:nth-child(7) .seal__go,.seal:nth-child(n+9) .seal__go{top:auto;bottom:100%;translate:-50% -4px}
-@container (min-width:480px){ .seal:nth-child(n+7) .seal__go{top:auto;bottom:100%;translate:-50% -6px} }
 .deck--none .deck__side{display:none}
 @media(min-width:1024px){
   .minutes__fold .mrow__go{column-gap:var(--sp-block)}
@@ -2500,7 +1898,7 @@ select.input{padding-right:22px;background-position:right 6px center,right 0 cen
    case, a refusal keeps its room, the camera is offered again in place,
    a working button keeps its width, every part of a field is ringed ══ */
 :root{--f-mono:'Keystamp Mono',ui-monospace,'SF Mono',Menlo,monospace}
-.rail__name,.who__name,.brow--member .brow__mid b,.brow--owed .brow__mid b,.brow--hand .brow__mid b,.bdetail__name--id,.authp__in{
+.rail__name,.brow--member .brow__mid b,.brow--owed .brow__mid b,.brow--hand .brow__mid b,.bdetail__name--id,.authp__in{
   font-family:var(--f-mono);font-weight:400;text-transform:none;letter-spacing:.01em}
 /* a long username breaks, rather than widening a phone page past its edge */
 .bdetail__name--id{overflow-wrap:anywhere;min-width:0}

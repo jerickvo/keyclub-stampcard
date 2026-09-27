@@ -158,58 +158,6 @@ select.input{appearance:none;-webkit-appearance:none;
   background-repeat:no-repeat}
 select.input:focus-visible{outline:none}
 
-.sealmeta{position:absolute;left:calc(100% - 2px);top:-2px;z-index:40;
-  display:none;width:max-content;max-width:44cqw;
-  padding:9px 11px;background:var(--paper);
-  border:var(--edge-thin) solid var(--ink);
-  font:400 10.5px/1.55 var(--f-mono);letter-spacing:.06em;
-  color:var(--ink-2);text-align:left;
-  pointer-events:none}
-.sealmeta > *{display:block}
-.sealmeta__no{font-weight:700;color:var(--ink);letter-spacing:.14em;
-  padding-bottom:5px;margin-bottom:5px;
-  border-bottom:var(--rule-hair) solid var(--ink)}
-
-.sealmeta::before{content:"";position:absolute;left:-1px;top:-1px;
-  width:10px;height:10px;border:var(--rule) solid var(--ink);
-  border-right:0;border-bottom:0}
-
-@media(pointer:coarse){
-  .sealmeta{font-size:11px;padding:10px 12px}
-}
-
-.seal:focus .sealmeta{display:block}
-@media (hover:hover){.seal:hover .sealmeta{display:block}}
-
-.seal:focus{z-index:30}
-@media (hover:hover){.seal:hover{z-index:30}}
-
-.seals:focus-within{z-index:4}
-@media (hover:hover){.seals:has(.seal:hover){z-index:4}}
-
-.seal:nth-child(3) .sealmeta,
-.seal:nth-child(4) .sealmeta,
-.seal:nth-child(5) .sealmeta,
-.seal:nth-child(9) .sealmeta,
-.seal:nth-child(10) .sealmeta{left:auto;right:calc(100% - 2px)}
-.seal:nth-child(3) .sealmeta::before,
-.seal:nth-child(4) .sealmeta::before,
-.seal:nth-child(5) .sealmeta::before,
-.seal:nth-child(9) .sealmeta::before,
-.seal:nth-child(10) .sealmeta::before{left:auto;right:-1px;
-  border-left:0;border-right:var(--rule) solid var(--ink)}
-
-@container (min-width:480px){
-  .seal:nth-child(3) .sealmeta,
-  .seal:nth-child(9) .sealmeta{left:calc(100% - 2px);right:auto}
-  .seal:nth-child(3) .sealmeta::before,
-  .seal:nth-child(9) .sealmeta::before{right:auto;left:-1px;
-    border-right:0;border-left:var(--rule) solid var(--ink)}
-  .seal:nth-child(6) .sealmeta{left:auto;right:calc(100% - 2px)}
-  .seal:nth-child(6) .sealmeta::before{left:auto;right:-1px;
-    border-left:0;border-right:var(--rule) solid var(--ink)}
-}
-
 .btn--go{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 @media (hover:hover){.btn--go:hover{background:var(--ink-2);border-color:var(--ink-2)}}
 

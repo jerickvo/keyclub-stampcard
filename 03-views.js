@@ -21,6 +21,46 @@ const STAMP_FIT = .62;
 const byHand = scan => Boolean(scan) && (scan.method === 'board' || scan.method === 'manual');
 const stampWhen = scan => byHand(scan) ? 'added by an officer' : fmtTime(scan.at);
 
+/* The card's ten seats, as [x, y, size, lean]: the seat's centre in
+   percent of the stamp field, its width in percent of the field's
+   width, and the angle it is printed at. `wide` is the card on its side
+   (a field of 16:10), `tall` the card stood up on a phone (5:6). The
+   route is drawn through the same centres, so it cannot miss a seat. */
+const SEAT_MAP = {
+  wide: [[8,21,11.5,-2.5],[23.5,42,11,1.5],[39,20,11.5,-1],[55,38,11,2],[71,17,11.5,-2],
+         [88,40,11,1],[70,63,11.5,-1.5],[48,60,11,2.2],[27,77,11.5,-2],[62,86,14.5,-3]],
+  tall: [[17,11,20,-2.5],[45,17,19,1.5],[75,12,20,-1],[81,34,19,2],[55,40,20,-2],
+         [26,45,19,1],[15,67,20,-1.5],[40,74,19,2.2],[66,62,20,-2],[76,86,25,-3]],
+};
+const seatStyle = i => {
+  const [wx, wy, ws, lean] = SEAT_MAP.wide[i], [tx, ty, ts] = SEAT_MAP.tall[i];
+  return `--wx:${wx}%;--wy:${wy}%;--ws:${ws}%;--tx:${tx}%;--ty:${ty}%;--ts:${ts}%;--lean:${lean}deg`;
+};
+/* a seat: the blank printed on the stock, and the impression pressed
+   over it a little off register, the way a hand stamp lands */
+const seatSvg = (n, mile = false) => {
+  const lift = (32 - 32 * STAMP_FIT).toFixed(1);
+  return `<svg viewBox="0 0 64 64" aria-hidden="true">
+    ${mile ? `<path class="sf-back" d="${stampShape(n + 1, 3.6)}"/>` : ''}
+    <path class="sf-blank" d="${stampShape(n + 1, 0)}"/>
+    <g class="sf-press">
+      <path class="sf-face" d="${stampShape(n + 1, 0)}"/>
+      <g class="seal__mark" transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(n)}</g>
+    </g>
+  </svg>`;
+};
+/* the route, seat to seat: inked where the member has been, a dashed
+   line to the seat they stand on, dotted beyond */
+const seatRoute = filled => ['wide', 'tall'].map(k => {
+  const pts = SEAT_MAP[k];
+  const segs = pts.slice(1).map(([x2, y2], i) => {
+    const [x1, y1] = pts[i];
+    const on = i < filled - 1 ? ' card__seg--set' : i === filled - 1 ? ' card__seg--to' : '';
+    return `<line class="card__seg${on}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+  }).join('');
+  return `<svg class="card__route card__route--${k}" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${segs}</svg>`;
+}).join('');
+
 /* the usual time and room are not repeated; a meeting that differs
    says how (the same rule the ledger and the board lists follow) */
 const unusual = m => (m.time && m.time !== '12:40 PM') || (m.place && m.place !== Schedule.PLACE)
@@ -63,31 +103,30 @@ const C = {
     </div>`;
   },
 
-  /* The ten-stamp card. `form` is how it is printed: 'sheet' is the
-     card as an object (Member: an ink head band, the paper field, the
-     district's seal under the stamps), 'field' is the same seats set
-     straight onto the page (Today). The seats, the route and the states
-     are the same in both. */
-  sealGrid(live = false, form = 'sheet'){
+  /* The ten-stamp card: the product's own object. An ink spine (the
+     card's number, the count, who it was issued to, the club's seal), a
+     field of card stock where ten seats wait along one route, and a stub
+     past a perforation that carries what the card is for, or the record
+     of a stamp held up to be read. The seats, the route and the states
+     are drawn from one map (SEAT_MAP), so the line always meets the
+     seat it names. */
+  sealGrid(live = false){
     const p = Rules.progress();
     const chrono = [...Store.scans]
       .sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
 
     const goal = Store.rewards.find(r => r.required === p.floor + p.span) || null;
-    const cardNo = p.card;
     const full = p.filled >= p.span;
     const liveNo = live ? (Store.openMeeting() || {}).no : null;
+    const ready = full && goal && !goal.claimed;
 
     const cells = Array.from({ length:p.span }, (_, i) => {
       /* the next seat is where the member stands on the route; while a
          check-in is open for it, the seat itself is the way in */
       const state = i < p.filled ? 'set' : i === p.filled ? 'next' : '';
-      const hero = form === 'sheet' && state === 'set' && i === p.filled - 1 ? ' seal--hero' : '';
+      const hero = state === 'set' && i === p.filled - 1 ? ' seal--hero' : '';
       const mile = i === p.span - 1 ? ' seal--mile' : '';
       const now  = state === 'next' && live ? ' seal--live' : '';
-
-      const tilt = state === 'set'
-        ? `--press-tilt:${[-2.1, 1.4, -1.2, 2.3, -1.7][i % 5]}deg` : '';
 
       const rec = state === 'set' ? chrono[p.floor + i] : null;
       const mtg = rec ? Store.meetings.find(m => m.id === rec.meetingId) : null;
@@ -97,74 +136,50 @@ const C = {
             mtg.no}, ${fmtDate(mtg.date)}, ${byHand(rec) ? 'added by an officer' : `checked in at ${fmtTime(rec.at)}`}"`
         : now ? ` tabindex="0" role="button" data-go="scan" aria-label="Check in${liveNo ? ` at general meeting ${liveNo}` : ''}"` : '';
 
-      const seed = p.floor + i + 1;
-      const fit  = STAMP_FIT;
-      return `<li class="seal ${state ? 'seal--' + state : ''}${hero}${mile}${now}" data-seal="${state || 'empty'}" style="${tilt}"${control}>
-        <svg viewBox="0 0 64 64" aria-hidden="true">
-          ${mile ? `<path class="sf-back" d="${stampShape(seed, 3.4)}"/>` : ''}
-          <g class="sf-press">
-            <path class="sf-face" d="${stampShape(seed, 0)}"/>
-            <g class="seal__mark" transform="translate(${(32 - 32 * fit).toFixed(1)} ${(32 - 32 * fit).toFixed(1)}) scale(${fit})">${stampMark(p.floor + i)}</g>
-          </g>
-        </svg>
+      /* the milestone seat names what it pays out, printed under the blank */
+      const prize = mile && goal && state !== 'set' ? `<span class="seal__prize" aria-hidden="true">${esc(goal.name)}</span>` : '';
+      return `<li class="seal ${state ? 'seal--' + state : ''}${hero}${mile}${now}" data-seal="${state || 'empty'}" style="${seatStyle(i)}"${control}>
+        ${seatSvg(p.floor + i, mile)}
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
-        ${now && form === 'sheet' ? `<span class="seal__go" aria-hidden="true">Check in · ${pad(p.floor + i + 1)}</span>` : ''}
-        ${docket}
+        ${now ? `<span class="seal__go" aria-hidden="true">Check in</span>` : ''}
+        ${prize}${docket}
       </li>`;
     }).join('');
 
-    /* the route is drawn seat to seat: solid where the member has been,
-       solid up to the seat they stand on, dotted beyond */
-    const L = [[9.5,12.3],[28.8,24],[48,12.3],[66.8,21.5],[86.5,34.3],[59.3,44.5],[38,47.3],[12.3,57],[34.5,72.3],[74.5,71.2]];
-    const P = [[17,10.2],[46,13.3],[74,21.1],[81,40.6],[58,50],[31,54.7],[14,72.7],[37.5,81.3],[58,71.9],[83,83.6]];
-    const segs = pts => pts.slice(1).map(([x2, y2], i) => {
-      const [x1, y1] = pts[i];
-      const on = full || i < p.filled - 1 ? ' card__seg--set' : i === p.filled - 1 ? ' card__seg--to' : '';
-      return `<line class="card__seg${on}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
-    }).join('');
-    const route =
-      `<svg class="card__route card__route--l" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${segs(L)}</svg>` +
-      `<svg class="card__route card__route--p" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${segs(P)}</svg>`;
-
-    const ready = full && goal && !goal.claimed;
-    const say = full
-      ? (ready ? `${goal.name} ready to claim`
-         : goal ? `${goal.name} ${goal.handedAt ? 'collected' : 'claimed'}` : '')
-      /* a prize already claimed (stamps taken away after the claim) is
-         not held out as the thing to reach */
-      : goal && !goal.claimed ? `${p.remaining} to ${goal.name}` : `${p.remaining} to a full card`;
-    /* the prize that is ready is a printed instruction, the card's one action */
+    /* the stub: what the card is for. A prize ready to claim is the card's
+       one action; a prize already claimed (stamps taken away after the
+       claim) is not held out as the thing to reach */
     const goalLine = ready
-      ? `<button class="card__goal card__goal--go" type="button" data-go="rewards"><span class="card__goal__arrow" aria-hidden="true">→</span>${esc(goal.name)}, ready to claim</button>`
-      : say ? `<p class="card__goal">${esc(say)}</p>` : '';
+      ? `<button class="card__goal card__goal--go" type="button" data-go="rewards">
+          <span class="card__goal__lab">Reward unlocked</span>
+          <span class="card__goal__what">Claim ${esc(goal.name)}</span><span class="card__goal__arrow" aria-hidden="true"></span></button>`
+      : full ? `<p class="card__goal card__goal--done"><span class="card__goal__lab">Card complete</span>
+          ${goal ? `<span class="card__goal__what">${esc(goal.name)} ${goal.handedAt ? 'collected' : 'claimed'}</span>` : ''}</p>`
+      : goal && !goal.claimed
+        ? `<p class="card__goal"><b class="card__goal__n">${p.remaining}</b><span class="card__goal__lab">more ${p.remaining === 1 ? 'stamp' : 'stamps'} to</span>
+            <span class="card__goal__what">${esc(goal.name)}</span></p>`
+        : `<p class="card__goal"><b class="card__goal__n">${p.remaining}</b><span class="card__goal__lab">more to a full card</span></p>`;
 
-    const cls = `card card--${form}${full ? ' card--full' : ''}${live ? ' card--live' : ''}`;
-    const field = `<div class="card__field">
-        ${form === 'sheet' ? `<span class="card__wm" aria-hidden="true">${brandSeal('cnh')}</span>` : ''}
-        ${route}
-        <ol class="seals" id="seals" aria-label="${p.filled} of ${p.span} stamps on this card">${cells}</ol>
-      </div>`;
-    const punch = full ? '<span class="card__punch" aria-hidden="true">Card full</span>' : '';
+    /* a full card is struck with the club's rubber stamp, in the prize's ink */
+    const done = full ? `<span class="card__done${ready ? ' card__done--ready' : ''}" aria-hidden="true">
+        <b>${ready ? 'Unlocked' : 'Complete'}</b><i>Card ${pad(p.card)}${goal ? ` · ${esc(goal.name)}` : ''}</i></span>` : '';
 
-    if (form === 'field') return `<section class="${cls}">
-      <div class="card__line">
-        <span class="card__num"><b>${p.filled}</b> <span>of ${p.span}</span></span>
-        ${goalLine}
-      </div>
-      ${field}${punch}
-    </section>`;
-
-    /* the sheet: an ink head band, the field, and a foot band that
-       carries the goal line (and, on a phone, a stamp's printed record) */
-    return `<section class="${cls}">
+    const cls = `card${full ? ' card--full' : ''}${ready ? ' card--ready' : ''}${live ? ' card--live' : ''}`;
+    return `<section class="${cls}" aria-label="Card ${pad(p.card)}: ${p.filled} of ${p.span} stamps"><div class="card__in">
       <div class="card__id">
-        <span class="card__cardno">Card ${pad(cardNo)}</span>
-        <p class="card__num"><b>${p.filled}</b><span>/ ${p.span}</span></p>
+        <p class="card__cardno"><span>Card</span> <b>${pad(p.card)}</b></p>
+        <p class="card__num"><b>${p.filled}</b><span>/${p.span}</span></p>
+        <p class="card__issued"><span>Issued to</span><b>${esc(memberName())}</b></p>
         <span class="card__kci" aria-hidden="true">${brandSeal('kci')}</span>
       </div>
-      ${field}
+      <div class="card__field">
+        <span class="card__wm" aria-hidden="true">${brandSeal('cnh')}</span>
+        ${seatRoute(full ? p.span : p.filled)}
+        <ol class="seals" id="seals" aria-label="${p.filled} of ${p.span} stamps on this card">${cells}</ol>
+        ${done}
+      </div>
       <div class="card__foot">${goalLine}</div>
-    </section>`;
+    </div></section>`;
   },
 
   /* a state that asks nothing of the member is a line of type */
@@ -229,6 +244,20 @@ const C = {
   },
 };
 
+/* the running head over a page: its chapter number, what the page is,
+   and the book it belongs to */
+C.run = (no, what, book = 'Keystamp · Key Club · Cali-Nev-Ha') =>
+  `<p class="run"><span class="run__no">Nº <b>${no}</b></span><span class="run__what">${esc(what)}</span><span class="run__book">${esc(book)}</span></p>`;
+
+/* a section inside a page: its name in the head face, a rule out to the
+   margin, the count at the end of the rule */
+C.sect = (name, count = '') =>
+  `<h2 class="sect"><span class="sect__name">${esc(name)}</span><i class="sect__rule" aria-hidden="true"></i>${count ? `<span class="sect__n">${esc(count)}</span>` : ''}</h2>`;
+
+/* the foot of a page: the book's line and the page's folio */
+C.folio = (no, what) =>
+  `<footer class="folio-foot" aria-hidden="true"><span>Keystamp — ${esc(what)}</span><span class="folio-foot__no">${no}</span></footer>`;
+
 /* the record's colophon: who holds it, and the two settings a member has */
 C.account = () => `<section class="acct" aria-label="Account">
   <p class="acct__who"><span class="acct__held">Record held by</span>
@@ -240,55 +269,65 @@ C.account = () => `<section class="acct" aria-label="Account">
   </div>
 </section>`;
 
-/* A card already filled, filed under the one in progress: the same seat
-   map and route in miniature, every seat pressed, the prize it earned
-   punched across it. */
-const SEATS = [[2,4,15,-2.5],[21.5,16,14.5,1.5],[40.5,4,15,-1],[59.5,13.5,14.5,2],[79,26,15,-2],
-               [52,36.5,14.5,1],[30.5,39,15,-1.5],[5,49,14.5,2.2],[27,64,15,-2],[63,58.5,23,-3]];
-const ROUTE = [[9.5,12.3],[28.8,24],[48,12.3],[66.8,21.5],[86.5,34.3],[59.3,44.5],[38,47.3],[12.3,57],[34.5,72.3],[74.5,71.2]];
-
 /* where a prize stands, in the one word the member reads for it */
 const prizeWord = r => !r ? '' : r.handedAt ? 'Collected' : r.claimed ? 'Claimed'
   : Store.tierState(r) === 'unlocked' ? 'Ready to claim' : '';
 
+/* A card already filled, filed under the one in hand: the same card in
+   miniature (its spine, the same seats and route, every seat pressed),
+   struck with what the prize it earned has come to. */
 C.filed = (k, run) => {
   const prize = Store.rewards.find(r => r.required === (k + 1) * Rules.CARD) || null;
   const word  = prizeWord(prize);
   const ready = prize && !prize.claimed && Store.tierState(prize) === 'unlocked';
   const lift  = (32 - 32 * STAMP_FIT).toFixed(1);
-  const seats = SEATS.map(([x, y, s, lean], i) => {
-    const n = k * Rules.CARD + i;
-    const tilt = lean + [-2.1, 1.4, -1.2, 2.3, -1.7][i % 5];
-    /* each seat names the meeting it was pressed at, so no two filed
-       cards read alike */
-    const rec = run[i];
-    const mtg = rec ? Store.meetings.find(m => m.id === rec.meetingId) : null;
-    return `<g transform="translate(${x} ${(y * .9).toFixed(2)}) scale(${(s / 64).toFixed(4)}) rotate(${tilt} 32 32)">
-      ${i === 9 ? `<path class="fc-back" d="${stampShape((n + 1) * 3 + 1, 3.4)}"/>` : ''}
+  /* the field is 160 by 100: the wide card's own proportion */
+  const seats = SEAT_MAP.wide.map(([x, y, s, lean], i) => {
+    const n = k * Rules.CARD + i, w = s * 1.6;
+    return `<g transform="translate(${(x * 1.6 - w / 2).toFixed(2)} ${(y - w / 2).toFixed(2)}) scale(${(w / 64).toFixed(4)}) rotate(${lean} 32 32)">
+      ${i === 9 ? `<path class="fc-back" d="${stampShape(n + 1, 3.6)}"/>` : ''}
       <path class="fc-face" d="${stampShape(n + 1, 0)}"/>
       <g class="fc-mark" transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(n)}</g>
-      ${mtg ? `<text class="fc-no" x="32" y="78" text-anchor="middle" style="font-size:${(12 * 15 / s).toFixed(1)}px">GM ${pad(mtg.no)}</text>` : ''}
     </g>`;
   }).join('');
-  const route = ROUTE.map(([x, y]) => `${x},${(y * .9).toFixed(2)}`).join(' ');
+  const route = SEAT_MAP.wide.map(([x, y]) => `${x * 1.6},${y}`).join(' ');
   const span = `${fmtDay(run[0].at)} — ${fmtDay(run[run.length - 1].at)}`;
-  const id = `filed-${k + 1}`;
-  /* a prize still to be claimed is the line's way on; any other line
-     opens the card it names */
-  const head = ready
-    ? `<button class="filed__row filed__row--go" type="button" data-go="rewards" aria-label="${esc(`Card ${pad(k + 1)}, ${span}: ${prize.name} ready to claim`)}">
-        <b class="filed__no">${pad(k + 1)}</b><span class="filed__when">${span}</span>
-        <span class="filed__prize filed__prize--go">${esc(prize.name)}, ready to claim</span></button>`
-    : `<button class="filed__row" type="button" aria-expanded="false" aria-controls="${id}">
-        <b class="filed__no">${pad(k + 1)}</b><span class="filed__when">${span}</span>
-        ${prize ? `<span class="filed__prize${prize.handedAt ? ' filed__prize--took' : ''}">${esc(prize.name)}${word ? ` · ${word.toLowerCase()}` : ''}</span>` : ''}</button>`;
-  return `<li class="filed${prize && prize.handedAt ? ' filed--took' : ''}">
-    ${head}
-    <div class="filed__card" id="${id}" hidden aria-hidden="true">
-      <svg class="filed__field" viewBox="0 0 100 90"><polyline class="fc-route" points="${route}"/>${seats}</svg>
-      ${word ? `<span class="filed__punch">${word}</span>` : ''}
+  const state = ready ? 'ready' : prize && prize.handedAt ? 'took' : prize && prize.claimed ? 'claimed' : 'done';
+  const punch = { ready:'Unlocked', took:'Collected', claimed:'Claimed', done:'Complete' }[state];
+  return `<li class="filed filed--${state}">
+    <div class="mini" aria-hidden="true">
+      <span class="mini__id"><i>Card</i><b>${pad(k + 1)}</b></span>
+      <svg class="mini__field" viewBox="0 0 160 100"><polyline class="fc-route" points="${route}"/>${seats}</svg>
+      <span class="mini__punch">${punch}</span>
     </div>
+    <p class="filed__cap">
+      <b class="filed__no">Card ${pad(k + 1)}</b>
+      <span class="filed__when">${span}</span>
+      ${prize && !ready ? `<span class="filed__prize">${esc(prize.name)}${word ? ` · ${word.toLowerCase()}` : ''}</span>` : ''}
+    </p>
+    ${ready ? `<button class="act act--ink filed__go" type="button" data-go="rewards"
+        aria-label="${esc(`Card ${pad(k + 1)}: claim ${prize.name}`)}"><span>Claim ${esc(prize.name)}</span></button>` : ''}
   </li>`;
+};
+
+/* The reward set, as a line of three medallions: what each takes, what
+   it is, and where it stands. Locked is quiet, unlocked is inked,
+   claimed carries the club's burgundy, collected is filed away. */
+C.prizeSet = (total, { go = false } = {}) => {
+  const tiers = [...Store.rewards].sort((a, b) => a.required - b.required);
+  if (!tiers.length) return '';
+  return `<ol class="pset${go ? ' pset--go' : ''}" aria-label="Rewards">${tiers.map((t, i) => {
+    const at = Store.tierState(t);
+    const state = at === 'claimed' ? (t.handedAt ? 'took' : 'claimed') : at === 'unlocked' ? 'ready' : 'locked';
+    const left = Math.max(0, t.required - total);
+    const say = { took:'Collected', claimed:'Claimed', ready:'Ready to claim',
+                  locked:`${left} more` }[state];
+    return `<li class="pset__t pset__t--${state}" style="--k:${i}">
+      <span class="pset__medal" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="${stampShape(t.required * 3 + 1, 2)}"/></svg><b>${t.required}</b></span>
+      <span class="pset__name">${esc(t.name)}</span>
+      <span class="pset__say">${say}</span>
+    </li>`;
+  }).join('')}</ol>`;
 };
 
 /* The meeting a day is about, as a ticket: its number on the stub, the
@@ -667,6 +706,12 @@ const Views = {
   bmeet(){     BoardUI.tab = 'meetings'; return this.boardSpread('Meetings'); },
   bmembers(){  BoardUI.tab = 'progress'; return this.boardSpread('Members'); },
 
+  /* Member: the member's own record, the strongest page in the book. The
+     identity is a manga panel (the name in the brush face over a tone
+     the district's seal is cut out of); the card is laid across the
+     panel's foot, breaking its frame, because the card is the member's
+     and the member is the card's. The standing is set in the margin
+     beside it, then the cards already filled, then the prizes. */
   profile(){
     if (Store.failed) return this.loadFailure('Member');
     const held     = Store.countedMeetings();
@@ -676,39 +721,55 @@ const Views = {
     const joined   = Store.user && Store.user.joined;
     const chrono   = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
     const p        = Rules.progress();
-    /* the cards filled before the one on the sheet, newest first */
+    const total    = Store.totalStamps();
+    /* the cards filled before the one in hand, newest first */
     const filed    = Array.from({ length:p.card - 1 }, (_, k) =>
       C.filed(k, chrono.slice(k * Rules.CARD, (k + 1) * Rules.CARD))).reverse();
     const open     = Store.openMeeting();
     const live     = Boolean(open && !Store.scanFor(open.id));
     const since    = joined ? onClock(joined, { month:'short', year:'numeric' }) : '';
+    const reached  = Store.rewards.filter(r => Store.tierState(r) !== 'locked').length;
+    /* the name is set as large as the panel allows it on one line */
+    const len      = Math.max(4, [...name].length);
 
     return `<div class="view view--member">
-      <header class="rechead folio">
-        <h1 class="title rechead__title folio__word">Member record</h1>
-        <span class="folio__meta">${handle.toLowerCase() !== name.toLowerCase() ? `${esc(handle)} · ` : ''}05</span>
-      </header>
-
-      <div class="mem${filed.length ? ' mem--filed' : ''}">
-        <section class="who" aria-label="Member">
-          <p class="who__name">${esc(name)}</p>
-          <p class="who__line"><span>Cali-Nev-Ha</span>${since ? `<span>Since ${esc(since)}</span>` : ''}${Store.isBoard ? '<span>Board</span>' : ''}</p>
-        </section>
-
-        ${C.sealGrid(live, 'sheet')}
-
-        <p class="standing-band">
-          <span><b>${attended}</b> <i>of ${held.length} ${held.length === 1 ? 'meeting' : 'meetings'}</i></span>
-          <span><b>${held.length ? Store.attendanceRate() : 0}%</b> <i>attendance</i></span>
+      <section class="idp" aria-label="Member">
+        ${C.run('05', 'Member record')}
+        <span class="idp__tone" aria-hidden="true"><span class="idp__seal">${brandSeal('cnh')}</span></span>
+        <h1 class="idp__name rechead__title" style="--len:${len}"><span class="sr-only">Member record: </span>${esc(name)}</h1>
+        <p class="idp__line">
+          <span>Key Club · Cali-Nev-Ha</span>
+          ${since ? `<span>Member since ${esc(since)}</span>` : ''}
+          ${handle.toLowerCase() !== name.toLowerCase() ? `<span>@${esc(handle)}</span>` : ''}
         </p>
+        <span class="idp__stamp" aria-hidden="true">${Store.isBoard ? 'Board' : 'Member'}</span>
+      </section>
 
-        ${filed.length ? `<section class="files" aria-label="Cards filed">
-          <h2 class="files__mark">Filed</h2>
-          <ol class="files__list">${filed.join('')}</ol>
-        </section>` : ''}
+      <div class="mem">
+        ${C.sealGrid(live)}
+        <section class="stand" aria-label="Standing">
+          <p class="stand__fig"><b>${total}</b><span>${total === 1 ? 'stamp' : 'stamps'} collected</span></p>
+          <dl class="stand__ledger">
+            <div><dt>Meetings</dt><dd><b>${attended}</b> of ${held.length}</dd></div>
+            <div><dt>Attendance</dt><dd><b>${held.length ? Store.attendanceRate() : 0}%</b></dd></div>
+            <div><dt>Rewards</dt><dd><b>${reached}</b> of ${Store.rewards.length}</dd></div>
+          </dl>
+        </section>
       </div>
 
+      ${filed.length ? `<section class="files" aria-label="Past cards">
+        ${C.sect('Past cards', `${filed.length} filed`)}
+        <ol class="files__list">${filed.join('')}</ol>
+      </section>` : ''}
+
+      ${Store.rewards.length ? `<section class="prizes" aria-label="Rewards">
+        ${C.sect('Rewards', `${reached} of ${Store.rewards.length} reached`)}
+        ${C.prizeSet(total)}
+        <button class="act act--rule prizes__go" type="button" data-go="rewards"><span>Open rewards</span></button>
+      </section>` : ''}
+
       ${C.account()}
+      ${C.folio('05', 'Member record')}
     </div>`;
   },
 
