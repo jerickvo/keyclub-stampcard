@@ -136,6 +136,8 @@ body{background:var(--paper);color:var(--ink)}
 .act--ink[aria-busy="true"] > span{background:var(--ink-2)}
 
 .act--rule{padding:10px 0 12px}
+/* a page's column stretches what it holds; a control keeps its own width */
+.view > .act{align-self:flex-start}
 .act--rule > span{display:inline-flex;align-items:center;gap:10px}
 .act--rule::after{content:'';position:absolute;left:0;bottom:6px;height:3px;width:calc(100% - 10px);
   background:var(--ink);transition:width 120ms steps(3,end)}
@@ -344,7 +346,9 @@ body{background:var(--paper);color:var(--ink)}
    standing is set in the margin beside it. ══ */
 .view--member{gap:0;container:page / inline-size}
 .idp{position:relative;display:grid;align-content:start;gap:clamp(14px,2vw,20px);min-width:0;
-  padding:clamp(14px,2vw,22px) clamp(16px,2.6vw,30px) calc(var(--overlap) + clamp(20px,3vw,34px));
+  /* the frame bleeds into the gutter; what it holds keeps to the page's
+     column, so the running head and the name line up with every page */
+  padding:clamp(14px,2vw,22px) max(16px,calc(var(--gutter) + var(--safe-x,0px) - 11px)) calc(var(--overlap) + clamp(20px,3vw,34px));
   border:3px solid var(--ink);background:none;isolation:isolate;overflow:hidden;
   --overlap:clamp(64px,11vw,150px);
   margin-inline:calc((var(--gutter) + var(--safe-x,0px)) * -1 + 8px)}
@@ -361,7 +365,8 @@ body{background:var(--paper);color:var(--ink)}
 .idp{container:idp / inline-size}
 /* as large as the panel allows on one line: the brush face runs about
    half an em a letter */
-.idp__name{margin:clamp(8px,3vw,40px) 0 0;max-width:100%;
+/* the brush strokes run below the line; the particulars wait under them */
+.idp__name{justify-self:start;margin:clamp(8px,3vw,40px) 0 .1em;max-width:100%;
   font:400 min(176px,19vw,calc((100cqi - 8px) / (var(--len,6) * .52)))/.8 var(--f-display);
   letter-spacing:-.02em;text-transform:uppercase;
   color:var(--ink);overflow-wrap:anywhere;text-shadow:0 0 1px var(--paper)}
@@ -416,7 +421,13 @@ body{background:var(--paper);color:var(--ink)}
 }
 
 /* ── past cards: miniatures of the same card, struck ─────────────── */
-.files,.prizes{display:grid;gap:clamp(16px,2vw,22px);margin-top:clamp(40px,6vw,76px);min-width:0}
+.mem__back{display:grid;min-width:0}
+.files,.prizes{display:grid;align-content:start;gap:clamp(16px,2vw,22px);margin-top:clamp(40px,6vw,76px);min-width:0}
+/* wide, with cards on file: the archive and the set face each other
+   under the card, the way a record's back page is laid out */
+@container page (min-width:900px){
+  .mem__back--pair{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);column-gap:clamp(36px,4.6vw,72px)}
+}
 .files__list{list-style:none;margin:0;padding:0;display:grid;gap:26px 22px;
   grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr))}
 .files__list > .filed{max-width:340px}
@@ -452,7 +463,8 @@ body{background:var(--paper);color:var(--ink)}
 /* ── the reward set: three medallions on one line ────────────────── */
 .pset{position:relative;list-style:none;margin:0;padding:0;display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.pset::before{content:'';position:absolute;left:12%;right:12%;top:clamp(28px,6vw,40px);height:2px;
+/* the dotted route runs medal centre to medal centre */
+.pset::before{content:'';position:absolute;left:calc((100% - 24px) / 6);right:calc((100% - 24px) / 6);top:clamp(28px,6vw,40px);height:2px;
   background:linear-gradient(90deg,var(--ink) 0 4px,transparent 4px) 0 0/8px 2px repeat-x;z-index:0}
 .pset__t{position:relative;z-index:1;display:grid;justify-items:center;text-align:center;gap:6px;min-width:0}
 .pset__medal{position:relative;display:grid;place-items:center;width:clamp(56px,12vw,80px);aspect-ratio:1}
@@ -578,8 +590,9 @@ body{background:var(--paper);color:var(--ink)}
 .mast--open:focus-visible{outline:3px solid var(--crimson);outline-offset:4px}
 .mast--open:active .mast__cmd{translate:2px 2px}
 @container page (min-width:880px){
+  /* strong and compact: the number carries the slab, not its height */
   .mast--open{margin-inline:0;width:100%;padding-inline:clamp(28px,3.4vw,44px)}
-  .mast--open .mast__no{font-size:clamp(160px,17vw,250px)}
+  .mast--open .mast__no{font-size:clamp(150px,14vw,210px)}
 }
 
 /* checked in: the stamp pressed over the meeting's number */
@@ -631,7 +644,7 @@ body{background:var(--paper);color:var(--ink)}
 
 /* a prize ready: a ticket in the margin, the one crimson thing on it */
 .prizeband{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"lab go" "what go";
-  align-items:center;gap:2px 12px;width:100%;padding:14px 14px 14px 16px;margin:0;cursor:pointer;text-align:left;
+  align-items:center;gap:2px 12px;width:calc(100% - 4px);padding:14px 14px 14px 16px;margin:0;cursor:pointer;text-align:left;
   background:var(--paper-card);color:var(--ink);border:2px solid var(--crimson);
   box-shadow:4px 4px 0 var(--crimson)}
 .prizeband__lab{grid-area:lab;font:400 10.5px/1.2 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--crimson)}
@@ -646,9 +659,9 @@ body{background:var(--paper);color:var(--ink)}
    large beside the title, the ledger kept by the month with the month
    in the margin like a yearbook's index, dense and ruled. ══ */
 .view--record{gap:0;container:page / inline-size}
-.rec__head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px 24px;flex-wrap:wrap}
+.rec__head{display:flex;align-items:flex-end;justify-content:space-between;gap:clamp(18px,3vw,24px) 24px;flex-wrap:wrap}
 .view--record .chap__title{font-size:clamp(56px,11vw,120px)}
-.tally{display:flex;gap:clamp(16px,3vw,36px);margin:0;padding-bottom:6px}
+.tally{display:flex;gap:clamp(16px,3vw,36px);margin:0 0 0 auto;padding-bottom:6px}
 .tally div{display:grid;justify-items:end;gap:6px}
 .tally dt{order:2;font:400 10px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
 .tally dd{margin:0;font:400 clamp(40px,6vw,64px)/.78 var(--f-display)}
@@ -731,7 +744,16 @@ body{background:var(--paper);color:var(--ink)}
   .lrow__stamp{width:30px;height:30px}
   .lrow__date i{display:none}
   .lrow--open .lrow__when{display:none}
+  .lrow--open .lrow__via{grid-column:4 / -1}
   .lrow__via{letter-spacing:.08em}
+  /* the open row bled to the page's edges, its words kept on the column */
+  .lrow--open{padding-inline:calc(var(--gutter) + var(--safe-x,0px));margin-inline:calc((var(--gutter) + var(--safe-x,0px)) * -1);
+    width:calc(100% + (var(--gutter) + var(--safe-x,0px)) * 2)}
+}
+/* a narrow year: the marks set smaller, so a full term reads as a line */
+@container page (max-width:560px){
+  .yt--set{width:14px;height:14px}
+  .yt--miss{width:9px;height:9px}
 }
 
 /* wide: the month in the margin, the register in columns that every
@@ -762,8 +784,8 @@ body{background:var(--paper);color:var(--ink)}
    dated, and greyed like an archive. ══ */
 .view--rewards{gap:0;container:page / inline-size}
 .view--rewards .chap__title{font-size:clamp(56px,11vw,120px)}
-.prize__fig{display:grid;justify-items:end;gap:14px 6px;margin:0;padding-bottom:6px;text-align:right}
-.prize__fig b{font:400 clamp(64px,10vw,110px)/.74 var(--f-display);font-weight:400}
+.prize__fig{display:grid;justify-items:end;gap:14px 6px;margin:0 0 0 auto;padding-bottom:6px;text-align:right}
+.prize__fig b{font:400 clamp(64px,7vw,88px)/.74 var(--f-display);font-weight:400}
 .prize__fig span{font:400 10.5px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
 .prize__fig i{font:400 clamp(15px,1.7vw,19px)/1 var(--f-head);font-style:normal;letter-spacing:.04em;text-transform:uppercase}
 
@@ -814,7 +836,12 @@ body{background:var(--paper);color:var(--ink)}
 .tier--sealed .tier__medal::before{content:'';position:absolute;inset:16%;border-radius:50%;
   background:var(--dot) 0 0/4px 4px;opacity:.32}
 .tier--sealed .tier__medal b{color:var(--ink-3)}
-.tier--far{opacity:.62}
+/* far off: printed fainter, the blank kept opaque so the route passes
+   behind it and not through it */
+.tier--far .tier__body{opacity:.62}
+.tier--far .tier__face{stroke:var(--tone)}
+.tier--far .tier__medal b,.tier--far .tier__at,.tier--far .tier__at b{color:var(--tone)}
+.tier--far .tier__medal::before{opacity:.2}
 .tier--far .tier__ticks i{border-style:dashed}
 
 /* unlocked: inked, the claim waiting to be pressed */
@@ -935,9 +962,12 @@ body{background:var(--paper);color:var(--ink)}
 .viewer--stalled + .scanline{display:none}
 .scanhint{margin:14px 0 0;max-width:52ch;font:400 var(--t-caption)/1.45 var(--f-body);color:var(--ink-2)}
 
-/* no camera: the frame is paper and says so */
-.viewer--stalled{height:auto;min-height:0;container-type:normal;place-items:stretch;background:var(--paper-card);
-  padding:clamp(24px,4vw,40px) var(--cx);border-block:3px solid var(--ink)}
+/* no camera: the frame keeps the camera's size, turns to paper and says
+   so, its words set inside the registration marks */
+.viewer--stalled{container-type:normal;place-items:stretch;background:var(--paper-card);
+  padding:clamp(56px,8vw,76px) max(var(--cx),60px);border-block:3px solid var(--ink)}
+/* placed on the frame itself, not on the padded area the words sit in */
+.viewer--stalled .viewer__marks{grid-area:auto}
 .viewer--stalled .viewer__marks i{border-color:var(--ink)}
 .viewer--stalled .viewer__marks::before,.viewer--stalled .viewer__marks::after,.viewer--stalled .reticle{display:none}
 .stall{display:flex;flex-direction:column;justify-content:center;gap:10px;position:relative;z-index:3}
@@ -1088,7 +1118,10 @@ body{background:var(--paper);color:var(--ink)}
   .cover__kci{right:32px;top:32px}
   .cover__head{grid-area:1 / 1;align-self:end;height:auto;padding:0 clamp(32px,4vw,64px) clamp(44px,8vh,90px)}
   .cover__wm{font-size:clamp(84px,9vw,150px)}
-  .regcard{grid-area:1 / 2;width:min(460px,80%);margin:40px auto;rotate:.4deg}
+  /* the card laid across the cover's edge, as on a phone, its foot on
+     the wordmark's line: one spread, not a form floated in the middle */
+  .regcard{grid-area:1 / 2;justify-self:start;align-self:end;width:min(460px,80%);
+    margin:40px 0 clamp(44px,8vh,90px) clamp(-64px,-3.6vw,-36px);rotate:.4deg}
 }
 
 /* ══ ARRIVING BY THE WALL CODE: the book's front cover. Paper inside a
@@ -1097,13 +1130,16 @@ body{background:var(--paper);color:var(--ink)}
    little text, and the way in. ══ */
 .view--arrive{min-height:100dvh}
 .entry{position:relative;display:grid;grid-template-rows:auto minmax(0,1fr) auto;justify-items:center;gap:18px;
-  min-height:100dvh;padding:calc(34px + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x,0px)) calc(40px + env(safe-area-inset-bottom,0px));
+  /* inside the double frame by a clear margin, never on its line */
+  min-height:100dvh;padding:calc(34px + env(safe-area-inset-top,0px)) max(calc(var(--gutter) + var(--safe-x,0px)),38px) calc(40px + env(safe-area-inset-bottom,0px));
   text-align:center}
 .entry::before{content:'';position:absolute;inset:10px;border:3px solid var(--ink);outline:1px solid var(--ink);outline-offset:-8px;pointer-events:none}
 .entry__head{display:grid;gap:6px;justify-items:center}
-.entry__wm{margin:0;font:400 clamp(40px,11vw,64px)/.85 var(--f-display);text-transform:uppercase;letter-spacing:-.01em}
-.entry__sub{margin:0;font:400 10px/1.3 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
-.entry__seat{position:relative;display:grid;place-items:center;align-self:center;width:min(76vw,52vh,420px);aspect-ratio:1}
+/* the brush strokes hang below the word; the line under it waits for them */
+.entry__wm{margin:0 0 .16em;font:400 clamp(40px,11vw,64px)/.85 var(--f-display);text-transform:uppercase;letter-spacing:-.01em}
+.entry__sub{margin:0;font:400 10px/1.3 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2);text-wrap:balance}
+@media(max-width:374px){ .entry__sub{letter-spacing:.12em} }
+.entry__seat{position:relative;display:grid;place-items:center;align-self:center;width:min(calc(100vw - 80px),80vw,50vh,420px);aspect-ratio:1}
 .entry__blank{position:absolute;inset:0;width:100%;height:100%;overflow:visible;rotate:-4deg}
 .entry__blank path{fill:var(--paper-card);stroke:var(--ink);stroke-width:1.1;stroke-dasharray:3.2 2.4}
 .entry__gm{position:relative;margin:0;display:grid;justify-items:center;line-height:.8}
@@ -1156,6 +1192,10 @@ body{background:var(--paper);color:var(--ink)}
 .fail{display:grid;justify-items:start;gap:10px;padding:18px 0;border-block:3px solid var(--ink)}
 .fail .kicker{font:400 11px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--seal)}
 .fail p{margin:0;font:400 var(--t-body)/1.4 var(--f-body)}
+/* a stored session that could not be read is shown outside the shell,
+   on the bare auth screen, so it brings the page's own margins */
+[data-screen="auth"] .view--fail{max-width:var(--page-max);margin-inline:auto;
+  padding:calc(var(--sp-pad) + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x,0px)) var(--sp-page)}
 .muted{color:var(--ink-2)}
 
 /* a smaller ink control for a row, and one that deletes */
@@ -1261,7 +1301,7 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
   font:400 18px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase}
 .tools__nextrow{display:flex;align-items:center;flex-wrap:wrap;gap:10px 18px;width:100%;min-height:44px;padding:8px 0;margin:0;
   border:0;background:none;cursor:pointer;color:var(--ink);text-align:left;font:inherit}
-.dstamp--sm{padding:7px 12px 6px;border-width:2px;outline-width:1px;outline-offset:2px;rotate:-3deg}
+.dstamp--sm{padding:7px 12px 6px;margin-left:4px;border-width:2px;outline-width:1px;outline-offset:2px;rotate:-3deg}
 .dstamp--sm b{font-size:30px}
 .dstamp--sm i{font-size:10px}
 .tools__nextgm{font:400 22px/1 var(--f-head);letter-spacing:.03em}
@@ -1278,14 +1318,29 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 
 /* the club's record: a line of figures, like a box score */
 .tools__record{grid-area:record;min-width:0}
-.tools__colophon{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));margin:0;border-bottom:1px solid var(--ink)}
+.tools__colophon{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:0;border-bottom:1px solid var(--ink)}
 .tools__colophon span{display:grid;gap:6px;padding:10px 14px 12px 0;
   font:400 10.5px/1.2 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
-.tools__colophon span + span{padding-left:14px;border-left:1px solid var(--tint)}
+/* a box score: every figure after the first ruled off from the one before */
+.tools__colophon span:nth-child(even){padding-left:14px;border-left:1px solid var(--tone)}
+.tools__colophon span:nth-child(n+3){border-top:1px solid var(--tint)}
+@container page (min-width:620px){
+  .tools__colophon{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .tools__colophon span + span{padding-left:14px;border-left:1px solid var(--tone)}
+  .tools__colophon span:nth-child(n+3){border-top:0}
+}
 .tools__colophon b{font:400 clamp(40px,5vw,60px)/.8 var(--f-display);font-weight:400;color:var(--ink)}
 
 @container page (min-width:860px){
   .tools{grid-template-columns:minmax(0,2.2fr) minmax(220px,1fr);grid-template-areas:"now side" "record record";column-gap:clamp(28px,3.4vw,48px)}
+  /* the cover set across its width: the meeting at the left, the count
+     standing at the right on the number's line, the commands under both */
+  .tools__now{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"kick kick" "gm count" "acts acts";column-gap:24px}
+  .tools__kick{grid-area:kick}
+  .tools__gm,.tools__none{grid-area:gm}
+  .tools__count{grid-area:count;align-self:end;justify-self:end;display:grid;justify-items:end;gap:10px;text-align:right}
+  .tools__count b{font-size:clamp(72px,7.4vw,112px)}
+  .tools__acts{grid-area:acts}
 }
 
 /* ══ CHECK-IN. The live desk: the meeting and its state, the code on
@@ -1314,7 +1369,7 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .qrpanel__code{display:grid;place-items:center;width:min(100%,380px);aspect-ratio:1;margin:0;padding:14px;background:#fff;
   box-shadow:0 0 0 3px var(--paper-card),0 0 0 6px var(--ink)}
 .qrpanel__code canvas,.qrpanel__code img,.qrpanel__code svg{width:100%;height:auto;display:block;image-rendering:pixelated}
-.proj__how{margin:0;font:400 10.5px/1.4 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:#BDB6AA;text-align:center}
+.proj__how{margin:0;font:400 10.5px/1.4 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:#BDB6AA;text-align:center;text-wrap:balance}
 .proj__count{grid-area:count;display:flex;align-items:baseline;gap:12px;margin:0}
 .proj__count b{font:400 clamp(72px,11vw,128px)/.78 var(--f-display);font-weight:400}
 .proj__count span{font:400 12px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
@@ -1365,8 +1420,10 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .is-projecting .rig{isolation:auto}
 .proj.proj--full{position:fixed;inset:0;z-index:400;margin:0;border:0;width:auto;height:auto;background:var(--ink);color:var(--paper-card);
   padding:max(4vh,env(safe-area-inset-top,0px)) max(4vw,env(safe-area-inset-right,0px)) max(4vh,env(safe-area-inset-bottom,0px)) max(4vw,env(safe-area-inset-left,0px));
-  grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;
-  grid-template-areas:"plate meet" "plate word" "plate count" "plate ctls";column-gap:6vw;row-gap:2.4vh;align-items:start}
+  /* the meeting, its state and the count set as one block on the
+     code's middle line; the commands kept low in the corner */
+  grid-template-columns:auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto auto auto minmax(0,1fr) auto;
+  grid-template-areas:"plate ." "plate meet" "plate word" "plate count" "plate ." "plate ctls";column-gap:6vw;row-gap:2.4vh;align-items:start}
 .proj--full .proj__meet{align-self:start}
 .proj--full .proj__no span{font-size:clamp(28px,4vh,48px)}
 .proj--full .proj__no b{font-size:clamp(110px,22vh,280px)}
@@ -1375,7 +1432,7 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .proj--full .proj__plate{align-self:center;justify-self:start}
 .proj--full .qrpanel__code{width:min(84vh,52vw);min-width:0;padding:2.4vh}
 .proj--full .proj__how{font-size:clamp(12px,1.8vh,20px);color:#CFC8BC}
-.proj--full .proj__count{align-self:center;flex-direction:column;align-items:flex-start;gap:3.4vh}
+.proj--full .proj__count{align-self:start;flex-direction:column;align-items:flex-start;gap:3.4vh;margin-top:2vh}
 .proj--full .proj__count b{font-size:clamp(140px,32vh,400px)}
 .proj--full .proj__count span{font-size:clamp(18px,3vh,34px);color:#CFC8BC}
 .proj--full .proj__ctls{align-self:end;justify-self:end;opacity:.4;transition:opacity 200ms steps(3,end)}
@@ -1384,11 +1441,20 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 @media (max-aspect-ratio:1/1){
   .proj.proj--full{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto minmax(0,1fr) auto;
     grid-template-areas:"meet word" "count count" "plate plate" "ctls ctls"}
+  .proj--full .proj__count{align-self:start;margin-top:1vh}
   .proj--full .proj__word{justify-self:end}
   .proj--full .proj__count{flex-direction:row;align-items:baseline;gap:3vw;margin-top:1vh}
   .proj--full .proj__count b{font-size:clamp(90px,14vh,190px)}
   .proj--full .proj__plate{justify-self:center}
   .proj--full .qrpanel__code{width:min(84vw,50vh)}
+}
+/* a phone held upright: the meeting over its state, never beside it */
+@media (max-aspect-ratio:1/1) and (max-width:600px){
+  .proj.proj--full{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr) auto;
+    grid-template-areas:"meet" "word" "count" "plate" "ctls"}
+  .proj--full .proj__word{justify-self:start}
+  .proj--full .proj__no b{font-size:clamp(96px,16vh,150px)}
+  .proj--full .proj__count b{font-size:clamp(80px,12vh,120px)}
 }
 :root[data-still] .proj--full .proj__ctls{transition:none}
 
@@ -1401,8 +1467,11 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
   font:400 clamp(20px,2.2vw,26px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
 .minutes__list{display:grid}
 .mrow{border-bottom:1px solid var(--tint)}
-.mrow__go{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"gm day n" "gm when state";
-  align-items:center;gap:2px 16px;width:100%;min-height:52px;padding:8px 0;margin:0;border:0;background:none;cursor:pointer;
+/* the number's height all goes to the first line, so the date and the
+   count stand on the number's foot and the second line only takes what
+   it prints */
+.mrow__go{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:1fr auto;grid-template-areas:"gm day n" "gm when state";
+  align-items:end;gap:2px 16px;width:100%;min-height:52px;padding:8px 0;margin:0;border:0;background:none;cursor:pointer;
   color:var(--ink);text-align:left;font:inherit}
 .mrow__go:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .mrow__gm{grid-area:gm;display:flex;align-items:flex-end;gap:4px;line-height:.8}
@@ -1440,7 +1509,7 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .minutes__fold .mrow__n b{font-size:clamp(30px,3.4vw,40px);font-family:var(--f-display)}
 .minutes__fold .mrow__go:focus-visible{outline:3px solid var(--crimson)}
 /* held: the minute book, quieter */
-.mrow__month{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:18px 0 6px;border-bottom:2px solid var(--ink)}
+.mrow__month{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:20px 0 10px;border-bottom:2px solid var(--ink)}
 .mrow__month:first-child{padding-top:6px}
 .mrow__mname{font:400 clamp(26px,3vw,36px)/.8 var(--f-display);text-transform:uppercase}
 .mrow__mtotal{font:400 10px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
@@ -1480,13 +1549,14 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .roster thead th:last-child,.roster td:last-child{text-align:right;padding-right:0}
 .roster tbody tr[data-bmember]{border-bottom:1px solid var(--tint);cursor:pointer}
 @media (hover:hover){ .roster tbody tr[data-bmember]:hover{background:rgba(19,18,17,.035)} }
-.roster td,.roster tbody th{padding:6px 10px 6px 0;text-align:left;vertical-align:middle;
+/* dense: a name's own 44px is the row, nothing padded round it */
+.roster td,.roster tbody th{padding:0 10px 0 0;text-align:left;vertical-align:middle;
   font:400 12px/1 var(--f-mono);letter-spacing:.06em;color:var(--ink-2)}
 .roster td:last-child{font:400 22px/1 var(--f-head);color:var(--ink)}
 .roster__name{min-height:44px;padding:0;margin:0;border:0;background:none;cursor:pointer;text-align:left;color:var(--ink);
   font:400 clamp(19px,2vw,22px)/1.1 var(--f-head);letter-spacing:.03em;overflow-wrap:anywhere}
 .roster__name:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-.roster__letter td{padding:14px 0 2px;border-bottom:1px solid var(--ink);text-align:left!important}
+.roster__letter td{padding:12px 0 6px;border-bottom:1px solid var(--ink);text-align:left!important}
 .roster__letter b{font:400 28px/.8 var(--f-display);color:var(--seal)}
 .roster__card{white-space:nowrap}
 .roster__cno{margin-right:8px;font:400 10px/1 var(--f-mono);color:var(--ink-3)}
@@ -1541,7 +1611,7 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .rail__brand .mark__word b{font-weight:400}
 .rail__brand::after{content:'Key Club · Cali-Nev-Ha';display:block;margin-top:8px;
   font:400 9.5px/1.2 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
-.rail__nav{position:relative;display:flex;flex-direction:column;flex:1;gap:0;padding-top:10px}
+.rail__nav{position:relative;display:flex;flex-direction:column;flex:1;gap:0;padding-top:10px;padding-right:0}
 /* the chapter being read, set large at the head of the contents */
 .rail__folio{display:block;margin:0 0 6px;padding-right:26px;font:400 clamp(84px,6.4vw,112px)/.8 var(--f-display);
   letter-spacing:-.03em;color:var(--ink)}
@@ -1550,12 +1620,12 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .rail__nav::before{content:'Contents';order:1;display:block;margin:10px 26px 6px 0;padding-bottom:6px;border-bottom:1px solid var(--ink);
   font:400 9.5px/1 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
 .rail__folio{order:0}
-.rail__link{order:2;position:relative;display:grid;grid-template-columns:3ch minmax(0,1fr) auto;align-items:baseline;column-gap:10px;
-  min-height:44px;margin:0;padding:10px 18px 9px 0;border:0;background:none;cursor:pointer;text-align:left;color:var(--ink)}
+.rail__link{order:2;position:relative;display:grid;grid-template-columns:3ch auto minmax(12px,1fr);align-items:baseline;column-gap:10px;
+  min-height:44px;margin:0;padding:10px 26px 9px 0;border:0;background:none;cursor:pointer;text-align:left;color:var(--ink)}
 .rail__idx{font:400 10.5px/1 var(--f-mono);letter-spacing:.1em;color:var(--ink-3)}
 .rail__lab{font:400 clamp(18px,1.5vw,21px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;color:var(--ink);min-width:0;overflow-wrap:anywhere}
 /* a dotted leader out to the binding, the way a contents page runs */
-.rail__link::after{content:'';grid-column:3;align-self:end;width:clamp(12px,2vw,34px);height:2px;margin-bottom:3px;
+.rail__link::after{content:'';grid-column:3;align-self:end;justify-self:stretch;height:2px;margin-bottom:3px;
   background:linear-gradient(90deg,var(--ink-3) 0 2px,transparent 2px) 0 0/5px 2px repeat-x}
 @media (hover:hover){ .rail__link:hover .rail__lab{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px} }
 .rail__link:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
@@ -1567,7 +1637,7 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .rail__link[aria-current="page"]::after{background:linear-gradient(90deg,#6A655E 0 2px,transparent 2px) 0 0/5px 2px repeat-x}
 .rail__link[aria-current="page"]:focus-visible{outline-color:var(--crimson);outline-offset:-4px}
 /* check-in open and not yet stamped: Scan says so */
-.rail__link--live .rail__lab::after{content:'Check-in open';display:block;margin-top:5px;font:400 9.5px/1 var(--f-mono);letter-spacing:.16em;color:var(--crimson)}
+.rail__link--live .rail__lab::after{content:'Check-in open';display:block;margin-top:5px;font:400 9.5px/1 var(--f-mono);letter-spacing:.1em;white-space:nowrap;color:var(--crimson)}
 .rail__link--live[aria-current="page"] .rail__lab::after{color:#F2A7B0}
 .rail__link--live::before{content:'';position:absolute;left:-13px;top:50%;width:8px;height:8px;border-radius:50%;translate:0 -50%;
   background:var(--crimson);box-shadow:0 0 0 3px rgba(193,31,51,.22)}
