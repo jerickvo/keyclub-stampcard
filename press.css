@@ -587,7 +587,9 @@ body{background:var(--paper);color:var(--ink)}
   -webkit-mask:radial-gradient(ellipse at 26% 62%,transparent 0 22%,#000 70%);
           mask:radial-gradient(ellipse at 26% 62%,transparent 0 22%,#000 70%)}
 @media (hover:hover){ .mast--open:hover .mast__cmd{background:var(--paper-card);color:var(--ink)} }
-.mast--open:focus-visible{outline:3px solid var(--crimson);outline-offset:4px}
+/* the slab is clipped like a ticket, which would clip a ring drawn
+   outside it; the focus ring is drawn inside its edge instead */
+.mast--open:focus-visible{outline:3px solid var(--crimson);outline-offset:-10px}
 .mast--open:active .mast__cmd{translate:2px 2px}
 @container page (min-width:880px){
   /* strong and compact: the number carries the slab, not its height */
@@ -768,7 +770,7 @@ body{background:var(--paper);color:var(--ink)}
   .ledger__group{grid-template-columns:subgrid;padding-top:4px}
   .ledger__group + .ledger__group{border-top:1px solid var(--ink)}
   .ledger__month{grid-column:1;position:sticky;top:12px;align-self:start;display:grid;gap:6px;margin:0;padding:12px 0 0;border:0}
-  .ledger__mname{font:400 clamp(28px,3.1vw,44px)/.8 var(--f-display);letter-spacing:-.01em}
+  .ledger__mname{margin-bottom:.14em;font:400 clamp(28px,3.1vw,44px)/.8 var(--f-display);letter-spacing:-.01em}
   .ledger__mn{margin:0}
   .ledger__rows{grid-column:2 / -1;grid-template-columns:subgrid}
   .ledger__rows > *{grid-column:1 / -1}
@@ -1258,7 +1260,10 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
   background:linear-gradient(45deg,transparent 50%,var(--ink) 50%) calc(100% - 10px) 50%/6px 6px no-repeat,
              linear-gradient(135deg,var(--ink) 50%,transparent 50%) calc(100% - 4px) 50%/6px 6px no-repeat}
 .bform{display:grid;gap:14px;padding:16px;border:2px dashed var(--ink);background:var(--paper-card)}
-.bform__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px 16px}
+/* four fields, set two by two: number and date, then the hours */
+.bform__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px}
+/* the smallest phones: a native date or time field needs the full line */
+@media(max-width:374px){ .bform__grid{grid-template-columns:minmax(0,1fr)} }
 .bform__row{display:flex;align-items:center;flex-wrap:wrap;gap:12px 18px}
 .bform .authp__err{margin:0;padding:6px 0 6px 10px;border-left:3px solid var(--seal);font:400 12px/1.4 var(--f-mono);color:var(--seal)}
 
@@ -1621,7 +1626,8 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
   font:400 9.5px/1 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
 .rail__folio{order:0}
 .rail__link{order:2;position:relative;display:grid;grid-template-columns:3ch auto minmax(12px,1fr);align-items:baseline;column-gap:10px;
-  min-height:44px;margin:0;padding:10px 26px 9px 0;border:0;background:none;cursor:pointer;text-align:left;color:var(--ink)}
+  /* the box starts a little before the number, so a focus ring clears it */
+  min-height:44px;margin:0 0 0 -8px;padding:10px 26px 9px 8px;border:0;background:none;cursor:pointer;text-align:left;color:var(--ink)}
 .rail__idx{font:400 10.5px/1 var(--f-mono);letter-spacing:.1em;color:var(--ink-3)}
 .rail__lab{font:400 clamp(18px,1.5vw,21px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;color:var(--ink);min-width:0;overflow-wrap:anywhere}
 /* a dotted leader out to the binding, the way a contents page runs */
@@ -1639,7 +1645,7 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 /* check-in open and not yet stamped: Scan says so */
 .rail__link--live .rail__lab::after{content:'Check-in open';display:block;margin-top:5px;font:400 9.5px/1 var(--f-mono);letter-spacing:.1em;white-space:nowrap;color:var(--crimson)}
 .rail__link--live[aria-current="page"] .rail__lab::after{color:#F2A7B0}
-.rail__link--live::before{content:'';position:absolute;left:-13px;top:50%;width:8px;height:8px;border-radius:50%;translate:0 -50%;
+.rail__link--live::before{content:'';position:absolute;left:-8px;top:50%;width:8px;height:8px;border-radius:50%;translate:0 -50%;
   background:var(--crimson);box-shadow:0 0 0 3px rgba(193,31,51,.22)}
 .rail__link--live[aria-current="page"]::before{left:7px}
 
