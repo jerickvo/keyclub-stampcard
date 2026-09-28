@@ -83,7 +83,7 @@ const C = {
     const took  = at === 'claimed' && r.handedAt;
     const note  = at !== 'claimed' ? ''
       : took ? `Collected ${fmtClubDay(r.handedAt)}`
-      : Store.handovers ? 'Claimed; collect it from an officer' : 'Claimed';
+      : Store.handovers ? 'Claimed · collect from an officer' : 'Claimed';
     const left  = r.required - total;
     const far   = state === 'sealed' && total < prev;
     const say   = state === 'sealed' && !far ? `${left} more ${left === 1 ? 'stamp' : 'stamps'}` : '';
@@ -365,7 +365,7 @@ function arrivalMeeting(bare){
 
 const Views = {
   loadFailure(title){
-    return `<div class="view">
+    return `<div class="view view--fail">
       <header class="rechead chap">
         ${C.run('—', title)}
         <h1 class="chap__title rechead__title">${title}</h1>
@@ -846,16 +846,18 @@ const Views = {
         </section>
       </div>
 
-      ${filed.length ? `<section class="files" aria-label="Past cards">
-        ${C.sect('Past cards', `${filed.length} filed`)}
-        <ol class="files__list">${filed.join('')}</ol>
-      </section>` : ''}
+      <div class="mem__back${filed.length && Store.rewards.length ? ' mem__back--pair' : ''}">
+        ${filed.length ? `<section class="files" aria-label="Past cards">
+          ${C.sect('Past cards', `${filed.length} filed`)}
+          <ol class="files__list">${filed.join('')}</ol>
+        </section>` : ''}
 
-      ${Store.rewards.length ? `<section class="prizes" aria-label="Rewards">
-        ${C.sect('Rewards', `${reached} of ${Store.rewards.length} reached`)}
-        ${C.prizeSet(total)}
-        <button class="act act--rule prizes__go" type="button" data-go="rewards"><span>Open rewards</span></button>
-      </section>` : ''}
+        ${Store.rewards.length ? `<section class="prizes" aria-label="Rewards">
+          ${C.sect('Rewards', `${reached} of ${Store.rewards.length} reached`)}
+          ${C.prizeSet(total)}
+          <button class="act act--rule prizes__go" type="button" data-go="rewards"><span>Open rewards</span></button>
+        </section>` : ''}
+      </div>
 
       ${C.account()}
       ${C.folio('05', 'Member record')}
