@@ -69,16 +69,6 @@ body{background:var(--paper);color:var(--ink)}
 /* ── record labels: small capitals in the record face ────────────── */
 .lab{font:400 11px/1.35 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 
-/* ── the running head: chapter number, what this page is, the book ─ */
-.run{display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap;margin:0;
-  padding-bottom:7px;border-bottom:1px solid var(--ink);
-  font:400 10.5px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
-.run__no{color:var(--ink)}
-.run__no b{font-weight:400;color:var(--seal)}
-.run__what{color:var(--ink)}
-.run__book{margin-left:auto;text-align:right}
-@media(max-width:519px){ .run__book{display:none} }
-
 /* ── the chapter title: the brush face on its brush rule ─────────── */
 .chap{position:relative;display:grid;gap:10px;min-width:0}
 .chap__title{margin:0;font:400 clamp(46px,9.5vw,112px)/.84 var(--f-display);
@@ -87,13 +77,6 @@ body{background:var(--paper);color:var(--ink)}
    it; it is not a control, so it draws no ring */
 .rechead__title:focus,.rechead__title:focus-visible{outline:0}
 .brush{display:block;height:clamp(9px,1.2vw,14px);background:var(--brush) 0 0/100% 100% no-repeat}
-
-/* ── the folio: the foot of every page ───────────────────────────── */
-.folio-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
-  margin-top:clamp(28px,5vw,64px);padding-top:10px;border-top:1px solid var(--ink);
-  font:400 10px/1.4 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
-.folio-foot__no{font:400 clamp(30px,3vw,40px)/.8 var(--f-display);letter-spacing:0;color:var(--ink)}
-.folio-foot__no::before{content:'— ';font:400 12px/1 var(--f-mono);vertical-align:.8em;color:var(--ink-3)}
 
 /* ── a section inside a page ─────────────────────────────────────── */
 .sect{display:flex;align-items:baseline;gap:12px;margin:0;min-width:0}
@@ -936,7 +919,6 @@ body{background:var(--paper);color:var(--ink)}
 .scanline--boot{color:#BDB6AA}
 .scanline__msg{min-width:0;overflow-wrap:anywhere}
 .viewer--stalled + .scanline{display:none}
-.scanhint{margin:14px 0 0;max-width:52ch;font:400 var(--t-caption)/1.45 var(--f-body);color:var(--ink-2)}
 
 /* no camera: the frame keeps the camera's size, turns to paper and says
    so, its words set inside the registration marks */
@@ -1348,7 +1330,10 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .qrpanel__code{display:grid;place-items:center;width:min(100%,380px);aspect-ratio:1;margin:0;padding:14px;background:#fff;
   box-shadow:0 0 0 3px var(--paper-card),0 0 0 6px var(--ink)}
 .qrpanel__code canvas,.qrpanel__code img,.qrpanel__code svg{width:100%;height:auto;display:block;image-rendering:pixelated}
-.proj__how{margin:0;font:400 10.5px/1.4 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:#BDB6AA;text-align:center;text-wrap:balance}
+/* the way to use the code is said to the room, on the projected stage
+   only; the officer's desk does not need it */
+.proj__how{display:none;margin:0;font:400 10.5px/1.4 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:#BDB6AA;text-align:center;text-wrap:balance}
+.proj--full .proj__how{display:block}
 .proj__count{grid-area:count;display:flex;align-items:baseline;gap:12px;margin:0}
 .proj__count b{font:400 clamp(72px,11vw,128px)/.78 var(--f-display);font-weight:400}
 .proj__count span{font:400 12px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
@@ -1588,33 +1573,17 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .rail__brand{position:relative;padding:0 26px 14px 0;margin:0 0 4px}
 .rail__brand .mark{display:block;font:400 clamp(28px,2.2vw,34px)/.85 var(--f-display);letter-spacing:-.01em;text-transform:uppercase;color:var(--ink)}
 .rail__brand .mark__word b{font-weight:400}
-.rail__brand::after{content:'Key Club · Cali-Nev-Ha';display:block;margin-top:8px;
-  font:400 9.5px/1.2 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
 .rail__nav{position:relative;display:flex;flex-direction:column;flex:1;gap:0;padding-top:10px;padding-right:0}
-/* the chapter being read, set large at the head of the contents */
-.rail__folio{display:block;margin:0 0 6px;padding-right:26px;font:400 clamp(84px,6.4vw,112px)/.8 var(--f-display);
-  letter-spacing:-.03em;color:var(--ink)}
-.rail__folio::before{content:'Nº';display:block;margin-bottom:6px;font:400 10px/1 var(--f-mono);letter-spacing:.18em;color:var(--seal)}
-.rail__folio--live{color:var(--crimson)}
-.rail__nav::before{content:'Contents';order:1;display:block;margin:10px 26px 6px 0;padding-bottom:6px;border-bottom:1px solid var(--ink);
-  font:400 9.5px/1 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
-.rail__folio{order:0}
-.rail__link{order:2;position:relative;display:grid;grid-template-columns:3ch auto minmax(12px,1fr);align-items:baseline;column-gap:10px;
-  /* the box starts a little before the number, so a focus ring clears it */
+.rail__link{position:relative;display:grid;align-items:center;
+  /* the box starts a little before the label, so a focus ring clears it */
   min-height:44px;margin:0 0 0 -8px;padding:10px 26px 9px 8px;border:0;background:none;cursor:pointer;text-align:left;color:var(--ink)}
-.rail__idx{font:400 10.5px/1 var(--f-mono);letter-spacing:.1em;color:var(--ink-3)}
 .rail__lab{font:400 clamp(18px,1.5vw,21px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;color:var(--ink);min-width:0;overflow-wrap:anywhere}
-/* a dotted leader out to the binding, the way a contents page runs */
-.rail__link::after{content:'';grid-column:3;align-self:end;justify-self:stretch;height:2px;margin-bottom:3px;
-  background:linear-gradient(90deg,var(--ink-3) 0 2px,transparent 2px) 0 0/5px 2px repeat-x}
 @media (hover:hover){ .rail__link:hover .rail__lab{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px} }
 .rail__link:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
 /* the open chapter: an ink tab pulled out of the binding */
 .rail__link[aria-current="page"]{margin-left:-20px;padding-left:20px;background:var(--ink);color:var(--paper-card);
   clip-path:polygon(0 0,100% 0,100% 100%,10px 100%,0 calc(100% - 10px))}
 .rail__link[aria-current="page"] .rail__lab{color:var(--paper-card)}
-.rail__link[aria-current="page"] .rail__idx{color:#E8A0A8}
-.rail__link[aria-current="page"]::after{background:linear-gradient(90deg,#6A655E 0 2px,transparent 2px) 0 0/5px 2px repeat-x}
 .rail__link[aria-current="page"]:focus-visible{outline-color:var(--crimson);outline-offset:-4px}
 /* check-in open and not yet stamped: Scan says so */
 .rail__link--live .rail__lab::after{content:'Check-in open';display:block;margin-top:5px;font:400 9.5px/1 var(--f-mono);letter-spacing:.1em;white-space:nowrap;color:var(--crimson)}
@@ -1627,9 +1596,7 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .rail__foot{margin:12px 26px 0 0;padding-top:12px;border-top:3px solid var(--ink);position:relative}
 .rail__foot::before{content:'';position:absolute;left:0;right:0;top:3px;height:3px;border-bottom:1px solid var(--ink)}
 .rail__who{display:grid;gap:4px;margin:6px 0 0;min-width:0}
-.rail__held{font:400 9.5px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
 .rail__name{font:400 20px/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;color:var(--ink);overflow-wrap:anywhere}
-.rail__role{font:400 9.5px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 .rail__util{display:grid;justify-items:start;gap:0;margin-top:8px}
 .rail__note{margin:6px 0 0;font:400 12px/1.4 var(--f-body);color:var(--ink-2)}
 
@@ -1639,8 +1606,6 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
   font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 .rail__motion::before{content:'';width:10px;height:10px;border:1.5px solid var(--ink)}
 .rail__motion[aria-pressed="true"]::before{background:var(--ink)}
-.rail__motion span::after{content:' /';color:var(--ink-3)}
-.rail__motion b{font-weight:400;color:var(--ink)}
 .rail__motion:focus-visible,.rail__out:focus-visible,.acct__out:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .rail__out,.acct__out{display:inline-flex;align-items:center;gap:8px;min-height:40px;margin:0;padding:0;border:0;background:none;cursor:pointer;
   font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
@@ -1650,10 +1615,6 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 /* the colophon at the foot of Member and Club Tools on a phone */
 .acct{display:grid;gap:8px;justify-items:start;padding-top:12px;border-top:3px solid var(--ink);position:relative}
 .acct::before{content:'';position:absolute;left:0;right:0;top:3px;height:3px;border-bottom:1px solid var(--ink)}
-.acct__who{display:grid;gap:4px;margin:6px 0 0}
-.acct__held{font:400 9.5px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
-.acct__name{font:400 22px/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;overflow-wrap:anywhere}
-.acct__role{font:400 10px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 .acct__row{display:flex;flex-wrap:wrap;align-items:center;gap:4px 24px;width:100%}
 @media(min-width:1024px){ .view--member .acct,.view--board .acct{display:none} }
 
@@ -1665,20 +1626,16 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
   margin:0;padding:6px 2px 6px;border:0;background:none;cursor:pointer;color:var(--ink);overflow:visible;-webkit-tap-highlight-color:transparent}
 .tab + .tab::after{content:'';position:absolute;left:0;top:14px;bottom:12px;width:1px;background:var(--tint)}
 .tab__tab{display:grid;justify-items:center;align-content:center;gap:4px;width:100%;min-width:0}
-.tab__idx{font:400 9px/1 var(--f-mono);letter-spacing:.12em;color:var(--ink-3)}
 .tab__lab{font:400 clamp(13px,3.6vw,15px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;max-width:100%}
 /* the open chapter's tab, raised in ink above the strip */
 .tab[aria-current="page"] .tab__tab{position:relative;margin:-12px 3px 0;padding:8px 2px 6px;background:var(--ink);color:var(--paper-card);
   clip-path:polygon(0 8px,8px 0,100% 0,100% 100%,0 100%)}
-.tab[aria-current="page"] .tab__idx{color:#E8A0A8}
 .tab:focus-visible{outline:2px solid var(--ink);outline-offset:-4px}
 .tab:active .tab__tab{translate:0 1px}
 /* check-in open: the Scan tab carries the crimson light */
-.tab--live .tab__idx{color:var(--crimson)}
 .tab--live .tab__lab::before{content:'';display:inline-block;width:7px;height:7px;margin-right:5px;border-radius:50%;background:var(--crimson);vertical-align:.15em}
 .tab--live[aria-current="page"] .tab__tab{background:var(--crimson)}
-.tab--live[aria-current="page"] .tab__idx{color:var(--paper-card)}
 .tab--live[aria-current="page"] .tab__lab::before{background:var(--paper-card)}
 @media(max-width:359px){ .tab__lab{font-size:12px;letter-spacing:.01em} }
 

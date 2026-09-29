@@ -514,16 +514,6 @@ body{background:var(--paper);color:var(--ink)}
 /* ── record labels: small capitals in the record face ────────────── */
 .lab{font:400 11px/1.35 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 
-/* ── the running head: chapter number, what this page is, the book ─ */
-.run{display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap;margin:0;
-  padding-bottom:7px;border-bottom:1px solid var(--ink);
-  font:400 10.5px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
-.run__no{color:var(--ink)}
-.run__no b{font-weight:400;color:var(--seal)}
-.run__what{color:var(--ink)}
-.run__book{margin-left:auto;text-align:right}
-@media(max-width:519px){ .run__book{display:none} }
-
 /* ── the chapter title: the brush face on its brush rule ─────────── */
 .chap{position:relative;display:grid;gap:10px;min-width:0}
 .chap__title{margin:0;font:400 clamp(46px,9.5vw,112px)/.84 var(--f-display);
@@ -532,13 +522,6 @@ body{background:var(--paper);color:var(--ink)}
    it; it is not a control, so it draws no ring */
 .rechead__title:focus,.rechead__title:focus-visible{outline:0}
 .brush{display:block;height:clamp(9px,1.2vw,14px);background:var(--brush) 0 0/100% 100% no-repeat}
-
-/* ── the folio: the foot of every page ───────────────────────────── */
-.folio-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
-  margin-top:clamp(28px,5vw,64px);padding-top:10px;border-top:1px solid var(--ink);
-  font:400 10px/1.4 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
-.folio-foot__no{font:400 clamp(30px,3vw,40px)/.8 var(--f-display);letter-spacing:0;color:var(--ink)}
-.folio-foot__no::before{content:'— ';font:400 12px/1 var(--f-mono);vertical-align:.8em;color:var(--ink-3)}
 
 /* ── a section inside a page ─────────────────────────────────────── */
 .sect{display:flex;align-items:baseline;gap:12px;margin:0;min-width:0}
@@ -1381,7 +1364,6 @@ body{background:var(--paper);color:var(--ink)}
 .scanline--boot{color:#BDB6AA}
 .scanline__msg{min-width:0;overflow-wrap:anywhere}
 .viewer--stalled + .scanline{display:none}
-.scanhint{margin:14px 0 0;max-width:52ch;font:400 var(--t-caption)/1.45 var(--f-body);color:var(--ink-2)}
 
 /* no camera: the frame keeps the camera's size, turns to paper and says
    so, its words set inside the registration marks */
@@ -1793,7 +1775,10 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .qrpanel__code{display:grid;place-items:center;width:min(100%,380px);aspect-ratio:1;margin:0;padding:14px;background:#fff;
   box-shadow:0 0 0 3px var(--paper-card),0 0 0 6px var(--ink)}
 .qrpanel__code canvas,.qrpanel__code img,.qrpanel__code svg{width:100%;height:auto;display:block;image-rendering:pixelated}
-.proj__how{margin:0;font:400 10.5px/1.4 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:#BDB6AA;text-align:center;text-wrap:balance}
+/* the way to use the code is said to the room, on the projected stage
+   only; the officer's desk does not need it */
+.proj__how{display:none;margin:0;font:400 10.5px/1.4 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:#BDB6AA;text-align:center;text-wrap:balance}
+.proj--full .proj__how{display:block}
 .proj__count{grid-area:count;display:flex;align-items:baseline;gap:12px;margin:0}
 .proj__count b{font:400 clamp(72px,11vw,128px)/.78 var(--f-display);font-weight:400}
 .proj__count span{font:400 12px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
@@ -2033,33 +2018,17 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .rail__brand{position:relative;padding:0 26px 14px 0;margin:0 0 4px}
 .rail__brand .mark{display:block;font:400 clamp(28px,2.2vw,34px)/.85 var(--f-display);letter-spacing:-.01em;text-transform:uppercase;color:var(--ink)}
 .rail__brand .mark__word b{font-weight:400}
-.rail__brand::after{content:'Key Club · Cali-Nev-Ha';display:block;margin-top:8px;
-  font:400 9.5px/1.2 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
 .rail__nav{position:relative;display:flex;flex-direction:column;flex:1;gap:0;padding-top:10px;padding-right:0}
-/* the chapter being read, set large at the head of the contents */
-.rail__folio{display:block;margin:0 0 6px;padding-right:26px;font:400 clamp(84px,6.4vw,112px)/.8 var(--f-display);
-  letter-spacing:-.03em;color:var(--ink)}
-.rail__folio::before{content:'Nº';display:block;margin-bottom:6px;font:400 10px/1 var(--f-mono);letter-spacing:.18em;color:var(--seal)}
-.rail__folio--live{color:var(--crimson)}
-.rail__nav::before{content:'Contents';order:1;display:block;margin:10px 26px 6px 0;padding-bottom:6px;border-bottom:1px solid var(--ink);
-  font:400 9.5px/1 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
-.rail__folio{order:0}
-.rail__link{order:2;position:relative;display:grid;grid-template-columns:3ch auto minmax(12px,1fr);align-items:baseline;column-gap:10px;
-  /* the box starts a little before the number, so a focus ring clears it */
+.rail__link{position:relative;display:grid;align-items:center;
+  /* the box starts a little before the label, so a focus ring clears it */
   min-height:44px;margin:0 0 0 -8px;padding:10px 26px 9px 8px;border:0;background:none;cursor:pointer;text-align:left;color:var(--ink)}
-.rail__idx{font:400 10.5px/1 var(--f-mono);letter-spacing:.1em;color:var(--ink-3)}
 .rail__lab{font:400 clamp(18px,1.5vw,21px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;color:var(--ink);min-width:0;overflow-wrap:anywhere}
-/* a dotted leader out to the binding, the way a contents page runs */
-.rail__link::after{content:'';grid-column:3;align-self:end;justify-self:stretch;height:2px;margin-bottom:3px;
-  background:linear-gradient(90deg,var(--ink-3) 0 2px,transparent 2px) 0 0/5px 2px repeat-x}
 @media (hover:hover){ .rail__link:hover .rail__lab{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px} }
 .rail__link:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
 /* the open chapter: an ink tab pulled out of the binding */
 .rail__link[aria-current="page"]{margin-left:-20px;padding-left:20px;background:var(--ink);color:var(--paper-card);
   clip-path:polygon(0 0,100% 0,100% 100%,10px 100%,0 calc(100% - 10px))}
 .rail__link[aria-current="page"] .rail__lab{color:var(--paper-card)}
-.rail__link[aria-current="page"] .rail__idx{color:#E8A0A8}
-.rail__link[aria-current="page"]::after{background:linear-gradient(90deg,#6A655E 0 2px,transparent 2px) 0 0/5px 2px repeat-x}
 .rail__link[aria-current="page"]:focus-visible{outline-color:var(--crimson);outline-offset:-4px}
 /* check-in open and not yet stamped: Scan says so */
 .rail__link--live .rail__lab::after{content:'Check-in open';display:block;margin-top:5px;font:400 9.5px/1 var(--f-mono);letter-spacing:.1em;white-space:nowrap;color:var(--crimson)}
@@ -2072,9 +2041,7 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .rail__foot{margin:12px 26px 0 0;padding-top:12px;border-top:3px solid var(--ink);position:relative}
 .rail__foot::before{content:'';position:absolute;left:0;right:0;top:3px;height:3px;border-bottom:1px solid var(--ink)}
 .rail__who{display:grid;gap:4px;margin:6px 0 0;min-width:0}
-.rail__held{font:400 9.5px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
 .rail__name{font:400 20px/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;color:var(--ink);overflow-wrap:anywhere}
-.rail__role{font:400 9.5px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 .rail__util{display:grid;justify-items:start;gap:0;margin-top:8px}
 .rail__note{margin:6px 0 0;font:400 12px/1.4 var(--f-body);color:var(--ink-2)}
 
@@ -2084,8 +2051,6 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
   font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 .rail__motion::before{content:'';width:10px;height:10px;border:1.5px solid var(--ink)}
 .rail__motion[aria-pressed="true"]::before{background:var(--ink)}
-.rail__motion span::after{content:' /';color:var(--ink-3)}
-.rail__motion b{font-weight:400;color:var(--ink)}
 .rail__motion:focus-visible,.rail__out:focus-visible,.acct__out:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .rail__out,.acct__out{display:inline-flex;align-items:center;gap:8px;min-height:40px;margin:0;padding:0;border:0;background:none;cursor:pointer;
   font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
@@ -2095,10 +2060,6 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 /* the colophon at the foot of Member and Club Tools on a phone */
 .acct{display:grid;gap:8px;justify-items:start;padding-top:12px;border-top:3px solid var(--ink);position:relative}
 .acct::before{content:'';position:absolute;left:0;right:0;top:3px;height:3px;border-bottom:1px solid var(--ink)}
-.acct__who{display:grid;gap:4px;margin:6px 0 0}
-.acct__held{font:400 9.5px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
-.acct__name{font:400 22px/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;overflow-wrap:anywhere}
-.acct__role{font:400 10px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 .acct__row{display:flex;flex-wrap:wrap;align-items:center;gap:4px 24px;width:100%}
 @media(min-width:1024px){ .view--member .acct,.view--board .acct{display:none} }
 
@@ -2110,20 +2071,16 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
   margin:0;padding:6px 2px 6px;border:0;background:none;cursor:pointer;color:var(--ink);overflow:visible;-webkit-tap-highlight-color:transparent}
 .tab + .tab::after{content:'';position:absolute;left:0;top:14px;bottom:12px;width:1px;background:var(--tint)}
 .tab__tab{display:grid;justify-items:center;align-content:center;gap:4px;width:100%;min-width:0}
-.tab__idx{font:400 9px/1 var(--f-mono);letter-spacing:.12em;color:var(--ink-3)}
 .tab__lab{font:400 clamp(13px,3.6vw,15px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase;white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;max-width:100%}
 /* the open chapter's tab, raised in ink above the strip */
 .tab[aria-current="page"] .tab__tab{position:relative;margin:-12px 3px 0;padding:8px 2px 6px;background:var(--ink);color:var(--paper-card);
   clip-path:polygon(0 8px,8px 0,100% 0,100% 100%,0 100%)}
-.tab[aria-current="page"] .tab__idx{color:#E8A0A8}
 .tab:focus-visible{outline:2px solid var(--ink);outline-offset:-4px}
 .tab:active .tab__tab{translate:0 1px}
 /* check-in open: the Scan tab carries the crimson light */
-.tab--live .tab__idx{color:var(--crimson)}
 .tab--live .tab__lab::before{content:'';display:inline-block;width:7px;height:7px;margin-right:5px;border-radius:50%;background:var(--crimson);vertical-align:.15em}
 .tab--live[aria-current="page"] .tab__tab{background:var(--crimson)}
-.tab--live[aria-current="page"] .tab__idx{color:var(--paper-card)}
 .tab--live[aria-current="page"] .tab__lab::before{background:var(--paper-card)}
 @media(max-width:359px){ .tab__lab{font-size:12px;letter-spacing:.01em} }
 
@@ -16385,12 +16342,10 @@ const C = {
         <svg viewBox="0 0 64 64"><path class="tier__rim" d="${stampShape(r.required * 3 + 1, 3.6)}"/><path class="tier__face" d="${stampShape(r.required * 3 + 1, 0)}"/></svg>
         <b>${r.required}</b>
       </span>
-      <span class="tier__at"><b>${pad(r.required)}</b> <span>stamps</span></span>
       <span class="tier__body">
         <span class="tier__name">${esc(r.name)}</span>
         ${r.desc ? `<span class="tier__desc">${esc(r.desc)}</span>` : ''}
         ${ticks}
-        ${ready ? '<span class="tier__unl">Unlocked</span>' : ''}
         ${say ? `<span class="tier__say">${say}</span>` : ''}
         ${note ? `<span class="tier__note">${esc(note)}</span>` : ''}
         ${claim}
@@ -16505,12 +16460,12 @@ const C = {
     const away = m.place && m.place !== Schedule.PLACE ? esc(m.place) : '';
     const when = {
       set:  scan ? (byHand(scan) ? '—' : fmtTime(scan.at)) : '',
-      open: 'Open now',
+      open: '',
       /* today's is still the day's: an officer can add a stamp by hand */
       miss: m.today ? 'Not yet' : '—',
       upcoming: esc(m.time),
     }[state];
-    const via = { set: scan && byHand(scan) ? 'By hand' : 'QR', open:'', miss: m.today ? '' : 'Missed', upcoming:'' }[state];
+    const via = { set: scan && byHand(scan) ? 'By hand' : '', open:'', miss: m.today ? '' : 'Missed', upcoming:'' }[state];
     const sr = { set:'Stamped', miss:m.today ? '' : 'Missed', open:'Check-in open', upcoming:'Ahead' }[state];
 
     const el   = state === 'open' ? 'button' : 'div';
@@ -16527,19 +16482,10 @@ const C = {
   },
 };
 
-/* the running head over a page: its chapter number, what the page is,
-   and the book it belongs to */
-C.run = (no, what, book = 'Keystamp · Key Club · Cali-Nev-Ha') =>
-  `<p class="run"><span class="run__no">Nº <b>${no}</b></span><span class="run__what">${esc(what)}</span><span class="run__book">${esc(book)}</span></p>`;
-
 /* a section inside a page: its name in the head face, a rule out to the
    margin, the count at the end of the rule */
 C.sect = (name, count = '') =>
   `<h2 class="sect"><span class="sect__name">${esc(name)}</span><i class="sect__rule" aria-hidden="true"></i>${count ? `<span class="sect__n">${esc(count)}</span>` : ''}</h2>`;
-
-/* the foot of a page: the book's line and the page's folio */
-C.folio = (no, what) =>
-  `<footer class="folio-foot" aria-hidden="true"><span>Keystamp — ${esc(what)}</span><span class="folio-foot__no">${no}</span></footer>`;
 
 /* the two settings a member has, at the foot of the page on a phone
    (on a desk they are at the foot of the contents column) */
@@ -16625,7 +16571,6 @@ const Views = {
   loadFailure(title){
     return `<div class="view view--fail">
       <header class="rechead chap">
-        ${C.run('—', title)}
         <h1 class="chap__title rechead__title">${title}</h1>
         <i class="brush" aria-hidden="true"></i>
       </header>
@@ -16683,7 +16628,7 @@ const Views = {
       kind = 'set';
       const i = chrono.findIndex(x => x.meetingId === day.id);
       mast = `<div class="mast mast--set">
-        ${kick(['Checked in', away(day)])}
+        ${kick([away(day)])}
         ${line(pad(day.no), i >= 0 ? glyph(i, 'mast__imp') : '')}
         <span class="mast__state">${byHand(scan) ? 'Checked in · by an officer' : `Checked in · ${fmtTime(scan.at)}`}</span>
         ${i >= 0 ? `<span class="mast__note">Stamp ${pad(i + 1)} · ${byHand(scan) ? 'added by hand' : 'QR verified'}</span>` : ''}
@@ -16727,8 +16672,6 @@ const Views = {
     /* the margin: the schedule, the last stamp, a prize ready */
     const showing = day ? day.id : next ? next.id : null;
     const ahead = Store.meetings.filter(m => m.upcoming && m.id !== showing).sort(soonest).slice(0, 3);
-    const last = chrono[chrono.length - 1];
-    const lastM = last && Store.meeting(last.meetingId);
     const ready = [...Store.rewards].sort((a, b) => a.required - b.required)
       .find(r => Store.tierState(r) === 'unlocked') || null;
 
@@ -16748,17 +16691,11 @@ const Views = {
             </li>`).join('')}</ol>`
           : `<p class="fol__line">${next && !day ? 'Nothing after it' : 'Nothing scheduled'}</p>`}
         </section>
-        ${lastM ? `<section class="fol fol--last" aria-label="Last stamp">
-          <h2 class="fol__lab">Last stamp</h2>
-          <p class="fol__stamp">${glyph(chrono.length - 1, 'fol__imp')}
-            <span><b>GM ${pad(lastM.no)}</b><span>${esc(fmtDay(lastM.date))} · ${byHand(last) ? 'by an officer' : fmtTime(last.at)}</span></span></p>
-        </section>` : ''}
       </aside>`;
 
     const today = Schedule.today();
     return `<div class="view view--home">
       <header class="daybook">
-        ${C.run('01', 'Today', 'Keystamp · Key Club · Cali-Nev-Ha')}
         <div class="daybook__head">
           <h1 class="daybook__title rechead__title">Today</h1>
           <p class="daybook__date"><i>${esc(onClock(today, { weekday:'long' }))}</i><b>${esc(onClock(today, { month:'short', day:'numeric' }))}</b></p>
@@ -16768,10 +16705,9 @@ const Views = {
 
       <div class="deck deck--${kind}${live ? ' deck--live' : ''}">
         <div class="deck__act">${mast}</div>
-        <div class="deck__card">${C.sealGrid(live)}</div>
+        <div class="deck__card">${C.sealGrid(live, { tag:false })}</div>
         ${side}
       </div>
-      ${C.folio('01', 'Today')}
     </div>`;
   },
 
@@ -16852,10 +16788,11 @@ const Views = {
     });
     const monthName = key => onClock(`${key}-01`, { month:'long' }).split(' ')[0];
     const monthYear = key => key.slice(0, 4);
+    /* the year is printed only on months outside the current one */
+    const thisYear = Schedule.today().slice(0, 4);
 
     return `<div class="view view--record">
       <header class="rechead chap">
-        ${C.run('02', 'Record')}
         <div class="rec__head">
           <h1 class="chap__title rechead__title">Record</h1>
           ${held.length ? `<dl class="tally">
@@ -16872,9 +16809,8 @@ const Views = {
         : `<p class="tally tally--first">${ahead.length ? `First meeting: GM ${pad(ahead[0].no)}, ${fmtDate(ahead[0].date)}` : 'First meeting not yet held'}</p>`}
 
       ${held.length ? `<section class="ledger" aria-label="Meetings, newest first">
-          <div class="ledger__cols" aria-hidden="true"><span>Nº</span><span>Mark</span><span>Date</span><span>In</span><span>How</span></div>
           ${groups.map(g => `<div class="ledger__group">
-              <h2 class="ledger__month"><span class="ledger__mname">${monthName(g.key)}</span><span class="ledger__my">${monthYear(g.key)}</span>
+              <h2 class="ledger__month"><span class="ledger__mname">${monthName(g.key)}</span>${monthYear(g.key) !== thisYear ? `<span class="ledger__my">${monthYear(g.key)}</span>` : ''}
                 <span class="ledger__mn">${g.got} of ${g.n}</span></h2>
               <div class="ledger__rows">${g.rows.join('')}</div>
             </div>`).join('')}
@@ -16882,7 +16818,6 @@ const Views = {
       : `<section class="ledger ledger--blank" aria-label="Meetings">
           <p class="ledger__none">No meetings held yet. The first stamp starts the record.</p>
         </section>`}
-      ${C.folio('02', 'Record')}
     </div>`;
   },
 
@@ -16896,7 +16831,6 @@ const Views = {
     const next = tiers.find(t => total < t.required) || null;
     const top  = tiers.length ? tiers[tiers.length - 1].required : Rules.CARD * 3;
     const lift = (32 - 32 * STAMP_FIT).toFixed(1);
-    const reached = tiers.filter(t => Store.tierState(t) !== 'locked').length;
     /* the route runs from the page's edge through each prize's slot, the
        slots evenly set; the member stands where their count falls
        between the two prizes either side of it */
@@ -16916,7 +16850,6 @@ const Views = {
 
     return `<div class="view view--rewards">
       <header class="rechead chap">
-        ${C.run('04', 'Rewards')}
         <div class="rec__head">
           <h1 class="chap__title rechead__title">Rewards</h1>
           <p class="prize__fig"><b>${total}</b><span>${tiers.length && total <= top ? `of ${top} stamps` : total === 1 ? 'stamp' : 'stamps'}</span>
@@ -16926,7 +16859,6 @@ const Views = {
       </header>
 
       ${tiers.length ? `<section class="set" aria-label="Rewards, by the stamps they take">
-        ${C.sect('The set', `${reached} of ${tiers.length} reached`)}
         <div class="tiers" style="--fill:${fill.toFixed(3)};--n:${tiers.length}">
           <span class="route__line" aria-hidden="true"></span>
           ${me}
@@ -16934,8 +16866,6 @@ const Views = {
         </div>
       </section>` : `<p class="ledger__none">No rewards set up yet.</p>`}
 
-      ${Store.handovers && tiers.length ? `<p class="set__rule"><b>How a prize is kept.</b> Claim it here when it is unlocked; an officer hands it over at a meeting and it is filed as collected.</p>` : ''}
-      ${C.folio('04', 'Rewards')}
     </div>`;
   },
 
@@ -16949,7 +16879,6 @@ const Views = {
     const open = Store.openMeeting();
     const stamp = open && Store.scanFor(open.id);
     const head = extra => `<header class="scanhead">
-        ${C.run('03', 'Scan')}
         <div class="scanhead__row">
           <h1 class="chap__title rechead__title">Scan</h1>
           ${extra}
@@ -16973,7 +16902,6 @@ const Views = {
           ${i >= 0 ? `<p class="stamped__seat">Stamp ${pad(i + 1)} · card ${pad(Math.floor(i / Rules.CARD) + 1)}</p>` : ''}
         </section>
         <button class="act act--rule stamped__go" type="button" data-go="home"><span>See it on your card</span></button>
-        ${C.folio('03', 'Scan')}
       </div>`;
     }
 
@@ -17004,8 +16932,6 @@ const Views = {
           <span class="scanline__msg" id="scanMsg">Starting camera</span>
         </p>
       </div>
-      <p class="scanhint">Point the camera at the code on the wall. It reads on its own.</p>
-      ${C.folio('03', 'Scan')}
     </div>`;
   },
 
@@ -17024,17 +16950,15 @@ const Views = {
        chapter's data */
     BoardUI.loading = true;
     BoardUI.shown = null;
-    const idx = { 'Club Tools':'01', 'Check-in':'02', 'Meetings':'03', 'Members':'04' }[title] || '';
     const key = { 'Club Tools':'tools', 'Check-in':'desk', 'Meetings':'meet', 'Members':'members' }[title] || 'x';
     const today = Schedule.today();
-    /* the officers' copy of the same book: the same running head, chapter
-       title and folio, the date at the head of every page */
+    /* the officers' copy of the same book: the chapter title on its brush
+       rule; the date only where the page is about today (Club Tools) */
     return `<div class="view view--board view--b-${key}">
       <header class="rechead chap bhead">
-        ${C.run(idx, title, "Keystamp · Officers' copy")}
         <div class="rec__head">
           <h1 class="chap__title rechead__title">${title}</h1>
-          <p class="daybook__date"><i>${esc(onClock(today, { weekday:'long' }))}</i><b>${esc(onClock(today, { month:'short', day:'numeric' }))}</b></p>
+          ${key === 'tools' ? `<p class="daybook__date"><i>${esc(onClock(today, { weekday:'long' }))}</i><b>${esc(onClock(today, { month:'short', day:'numeric' }))}</b></p>` : ''}
         </div>
         <i class="brush" aria-hidden="true"></i>
       </header>
@@ -17042,7 +16966,6 @@ const Views = {
         <div id="boardPane">${BoardUI.pane()}</div>
       </section>
       ${tail}
-      ${C.folio(idx, title)}
     </div>`;
   },
 
@@ -17173,7 +17096,7 @@ const Views = {
       <div class="entry">
         <header class="entry__head">
           <p class="entry__wm">Keystamp</p>
-          <p class="entry__sub">Key Club attendance · Cali-Nev-Ha</p>
+          <p class="entry__sub">Key Club attendance</p>
         </header>
 
         <div class="entry__seat">
@@ -17192,9 +17115,9 @@ const Views = {
        member is asked to retry, not to type the password again */
     if (Store.loadError === 'SESSION') return this.loadFailure('Keystamp');
     const mode = AuthUI.mode;
-    const passwordField = ({ id, name, label, n, autocomplete, rule = '' }) => `
+    const passwordField = ({ id, name, label, autocomplete, rule = '' }) => `
           <div class="authp__f">
-            <label class="authp__lab" for="${id}"><i>${n}</i>${label}</label>
+            <label class="authp__lab" for="${id}">${label}</label>
             <div class="authp__pw">
               <input class="authp__in" id="${id}" name="${name}" type="password"
                      autocomplete="${autocomplete}" autocapitalize="none"
@@ -17215,31 +17138,29 @@ const Views = {
           <span class="cover__kci">${brandSeal('kci')}</span>
         </div>
         <header class="cover__head">
-          <p class="cover__sub">Key Club attendance · Cali-Nev-Ha</p>
+          <p class="cover__sub">Key Club attendance</p>
           <h1 class="cover__wm">Keystamp</h1>
         </header>
 
         <form class="authp regcard" id="authForm" novalidate>
           <div class="regcard__band">
-            <span class="regcard__kind">Membership record</span>
             <p class="authp__chapter">${up ? 'New account' : 'Sign in'}</p>
-            <span class="regcard__no">Form ${up ? '02' : '01'}</span>
           </div>
-          ${Arrival.bare ? `<p class="authp__arrive"><b>Then</b> ${Arrival.no ? `check in to GM ${pad(Arrival.no)}` : 'check in'} — no second scan</p>` : ''}
+          ${Arrival.bare ? `<p class="authp__arrive"><b>Then</b> ${Arrival.no ? `check in to GM ${pad(Arrival.no)}` : 'check in'}</p>` : ''}
 
           <div class="authp__f">
-            <label class="authp__lab" for="authUser"><i>01</i>Username</label>
+            <label class="authp__lab" for="authUser">Username</label>
             <input class="authp__in" id="authUser" name="username" type="text"
                    autocomplete="username" autocapitalize="none" spellcheck="false"
                    inputmode="latin" maxlength="${Config.USERNAME_MAX}"${up ? ' aria-describedby="userRule"' : ''}>
             ${up ? '<span class="authp__rule" id="userRule">Letters, numbers, _ and .</span>' : ''}
           </div>
 
-          ${passwordField({ id:'authPass', name:'password', label:'Password', n:'02',
+          ${passwordField({ id:'authPass', name:'password', label:'Password',
                             autocomplete: up ? 'new-password' : 'current-password',
                             rule: up ? '8 characters or more' : '' })}
 
-          ${up ? passwordField({ id:'authPass2', name:'confirm', label:'Confirm password', n:'03',
+          ${up ? passwordField({ id:'authPass2', name:'confirm', label:'Confirm password',
                                  autocomplete:'new-password' }) : ''}
 
           <div class="authp__act">
@@ -17513,9 +17434,8 @@ const BoardUI = {
   progressPane(){
     const d = this.members || {};
     const total = Number(d.total) || (d.members || []).length;
-    const owed = this.prizes && !this.prizes.code ? (this.prizes.owed || []).length : null;
     return `<div class="bpanel memgrid">
-      <p class="memidx"><span><b>${total}</b> on the roster</span>${owed === null ? '' : `<span><b>${owed}</b> to hand over</span>`}</p>
+      <p class="memidx"><span><b>${total}</b> on the roster</span></p>
       ${this.owedBody()}
       <section class="rosterpanel" aria-label="Roster">
         ${this.rosterBody()}
@@ -17576,13 +17496,11 @@ const BoardUI = {
     const just = [...mem, ...fromServer];
     const owed = (pz.owed || []).filter(o => !this.handed[o.user_id + ':' + o.reward_id]);
 
-    /* how many of each prize to bring: owed now, and how many more the
-       next meeting could add (members one stamp short). Counts, not a
-       forecast; the only sums an officer at the prize table needs */
-    const near = pz.near || {};
-    const tally = REWARD_TIERS.map(t => [t, owed.filter(o => o.reward_id === t.id).length, Number(near[t.id]) || 0])
-      .filter(([, n, k]) => n || k)
-      .map(([t, n, k]) => `${n} ${esc(prizeName(t))}${k ? ` (+${k} a stamp away)` : ''}`).join(' / ');
+    /* how many of each prize to bring to the table: the prizes owed now,
+       and only those (a prize nobody is owed is not listed) */
+    const tally = REWARD_TIERS.map(t => [t, owed.filter(o => o.reward_id === t.id).length])
+      .filter(([, n]) => n)
+      .map(([t, n]) => `${n} ${esc(prizeName(t))}`).join(' / ');
 
     const row = o => {
       const key = o.user_id + ':' + o.reward_id;
@@ -18708,7 +18626,8 @@ const Scanner = {
     const ret = $('#reticle'), el = $('#scanMsg'), line = $('#scanLine');
     if (el) el.textContent = msg;
     if (line){
-      const tone = state === 'hit' ? 'good' : state;
+      /* a code read is not yet a stamp: it reads Checking until the server says so */
+      const tone = state === 'hit' ? 'busy' : state;
       ['boot', 'live', 'busy', 'good', 'bad', 'off'].forEach(s =>
         line.classList.toggle('scanline--' + s, s === tone));
     }
@@ -18736,7 +18655,7 @@ const Scanner = {
     $('#viewer')?.classList.remove('viewer--stalled');
     $('#viewer .stall')?.remove();
 
-    this.setState('boot', 'Starting camera');
+    this.setState('boot', 'Starting');
     this.showLoader();
 
     if (!navigator.mediaDevices?.getUserMedia) return this.stall('unsupported');
@@ -18788,7 +18707,8 @@ const Scanner = {
 
     this.cv = document.createElement('canvas');
     this.ctx = this.cv.getContext('2d', { willReadFrequently:true });
-    this.setState('live', 'Scanning');
+    /* the state tag says Ready; the strip needs no second word for it */
+    this.setState('live', '');
     this.mountZoom();
     this.loop(video, run);
   },
@@ -18914,7 +18834,7 @@ const Scanner = {
     this.locked = true;
     /* the frame holds on the code that was read while it is checked */
     try { $('#cam')?.pause(); } catch (_) {}
-    this.setState('hit', 'Code read');
+    this.setState('hit', '');
     FX.scanLock();
     submitSeal(text, run);
   },
@@ -19165,13 +19085,13 @@ async function checkSeal(raw){
 async function submitSeal(raw, run = Scanner.run){
   if (!QRFormat.looksLikeKeystamp(raw)) return rejectVisual('INVALID_TOKEN', raw, run);
 
-  Scanner.setState('busy', 'Checking');
+  Scanner.setState('busy', '');
   const got = await checkSeal(QRFormat.canonical(raw));
   if (!got) return;
   if (got.code) return rejectVisual(got.code, raw, run);
 
   /* said on the live line, under the scene, so a screen reader hears it */
-  Scanner.setState('good', `Stamp acquired. GM ${pad(got.meeting.no)}`);
+  Scanner.setState('good', `GM ${pad(got.meeting.no)}`);
   Scanner.stop();
   await Landing.run(got.meeting);
 }
@@ -19492,15 +19412,6 @@ function paintNav(){
 
   /* the same pages as before: the buttons stay (a focused tab keeps its
      focus, a tap in progress keeps its target); only their state moves */
-  /* the chapter numeral: the page's own index, set large at the head of
-     the column; it changes as a printed thing changes, without a tween */
-  const at = nav.findIndex(n => n.id === current);
-  const folio = () => {
-    let f = $('.rail__folio', rail);
-    if (!f){ f = document.createElement('span'); f.className = 'rail__folio'; f.setAttribute('aria-hidden', 'true'); rail.prepend(f); }
-    f.textContent = at >= 0 ? pad(at + 1) : '';
-    f.classList.toggle('rail__folio--live', live && current === 'scan');
-  };
   const had = $$('.tab', tabs).map(el => el.dataset.go);
   if (had.length === nav.length && nav.every((n, i) => had[i] === n.id)){
     $$('[data-go]', tabs).concat($$('.rail__link', rail)).forEach(el => {
@@ -19509,21 +19420,19 @@ function paintNav(){
     });
     $$('.tab', tabs).forEach(el => el.classList.toggle('tab--live', live && el.dataset.go === 'scan'));
     $$('.rail__link', rail).forEach(el => el.classList.toggle('rail__link--live', live && el.dataset.go === 'scan'));
-    folio();
     return;
   }
   $$('.tab', tabs).forEach(el => el.remove());
   $$('.rail__link', rail).forEach(el => el.remove());
-  nav.forEach((n, i) => {
+  nav.forEach(n => {
     const cur = current === n.id ? ' aria-current="page"' : '';
     const hot = live && n.id === 'scan' ? ' tab--live' : '';
     const hotRail = live && n.id === 'scan' ? ' rail__link--live' : '';
     tabs.insertAdjacentHTML('beforeend',
-      `<button class="tab${hot}" data-go="${n.id}"${cur}><span class="tab__tab"><span class="tab__idx" aria-hidden="true">${pad(i + 1)}</span><span class="tab__lab">${n.short || n.label}</span></span></button>`);
+      `<button class="tab${hot}" data-go="${n.id}"${cur}><span class="tab__tab"><span class="tab__lab">${n.short || n.label}</span></span></button>`);
     rail.insertAdjacentHTML('beforeend',
-      `<button class="rail__link${hotRail}" data-go="${n.id}"${cur}><span class="rail__idx" aria-hidden="true">${pad(i + 1)}</span><span class="rail__lab">${n.label}</span></button>`);
+      `<button class="rail__link${hotRail}" data-go="${n.id}"${cur}><span class="rail__lab">${n.label}</span></button>`);
   });
-  folio();
 }
 
 async function go(id, opts = {}){
@@ -20671,10 +20580,10 @@ function boardGoto(next){
 function paintMotion(){
   $$('[data-motion]').forEach(b => {
     b.setAttribute('aria-pressed', String(Motion.forced));
-    /* one control, one name (Reduce motion, pressed while it is on); the
-       line reads as a colophon setting: MOTION / FULL or MOTION / REDUCED */
-    b.setAttribute('aria-label', 'Reduce motion');
-    b.innerHTML = `<span aria-hidden="true">Motion</span><b aria-hidden="true">${Motion.forced ? 'Reduced' : 'Full'}</b>`;
+    /* one control, one name: Reduce motion, a box on the form that is
+       filled while it is on */
+    b.removeAttribute('aria-label');
+    b.textContent = 'Reduce motion';
   });
 }
 
@@ -20854,9 +20763,7 @@ function paintIdentity(){
   if (foot.dataset.who === who && foot.firstChild){ paintMotion(); return; }
   foot.dataset.who = who;
   foot.innerHTML = Store.signedIn
-    ? `<p class="rail__who"><span class="rail__held">Record held by</span>
-         <span class="rail__name">${esc(Store.user.name)}</span>
-         <span class="rail__role">${Store.isBoard ? 'Board' : 'Member'}${Store.user.joined ? ` / since ${esc(onClock(Store.user.joined, { month:'short', year:'numeric' }))}` : ''}</span></p>
+    ? `<p class="rail__who"><span class="rail__name">${esc(Store.user.name)}</span></p>
        <div class="rail__util">
          <button class="rail__motion" type="button" data-motion aria-label="Reduce motion"></button>
          <button class="rail__out" type="button" data-signout>Sign out</button>

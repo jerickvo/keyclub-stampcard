@@ -100,12 +100,10 @@ const C = {
         <svg viewBox="0 0 64 64"><path class="tier__rim" d="${stampShape(r.required * 3 + 1, 3.6)}"/><path class="tier__face" d="${stampShape(r.required * 3 + 1, 0)}"/></svg>
         <b>${r.required}</b>
       </span>
-      <span class="tier__at"><b>${pad(r.required)}</b> <span>stamps</span></span>
       <span class="tier__body">
         <span class="tier__name">${esc(r.name)}</span>
         ${r.desc ? `<span class="tier__desc">${esc(r.desc)}</span>` : ''}
         ${ticks}
-        ${ready ? '<span class="tier__unl">Unlocked</span>' : ''}
         ${say ? `<span class="tier__say">${say}</span>` : ''}
         ${note ? `<span class="tier__note">${esc(note)}</span>` : ''}
         ${claim}
@@ -220,12 +218,12 @@ const C = {
     const away = m.place && m.place !== Schedule.PLACE ? esc(m.place) : '';
     const when = {
       set:  scan ? (byHand(scan) ? '—' : fmtTime(scan.at)) : '',
-      open: 'Open now',
+      open: '',
       /* today's is still the day's: an officer can add a stamp by hand */
       miss: m.today ? 'Not yet' : '—',
       upcoming: esc(m.time),
     }[state];
-    const via = { set: scan && byHand(scan) ? 'By hand' : 'QR', open:'', miss: m.today ? '' : 'Missed', upcoming:'' }[state];
+    const via = { set: scan && byHand(scan) ? 'By hand' : '', open:'', miss: m.today ? '' : 'Missed', upcoming:'' }[state];
     const sr = { set:'Stamped', miss:m.today ? '' : 'Missed', open:'Check-in open', upcoming:'Ahead' }[state];
 
     const el   = state === 'open' ? 'button' : 'div';
@@ -242,19 +240,10 @@ const C = {
   },
 };
 
-/* the running head over a page: its chapter number, what the page is,
-   and the book it belongs to */
-C.run = (no, what, book = 'Keystamp · Key Club · Cali-Nev-Ha') =>
-  `<p class="run"><span class="run__no">Nº <b>${no}</b></span><span class="run__what">${esc(what)}</span><span class="run__book">${esc(book)}</span></p>`;
-
 /* a section inside a page: its name in the head face, a rule out to the
    margin, the count at the end of the rule */
 C.sect = (name, count = '') =>
   `<h2 class="sect"><span class="sect__name">${esc(name)}</span><i class="sect__rule" aria-hidden="true"></i>${count ? `<span class="sect__n">${esc(count)}</span>` : ''}</h2>`;
-
-/* the foot of a page: the book's line and the page's folio */
-C.folio = (no, what) =>
-  `<footer class="folio-foot" aria-hidden="true"><span>Keystamp — ${esc(what)}</span><span class="folio-foot__no">${no}</span></footer>`;
 
 /* the two settings a member has, at the foot of the page on a phone
    (on a desk they are at the foot of the contents column) */
@@ -340,7 +329,6 @@ const Views = {
   loadFailure(title){
     return `<div class="view view--fail">
       <header class="rechead chap">
-        ${C.run('—', title)}
         <h1 class="chap__title rechead__title">${title}</h1>
         <i class="brush" aria-hidden="true"></i>
       </header>
@@ -398,7 +386,7 @@ const Views = {
       kind = 'set';
       const i = chrono.findIndex(x => x.meetingId === day.id);
       mast = `<div class="mast mast--set">
-        ${kick(['Checked in', away(day)])}
+        ${kick([away(day)])}
         ${line(pad(day.no), i >= 0 ? glyph(i, 'mast__imp') : '')}
         <span class="mast__state">${byHand(scan) ? 'Checked in · by an officer' : `Checked in · ${fmtTime(scan.at)}`}</span>
         ${i >= 0 ? `<span class="mast__note">Stamp ${pad(i + 1)} · ${byHand(scan) ? 'added by hand' : 'QR verified'}</span>` : ''}
@@ -442,8 +430,6 @@ const Views = {
     /* the margin: the schedule, the last stamp, a prize ready */
     const showing = day ? day.id : next ? next.id : null;
     const ahead = Store.meetings.filter(m => m.upcoming && m.id !== showing).sort(soonest).slice(0, 3);
-    const last = chrono[chrono.length - 1];
-    const lastM = last && Store.meeting(last.meetingId);
     const ready = [...Store.rewards].sort((a, b) => a.required - b.required)
       .find(r => Store.tierState(r) === 'unlocked') || null;
 
@@ -463,17 +449,11 @@ const Views = {
             </li>`).join('')}</ol>`
           : `<p class="fol__line">${next && !day ? 'Nothing after it' : 'Nothing scheduled'}</p>`}
         </section>
-        ${lastM ? `<section class="fol fol--last" aria-label="Last stamp">
-          <h2 class="fol__lab">Last stamp</h2>
-          <p class="fol__stamp">${glyph(chrono.length - 1, 'fol__imp')}
-            <span><b>GM ${pad(lastM.no)}</b><span>${esc(fmtDay(lastM.date))} · ${byHand(last) ? 'by an officer' : fmtTime(last.at)}</span></span></p>
-        </section>` : ''}
       </aside>`;
 
     const today = Schedule.today();
     return `<div class="view view--home">
       <header class="daybook">
-        ${C.run('01', 'Today', 'Keystamp · Key Club · Cali-Nev-Ha')}
         <div class="daybook__head">
           <h1 class="daybook__title rechead__title">Today</h1>
           <p class="daybook__date"><i>${esc(onClock(today, { weekday:'long' }))}</i><b>${esc(onClock(today, { month:'short', day:'numeric' }))}</b></p>
@@ -483,10 +463,9 @@ const Views = {
 
       <div class="deck deck--${kind}${live ? ' deck--live' : ''}">
         <div class="deck__act">${mast}</div>
-        <div class="deck__card">${C.sealGrid(live)}</div>
+        <div class="deck__card">${C.sealGrid(live, { tag:false })}</div>
         ${side}
       </div>
-      ${C.folio('01', 'Today')}
     </div>`;
   },
 
@@ -567,10 +546,11 @@ const Views = {
     });
     const monthName = key => onClock(`${key}-01`, { month:'long' }).split(' ')[0];
     const monthYear = key => key.slice(0, 4);
+    /* the year is printed only on months outside the current one */
+    const thisYear = Schedule.today().slice(0, 4);
 
     return `<div class="view view--record">
       <header class="rechead chap">
-        ${C.run('02', 'Record')}
         <div class="rec__head">
           <h1 class="chap__title rechead__title">Record</h1>
           ${held.length ? `<dl class="tally">
@@ -587,9 +567,8 @@ const Views = {
         : `<p class="tally tally--first">${ahead.length ? `First meeting: GM ${pad(ahead[0].no)}, ${fmtDate(ahead[0].date)}` : 'First meeting not yet held'}</p>`}
 
       ${held.length ? `<section class="ledger" aria-label="Meetings, newest first">
-          <div class="ledger__cols" aria-hidden="true"><span>Nº</span><span>Mark</span><span>Date</span><span>In</span><span>How</span></div>
           ${groups.map(g => `<div class="ledger__group">
-              <h2 class="ledger__month"><span class="ledger__mname">${monthName(g.key)}</span><span class="ledger__my">${monthYear(g.key)}</span>
+              <h2 class="ledger__month"><span class="ledger__mname">${monthName(g.key)}</span>${monthYear(g.key) !== thisYear ? `<span class="ledger__my">${monthYear(g.key)}</span>` : ''}
                 <span class="ledger__mn">${g.got} of ${g.n}</span></h2>
               <div class="ledger__rows">${g.rows.join('')}</div>
             </div>`).join('')}
@@ -597,7 +576,6 @@ const Views = {
       : `<section class="ledger ledger--blank" aria-label="Meetings">
           <p class="ledger__none">No meetings held yet. The first stamp starts the record.</p>
         </section>`}
-      ${C.folio('02', 'Record')}
     </div>`;
   },
 
@@ -611,7 +589,6 @@ const Views = {
     const next = tiers.find(t => total < t.required) || null;
     const top  = tiers.length ? tiers[tiers.length - 1].required : Rules.CARD * 3;
     const lift = (32 - 32 * STAMP_FIT).toFixed(1);
-    const reached = tiers.filter(t => Store.tierState(t) !== 'locked').length;
     /* the route runs from the page's edge through each prize's slot, the
        slots evenly set; the member stands where their count falls
        between the two prizes either side of it */
@@ -631,7 +608,6 @@ const Views = {
 
     return `<div class="view view--rewards">
       <header class="rechead chap">
-        ${C.run('04', 'Rewards')}
         <div class="rec__head">
           <h1 class="chap__title rechead__title">Rewards</h1>
           <p class="prize__fig"><b>${total}</b><span>${tiers.length && total <= top ? `of ${top} stamps` : total === 1 ? 'stamp' : 'stamps'}</span>
@@ -641,7 +617,6 @@ const Views = {
       </header>
 
       ${tiers.length ? `<section class="set" aria-label="Rewards, by the stamps they take">
-        ${C.sect('The set', `${reached} of ${tiers.length} reached`)}
         <div class="tiers" style="--fill:${fill.toFixed(3)};--n:${tiers.length}">
           <span class="route__line" aria-hidden="true"></span>
           ${me}
@@ -649,8 +624,6 @@ const Views = {
         </div>
       </section>` : `<p class="ledger__none">No rewards set up yet.</p>`}
 
-      ${Store.handovers && tiers.length ? `<p class="set__rule"><b>How a prize is kept.</b> Claim it here when it is unlocked; an officer hands it over at a meeting and it is filed as collected.</p>` : ''}
-      ${C.folio('04', 'Rewards')}
     </div>`;
   },
 
@@ -664,7 +637,6 @@ const Views = {
     const open = Store.openMeeting();
     const stamp = open && Store.scanFor(open.id);
     const head = extra => `<header class="scanhead">
-        ${C.run('03', 'Scan')}
         <div class="scanhead__row">
           <h1 class="chap__title rechead__title">Scan</h1>
           ${extra}
@@ -688,7 +660,6 @@ const Views = {
           ${i >= 0 ? `<p class="stamped__seat">Stamp ${pad(i + 1)} · card ${pad(Math.floor(i / Rules.CARD) + 1)}</p>` : ''}
         </section>
         <button class="act act--rule stamped__go" type="button" data-go="home"><span>See it on your card</span></button>
-        ${C.folio('03', 'Scan')}
       </div>`;
     }
 
@@ -719,8 +690,6 @@ const Views = {
           <span class="scanline__msg" id="scanMsg">Starting camera</span>
         </p>
       </div>
-      <p class="scanhint">Point the camera at the code on the wall. It reads on its own.</p>
-      ${C.folio('03', 'Scan')}
     </div>`;
   },
 
@@ -739,17 +708,15 @@ const Views = {
        chapter's data */
     BoardUI.loading = true;
     BoardUI.shown = null;
-    const idx = { 'Club Tools':'01', 'Check-in':'02', 'Meetings':'03', 'Members':'04' }[title] || '';
     const key = { 'Club Tools':'tools', 'Check-in':'desk', 'Meetings':'meet', 'Members':'members' }[title] || 'x';
     const today = Schedule.today();
-    /* the officers' copy of the same book: the same running head, chapter
-       title and folio, the date at the head of every page */
+    /* the officers' copy of the same book: the chapter title on its brush
+       rule; the date only where the page is about today (Club Tools) */
     return `<div class="view view--board view--b-${key}">
       <header class="rechead chap bhead">
-        ${C.run(idx, title, "Keystamp · Officers' copy")}
         <div class="rec__head">
           <h1 class="chap__title rechead__title">${title}</h1>
-          <p class="daybook__date"><i>${esc(onClock(today, { weekday:'long' }))}</i><b>${esc(onClock(today, { month:'short', day:'numeric' }))}</b></p>
+          ${key === 'tools' ? `<p class="daybook__date"><i>${esc(onClock(today, { weekday:'long' }))}</i><b>${esc(onClock(today, { month:'short', day:'numeric' }))}</b></p>` : ''}
         </div>
         <i class="brush" aria-hidden="true"></i>
       </header>
@@ -757,7 +724,6 @@ const Views = {
         <div id="boardPane">${BoardUI.pane()}</div>
       </section>
       ${tail}
-      ${C.folio(idx, title)}
     </div>`;
   },
 
@@ -888,7 +854,7 @@ const Views = {
       <div class="entry">
         <header class="entry__head">
           <p class="entry__wm">Keystamp</p>
-          <p class="entry__sub">Key Club attendance · Cali-Nev-Ha</p>
+          <p class="entry__sub">Key Club attendance</p>
         </header>
 
         <div class="entry__seat">
@@ -907,9 +873,9 @@ const Views = {
        member is asked to retry, not to type the password again */
     if (Store.loadError === 'SESSION') return this.loadFailure('Keystamp');
     const mode = AuthUI.mode;
-    const passwordField = ({ id, name, label, n, autocomplete, rule = '' }) => `
+    const passwordField = ({ id, name, label, autocomplete, rule = '' }) => `
           <div class="authp__f">
-            <label class="authp__lab" for="${id}"><i>${n}</i>${label}</label>
+            <label class="authp__lab" for="${id}">${label}</label>
             <div class="authp__pw">
               <input class="authp__in" id="${id}" name="${name}" type="password"
                      autocomplete="${autocomplete}" autocapitalize="none"
@@ -930,31 +896,29 @@ const Views = {
           <span class="cover__kci">${brandSeal('kci')}</span>
         </div>
         <header class="cover__head">
-          <p class="cover__sub">Key Club attendance · Cali-Nev-Ha</p>
+          <p class="cover__sub">Key Club attendance</p>
           <h1 class="cover__wm">Keystamp</h1>
         </header>
 
         <form class="authp regcard" id="authForm" novalidate>
           <div class="regcard__band">
-            <span class="regcard__kind">Membership record</span>
             <p class="authp__chapter">${up ? 'New account' : 'Sign in'}</p>
-            <span class="regcard__no">Form ${up ? '02' : '01'}</span>
           </div>
-          ${Arrival.bare ? `<p class="authp__arrive"><b>Then</b> ${Arrival.no ? `check in to GM ${pad(Arrival.no)}` : 'check in'} — no second scan</p>` : ''}
+          ${Arrival.bare ? `<p class="authp__arrive"><b>Then</b> ${Arrival.no ? `check in to GM ${pad(Arrival.no)}` : 'check in'}</p>` : ''}
 
           <div class="authp__f">
-            <label class="authp__lab" for="authUser"><i>01</i>Username</label>
+            <label class="authp__lab" for="authUser">Username</label>
             <input class="authp__in" id="authUser" name="username" type="text"
                    autocomplete="username" autocapitalize="none" spellcheck="false"
                    inputmode="latin" maxlength="${Config.USERNAME_MAX}"${up ? ' aria-describedby="userRule"' : ''}>
             ${up ? '<span class="authp__rule" id="userRule">Letters, numbers, _ and .</span>' : ''}
           </div>
 
-          ${passwordField({ id:'authPass', name:'password', label:'Password', n:'02',
+          ${passwordField({ id:'authPass', name:'password', label:'Password',
                             autocomplete: up ? 'new-password' : 'current-password',
                             rule: up ? '8 characters or more' : '' })}
 
-          ${up ? passwordField({ id:'authPass2', name:'confirm', label:'Confirm password', n:'03',
+          ${up ? passwordField({ id:'authPass2', name:'confirm', label:'Confirm password',
                                  autocomplete:'new-password' }) : ''}
 
           <div class="authp__act">
