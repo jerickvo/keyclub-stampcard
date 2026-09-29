@@ -1952,6 +1952,8 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .bfilters__q::before{content:'Find';position:absolute;left:0;bottom:10px;font:400 16px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;
   color:var(--ink);pointer-events:none}
 .bfilters__q .input{padding-left:52px;font-size:18px}
+/* a narrow roster: the search takes the whole line, the order under it */
+@container page (max-width:420px){ .bfilters{grid-template-columns:minmax(0,1fr)} .bfilters > :last-child{justify-self:start} }
 .roster{width:100%;border-collapse:collapse}
 .roster thead th{padding:8px 10px 8px 0;border-bottom:3px solid var(--ink);text-align:left;
   font:400 9.5px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
@@ -17577,7 +17579,7 @@ const BoardUI = {
         <span class="mrow__day">${esc(fold || isAhead ? fmtDate(m.meeting_date) : fmtDay(m.meeting_date))}</span>
         ${meta(m)}
         ${word ? `<span class="mrow__state">${word}</span>` : ''}
-        ${n || (!isAhead && !fold) ? `<span class="mrow__n"><b>${n}</b><span>checked in</span></span>` : ''}
+        ${n || (!isAhead && !fold) ? `<span class="mrow__n"><b>${n}</b>${fold ? '<span>checked in</span>' : '<span class="sr-only">checked in</span>'}</span>` : ''}
       </button></li>`;
     };
     const todays = upcoming.filter(m => m.meeting_date === today);

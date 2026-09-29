@@ -380,7 +380,7 @@ const BoardUI = {
         <span class="mrow__day">${esc(fold || isAhead ? fmtDate(m.meeting_date) : fmtDay(m.meeting_date))}</span>
         ${meta(m)}
         ${word ? `<span class="mrow__state">${word}</span>` : ''}
-        ${n || (!isAhead && !fold) ? `<span class="mrow__n"><b>${n}</b><span>checked in</span></span>` : ''}
+        ${n || (!isAhead && !fold) ? `<span class="mrow__n"><b>${n}</b>${fold ? '<span>checked in</span>' : '<span class="sr-only">checked in</span>'}</span>` : ''}
       </button></li>`;
     };
     const todays = upcoming.filter(m => m.meeting_date === today);
