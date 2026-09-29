@@ -120,7 +120,7 @@ const C = {
      of a stamp held up to be read. The seats, the route and the states
      are drawn from one map (SEAT_MAP), so the line always meets the
      seat it names. */
-  sealGrid(live = false){
+  sealGrid(live = false, { tag = true } = {}){
     const p = Rules.progress();
     const chrono = [...Store.scans]
       .sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
@@ -146,13 +146,11 @@ const C = {
             mtg.no}, ${fmtDate(mtg.date)}, ${byHand(rec) ? 'added by an officer' : `checked in at ${fmtTime(rec.at)}`}"`
         : now ? ` tabindex="0" role="button" data-go="scan" aria-label="Check in${liveNo ? ` at general meeting ${liveNo}` : ''}"` : '';
 
-      /* the milestone seat names what it pays out, printed under the blank */
-      const prize = mile && goal && state !== 'set' ? `<span class="seal__prize" aria-hidden="true">${esc(goal.name)}</span>` : '';
       return `<li class="seal ${state ? 'seal--' + state : ''}${hero}${mile}${now}" data-seal="${state || 'empty'}" style="${seatStyle(i)}"${control}>
         ${seatSvg(p.floor + i, mile)}
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
-        ${now ? `<span class="seal__go" aria-hidden="true">Check in</span>` : ''}
-        ${prize}${docket}
+        ${now && tag ? `<span class="seal__go" aria-hidden="true">Check in</span>` : ''}
+        ${docket}
       </li>`;
     }).join('');
 
@@ -179,7 +177,6 @@ const C = {
       <div class="card__id">
         <p class="card__cardno"><span>Card</span> <b>${pad(p.card)}</b></p>
         <p class="card__num"><b>${p.filled}</b><span>/${p.span}</span></p>
-        <p class="card__issued"><span>Issued to</span><b>${esc(memberName())}</b></p>
         <span class="card__kci" aria-hidden="true">${brandSeal('kci')}</span>
       </div>
       <div class="card__field">
@@ -259,11 +256,9 @@ C.sect = (name, count = '') =>
 C.folio = (no, what) =>
   `<footer class="folio-foot" aria-hidden="true"><span>Keystamp — ${esc(what)}</span><span class="folio-foot__no">${no}</span></footer>`;
 
-/* the record's colophon: who holds it, and the two settings a member has */
+/* the two settings a member has, at the foot of the page on a phone
+   (on a desk they are at the foot of the contents column) */
 C.account = () => `<section class="acct" aria-label="Account">
-  <p class="acct__who"><span class="acct__held">Record held by</span>
-    <span class="acct__name">${esc(memberName())}</span>
-    <span class="acct__role">${Store.isBoard ? 'Board' : 'Member'}${Store.user && Store.user.joined ? ` / since ${esc(onClock(Store.user.joined, { month:'short', year:'numeric' }))}` : ''}</span></p>
   <div class="acct__row">
     <button class="rail__motion" type="button" data-motion aria-pressed="false" aria-label="Reduce motion"></button>
     <button class="acct__out" data-signout type="button">Sign out</button>
@@ -304,31 +299,9 @@ C.filed = (k, run) => {
     <p class="filed__cap">
       <b class="filed__no">Card ${pad(k + 1)}</b>
       <span class="filed__when">${span}</span>
-      ${prize && !ready ? `<span class="filed__prize">${esc(prize.name)}${word ? ` · ${word.toLowerCase()}` : ''}</span>` : ''}
+      ${prize ? `<span class="filed__prize">${esc(prize.name)}${word ? ` · ${word.toLowerCase()}` : ''}</span>` : ''}
     </p>
-    ${ready ? `<button class="act act--ink filed__go" type="button" data-go="rewards"
-        aria-label="${esc(`Card ${pad(k + 1)}: claim ${prize.name}`)}"><span>Claim ${esc(prize.name)}</span></button>` : ''}
   </li>`;
-};
-
-/* The reward set, as a line of three medallions: what each takes, what
-   it is, and where it stands. Locked is quiet, unlocked is inked,
-   claimed carries the club's burgundy, collected is filed away. */
-C.prizeSet = (total, { go = false } = {}) => {
-  const tiers = [...Store.rewards].sort((a, b) => a.required - b.required);
-  if (!tiers.length) return '';
-  return `<ol class="pset${go ? ' pset--go' : ''}" aria-label="Rewards">${tiers.map((t, i) => {
-    const at = Store.tierState(t);
-    const state = at === 'claimed' ? (t.handedAt ? 'took' : 'claimed') : at === 'unlocked' ? 'ready' : 'locked';
-    const left = Math.max(0, t.required - total);
-    const say = { took:'Collected', claimed:'Claimed', ready:'Ready to claim',
-                  locked:`${left} more` }[state];
-    return `<li class="pset__t pset__t--${state}" style="--k:${i}">
-      <span class="pset__medal" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="${stampShape(t.required * 3 + 1, 2)}"/></svg><b>${t.required}</b></span>
-      <span class="pset__name">${esc(t.name)}</span>
-      <span class="pset__say">${say}</span>
-    </li>`;
-  }).join('')}</ol>`;
 };
 
 /* The meeting a day is about, as a ticket: its number on the stub, the
@@ -821,21 +794,25 @@ const Views = {
     /* the name is set as large as the panel allows it on one line */
     const len      = Math.max(4, [...name].length);
 
+    /* The member's record as one spread, the way it was first set: the
+       identity panel beside the card in hand, the same height; under the
+       panel the standing, under the card the cards already filed. */
     return `<div class="view view--member">
-      <section class="idp" aria-label="Member">
-        ${C.run('05', 'Member record')}
-        <span class="idp__tone" aria-hidden="true"><span class="idp__seal">${brandSeal('cnh')}</span></span>
-        <h1 class="idp__name rechead__title" style="--len:${len}"><span class="sr-only">Member record: </span>${esc(name)}</h1>
-        <p class="idp__line">
-          <span>Key Club · Cali-Nev-Ha</span>
-          ${since ? `<span>Member since ${esc(since)}</span>` : ''}
-          ${handle.toLowerCase() !== name.toLowerCase() ? `<span>@${esc(handle)}</span>` : ''}
-        </p>
-        <span class="idp__stamp" aria-hidden="true">${Store.isBoard ? 'Board' : 'Member'}</span>
-      </section>
+      <div class="mem${filed.length ? ' mem--filed' : ''}">
+        <section class="idp" aria-label="Member">
+          <span class="idp__tone" aria-hidden="true"><span class="idp__seal">${brandSeal('cnh')}</span></span>
+          <span class="idp__stamp" aria-hidden="true">${Store.isBoard ? 'Board' : 'Member'}</span>
+          <div class="idp__who">
+            <h1 class="idp__name rechead__title" style="--len:${len}"><span class="sr-only">Member record: </span>${esc(name)}</h1>
+            ${since || handle.toLowerCase() !== name.toLowerCase() ? `<p class="idp__line">
+              ${since ? `<span>Member since ${esc(since)}</span>` : ''}
+              ${handle.toLowerCase() !== name.toLowerCase() ? `<span>@${esc(handle)}</span>` : ''}
+            </p>` : ''}
+          </div>
+        </section>
 
-      <div class="mem">
         ${C.sealGrid(live)}
+
         <section class="stand" aria-label="Standing">
           <p class="stand__fig"><b>${total}</b><span>${total === 1 ? 'stamp' : 'stamps'} collected</span></p>
           <dl class="stand__ledger">
@@ -844,23 +821,14 @@ const Views = {
             <div><dt>Rewards</dt><dd><b>${reached}</b> of ${Store.rewards.length}</dd></div>
           </dl>
         </section>
-      </div>
 
-      <div class="mem__back${filed.length && Store.rewards.length ? ' mem__back--pair' : ''}">
         ${filed.length ? `<section class="files" aria-label="Past cards">
-          ${C.sect('Past cards', `${filed.length} filed`)}
+          ${C.sect('Past cards')}
           <ol class="files__list">${filed.join('')}</ol>
-        </section>` : ''}
-
-        ${Store.rewards.length ? `<section class="prizes" aria-label="Rewards">
-          ${C.sect('Rewards', `${reached} of ${Store.rewards.length} reached`)}
-          ${C.prizeSet(total)}
-          <button class="act act--rule prizes__go" type="button" data-go="rewards"><span>Open rewards</span></button>
         </section>` : ''}
       </div>
 
       ${C.account()}
-      ${C.folio('05', 'Member record')}
     </div>`;
   },
 

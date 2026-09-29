@@ -11,6 +11,16 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 :root{
+  /* the spacing: five steps, named by what they separate. tight: a
+     label from its value; row: siblings on one line, list rows; group:
+     the parts of one object or block; section: one block from the next;
+     page: the page from its edges and its foot */
+  --sp-tight:8px;
+  --sp-row:12px;
+  --sp-group:clamp(16px,1.8vw,24px);
+  --sp-section:clamp(32px,4vw,56px);
+  --sp-page:clamp(40px,5vw,64px);
+
   /* stock */
   --paper:#F2EEE5;          /* the page: warm newsprint */
   --paper-card:#FBF9F4;     /* card stock: brighter, heavier */
@@ -163,10 +173,15 @@ body{background:var(--paper);color:var(--ink)}
    seats wait along the route, and a stub past a perforation. On its
    side where there is room (the spine at the left), stood up on a
    phone (the spine across the top). ══ */
-.card{--stub:58px;position:relative;min-width:0;isolation:isolate;
+/* the card is a printed object on the page: a heavy ink edge and a hard
+   offset shadow, square to the page (a card turned by a fraction of a
+   degree is resampled, and its stamps go soft) */
+.card{--stub:58px;--card-edge:clamp(3px,.4vw,5px);--card-off:clamp(5px,.7vw,9px);
+  position:relative;min-width:0;isolation:isolate;
   container:card / inline-size;
-  background:var(--paper-card);color:var(--ink);border-radius:5px;
-  box-shadow:0 0 0 1px rgba(40,28,16,.16),var(--press-shadow)}
+  background:var(--paper-card);color:var(--ink);
+  border:var(--card-edge) solid var(--ink);
+  box-shadow:var(--card-off) var(--card-off) 0 var(--tone)}
 .card__in{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"id" "field" "foot"}
 /* the stock's own tooth, finer than the page's */
 .card::before{content:'';position:absolute;inset:0;z-index:0;border-radius:inherit;pointer-events:none;
@@ -178,9 +193,8 @@ body{background:var(--paper);color:var(--ink)}
 
 /* the spine: the card's number, the count, who holds it, the club */
 .card__id{position:relative;display:grid;align-items:end;gap:0 14px;overflow:hidden;
-  grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"no no kci" "num who kci";
-  padding:14px 16px 14px 18px;background:var(--ink);color:var(--paper-card);
-  border-radius:5px 5px 0 0}
+  grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"no kci" "num kci";
+  padding:14px 16px 14px 18px;background:var(--ink);color:var(--paper-card)}
 .card__id p{margin:0}
 .card__cardno{grid-area:no;margin-bottom:4px!important;font:400 10.5px/1 var(--f-mono);
   letter-spacing:.2em;text-transform:uppercase;color:#BDB6AA}
@@ -188,16 +202,16 @@ body{background:var(--paper);color:var(--ink)}
 .card__num{grid-area:num;display:flex;align-items:baseline;gap:4px;line-height:.78}
 .card__num b{font:400 clamp(58px,17cqw,76px)/.78 var(--f-display);letter-spacing:-.02em}
 .card__num span{font:400 14px/1 var(--f-mono);letter-spacing:.06em;color:#BDB6AA}
-.card__issued{grid-area:who;align-self:end;display:grid;gap:4px;min-width:0;padding-bottom:3px}
-.card__issued span{font:400 9.5px/1 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:#BDB6AA}
-.card__issued b{display:block;padding-bottom:4px;border-bottom:1px solid #6A655E;
-  font:400 clamp(16px,4.6cqw,20px)/1.05 var(--f-head);letter-spacing:.03em;text-transform:uppercase;
-  font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .card__kci{grid-area:kci;align-self:center}
 .card__kci .brandseal{display:block;width:44px;height:auto;--si:var(--paper-card);--sp:var(--ink)}
 
-/* the field: card stock, the district's seal printed faintly under it */
+/* the field: card stock, the district's seal printed faintly under it,
+   registration marks at its outer corners */
 .card__field{position:relative;aspect-ratio:5/6;margin:0 3%;isolation:isolate}
+.card__field::before,.card__field::after{content:'';position:absolute;z-index:0;right:-2%;width:14px;height:14px;
+  pointer-events:none;border:0 solid var(--ink);border-right-width:2px}
+.card__field::before{top:2%;border-top-width:2px}
+.card__field::after{bottom:0;border-bottom-width:2px}
 .card__wm{position:absolute;left:50%;top:52%;width:74%;translate:-50% -50%;opacity:.04;
   z-index:0;pointer-events:none}
 .card__wm .brandseal{display:block;width:100%;height:auto;--si:var(--ink);--sp:transparent}
@@ -241,8 +255,10 @@ body{background:var(--paper);color:var(--ink)}
 .seal--next .seal__mark{opacity:.16}
 .seal--next .seal__no{color:var(--ink)}
 
-.seal--set .sf-blank{stroke-opacity:.5}
-.seal--set .sf-press{filter:url(#ks-ink);translate:.9px -.6px;rotate:1.2deg}
+/* the impression covers its blank exactly: an offset of a fraction of a
+   pixel left the blank's hairline showing round the ink as a grey halo */
+.seal--set .sf-blank{stroke:none}
+.seal--set .sf-press{filter:url(#ks-ink)}
 .seal--set .sf-face{fill:var(--ink)}
 .seal--set .seal__mark{opacity:1}
 .seal--set .seal__mark path{fill:var(--paper-card)}
@@ -292,11 +308,7 @@ body{background:var(--paper);color:var(--ink)}
 .card--full .card__num span{color:var(--paper-card)}
 
 /* the stub, past the perforation: what the card is for */
-.card__foot{position:relative;min-height:var(--stub);display:flex;align-items:center;padding:12px 18px 12px;
-  border-top:0;background:
-    radial-gradient(circle at 0 0,transparent 7px,var(--paper-card) 7.5px) 0 0/51% 100% no-repeat,
-    radial-gradient(circle at 100% 0,transparent 7px,var(--paper-card) 7.5px) 100% 0/51% 100% no-repeat;
-  border-radius:0 0 5px 5px}
+.card__foot{position:relative;min-height:var(--stub);display:flex;align-items:center;padding:12px 18px 12px;border-top:0}
 .card__foot::before{content:'';position:absolute;left:10px;right:10px;top:0;height:1.5px;
   background:linear-gradient(90deg,var(--ink-3) 0 5px,transparent 5px) 0 0/9px 100% repeat-x}
 .card__goal{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;margin:0;min-width:0}
@@ -318,17 +330,14 @@ body{background:var(--paper);color:var(--ink)}
 /* ── the card on its side: the spine at the left ─────────────────── */
 @container card (min-width:600px){
   .card__in{grid-template-columns:minmax(150px,21%) minmax(0,1fr);grid-template-areas:"id field" "id foot"}
+  /* the spine: the card's number at the head, the count under it, the
+     club's seal at the foot */
   .card__id{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;
-    grid-template-areas:"no" "num" "." "who";align-items:start;gap:0;padding:18px 18px 18px 20px;
-    border-radius:5px 0 0 5px}
+    grid-template-areas:"no" "num" "." "kci";align-items:start;gap:0;padding:18px 18px 20px 20px}
   .card__num{margin-top:6px}
   .card__num b{font-size:clamp(76px,15cqw,118px)}
-  .card__kci{position:absolute;right:16px;top:16px}
-  .card__kci .brandseal{width:40px}
-  .card__issued{margin-top:18px}
-  .card__id::after{content:'Keystamp';position:absolute;left:50%;top:54%;translate:-50% -50%;rotate:-90deg;
-    font:400 clamp(30px,5cqw,46px)/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;
-    color:#2A2825;white-space:nowrap;pointer-events:none}
+  .card__kci{justify-self:start}
+  .card__kci .brandseal{width:48px}
   .card__field{aspect-ratio:16/10;margin:3% 4% 1% 3.5%}
   .card__route--tall{display:none}
   .card__route--wide{display:block}
@@ -339,108 +348,102 @@ body{background:var(--paper);color:var(--ink)}
   .card__done{top:50%}
 }
 
-/* ══ MEMBER. The identity is a manga panel: a heavy ink frame, the name
-   in the brush face, a screentone rising from the right with the
-   district's seal cut out of it, the club's rubber stamp on the name.
-   The card is laid across the panel's foot and breaks its frame; the
-   standing is set in the margin beside it. ══ */
+/* ══ MEMBER. One spread, as the record was first set: the identity panel
+   (a heavy ink frame, a screentone rising from the right with the
+   district's seal reversed out of it, the name in the brush face, the
+   club's rubber stamp) beside the card in hand, the same height. Under
+   the panel the standing; under the card the cards already filed. On a
+   phone the panel closes to a band over the card, so the card is the
+   first thing of any size on the page. ══ */
 .view--member{gap:0;container:page / inline-size}
-.idp{position:relative;display:grid;align-content:start;gap:clamp(14px,2vw,20px);min-width:0;
-  /* the frame bleeds into the gutter; what it holds keeps to the page's
-     column, so the running head and the name line up with every page */
-  padding:clamp(14px,2vw,22px) max(16px,calc(var(--gutter) + var(--safe-x,0px) - 11px)) calc(var(--overlap) + clamp(20px,3vw,34px));
-  border:3px solid var(--ink);background:none;isolation:isolate;overflow:hidden;
-  --overlap:clamp(64px,11vw,150px);
-  margin-inline:calc((var(--gutter) + var(--safe-x,0px)) * -1 + 8px)}
+.mem{display:grid;gap:var(--sp-group) 0;min-width:0;
+  grid-template-columns:minmax(0,1fr);grid-template-areas:"who" "card" "stand" "files"}
+.mem > .idp{grid-area:who}
+.mem > .card{grid-area:card}
+.mem > .stand{grid-area:stand;margin-top:var(--sp-tight)}
+.mem > .files{grid-area:files}
+
+/* the identity: on a phone a band, the name and the date on the left,
+   the rubber stamp on the right */
+.idp{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:6px 14px;min-width:0;
+  padding:16px 16px 14px;border:3px solid var(--ink);isolation:isolate;overflow:hidden}
 .idp > *{position:relative;z-index:1}
-.idp .run{border-bottom-color:var(--ink)}
 /* the tone: dots at one pitch, faded from the right edge inward; the
    district's seal reversed out of it in the stock's own colour */
-.idp__tone{position:absolute!important;z-index:0!important;inset:clamp(44px,5vw,56px) 0 0 30%;pointer-events:none;
+.idp__tone{position:absolute!important;z-index:0!important;inset:0 0 0 34%;pointer-events:none;
   background:var(--dot) 0 0/var(--dot-pitch) var(--dot-pitch);
   -webkit-mask:linear-gradient(100deg,transparent 0%,rgba(0,0,0,.35) 30%,#000 78%);
           mask:linear-gradient(100deg,transparent 0%,rgba(0,0,0,.35) 30%,#000 78%)}
-.idp__seal{position:absolute;right:-9%;top:50%;translate:0 -54%;rotate:-9deg;width:min(64%,540px)}
+.idp__seal{position:absolute;right:-14%;top:50%;translate:0 -50%;rotate:-9deg;width:min(78%,420px)}
 .idp__seal .brandseal{display:block;width:100%;height:auto;--si:var(--paper);--sp:transparent}
-.idp{container:idp / inline-size}
-/* as large as the panel allows on one line: the brush face runs about
-   half an em a letter */
-/* the brush strokes run below the line; the particulars wait under them */
-.idp__name{justify-self:start;margin:clamp(8px,3vw,40px) 0 .1em;max-width:100%;
-  font:400 min(176px,19vw,calc((100cqi - 8px) / (var(--len,6) * .52)))/.8 var(--f-display);
-  letter-spacing:-.02em;text-transform:uppercase;
-  color:var(--ink);overflow-wrap:anywhere;text-shadow:0 0 1px var(--paper)}
+.idp__who{display:grid;gap:10px;min-width:0;container:idpwho / inline-size}
+/* as large as the panel allows on one line (the brush face runs about
+   half an em a letter), and never larger than its size on the page */
+.idp__name{margin:0 0 .08em;justify-self:start;max-width:100%;
+  font:400 min(var(--name-max,64px),calc((100cqi - 4px) / (var(--len,6) * .52)))/.8 var(--f-display);
+  letter-spacing:-.02em;text-transform:uppercase;color:var(--ink);overflow-wrap:anywhere;text-shadow:0 0 1px var(--paper)}
 .idp__name:focus{outline:0}
 .idp__line{display:flex;flex-wrap:wrap;gap:4px 18px;margin:0;
   font:400 11px/1.5 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
 .idp__line span{background:var(--paper);padding-right:2px;white-space:nowrap}
 /* the club's rubber stamp, pressed once on the record, in the burgundy */
-.idp__stamp{position:absolute!important;right:clamp(16px,3vw,40px);top:clamp(44px,6vw,64px);rotate:-7deg;
-  padding:6px 12px 5px;border:2.5px solid var(--seal);outline:1px solid var(--seal);outline-offset:2px;
-  font:400 clamp(16px,2vw,22px)/1 var(--f-head);letter-spacing:.14em;text-transform:uppercase;
+.idp__stamp{align-self:center;rotate:-7deg;padding:5px 10px 4px;
+  border:2.5px solid var(--seal);outline:1px solid var(--seal);outline-offset:2px;
+  font:400 14px/1 var(--f-head);letter-spacing:.14em;text-transform:uppercase;
   color:var(--seal);background:rgba(242,238,229,.7);filter:url(#ks-rough)}
-/* on a phone the stamp is pressed beside the particulars, clear of the name */
-@container idp (max-width:560px){
-  .idp__stamp{top:auto;bottom:calc(var(--overlap) + 22px);right:14px;font-size:14px}
-  .idp__line{padding-right:96px}
-}
-@container idp (max-width:400px){
-  .idp__stamp{position:relative!important;inset:auto;justify-self:end;margin:-4px 2px 0 0}
-  .idp__line{padding-right:0;flex-direction:column}
-}
-
-.mem{position:relative;z-index:2;display:grid;gap:clamp(22px,3vw,34px);min-width:0;
-  grid-template-columns:minmax(0,1fr);grid-template-areas:"card" "stand";
-  margin-top:calc(var(--overlap) * -1);
-  --overlap:clamp(64px,11vw,150px)}
-.mem > .card{grid-area:card;margin-inline:clamp(0px,1vw,8px)}
-.mem > .stand{grid-area:stand}
+.idp__stamp{grid-column:2;grid-row:1}
+.idp__who{grid-column:1;grid-row:1}
 
 /* the standing: one figure in the brush face, the rest as a ledger */
 .stand{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:end;gap:0 20px;min-width:0}
 .stand__fig{display:grid;margin:0}
-.stand__fig b{font:400 clamp(92px,24vw,150px)/.74 var(--f-display);letter-spacing:-.03em;font-weight:400}
-.stand__fig span{margin-top:18px;font:400 11px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.stand__fig b{font:400 clamp(80px,22vw,112px)/.74 var(--f-display);letter-spacing:-.03em;font-weight:400}
+.stand__fig span{margin-top:14px;font:400 11px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
 .stand__ledger{margin:0;display:grid;align-self:end}
 .stand__ledger div{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
   padding:8px 0 7px;border-bottom:1px solid var(--tint)}
 .stand__ledger div:first-child{border-top:2px solid var(--ink)}
+.stand__ledger div:last-child{border-bottom:0}
 .stand__ledger dt{font:400 10.5px/1.2 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 .stand__ledger dd{margin:0;font:400 11px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
 .stand__ledger dd b{font:400 21px/1 var(--f-head);letter-spacing:.02em;color:var(--ink);margin-right:3px}
 
+/* a desk: the panel beside the card, stretched to its height; the name
+   set at the panel's foot, the stamp at its head */
 @container page (min-width:900px){
-  .mem{grid-template-columns:minmax(200px,1fr) minmax(0,2.9fr);grid-template-areas:"stand card";
-    column-gap:clamp(28px,3.4vw,48px);align-items:end}
-  .mem > .card{margin:0;rotate:-.6deg}
-  /* the figure breaks the panel's frame the way the card does: the
-     numeral set over the rule, the ledger below it on the page */
-  .stand{grid-template-columns:minmax(0,1fr);align-self:start;padding-top:calc(var(--overlap) - .42em)}
-  .stand__fig b{font-size:clamp(120px,11vw,172px)}
-  .stand__ledger{margin-top:26px}
+  .mem{grid-template-columns:minmax(0,32fr) minmax(0,68fr);column-gap:clamp(24px,2.8vw,44px);row-gap:var(--sp-section);
+    grid-template-areas:"who card" "stand stand"}
+  .mem--filed{grid-template-areas:"who card" "stand files"}
+  .mem > .stand{margin-top:0}
+  .idp{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;align-self:stretch;align-items:start;
+    padding:clamp(18px,2vw,26px) clamp(18px,2vw,28px) clamp(20px,2.2vw,28px);--name-max:128px}
+  .idp__tone{inset:0 0 0 22%}
+  .idp__seal{right:-30%;width:min(110%,460px)}
+  .idp__stamp{grid-column:1;grid-row:1;justify-self:end;align-self:start;font-size:clamp(15px,1.5vw,19px);padding:6px 12px 5px}
+  .idp__who{grid-column:1;grid-row:3;gap:14px}
+  .stand__fig b{font-size:clamp(104px,9vw,150px)}
+  /* with cards on file the standing is a column under the panel */
+  .mem--filed .stand{grid-template-columns:minmax(0,1fr);align-content:start;row-gap:var(--sp-group)}
+  /* with none, the standing runs across under both */
+  .mem:not(.mem--filed) .stand{grid-template-columns:auto minmax(0,1fr);column-gap:clamp(32px,4vw,64px)}
+  .mem:not(.mem--filed) .stand__ledger{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:clamp(16px,2.4vw,36px)}
+  .mem:not(.mem--filed) .stand__ledger div{display:grid;gap:6px;padding:10px 0 0;border:0;border-top:2px solid var(--ink)}
 }
 
-/* ── past cards: miniatures of the same card, struck ─────────────── */
-.mem__back{display:grid;min-width:0}
-.files,.prizes{display:grid;align-content:start;gap:clamp(16px,2vw,22px);margin-top:clamp(40px,6vw,76px);min-width:0}
-/* wide, with cards on file: the archive and the set face each other
-   under the card, the way a record's back page is laid out */
-@container page (min-width:900px){
-  .mem__back--pair{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);column-gap:clamp(36px,4.6vw,72px)}
-}
-.files__list{list-style:none;margin:0;padding:0;display:grid;gap:26px 22px;
-  grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr))}
-.files__list > .filed{max-width:340px}
+/* ── past cards: miniatures of the same card, filed side by side ─── */
+.files{display:grid;align-content:start;gap:var(--sp-group);min-width:0}
+.files__list{list-style:none;margin:0;padding:0;display:grid;gap:var(--sp-group);
+  grid-template-columns:repeat(auto-fill,minmax(min(100%,136px),1fr))}
+@container page (min-width:560px){ .files__list{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))} }
+.files__list > .filed{max-width:300px}
 .filed{display:grid;gap:10px;align-content:start;min-width:0}
-.filed:nth-child(3n+1) .mini{rotate:-1.4deg}
-.filed:nth-child(3n+2) .mini{rotate:.9deg}
-.filed:nth-child(3n) .mini{rotate:-.4deg}
+/* the miniature is printed like the card itself: an ink edge, a hard
+   offset shadow, square to the page */
 .mini{position:relative;display:grid;grid-template-columns:21% minmax(0,1fr);align-items:center;
-  background:var(--paper-card);border-radius:3px;overflow:hidden;
-  box-shadow:0 0 0 1px rgba(40,28,16,.16),0 10px 18px -12px rgba(40,28,16,.5)}
+  background:var(--paper-card);overflow:hidden;border:2px solid var(--ink);box-shadow:4px 4px 0 var(--tone)}
 .mini__id{align-self:stretch;display:grid;align-content:space-between;padding:8px 7px;background:var(--ink);color:var(--paper-card)}
 .mini__id i{font:400 7.5px/1 var(--f-mono);font-style:normal;letter-spacing:.16em;text-transform:uppercase;color:#BDB6AA}
-.mini__id b{font:400 34px/.8 var(--f-display);font-weight:400}
+.mini__id b{font:400 clamp(24px,7cqw,34px)/.8 var(--f-display);font-weight:400}
 .mini__field{display:block;width:92%;height:auto;margin:6% 4% 6%;overflow:visible}
 .fc-route{fill:none;stroke:var(--ink);stroke-width:1.2}
 .fc-face{fill:var(--ink)}
@@ -448,49 +451,20 @@ body{background:var(--paper);color:var(--ink)}
 .fc-back{fill:none;stroke:var(--ink);stroke-width:2}
 .filed--took .fc-face{fill:var(--ink-2)}
 .mini__punch{position:absolute;left:58%;top:50%;translate:-50% -50%;rotate:-10deg;
-  padding:4px 9px 3px;border:2px solid var(--ink);outline:1px solid var(--ink);outline-offset:2px;
+  padding:3px 8px 2px;border:2px solid var(--ink);outline:1px solid var(--ink);outline-offset:2px;
   background:rgba(251,249,244,.8);filter:url(#ks-rough);
-  font:400 17px/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
-.filed--claimed .mini__punch,.filed--ready .mini__punch{color:var(--seal);border-color:var(--seal);outline-color:var(--seal)}
+  font:400 clamp(12px,3.4vw,16px)/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
+.filed--claimed .mini__punch{color:var(--seal);border-color:var(--seal);outline-color:var(--seal)}
 .filed--ready .mini__punch{color:var(--crimson);border-color:var(--crimson);outline-color:var(--crimson)}
 .filed--took .mini{filter:grayscale(1)}
 .filed--took .mini__punch{color:var(--ink-2);border-color:var(--ink-2);outline-color:var(--ink-2)}
 .filed__cap{display:grid;gap:3px;margin:0;padding-left:2px}
 .filed__no{font:400 16px/1 var(--f-head);font-weight:400;letter-spacing:.04em;text-transform:uppercase}
 .filed__when,.filed__prize{font:400 10.5px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.filed__go{justify-self:start}
+.filed--ready .filed__prize{color:var(--crimson)}
 
-/* ── the reward set: three medallions on one line ────────────────── */
-.pset{position:relative;list-style:none;margin:0;padding:0;display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-/* the dotted route runs medal centre to medal centre */
-.pset::before{content:'';position:absolute;left:calc((100% - 24px) / 6);right:calc((100% - 24px) / 6);top:clamp(28px,6vw,40px);height:2px;
-  background:linear-gradient(90deg,var(--ink) 0 4px,transparent 4px) 0 0/8px 2px repeat-x;z-index:0}
-.pset__t{position:relative;z-index:1;display:grid;justify-items:center;text-align:center;gap:6px;min-width:0}
-.pset__medal{position:relative;display:grid;place-items:center;width:clamp(56px,12vw,80px);aspect-ratio:1}
-.pset__medal svg{position:absolute;inset:0;width:100%;height:100%}
-.pset__medal path{fill:var(--paper);stroke:var(--ink);stroke-width:1.6}
-.pset__medal b{position:relative;font:400 clamp(24px,5vw,34px)/1 var(--f-display);font-weight:400;color:var(--ink)}
-.pset__name{font:400 clamp(14px,1.6vw,17px)/1.05 var(--f-head);letter-spacing:.03em;text-transform:uppercase;overflow-wrap:anywhere}
-.pset__say{font:400 10px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
-.pset__t--locked .pset__medal path{fill:var(--paper);stroke:var(--tone);stroke-dasharray:3 3}
-.pset__t--locked .pset__medal::before{content:'';position:absolute;inset:14%;border-radius:50%;
-  background:var(--dot) 0 0/4px 4px;opacity:.35}
-.pset__t--locked .pset__medal b{color:var(--ink-3)}
-.pset__t--locked .pset__name{color:var(--ink-2)}
-.pset__t--ready .pset__medal path{fill:var(--ink);stroke:var(--ink);filter:url(#ks-ink)}
-.pset__t--ready .pset__medal b{color:var(--paper-card)}
-.pset__t--ready .pset__say{color:var(--crimson)}
-.pset__t--claimed .pset__medal path{fill:var(--seal);stroke:var(--seal);filter:url(#ks-ink)}
-.pset__t--claimed .pset__medal b{color:var(--paper-card)}
-.pset__t--claimed .pset__say{color:var(--seal)}
-.pset__t--took .pset__medal path{fill:var(--paper-deep);stroke:var(--ink-2);stroke-width:2.4}
-.pset__t--took .pset__medal b{color:var(--ink-2)}
-.pset__t--took .pset__medal::after{content:'';position:absolute;left:8%;right:8%;top:50%;height:2px;background:var(--ink-2);rotate:-24deg}
-.prizes__go{justify-self:start}
-
-/* the colophon on a phone: who holds the record, the two settings */
-.view--member .acct{margin-top:clamp(40px,6vw,64px)}
+/* the two settings at the foot of a phone's page */
+.view--member .acct{margin-top:var(--sp-section)}
 
 /* ══ Examining a stamp. The tapped impression is held up, square to
    the reader and larger; the rest of the card recedes; the stamp's
@@ -508,7 +482,7 @@ body{background:var(--paper);color:var(--ink)}
 .seal--held .seal__no{opacity:0}
 .card__record{z-index:8;pointer-events:none}
 .card__record[data-at="foot"]{position:absolute;inset:0;display:flex;align-items:center;flex-wrap:wrap;
-  gap:2px 16px;padding:8px 18px;background:var(--paper-card);border-radius:0 0 5px 5px;
+  gap:2px 16px;padding:8px 18px;background:var(--paper-card);
   font:400 11px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .card__record .sealmeta__no{font:400 22px/1 var(--f-head);letter-spacing:.04em;color:var(--ink)}
 .card__record .sealmeta__day{color:var(--ink)}
