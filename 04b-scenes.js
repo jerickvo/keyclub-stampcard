@@ -209,9 +209,10 @@ const Transit = {
   ORDER: { home:0, record:1, scan:2, rewards:3, profile:4,
            board:0, bcheckin:1, bmeet:2, bmembers:3 },
 
-  /* one cut for every page turn: an ink slab crosses the column in tab
-     order; only its direction says anything, so nothing rides on it */
-  CUT: { in:90, out:120, angle:6 },
+  /* one cut for every page turn: a narrow ink band crosses the column in
+     tab order, the page being left ahead of it and the new page behind
+     its trailing edge; only its direction says anything */
+  CUT: { dur:280, angle:6 },
 
   direction(from, to){
     const a = this.ORDER[from], b = this.ORDER[to];
@@ -228,22 +229,45 @@ const Transit = {
     return { left:r.left, width:r.width, top, height:Math.max(0, floor - top) };
   },
 
-  slab(f, dir){
+  /* the page being left, as it was printed: a copy laid over the column
+     (no ids, no focus, no pointer), on the same paper, at the same scroll */
+  sheet(view, f){
+    const r = view.getBoundingClientRect();
+    const cs = getComputedStyle(view);
+    const wrap = document.createElement('div');
+    wrap.className = 'cutsheet';
+    wrap.setAttribute('aria-hidden', 'true');
+    wrap.inert = true;
+    wrap.style.cssText = `left:${f.left}px;top:${f.top}px;width:${f.width}px;height:${f.height}px`;
+    const page = view.cloneNode(true);
+    page.removeAttribute('id');
+    page.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+    page.style.cssText = `position:absolute;left:${r.left - f.left}px;top:${r.top - f.top}px;width:${r.width}px;` +
+      `max-width:none;margin:0;padding:${cs.padding};--safe-x:${cs.getPropertyValue('--safe-x') || '0px'}`;
+    /* a drawn canvas (the wall code) is copied as drawn */
+    const from = view.querySelectorAll('canvas'), to = page.querySelectorAll('canvas');
+    from.forEach((c, i) => { try { to[i].getContext('2d').drawImage(c, 0, 0); } catch (_) {} });
+    wrap.appendChild(page);
+    document.body.appendChild(wrap);
+    return wrap;
+  },
+
+  band(f, dir){
     const box = document.createElement('div');
     box.className = 'cutbox';
     box.style.cssText = `left:${f.left}px;top:${f.top}px;width:${f.width}px;height:${f.height}px`;
     const W = f.width, H = f.height;
     const off = Math.round(Math.tan(this.CUT.angle * Math.PI / 180) * H);
+    const B = Math.round(Math.max(56, Math.min(140, W * .1)));
     const el = document.createElement('div');
     el.className = 'slab';
-    el.style.cssText = `left:${-off}px;top:0;width:${W + 2 * off}px;height:${H}px`;
+    el.style.cssText = `left:0;top:0;width:${B + off}px;height:${H}px`;
     el.style.clipPath = dir > 0
-      ? `polygon(${off}px 0, 100% 0, calc(100% - ${off}px) 100%, 0 100%)`
-      : `polygon(0 0, calc(100% - ${off}px) 0, 100% 100%, ${off}px 100%)`;
+      ? `polygon(${off}px 0, 100% 0, ${B}px 100%, 0 100%)`
+      : `polygon(0 0, ${B}px 0, 100% 100%, ${off}px 100%)`;
     box.appendChild(el);
     document.body.appendChild(box);
-    const enter = dir > 0 ? W + off : -(W + off);
-    return { box, el, enter, exit:-enter };
+    return { box, el, W, H, B, off };
   },
 
   run(from, to, swap){
@@ -258,26 +282,37 @@ const Transit = {
     }
 
     this.running = true;
-    const c = this.CUT;
-    const cut = this.slab(this.frame(view), dir);
-    const IN = cubicBezier(.7, 0, .2, 1), OUT = cubicBezier(.55, 0, .12, 1);
+    const f = this.frame(view);
+    const old = this.sheet(view, f);
+    const b = this.band(f, dir);
+    /* the new page is set under the copy at once; the band uncovers it */
+    try { doSwap(); } catch (_) {}
+    const { W, B, off } = b;
+    /* the band's left edge travels from beyond one side to beyond the
+       other; the copy of the old page keeps only what is ahead of it */
+    const x0 = dir > 0 ? W : -(B + off), x1 = dir > 0 ? -(B + off) : W;
+    const place = x => {
+      b.el.style.transform = `translateX(${x}px)`;
+      old.style.clipPath = dir > 0
+        ? `polygon(0 0, ${x + off}px 0, ${x}px 100%, 0 100%)`
+        : `polygon(${x + B}px 0, 100% 0, 100% 100%, ${x + B + off}px 100%)`;
+    };
+    place(x0);
 
     return new Promise(res => {
       let settled = false;
       const finish = () => {
         if (settled) return; settled = true;
         Transit.running = false;
-        try { cut.box.remove(); } catch (_) {}
+        try { b.box.remove(); } catch (_) {}
+        try { old.remove(); } catch (_) {}
         Motion.settle(view);
         res();
       };
-      aset(cut.el, { translateX:cut.enter });
-      animate(cut.el, { translateX:[cut.enter, 0], duration:c.in, ease:IN });
-      setTimeout(() => {
-        try { doSwap(); } catch (_) {}
-        animate(cut.el, { translateX:[0, cut.exit], duration:c.out, ease:OUT, onComplete:finish });
-      }, c.in);
-      setTimeout(finish, c.in + c.out + 200);
+      const pos = { x:x0 };
+      animate(pos, { x:[x0, x1], duration:this.CUT.dur, ease:cubicBezier(.5, 0, .3, 1),
+        onUpdate(){ place(pos.x); }, onComplete:finish });
+      setTimeout(finish, this.CUT.dur + 250);
     });
   },
 };

@@ -159,6 +159,8 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .cutbox{position:fixed;z-index:56;overflow:hidden;pointer-events:none;
   contain:layout paint}
 .slab{position:absolute;background:var(--ink);will-change:transform}
+/* the page being left, laid over the column while the band crosses it */
+.cutsheet{position:fixed;z-index:55;overflow:hidden;pointer-events:none;contain:layout paint}
 /* while signing out, a tap never lands on the page under the scene */
 .scene--exit{pointer-events:auto}
 /* nor under the opening scene while it holds: it lets taps through only

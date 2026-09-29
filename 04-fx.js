@@ -100,8 +100,12 @@ const FX = {
           const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
           const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
           scene.classList.add('acq--lift');
-          animate(sealEl, { translateX:[0, dx], translateY:[0, dy], scale:[1, to.width / from.width],
-            duration:320, ease:cubicBezier(.7, 0, .18, 1), onComplete:done });
+          /* it arrives as the landing begins: over its seat, held a little
+             above the card (larger) and turned, so the press that follows
+             continues the same movement */
+          const lean = parseFloat(getComputedStyle(cell).getPropertyValue('--lean')) || 0;
+          animate(sealEl, { translateX:[0, dx], translateY:[0, dy], scale:[1, 1.55 * to.width / from.width],
+            rotate:[-1.5, lean - 9], duration:320, ease:cubicBezier(.7, 0, .18, 1), onComplete:done });
         } else {
           animate(scene, { opacity:[1, 0], duration:220, ease:EASE.CALM, onComplete:done });
         }

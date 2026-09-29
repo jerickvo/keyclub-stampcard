@@ -66,6 +66,10 @@ body{background:var(--paper);color:var(--ink)}
   background-image:var(--cloud),var(--grain);
   background-size:900px 900px,220px 220px;
   background-blend-mode:multiply,multiply}
+/* the copy of a page being turned is printed on the same stock, its
+   grain fixed to the window like the ground's so the two meet unseen */
+.cutsheet{background-color:var(--paper);background-image:var(--cloud),var(--grain);
+  background-size:900px 900px,220px 220px;background-blend-mode:multiply,multiply;background-attachment:fixed}
 /* the page's torn outer edge: ink bled off the trim */
 .ground__bleed{width:clamp(6px,.9vw,13px)}
 
@@ -877,7 +881,9 @@ body{background:var(--paper);color:var(--ink)}
 .scanframe{position:relative;margin:0 calc(var(--cx) * -1)}
 .viewer{position:relative;display:grid;place-items:center;grid-template:minmax(0,1fr) / minmax(0,1fr);
   isolation:isolate;overflow:hidden;container-type:size;width:100%;
-  height:clamp(300px,calc(100dvh - 300px - env(safe-area-inset-bottom,0px)),660px);background:var(--ink)}
+  /* on a phone the camera takes the height the head, the strip and the
+     tabs leave, and nothing else */
+  height:clamp(300px,calc(100dvh - 216px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)),660px);background:var(--ink)}
 .viewer > *{grid-area:1 / 1;min-width:0;min-height:0}
 .viewer video{width:100%;height:100%;display:block;object-fit:cover;filter:grayscale(1) contrast(1.08) brightness(.92)}
 /* registration marks: heavy L-shaped corners, a tick at each edge's middle */
@@ -948,10 +954,11 @@ body{background:var(--paper);color:var(--ink)}
 .stamped__face{fill:var(--ink)}
 .stamped__imp g path{fill:var(--paper)}
 .stamped__rec{grid-area:rec;display:grid;gap:4px;margin:0;font:400 11.5px/1.5 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
-.stamped__no{display:block;font:400 clamp(44px,8vw,80px)/.8 var(--f-display);font-weight:400;color:var(--ink)}
+/* the brush strokes hang below the number; the state waits under them */
+.stamped__no{display:block;margin-bottom:.14em;font:400 clamp(44px,8vw,80px)/.8 var(--f-display);font-weight:400;color:var(--ink)}
 .stamped__word{font:400 clamp(20px,2.6vw,28px)/1 var(--f-head);letter-spacing:.04em;color:var(--seal)}
 .stamped__how{justify-self:start;padding:3px 6px 2px;border:1.5px solid var(--seal);color:var(--seal);rotate:-2deg}
-.stamped__seat{grid-area:seat;margin:0;font:400 10.5px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.stamped__seat{grid-area:seat;margin:0;font:400 10.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
 .stamped__go{margin-top:18px}
 
 /* wide: the picture at the left, the meeting and the strip in the margin */

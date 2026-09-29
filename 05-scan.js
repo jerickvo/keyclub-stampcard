@@ -560,6 +560,8 @@ const Landing = {
   async run(meeting){
     const seq = ++this.seq;
     const who = Store.user && Store.user.id;
+    /* where the stamp was earned: the camera, or a wall code's link */
+    const from = current;
     this.active = true;
     this.armed = null;
     if (this.scene) this.scene.clear();
@@ -588,8 +590,13 @@ const Landing = {
     }
 
     /* The reader may have left Scan during the hold. The record is
-       fresh either way; the page they chose is not taken from them. */
-    if (current !== 'scan' && current !== 'checkin'){
+       fresh either way; the page they chose is not taken from them. A
+       wall code's link lands on Home whatever repainted under the sheet
+       (the arrival page gives way to Home once its code is spent, and a
+       reader cannot turn a page under the sheet), so there the stamp is
+       still carried into its seat. */
+    const arrived = from === 'checkin' && (current === 'checkin' || current === 'home');
+    if (current !== 'scan' && !arrived){
       scene.clear();
       this.armed = null; this.active = false; this.scene = null;
       if (!fresh && Store.signedIn){
