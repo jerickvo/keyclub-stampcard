@@ -299,6 +299,8 @@ function refocusKey(root, key){
 
 /* the one intro a page has: a stamp just earned is primed to land */
 function playViewIntro(id){
+  /* the year line is drawn once the page cut has cleared */
+  if (id === 'record' && !FX.yearDrawn){ const draw = FX.drawYear(); Transit.after(() => { if (current === 'record') draw(); }); }
   if (id === 'home' && pendingStamp){
     const cell = Landing.cellFor(pendingStamp.meetingId);
     pendingStamp = null;

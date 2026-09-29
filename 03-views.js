@@ -216,11 +216,13 @@ const C = {
 
     /* the room is said only when it is not the usual one */
     const away = m.place && m.place !== Schedule.PLACE ? esc(m.place) : '';
+    /* the time a member came in is read with the date it belongs to; a
+       stamp added by hand and a meeting missed have no time of their own */
     const when = {
-      set:  scan ? (byHand(scan) ? '—' : fmtTime(scan.at)) : '',
+      set:  scan && !byHand(scan) ? fmtTime(scan.at) : '',
       open: '',
       /* today's is still the day's: an officer can add a stamp by hand */
-      miss: m.today ? 'Not yet' : '—',
+      miss: m.today ? 'Not yet' : '',
       upcoming: esc(m.time),
     }[state];
     const via = { set: scan && byHand(scan) ? 'By hand' : '', open:'', miss: m.today ? '' : 'Missed', upcoming:'' }[state];
@@ -232,8 +234,7 @@ const C = {
     return `<${el} class="lrow lrow--${state}${gap > 1 ? ` lrow--gap${gap}` : ''}"${attr}>
       <span class="lrow__no"><i>GM</i>${pad(m.no)}</span>
       <span class="lrow__stamp">${mark}</span>
-      <span class="lrow__date"><b>${m.today ? 'Today' : esc(onClock(m.date, { month:'short', day:'numeric' }))}</b><i>${esc(onClock(m.date, { weekday:'short' }))}</i></span>
-      <span class="lrow__when">${when}</span>
+      <span class="lrow__date"><b>${m.today ? 'Today' : esc(onClock(m.date, { month:'short', day:'numeric' }))}</b><i>${esc(onClock(m.date, { weekday:'short' }))}</i>${when ? `<span class="lrow__when">${when}</span>` : ''}</span>
       <span class="lrow__via">${state === 'open' ? '<span class="lrow__go">Check in</span>' : via}${away ? ` · ${away}` : ''}</span>
       ${sr ? `<span class="sr-only">${sr}</span>` : ''}
     </${el}>`;
