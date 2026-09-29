@@ -933,58 +933,64 @@ body{background:var(--paper);color:var(--ink)}
   :root:not([data-still]) .seal--held .sf-press{transition:scale 140ms steps(4,end)}
 }
 
-/* ══ TODAY. The member's current chapter: a dateline, then the head of
-   the page recomposed by what is true now, the card under it, the
-   schedule and the record in the margin. ══ */
+/* ══ TODAY. The page is headed by today's meeting: a banner that carries
+   the date, the meeting's number in the brush face and what is true of
+   it now; the card under it in the same column; a prize ready and the
+   meetings ahead in the margin beside them. ══ */
 .view--home{gap:0;container:page / inline-size}
-.daybook{display:grid;gap:10px;margin-bottom:clamp(22px,3.4vw,40px)}
-.daybook__head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;min-width:0}
-.daybook__title{margin:0;font:400 clamp(58px,13vw,128px)/.8 var(--f-display);letter-spacing:-.02em;
-  text-transform:uppercase;color:var(--ink)}
-.daybook__title:focus{outline:0}
+/* the date, where a page states it at its head (Club Tools) */
 .daybook__date{display:grid;justify-items:end;margin:0;text-align:right;padding-bottom:4px}
 .daybook__date i{font:400 10.5px/1.2 var(--f-mono);font-style:normal;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
 .daybook__date b{font:400 clamp(26px,4.6vw,44px)/.9 var(--f-head);letter-spacing:.02em;text-transform:uppercase;font-weight:400}
 
-.deck{display:grid;gap:clamp(24px,3vw,36px);min-width:0;
+.deck{display:grid;gap:var(--sp-group);min-width:0;
   grid-template-columns:minmax(0,1fr);grid-template-areas:"act" "card" "side"}
 .deck > .deck__act{grid-area:act;min-width:0}
 .deck > .deck__card{grid-area:card;min-width:0}
-.deck > .deck__side{grid-area:side;min-width:0}
+.deck > .deck__side{grid-area:side;min-width:0;margin-top:var(--sp-tight)}
+/* a desk: one column for the meeting and the card, square to each
+   other; the margin beside them from the top of the page */
 @container page (min-width:880px){
-  .deck{grid-template-columns:minmax(0,2.3fr) minmax(210px,1fr);column-gap:clamp(28px,3.4vw,52px);
+  .deck{grid-template-columns:minmax(0,2.4fr) minmax(220px,1fr);column-gap:clamp(28px,3.4vw,52px);
     grid-template-areas:"act side" "card side";align-items:start}
-  .deck--open{grid-template-areas:"act act" "card side"}
+  .deck > .deck__side{grid-row:1 / span 2;margin-top:0}
 }
 
-/* the masthead, whatever the state: a kicker, the meeting's number in
-   the brush face, a line of state */
-.mast{position:relative;display:grid;justify-items:start;gap:8px;width:100%;margin:0;min-width:0;
+/* the banner, whatever the state: what is true of the meeting at its
+   head with the date opposite, the meeting's number in the brush face,
+   a line of state */
+.mast{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:"kick day" "line line" "state state" "note note";
+  align-items:end;gap:8px 16px;width:100%;margin:0;min-width:0;
   border:0;background:none;color:var(--ink);text-align:left;font:inherit}
-.mast__kick{display:flex;flex-wrap:wrap;gap:4px 16px;font:400 11px/1.3 var(--f-mono);
+.mast__kick{grid-area:kick;align-self:start;display:flex;flex-wrap:wrap;gap:4px 16px;font:400 11px/1.3 var(--f-mono);
   letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
-.mast__line{position:relative;display:flex;align-items:flex-end;gap:10px;line-height:.78}
-.mast__gm{font:400 clamp(20px,3vw,30px)/1 var(--f-head);letter-spacing:.04em;padding-bottom:.35em}
-.mast__no{font:400 clamp(120px,32vw,220px)/.76 var(--f-display);letter-spacing:-.03em;font-weight:400}
-.mast__state{font:400 clamp(17px,2vw,22px)/1.1 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
-.mast__note{font:400 10.5px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.mast__kick:empty{display:none}
+.mast__day{grid-area:day;align-self:start;justify-self:end;display:grid;justify-items:end;gap:3px;text-align:right}
+.mast__day i{font:400 10px/1 var(--f-mono);font-style:normal;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
+.mast__day b{font:400 clamp(20px,2.4vw,28px)/.9 var(--f-head);letter-spacing:.02em;text-transform:uppercase;font-weight:400}
+.mast__line{grid-area:line;justify-self:start;position:relative;display:flex;align-items:flex-end;gap:10px;line-height:.78;margin-top:6px}
+.mast__gm{font:400 clamp(20px,3vw,28px)/1 var(--f-head);letter-spacing:.04em;padding-bottom:.35em}
+.mast__no{font:400 clamp(112px,30vw,168px)/.76 var(--f-display);letter-spacing:-.03em;font-weight:400}
+.mast__state{grid-area:state;font:400 clamp(17px,2vw,22px)/1.1 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.mast__note{grid-area:note;font:400 10.5px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
 
 /* open: an ink slab, bled to the edge on a phone, focus lines drawn in
    from the number; the slab is the way in */
-.mast--open{cursor:pointer;padding:clamp(18px,3vw,30px) clamp(18px,3vw,34px) clamp(20px,3vw,30px);
+.mast--open{cursor:pointer;padding:clamp(16px,2.4vw,26px) clamp(18px,2.8vw,32px) clamp(18px,2.6vw,26px);
   background:var(--ink);color:var(--paper-card);overflow:hidden;isolation:isolate;
-  grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"kick kick" "line cmd";align-items:end;
+  grid-template-areas:"kick day" "line cmd";
   margin-inline:calc((var(--gutter) + var(--safe-x,0px)) * -1);width:calc(100% + (var(--gutter) + var(--safe-x,0px)) * 2);
   clip-path:polygon(0 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%)}
 .mast--open > *{position:relative;z-index:1}
-.mast--open .mast__kick{grid-area:kick;color:#CFC8BC}
+.mast--open .mast__kick{color:#CFC8BC}
 .mast--open .mast__kick span:first-child{display:inline-flex;align-items:center;gap:9px;color:var(--paper-card)}
 .mast--open .mast__kick span:first-child::before{content:'';width:10px;height:10px;border-radius:50%;
   background:var(--crimson);box-shadow:0 0 0 3px rgba(193,31,51,.28)}
-.mast--open .mast__line{grid-area:line}
+.mast--open .mast__day i{color:#BDB6AA}
 .mast--open .mast__cmd{grid-area:cmd;justify-self:end;display:inline-flex;align-items:center;gap:12px;
   padding:12px 16px 11px 18px;background:var(--crimson);color:var(--paper-card);
-  font:400 clamp(20px,3vw,30px)/1 var(--f-head);letter-spacing:.05em;text-transform:uppercase}
+  font:400 clamp(20px,2.6vw,28px)/1 var(--f-head);letter-spacing:.05em;text-transform:uppercase}
 .mast--open .mast__cmd::after{content:'';width:22px;height:18px;background:currentColor;
   clip-path:polygon(0 38%,56% 38%,56% 6%,100% 50%,56% 94%,56% 62%,0 62%)}
 .mast__lines{position:absolute!important;inset:0;z-index:0!important;pointer-events:none;
@@ -997,18 +1003,17 @@ body{background:var(--paper);color:var(--ink)}
 .mast--open:focus-visible{outline:3px solid var(--crimson);outline-offset:-10px}
 .mast--open:active .mast__cmd{translate:2px 2px}
 @container page (min-width:880px){
-  /* strong and compact: the number carries the slab, not its height */
-  .mast--open{margin-inline:0;width:100%;padding-inline:clamp(28px,3.4vw,44px)}
-  .mast--open .mast__no{font-size:clamp(150px,14vw,210px)}
+  .mast--open{margin-inline:0;width:100%}
 }
 
-/* checked in: the stamp pressed over the meeting's number */
-.mast--set .mast__imp{position:absolute;left:62%;top:-12%;width:clamp(96px,22vw,150px);height:auto;
+/* checked in: the stamp pressed beside the meeting's number, touching
+   its edge, never over it */
+.mast--set .mast__imp{position:relative;align-self:center;flex:none;width:clamp(76px,16vw,116px);height:auto;margin-left:clamp(6px,1.2vw,14px);
   rotate:-9deg;filter:url(#ks-ink);overflow:visible}
 .mast__imp__face{fill:var(--ink)}
 .mast--set .mast__imp g path{fill:var(--paper)}
 .mast--set .mast__no{color:var(--ink)}
-.mast--set .mast__kick span:first-child{color:var(--seal)}
+.mast--set .mast__state{color:var(--seal)}
 
 /* later today: an outline waiting to be filled */
 .mast--today{padding:clamp(16px,2.4vw,24px) clamp(16px,2.4vw,26px);border:2px dashed var(--ink)}
@@ -1019,7 +1024,7 @@ body{background:var(--paper);color:var(--ink)}
 .mast--closed .mast__state{color:var(--ink-2)}
 
 /* another day: a rubber date stamp */
-.mast__date{display:block;padding:8px 0 4px}
+.mast__date{grid-area:line;justify-self:start;display:block;padding:8px 0 4px}
 .dstamp{display:inline-grid;justify-items:center;gap:4px;padding:12px 22px 10px;rotate:-4deg;
   border:3px solid var(--ink);outline:1.5px solid var(--ink);outline-offset:3px;filter:url(#ks-rough)}
 .dstamp i{font:400 12px/1 var(--f-mono);font-style:normal;letter-spacing:.3em;text-transform:uppercase}
@@ -1040,14 +1045,6 @@ body{background:var(--paper);color:var(--ink)}
 .fol__day{font:400 11px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 .fol__no{font:400 15px/1 var(--f-head);letter-spacing:.04em}
 .fol__at{grid-column:2 / -1;font:400 10.5px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--seal)}
-.fol__line{margin:0;font:400 11px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
-.fol__stamp{display:flex;align-items:center;gap:12px;margin:4px 0 0}
-.fol__imp{width:46px;height:46px;flex:none;rotate:-5deg;filter:url(#ks-ink)}
-.fol__imp__face{fill:var(--ink)}
-.fol__imp g path{fill:var(--paper)}
-.fol__stamp > span{display:grid;gap:3px}
-.fol__stamp b{font:400 20px/1 var(--f-head);letter-spacing:.03em}
-.fol__stamp span span{font:400 10.5px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 
 /* a prize ready: a ticket in the margin, the one crimson thing on it */
 .prizeband{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"lab go" "what go";
@@ -16601,7 +16598,6 @@ const Views = {
     const at = m => { const v = clockMinutes(m.time); return Number.isNaN(v) ? 0 : v; };
     const soonest = (a, b) => String(a.date).localeCompare(String(b.date)) || at(a) - at(b) || a.no - b.no;
     const next = Store.meetings.filter(m => m.upcoming && (!day || m.id !== day.id)).sort(soonest)[0] || null;
-    const room = m => m.place || Schedule.PLACE;
     const away = m => unusual(m).includes(m.place) ? m.place : '';
 
     const chrono = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
@@ -16611,6 +16607,9 @@ const Views = {
     const kick = parts => `<span class="mast__kick">${parts.filter(Boolean).map(t => `<span>${esc(t)}</span>`).join('')}</span>`;
     const line = (no, extra = '') =>
       `<span class="mast__line"><span class="mast__gm">GM</span><b class="mast__no">${no}</b>${extra}</span>`;
+    /* today's date belongs to today's meeting: printed in its banner */
+    const today = Schedule.today();
+    const dated = `<span class="mast__day"><i>${esc(onClock(today, { weekday:'long' }))}</i><b>${esc(onClock(today, { month:'short', day:'numeric' }))}</b></span>`;
     const daysTo = iso => Math.round((Date.parse(iso + 'T12:00:00Z') - Date.parse(Schedule.today() + 'T12:00:00Z')) / 864e5);
 
     let kind, mast;
@@ -16619,6 +16618,7 @@ const Views = {
       mast = `<button class="mast mast--open" type="button" data-go="scan" aria-label="Check in at general meeting ${day.no}">
         <span class="mast__lines" aria-hidden="true"></span>
         ${kick(['Check-in open', away(day)])}
+        ${dated}
         ${line(pad(day.no))}
         <span class="mast__cmd">Check in</span>
       </button>`;
@@ -16627,6 +16627,7 @@ const Views = {
       const i = chrono.findIndex(x => x.meetingId === day.id);
       mast = `<div class="mast mast--set">
         ${kick([away(day)])}
+        ${dated}
         ${line(pad(day.no), i >= 0 ? glyph(i, 'mast__imp') : '')}
         <span class="mast__state">${byHand(scan) ? 'Checked in · by an officer' : `Checked in · ${fmtTime(scan.at)}`}</span>
         ${i >= 0 ? `<span class="mast__note">Stamp ${pad(i + 1)} · ${byHand(scan) ? 'added by hand' : 'QR verified'}</span>` : ''}
@@ -16637,6 +16638,7 @@ const Views = {
       kind = 'closed';
       mast = `<div class="mast mast--closed">
         ${kick(['Meeting closed', away(day)])}
+        ${dated}
         ${line(pad(day.no))}
         <span class="mast__state">Not checked in</span>
       </div>`;
@@ -16645,7 +16647,8 @@ const Views = {
          which a member cannot tell apart, so only what is true now */
       kind = 'today';
       mast = `<div class="mast mast--today">
-        ${kick(['Today', `${day.time || ''} · ${room(day)}`])}
+        ${kick([away(day)])}
+        ${dated}
         ${line(pad(day.no))}
         <span class="mast__state">${day.started && !day.open ? 'Check-in not open' : `Starts ${esc(day.time || '')}`}</span>
       </div>`;
@@ -16663,44 +16666,38 @@ const Views = {
       kind = 'none';
       mast = `<div class="mast mast--none">
         ${kick(['Nothing scheduled'])}
+        ${dated}
         <span class="mast__state">The board has not set the next meeting.</span>
       </div>`;
     }
 
-    /* the margin: the schedule, the last stamp, a prize ready */
+    /* the margin: a prize ready, the meetings ahead */
     const showing = day ? day.id : next ? next.id : null;
     const ahead = Store.meetings.filter(m => m.upcoming && m.id !== showing).sort(soonest).slice(0, 3);
     const ready = [...Store.rewards].sort((a, b) => a.required - b.required)
       .find(r => Store.tierState(r) === 'unlocked') || null;
 
-    const side = `<aside class="deck__side" aria-label="The club's schedule and your record">
+    const side = `<aside class="deck__side" aria-label="Ahead">
         ${ready ? `<button class="prizeband" type="button" data-go="rewards">
             <span class="prizeband__lab">Reward unlocked</span>
             <span class="prizeband__what">${esc(ready.name)}</span>
             <span class="prizeband__go">Claim</span>
           </button>` : ''}
-        <section class="fol fol--ahead" aria-label="Meetings ahead">
+        ${ahead.length ? `<section class="fol fol--ahead" aria-label="Meetings ahead">
           <h2 class="fol__lab">Ahead</h2>
-          ${ahead.length ? `<ol class="fol__list">${ahead.map(m => `<li class="fol__row">
+          <ol class="fol__list">${ahead.map(m => `<li class="fol__row">
               <b class="fol__d">${esc(onClock(m.date, { day:'numeric' }))}</b>
               <span class="fol__day">${esc(onClock(m.date, { month:'short' }))} · ${esc(onClock(m.date, { weekday:'short' }))}</span>
               <span class="fol__no">GM ${pad(m.no)}</span>
               ${unusual(m).length ? `<span class="fol__at">${unusual(m).map(esc).join(' · ')}</span>` : ''}
-            </li>`).join('')}</ol>`
-          : `<p class="fol__line">${next && !day ? 'Nothing after it' : 'Nothing scheduled'}</p>`}
-        </section>
+            </li>`).join('')}</ol>
+        </section>` : ''}
       </aside>`;
 
-    const today = Schedule.today();
+    /* the page's heading is the meeting itself: the banner is read as
+       the head of the page, with its date in it */
     return `<div class="view view--home">
-      <header class="daybook">
-        <div class="daybook__head">
-          <h1 class="daybook__title rechead__title">Today</h1>
-          <p class="daybook__date"><i>${esc(onClock(today, { weekday:'long' }))}</i><b>${esc(onClock(today, { month:'short', day:'numeric' }))}</b></p>
-        </div>
-        <i class="brush" aria-hidden="true"></i>
-      </header>
-
+      <h1 class="sr-only rechead__title">Today, ${esc(fmtDate(today))}</h1>
       <div class="deck deck--${kind}${live ? ' deck--live' : ''}">
         <div class="deck__act">${mast}</div>
         <div class="deck__card">${C.sealGrid(live, { tag:false })}</div>

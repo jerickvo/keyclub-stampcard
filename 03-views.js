@@ -361,7 +361,6 @@ const Views = {
     const at = m => { const v = clockMinutes(m.time); return Number.isNaN(v) ? 0 : v; };
     const soonest = (a, b) => String(a.date).localeCompare(String(b.date)) || at(a) - at(b) || a.no - b.no;
     const next = Store.meetings.filter(m => m.upcoming && (!day || m.id !== day.id)).sort(soonest)[0] || null;
-    const room = m => m.place || Schedule.PLACE;
     const away = m => unusual(m).includes(m.place) ? m.place : '';
 
     const chrono = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
@@ -371,6 +370,9 @@ const Views = {
     const kick = parts => `<span class="mast__kick">${parts.filter(Boolean).map(t => `<span>${esc(t)}</span>`).join('')}</span>`;
     const line = (no, extra = '') =>
       `<span class="mast__line"><span class="mast__gm">GM</span><b class="mast__no">${no}</b>${extra}</span>`;
+    /* today's date belongs to today's meeting: printed in its banner */
+    const today = Schedule.today();
+    const dated = `<span class="mast__day"><i>${esc(onClock(today, { weekday:'long' }))}</i><b>${esc(onClock(today, { month:'short', day:'numeric' }))}</b></span>`;
     const daysTo = iso => Math.round((Date.parse(iso + 'T12:00:00Z') - Date.parse(Schedule.today() + 'T12:00:00Z')) / 864e5);
 
     let kind, mast;
@@ -379,6 +381,7 @@ const Views = {
       mast = `<button class="mast mast--open" type="button" data-go="scan" aria-label="Check in at general meeting ${day.no}">
         <span class="mast__lines" aria-hidden="true"></span>
         ${kick(['Check-in open', away(day)])}
+        ${dated}
         ${line(pad(day.no))}
         <span class="mast__cmd">Check in</span>
       </button>`;
@@ -387,6 +390,7 @@ const Views = {
       const i = chrono.findIndex(x => x.meetingId === day.id);
       mast = `<div class="mast mast--set">
         ${kick([away(day)])}
+        ${dated}
         ${line(pad(day.no), i >= 0 ? glyph(i, 'mast__imp') : '')}
         <span class="mast__state">${byHand(scan) ? 'Checked in · by an officer' : `Checked in · ${fmtTime(scan.at)}`}</span>
         ${i >= 0 ? `<span class="mast__note">Stamp ${pad(i + 1)} · ${byHand(scan) ? 'added by hand' : 'QR verified'}</span>` : ''}
@@ -397,6 +401,7 @@ const Views = {
       kind = 'closed';
       mast = `<div class="mast mast--closed">
         ${kick(['Meeting closed', away(day)])}
+        ${dated}
         ${line(pad(day.no))}
         <span class="mast__state">Not checked in</span>
       </div>`;
@@ -405,7 +410,8 @@ const Views = {
          which a member cannot tell apart, so only what is true now */
       kind = 'today';
       mast = `<div class="mast mast--today">
-        ${kick(['Today', `${day.time || ''} · ${room(day)}`])}
+        ${kick([away(day)])}
+        ${dated}
         ${line(pad(day.no))}
         <span class="mast__state">${day.started && !day.open ? 'Check-in not open' : `Starts ${esc(day.time || '')}`}</span>
       </div>`;
@@ -423,44 +429,38 @@ const Views = {
       kind = 'none';
       mast = `<div class="mast mast--none">
         ${kick(['Nothing scheduled'])}
+        ${dated}
         <span class="mast__state">The board has not set the next meeting.</span>
       </div>`;
     }
 
-    /* the margin: the schedule, the last stamp, a prize ready */
+    /* the margin: a prize ready, the meetings ahead */
     const showing = day ? day.id : next ? next.id : null;
     const ahead = Store.meetings.filter(m => m.upcoming && m.id !== showing).sort(soonest).slice(0, 3);
     const ready = [...Store.rewards].sort((a, b) => a.required - b.required)
       .find(r => Store.tierState(r) === 'unlocked') || null;
 
-    const side = `<aside class="deck__side" aria-label="The club's schedule and your record">
+    const side = `<aside class="deck__side" aria-label="Ahead">
         ${ready ? `<button class="prizeband" type="button" data-go="rewards">
             <span class="prizeband__lab">Reward unlocked</span>
             <span class="prizeband__what">${esc(ready.name)}</span>
             <span class="prizeband__go">Claim</span>
           </button>` : ''}
-        <section class="fol fol--ahead" aria-label="Meetings ahead">
+        ${ahead.length ? `<section class="fol fol--ahead" aria-label="Meetings ahead">
           <h2 class="fol__lab">Ahead</h2>
-          ${ahead.length ? `<ol class="fol__list">${ahead.map(m => `<li class="fol__row">
+          <ol class="fol__list">${ahead.map(m => `<li class="fol__row">
               <b class="fol__d">${esc(onClock(m.date, { day:'numeric' }))}</b>
               <span class="fol__day">${esc(onClock(m.date, { month:'short' }))} · ${esc(onClock(m.date, { weekday:'short' }))}</span>
               <span class="fol__no">GM ${pad(m.no)}</span>
               ${unusual(m).length ? `<span class="fol__at">${unusual(m).map(esc).join(' · ')}</span>` : ''}
-            </li>`).join('')}</ol>`
-          : `<p class="fol__line">${next && !day ? 'Nothing after it' : 'Nothing scheduled'}</p>`}
-        </section>
+            </li>`).join('')}</ol>
+        </section>` : ''}
       </aside>`;
 
-    const today = Schedule.today();
+    /* the page's heading is the meeting itself: the banner is read as
+       the head of the page, with its date in it */
     return `<div class="view view--home">
-      <header class="daybook">
-        <div class="daybook__head">
-          <h1 class="daybook__title rechead__title">Today</h1>
-          <p class="daybook__date"><i>${esc(onClock(today, { weekday:'long' }))}</i><b>${esc(onClock(today, { month:'short', day:'numeric' }))}</b></p>
-        </div>
-        <i class="brush" aria-hidden="true"></i>
-      </header>
-
+      <h1 class="sr-only rechead__title">Today, ${esc(fmtDate(today))}</h1>
       <div class="deck deck--${kind}${live ? ' deck--live' : ''}">
         <div class="deck__act">${mast}</div>
         <div class="deck__card">${C.sealGrid(live, { tag:false })}</div>
