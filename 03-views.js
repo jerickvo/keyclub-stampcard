@@ -589,22 +589,34 @@ const Views = {
     const next = tiers.find(t => total < t.required) || null;
     const top  = tiers.length ? tiers[tiers.length - 1].required : Rules.CARD * 3;
     const lift = (32 - 32 * STAMP_FIT).toFixed(1);
-    /* the route runs from the page's edge through each prize's slot, the
-       slots evenly set; the member stands where their count falls
-       between the two prizes either side of it */
+    /* One route from no stamps to the last prize. Each prize's medal sits
+       on it at its own count, the steps to scale: the route starts at 0
+       and medal i is centred at (i + 1) / (n + .5) of its length, so each
+       prize stands one step from the one before and the last keeps half
+       a step to the page's edge. The member's last stamp stands on the
+       route where their count falls. */
     const n = tiers.length || 1;
-    const slot = i => (2 * i + 1) / (2 * n);
-    const fill = !tiers.length ? 0 : total >= top ? Math.min(1, slot(n - 1) + (total - top) / Rules.CARD * (1 - slot(n - 1))) : (() => {
+    const x = i => (i + 1) / (n + .5);
+    const at = !tiers.length || total <= 0 ? 0 : (() => {
       const i = tiers.findIndex(t => total < t.required);
-      const lo = i ? tiers[i - 1].required : 0, from = i ? slot(i - 1) : 0;
-      return from + (total - lo) / (tiers[i].required - lo) * (slot(i) - from);
+      if (i === -1) return Math.min(1, x(n - 1) + (total - top) / Rules.CARD * (1 / (n + .5)));
+      const lo = i ? tiers[i - 1].required : 0, from = i ? x(i - 1) : 0;
+      return from + (total - lo) / (tiers[i].required - lo) * (x(i) - from);
     })();
+
+    /* a count within three stamps of a prize would put the member's stamp
+       on the prize's medal: it is held just clear of the medal's edge, on
+       the side the count is on (the route still runs to scale) */
+    const near = total <= 0 ? null : tiers.map((t, i) => [i, total - t.required])
+      .filter(([, d]) => Math.abs(d) <= 3).sort((p, q) => Math.abs(p[1]) - Math.abs(q[1]))[0] || null;
+    const pin = near ? ` tiers--${near[1] >= 0 ? 'after' : 'before'}` : '';
+    const end = Math.max(x(n - 1), at);
 
     /* where the member stands on the route: the last stamp earned, or the start */
     const me = total
-      ? `<span class="route__me" aria-hidden="true" style="--at:${fill.toFixed(3)}"><svg viewBox="0 0 64 64"><path class="route__face" d="${stampShape(total, 0)}"/>
+      ? `<span class="route__me" aria-hidden="true"><svg viewBox="0 0 64 64"><path class="route__face" d="${stampShape(total, 0)}"/>
           <g transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(total - 1)}</g></svg><b>${total}</b></span>`
-      : `<span class="route__me route__me--start" aria-hidden="true" style="--at:0"></span>`;
+      : `<span class="route__me route__me--start" aria-hidden="true"></span>`;
 
     return `<div class="view view--rewards">
       <header class="rechead chap">
@@ -617,9 +629,10 @@ const Views = {
       </header>
 
       ${tiers.length ? `<section class="set" aria-label="Rewards, by the stamps they take">
-        <div class="tiers" style="--fill:${fill.toFixed(3)};--n:${tiers.length}">
-          <span class="route__line" aria-hidden="true"></span>
+        <div class="tiers${pin}" style="--n:${n};--at:${at.toFixed(4)};--end:${end.toFixed(4)}${near ? `;--pin:${x(near[0]).toFixed(4)}` : ''}">
+          <span class="route" aria-hidden="true"><i class="route__done"></i></span>
           ${me}
+          <span class="tiers__start" aria-hidden="true"></span>
           ${tiers.map((t, i) => C.tier(t, total, i ? tiers[i - 1].required : 0, i)).join('')}
         </div>
       </section>` : `<p class="ledger__none">No rewards set up yet.</p>`}

@@ -18,12 +18,20 @@ const Impact = {
 };
 
 const FX = {
-  /* the claim's note is pressed onto the station, the way a stamp lands */
+  /* a claim presses the prize's medal the way a stamp lands on the card:
+     brought down large and turned, set square in a few hard steps; the
+     burgundy is the ink it leaves. The note under it is printed after. */
   claimStamp(row){
-    const p = row && row.querySelector('.tier__note');
-    if (!p || Motion.off) return;
-    animate(p, { scale:[1.3, 1], duration:120, ease:STEP(3),
-                 onComplete(){ Motion.settle(p); } });
+    const medal = row && row.querySelector('.tier__medal');
+    if (!medal || Motion.off) return;
+    aset(medal, { scale:1.45, rotate:-9 });
+    animate(medal, { scale:[1.45, 1], rotate:[-9, 0], duration:180, delay:40, ease:STEP(4),
+      onComplete(){ Motion.settle(medal); } });
+    const note = row.querySelector('.tier__note');
+    if (note){
+      aset(note, { opacity:0 });
+      animate(note, { opacity:[0, 1], duration:1, delay:230, ease:STEP(1), onComplete(){ Motion.settle(note); } });
+    }
   },
 
   /* a code read: the seat over the camera swells, the way a stamp is

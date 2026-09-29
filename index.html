@@ -1181,58 +1181,63 @@ body{background:var(--paper);color:var(--ink)}
   .ledger__rows > :last-child{border-bottom:0}
 }
 
-/* ══ REWARDS. The set: three prizes on one route, each a slot in a
-   collector's page. The member's own last stamp stands on the route
-   where their count falls. Locked is a printed blank under a tone;
-   unlocked is inked; claimed carries the burgundy; collected is filed,
-   dated, and greyed like an archive. ══ */
+/* ══ REWARDS. A collection on one route: from no stamps to the last
+   prize, drawn to scale, each prize's medal sitting on it at its own
+   count and the member's last stamp standing where their count falls.
+   Locked is a printed blank; unlocked is inked, the claim waiting under
+   it; claimed carries the club's burgundy; collected is filed, grey and
+   dated. On a phone the route runs down the page, still to scale. ══ */
 .view--rewards{gap:0;container:page / inline-size}
-.view--rewards .chap__title{font-size:clamp(56px,11vw,120px)}
 .prize__fig{display:grid;justify-items:end;gap:14px 6px;margin:0 0 0 auto;padding-bottom:6px;text-align:right}
 .prize__fig b{font:400 clamp(64px,7vw,88px)/.74 var(--f-display);font-weight:400}
 .prize__fig span{font:400 10.5px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
 .prize__fig i{font:400 clamp(15px,1.7vw,19px)/1 var(--f-head);font-style:normal;letter-spacing:.04em;text-transform:uppercase}
 
-.set{display:grid;gap:clamp(20px,3vw,32px);margin-top:clamp(28px,4vw,48px)}
-.tiers{--medal:clamp(92px,11vw,132px);position:relative;display:grid;gap:clamp(26px,4vw,40px);
-  grid-template-columns:minmax(0,1fr)}
-
-/* the route: solid ink to where the member stands, dotted beyond */
-/* stacked on a phone the slots are not to scale, so the route is only
-   the thread between them and the ticks carry the count */
-.route__line{position:absolute;z-index:0;left:calc(var(--medal) / 2 - 1px);top:calc(var(--medal) / 2);bottom:40px;width:2px;
-  background:linear-gradient(var(--ink-3) 0 3px,transparent 3px) 0 0/2px 7px repeat-y}
-.route__me{position:absolute;z-index:3;left:calc(var(--medal) / 2);top:calc(var(--at) * 100%);translate:-50% -50%;
-  display:none;place-items:center;width:40px;height:40px}
+.set{margin-top:var(--sp-section)}
+/* a phone: the route down the left, one step per prize; the medal on it,
+   the prize's name and state beside. --me is where the member's stamp
+   stands on the route: to scale, or held just clear of a medal */
+.tiers{--medal:88px;--step:176px;--len:calc((var(--n) + .5) * var(--step));--gap:24px;
+  --me:calc(var(--at) * var(--len));
+  position:relative;display:grid;
+  grid-template-columns:var(--medal) minmax(0,1fr);column-gap:var(--sp-group);
+  grid-template-rows:calc(var(--step) / 2) repeat(var(--n),var(--step))}
+.tiers--after{--me:max(calc(var(--at) * var(--len)),calc(var(--pin) * var(--len) + var(--medal) / 2 + var(--gap)))}
+.tiers--before{--me:min(calc(var(--at) * var(--len)),calc(var(--pin) * var(--len) - var(--medal) / 2 - var(--gap)))}
+.tiers__start{grid-column:1 / -1}
+/* the route's start: a small ring at no stamps */
+.tiers__start::before{content:'';position:absolute;z-index:1;left:calc(var(--medal) / 2 - 6px);top:-6px;
+  width:12px;height:12px;border:2px solid var(--ink);border-radius:50%;background:var(--paper)}
+.route{position:absolute;z-index:0;left:calc(var(--medal) / 2 - 1px);top:0;width:2px;height:var(--len);
+  background:linear-gradient(var(--ink-3) 0 3px,transparent 3px) 0 0/2px 7px repeat-y;
+  -webkit-mask:linear-gradient(#000 calc(var(--end) * 100%),transparent 0);
+          mask:linear-gradient(#000 calc(var(--end) * 100%),transparent 0)}
+.route__done{position:absolute;left:-.5px;top:0;width:3px;height:var(--me);background:var(--ink)}
+.route__me{position:absolute;z-index:3;left:calc(var(--medal) / 2);top:var(--me);
+  translate:-50% -50%;display:grid;place-items:center;width:34px;height:34px}
 .route__me svg{position:absolute;inset:0;width:100%;height:100%;rotate:-8deg;filter:url(#ks-ink)}
 .route__face{fill:var(--ink)}
 .route__me g path{fill:var(--paper)}
 .route__me b{position:absolute;left:calc(100% + 6px);top:50%;translate:0 -50%;padding:3px 6px 2px;background:var(--ink);color:var(--paper-card);
-  font:400 12px/1 var(--f-head);letter-spacing:.04em;white-space:nowrap}
+  font:400 13px/1 var(--f-head);letter-spacing:.04em;white-space:nowrap}
 .route__me b::after{content:' · you';font:400 9px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:#BDB6AA}
-.route__me--start{width:12px;height:12px;border:2px solid var(--ink);border-radius:50%;background:var(--paper)}
+.route__me--start{display:none}
 
-/* a slot */
-.tier{position:relative;z-index:1;display:grid;grid-template-columns:var(--medal) minmax(0,1fr);
-  grid-template-areas:"medal body" "at body";align-items:start;align-content:start;gap:6px 18px;min-width:0}
-.tier__medal{grid-area:medal;position:relative;display:grid;place-items:center;width:var(--medal);aspect-ratio:1}
+/* a prize: its medal on the route, its name, its stamps, where it stands */
+.tier{position:relative;z-index:1;grid-column:1 / -1;display:grid;grid-template-columns:subgrid;align-items:center;min-width:0}
+.tier__medal{position:relative;display:grid;place-items:center;width:var(--medal);aspect-ratio:1}
 .tier__medal svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .tier__rim{fill:none;stroke:var(--ink);stroke-width:1;opacity:.5}
 .tier__face{fill:var(--paper);stroke:var(--ink);stroke-width:1.4}
 .tier__medal b{position:relative;font:400 calc(var(--medal) * .44)/1 var(--f-display);font-weight:400;color:var(--ink)}
-.tier__at{grid-area:at;justify-self:center;display:flex;gap:5px;align-items:baseline;position:relative;padding:2px 4px;background:var(--paper);
-  font:400 9.5px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
-.tier__at b{font-weight:400;color:var(--ink)}
-.tier__body{grid-area:body;display:grid;justify-items:start;gap:8px;padding-top:clamp(8px,2vw,22px);min-width:0}
-.tier__name{font:400 clamp(24px,3vw,34px)/.95 var(--f-head);letter-spacing:.02em;text-transform:uppercase;overflow-wrap:anywhere}
+.tier__body{display:grid;justify-items:start;align-content:center;gap:8px;min-width:0}
+.tier__name{font:400 clamp(22px,2.6vw,32px)/.95 var(--f-head);letter-spacing:.02em;text-transform:uppercase;overflow-wrap:anywhere}
 .tier__desc{font:400 var(--t-caption)/1.4 var(--f-body);color:var(--ink-2)}
 .tier__ticks{display:flex;gap:3px;flex-wrap:wrap;max-width:200px}
 .tier__ticks i{width:12px;height:12px;border:1.5px solid var(--ink-3);background:var(--paper)}
 .tier__ticks i.on{border-color:var(--ink);background:var(--ink)}
 .tier__say{font:400 11px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 .tier__note{font:400 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--seal)}
-.tier__unl{padding:4px 8px 3px;border:2px solid var(--crimson);color:var(--crimson);rotate:-3deg;
-  font:400 14px/1 var(--f-head);letter-spacing:.1em;text-transform:uppercase}
 
 /* locked: a printed blank under a tone */
 .tier--sealed .tier__face{stroke:var(--ink-3);stroke-dasharray:3 3}
@@ -1244,7 +1249,7 @@ body{background:var(--paper);color:var(--ink)}
    behind it and not through it */
 .tier--far .tier__body{opacity:.62}
 .tier--far .tier__face{stroke:var(--tone)}
-.tier--far .tier__medal b,.tier--far .tier__at,.tier--far .tier__at b{color:var(--tone)}
+.tier--far .tier__medal b{color:var(--tone)}
 .tier--far .tier__medal::before{opacity:.2}
 .tier--far .tier__ticks i{border-style:dashed}
 
@@ -1252,12 +1257,12 @@ body{background:var(--paper);color:var(--ink)}
 .tier--ready .tier__face{fill:var(--ink);stroke:var(--ink);filter:url(#ks-ink)}
 .tier--ready .tier__rim{opacity:1;stroke-width:1.6}
 .tier--ready .tier__medal b{color:var(--paper-card)}
-.tier__claim{position:relative;display:inline-grid;place-items:center;min-width:132px;min-height:52px;margin-top:4px;
-  padding:10px 22px 9px;cursor:pointer;background:var(--paper-card);color:var(--crimson);
+.tier__claim{position:relative;display:inline-grid;place-items:center;min-width:124px;min-height:48px;margin-top:2px;
+  padding:9px 20px 8px;cursor:pointer;background:var(--paper-card);color:var(--crimson);
   border:3px solid var(--crimson);border-radius:48% 52% 46% 54% / 56% 44% 58% 42%;outline:1.5px solid var(--crimson);outline-offset:3px;
-  rotate:-2deg;font:400 22px/1 var(--f-head);letter-spacing:.1em;text-transform:uppercase}
+  rotate:-2deg;font:400 20px/1 var(--f-head);letter-spacing:.1em;text-transform:uppercase}
 @media (hover:hover){ .tier__claim:hover{background:var(--crimson);color:var(--paper-card)} }
-.tier__claim[data-armed]{background:var(--crimson);color:var(--paper-card);font-size:18px}
+.tier__claim[data-armed]{background:var(--crimson);color:var(--paper-card);font-size:17px}
 .tier__claim[aria-busy="true"]{border-color:var(--ink-3);outline-color:var(--ink-3);color:var(--ink-3);background:var(--paper-card);cursor:progress}
 .tier__claim:focus-visible{outline:3px solid var(--ink);outline-offset:4px}
 .tier__claim:active{translate:1px 2px}
@@ -1268,37 +1273,41 @@ body{background:var(--paper);color:var(--ink)}
 .tier--claimed .tier__medal b{color:var(--paper-card)}
 .tier--claimed .tier__ticks i.on{background:var(--seal);border-color:var(--seal)}
 
-/* collected: filed away, dated, grey as an archive */
+/* collected: filed away, grey, the date it was handed over under it */
 .tier--took .tier__face{fill:var(--paper-deep);stroke:var(--ink-2);stroke-width:2;filter:none}
 .tier--took .tier__rim{stroke:var(--ink-2);opacity:.6}
 .tier--took .tier__medal b{color:var(--ink-2)}
-.tier--took .tier__medal::after{content:'Filed';position:absolute;left:50%;bottom:12%;translate:-50% 0;rotate:-8deg;
+.tier--took .tier__medal::after{content:'Filed';position:absolute;left:50%;bottom:10%;translate:-50% 0;rotate:-8deg;
   padding:2px 6px 1px;border:1.5px solid var(--ink-2);background:var(--paper-deep);
   font:400 11px/1 var(--f-head);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .tier--took .tier__name{color:var(--ink-2)}
 .tier--took .tier__note{color:var(--ink-2)}
 .tier--took .tier__ticks i.on{background:var(--ink-2);border-color:var(--ink-2)}
 
-.set__rule{max-width:62ch;margin:clamp(26px,4vw,40px) 0 0;padding-top:12px;border-top:1px solid var(--ink);
-  font:400 var(--t-caption)/1.5 var(--f-body);color:var(--ink-2)}
-.set__rule b{font-weight:700;color:var(--ink)}
-
-/* wide: the three slots side by side, hung from one rail that runs the
-   stamps from nothing to the last prize; the member rides the rail */
+/* wider: the route runs across the page, the medals on it, each prize's
+   name and state under its medal; the member's stamp on the route with
+   its count over it */
 @container page (min-width:720px){
-  .tiers{grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:24px;padding-top:58px}
-  .route__line{left:0;right:0;top:22px;bottom:auto;width:auto;height:3px;
-    background:linear-gradient(var(--ink),var(--ink)) 0 0/calc(var(--fill) * 100%) 3px no-repeat,
-               linear-gradient(90deg,var(--ink-3) 0 3px,transparent 3px) 0 1px/7px 1.5px repeat-x}
-  .route__me{display:grid;left:calc(var(--at) * 100%);top:23px;width:34px;height:34px}
-  .route__me b{left:50%;top:auto;bottom:calc(100% + 4px);translate:-50% 0}
-  .tier{grid-template-columns:minmax(0,1fr);grid-template-areas:"medal" "at" "body";justify-items:center;
-    align-content:start;text-align:center}
-  /* each slot hangs from its station on the rail */
-  .tier::before{content:'';position:absolute;left:50%;top:-36px;height:36px;width:0;
-    border-left:1.5px dashed var(--ink-3)}
-  .tier--ready::before,.tier--claimed::before,.tier--took::before{border-left:2px solid var(--ink)}
-  .tier__body{justify-items:center;padding-top:6px}
+  .tiers{--medal:clamp(136px,15vw,228px);--lane:44px;
+    grid-template-columns:minmax(0,.5fr) repeat(var(--n),minmax(0,1fr));grid-template-rows:auto;column-gap:0;
+    padding-top:var(--lane)}
+  .tiers__start{grid-column:auto}
+  /* across the page the route's length is the page's width */
+  .tiers{--len:100%;--gap:26px}
+  .route{left:0;right:0;top:calc(var(--lane) + var(--medal) / 2 - 1px);width:auto;height:2px;
+    background:linear-gradient(90deg,var(--ink-3) 0 3px,transparent 3px) 0 0/7px 2px repeat-x;
+    -webkit-mask:linear-gradient(90deg,#000 calc(var(--end) * 100%),transparent 0);
+            mask:linear-gradient(90deg,#000 calc(var(--end) * 100%),transparent 0)}
+  .tiers__start::before{left:-6px;top:calc(var(--lane) + var(--medal) / 2 - 6px)}
+  .route__done{left:0;top:-.5px;height:3px;width:var(--me)}
+  .route__me{left:var(--me);top:calc(var(--lane) + var(--medal) / 2);width:38px;height:38px}
+  /* the count is printed in the lane over the medals, a hairline down to
+     the stamp, so it never lands on a medal */
+  .route__me b{left:50%;top:calc(8px - var(--lane) - var(--medal) / 2 + 19px);translate:-50% 0}
+  .route__me::after{content:'';position:absolute;left:50%;bottom:100%;width:1px;
+    height:calc(var(--lane) + var(--medal) / 2 - 19px - 26px);background:var(--ink)}
+  .tier{grid-column:auto;grid-template-columns:minmax(0,1fr);justify-items:center;align-items:start;align-content:start;row-gap:var(--sp-group);text-align:center}
+  .tier__body{justify-items:center}
   .tier__ticks{justify-content:center}
 }
 
@@ -16826,22 +16835,34 @@ const Views = {
     const next = tiers.find(t => total < t.required) || null;
     const top  = tiers.length ? tiers[tiers.length - 1].required : Rules.CARD * 3;
     const lift = (32 - 32 * STAMP_FIT).toFixed(1);
-    /* the route runs from the page's edge through each prize's slot, the
-       slots evenly set; the member stands where their count falls
-       between the two prizes either side of it */
+    /* One route from no stamps to the last prize. Each prize's medal sits
+       on it at its own count, the steps to scale: the route starts at 0
+       and medal i is centred at (i + 1) / (n + .5) of its length, so each
+       prize stands one step from the one before and the last keeps half
+       a step to the page's edge. The member's last stamp stands on the
+       route where their count falls. */
     const n = tiers.length || 1;
-    const slot = i => (2 * i + 1) / (2 * n);
-    const fill = !tiers.length ? 0 : total >= top ? Math.min(1, slot(n - 1) + (total - top) / Rules.CARD * (1 - slot(n - 1))) : (() => {
+    const x = i => (i + 1) / (n + .5);
+    const at = !tiers.length || total <= 0 ? 0 : (() => {
       const i = tiers.findIndex(t => total < t.required);
-      const lo = i ? tiers[i - 1].required : 0, from = i ? slot(i - 1) : 0;
-      return from + (total - lo) / (tiers[i].required - lo) * (slot(i) - from);
+      if (i === -1) return Math.min(1, x(n - 1) + (total - top) / Rules.CARD * (1 / (n + .5)));
+      const lo = i ? tiers[i - 1].required : 0, from = i ? x(i - 1) : 0;
+      return from + (total - lo) / (tiers[i].required - lo) * (x(i) - from);
     })();
+
+    /* a count within three stamps of a prize would put the member's stamp
+       on the prize's medal: it is held just clear of the medal's edge, on
+       the side the count is on (the route still runs to scale) */
+    const near = total <= 0 ? null : tiers.map((t, i) => [i, total - t.required])
+      .filter(([, d]) => Math.abs(d) <= 3).sort((p, q) => Math.abs(p[1]) - Math.abs(q[1]))[0] || null;
+    const pin = near ? ` tiers--${near[1] >= 0 ? 'after' : 'before'}` : '';
+    const end = Math.max(x(n - 1), at);
 
     /* where the member stands on the route: the last stamp earned, or the start */
     const me = total
-      ? `<span class="route__me" aria-hidden="true" style="--at:${fill.toFixed(3)}"><svg viewBox="0 0 64 64"><path class="route__face" d="${stampShape(total, 0)}"/>
+      ? `<span class="route__me" aria-hidden="true"><svg viewBox="0 0 64 64"><path class="route__face" d="${stampShape(total, 0)}"/>
           <g transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(total - 1)}</g></svg><b>${total}</b></span>`
-      : `<span class="route__me route__me--start" aria-hidden="true" style="--at:0"></span>`;
+      : `<span class="route__me route__me--start" aria-hidden="true"></span>`;
 
     return `<div class="view view--rewards">
       <header class="rechead chap">
@@ -16854,9 +16875,10 @@ const Views = {
       </header>
 
       ${tiers.length ? `<section class="set" aria-label="Rewards, by the stamps they take">
-        <div class="tiers" style="--fill:${fill.toFixed(3)};--n:${tiers.length}">
-          <span class="route__line" aria-hidden="true"></span>
+        <div class="tiers${pin}" style="--n:${n};--at:${at.toFixed(4)};--end:${end.toFixed(4)}${near ? `;--pin:${x(near[0]).toFixed(4)}` : ''}">
+          <span class="route" aria-hidden="true"><i class="route__done"></i></span>
           ${me}
+          <span class="tiers__start" aria-hidden="true"></span>
           ${tiers.map((t, i) => C.tier(t, total, i ? tiers[i - 1].required : 0, i)).join('')}
         </div>
       </section>` : `<p class="ledger__none">No rewards set up yet.</p>`}
@@ -17961,12 +17983,20 @@ const Impact = {
 };
 
 const FX = {
-  /* the claim's note is pressed onto the station, the way a stamp lands */
+  /* a claim presses the prize's medal the way a stamp lands on the card:
+     brought down large and turned, set square in a few hard steps; the
+     burgundy is the ink it leaves. The note under it is printed after. */
   claimStamp(row){
-    const p = row && row.querySelector('.tier__note');
-    if (!p || Motion.off) return;
-    animate(p, { scale:[1.3, 1], duration:120, ease:STEP(3),
-                 onComplete(){ Motion.settle(p); } });
+    const medal = row && row.querySelector('.tier__medal');
+    if (!medal || Motion.off) return;
+    aset(medal, { scale:1.45, rotate:-9 });
+    animate(medal, { scale:[1.45, 1], rotate:[-9, 0], duration:180, delay:40, ease:STEP(4),
+      onComplete(){ Motion.settle(medal); } });
+    const note = row.querySelector('.tier__note');
+    if (note){
+      aset(note, { opacity:0 });
+      animate(note, { opacity:[0, 1], duration:1, delay:230, ease:STEP(1), onComplete(){ Motion.settle(note); } });
+    }
   },
 
   /* a code read: the seat over the camera swells, the way a stamp is
