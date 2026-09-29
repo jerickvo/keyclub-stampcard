@@ -68,7 +68,7 @@ body{
 
 main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   --safe-x:max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
-  padding:calc(var(--sp-pad) + env(safe-area-inset-top, 0px)) calc(var(--gutter) + var(--safe-x))
+  padding:calc(clamp(16px,1.8vw,24px) + env(safe-area-inset-top, 0px)) calc(var(--gutter) + var(--safe-x))
           calc(var(--sp-page) + var(--tabs-h) + env(safe-area-inset-bottom, 0px))}
 
 /* one rhythm for every page: blocks sit one step apart */

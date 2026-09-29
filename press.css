@@ -18,7 +18,7 @@
   --sp-tight:8px;
   --sp-row:12px;
   --sp-group:clamp(16px,1.8vw,24px);
-  --sp-section:clamp(32px,4vw,56px);
+  --sp-section:clamp(28px,3.4vw,48px);
   --sp-page:clamp(40px,5vw,64px);
 
   /* stock */
@@ -74,7 +74,7 @@ body{background:var(--paper);color:var(--ink)}
 
 /* ── the chapter title: the brush face on its brush rule ─────────── */
 .chap{position:relative;display:grid;gap:10px;min-width:0}
-.chap__title{margin:0;font:400 clamp(46px,9.5vw,112px)/.84 var(--f-display);
+.chap__title{margin:0;font:400 clamp(44px,7.4vw,92px)/.84 var(--f-display);
   letter-spacing:-.015em;text-transform:uppercase;color:var(--ink);overflow-wrap:anywhere}
 /* a page's heading takes focus on a page turn so a screen reader reads
    it; it is not a control, so it draws no ring */
@@ -450,7 +450,7 @@ body{background:var(--paper);color:var(--ink)}
 .filed--ready .filed__prize{color:var(--crimson)}
 
 /* the two settings at the foot of a phone's page */
-.view--member .acct{margin-top:var(--sp-section)}
+.view--member .acct{margin-top:var(--sp-page)}
 
 /* ══ Examining a stamp. The tapped impression is held up, square to
    the reader and larger; the rest of the card recedes; the stamp's
@@ -494,7 +494,7 @@ body{background:var(--paper);color:var(--ink)}
    meetings ahead in the margin beside them. ══ */
 .view--home{gap:0;container:page / inline-size}
 /* the date, where a page states it at its head (Club Tools) */
-.daybook__date{display:grid;justify-items:end;margin:0;text-align:right;padding-bottom:4px}
+.daybook__date{display:grid;justify-items:end;margin:0 0 0 auto;text-align:right;padding-bottom:4px}
 .daybook__date i{font:400 10.5px/1.2 var(--f-mono);font-style:normal;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
 .daybook__date b{font:400 clamp(26px,4.6vw,44px)/.9 var(--f-head);letter-spacing:.02em;text-transform:uppercase;font-weight:400}
 
@@ -589,7 +589,7 @@ body{background:var(--paper);color:var(--ink)}
 .mast--none .mast__state{font:400 var(--t-body)/1.4 var(--f-body);text-transform:none;letter-spacing:0;color:var(--ink-2)}
 
 /* ── the margin ──────────────────────────────────────────────────── */
-.deck__side{display:grid;gap:clamp(22px,3vw,30px);align-content:start}
+.deck__side{display:grid;gap:var(--sp-section);align-content:start}
 .fol{display:grid;gap:8px}
 .fol__lab{margin:0;padding-bottom:6px;border-bottom:2px solid var(--ink);
   font:400 18px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase}
@@ -619,16 +619,15 @@ body{background:var(--paper);color:var(--ink)}
    in the margin like a yearbook's index, dense and ruled. ══ */
 .view--record{gap:0;container:page / inline-size}
 .rec__head{display:flex;align-items:flex-end;justify-content:space-between;gap:clamp(18px,3vw,24px) 24px;flex-wrap:wrap}
-.view--record .chap__title{font-size:clamp(56px,11vw,120px)}
 .tally{display:flex;gap:clamp(16px,3vw,36px);margin:0 0 0 auto;padding-bottom:6px}
 .tally div{display:grid;justify-items:end;gap:6px}
 .tally dt{order:2;font:400 10px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
-.tally dd{margin:0;font:400 clamp(40px,6vw,64px)/.78 var(--f-display)}
+.tally dd{margin:0;font:400 clamp(34px,5vw,60px)/.78 var(--f-display)}
 .tally div:nth-child(2) dd{color:var(--ink-3)}
 .tally--first{margin:14px 0 0;font:400 11px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 
 /* the year line: one rule, a mark at every meeting's true date */
-.yline{position:relative;height:66px;margin:clamp(26px,4vw,40px) 6px 6px 4px}
+.yline{position:relative;height:66px;margin:var(--sp-section) 6px 6px 4px}
 .yline__rule{position:absolute;left:0;right:calc(100% - var(--now));top:22px;height:2px;background:var(--ink)}
 .yline__ahead{position:absolute;left:var(--now);right:0;top:22px;height:2px;
   background:linear-gradient(90deg,var(--ink-3) 0 3px,transparent 3px) 0 0/7px 2px repeat-x}
@@ -740,7 +739,7 @@ body{background:var(--paper);color:var(--ink)}
    dated. On a phone the route runs down the page, still to scale. ══ */
 .view--rewards{gap:0;container:page / inline-size}
 .prize__fig{display:grid;justify-items:end;gap:14px 6px;margin:0 0 0 auto;padding-bottom:6px;text-align:right}
-.prize__fig b{font:400 clamp(64px,7vw,88px)/.74 var(--f-display);font-weight:400}
+.prize__fig b{font:400 clamp(44px,6vw,80px)/.74 var(--f-display);font-weight:400}
 .prize__fig span{font:400 10.5px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
 .prize__fig i{font:400 clamp(15px,1.7vw,19px)/1 var(--f-head);font-style:normal;letter-spacing:.04em;text-transform:uppercase}
 
@@ -869,12 +868,11 @@ body{background:var(--paper);color:var(--ink)}
 .view--scan{gap:0;container:page / inline-size;--cx:calc(var(--gutter) + var(--safe-x,0px))}
 .scanhead{display:grid;gap:10px;margin-bottom:clamp(14px,2.4vw,26px)}
 .scanhead__row{display:flex;align-items:flex-end;justify-content:space-between;gap:10px 20px;flex-wrap:wrap}
-.view--scan .chap__title{font-size:clamp(52px,10vw,104px)}
 .standing{display:grid;justify-items:end;gap:4px;margin:0;padding-bottom:6px;text-align:right}
 .standing__lab{font:400 10.5px/1.2 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
 .standing__at{display:flex;align-items:flex-end;gap:6px;font:400 clamp(16px,2vw,20px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
 .standing__at i{font:400 clamp(16px,2vw,22px)/1 var(--f-head);font-style:normal;padding-bottom:.3em}
-.standing__at b{font:400 clamp(52px,8vw,84px)/.76 var(--f-display);font-weight:400}
+.standing__at b{font:400 clamp(40px,6vw,72px)/.76 var(--f-display);font-weight:400}
 
 .scanframe{position:relative;margin:0 calc(var(--cx) * -1)}
 .viewer{position:relative;display:grid;place-items:center;grid-template:minmax(0,1fr) / minmax(0,1fr);
@@ -1137,12 +1135,11 @@ body{background:var(--paper);color:var(--ink)}
    operating a meeting rather than reading a record.
    ═══════════════════════════════════════════════════════════════════ */
 .view--board{gap:0;container:page / inline-size}
-.view--board .chap__title{font-size:clamp(50px,9vw,104px)}
-.bhead{margin-bottom:clamp(20px,3vw,34px)}
+.bhead{margin-bottom:var(--sp-group)}
 .rig{position:relative;min-width:0;isolation:isolate}
 #boardPane[aria-busy="true"] > *{opacity:.55;cursor:progress}
 #boardPane[aria-busy="true"] > .bpanel--live{opacity:1}
-.bpanel{position:relative;display:grid;gap:clamp(22px,3vw,34px);min-width:0;margin:0;padding:0;border:0;background:none}
+.bpanel{position:relative;display:grid;gap:var(--sp-section);min-width:0;margin:0;padding:0;border:0;background:none}
 .bpanel--wait{min-height:180px;align-content:start;padding-top:10px;border-top:3px solid var(--ink)}
 .bpanel--wait .kicker{font:400 11px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
 .bpanel--wait::after{content:'';display:block;height:110px;margin-top:14px;background:var(--dot) 0 0/5px 5px;opacity:.14;
@@ -1235,7 +1232,7 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .tools__state{display:inline-flex;align-items:center;gap:8px;font:400 clamp(17px,2vw,22px)/1 var(--f-head);letter-spacing:.05em;color:var(--ink)}
 .tools__gm{display:flex;align-items:flex-end;gap:8px;margin:0;line-height:.78}
 .tools__gm span{font:400 clamp(18px,2.6vw,26px)/1 var(--f-head);letter-spacing:.04em;padding-bottom:.35em}
-.tools__gm b{font:400 clamp(104px,20vw,190px)/.76 var(--f-display);font-weight:400;letter-spacing:-.03em}
+.tools__gm b{font:400 clamp(100px,18vw,168px)/.76 var(--f-display);font-weight:400;letter-spacing:-.03em}
 .tools__none{margin:0;font:400 clamp(40px,7vw,72px)/.9 var(--f-head);letter-spacing:.02em;text-transform:uppercase}
 .tools__count{display:flex;align-items:baseline;gap:10px;margin:0}
 .tools__count b{font:400 clamp(44px,6vw,64px)/.8 var(--f-display);font-weight:400}
@@ -1257,7 +1254,7 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .tools--ended .tools__gm b{color:transparent;-webkit-text-stroke:2px var(--ink-2)}
 .tools--none .tools__now{border-width:3px 0 1px;padding-inline:0}
 
-.tools__side{grid-area:side;display:grid;gap:clamp(22px,3vw,30px);align-content:start;min-width:0}
+.tools__side{grid-area:side;display:grid;gap:var(--sp-section);align-content:start;min-width:0}
 .tools__mark{margin:0 0 8px;padding-bottom:6px;border-bottom:2px solid var(--ink);
   font:400 18px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase}
 .tools__nextrow{display:flex;align-items:center;flex-wrap:wrap;gap:10px 18px;width:100%;min-height:44px;padding:8px 0;margin:0;
@@ -1293,7 +1290,7 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .tools__colophon b{font:400 clamp(40px,5vw,60px)/.8 var(--f-display);font-weight:400;color:var(--ink)}
 
 @container page (min-width:860px){
-  .tools{grid-template-columns:minmax(0,2.2fr) minmax(220px,1fr);grid-template-areas:"now side" "record record";column-gap:clamp(28px,3.4vw,48px)}
+  .tools{grid-template-columns:minmax(0,2.2fr) minmax(220px,1fr);grid-template-areas:"now side" "record record";column-gap:var(--sp-section)}
   /* the cover set across its width: the meeting at the left, the count
      standing at the right on the number's line, the commands under both */
   .tools__now{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"kick kick" "gm count" "acts acts";column-gap:24px}
@@ -1426,7 +1423,7 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
    as a printed schedule with large numbers and strong dates, the blank
    line the next one is written on, today's meeting as the fold, and the
    meetings held kept by the month, quieter and denser. ══ */
-.minutes{gap:clamp(26px,4vw,40px)}
+.minutes{gap:var(--sp-section)}
 .minutes__lab{margin:0 0 4px;padding-bottom:8px;border-bottom:3px solid var(--ink);
   font:400 clamp(20px,2.2vw,26px)/1 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
 .minutes__list{display:grid}
@@ -1483,7 +1480,7 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .mrow--left .mrow__state{color:var(--seal)}
 .minutes__foot{margin:10px 0 0;font:400 10.5px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 @container page (min-width:860px){
-  .minutes{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:clamp(28px,4vw,56px);align-items:start}
+  .minutes{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:var(--sp-section);align-items:start}
   .minutes > .meetgrid__err{grid-column:1 / -1}
   .minutes__fold{grid-column:1 / -1;grid-row:1}
   .minutes__ahead{grid-column:1}
@@ -1494,7 +1491,7 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
    (who is owed a prize, and the hand-over), then the roster itself, its
    names the visual content, indexed by letter, each with the ten seats
    of the card they hold. ══ */
-.memgrid{grid-template-columns:minmax(0,1fr);gap:clamp(26px,4vw,40px)}
+.memgrid{grid-template-columns:minmax(0,1fr);gap:var(--sp-section)}
 .memidx{display:flex;flex-wrap:wrap;gap:6px 28px;margin:0}
 .memidx span{display:flex;align-items:baseline;gap:8px;font:400 10.5px/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
 .memidx b{font:400 clamp(44px,6vw,64px)/.8 var(--f-display);font-weight:400;color:var(--ink)}
@@ -1534,14 +1531,14 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .bpage .muted{font:400 10.5px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase}
 @container page (max-width:560px){ .roster__card,.roster thead .roster__card{display:none} }
 @container page (min-width:1000px){
-  .memgrid{grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);grid-template-areas:"idx idx" "roster owed";column-gap:clamp(28px,4vw,56px);align-items:start}
+  .memgrid{grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);grid-template-areas:"idx idx" "roster owed";column-gap:var(--sp-section);align-items:start}
   .memgrid > .memidx{grid-area:idx}
   .memgrid > .owed{grid-area:owed}
   .memgrid > .rosterpanel{grid-area:roster}
 }
 
 /* ══ A member or a meeting, opened from a list ══ */
-.bdet{display:grid;gap:clamp(22px,3vw,34px)}
+.bdet{display:grid;gap:var(--sp-section)}
 .bdet__head{display:grid;gap:10px;min-width:0}
 .crumb{margin:0}
 .bwho{display:grid;gap:8px}
@@ -1550,7 +1547,7 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .bmeet{display:grid;gap:10px}
 .bmeet__when{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:0;font:400 11px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 .bmeet__when b{padding:4px 8px 3px;background:var(--crimson);color:var(--paper-card);font:400 13px/1 var(--f-head);letter-spacing:.06em}
-.bdet__body{display:grid;gap:clamp(22px,3vw,30px);min-width:0}
+.bdet__body{display:grid;gap:var(--sp-section);min-width:0}
 .hand{display:grid;gap:10px;padding:14px 16px;border:2px solid var(--ink);background:var(--paper-card)}
 .hand .field::before{content:'Find';position:absolute;left:0;bottom:10px;font:400 16px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase;pointer-events:none}
 .hand .input{padding-left:52px;font-size:18px}
@@ -1559,7 +1556,7 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
   .bdet{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);column-gap:clamp(28px,4vw,56px);align-items:start}
   .bdet__head{position:sticky;top:20px}
 }
-.view--board .acct{margin-top:clamp(40px,6vw,64px)}
+.view--board .acct{margin-top:var(--sp-page)}
 @media(min-width:1024px){ .view--board .acct{display:none} }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1570,7 +1567,7 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
    of the page, the open chapter's tab raised in ink.
    ═══════════════════════════════════════════════════════════════════ */
 /* one binding rule between the contents column and the page */
-.rail{padding:22px 0 18px 20px;overflow:visible;background:var(--paper);isolation:isolate;border-right:3px solid var(--ink)}
+.rail{padding:clamp(16px,1.8vw,24px) 0 18px 20px;overflow:visible;background:var(--paper);isolation:isolate;border-right:3px solid var(--ink)}
 .rail__brand{position:relative;padding:0 18px 14px 0;margin:0 0 4px}
 .rail__brand .mark{display:block;font:400 clamp(28px,2.2vw,34px)/.85 var(--f-display);letter-spacing:-.01em;text-transform:uppercase;color:var(--ink)}
 .rail__brand .mark__word b{font-weight:400}
