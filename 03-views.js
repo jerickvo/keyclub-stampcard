@@ -565,7 +565,7 @@ const Views = {
 
       ${yearline}
       ${held.length ? `<p class="sr-only">${kept} stamped, ${gone} missed</p>`
-        : `<p class="tally tally--first">${ahead.length ? `First meeting: GM ${pad(ahead[0].no)}, ${fmtDate(ahead[0].date)}` : 'First meeting not yet held'}</p>`}
+        : ahead.length ? `<p class="tally tally--first">First meeting: GM ${pad(ahead[0].no)}, ${fmtDate(ahead[0].date)}</p>` : ''}
 
       ${held.length ? `<section class="ledger" aria-label="Meetings, newest first">
           ${groups.map(g => `<div class="ledger__group">
@@ -575,7 +575,7 @@ const Views = {
             </div>`).join('')}
         </section>`
       : `<section class="ledger ledger--blank" aria-label="Meetings">
-          <p class="ledger__none">No meetings held yet. The first stamp starts the record.</p>
+          <p class="ledger__none">No meetings held yet.</p>
         </section>`}
     </div>`;
   },

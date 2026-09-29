@@ -1288,8 +1288,9 @@ body{background:var(--paper);color:var(--ink)}
 /* wider: the route runs across the page, the medals on it, each prize's
    name and state under its medal; the member's stamp on the route with
    its count over it */
-@container page (min-width:720px){
-  .tiers{--medal:clamp(136px,15vw,228px);--lane:44px;
+@container page (min-width:600px){
+  /* each medal about three fifths of its prize's share of the route */
+  .tiers{--medal:clamp(112px,calc(100cqi / (var(--n) + .5) * .62),228px);--lane:44px;
     grid-template-columns:minmax(0,.5fr) repeat(var(--n),minmax(0,1fr));grid-template-rows:auto;column-gap:0;
     padding-top:var(--lane)}
   .tiers__start{grid-column:auto}
@@ -16815,7 +16816,7 @@ const Views = {
 
       ${yearline}
       ${held.length ? `<p class="sr-only">${kept} stamped, ${gone} missed</p>`
-        : `<p class="tally tally--first">${ahead.length ? `First meeting: GM ${pad(ahead[0].no)}, ${fmtDate(ahead[0].date)}` : 'First meeting not yet held'}</p>`}
+        : ahead.length ? `<p class="tally tally--first">First meeting: GM ${pad(ahead[0].no)}, ${fmtDate(ahead[0].date)}</p>` : ''}
 
       ${held.length ? `<section class="ledger" aria-label="Meetings, newest first">
           ${groups.map(g => `<div class="ledger__group">
@@ -16825,7 +16826,7 @@ const Views = {
             </div>`).join('')}
         </section>`
       : `<section class="ledger ledger--blank" aria-label="Meetings">
-          <p class="ledger__none">No meetings held yet. The first stamp starts the record.</p>
+          <p class="ledger__none">No meetings held yet.</p>
         </section>`}
     </div>`;
   },
