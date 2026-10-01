@@ -256,7 +256,8 @@ const Scanner = {
     const ret = $('#reticle'), el = $('#scanMsg'), line = $('#scanLine');
     if (el) el.textContent = msg;
     if (line){
-      const tone = state === 'hit' ? 'good' : state;
+      /* a code read is not yet a stamp: it reads Checking until the server says so */
+      const tone = state === 'hit' ? 'busy' : state;
       ['boot', 'live', 'busy', 'good', 'bad', 'off'].forEach(s =>
         line.classList.toggle('scanline--' + s, s === tone));
     }
@@ -284,7 +285,7 @@ const Scanner = {
     $('#viewer')?.classList.remove('viewer--stalled');
     $('#viewer .stall')?.remove();
 
-    this.setState('boot', 'Starting camera');
+    this.setState('boot', 'Starting');
     this.showLoader();
 
     if (!navigator.mediaDevices?.getUserMedia) return this.stall('unsupported');
@@ -336,7 +337,8 @@ const Scanner = {
 
     this.cv = document.createElement('canvas');
     this.ctx = this.cv.getContext('2d', { willReadFrequently:true });
-    this.setState('live', 'Scanning');
+    /* the state tag says Ready; the strip needs no second word for it */
+    this.setState('live', '');
     this.mountZoom();
     this.loop(video, run);
   },
@@ -462,7 +464,7 @@ const Scanner = {
     this.locked = true;
     /* the frame holds on the code that was read while it is checked */
     try { $('#cam')?.pause(); } catch (_) {}
-    this.setState('hit', 'Code read');
+    this.setState('hit', '');
     FX.scanLock();
     submitSeal(text, run);
   },
@@ -558,6 +560,8 @@ const Landing = {
   async run(meeting){
     const seq = ++this.seq;
     const who = Store.user && Store.user.id;
+    /* where the stamp was earned: the camera, or a wall code's link */
+    const from = current;
     this.active = true;
     this.armed = null;
     if (this.scene) this.scene.clear();
@@ -586,8 +590,13 @@ const Landing = {
     }
 
     /* The reader may have left Scan during the hold. The record is
-       fresh either way; the page they chose is not taken from them. */
-    if (current !== 'scan' && current !== 'checkin'){
+       fresh either way; the page they chose is not taken from them. A
+       wall code's link lands on Home whatever repainted under the sheet
+       (the arrival page gives way to Home once its code is spent, and a
+       reader cannot turn a page under the sheet), so there the stamp is
+       still carried into its seat. */
+    const arrived = from === 'checkin' && (current === 'checkin' || current === 'home');
+    if (current !== 'scan' && !arrived){
       scene.clear();
       this.armed = null; this.active = false; this.scene = null;
       if (!fresh && Store.signedIn){
@@ -713,13 +722,13 @@ async function checkSeal(raw){
 async function submitSeal(raw, run = Scanner.run){
   if (!QRFormat.looksLikeKeystamp(raw)) return rejectVisual('INVALID_TOKEN', raw, run);
 
-  Scanner.setState('busy', 'Checking');
+  Scanner.setState('busy', '');
   const got = await checkSeal(QRFormat.canonical(raw));
   if (!got) return;
   if (got.code) return rejectVisual(got.code, raw, run);
 
   /* said on the live line, under the scene, so a screen reader hears it */
-  Scanner.setState('good', `Stamp acquired. GM ${pad(got.meeting.no)}`);
+  Scanner.setState('good', `GM ${pad(got.meeting.no)}`);
   Scanner.stop();
   await Landing.run(got.meeting);
 }

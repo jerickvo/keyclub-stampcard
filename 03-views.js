@@ -100,12 +100,10 @@ const C = {
         <svg viewBox="0 0 64 64"><path class="tier__rim" d="${stampShape(r.required * 3 + 1, 3.6)}"/><path class="tier__face" d="${stampShape(r.required * 3 + 1, 0)}"/></svg>
         <b>${r.required}</b>
       </span>
-      <span class="tier__at"><b>${pad(r.required)}</b> <span>stamps</span></span>
       <span class="tier__body">
         <span class="tier__name">${esc(r.name)}</span>
         ${r.desc ? `<span class="tier__desc">${esc(r.desc)}</span>` : ''}
         ${ticks}
-        ${ready ? '<span class="tier__unl">Unlocked</span>' : ''}
         ${say ? `<span class="tier__say">${say}</span>` : ''}
         ${note ? `<span class="tier__note">${esc(note)}</span>` : ''}
         ${claim}
@@ -120,7 +118,7 @@ const C = {
      of a stamp held up to be read. The seats, the route and the states
      are drawn from one map (SEAT_MAP), so the line always meets the
      seat it names. */
-  sealGrid(live = false){
+  sealGrid(live = false, { tag = true } = {}){
     const p = Rules.progress();
     const chrono = [...Store.scans]
       .sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
@@ -146,13 +144,11 @@ const C = {
             mtg.no}, ${fmtDate(mtg.date)}, ${byHand(rec) ? 'added by an officer' : `checked in at ${fmtTime(rec.at)}`}"`
         : now ? ` tabindex="0" role="button" data-go="scan" aria-label="Check in${liveNo ? ` at general meeting ${liveNo}` : ''}"` : '';
 
-      /* the milestone seat names what it pays out, printed under the blank */
-      const prize = mile && goal && state !== 'set' ? `<span class="seal__prize" aria-hidden="true">${esc(goal.name)}</span>` : '';
       return `<li class="seal ${state ? 'seal--' + state : ''}${hero}${mile}${now}" data-seal="${state || 'empty'}" style="${seatStyle(i)}"${control}>
         ${seatSvg(p.floor + i, mile)}
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
-        ${now ? `<span class="seal__go" aria-hidden="true">Check in</span>` : ''}
-        ${prize}${docket}
+        ${now && tag ? `<span class="seal__go" aria-hidden="true">Check in</span>` : ''}
+        ${docket}
       </li>`;
     }).join('');
 
@@ -179,7 +175,6 @@ const C = {
       <div class="card__id">
         <p class="card__cardno"><span>Card</span> <b>${pad(p.card)}</b></p>
         <p class="card__num"><b>${p.filled}</b><span>/${p.span}</span></p>
-        <p class="card__issued"><span>Issued to</span><b>${esc(memberName())}</b></p>
         <span class="card__kci" aria-hidden="true">${brandSeal('kci')}</span>
       </div>
       <div class="card__field">
@@ -221,14 +216,16 @@ const C = {
 
     /* the room is said only when it is not the usual one */
     const away = m.place && m.place !== Schedule.PLACE ? esc(m.place) : '';
+    /* the time a member came in is read with the date it belongs to; a
+       stamp added by hand and a meeting missed have no time of their own */
     const when = {
-      set:  scan ? (byHand(scan) ? '—' : fmtTime(scan.at)) : '',
-      open: 'Open now',
+      set:  scan && !byHand(scan) ? fmtTime(scan.at) : '',
+      open: '',
       /* today's is still the day's: an officer can add a stamp by hand */
-      miss: m.today ? 'Not yet' : '—',
+      miss: m.today ? 'Not yet' : '',
       upcoming: esc(m.time),
     }[state];
-    const via = { set: scan && byHand(scan) ? 'By hand' : 'QR', open:'', miss: m.today ? '' : 'Missed', upcoming:'' }[state];
+    const via = { set: scan && byHand(scan) ? 'By hand' : '', open:'', miss: m.today ? '' : 'Missed', upcoming:'' }[state];
     const sr = { set:'Stamped', miss:m.today ? '' : 'Missed', open:'Check-in open', upcoming:'Ahead' }[state];
 
     const el   = state === 'open' ? 'button' : 'div';
@@ -237,33 +234,21 @@ const C = {
     return `<${el} class="lrow lrow--${state}${gap > 1 ? ` lrow--gap${gap}` : ''}"${attr}>
       <span class="lrow__no"><i>GM</i>${pad(m.no)}</span>
       <span class="lrow__stamp">${mark}</span>
-      <span class="lrow__date"><b>${m.today ? 'Today' : esc(onClock(m.date, { month:'short', day:'numeric' }))}</b><i>${esc(onClock(m.date, { weekday:'short' }))}</i></span>
-      <span class="lrow__when">${when}</span>
+      <span class="lrow__date"><b>${m.today ? 'Today' : esc(onClock(m.date, { month:'short', day:'numeric' }))}</b><i>${esc(onClock(m.date, { weekday:'short' }))}</i>${when ? `<span class="lrow__when">${when}</span>` : ''}</span>
       <span class="lrow__via">${state === 'open' ? '<span class="lrow__go">Check in</span>' : via}${away ? ` · ${away}` : ''}</span>
       ${sr ? `<span class="sr-only">${sr}</span>` : ''}
     </${el}>`;
   },
 };
 
-/* the running head over a page: its chapter number, what the page is,
-   and the book it belongs to */
-C.run = (no, what, book = 'Keystamp · Key Club · Cali-Nev-Ha') =>
-  `<p class="run"><span class="run__no">Nº <b>${no}</b></span><span class="run__what">${esc(what)}</span><span class="run__book">${esc(book)}</span></p>`;
-
 /* a section inside a page: its name in the head face, a rule out to the
    margin, the count at the end of the rule */
 C.sect = (name, count = '') =>
   `<h2 class="sect"><span class="sect__name">${esc(name)}</span><i class="sect__rule" aria-hidden="true"></i>${count ? `<span class="sect__n">${esc(count)}</span>` : ''}</h2>`;
 
-/* the foot of a page: the book's line and the page's folio */
-C.folio = (no, what) =>
-  `<footer class="folio-foot" aria-hidden="true"><span>Keystamp — ${esc(what)}</span><span class="folio-foot__no">${no}</span></footer>`;
-
-/* the record's colophon: who holds it, and the two settings a member has */
+/* the two settings a member has, at the foot of the page on a phone
+   (on a desk they are at the foot of the contents column) */
 C.account = () => `<section class="acct" aria-label="Account">
-  <p class="acct__who"><span class="acct__held">Record held by</span>
-    <span class="acct__name">${esc(memberName())}</span>
-    <span class="acct__role">${Store.isBoard ? 'Board' : 'Member'}${Store.user && Store.user.joined ? ` / since ${esc(onClock(Store.user.joined, { month:'short', year:'numeric' }))}` : ''}</span></p>
   <div class="acct__row">
     <button class="rail__motion" type="button" data-motion aria-pressed="false" aria-label="Reduce motion"></button>
     <button class="acct__out" data-signout type="button">Sign out</button>
@@ -304,31 +289,9 @@ C.filed = (k, run) => {
     <p class="filed__cap">
       <b class="filed__no">Card ${pad(k + 1)}</b>
       <span class="filed__when">${span}</span>
-      ${prize && !ready ? `<span class="filed__prize">${esc(prize.name)}${word ? ` · ${word.toLowerCase()}` : ''}</span>` : ''}
+      ${prize ? `<span class="filed__prize">${esc(prize.name)}${word ? ` · ${word.toLowerCase()}` : ''}</span>` : ''}
     </p>
-    ${ready ? `<button class="act act--ink filed__go" type="button" data-go="rewards"
-        aria-label="${esc(`Card ${pad(k + 1)}: claim ${prize.name}`)}"><span>Claim ${esc(prize.name)}</span></button>` : ''}
   </li>`;
-};
-
-/* The reward set, as a line of three medallions: what each takes, what
-   it is, and where it stands. Locked is quiet, unlocked is inked,
-   claimed carries the club's burgundy, collected is filed away. */
-C.prizeSet = (total, { go = false } = {}) => {
-  const tiers = [...Store.rewards].sort((a, b) => a.required - b.required);
-  if (!tiers.length) return '';
-  return `<ol class="pset${go ? ' pset--go' : ''}" aria-label="Rewards">${tiers.map((t, i) => {
-    const at = Store.tierState(t);
-    const state = at === 'claimed' ? (t.handedAt ? 'took' : 'claimed') : at === 'unlocked' ? 'ready' : 'locked';
-    const left = Math.max(0, t.required - total);
-    const say = { took:'Collected', claimed:'Claimed', ready:'Ready to claim',
-                  locked:`${left} more` }[state];
-    return `<li class="pset__t pset__t--${state}" style="--k:${i}">
-      <span class="pset__medal" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="${stampShape(t.required * 3 + 1, 2)}"/></svg><b>${t.required}</b></span>
-      <span class="pset__name">${esc(t.name)}</span>
-      <span class="pset__say">${say}</span>
-    </li>`;
-  }).join('')}</ol>`;
 };
 
 /* The meeting a day is about, as a ticket: its number on the stub, the
@@ -367,7 +330,6 @@ const Views = {
   loadFailure(title){
     return `<div class="view view--fail">
       <header class="rechead chap">
-        ${C.run('—', title)}
         <h1 class="chap__title rechead__title">${title}</h1>
         <i class="brush" aria-hidden="true"></i>
       </header>
@@ -400,7 +362,6 @@ const Views = {
     const at = m => { const v = clockMinutes(m.time); return Number.isNaN(v) ? 0 : v; };
     const soonest = (a, b) => String(a.date).localeCompare(String(b.date)) || at(a) - at(b) || a.no - b.no;
     const next = Store.meetings.filter(m => m.upcoming && (!day || m.id !== day.id)).sort(soonest)[0] || null;
-    const room = m => m.place || Schedule.PLACE;
     const away = m => unusual(m).includes(m.place) ? m.place : '';
 
     const chrono = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
@@ -410,6 +371,9 @@ const Views = {
     const kick = parts => `<span class="mast__kick">${parts.filter(Boolean).map(t => `<span>${esc(t)}</span>`).join('')}</span>`;
     const line = (no, extra = '') =>
       `<span class="mast__line"><span class="mast__gm">GM</span><b class="mast__no">${no}</b>${extra}</span>`;
+    /* today's date belongs to today's meeting: printed in its banner */
+    const today = Schedule.today();
+    const dated = `<span class="mast__day"><i>${esc(onClock(today, { weekday:'long' }))}</i><b>${esc(onClock(today, { month:'short', day:'numeric' }))}</b></span>`;
     const daysTo = iso => Math.round((Date.parse(iso + 'T12:00:00Z') - Date.parse(Schedule.today() + 'T12:00:00Z')) / 864e5);
 
     let kind, mast;
@@ -418,6 +382,7 @@ const Views = {
       mast = `<button class="mast mast--open" type="button" data-go="scan" aria-label="Check in at general meeting ${day.no}">
         <span class="mast__lines" aria-hidden="true"></span>
         ${kick(['Check-in open', away(day)])}
+        ${dated}
         ${line(pad(day.no))}
         <span class="mast__cmd">Check in</span>
       </button>`;
@@ -425,7 +390,8 @@ const Views = {
       kind = 'set';
       const i = chrono.findIndex(x => x.meetingId === day.id);
       mast = `<div class="mast mast--set">
-        ${kick(['Checked in', away(day)])}
+        ${kick([away(day)])}
+        ${dated}
         ${line(pad(day.no), i >= 0 ? glyph(i, 'mast__imp') : '')}
         <span class="mast__state">${byHand(scan) ? 'Checked in · by an officer' : `Checked in · ${fmtTime(scan.at)}`}</span>
         ${i >= 0 ? `<span class="mast__note">Stamp ${pad(i + 1)} · ${byHand(scan) ? 'added by hand' : 'QR verified'}</span>` : ''}
@@ -436,6 +402,7 @@ const Views = {
       kind = 'closed';
       mast = `<div class="mast mast--closed">
         ${kick(['Meeting closed', away(day)])}
+        ${dated}
         ${line(pad(day.no))}
         <span class="mast__state">Not checked in</span>
       </div>`;
@@ -444,7 +411,8 @@ const Views = {
          which a member cannot tell apart, so only what is true now */
       kind = 'today';
       mast = `<div class="mast mast--today">
-        ${kick(['Today', `${day.time || ''} · ${room(day)}`])}
+        ${kick([away(day)])}
+        ${dated}
         ${line(pad(day.no))}
         <span class="mast__state">${day.started && !day.open ? 'Check-in not open' : `Starts ${esc(day.time || '')}`}</span>
       </div>`;
@@ -462,58 +430,43 @@ const Views = {
       kind = 'none';
       mast = `<div class="mast mast--none">
         ${kick(['Nothing scheduled'])}
+        ${dated}
         <span class="mast__state">The board has not set the next meeting.</span>
       </div>`;
     }
 
-    /* the margin: the schedule, the last stamp, a prize ready */
+    /* the margin: a prize ready, the meetings ahead */
     const showing = day ? day.id : next ? next.id : null;
     const ahead = Store.meetings.filter(m => m.upcoming && m.id !== showing).sort(soonest).slice(0, 3);
-    const last = chrono[chrono.length - 1];
-    const lastM = last && Store.meeting(last.meetingId);
     const ready = [...Store.rewards].sort((a, b) => a.required - b.required)
       .find(r => Store.tierState(r) === 'unlocked') || null;
 
-    const side = `<aside class="deck__side" aria-label="The club's schedule and your record">
+    const side = `<aside class="deck__side" aria-label="Ahead">
         ${ready ? `<button class="prizeband" type="button" data-go="rewards">
             <span class="prizeband__lab">Reward unlocked</span>
             <span class="prizeband__what">${esc(ready.name)}</span>
             <span class="prizeband__go">Claim</span>
           </button>` : ''}
-        <section class="fol fol--ahead" aria-label="Meetings ahead">
+        ${ahead.length ? `<section class="fol fol--ahead" aria-label="Meetings ahead">
           <h2 class="fol__lab">Ahead</h2>
-          ${ahead.length ? `<ol class="fol__list">${ahead.map(m => `<li class="fol__row">
+          <ol class="fol__list">${ahead.map(m => `<li class="fol__row">
               <b class="fol__d">${esc(onClock(m.date, { day:'numeric' }))}</b>
               <span class="fol__day">${esc(onClock(m.date, { month:'short' }))} · ${esc(onClock(m.date, { weekday:'short' }))}</span>
               <span class="fol__no">GM ${pad(m.no)}</span>
               ${unusual(m).length ? `<span class="fol__at">${unusual(m).map(esc).join(' · ')}</span>` : ''}
-            </li>`).join('')}</ol>`
-          : `<p class="fol__line">${next && !day ? 'Nothing after it' : 'Nothing scheduled'}</p>`}
-        </section>
-        ${lastM ? `<section class="fol fol--last" aria-label="Last stamp">
-          <h2 class="fol__lab">Last stamp</h2>
-          <p class="fol__stamp">${glyph(chrono.length - 1, 'fol__imp')}
-            <span><b>GM ${pad(lastM.no)}</b><span>${esc(fmtDay(lastM.date))} · ${byHand(last) ? 'by an officer' : fmtTime(last.at)}</span></span></p>
+            </li>`).join('')}</ol>
         </section>` : ''}
       </aside>`;
 
-    const today = Schedule.today();
+    /* the page's heading is the meeting itself: the banner is read as
+       the head of the page, with its date in it */
     return `<div class="view view--home">
-      <header class="daybook">
-        ${C.run('01', 'Today', 'Keystamp · Key Club · Cali-Nev-Ha')}
-        <div class="daybook__head">
-          <h1 class="daybook__title rechead__title">Today</h1>
-          <p class="daybook__date"><i>${esc(onClock(today, { weekday:'long' }))}</i><b>${esc(onClock(today, { month:'short', day:'numeric' }))}</b></p>
-        </div>
-        <i class="brush" aria-hidden="true"></i>
-      </header>
-
+      <h1 class="sr-only rechead__title">Today, ${esc(fmtDate(today))}</h1>
       <div class="deck deck--${kind}${live ? ' deck--live' : ''}">
         <div class="deck__act">${mast}</div>
-        <div class="deck__card">${C.sealGrid(live)}</div>
+        <div class="deck__card">${C.sealGrid(live, { tag:false })}</div>
         ${side}
       </div>
-      ${C.folio('01', 'Today')}
     </div>`;
   },
 
@@ -594,10 +547,11 @@ const Views = {
     });
     const monthName = key => onClock(`${key}-01`, { month:'long' }).split(' ')[0];
     const monthYear = key => key.slice(0, 4);
+    /* the year is printed only on months outside the current one */
+    const thisYear = Schedule.today().slice(0, 4);
 
     return `<div class="view view--record">
       <header class="rechead chap">
-        ${C.run('02', 'Record')}
         <div class="rec__head">
           <h1 class="chap__title rechead__title">Record</h1>
           ${held.length ? `<dl class="tally">
@@ -611,20 +565,18 @@ const Views = {
 
       ${yearline}
       ${held.length ? `<p class="sr-only">${kept} stamped, ${gone} missed</p>`
-        : `<p class="tally tally--first">${ahead.length ? `First meeting: GM ${pad(ahead[0].no)}, ${fmtDate(ahead[0].date)}` : 'First meeting not yet held'}</p>`}
+        : ahead.length ? `<p class="tally tally--first">First meeting: GM ${pad(ahead[0].no)}, ${fmtDate(ahead[0].date)}</p>` : ''}
 
       ${held.length ? `<section class="ledger" aria-label="Meetings, newest first">
-          <div class="ledger__cols" aria-hidden="true"><span>Nº</span><span>Mark</span><span>Date</span><span>In</span><span>How</span></div>
           ${groups.map(g => `<div class="ledger__group">
-              <h2 class="ledger__month"><span class="ledger__mname">${monthName(g.key)}</span><span class="ledger__my">${monthYear(g.key)}</span>
+              <h2 class="ledger__month"><span class="ledger__mname">${monthName(g.key)}</span>${monthYear(g.key) !== thisYear ? `<span class="ledger__my">${monthYear(g.key)}</span>` : ''}
                 <span class="ledger__mn">${g.got} of ${g.n}</span></h2>
               <div class="ledger__rows">${g.rows.join('')}</div>
             </div>`).join('')}
         </section>`
       : `<section class="ledger ledger--blank" aria-label="Meetings">
-          <p class="ledger__none">No meetings held yet. The first stamp starts the record.</p>
+          <p class="ledger__none">No meetings held yet.</p>
         </section>`}
-      ${C.folio('02', 'Record')}
     </div>`;
   },
 
@@ -638,27 +590,37 @@ const Views = {
     const next = tiers.find(t => total < t.required) || null;
     const top  = tiers.length ? tiers[tiers.length - 1].required : Rules.CARD * 3;
     const lift = (32 - 32 * STAMP_FIT).toFixed(1);
-    const reached = tiers.filter(t => Store.tierState(t) !== 'locked').length;
-    /* the route runs from the page's edge through each prize's slot, the
-       slots evenly set; the member stands where their count falls
-       between the two prizes either side of it */
+    /* One route from no stamps to the last prize. Each prize's medal sits
+       on it at its own count, the steps to scale: the route starts at 0
+       and medal i is centred at (i + 1) / (n + .5) of its length, so each
+       prize stands one step from the one before and the last keeps half
+       a step to the page's edge. The member's last stamp stands on the
+       route where their count falls. */
     const n = tiers.length || 1;
-    const slot = i => (2 * i + 1) / (2 * n);
-    const fill = !tiers.length ? 0 : total >= top ? Math.min(1, slot(n - 1) + (total - top) / Rules.CARD * (1 - slot(n - 1))) : (() => {
+    const x = i => (i + 1) / (n + .5);
+    const at = !tiers.length || total <= 0 ? 0 : (() => {
       const i = tiers.findIndex(t => total < t.required);
-      const lo = i ? tiers[i - 1].required : 0, from = i ? slot(i - 1) : 0;
-      return from + (total - lo) / (tiers[i].required - lo) * (slot(i) - from);
+      if (i === -1) return Math.min(1, x(n - 1) + (total - top) / Rules.CARD * (1 / (n + .5)));
+      const lo = i ? tiers[i - 1].required : 0, from = i ? x(i - 1) : 0;
+      return from + (total - lo) / (tiers[i].required - lo) * (x(i) - from);
     })();
+
+    /* a count within three stamps of a prize would put the member's stamp
+       on the prize's medal: it is held just clear of the medal's edge, on
+       the side the count is on (the route still runs to scale) */
+    const near = total <= 0 ? null : tiers.map((t, i) => [i, total - t.required])
+      .filter(([, d]) => Math.abs(d) <= 3).sort((p, q) => Math.abs(p[1]) - Math.abs(q[1]))[0] || null;
+    const pin = near ? ` tiers--${near[1] >= 0 ? 'after' : 'before'}` : '';
+    const end = Math.max(x(n - 1), at);
 
     /* where the member stands on the route: the last stamp earned, or the start */
     const me = total
-      ? `<span class="route__me" aria-hidden="true" style="--at:${fill.toFixed(3)}"><svg viewBox="0 0 64 64"><path class="route__face" d="${stampShape(total, 0)}"/>
+      ? `<span class="route__me" aria-hidden="true"><svg viewBox="0 0 64 64"><path class="route__face" d="${stampShape(total, 0)}"/>
           <g transform="translate(${lift} ${lift}) scale(${STAMP_FIT})">${stampMark(total - 1)}</g></svg><b>${total}</b></span>`
-      : `<span class="route__me route__me--start" aria-hidden="true" style="--at:0"></span>`;
+      : `<span class="route__me route__me--start" aria-hidden="true"></span>`;
 
     return `<div class="view view--rewards">
       <header class="rechead chap">
-        ${C.run('04', 'Rewards')}
         <div class="rec__head">
           <h1 class="chap__title rechead__title">Rewards</h1>
           <p class="prize__fig"><b>${total}</b><span>${tiers.length && total <= top ? `of ${top} stamps` : total === 1 ? 'stamp' : 'stamps'}</span>
@@ -668,16 +630,14 @@ const Views = {
       </header>
 
       ${tiers.length ? `<section class="set" aria-label="Rewards, by the stamps they take">
-        ${C.sect('The set', `${reached} of ${tiers.length} reached`)}
-        <div class="tiers" style="--fill:${fill.toFixed(3)};--n:${tiers.length}">
-          <span class="route__line" aria-hidden="true"></span>
+        <div class="tiers${pin}" style="--n:${n};--at:${at.toFixed(4)};--end:${end.toFixed(4)}${near ? `;--pin:${x(near[0]).toFixed(4)}` : ''}">
+          <span class="route" aria-hidden="true"><i class="route__done"></i></span>
           ${me}
+          <span class="tiers__start" aria-hidden="true"></span>
           ${tiers.map((t, i) => C.tier(t, total, i ? tiers[i - 1].required : 0, i)).join('')}
         </div>
       </section>` : `<p class="ledger__none">No rewards set up yet.</p>`}
 
-      ${Store.handovers && tiers.length ? `<p class="set__rule"><b>How a prize is kept.</b> Claim it here when it is unlocked; an officer hands it over at a meeting and it is filed as collected.</p>` : ''}
-      ${C.folio('04', 'Rewards')}
     </div>`;
   },
 
@@ -691,7 +651,6 @@ const Views = {
     const open = Store.openMeeting();
     const stamp = open && Store.scanFor(open.id);
     const head = extra => `<header class="scanhead">
-        ${C.run('03', 'Scan')}
         <div class="scanhead__row">
           <h1 class="chap__title rechead__title">Scan</h1>
           ${extra}
@@ -715,7 +674,6 @@ const Views = {
           ${i >= 0 ? `<p class="stamped__seat">Stamp ${pad(i + 1)} · card ${pad(Math.floor(i / Rules.CARD) + 1)}</p>` : ''}
         </section>
         <button class="act act--rule stamped__go" type="button" data-go="home"><span>See it on your card</span></button>
-        ${C.folio('03', 'Scan')}
       </div>`;
     }
 
@@ -746,8 +704,6 @@ const Views = {
           <span class="scanline__msg" id="scanMsg">Starting camera</span>
         </p>
       </div>
-      <p class="scanhint">Point the camera at the code on the wall. It reads on its own.</p>
-      ${C.folio('03', 'Scan')}
     </div>`;
   },
 
@@ -766,17 +722,15 @@ const Views = {
        chapter's data */
     BoardUI.loading = true;
     BoardUI.shown = null;
-    const idx = { 'Club Tools':'01', 'Check-in':'02', 'Meetings':'03', 'Members':'04' }[title] || '';
     const key = { 'Club Tools':'tools', 'Check-in':'desk', 'Meetings':'meet', 'Members':'members' }[title] || 'x';
     const today = Schedule.today();
-    /* the officers' copy of the same book: the same running head, chapter
-       title and folio, the date at the head of every page */
+    /* the officers' copy of the same book: the chapter title on its brush
+       rule; the date only where the page is about today (Club Tools) */
     return `<div class="view view--board view--b-${key}">
       <header class="rechead chap bhead">
-        ${C.run(idx, title, "Keystamp · Officers' copy")}
         <div class="rec__head">
           <h1 class="chap__title rechead__title">${title}</h1>
-          <p class="daybook__date"><i>${esc(onClock(today, { weekday:'long' }))}</i><b>${esc(onClock(today, { month:'short', day:'numeric' }))}</b></p>
+          ${key === 'tools' ? `<p class="daybook__date"><i>${esc(onClock(today, { weekday:'long' }))}</i><b>${esc(onClock(today, { month:'short', day:'numeric' }))}</b></p>` : ''}
         </div>
         <i class="brush" aria-hidden="true"></i>
       </header>
@@ -784,7 +738,6 @@ const Views = {
         <div id="boardPane">${BoardUI.pane()}</div>
       </section>
       ${tail}
-      ${C.folio(idx, title)}
     </div>`;
   },
 
@@ -821,21 +774,25 @@ const Views = {
     /* the name is set as large as the panel allows it on one line */
     const len      = Math.max(4, [...name].length);
 
+    /* The member's record as one spread, the way it was first set: the
+       identity panel beside the card in hand, the same height; under the
+       panel the standing, under the card the cards already filed. */
     return `<div class="view view--member">
-      <section class="idp" aria-label="Member">
-        ${C.run('05', 'Member record')}
-        <span class="idp__tone" aria-hidden="true"><span class="idp__seal">${brandSeal('cnh')}</span></span>
-        <h1 class="idp__name rechead__title" style="--len:${len}"><span class="sr-only">Member record: </span>${esc(name)}</h1>
-        <p class="idp__line">
-          <span>Key Club · Cali-Nev-Ha</span>
-          ${since ? `<span>Member since ${esc(since)}</span>` : ''}
-          ${handle.toLowerCase() !== name.toLowerCase() ? `<span>@${esc(handle)}</span>` : ''}
-        </p>
-        <span class="idp__stamp" aria-hidden="true">${Store.isBoard ? 'Board' : 'Member'}</span>
-      </section>
+      <div class="mem${filed.length ? ' mem--filed' : ''}">
+        <section class="idp" aria-label="Member">
+          <span class="idp__tone" aria-hidden="true"><span class="idp__seal">${brandSeal('cnh')}</span></span>
+          <span class="idp__stamp" aria-hidden="true">${Store.isBoard ? 'Board' : 'Member'}</span>
+          <div class="idp__who">
+            <h1 class="idp__name rechead__title" style="--len:${len}"><span class="sr-only">Member record: </span>${esc(name)}</h1>
+            ${since || handle.toLowerCase() !== name.toLowerCase() ? `<p class="idp__line">
+              ${since ? `<span>Member since ${esc(since)}</span>` : ''}
+              ${handle.toLowerCase() !== name.toLowerCase() ? `<span>@${esc(handle)}</span>` : ''}
+            </p>` : ''}
+          </div>
+        </section>
 
-      <div class="mem">
         ${C.sealGrid(live)}
+
         <section class="stand" aria-label="Standing">
           <p class="stand__fig"><b>${total}</b><span>${total === 1 ? 'stamp' : 'stamps'} collected</span></p>
           <dl class="stand__ledger">
@@ -844,23 +801,14 @@ const Views = {
             <div><dt>Rewards</dt><dd><b>${reached}</b> of ${Store.rewards.length}</dd></div>
           </dl>
         </section>
-      </div>
 
-      <div class="mem__back${filed.length && Store.rewards.length ? ' mem__back--pair' : ''}">
         ${filed.length ? `<section class="files" aria-label="Past cards">
-          ${C.sect('Past cards', `${filed.length} filed`)}
+          ${C.sect('Past cards')}
           <ol class="files__list">${filed.join('')}</ol>
-        </section>` : ''}
-
-        ${Store.rewards.length ? `<section class="prizes" aria-label="Rewards">
-          ${C.sect('Rewards', `${reached} of ${Store.rewards.length} reached`)}
-          ${C.prizeSet(total)}
-          <button class="act act--rule prizes__go" type="button" data-go="rewards"><span>Open rewards</span></button>
         </section>` : ''}
       </div>
 
       ${C.account()}
-      ${C.folio('05', 'Member record')}
     </div>`;
   },
 
@@ -920,7 +868,7 @@ const Views = {
       <div class="entry">
         <header class="entry__head">
           <p class="entry__wm">Keystamp</p>
-          <p class="entry__sub">Key Club attendance · Cali-Nev-Ha</p>
+          <p class="entry__sub">Key Club attendance</p>
         </header>
 
         <div class="entry__seat">
@@ -939,9 +887,9 @@ const Views = {
        member is asked to retry, not to type the password again */
     if (Store.loadError === 'SESSION') return this.loadFailure('Keystamp');
     const mode = AuthUI.mode;
-    const passwordField = ({ id, name, label, n, autocomplete, rule = '' }) => `
+    const passwordField = ({ id, name, label, autocomplete, rule = '' }) => `
           <div class="authp__f">
-            <label class="authp__lab" for="${id}"><i>${n}</i>${label}</label>
+            <label class="authp__lab" for="${id}">${label}</label>
             <div class="authp__pw">
               <input class="authp__in" id="${id}" name="${name}" type="password"
                      autocomplete="${autocomplete}" autocapitalize="none"
@@ -962,31 +910,29 @@ const Views = {
           <span class="cover__kci">${brandSeal('kci')}</span>
         </div>
         <header class="cover__head">
-          <p class="cover__sub">Key Club attendance · Cali-Nev-Ha</p>
+          <p class="cover__sub">Key Club attendance</p>
           <h1 class="cover__wm">Keystamp</h1>
         </header>
 
         <form class="authp regcard" id="authForm" novalidate>
           <div class="regcard__band">
-            <span class="regcard__kind">Membership record</span>
             <p class="authp__chapter">${up ? 'New account' : 'Sign in'}</p>
-            <span class="regcard__no">Form ${up ? '02' : '01'}</span>
           </div>
-          ${Arrival.bare ? `<p class="authp__arrive"><b>Then</b> ${Arrival.no ? `check in to GM ${pad(Arrival.no)}` : 'check in'} — no second scan</p>` : ''}
+          ${Arrival.bare ? `<p class="authp__arrive"><b>Then</b> ${Arrival.no ? `check in to GM ${pad(Arrival.no)}` : 'check in'}</p>` : ''}
 
           <div class="authp__f">
-            <label class="authp__lab" for="authUser"><i>01</i>Username</label>
+            <label class="authp__lab" for="authUser">Username</label>
             <input class="authp__in" id="authUser" name="username" type="text"
                    autocomplete="username" autocapitalize="none" spellcheck="false"
                    inputmode="latin" maxlength="${Config.USERNAME_MAX}"${up ? ' aria-describedby="userRule"' : ''}>
             ${up ? '<span class="authp__rule" id="userRule">Letters, numbers, _ and .</span>' : ''}
           </div>
 
-          ${passwordField({ id:'authPass', name:'password', label:'Password', n:'02',
+          ${passwordField({ id:'authPass', name:'password', label:'Password',
                             autocomplete: up ? 'new-password' : 'current-password',
                             rule: up ? '8 characters or more' : '' })}
 
-          ${up ? passwordField({ id:'authPass2', name:'confirm', label:'Confirm password', n:'03',
+          ${up ? passwordField({ id:'authPass2', name:'confirm', label:'Confirm password',
                                  autocomplete:'new-password' }) : ''}
 
           <div class="authp__act">

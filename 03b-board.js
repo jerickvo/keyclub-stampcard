@@ -251,9 +251,8 @@ const BoardUI = {
   progressPane(){
     const d = this.members || {};
     const total = Number(d.total) || (d.members || []).length;
-    const owed = this.prizes && !this.prizes.code ? (this.prizes.owed || []).length : null;
     return `<div class="bpanel memgrid">
-      <p class="memidx"><span><b>${total}</b> on the roster</span>${owed === null ? '' : `<span><b>${owed}</b> to hand over</span>`}</p>
+      <p class="memidx"><span><b>${total}</b> on the roster</span></p>
       ${this.owedBody()}
       <section class="rosterpanel" aria-label="Roster">
         ${this.rosterBody()}
@@ -314,13 +313,11 @@ const BoardUI = {
     const just = [...mem, ...fromServer];
     const owed = (pz.owed || []).filter(o => !this.handed[o.user_id + ':' + o.reward_id]);
 
-    /* how many of each prize to bring: owed now, and how many more the
-       next meeting could add (members one stamp short). Counts, not a
-       forecast; the only sums an officer at the prize table needs */
-    const near = pz.near || {};
-    const tally = REWARD_TIERS.map(t => [t, owed.filter(o => o.reward_id === t.id).length, Number(near[t.id]) || 0])
-      .filter(([, n, k]) => n || k)
-      .map(([t, n, k]) => `${n} ${esc(prizeName(t))}${k ? ` (+${k} a stamp away)` : ''}`).join(' / ');
+    /* how many of each prize to bring to the table: the prizes owed now,
+       and only those (a prize nobody is owed is not listed) */
+    const tally = REWARD_TIERS.map(t => [t, owed.filter(o => o.reward_id === t.id).length])
+      .filter(([, n]) => n)
+      .map(([t, n]) => `${n} ${esc(prizeName(t))}`).join(' / ');
 
     const row = o => {
       const key = o.user_id + ':' + o.reward_id;
@@ -383,7 +380,7 @@ const BoardUI = {
         <span class="mrow__day">${esc(fold || isAhead ? fmtDate(m.meeting_date) : fmtDay(m.meeting_date))}</span>
         ${meta(m)}
         ${word ? `<span class="mrow__state">${word}</span>` : ''}
-        ${n || (!isAhead && !fold) ? `<span class="mrow__n"><b>${n}</b><span>checked in</span></span>` : ''}
+        ${n || (!isAhead && !fold) ? `<span class="mrow__n"><b>${n}</b>${fold ? '<span>checked in</span>' : '<span class="sr-only">checked in</span>'}</span>` : ''}
       </button></li>`;
     };
     const todays = upcoming.filter(m => m.meeting_date === today);

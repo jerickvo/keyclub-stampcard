@@ -169,15 +169,6 @@ function paintNav(){
 
   /* the same pages as before: the buttons stay (a focused tab keeps its
      focus, a tap in progress keeps its target); only their state moves */
-  /* the chapter numeral: the page's own index, set large at the head of
-     the column; it changes as a printed thing changes, without a tween */
-  const at = nav.findIndex(n => n.id === current);
-  const folio = () => {
-    let f = $('.rail__folio', rail);
-    if (!f){ f = document.createElement('span'); f.className = 'rail__folio'; f.setAttribute('aria-hidden', 'true'); rail.prepend(f); }
-    f.textContent = at >= 0 ? pad(at + 1) : '';
-    f.classList.toggle('rail__folio--live', live && current === 'scan');
-  };
   const had = $$('.tab', tabs).map(el => el.dataset.go);
   if (had.length === nav.length && nav.every((n, i) => had[i] === n.id)){
     $$('[data-go]', tabs).concat($$('.rail__link', rail)).forEach(el => {
@@ -186,21 +177,19 @@ function paintNav(){
     });
     $$('.tab', tabs).forEach(el => el.classList.toggle('tab--live', live && el.dataset.go === 'scan'));
     $$('.rail__link', rail).forEach(el => el.classList.toggle('rail__link--live', live && el.dataset.go === 'scan'));
-    folio();
     return;
   }
   $$('.tab', tabs).forEach(el => el.remove());
   $$('.rail__link', rail).forEach(el => el.remove());
-  nav.forEach((n, i) => {
+  nav.forEach(n => {
     const cur = current === n.id ? ' aria-current="page"' : '';
     const hot = live && n.id === 'scan' ? ' tab--live' : '';
     const hotRail = live && n.id === 'scan' ? ' rail__link--live' : '';
     tabs.insertAdjacentHTML('beforeend',
-      `<button class="tab${hot}" data-go="${n.id}"${cur}><span class="tab__tab"><span class="tab__idx" aria-hidden="true">${pad(i + 1)}</span><span class="tab__lab">${n.short || n.label}</span></span></button>`);
+      `<button class="tab${hot}" data-go="${n.id}"${cur}><span class="tab__tab"><span class="tab__lab">${n.short || n.label}</span></span></button>`);
     rail.insertAdjacentHTML('beforeend',
-      `<button class="rail__link${hotRail}" data-go="${n.id}"${cur}><span class="rail__idx" aria-hidden="true">${pad(i + 1)}</span><span class="rail__lab">${n.label}</span></button>`);
+      `<button class="rail__link${hotRail}" data-go="${n.id}"${cur}><span class="rail__lab">${n.label}</span></button>`);
   });
-  folio();
 }
 
 async function go(id, opts = {}){
@@ -310,6 +299,8 @@ function refocusKey(root, key){
 
 /* the one intro a page has: a stamp just earned is primed to land */
 function playViewIntro(id){
+  /* the year line is drawn once the page cut has cleared */
+  if (id === 'record' && !FX.yearDrawn){ const draw = FX.drawYear(); Transit.after(() => { if (current === 'record') draw(); }); }
   if (id === 'home' && pendingStamp){
     const cell = Landing.cellFor(pendingStamp.meetingId);
     pendingStamp = null;
@@ -1348,10 +1339,10 @@ function boardGoto(next){
 function paintMotion(){
   $$('[data-motion]').forEach(b => {
     b.setAttribute('aria-pressed', String(Motion.forced));
-    /* one control, one name (Reduce motion, pressed while it is on); the
-       line reads as a colophon setting: MOTION / FULL or MOTION / REDUCED */
-    b.setAttribute('aria-label', 'Reduce motion');
-    b.innerHTML = `<span aria-hidden="true">Motion</span><b aria-hidden="true">${Motion.forced ? 'Reduced' : 'Full'}</b>`;
+    /* one control, one name: Reduce motion, a box on the form that is
+       filled while it is on */
+    b.removeAttribute('aria-label');
+    b.textContent = 'Reduce motion';
   });
 }
 
@@ -1531,9 +1522,7 @@ function paintIdentity(){
   if (foot.dataset.who === who && foot.firstChild){ paintMotion(); return; }
   foot.dataset.who = who;
   foot.innerHTML = Store.signedIn
-    ? `<p class="rail__who"><span class="rail__held">Record held by</span>
-         <span class="rail__name">${esc(Store.user.name)}</span>
-         <span class="rail__role">${Store.isBoard ? 'Board' : 'Member'}${Store.user.joined ? ` / since ${esc(onClock(Store.user.joined, { month:'short', year:'numeric' }))}` : ''}</span></p>
+    ? `<p class="rail__who"><span class="rail__name">${esc(Store.user.name)}</span></p>
        <div class="rail__util">
          <button class="rail__motion" type="button" data-motion aria-label="Reduce motion"></button>
          <button class="rail__out" type="button" data-signout>Sign out</button>

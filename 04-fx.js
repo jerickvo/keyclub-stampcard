@@ -18,12 +18,20 @@ const Impact = {
 };
 
 const FX = {
-  /* the claim's note is pressed onto the station, the way a stamp lands */
+  /* a claim presses the prize's medal the way a stamp lands on the card:
+     brought down large and turned, set square in a few hard steps; the
+     burgundy is the ink it leaves. The note under it is printed after. */
   claimStamp(row){
-    const p = row && row.querySelector('.tier__note');
-    if (!p || Motion.off) return;
-    animate(p, { scale:[1.3, 1], duration:120, ease:STEP(3),
-                 onComplete(){ Motion.settle(p); } });
+    const medal = row && row.querySelector('.tier__medal');
+    if (!medal || Motion.off) return;
+    aset(medal, { scale:1.45, rotate:-9 });
+    animate(medal, { scale:[1.45, 1], rotate:[-9, 0], duration:180, delay:40, ease:STEP(4),
+      onComplete(){ Motion.settle(medal); } });
+    const note = row.querySelector('.tier__note');
+    if (note){
+      aset(note, { opacity:0 });
+      animate(note, { opacity:[0, 1], duration:1, delay:230, ease:STEP(1), onComplete(){ Motion.settle(note); } });
+    }
   },
 
   /* a code read: the seat over the camera swells, the way a stamp is
@@ -92,13 +100,64 @@ const FX = {
           const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
           const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
           scene.classList.add('acq--lift');
-          animate(sealEl, { translateX:[0, dx], translateY:[0, dy], scale:[1, to.width / from.width],
-            duration:320, ease:cubicBezier(.7, 0, .18, 1), onComplete:done });
+          /* it arrives as the landing begins: over its seat, held a little
+             above the card (larger) and turned, so the press that follows
+             continues the same movement */
+          const lean = parseFloat(getComputedStyle(cell).getPropertyValue('--lean')) || 0;
+          animate(sealEl, { translateX:[0, dx], translateY:[0, dy], scale:[1, 1.55 * to.width / from.width],
+            rotate:[-1.5, lean - 9], duration:320, ease:cubicBezier(.7, 0, .18, 1), onComplete:done });
         } else {
           animate(scene, { opacity:[1, 0], duration:220, ease:EASE.CALM, onComplete:done });
         }
         setTimeout(done, 600);
       },
+    };
+  },
+
+  /* The Record's year line, the first time it is read: the rule printed
+     from the first meeting to today at one pen speed, each meeting's mark
+     set down as the line reaches it (a stamp pressed, a missed meeting's
+     blank printed), the months and the dotted time ahead after. Half a
+     second; once a visit; not at all with motion reduced. */
+  yearDrawn: false,
+  /* set out as blank paper at once (so the finished line is never seen
+     first), then drawn when `go` is called */
+  drawYear(){
+    const line = $('.view--record .yline');
+    if (!line || this.yearDrawn) return () => {};
+    this.yearDrawn = true;
+    if (Motion.off) return () => {};
+    const D = 480;
+    const now = (parseFloat(line.style.getPropertyValue('--now')) || 100) / 100;
+    const rule = line.querySelector('.yline__rule');
+    const late = [...line.querySelectorAll('.yline__ahead, .yline__now')];
+    const marks = [...line.querySelectorAll('.yt, .yline__m')];
+    if (rule){ rule.style.transformOrigin = '0 50%'; aset(rule, { scaleX:0 }); }
+    marks.forEach(el => aset(el, el.classList.contains('yt--set') ? { opacity:0, scale:1.5 } : { opacity:0 }));
+    late.forEach(el => aset(el, { opacity:0 }));
+    const show = () => [rule, ...marks, ...late].forEach(el => { if (el){ Motion.settle(el); el.style.transformOrigin = ''; } });
+    return () => {
+      if (!line.isConnected) return;
+      if (Motion.off || !rule) return show();
+      /* the marks are set down by the pen itself: as the rule passes a
+         meeting's date its mark appears, a stamp pressed in two steps */
+      const todo = marks.map(el => ({ el, x:(parseFloat(el.style.left) || 0) / 100 }))
+        .sort((p, q) => p.x - q.x);
+      let k = 0;
+      const reach = f => {
+        while (k < todo.length && todo[k].x <= f * now + .0001){
+          const { el } = todo[k++];
+          Motion.settle(el);
+          if (el.classList.contains('yt--set')) animate(el, { scale:[1.5, 1], duration:90, ease:STEP(2),
+            onComplete(){ Motion.settle(el); } });
+        }
+      };
+      animate(rule, { scaleX:[0, 1], duration:D, ease:'linear',
+        onUpdate(a){ reach(a.progress); },
+        onComplete(){ reach(1); Motion.settle(rule); rule.style.transformOrigin = '';
+          setTimeout(() => { todo.forEach(t => Motion.settle(t.el)); late.forEach(el => Motion.settle(el)); }, 60); } });
+      /* whatever a busy frame dropped, the line ends finished */
+      setTimeout(show, D + 400);
     };
   },
 

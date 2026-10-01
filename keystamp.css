@@ -68,7 +68,7 @@ body{
 
 main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   --safe-x:max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
-  padding:calc(var(--sp-pad) + env(safe-area-inset-top, 0px)) calc(var(--gutter) + var(--safe-x))
+  padding:calc(clamp(16px,1.8vw,24px) + env(safe-area-inset-top, 0px)) calc(var(--gutter) + var(--safe-x))
           calc(var(--sp-page) + var(--tabs-h) + env(safe-area-inset-bottom, 0px))}
 
 /* one rhythm for every page: blocks sit one step apart */
@@ -159,6 +159,8 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .cutbox{position:fixed;z-index:56;overflow:hidden;pointer-events:none;
   contain:layout paint}
 .slab{position:absolute;background:var(--ink);will-change:transform}
+/* the page being left, laid over the column while the band crosses it */
+.cutsheet{position:fixed;z-index:55;overflow:hidden;pointer-events:none;contain:layout paint}
 /* while signing out, a tap never lands on the page under the scene */
 .scene--exit{pointer-events:auto}
 /* nor under the opening scene while it holds: it lets taps through only
