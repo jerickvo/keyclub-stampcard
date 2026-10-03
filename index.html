@@ -20812,8 +20812,14 @@ document.addEventListener('click', e => {
          reader has queued meanwhile is theirs */
       if (here === 'rewards' && navigating) go('rewards', { instant:true, force:true, quiet:true });
       else if (here === 'rewards'){
+        /* a claim made from the keyboard keeps the reader on the prize
+           it claimed, not back at the top of the page */
+        const kept = Boolean(document.activeElement && document.activeElement.closest &&
+          document.activeElement.closest(`[data-reward="${rid}"]`));
         go('rewards', { instant:true, force:true });
-        FX.claimStamp($(`[data-reward="${rid}"]`));
+        const row = $(`[data-reward="${rid}"]`);
+        if (kept && row){ row.setAttribute('tabindex', '-1'); row.focus({ preventScroll:true }); }
+        FX.claimStamp(row);
       }
       setTimeout(() => toast({ key:'claim', title:`${r.name} claimed`,
         detail:r.handedAt ? 'An officer has already handed it to you.'
