@@ -88,6 +88,7 @@ const Store = {
   emit(){ this.listeners.forEach(fn => { try { fn(); } catch (_) {} }); },
 
   loadError: null,
+  SESSION_WAIT: 12000,
   seq: 0,        /* reads begun */
   applied: 0,    /* the newest read shown */
   /* whether this club records prize hand-overs (the migration has run) */
@@ -113,7 +114,15 @@ const Store = {
 
     let session = null;
     try {
-      session = await Backend.currentSession();
+      /* A stored session that needs refreshing while the auth server
+         cannot be reached is retried by supabase-js for half a minute;
+         the page says it could not load well before that, and Try again
+         (or the next read) picks the session up once it can. */
+      let fuse;
+      session = await Promise.race([
+        Backend.currentSession(),
+        new Promise((_, no) => { fuse = setTimeout(() => no(new Error('SESSION_SLOW')), this.SESSION_WAIT); }),
+      ]).finally(() => clearTimeout(fuse));
     } catch (_){
       if (held || stale()) return this;
       apply();
