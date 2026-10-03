@@ -907,8 +907,11 @@ body{background:var(--paper);color:var(--ink)}
   .route__me::after{content:'';position:absolute;left:50%;bottom:100%;width:1px;
     height:calc(var(--lane) + var(--medal) / 2 - 19px - 26px);background:var(--ink)}
   .tier{grid-column:auto;grid-template-columns:minmax(0,1fr);justify-items:center;align-items:start;align-content:start;row-gap:var(--sp-group);text-align:center}
-  .tier__body{justify-items:center}
+  .tier__body{justify-items:center;padding-inline:clamp(6px,1.2cqi,14px)}
   .tier__ticks{justify-content:center}
+  /* a prize's state stays under its own medal: two notes side by side
+     read as one sentence when they run to their columns' edges */
+  .tier__note,.tier__say{max-width:24ch;text-wrap:balance}
 }
 
 /* ══ SCAN. The checkpoint, purpose-built: a viewfinder in a heavy frame
