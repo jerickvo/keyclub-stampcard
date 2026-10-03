@@ -813,6 +813,10 @@ document.addEventListener('click', e => {
 
   const bstart = e.target.closest('[data-bstart]');
   if (bstart){
+    /* Close check-in leaves focus on Reopen: a second press of the same
+       key (or a held one) in the moment after is the close's, not a
+       request to reopen */
+    if (Date.now() - closedAt < 800) return;
     const id = bstart.dataset.bstart;
     const openNow = list => ((list && list.meetings) || []).filter(m => m.state === 'OPEN');
     const opened = () => { dropToast('board', true); boardMeeting = id; boardStamp = true; plateFresh = true;
@@ -850,7 +854,7 @@ document.addEventListener('click', e => {
     const who = Store.user && Store.user.id;
     const still = () => Store.user && Store.user.id === who;
     const closed = () => { dropToast('board', true); clearInterval(countTimer); boardStamp = true; boardPicked = id;
-                           BoardUI.refocus = '[data-bstart]'; loadBoard(); };
+                           closedAt = Date.now(); BoardUI.refocus = '[data-bstart]'; loadBoard(); };
     hold(bend, 'Closing');
     Backend.endAttendance(id)
       .then(() => { if (still()) closed(); })
@@ -1137,6 +1141,8 @@ document.addEventListener('click', e => {
 });
 
 let boardStamp = false;
+/* when this page last closed a check-in (Reopen is not taken at once) */
+let closedAt = 0;
 
 /* A write refused because the session is gone (signed out on another
    device, a refresh the server refused, another account in another
