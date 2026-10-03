@@ -209,10 +209,12 @@ const Transit = {
   ORDER: { home:0, record:1, scan:2, rewards:3, profile:4,
            board:0, bcheckin:1, bmeet:2, bmembers:3 },
 
-  /* one cut for every page turn: a narrow ink band crosses the column in
-     tab order, the page being left ahead of it and the new page behind
-     its trailing edge; only its direction says anything */
-  CUT: { dur:280, angle:6 },
+  /* one cut for every page turn: a blade crosses the column in tab order,
+     the page being left ahead of its cutting edge and the new page behind
+     it, a screentone trail fading over the new page as it goes. The page
+     itself never moves; the blade does. A held start and then all at
+     once, the way a slash is. */
+  CUT: { dur:300, narrowDur:240, angle:11, narrowAngle:8 },
 
   direction(from, to){
     const a = this.ORDER[from], b = this.ORDER[to];
@@ -252,24 +254,6 @@ const Transit = {
     return wrap;
   },
 
-  band(f, dir){
-    const box = document.createElement('div');
-    box.className = 'cutbox';
-    box.style.cssText = `left:${f.left}px;top:${f.top}px;width:${f.width}px;height:${f.height}px`;
-    const W = f.width, H = f.height;
-    const off = Math.round(Math.tan(this.CUT.angle * Math.PI / 180) * H);
-    const B = Math.round(Math.max(56, Math.min(140, W * .1)));
-    const el = document.createElement('div');
-    el.className = 'slab';
-    el.style.cssText = `left:0;top:0;width:${B + off}px;height:${H}px`;
-    el.style.clipPath = dir > 0
-      ? `polygon(${off}px 0, 100% 0, ${B}px 100%, 0 100%)`
-      : `polygon(0 0, ${B}px 0, 100% 100%, ${off}px 100%)`;
-    box.appendChild(el);
-    document.body.appendChild(box);
-    return { box, el, W, H, B, off };
-  },
-
   run(from, to, swap){
     const view = $('#view');
     const doSwap = typeof swap === 'function' ? swap : () => {};
@@ -283,36 +267,17 @@ const Transit = {
 
     this.running = true;
     const f = this.frame(view);
+    const narrow = f.width < 600;
     const old = this.sheet(view, f);
-    const b = this.band(f, dir);
-    /* the new page is set under the copy at once; the band uncovers it */
+    /* the new page is set under the copy at once; the blade uncovers it */
     try { doSwap(); } catch (_) {}
-    const { W, B, off } = b;
-    /* the band's left edge travels from beyond one side to beyond the
-       other; the copy of the old page keeps only what is ahead of it */
-    const x0 = dir > 0 ? W : -(B + off), x1 = dir > 0 ? -(B + off) : W;
-    const place = x => {
-      b.el.style.transform = `translateX(${x}px)`;
-      old.style.clipPath = dir > 0
-        ? `polygon(0 0, ${x + off}px 0, ${x}px 100%, 0 100%)`
-        : `polygon(${x + B}px 0, 100% 0, 100% 100%, ${x + B + off}px 100%)`;
-    };
-    place(x0);
-
-    return new Promise(res => {
-      let settled = false;
-      const finish = () => {
-        if (settled) return; settled = true;
-        Transit.running = false;
-        try { b.box.remove(); } catch (_) {}
-        try { old.remove(); } catch (_) {}
-        Motion.settle(view);
-        res();
-      };
-      const pos = { x:x0 };
-      animate(pos, { x:[x0, x1], duration:this.CUT.dur, ease:cubicBezier(.5, 0, .3, 1),
-        onUpdate(){ place(pos.x); }, onComplete:finish });
-      setTimeout(finish, this.CUT.dur + 250);
+    const cut = Ink.cut(old, f, dir, narrow
+      ? { dur:this.CUT.narrowDur, angle:this.CUT.narrowAngle, body:14, trail:80 }
+      : { dur:this.CUT.dur, angle:this.CUT.angle, body:22, trail:150 });
+    return cut.then(() => {
+      Transit.running = false;
+      try { old.remove(); } catch (_) {}
+      Motion.settle(view);
     });
   },
 };

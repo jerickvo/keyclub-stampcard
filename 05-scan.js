@@ -542,7 +542,8 @@ const Landing = {
   prime(cell){
     if (!this.active || !cell) return;
     this.armed = cell;
-    if (!Motion.off) cell.style.opacity = '0';
+    /* the seat waits printed, its impression not yet pressed */
+    if (!Motion.off) cell.classList.add('seal--landing');
     /* only as far as needed: a full card's figure and punch stay in view */
     try { cell.scrollIntoView({ block:'nearest', inline:'nearest', behavior:'instant' }); }
     catch (_) { try { cell.scrollIntoView(); } catch (__) {} }
@@ -568,7 +569,9 @@ const Landing = {
 
     const scene = FX.stampAcquire(meeting);
     this.scene = scene;
-    const held = new Promise(r => setTimeout(r, Motion.off ? 750 : 900));
+    /* long enough to read the sheet, no longer: the first stamp an
+       account earns is given a moment more */
+    const held = new Promise(r => setTimeout(r, Motion.off ? 750 : scene.first ? 860 : 640));
     /* the record is waited for a bounded time, well inside the cover's
        own fuse; the stamp is on file either way */
     const read = Promise.race([this.refresh(3), new Promise(r => setTimeout(() => r(false), 5000))]);
@@ -618,7 +621,7 @@ const Landing = {
     /* the seal travels from the sheet into its seat on the card */
     scene.lift(() => {
       if (seq !== this.seq) return;
-      if (cell && document.body.contains(cell)) FX.stampLand(cell);
+      if (cell && document.body.contains(cell)) FX.stampLand(cell, { first:scene.first, hold:30 });
       if (!fresh) Store.hydrate({ keep:true });
     }, cell && document.body.contains(cell) ? cell : null);
   },

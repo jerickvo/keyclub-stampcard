@@ -73,6 +73,20 @@ body{background:var(--paper);color:var(--ink)}
 /* the page's torn outer edge: ink bled off the trim */
 .ground__bleed{width:clamp(6px,.9vw,13px)}
 
+/* ── motion: the marks the vocabulary leaves (04-fx.js) ─────────── */
+/* the ink a hit leaves round a stamp or a medal; round a word, square */
+.inkbleed{position:absolute;inset:-5%;z-index:-1;pointer-events:none;opacity:0;
+  border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;background:currentColor}
+.inkbleed--box{inset:-3px;border-radius:0}
+.inkbleed--shape{inset:0;border-radius:0;background:none}
+.inkbleed--shape svg{display:block;width:100%;height:100%;overflow:visible}
+.inkbleed--shape path{fill:currentColor}
+.blade{position:absolute;left:0;top:0;height:100%;pointer-events:none;will-change:transform}
+.blade > i{position:absolute;top:0;height:100%;display:block}
+.blade__edge{background:var(--crimson)}
+.blade__body{background:var(--ink)}
+.blade__trail{background:var(--dot) 0 0/5px 5px;opacity:.9}
+
 /* ── record labels: small capitals in the record face ────────────── */
 .lab{font:400 11px/1.35 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 
@@ -171,7 +185,8 @@ body{background:var(--paper);color:var(--ink)}
   container:card / inline-size;
   background:var(--paper-card);color:var(--ink);
   border:var(--card-edge) solid var(--ink);
-  box-shadow:var(--card-off) var(--card-off) 0 var(--tone)}
+  /* --press: how far a hit has pushed the card toward its own shadow */
+  box-shadow:calc(var(--card-off) - var(--press,0px)) calc(var(--card-off) - var(--press,0px)) 0 var(--tone)}
 .card__in{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"id" "field" "foot"}
 /* the stock's own tooth, finer than the page's */
 .card::before{content:'';position:absolute;inset:0;z-index:0;border-radius:inherit;pointer-events:none;
@@ -255,6 +270,15 @@ body{background:var(--paper);color:var(--ink)}
 .seal--set .seal__no{color:var(--ink)}
 .seal--hero::after{content:'';position:absolute;inset:-9%;pointer-events:none;
   border:1.2px solid var(--ink);border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;rotate:-6deg}
+
+/* a stamp on its way down: the seat shows as the blank it was, the
+   impression not yet pressed; on the hit the newest ring is wet with
+   crimson for a moment, and dries to ink */
+.seal--landing .sf-blank{stroke:var(--ink);stroke-width:1.6;stroke-opacity:1}
+.seal--landing .sf-press{opacity:0}
+.seal--landing::after{opacity:0}
+.seal--hero::after{transition:border-color .45s cubic-bezier(.3,.75,.3,1)}
+.seal--wet::after{border-color:var(--crimson);transition:none}
 
 .seal--mile .sf-back{opacity:.9;stroke-width:1.1}
 .seal--mile.seal--set .sf-face{fill:var(--seal)}
@@ -977,29 +1001,27 @@ body{background:var(--paper);color:var(--ink)}
    page's edges to the new impression, its tag in crimson, the record
    under it; then the stamp leaves the frame for its seat on the card. ══ */
 .acq{position:fixed;inset:0;z-index:160;display:grid;place-items:stretch;padding:0;
-  background:var(--paper-card);color:var(--ink);text-align:left;transition:background-color 220ms steps(3,end)}
+  background:var(--paper-card);color:var(--ink);text-align:left}
 .acq__lines{position:absolute;inset:0;pointer-events:none;
   background:repeating-conic-gradient(from 0deg at 50% 46%,var(--ink) 0 .55deg,transparent .55deg 3.2deg);
   -webkit-mask:radial-gradient(ellipse 70% 62% at 50% 46%,transparent 0 44%,#000 78%);
           mask:radial-gradient(ellipse 70% 62% at 50% 46%,transparent 0 44%,#000 78%);opacity:.9}
-.acq--lift{background:transparent;pointer-events:none}
-.acq--lift .acq__lines,.acq--lift .acq__kick,.acq--lift .acq__meet{opacity:0;transition:opacity 120ms steps(2,end)}
+.acq--lift{pointer-events:none}
 .acq__stack{position:relative;display:grid;grid-template-rows:auto minmax(0,1fr) auto;justify-items:center;height:100%;
   padding:calc(24px + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x,0px)) calc(32px + env(safe-area-inset-bottom,0px))}
-.acq__kick{display:flex;align-items:center;gap:12px;margin:0;opacity:1}
+.acq__kick{grid-row:1;display:flex;align-items:center;gap:12px;margin:0;opacity:1}
 .acq__kick span:first-child{padding:8px 14px 7px;background:var(--crimson);color:var(--paper-card);rotate:-3deg;
   font:400 clamp(22px,5vw,34px)/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase}
 .acq__kick span:last-child{padding:6px 8px 5px;background:var(--paper-card);font:400 12px/1 var(--f-mono);letter-spacing:.16em}
 .acq__seal{place-self:center;width:min(58vmin,300px);aspect-ratio:1;display:grid;place-items:center;will-change:transform;
   filter:url(#ks-ink)}
-.acq__seal svg{position:absolute;inset:0;width:100%;height:100%}
+.acq__seal svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.acq__seal--fly{position:fixed;z-index:163;margin:0;pointer-events:none}
 .acq__seal .acq__face{fill:var(--ink);stroke:none}
 .acq__seal .acq__mark path{fill:var(--paper-card);stroke:none}
-.acq__meet{display:flex;align-items:baseline;gap:14px;margin:0;padding:10px 16px 8px;background:var(--paper-card);
+.acq__meet{grid-row:3;display:flex;align-items:baseline;gap:14px;margin:0;padding:10px 16px 8px;background:var(--paper-card);
   border-top:3px solid var(--ink);font:400 12px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);opacity:1}
 .acq__meet b{font:400 clamp(28px,6vw,40px)/1 var(--f-head);letter-spacing:.03em;color:var(--ink)}
-@media(prefers-reduced-motion:reduce){ .acq,.acq--lift .acq__lines,.acq--lift .acq__kick,.acq--lift .acq__meet{transition:none} }
-:root[data-still] .acq,:root[data-still] .acq--lift .acq__lines,:root[data-still] .acq--lift .acq__kick,:root[data-still] .acq--lift .acq__meet{transition:none}
 
 /* ══ SIGN IN. A chapter title page and a printed registration card: the
    cover is an ink panel with the club's swirl cut by its edge and the
