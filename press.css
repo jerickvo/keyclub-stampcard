@@ -1149,16 +1149,19 @@ body{background:var(--paper);color:var(--ink)}
 .entry__wm{margin:0 0 .16em;font:400 clamp(40px,11vw,64px)/.85 var(--f-display);text-transform:uppercase;letter-spacing:-.01em}
 .entry__sub{margin:0;font:400 10px/1.3 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2);text-wrap:balance}
 @media(max-width:374px){ .entry__sub{letter-spacing:.12em} }
-.entry__seat{position:relative;display:grid;place-items:center;align-self:center;width:min(calc(100vw - 80px),80vw,50vh,420px);aspect-ratio:1}
+/* the number is sized by its seat: on a phone held sideways the seat is
+   held to the height, and a number sized by the width overran it */
+.entry__seat{position:relative;display:grid;place-items:center;align-self:center;width:min(calc(100vw - 80px),80vw,50vh,420px);aspect-ratio:1;
+  container-type:inline-size}
 .entry__blank{position:absolute;inset:0;width:100%;height:100%;overflow:visible;rotate:-4deg}
 .entry__blank path{fill:var(--paper-card);stroke:var(--ink);stroke-width:1.1;stroke-dasharray:3.2 2.4}
 .entry__gm{position:relative;margin:0;display:grid;justify-items:center;line-height:.8}
 .entry__gmv{display:grid;justify-items:center;gap:2px}
-.entry__gmv span{font:400 clamp(20px,5vw,30px)/1 var(--f-head);letter-spacing:.08em}
-.entry__gmv b{font:400 clamp(110px,30vw,220px)/.78 var(--f-display);font-weight:400;letter-spacing:-.03em}
-.entry__gm--word{font:400 clamp(40px,11vw,80px)/.9 var(--f-display);font-weight:400;text-transform:uppercase}
+.entry__gmv span{font:400 min(clamp(20px,5vw,30px),12cqi)/1 var(--f-head);letter-spacing:.08em}
+.entry__gmv b{font:400 min(clamp(110px,30vw,220px),48cqi)/.78 var(--f-display);font-weight:400;letter-spacing:-.03em}
+.entry__gm--word{font:400 min(clamp(40px,11vw,80px),18cqi)/.9 var(--f-display);font-weight:400;text-transform:uppercase}
 .arrive__status{position:absolute;right:-2%;bottom:6%;margin:0;padding:8px 12px 7px;rotate:-6deg;
-  background:var(--crimson);color:var(--paper-card);font:400 clamp(16px,3.4vw,22px)/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase}
+  background:var(--crimson);color:var(--paper-card);font:400 min(clamp(16px,3.4vw,22px),9cqi)/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase}
 .view--arrive-done .arrive__status{background:var(--ink)}
 .view--arrive-open .entry__blank path{stroke-width:1.5}
 .view--arrive-done .entry__blank path{fill:var(--ink);stroke-dasharray:none;filter:url(#ks-ink)}
@@ -1173,7 +1176,8 @@ body{background:var(--paper);color:var(--ink)}
 .arrive__note{margin:0;font:400 11.5px/1.5 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
 .arrive .authp__act{justify-items:center;margin:6px 0 0;width:100%}
 .arrive .authp__go{width:100%}
-@media(min-width:900px) and (min-height:600px){
+/* wide, or a phone on its side: the seat and the way in side by side */
+@media(min-width:900px) and (min-height:600px),(orientation:landscape) and (min-width:560px) and (max-height:520px){
   .entry{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:clamp(32px,6vw,96px);
     align-items:center;padding-inline:clamp(40px,7vw,120px)}
   .entry__head{grid-column:1 / -1}
@@ -1181,6 +1185,12 @@ body{background:var(--paper);color:var(--ink)}
   .arrive{justify-self:start;justify-items:start;text-align:left}
   .arrive .authp__act{justify-items:start}
   .arrive__word{font-size:clamp(40px,4vw,56px)}
+}
+@media(orientation:landscape) and (min-width:560px) and (max-height:520px){
+  .entry{row-gap:10px;padding-block:calc(26px + env(safe-area-inset-top,0px)) calc(26px + env(safe-area-inset-bottom,0px))}
+  .entry__wm{font-size:clamp(32px,9vh,46px)}
+  .entry__seat{width:min(40vw,54vh,300px)}
+  .arrive__word{font-size:clamp(26px,7vh,36px)}
 }
 
 /* ═══════════════════════════════════════════════════════════════════
