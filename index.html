@@ -2055,7 +2055,10 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .bwho{display:grid;gap:8px}
 .bwho__lab{margin:0;font:400 10.5px/1.2 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
 .bdetail__name{margin:0;font:400 clamp(52px,10vw,110px)/.82 var(--f-display);letter-spacing:-.02em;text-transform:uppercase;overflow-wrap:anywhere}
-.bmeet{display:grid;gap:10px}
+/* the display face's G and M run their tails below the line: the date
+   under a meeting's number is set clear of them */
+.bmeet{display:grid;gap:calc(10px + .16em);font-size:clamp(52px,10vw,110px)}
+.bmeet > .bdetail__name{font-size:1em}
 .bmeet__when{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:0;font:400 11px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 .bmeet__when b{padding:4px 8px 3px;background:var(--crimson);color:var(--paper-card);font:400 13px/1 var(--f-head);letter-spacing:.06em}
 .bdet__body{display:grid;gap:var(--sp-section);min-width:0}
@@ -17683,7 +17686,8 @@ const BoardUI = {
           <li class="mrow__month" aria-hidden="true"><span class="mrow__mname">${esc(onClock(`${g.key}-01`, { month:'long' }))}</span>
             <span class="mrow__mtotal">${g.rows.reduce((n, m) => n + count(m), 0)} checked in</span></li>
           ${g.rows.map(m => row(m)).join('')}`).join('')}</ul>
-        ${past.length ? `<p class="minutes__foot">${past.length} ${past.length === 1 ? 'meeting' : 'meetings'} · ${held} check-ins</p>` : ''}
+        ${past.length ? `<p class="minutes__foot">${past.length} ${past.length === 1 ? 'meeting' : 'meetings'} · ${held} check-ins</p>`
+          : `<p class="minutes__foot">No meetings held yet.</p>`}
       </section>
     </div>`;
   },

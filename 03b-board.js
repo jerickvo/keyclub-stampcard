@@ -411,7 +411,8 @@ const BoardUI = {
           <li class="mrow__month" aria-hidden="true"><span class="mrow__mname">${esc(onClock(`${g.key}-01`, { month:'long' }))}</span>
             <span class="mrow__mtotal">${g.rows.reduce((n, m) => n + count(m), 0)} checked in</span></li>
           ${g.rows.map(m => row(m)).join('')}`).join('')}</ul>
-        ${past.length ? `<p class="minutes__foot">${past.length} ${past.length === 1 ? 'meeting' : 'meetings'} · ${held} check-ins</p>` : ''}
+        ${past.length ? `<p class="minutes__foot">${past.length} ${past.length === 1 ? 'meeting' : 'meetings'} · ${held} check-ins</p>`
+          : `<p class="minutes__foot">No meetings held yet.</p>`}
       </section>
     </div>`;
   },
