@@ -21,6 +21,9 @@ let boardMeeting = null;
 let boardPicked = null;
 
 let qrRetry = null;
+/* the code just opened is printed onto the wall the first time it is
+   drawn; one already up is redrawn in place */
+let plateFresh = false;
 function paintBoard(attempt = 0){
   const box = $('#qrBox');
   clearTimeout(qrRetry);
@@ -33,6 +36,7 @@ function paintBoard(attempt = 0){
        Scan reads the same link */
     const svg = qrSVG(QRFormat.link(token));
     box.innerHTML = svg || `<p class="qrpanel__fail">The code could not be drawn. Reload the page.</p>`;
+    if (plateFresh && svg){ plateFresh = false; Ink.print(box, { from:'top', dur:300 }); }
   }).catch(() => {
     if (!document.body.contains(box)) return;
     /* a code already on the wall stays up; otherwise the wall says it is
@@ -86,7 +90,7 @@ function paintAttendanceCount(meetingId){
     if (!node) return clearInterval(countTimer);
     if (node.textContent !== text){
       node.textContent = text;
-      if (!Motion.off && window.animate) animate(node, { scale:[1.3, 1], duration:240, ease:STEP(3) });
+      Ink.snap(node);
     }
     if (open === false){ clearInterval(countTimer); boardStamp = true; loadBoard(); }
   };
@@ -388,16 +392,13 @@ const Scanner = {
     this.zoom = { el, drop };
   },
 
+  /* while the camera starts, the seat says so; nothing spins */
   showLoader(){
     const ret = $('#reticle');
     if (!ret || $('#camLoader')) return;
-    const l = document.createElement('div');
+    const l = document.createElement('p');
     l.className = 'loader'; l.id = 'camLoader';
-
-    l.innerHTML = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor"
-        stroke-width="3" aria-hidden="true">
-      <circle cx="50" cy="50" r="42" stroke-dasharray="42 90"/>
-      <circle cx="50" cy="50" r="30" stroke-dasharray="24 70" opacity=".5"/></svg>`;
+    l.textContent = 'Starting camera';
     ret.appendChild(l);
   },
   hideLoader(){ $('#camLoader')?.remove(); },
@@ -543,7 +544,13 @@ const Landing = {
     if (!this.active || !cell) return;
     this.armed = cell;
     /* the seat waits printed, its impression not yet pressed */
-    if (!Motion.off) cell.classList.add('seal--landing');
+    if (!Motion.off){
+      cell.classList.add('seal--landing');
+      /* a card this stamp fills is not struck, nor its prize announced,
+         before the stamp is down */
+      const card = cell.closest('.card');
+      if (card) card.classList.add('card--landing');
+    }
     /* only as far as needed: a full card's figure and punch stay in view */
     try { cell.scrollIntoView({ block:'nearest', inline:'nearest', behavior:'instant' }); }
     catch (_) { try { cell.scrollIntoView(); } catch (__) {} }

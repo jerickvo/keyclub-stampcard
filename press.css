@@ -179,6 +179,16 @@ body{background:var(--paper);color:var(--ink)}
 .act--seal{color:var(--seal)}
 .act--seal.act--rule::after{background:var(--seal)}
 
+/* under a finger every control gives a little toward the page, the
+   way a key or a stamp does; nothing bounces back past rest */
+.act--rule:active > span{translate:1px 1px}
+.act--rule:active::after{height:2px}
+.act--quiet:active::before{background:currentColor}
+.rail__link:active .rail__lab{translate:1px 1px}
+.gmpick__tab:active{translate:1px 1px}
+.seal--live:active{scale:.97}
+.seal[tabindex]:not(.seal--live):active .sf-press{scale:.97}
+
 @media (prefers-reduced-motion:reduce){ .act--rule::after{transition:none} }
 :root[data-still] .act--rule::after{transition:none}
 
@@ -288,6 +298,7 @@ body{background:var(--paper);color:var(--ink)}
 .seal--landing .sf-press{opacity:0}
 .seal--landing::after{opacity:0}
 .seal--hero::after{transition:border-color .45s cubic-bezier(.3,.75,.3,1)}
+.card--landing .card__done,.card--landing .card__goal--go,.card--landing .card__goal--done{opacity:0}
 .seal--wet::after{border-color:var(--crimson);transition:none}
 
 .seal--mile .sf-back{opacity:.9;stroke-width:1.1}

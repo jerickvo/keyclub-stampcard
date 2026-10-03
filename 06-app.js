@@ -636,11 +636,9 @@ const Inspect = {
         ? `left:${Math.round(cx)}px;top:${Math.round(below)}px;width:2px;height:${Math.max(0, Math.round(f.height - below))}px`
         : `left:-24px;top:${Math.round(cy)}px;width:24px;height:2px`;
     }
-    if (!Motion.off && window.animate){
-      aset(rec, { opacity:0 });
-      animate(rec, { opacity:[0, 1], duration:1, delay:90, ease:STEP(1) });
-      if (lead){ aset(lead, { opacity:0 }); animate(lead, { opacity:[0, 1], duration:1, delay:60, ease:STEP(1) }); }
-    }
+    /* the leader is drawn out from the stamp, the record printed after */
+    Ink.print(lead, { from: mode === 'foot' ? 'top' : 'right', dur:110, delay:40 });
+    Ink.print(rec, { from:'left', dur:180, delay:90 });
   },
   close(){
     const was = this.open;
@@ -817,7 +815,7 @@ document.addEventListener('click', e => {
   if (bstart){
     const id = bstart.dataset.bstart;
     const openNow = list => ((list && list.meetings) || []).filter(m => m.state === 'OPEN');
-    const opened = () => { dropToast('board', true); boardMeeting = id; boardStamp = true;
+    const opened = () => { dropToast('board', true); boardMeeting = id; boardStamp = true; plateFresh = true;
                            BoardUI.refocus = '[data-bfull]'; loadBoard(); };
     hold(bstart, 'Opening');
     const who = Store.user && Store.user.id;

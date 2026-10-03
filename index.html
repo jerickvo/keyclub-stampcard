@@ -166,16 +166,9 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .toast--bad{background:var(--ink);color:var(--paper)}
 [hidden]{display:none!important}
 
-.loader{position:absolute;top:50%;left:50%;
-  width:clamp(54px,42%,116px);aspect-ratio:1;
-  transform:translate(-50%,-50%);
-  color:var(--ink);pointer-events:none;z-index:4;
-  animation:loaderTurn 1.2s steps(12,end) infinite}
-.loader svg{width:100%;height:100%;display:block}
-@keyframes loaderTurn{from{transform:translate(-50%,-50%) rotate(0deg)}
-                      to  {transform:translate(-50%,-50%) rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){ .loader{animation:none} }
-:root[data-still] .loader{animation:none}
+.loader{position:absolute;top:50%;left:50%;margin:0;transform:translate(-50%,-50%);
+  padding:6px 9px 5px;background:var(--ink);color:var(--paper);pointer-events:none;z-index:4;white-space:nowrap;
+  font:400 11px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase}
 
 .fx{position:fixed;inset:0;z-index:125;pointer-events:none;overflow:hidden;
   contain:layout paint}
@@ -643,6 +636,16 @@ body{background:var(--paper);color:var(--ink)}
 .act--seal{color:var(--seal)}
 .act--seal.act--rule::after{background:var(--seal)}
 
+/* under a finger every control gives a little toward the page, the
+   way a key or a stamp does; nothing bounces back past rest */
+.act--rule:active > span{translate:1px 1px}
+.act--rule:active::after{height:2px}
+.act--quiet:active::before{background:currentColor}
+.rail__link:active .rail__lab{translate:1px 1px}
+.gmpick__tab:active{translate:1px 1px}
+.seal--live:active{scale:.97}
+.seal[tabindex]:not(.seal--live):active .sf-press{scale:.97}
+
 @media (prefers-reduced-motion:reduce){ .act--rule::after{transition:none} }
 :root[data-still] .act--rule::after{transition:none}
 
@@ -752,6 +755,7 @@ body{background:var(--paper);color:var(--ink)}
 .seal--landing .sf-press{opacity:0}
 .seal--landing::after{opacity:0}
 .seal--hero::after{transition:border-color .45s cubic-bezier(.3,.75,.3,1)}
+.card--landing .card__done,.card--landing .card__goal--go,.card--landing .card__goal--done{opacity:0}
 .seal--wet::after{border-color:var(--crimson);transition:none}
 
 .seal--mile .sf-back{opacity:.9;stroke-width:1.1}
@@ -16264,7 +16268,8 @@ function toast({ title, detail, bad = false, key, about }){
     while (liveToasts.size >= TOAST_LIMIT) dropToast(liveToasts.keys().next().value, true);
     el = document.createElement('div');
     host.appendChild(el);
-    if (!Motion.off) animate(el, { opacity:[0,1], translateY:[6,0], duration:160, ease:'outQuad' });
+    /* printed onto the page, from its left edge */
+    if (typeof Ink !== 'undefined') Ink.print(el, { from:'left', dur:170 });
   }
 
   el.className = 'toast' + (bad ? ' toast--bad' : '');
@@ -18020,8 +18025,6 @@ const BoardUI = {
 /* ── js/04-fx.js ── */
 "use strict";
 
-const STEP = n => (typeof steps === 'function' ? steps(n) : undefined);
-
 /* ══ THE MOTION VOCABULARY. Few things move in Keystamp, and they move the
    way paper and ink do. Most of the page is still; when something moves
    it is because something just happened.
@@ -18102,11 +18105,12 @@ const Ink = {
      starts, the way a roller passes over it */
   print(el, { from = 'left', dur = 220, delay = 0 } = {}){
     if (!el || Motion.off) return;
-    const shut = { left:'inset(0 100% 0 0)', right:'inset(0 0 0 100%)', top:'inset(0 0 100% 0)', bottom:'inset(100% 0 0 0)' }[from];
+    /* every side in the same unit, so each one is carried across */
+    const shut = { left:'inset(0% 100% 0% 0%)', right:'inset(0% 0% 0% 100%)', top:'inset(0% 0% 100% 0%)', bottom:'inset(100% 0% 0% 0%)' }[from];
     el.style.opacity = '';
     el.style.clipPath = shut;
     const open = () => { el.style.clipPath = ''; };
-    animate(el, { clipPath:[shut, 'inset(0 0% 0 0%)'], duration:dur, delay, ease:EASE.INK, onComplete:open });
+    animate(el, { clipPath:[shut, 'inset(0% 0% 0% 0%)'], duration:dur, delay, ease:EASE.INK, onComplete:open });
     setTimeout(open, dur + delay + 300);
   },
 
@@ -18218,20 +18222,17 @@ const Ink = {
 };
 
 const FX = {
-  /* a claim presses the prize's medal the way a stamp lands on the card:
-     brought down large and turned, set square in a few hard steps; the
-     burgundy is the ink it leaves. The note under it is printed after. */
+  /* a claim strikes the prize's medal the way a stamp strikes the card:
+     held over it, brought down, pressed; the burgundy is the ink it
+     leaves. The note under it is printed after. */
   claimStamp(row){
     const medal = row && row.querySelector('.tier__medal');
     if (!medal || Motion.off) return;
-    aset(medal, { scale:1.45, rotate:-9 });
-    animate(medal, { scale:[1.45, 1], rotate:[-9, 0], duration:180, delay:40, ease:STEP(4),
-      onComplete(){ Motion.settle(medal); } });
+    const face = medal.querySelector('.tier__face');
+    Ink.stamp(medal, { lift:1.22, turn:-8, hold:50, strike:100, settle:190,
+      hit(){ Ink.bleed(medal, { color:'var(--seal)', shape: face && face.getAttribute('d'), grow:1.15, dur:280, from:.55 }); } });
     const note = row.querySelector('.tier__note');
-    if (note){
-      aset(note, { opacity:0 });
-      animate(note, { opacity:[0, 1], duration:1, delay:230, ease:STEP(1), onComplete(){ Motion.settle(note); } });
-    }
+    if (note) Ink.print(note, { from:'left', dur:200, delay:240 });
   },
 
   /* a code read: the seat over the camera swells, the way a stamp is
@@ -18382,7 +18383,7 @@ const FX = {
       if (!line.isConnected) return;
       if (Motion.off || !rule) return show();
       /* the marks are set down by the pen itself: as the rule passes a
-         meeting's date its mark appears, a stamp pressed in two steps */
+         meeting's date its mark appears, a stamp struck down */
       const todo = marks.map(el => ({ el, x:(parseFloat(el.style.left) || 0) / 100 }))
         .sort((p, q) => p.x - q.x);
       let k = 0;
@@ -18390,7 +18391,7 @@ const FX = {
         while (k < todo.length && todo[k].x <= f * now + .0001){
           const { el } = todo[k++];
           Motion.settle(el);
-          if (el.classList.contains('yt--set')) animate(el, { scale:[1.5, 1], duration:90, ease:STEP(2),
+          if (el.classList.contains('yt--set')) animate(el, { scale:[1.5, 1], duration:90, ease:EASE.STRIKE,
             onComplete(){ Motion.settle(el); } });
         }
       };
@@ -18413,9 +18414,10 @@ const FX = {
   stampLand(cell, { lift = 1.5, first = false, hold = 50 } = {}){
     if (!cell) return;
     const press = cell.querySelector('.sf-press');
-    const end = () => { cell.classList.remove('seal--landing', 'seal--wet'); cell.style.opacity = ''; };
-    if (Motion.off || !press){ end(); return; }
     const card = cell.closest('.card');
+    const end = () => { cell.classList.remove('seal--landing', 'seal--wet'); cell.style.opacity = '';
+      if (card) card.classList.remove('card--landing'); };
+    if (Motion.off || !press){ end(); return; }
     const mile = cell.classList.contains('seal--mile');
     const i = [...cell.parentElement.children].indexOf(cell);
     const route = card && [...card.querySelectorAll('.card__route')].find(r => getComputedStyle(r).display !== 'none');
@@ -18438,6 +18440,7 @@ const FX = {
         setTimeout(() => cell.classList.remove('seal--wet'), 90);
         const done = card && card.querySelector('.card__done');
         if (done) setTimeout(() => FX.cardStruck(card), 150);
+        else if (card) card.classList.remove('card--landing');
       },
       done(){ cell.classList.remove('seal--landing'); } });
     setTimeout(end, 1400);
@@ -18447,26 +18450,25 @@ const FX = {
      the prize it unlocks is then printed into the stub */
   cardStruck(card){
     const done = card && card.querySelector('.card__done');
-    if (!done || Motion.off) return;
+    if (!done || Motion.off){ if (card) card.classList.remove('card--landing'); return; }
     aset(done, { opacity:0 });
+    const go = card.querySelector('.card__goal--go, .card__goal--done');
+    if (go) go.style.clipPath = 'inset(0% 100% 0% 0%)';
+    card.classList.remove('card--landing');
     Ink.stamp(done, { lift:1.3, turn:-5, hold:60, strike:110, settle:190,
       hit(){ Ink.bleed(done, { color:'currentColor', grow:1.06, dur:260, from:.25, box:true }); Ink.jolt(card, 3); } });
-    const go = card.querySelector('.card__goal--go, .card__goal--done');
     if (go) Ink.print(go, { from:'left', dur:240, delay:300 });
   },
 
+  /* the meeting's state on the desk, struck like a rubber stamp when
+     it changes (the code, when check-in opens, is printed as it is
+     drawn: paintBoard) */
   boardSeal(){
     const word = $('.proj__word');
     if (!word || Motion.off) return;
-    let deg = 0;
-    try {
-      const m = new DOMMatrixReadOnly(getComputedStyle(word).transform);
-      deg = Math.atan2(m.b, m.a) * 180 / Math.PI;
-    } catch (_) {}
-    aset(word, { scale:1.2, rotate:deg, opacity:0 });
-    animate(word, { opacity:[0, 1], duration:1, delay:60, ease:STEP(1) });
-    animate(word, { scale:[1.2, 1], rotate:deg, duration:120, delay:60, ease:STEP(3) });
-    setTimeout(() => Motion.settle(word), 300);
+    aset(word, { opacity:0 });
+    Ink.stamp(word, { lift:1.22, turn:-5, hold:40, strike:90, settle:170,
+      hit(){ Ink.bleed(word, { color:'currentColor', grow:1.06, dur:240, from:.22, box:true }); } });
   }
 };
 
@@ -18838,6 +18840,9 @@ let boardMeeting = null;
 let boardPicked = null;
 
 let qrRetry = null;
+/* the code just opened is printed onto the wall the first time it is
+   drawn; one already up is redrawn in place */
+let plateFresh = false;
 function paintBoard(attempt = 0){
   const box = $('#qrBox');
   clearTimeout(qrRetry);
@@ -18850,6 +18855,7 @@ function paintBoard(attempt = 0){
        Scan reads the same link */
     const svg = qrSVG(QRFormat.link(token));
     box.innerHTML = svg || `<p class="qrpanel__fail">The code could not be drawn. Reload the page.</p>`;
+    if (plateFresh && svg){ plateFresh = false; Ink.print(box, { from:'top', dur:300 }); }
   }).catch(() => {
     if (!document.body.contains(box)) return;
     /* a code already on the wall stays up; otherwise the wall says it is
@@ -18903,7 +18909,7 @@ function paintAttendanceCount(meetingId){
     if (!node) return clearInterval(countTimer);
     if (node.textContent !== text){
       node.textContent = text;
-      if (!Motion.off && window.animate) animate(node, { scale:[1.3, 1], duration:240, ease:STEP(3) });
+      Ink.snap(node);
     }
     if (open === false){ clearInterval(countTimer); boardStamp = true; loadBoard(); }
   };
@@ -19205,16 +19211,13 @@ const Scanner = {
     this.zoom = { el, drop };
   },
 
+  /* while the camera starts, the seat says so; nothing spins */
   showLoader(){
     const ret = $('#reticle');
     if (!ret || $('#camLoader')) return;
-    const l = document.createElement('div');
+    const l = document.createElement('p');
     l.className = 'loader'; l.id = 'camLoader';
-
-    l.innerHTML = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor"
-        stroke-width="3" aria-hidden="true">
-      <circle cx="50" cy="50" r="42" stroke-dasharray="42 90"/>
-      <circle cx="50" cy="50" r="30" stroke-dasharray="24 70" opacity=".5"/></svg>`;
+    l.textContent = 'Starting camera';
     ret.appendChild(l);
   },
   hideLoader(){ $('#camLoader')?.remove(); },
@@ -19360,7 +19363,13 @@ const Landing = {
     if (!this.active || !cell) return;
     this.armed = cell;
     /* the seat waits printed, its impression not yet pressed */
-    if (!Motion.off) cell.classList.add('seal--landing');
+    if (!Motion.off){
+      cell.classList.add('seal--landing');
+      /* a card this stamp fills is not struck, nor its prize announced,
+         before the stamp is down */
+      const card = cell.closest('.card');
+      if (card) card.classList.add('card--landing');
+    }
     /* only as far as needed: a full card's figure and punch stay in view */
     try { cell.scrollIntoView({ block:'nearest', inline:'nearest', behavior:'instant' }); }
     catch (_) { try { cell.scrollIntoView(); } catch (__) {} }
@@ -20336,11 +20345,9 @@ const Inspect = {
         ? `left:${Math.round(cx)}px;top:${Math.round(below)}px;width:2px;height:${Math.max(0, Math.round(f.height - below))}px`
         : `left:-24px;top:${Math.round(cy)}px;width:24px;height:2px`;
     }
-    if (!Motion.off && window.animate){
-      aset(rec, { opacity:0 });
-      animate(rec, { opacity:[0, 1], duration:1, delay:90, ease:STEP(1) });
-      if (lead){ aset(lead, { opacity:0 }); animate(lead, { opacity:[0, 1], duration:1, delay:60, ease:STEP(1) }); }
-    }
+    /* the leader is drawn out from the stamp, the record printed after */
+    Ink.print(lead, { from: mode === 'foot' ? 'top' : 'right', dur:110, delay:40 });
+    Ink.print(rec, { from:'left', dur:180, delay:90 });
   },
   close(){
     const was = this.open;
@@ -20517,7 +20524,7 @@ document.addEventListener('click', e => {
   if (bstart){
     const id = bstart.dataset.bstart;
     const openNow = list => ((list && list.meetings) || []).filter(m => m.state === 'OPEN');
-    const opened = () => { dropToast('board', true); boardMeeting = id; boardStamp = true;
+    const opened = () => { dropToast('board', true); boardMeeting = id; boardStamp = true; plateFresh = true;
                            BoardUI.refocus = '[data-bfull]'; loadBoard(); };
     hold(bstart, 'Opening');
     const who = Store.user && Store.user.id;

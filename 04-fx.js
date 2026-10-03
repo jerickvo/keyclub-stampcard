@@ -1,7 +1,5 @@
 "use strict";
 
-const STEP = n => (typeof steps === 'function' ? steps(n) : undefined);
-
 /* ══ THE MOTION VOCABULARY. Few things move in Keystamp, and they move the
    way paper and ink do. Most of the page is still; when something moves
    it is because something just happened.
@@ -82,11 +80,12 @@ const Ink = {
      starts, the way a roller passes over it */
   print(el, { from = 'left', dur = 220, delay = 0 } = {}){
     if (!el || Motion.off) return;
-    const shut = { left:'inset(0 100% 0 0)', right:'inset(0 0 0 100%)', top:'inset(0 0 100% 0)', bottom:'inset(100% 0 0 0)' }[from];
+    /* every side in the same unit, so each one is carried across */
+    const shut = { left:'inset(0% 100% 0% 0%)', right:'inset(0% 0% 0% 100%)', top:'inset(0% 0% 100% 0%)', bottom:'inset(100% 0% 0% 0%)' }[from];
     el.style.opacity = '';
     el.style.clipPath = shut;
     const open = () => { el.style.clipPath = ''; };
-    animate(el, { clipPath:[shut, 'inset(0 0% 0 0%)'], duration:dur, delay, ease:EASE.INK, onComplete:open });
+    animate(el, { clipPath:[shut, 'inset(0% 0% 0% 0%)'], duration:dur, delay, ease:EASE.INK, onComplete:open });
     setTimeout(open, dur + delay + 300);
   },
 
@@ -198,20 +197,17 @@ const Ink = {
 };
 
 const FX = {
-  /* a claim presses the prize's medal the way a stamp lands on the card:
-     brought down large and turned, set square in a few hard steps; the
-     burgundy is the ink it leaves. The note under it is printed after. */
+  /* a claim strikes the prize's medal the way a stamp strikes the card:
+     held over it, brought down, pressed; the burgundy is the ink it
+     leaves. The note under it is printed after. */
   claimStamp(row){
     const medal = row && row.querySelector('.tier__medal');
     if (!medal || Motion.off) return;
-    aset(medal, { scale:1.45, rotate:-9 });
-    animate(medal, { scale:[1.45, 1], rotate:[-9, 0], duration:180, delay:40, ease:STEP(4),
-      onComplete(){ Motion.settle(medal); } });
+    const face = medal.querySelector('.tier__face');
+    Ink.stamp(medal, { lift:1.22, turn:-8, hold:50, strike:100, settle:190,
+      hit(){ Ink.bleed(medal, { color:'var(--seal)', shape: face && face.getAttribute('d'), grow:1.15, dur:280, from:.55 }); } });
     const note = row.querySelector('.tier__note');
-    if (note){
-      aset(note, { opacity:0 });
-      animate(note, { opacity:[0, 1], duration:1, delay:230, ease:STEP(1), onComplete(){ Motion.settle(note); } });
-    }
+    if (note) Ink.print(note, { from:'left', dur:200, delay:240 });
   },
 
   /* a code read: the seat over the camera swells, the way a stamp is
@@ -362,7 +358,7 @@ const FX = {
       if (!line.isConnected) return;
       if (Motion.off || !rule) return show();
       /* the marks are set down by the pen itself: as the rule passes a
-         meeting's date its mark appears, a stamp pressed in two steps */
+         meeting's date its mark appears, a stamp struck down */
       const todo = marks.map(el => ({ el, x:(parseFloat(el.style.left) || 0) / 100 }))
         .sort((p, q) => p.x - q.x);
       let k = 0;
@@ -370,7 +366,7 @@ const FX = {
         while (k < todo.length && todo[k].x <= f * now + .0001){
           const { el } = todo[k++];
           Motion.settle(el);
-          if (el.classList.contains('yt--set')) animate(el, { scale:[1.5, 1], duration:90, ease:STEP(2),
+          if (el.classList.contains('yt--set')) animate(el, { scale:[1.5, 1], duration:90, ease:EASE.STRIKE,
             onComplete(){ Motion.settle(el); } });
         }
       };
@@ -393,9 +389,10 @@ const FX = {
   stampLand(cell, { lift = 1.5, first = false, hold = 50 } = {}){
     if (!cell) return;
     const press = cell.querySelector('.sf-press');
-    const end = () => { cell.classList.remove('seal--landing', 'seal--wet'); cell.style.opacity = ''; };
-    if (Motion.off || !press){ end(); return; }
     const card = cell.closest('.card');
+    const end = () => { cell.classList.remove('seal--landing', 'seal--wet'); cell.style.opacity = '';
+      if (card) card.classList.remove('card--landing'); };
+    if (Motion.off || !press){ end(); return; }
     const mile = cell.classList.contains('seal--mile');
     const i = [...cell.parentElement.children].indexOf(cell);
     const route = card && [...card.querySelectorAll('.card__route')].find(r => getComputedStyle(r).display !== 'none');
@@ -418,6 +415,7 @@ const FX = {
         setTimeout(() => cell.classList.remove('seal--wet'), 90);
         const done = card && card.querySelector('.card__done');
         if (done) setTimeout(() => FX.cardStruck(card), 150);
+        else if (card) card.classList.remove('card--landing');
       },
       done(){ cell.classList.remove('seal--landing'); } });
     setTimeout(end, 1400);
@@ -427,25 +425,24 @@ const FX = {
      the prize it unlocks is then printed into the stub */
   cardStruck(card){
     const done = card && card.querySelector('.card__done');
-    if (!done || Motion.off) return;
+    if (!done || Motion.off){ if (card) card.classList.remove('card--landing'); return; }
     aset(done, { opacity:0 });
+    const go = card.querySelector('.card__goal--go, .card__goal--done');
+    if (go) go.style.clipPath = 'inset(0% 100% 0% 0%)';
+    card.classList.remove('card--landing');
     Ink.stamp(done, { lift:1.3, turn:-5, hold:60, strike:110, settle:190,
       hit(){ Ink.bleed(done, { color:'currentColor', grow:1.06, dur:260, from:.25, box:true }); Ink.jolt(card, 3); } });
-    const go = card.querySelector('.card__goal--go, .card__goal--done');
     if (go) Ink.print(go, { from:'left', dur:240, delay:300 });
   },
 
+  /* the meeting's state on the desk, struck like a rubber stamp when
+     it changes (the code, when check-in opens, is printed as it is
+     drawn: paintBoard) */
   boardSeal(){
     const word = $('.proj__word');
     if (!word || Motion.off) return;
-    let deg = 0;
-    try {
-      const m = new DOMMatrixReadOnly(getComputedStyle(word).transform);
-      deg = Math.atan2(m.b, m.a) * 180 / Math.PI;
-    } catch (_) {}
-    aset(word, { scale:1.2, rotate:deg, opacity:0 });
-    animate(word, { opacity:[0, 1], duration:1, delay:60, ease:STEP(1) });
-    animate(word, { scale:[1.2, 1], rotate:deg, duration:120, delay:60, ease:STEP(3) });
-    setTimeout(() => Motion.settle(word), 300);
+    aset(word, { opacity:0 });
+    Ink.stamp(word, { lift:1.22, turn:-5, hold:40, strike:90, settle:170,
+      hit(){ Ink.bleed(word, { color:'currentColor', grow:1.06, dur:240, from:.22, box:true }); } });
   }
 };
