@@ -21112,6 +21112,20 @@ addEventListener('pagehide', () => {
   Scanner.stop(); clearInterval(countTimer); TodayWatch.stop();
 });
 
+/* A camera left running in a tab nobody is looking at keeps its light
+   on and the phone's battery going: hidden, Scan lets it go; shown
+   again, Scan opens it again if it was reading when the tab was left. */
+let scanWasLive = false;
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden'){
+    scanWasLive = current === 'scan' && Boolean(Scanner.stream || Scanner.armTimer);
+    if (scanWasLive) Scanner.stop();
+    return;
+  }
+  if (scanWasLive && current === 'scan' && !Scanner.stream && !Landing.active) Scanner.armStart();
+  scanWasLive = false;
+});
+
 let opening = null;
 try {
   opening = Scenes.opening({ root:$('#boot'), reveal(){
