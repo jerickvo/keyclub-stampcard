@@ -182,6 +182,13 @@ const Ink = {
     });
   },
 
+  /* a thing set down where it belongs: from a little above, a hair
+     past rest, still */
+  settle(el, { y = 6, dur = 220 } = {}){
+    if (!el || Motion.off) return;
+    animate(el, { translateY:[y, 0], duration:dur, ease:EASE.SETTLE, onComplete(){ Motion.settle(el); } });
+  },
+
   /* a word that means no: knocked once, sideways */
   knock(el, px = 5){
     if (!el || Motion.off) return;

@@ -913,10 +913,10 @@ document.addEventListener('click', e => {
   const out = e.target.closest('[data-signout]');
   if (out){
     if (Store.signingOut || Scenes.busy) return;
-    /* the device lets go of the session at the tap: a reload or a new
-       tab from here on is signed out, whatever the scene is doing */
-    Store.signingOut = true;
-    Backend.letGo();
+    /* the page is taken for the cut as it is printed, before anything
+       on it answers the sign-out; then, in the same moment, the device
+       lets go of the session: a reload or a new tab from here on is
+       signed out, whatever the scene is doing */
     Scenes.exit({
       btn: out,
       swap: () => Store.signOut().then(() => {
@@ -931,6 +931,8 @@ document.addEventListener('click', e => {
       fail: () => toast({ key:'auth', bad:true, title:'Could not sign out',
                           detail:'Check your connection and try again.' }),
     });
+    Store.signingOut = true;
+    Backend.letGo();
     return;
   }
 

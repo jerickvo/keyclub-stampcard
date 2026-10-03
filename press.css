@@ -81,6 +81,16 @@ body{background:var(--paper);color:var(--ink)}
 .inkbleed--shape{inset:0;border-radius:0;background:none}
 .inkbleed--shape svg{display:block;width:100%;height:100%;overflow:visible}
 .inkbleed--shape path{fill:currentColor}
+/* sign-out: the page cut apart. A blocker under the halves (the slit
+   of ink between them once they part), the hairline over them */
+.outbase{position:fixed;inset:0;z-index:180;pointer-events:auto;background:transparent}
+.outbase--slit{background:var(--ink)}
+.outpiece{z-index:181;will-change:transform}
+.outslash{position:fixed;left:0;top:0;z-index:182;width:100%;height:100%;pointer-events:none;overflow:visible}
+.outslash line{stroke:var(--crimson);stroke-width:2.5}
+.outtag{position:fixed;left:50%;top:50%;z-index:183;translate:-50% -50%;margin:0;padding:7px 10px 6px;
+  background:var(--paper-card);border:2px solid var(--ink);font:400 12px/1 var(--f-mono);letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink);pointer-events:none}
 .blade{position:absolute;left:0;top:0;height:100%;pointer-events:none;will-change:transform}
 .blade > i{position:absolute;top:0;height:100%;display:block}
 .blade__edge{background:var(--crimson)}

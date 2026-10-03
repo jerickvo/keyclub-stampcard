@@ -158,7 +158,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   --si:var(--ink);--sp:var(--paper)}
 .cutbox{position:fixed;z-index:56;overflow:hidden;pointer-events:none;
   contain:layout paint}
-.slab{position:absolute;background:var(--ink);will-change:transform}
 /* the page being left, laid over the column while the band crosses it */
 .cutsheet{position:fixed;z-index:55;overflow:hidden;pointer-events:none;contain:layout paint}
 /* while signing out, a tap never lands on the page under the scene */
@@ -167,26 +166,42 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
    once its panels start to leave */
 .scene--welcome,.scene--open{pointer-events:auto}
 
-.scene--play .scene__panel--a .scene__ink{animation:sceneInk 110ms steps(3,end) calc(var(--lead,0ms) + 90ms) both}
-.scene--play .scene__panel--b .scene__ink{animation:sceneInk 100ms steps(3,end) calc(var(--lead,0ms) + 210ms) both}
-.scene--play .scene__panel--c .scene__ink{animation:sceneInk 100ms steps(3,end) calc(var(--lead,0ms) + 270ms) both,
-  sceneBreathe 1.4s ease-in-out calc(var(--lead,0ms) + 1600ms) infinite alternate}
-.scene--play .scene__seal{animation:sceneSeal 90ms steps(2,end) calc(var(--lead,0ms) + 360ms) forwards}
-.scene--play .scene__word{animation:sceneStamp 120ms steps(3,end) calc(var(--lead,0ms) + 420ms) forwards}
-.scene--play .scene__kick{animation:sceneCut 1ms linear calc(var(--lead,0ms) + 480ms) forwards}
-.scene--play .scene__tail:not(:empty){animation:sceneCut 1ms linear calc(var(--lead,0ms) + 560ms) forwards}
+/* Opening a chapter: the panels are inked one after another, each
+   rolled across faster and faster to a dead stop, a crimson hairline
+   riding the ink's edge; the club's seal is struck into the tone; the
+   title is stamped, its crimson plate a hair off register and pulled
+   true; the small type is set. Then a pause, and one cut (in 04b). */
+.scene__edge{position:absolute;top:0;bottom:0;left:-100%;width:100%;pointer-events:none;opacity:0;
+  border-right:3px solid var(--crimson)}
+.scene--play .scene__panel--a .scene__ink{animation:sceneInk 150ms cubic-bezier(.5,0,.75,.4) calc(var(--lead,0ms) + 60ms) both}
+.scene--play .scene__panel--a .scene__edge{animation:sceneEdge 150ms cubic-bezier(.5,0,.75,.4) calc(var(--lead,0ms) + 60ms) both,
+  sceneEdgeOff 1ms linear calc(var(--lead,0ms) + 290ms) forwards}
+.scene--play .scene__panel--b .scene__ink{animation:sceneInk 130ms cubic-bezier(.5,0,.75,.4) calc(var(--lead,0ms) + 140ms) both}
+.scene--play .scene__panel--b .scene__edge{animation:sceneEdge 130ms cubic-bezier(.5,0,.75,.4) calc(var(--lead,0ms) + 140ms) both,
+  sceneEdgeOff 1ms linear calc(var(--lead,0ms) + 330ms) forwards}
+.scene--play .scene__panel--c .scene__ink{animation:sceneInk 120ms cubic-bezier(.5,0,.75,.4) calc(var(--lead,0ms) + 190ms) both}
+.scene--play .scene__seal{animation:sceneSeal 130ms cubic-bezier(.6,0,.92,.4) calc(var(--lead,0ms) + 280ms) forwards}
+.scene--play .scene__word{animation:sceneStamp 140ms cubic-bezier(.6,0,.92,.4) calc(var(--lead,0ms) + 330ms) forwards}
+.scene--play .scene__kick{animation:sceneCut 1ms linear calc(var(--lead,0ms) + 400ms) forwards}
+.scene--play .scene__tail:not(:empty){animation:sceneCut 1ms linear calc(var(--lead,0ms) + 440ms) forwards}
 @keyframes sceneInk{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-@keyframes sceneSeal{from{opacity:1;transform:scale(1.1)}to{opacity:1;transform:scale(1)}}
-@keyframes sceneStamp{from{opacity:1;transform:scale(1.3)}to{opacity:1;transform:scale(1)}}
+@keyframes sceneEdge{from{opacity:1;transform:translateX(0)}to{opacity:1;transform:translateX(100%)}}
+@keyframes sceneEdgeOff{to{opacity:0}}
+@keyframes sceneSeal{from{opacity:1;transform:scale(1.25) rotate(-6deg)}to{opacity:1;transform:scale(1) rotate(0deg)}}
+@keyframes sceneStamp{
+  0%{opacity:1;transform:scale(1.22);text-shadow:8px 0 0 var(--crimson)}
+  75%{opacity:1;transform:scale(.97);text-shadow:3px 0 0 var(--crimson)}
+  100%{opacity:1;transform:scale(1);text-shadow:0 0 0 transparent}}
 @keyframes sceneCut{from{opacity:0}to{opacity:1}}
-@keyframes sceneBreathe{from{opacity:1}to{opacity:.55}}
 .scene--set,.scene--set *{animation:none}
 .scene--set .scene__ink{transform:scaleX(1)}
+.scene--set .scene__edge{display:none}
 .scene--set .scene__word,.scene--set .scene__kick,.scene--set .scene__seal,
 .scene--set .scene__tail:not(:empty){opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){
   .scene--play,.scene--play *{animation:none}
   .scene--play .scene__ink{transform:scaleX(1)}
+  .scene--play .scene__edge{display:none}
   .scene--play .scene__word,.scene--play .scene__kick,.scene--play .scene__seal,
   .scene--play .scene__tail:not(:empty){opacity:1;transform:none}
 }

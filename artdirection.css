@@ -4,9 +4,11 @@
   --pnl-off:clamp(5px,.9vw,9px);
   --ink-w:2.8}
 
-[data-screen="auth"] .rail__nav,
-[data-screen="auth"] .tabs,
-[data-screen="checkin"] .rail__nav,
-[data-screen="checkin"] .tabs{display:none}
+/* (on the live page's ids: a copy of the page cut away on sign-out
+   keeps the layout it was printed with) */
+[data-screen="auth"] #railNav,
+[data-screen="auth"] #tabs,
+[data-screen="checkin"] #railNav,
+[data-screen="checkin"] #tabs{display:none}
 
 [data-screen="auth"] main#view,[data-screen="checkin"] main#view{padding:0;max-width:none}
