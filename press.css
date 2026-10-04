@@ -73,6 +73,30 @@ body{background:var(--paper);color:var(--ink)}
 /* the page's torn outer edge: ink bled off the trim */
 .ground__bleed{width:clamp(6px,.9vw,13px)}
 
+/* ── motion: the marks the vocabulary leaves (04-fx.js) ─────────── */
+/* the ink a hit leaves round a stamp or a medal; round a word, square */
+.inkbleed{position:absolute;inset:-5%;z-index:-1;pointer-events:none;opacity:0;
+  border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;background:currentColor}
+.inkbleed--box{inset:-3px;border-radius:0}
+.inkbleed--shape{inset:0;border-radius:0;background:none}
+.inkbleed--shape svg{display:block;width:100%;height:100%;overflow:visible}
+.inkbleed--shape path{fill:currentColor}
+/* sign-out: the page cut apart. A blocker under the halves (the slit
+   of ink between them once they part), the hairline over them */
+.outbase{position:fixed;inset:0;z-index:180;pointer-events:auto;background:transparent}
+.outbase--slit{background:var(--ink)}
+.outpiece{z-index:181;will-change:transform}
+.outslash{position:fixed;left:0;top:0;z-index:182;width:100%;height:100%;pointer-events:none;overflow:visible}
+.outslash line{stroke:var(--crimson);stroke-width:2.5}
+.outtag{position:fixed;left:50%;top:50%;z-index:183;translate:-50% -50%;margin:0;padding:7px 10px 6px;
+  background:var(--paper-card);border:2px solid var(--ink);font:400 12px/1 var(--f-mono);letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink);pointer-events:none}
+.blade{position:absolute;left:0;top:0;height:100%;pointer-events:none;will-change:transform}
+.blade > i{position:absolute;top:0;height:100%;display:block}
+.blade__edge{background:var(--crimson)}
+.blade__body{background:var(--ink)}
+.blade__trail{background:var(--dot) 0 0/5px 5px;opacity:.9}
+
 /* ── record labels: small capitals in the record face ────────────── */
 .lab{font:400 11px/1.35 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 
@@ -155,6 +179,16 @@ body{background:var(--paper);color:var(--ink)}
 .act--seal{color:var(--seal)}
 .act--seal.act--rule::after{background:var(--seal)}
 
+/* under a finger every control gives a little toward the page, the
+   way a key or a stamp does; nothing bounces back past rest */
+.act--rule:active > span{translate:1px 1px}
+.act--rule:active::after{height:2px}
+.act--quiet:active::before{background:currentColor}
+.rail__link:active .rail__lab{translate:1px 1px}
+.gmpick__tab:active{translate:1px 1px}
+.seal--live:active{scale:.97}
+.seal[tabindex]:not(.seal--live):active .sf-press{scale:.97}
+
 @media (prefers-reduced-motion:reduce){ .act--rule::after{transition:none} }
 :root[data-still] .act--rule::after{transition:none}
 
@@ -171,7 +205,8 @@ body{background:var(--paper);color:var(--ink)}
   container:card / inline-size;
   background:var(--paper-card);color:var(--ink);
   border:var(--card-edge) solid var(--ink);
-  box-shadow:var(--card-off) var(--card-off) 0 var(--tone)}
+  /* --press: how far a hit has pushed the card toward its own shadow */
+  box-shadow:calc(var(--card-off) - var(--press,0px)) calc(var(--card-off) - var(--press,0px)) 0 var(--tone)}
 .card__in{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"id" "field" "foot"}
 /* the stock's own tooth, finer than the page's */
 .card::before{content:'';position:absolute;inset:0;z-index:0;border-radius:inherit;pointer-events:none;
@@ -255,6 +290,16 @@ body{background:var(--paper);color:var(--ink)}
 .seal--set .seal__no{color:var(--ink)}
 .seal--hero::after{content:'';position:absolute;inset:-9%;pointer-events:none;
   border:1.2px solid var(--ink);border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;rotate:-6deg}
+
+/* a stamp on its way down: the seat shows as the blank it was, the
+   impression not yet pressed; on the hit the newest ring is wet with
+   crimson for a moment, and dries to ink */
+.seal--landing .sf-blank{stroke:var(--ink);stroke-width:1.6;stroke-opacity:1}
+.seal--landing .sf-press{opacity:0}
+.seal--landing::after{opacity:0}
+.seal--hero::after{transition:border-color .45s cubic-bezier(.3,.75,.3,1)}
+.card--landing .card__done,.card--landing .card__goal--go,.card--landing .card__goal--done{opacity:0}
+.seal--wet::after{border-color:var(--crimson);transition:none}
 
 .seal--mile .sf-back{opacity:.9;stroke-width:1.1}
 .seal--mile.seal--set .sf-face{fill:var(--seal)}
@@ -862,8 +907,11 @@ body{background:var(--paper);color:var(--ink)}
   .route__me::after{content:'';position:absolute;left:50%;bottom:100%;width:1px;
     height:calc(var(--lane) + var(--medal) / 2 - 19px - 26px);background:var(--ink)}
   .tier{grid-column:auto;grid-template-columns:minmax(0,1fr);justify-items:center;align-items:start;align-content:start;row-gap:var(--sp-group);text-align:center}
-  .tier__body{justify-items:center}
+  .tier__body{justify-items:center;padding-inline:clamp(6px,1.2cqi,14px)}
   .tier__ticks{justify-content:center}
+  /* a prize's state stays under its own medal: two notes side by side
+     read as one sentence when they run to their columns' edges */
+  .tier__note,.tier__say{max-width:24ch;text-wrap:balance}
 }
 
 /* ══ SCAN. The checkpoint, purpose-built: a viewfinder in a heavy frame
@@ -977,29 +1025,27 @@ body{background:var(--paper);color:var(--ink)}
    page's edges to the new impression, its tag in crimson, the record
    under it; then the stamp leaves the frame for its seat on the card. ══ */
 .acq{position:fixed;inset:0;z-index:160;display:grid;place-items:stretch;padding:0;
-  background:var(--paper-card);color:var(--ink);text-align:left;transition:background-color 220ms steps(3,end)}
+  background:var(--paper-card);color:var(--ink);text-align:left}
 .acq__lines{position:absolute;inset:0;pointer-events:none;
   background:repeating-conic-gradient(from 0deg at 50% 46%,var(--ink) 0 .55deg,transparent .55deg 3.2deg);
   -webkit-mask:radial-gradient(ellipse 70% 62% at 50% 46%,transparent 0 44%,#000 78%);
           mask:radial-gradient(ellipse 70% 62% at 50% 46%,transparent 0 44%,#000 78%);opacity:.9}
-.acq--lift{background:transparent;pointer-events:none}
-.acq--lift .acq__lines,.acq--lift .acq__kick,.acq--lift .acq__meet{opacity:0;transition:opacity 120ms steps(2,end)}
+.acq--lift{pointer-events:none}
 .acq__stack{position:relative;display:grid;grid-template-rows:auto minmax(0,1fr) auto;justify-items:center;height:100%;
   padding:calc(24px + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x,0px)) calc(32px + env(safe-area-inset-bottom,0px))}
-.acq__kick{display:flex;align-items:center;gap:12px;margin:0;opacity:1}
+.acq__kick{grid-row:1;display:flex;align-items:center;gap:12px;margin:0;opacity:1}
 .acq__kick span:first-child{padding:8px 14px 7px;background:var(--crimson);color:var(--paper-card);rotate:-3deg;
   font:400 clamp(22px,5vw,34px)/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase}
 .acq__kick span:last-child{padding:6px 8px 5px;background:var(--paper-card);font:400 12px/1 var(--f-mono);letter-spacing:.16em}
 .acq__seal{place-self:center;width:min(58vmin,300px);aspect-ratio:1;display:grid;place-items:center;will-change:transform;
   filter:url(#ks-ink)}
-.acq__seal svg{position:absolute;inset:0;width:100%;height:100%}
+.acq__seal svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.acq__seal--fly{position:fixed;z-index:163;margin:0;pointer-events:none}
 .acq__seal .acq__face{fill:var(--ink);stroke:none}
 .acq__seal .acq__mark path{fill:var(--paper-card);stroke:none}
-.acq__meet{display:flex;align-items:baseline;gap:14px;margin:0;padding:10px 16px 8px;background:var(--paper-card);
+.acq__meet{grid-row:3;display:flex;align-items:baseline;gap:14px;margin:0;padding:10px 16px 8px;background:var(--paper-card);
   border-top:3px solid var(--ink);font:400 12px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);opacity:1}
 .acq__meet b{font:400 clamp(28px,6vw,40px)/1 var(--f-head);letter-spacing:.03em;color:var(--ink)}
-@media(prefers-reduced-motion:reduce){ .acq,.acq--lift .acq__lines,.acq--lift .acq__kick,.acq--lift .acq__meet{transition:none} }
-:root[data-still] .acq,:root[data-still] .acq--lift .acq__lines,:root[data-still] .acq--lift .acq__kick,:root[data-still] .acq--lift .acq__meet{transition:none}
 
 /* ══ SIGN IN. A chapter title page and a printed registration card: the
    cover is an ink panel with the club's swirl cut by its edge and the
@@ -1103,16 +1149,19 @@ body{background:var(--paper);color:var(--ink)}
 .entry__wm{margin:0 0 .16em;font:400 clamp(40px,11vw,64px)/.85 var(--f-display);text-transform:uppercase;letter-spacing:-.01em}
 .entry__sub{margin:0;font:400 10px/1.3 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2);text-wrap:balance}
 @media(max-width:374px){ .entry__sub{letter-spacing:.12em} }
-.entry__seat{position:relative;display:grid;place-items:center;align-self:center;width:min(calc(100vw - 80px),80vw,50vh,420px);aspect-ratio:1}
+/* the number is sized by its seat: on a phone held sideways the seat is
+   held to the height, and a number sized by the width overran it */
+.entry__seat{position:relative;display:grid;place-items:center;align-self:center;width:min(calc(100vw - 80px),80vw,50vh,420px);aspect-ratio:1;
+  container-type:inline-size}
 .entry__blank{position:absolute;inset:0;width:100%;height:100%;overflow:visible;rotate:-4deg}
 .entry__blank path{fill:var(--paper-card);stroke:var(--ink);stroke-width:1.1;stroke-dasharray:3.2 2.4}
 .entry__gm{position:relative;margin:0;display:grid;justify-items:center;line-height:.8}
 .entry__gmv{display:grid;justify-items:center;gap:2px}
-.entry__gmv span{font:400 clamp(20px,5vw,30px)/1 var(--f-head);letter-spacing:.08em}
-.entry__gmv b{font:400 clamp(110px,30vw,220px)/.78 var(--f-display);font-weight:400;letter-spacing:-.03em}
-.entry__gm--word{font:400 clamp(40px,11vw,80px)/.9 var(--f-display);font-weight:400;text-transform:uppercase}
+.entry__gmv span{font:400 min(clamp(20px,5vw,30px),12cqi)/1 var(--f-head);letter-spacing:.08em}
+.entry__gmv b{font:400 min(clamp(110px,30vw,220px),48cqi)/.78 var(--f-display);font-weight:400;letter-spacing:-.03em}
+.entry__gm--word{font:400 min(clamp(40px,11vw,80px),18cqi)/.9 var(--f-display);font-weight:400;text-transform:uppercase}
 .arrive__status{position:absolute;right:-2%;bottom:6%;margin:0;padding:8px 12px 7px;rotate:-6deg;
-  background:var(--crimson);color:var(--paper-card);font:400 clamp(16px,3.4vw,22px)/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase}
+  background:var(--crimson);color:var(--paper-card);font:400 min(clamp(16px,3.4vw,22px),9cqi)/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase}
 .view--arrive-done .arrive__status{background:var(--ink)}
 .view--arrive-open .entry__blank path{stroke-width:1.5}
 .view--arrive-done .entry__blank path{fill:var(--ink);stroke-dasharray:none;filter:url(#ks-ink)}
@@ -1127,7 +1176,8 @@ body{background:var(--paper);color:var(--ink)}
 .arrive__note{margin:0;font:400 11.5px/1.5 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
 .arrive .authp__act{justify-items:center;margin:6px 0 0;width:100%}
 .arrive .authp__go{width:100%}
-@media(min-width:900px) and (min-height:600px){
+/* wide, or a phone on its side: the seat and the way in side by side */
+@media(min-width:900px) and (min-height:600px),(orientation:landscape) and (min-width:560px) and (max-height:520px){
   .entry{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:clamp(32px,6vw,96px);
     align-items:center;padding-inline:clamp(40px,7vw,120px)}
   .entry__head{grid-column:1 / -1}
@@ -1135,6 +1185,12 @@ body{background:var(--paper);color:var(--ink)}
   .arrive{justify-self:start;justify-items:start;text-align:left}
   .arrive .authp__act{justify-items:start}
   .arrive__word{font-size:clamp(40px,4vw,56px)}
+}
+@media(orientation:landscape) and (min-width:560px) and (max-height:520px){
+  .entry{row-gap:10px;padding-block:calc(26px + env(safe-area-inset-top,0px)) calc(26px + env(safe-area-inset-bottom,0px))}
+  .entry__wm{font-size:clamp(32px,9vh,46px)}
+  .entry__seat{width:min(40vw,54vh,300px)}
+  .arrive__word{font-size:clamp(26px,7vh,36px)}
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1552,7 +1608,10 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .bwho{display:grid;gap:8px}
 .bwho__lab{margin:0;font:400 10.5px/1.2 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
 .bdetail__name{margin:0;font:400 clamp(52px,10vw,110px)/.82 var(--f-display);letter-spacing:-.02em;text-transform:uppercase;overflow-wrap:anywhere}
-.bmeet{display:grid;gap:10px}
+/* the display face's G and M run their tails below the line: the date
+   under a meeting's number is set clear of them */
+.bmeet{display:grid;gap:calc(10px + .16em);font-size:clamp(52px,10vw,110px)}
+.bmeet > .bdetail__name{font-size:1em}
 .bmeet__when{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:0;font:400 11px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 .bmeet__when b{padding:4px 8px 3px;background:var(--crimson);color:var(--paper-card);font:400 13px/1 var(--f-head);letter-spacing:.06em}
 .bdet__body{display:grid;gap:var(--sp-section);min-width:0}

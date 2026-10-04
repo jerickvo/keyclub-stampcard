@@ -636,11 +636,9 @@ const Inspect = {
         ? `left:${Math.round(cx)}px;top:${Math.round(below)}px;width:2px;height:${Math.max(0, Math.round(f.height - below))}px`
         : `left:-24px;top:${Math.round(cy)}px;width:24px;height:2px`;
     }
-    if (!Motion.off && window.animate){
-      aset(rec, { opacity:0 });
-      animate(rec, { opacity:[0, 1], duration:1, delay:90, ease:STEP(1) });
-      if (lead){ aset(lead, { opacity:0 }); animate(lead, { opacity:[0, 1], duration:1, delay:60, ease:STEP(1) }); }
-    }
+    /* the leader is drawn out from the stamp, the record printed after */
+    Ink.print(lead, { from: mode === 'foot' ? 'top' : 'right', dur:110, delay:40 });
+    Ink.print(rec, { from:'left', dur:180, delay:90 });
   },
   close(){
     const was = this.open;
@@ -815,9 +813,13 @@ document.addEventListener('click', e => {
 
   const bstart = e.target.closest('[data-bstart]');
   if (bstart){
+    /* Close check-in leaves focus on Reopen: a second press of the same
+       key (or a held one) in the moment after is the close's, not a
+       request to reopen */
+    if (Date.now() - closedAt < 800) return;
     const id = bstart.dataset.bstart;
     const openNow = list => ((list && list.meetings) || []).filter(m => m.state === 'OPEN');
-    const opened = () => { dropToast('board', true); boardMeeting = id; boardStamp = true;
+    const opened = () => { dropToast('board', true); boardMeeting = id; boardStamp = true; plateFresh = true;
                            BoardUI.refocus = '[data-bfull]'; loadBoard(); };
     hold(bstart, 'Opening');
     const who = Store.user && Store.user.id;
@@ -852,7 +854,7 @@ document.addEventListener('click', e => {
     const who = Store.user && Store.user.id;
     const still = () => Store.user && Store.user.id === who;
     const closed = () => { dropToast('board', true); clearInterval(countTimer); boardStamp = true; boardPicked = id;
-                           BoardUI.refocus = '[data-bstart]'; loadBoard(); };
+                           closedAt = Date.now(); BoardUI.refocus = '[data-bstart]'; loadBoard(); };
     hold(bend, 'Closing');
     Backend.endAttendance(id)
       .then(() => { if (still()) closed(); })
@@ -913,10 +915,10 @@ document.addEventListener('click', e => {
   const out = e.target.closest('[data-signout]');
   if (out){
     if (Store.signingOut || Scenes.busy) return;
-    /* the device lets go of the session at the tap: a reload or a new
-       tab from here on is signed out, whatever the scene is doing */
-    Store.signingOut = true;
-    Backend.letGo();
+    /* the page is taken for the cut as it is printed, before anything
+       on it answers the sign-out; then, in the same moment, the device
+       lets go of the session: a reload or a new tab from here on is
+       signed out, whatever the scene is doing */
     Scenes.exit({
       btn: out,
       swap: () => Store.signOut().then(() => {
@@ -931,6 +933,8 @@ document.addEventListener('click', e => {
       fail: () => toast({ key:'auth', bad:true, title:'Could not sign out',
                           detail:'Check your connection and try again.' }),
     });
+    Store.signingOut = true;
+    Backend.letGo();
     return;
   }
 
@@ -1077,8 +1081,14 @@ document.addEventListener('click', e => {
          reader has queued meanwhile is theirs */
       if (here === 'rewards' && navigating) go('rewards', { instant:true, force:true, quiet:true });
       else if (here === 'rewards'){
+        /* a claim made from the keyboard keeps the reader on the prize
+           it claimed, not back at the top of the page */
+        const kept = Boolean(document.activeElement && document.activeElement.closest &&
+          document.activeElement.closest(`[data-reward="${rid}"]`));
         go('rewards', { instant:true, force:true });
-        FX.claimStamp($(`[data-reward="${rid}"]`));
+        const row = $(`[data-reward="${rid}"]`);
+        if (kept && row){ row.setAttribute('tabindex', '-1'); row.focus({ preventScroll:true }); }
+        FX.claimStamp(row);
       }
       setTimeout(() => toast({ key:'claim', title:`${r.name} claimed`,
         detail:r.handedAt ? 'An officer has already handed it to you.'
@@ -1131,6 +1141,8 @@ document.addEventListener('click', e => {
 });
 
 let boardStamp = false;
+/* when this page last closed a check-in (Reopen is not taken at once) */
+let closedAt = 0;
 
 /* A write refused because the session is gone (signed out on another
    device, a refresh the server refused, another account in another
@@ -1401,6 +1413,20 @@ document.addEventListener('keydown', e => {
 
 addEventListener('pagehide', () => {
   Scanner.stop(); clearInterval(countTimer); TodayWatch.stop();
+});
+
+/* A camera left running in a tab nobody is looking at keeps its light
+   on and the phone's battery going: hidden, Scan lets it go; shown
+   again, Scan opens it again if it was reading when the tab was left. */
+let scanWasLive = false;
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden'){
+    scanWasLive = current === 'scan' && Boolean(Scanner.stream || Scanner.armTimer);
+    if (scanWasLive) Scanner.stop();
+    return;
+  }
+  if (scanWasLive && current === 'scan' && !Scanner.stream && !Landing.active) Scanner.armStart();
+  scanWasLive = false;
 });
 
 let opening = null;
