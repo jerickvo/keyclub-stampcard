@@ -166,16 +166,9 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
 .toast--bad{background:var(--ink);color:var(--paper)}
 [hidden]{display:none!important}
 
-.loader{position:absolute;top:50%;left:50%;
-  width:clamp(54px,42%,116px);aspect-ratio:1;
-  transform:translate(-50%,-50%);
-  color:var(--ink);pointer-events:none;z-index:4;
-  animation:loaderTurn 1.2s steps(12,end) infinite}
-.loader svg{width:100%;height:100%;display:block}
-@keyframes loaderTurn{from{transform:translate(-50%,-50%) rotate(0deg)}
-                      to  {transform:translate(-50%,-50%) rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){ .loader{animation:none} }
-:root[data-still] .loader{animation:none}
+.loader{position:absolute;top:50%;left:50%;margin:0;transform:translate(-50%,-50%);
+  padding:6px 9px 5px;background:var(--ink);color:var(--paper);pointer-events:none;z-index:4;white-space:nowrap;
+  font:400 11px/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase}
 
 .fx{position:fixed;inset:0;z-index:125;pointer-events:none;overflow:hidden;
   contain:layout paint}
@@ -234,7 +227,6 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
   --si:var(--ink);--sp:var(--paper)}
 .cutbox{position:fixed;z-index:56;overflow:hidden;pointer-events:none;
   contain:layout paint}
-.slab{position:absolute;background:var(--ink);will-change:transform}
 /* the page being left, laid over the column while the band crosses it */
 .cutsheet{position:fixed;z-index:55;overflow:hidden;pointer-events:none;contain:layout paint}
 /* while signing out, a tap never lands on the page under the scene */
@@ -243,26 +235,42 @@ main#view{width:100%;max-width:var(--page-max);margin-inline:auto;
    once its panels start to leave */
 .scene--welcome,.scene--open{pointer-events:auto}
 
-.scene--play .scene__panel--a .scene__ink{animation:sceneInk 110ms steps(3,end) calc(var(--lead,0ms) + 90ms) both}
-.scene--play .scene__panel--b .scene__ink{animation:sceneInk 100ms steps(3,end) calc(var(--lead,0ms) + 210ms) both}
-.scene--play .scene__panel--c .scene__ink{animation:sceneInk 100ms steps(3,end) calc(var(--lead,0ms) + 270ms) both,
-  sceneBreathe 1.4s ease-in-out calc(var(--lead,0ms) + 1600ms) infinite alternate}
-.scene--play .scene__seal{animation:sceneSeal 90ms steps(2,end) calc(var(--lead,0ms) + 360ms) forwards}
-.scene--play .scene__word{animation:sceneStamp 120ms steps(3,end) calc(var(--lead,0ms) + 420ms) forwards}
-.scene--play .scene__kick{animation:sceneCut 1ms linear calc(var(--lead,0ms) + 480ms) forwards}
-.scene--play .scene__tail:not(:empty){animation:sceneCut 1ms linear calc(var(--lead,0ms) + 560ms) forwards}
+/* Opening a chapter: the panels are inked one after another, each
+   rolled across faster and faster to a dead stop, a crimson hairline
+   riding the ink's edge; the club's seal is struck into the tone; the
+   title is stamped, its crimson plate a hair off register and pulled
+   true; the small type is set. Then a pause, and one cut (in 04b). */
+.scene__edge{position:absolute;top:0;bottom:0;left:-100%;width:100%;pointer-events:none;opacity:0;
+  border-right:3px solid var(--crimson)}
+.scene--play .scene__panel--a .scene__ink{animation:sceneInk 150ms cubic-bezier(.5,0,.75,.4) calc(var(--lead,0ms) + 60ms) both}
+.scene--play .scene__panel--a .scene__edge{animation:sceneEdge 150ms cubic-bezier(.5,0,.75,.4) calc(var(--lead,0ms) + 60ms) both,
+  sceneEdgeOff 1ms linear calc(var(--lead,0ms) + 290ms) forwards}
+.scene--play .scene__panel--b .scene__ink{animation:sceneInk 130ms cubic-bezier(.5,0,.75,.4) calc(var(--lead,0ms) + 140ms) both}
+.scene--play .scene__panel--b .scene__edge{animation:sceneEdge 130ms cubic-bezier(.5,0,.75,.4) calc(var(--lead,0ms) + 140ms) both,
+  sceneEdgeOff 1ms linear calc(var(--lead,0ms) + 330ms) forwards}
+.scene--play .scene__panel--c .scene__ink{animation:sceneInk 120ms cubic-bezier(.5,0,.75,.4) calc(var(--lead,0ms) + 190ms) both}
+.scene--play .scene__seal{animation:sceneSeal 130ms cubic-bezier(.6,0,.92,.4) calc(var(--lead,0ms) + 280ms) forwards}
+.scene--play .scene__word{animation:sceneStamp 140ms cubic-bezier(.6,0,.92,.4) calc(var(--lead,0ms) + 330ms) forwards}
+.scene--play .scene__kick{animation:sceneCut 1ms linear calc(var(--lead,0ms) + 400ms) forwards}
+.scene--play .scene__tail:not(:empty){animation:sceneCut 1ms linear calc(var(--lead,0ms) + 440ms) forwards}
 @keyframes sceneInk{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-@keyframes sceneSeal{from{opacity:1;transform:scale(1.1)}to{opacity:1;transform:scale(1)}}
-@keyframes sceneStamp{from{opacity:1;transform:scale(1.3)}to{opacity:1;transform:scale(1)}}
+@keyframes sceneEdge{from{opacity:1;transform:translateX(0)}to{opacity:1;transform:translateX(100%)}}
+@keyframes sceneEdgeOff{to{opacity:0}}
+@keyframes sceneSeal{from{opacity:1;transform:scale(1.25) rotate(-6deg)}to{opacity:1;transform:scale(1) rotate(0deg)}}
+@keyframes sceneStamp{
+  0%{opacity:1;transform:scale(1.22);text-shadow:8px 0 0 var(--crimson)}
+  75%{opacity:1;transform:scale(.97);text-shadow:3px 0 0 var(--crimson)}
+  100%{opacity:1;transform:scale(1);text-shadow:0 0 0 transparent}}
 @keyframes sceneCut{from{opacity:0}to{opacity:1}}
-@keyframes sceneBreathe{from{opacity:1}to{opacity:.55}}
 .scene--set,.scene--set *{animation:none}
 .scene--set .scene__ink{transform:scaleX(1)}
+.scene--set .scene__edge{display:none}
 .scene--set .scene__word,.scene--set .scene__kick,.scene--set .scene__seal,
 .scene--set .scene__tail:not(:empty){opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){
   .scene--play,.scene--play *{animation:none}
   .scene--play .scene__ink{transform:scaleX(1)}
+  .scene--play .scene__edge{display:none}
   .scene--play .scene__word,.scene--play .scene__kick,.scene--play .scene__seal,
   .scene--play .scene__tail:not(:empty){opacity:1;transform:none}
 }
@@ -330,10 +338,12 @@ body{font-family:var(--f-body);font-size:var(--t-body);line-height:1.45}
   --pnl-off:clamp(5px,.9vw,9px);
   --ink-w:2.8}
 
-[data-screen="auth"] .rail__nav,
-[data-screen="auth"] .tabs,
-[data-screen="checkin"] .rail__nav,
-[data-screen="checkin"] .tabs{display:none}
+/* (on the live page's ids: a copy of the page cut away on sign-out
+   keeps the layout it was printed with) */
+[data-screen="auth"] #railNav,
+[data-screen="auth"] #tabs,
+[data-screen="checkin"] #railNav,
+[data-screen="checkin"] #tabs{display:none}
 
 [data-screen="auth"] main#view,[data-screen="checkin"] main#view{padding:0;max-width:none}
 
@@ -384,8 +394,8 @@ body{
 main#view:focus,main#view:focus-visible{outline:none}
 
 @media(min-width:1024px){
-  [data-screen="auth"] .rail,[data-screen="checkin"] .rail{display:none}
-  [data-screen="auth"] .shell,[data-screen="checkin"] .shell{grid-template-columns:1fr}
+  [data-screen="auth"] #shell > .rail,[data-screen="checkin"] #shell > .rail{display:none}
+  [data-screen="auth"] #shell,[data-screen="checkin"] #shell{grid-template-columns:1fr}
 }
 
 .h2{font-family:var(--f-head)}
@@ -520,6 +530,30 @@ body{background:var(--paper);color:var(--ink)}
 /* the page's torn outer edge: ink bled off the trim */
 .ground__bleed{width:clamp(6px,.9vw,13px)}
 
+/* ── motion: the marks the vocabulary leaves (04-fx.js) ─────────── */
+/* the ink a hit leaves round a stamp or a medal; round a word, square */
+.inkbleed{position:absolute;inset:-5%;z-index:-1;pointer-events:none;opacity:0;
+  border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;background:currentColor}
+.inkbleed--box{inset:-3px;border-radius:0}
+.inkbleed--shape{inset:0;border-radius:0;background:none}
+.inkbleed--shape svg{display:block;width:100%;height:100%;overflow:visible}
+.inkbleed--shape path{fill:currentColor}
+/* sign-out: the page cut apart. A blocker under the halves (the slit
+   of ink between them once they part), the hairline over them */
+.outbase{position:fixed;inset:0;z-index:180;pointer-events:auto;background:transparent}
+.outbase--slit{background:var(--ink)}
+.outpiece{z-index:181;will-change:transform}
+.outslash{position:fixed;left:0;top:0;z-index:182;width:100%;height:100%;pointer-events:none;overflow:visible}
+.outslash line{stroke:var(--crimson);stroke-width:2.5}
+.outtag{position:fixed;left:50%;top:50%;z-index:183;translate:-50% -50%;margin:0;padding:7px 10px 6px;
+  background:var(--paper-card);border:2px solid var(--ink);font:400 12px/1 var(--f-mono);letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink);pointer-events:none}
+.blade{position:absolute;left:0;top:0;height:100%;pointer-events:none;will-change:transform}
+.blade > i{position:absolute;top:0;height:100%;display:block}
+.blade__edge{background:var(--crimson)}
+.blade__body{background:var(--ink)}
+.blade__trail{background:var(--dot) 0 0/5px 5px;opacity:.9}
+
 /* ── record labels: small capitals in the record face ────────────── */
 .lab{font:400 11px/1.35 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 
@@ -602,6 +636,16 @@ body{background:var(--paper);color:var(--ink)}
 .act--seal{color:var(--seal)}
 .act--seal.act--rule::after{background:var(--seal)}
 
+/* under a finger every control gives a little toward the page, the
+   way a key or a stamp does; nothing bounces back past rest */
+.act--rule:active > span{translate:1px 1px}
+.act--rule:active::after{height:2px}
+.act--quiet:active::before{background:currentColor}
+.rail__link:active .rail__lab{translate:1px 1px}
+.gmpick__tab:active{translate:1px 1px}
+.seal--live:active{scale:.97}
+.seal[tabindex]:not(.seal--live):active .sf-press{scale:.97}
+
 @media (prefers-reduced-motion:reduce){ .act--rule::after{transition:none} }
 :root[data-still] .act--rule::after{transition:none}
 
@@ -618,7 +662,8 @@ body{background:var(--paper);color:var(--ink)}
   container:card / inline-size;
   background:var(--paper-card);color:var(--ink);
   border:var(--card-edge) solid var(--ink);
-  box-shadow:var(--card-off) var(--card-off) 0 var(--tone)}
+  /* --press: how far a hit has pushed the card toward its own shadow */
+  box-shadow:calc(var(--card-off) - var(--press,0px)) calc(var(--card-off) - var(--press,0px)) 0 var(--tone)}
 .card__in{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"id" "field" "foot"}
 /* the stock's own tooth, finer than the page's */
 .card::before{content:'';position:absolute;inset:0;z-index:0;border-radius:inherit;pointer-events:none;
@@ -702,6 +747,16 @@ body{background:var(--paper);color:var(--ink)}
 .seal--set .seal__no{color:var(--ink)}
 .seal--hero::after{content:'';position:absolute;inset:-9%;pointer-events:none;
   border:1.2px solid var(--ink);border-radius:53% 47% 50% 46% / 48% 54% 45% 52%;rotate:-6deg}
+
+/* a stamp on its way down: the seat shows as the blank it was, the
+   impression not yet pressed; on the hit the newest ring is wet with
+   crimson for a moment, and dries to ink */
+.seal--landing .sf-blank{stroke:var(--ink);stroke-width:1.6;stroke-opacity:1}
+.seal--landing .sf-press{opacity:0}
+.seal--landing::after{opacity:0}
+.seal--hero::after{transition:border-color .45s cubic-bezier(.3,.75,.3,1)}
+.card--landing .card__done,.card--landing .card__goal--go,.card--landing .card__goal--done{opacity:0}
+.seal--wet::after{border-color:var(--crimson);transition:none}
 
 .seal--mile .sf-back{opacity:.9;stroke-width:1.1}
 .seal--mile.seal--set .sf-face{fill:var(--seal)}
@@ -1309,8 +1364,11 @@ body{background:var(--paper);color:var(--ink)}
   .route__me::after{content:'';position:absolute;left:50%;bottom:100%;width:1px;
     height:calc(var(--lane) + var(--medal) / 2 - 19px - 26px);background:var(--ink)}
   .tier{grid-column:auto;grid-template-columns:minmax(0,1fr);justify-items:center;align-items:start;align-content:start;row-gap:var(--sp-group);text-align:center}
-  .tier__body{justify-items:center}
+  .tier__body{justify-items:center;padding-inline:clamp(6px,1.2cqi,14px)}
   .tier__ticks{justify-content:center}
+  /* a prize's state stays under its own medal: two notes side by side
+     read as one sentence when they run to their columns' edges */
+  .tier__note,.tier__say{max-width:24ch;text-wrap:balance}
 }
 
 /* ══ SCAN. The checkpoint, purpose-built: a viewfinder in a heavy frame
@@ -1424,29 +1482,27 @@ body{background:var(--paper);color:var(--ink)}
    page's edges to the new impression, its tag in crimson, the record
    under it; then the stamp leaves the frame for its seat on the card. ══ */
 .acq{position:fixed;inset:0;z-index:160;display:grid;place-items:stretch;padding:0;
-  background:var(--paper-card);color:var(--ink);text-align:left;transition:background-color 220ms steps(3,end)}
+  background:var(--paper-card);color:var(--ink);text-align:left}
 .acq__lines{position:absolute;inset:0;pointer-events:none;
   background:repeating-conic-gradient(from 0deg at 50% 46%,var(--ink) 0 .55deg,transparent .55deg 3.2deg);
   -webkit-mask:radial-gradient(ellipse 70% 62% at 50% 46%,transparent 0 44%,#000 78%);
           mask:radial-gradient(ellipse 70% 62% at 50% 46%,transparent 0 44%,#000 78%);opacity:.9}
-.acq--lift{background:transparent;pointer-events:none}
-.acq--lift .acq__lines,.acq--lift .acq__kick,.acq--lift .acq__meet{opacity:0;transition:opacity 120ms steps(2,end)}
+.acq--lift{pointer-events:none}
 .acq__stack{position:relative;display:grid;grid-template-rows:auto minmax(0,1fr) auto;justify-items:center;height:100%;
   padding:calc(24px + env(safe-area-inset-top,0px)) calc(var(--gutter) + var(--safe-x,0px)) calc(32px + env(safe-area-inset-bottom,0px))}
-.acq__kick{display:flex;align-items:center;gap:12px;margin:0;opacity:1}
+.acq__kick{grid-row:1;display:flex;align-items:center;gap:12px;margin:0;opacity:1}
 .acq__kick span:first-child{padding:8px 14px 7px;background:var(--crimson);color:var(--paper-card);rotate:-3deg;
   font:400 clamp(22px,5vw,34px)/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase}
 .acq__kick span:last-child{padding:6px 8px 5px;background:var(--paper-card);font:400 12px/1 var(--f-mono);letter-spacing:.16em}
 .acq__seal{place-self:center;width:min(58vmin,300px);aspect-ratio:1;display:grid;place-items:center;will-change:transform;
   filter:url(#ks-ink)}
-.acq__seal svg{position:absolute;inset:0;width:100%;height:100%}
+.acq__seal svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.acq__seal--fly{position:fixed;z-index:163;margin:0;pointer-events:none}
 .acq__seal .acq__face{fill:var(--ink);stroke:none}
 .acq__seal .acq__mark path{fill:var(--paper-card);stroke:none}
-.acq__meet{display:flex;align-items:baseline;gap:14px;margin:0;padding:10px 16px 8px;background:var(--paper-card);
+.acq__meet{grid-row:3;display:flex;align-items:baseline;gap:14px;margin:0;padding:10px 16px 8px;background:var(--paper-card);
   border-top:3px solid var(--ink);font:400 12px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);opacity:1}
 .acq__meet b{font:400 clamp(28px,6vw,40px)/1 var(--f-head);letter-spacing:.03em;color:var(--ink)}
-@media(prefers-reduced-motion:reduce){ .acq,.acq--lift .acq__lines,.acq--lift .acq__kick,.acq--lift .acq__meet{transition:none} }
-:root[data-still] .acq,:root[data-still] .acq--lift .acq__lines,:root[data-still] .acq--lift .acq__kick,:root[data-still] .acq--lift .acq__meet{transition:none}
 
 /* ══ SIGN IN. A chapter title page and a printed registration card: the
    cover is an ink panel with the club's swirl cut by its edge and the
@@ -1550,16 +1606,19 @@ body{background:var(--paper);color:var(--ink)}
 .entry__wm{margin:0 0 .16em;font:400 clamp(40px,11vw,64px)/.85 var(--f-display);text-transform:uppercase;letter-spacing:-.01em}
 .entry__sub{margin:0;font:400 10px/1.3 var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2);text-wrap:balance}
 @media(max-width:374px){ .entry__sub{letter-spacing:.12em} }
-.entry__seat{position:relative;display:grid;place-items:center;align-self:center;width:min(calc(100vw - 80px),80vw,50vh,420px);aspect-ratio:1}
+/* the number is sized by its seat: on a phone held sideways the seat is
+   held to the height, and a number sized by the width overran it */
+.entry__seat{position:relative;display:grid;place-items:center;align-self:center;width:min(calc(100vw - 80px),80vw,50vh,420px);aspect-ratio:1;
+  container-type:inline-size}
 .entry__blank{position:absolute;inset:0;width:100%;height:100%;overflow:visible;rotate:-4deg}
 .entry__blank path{fill:var(--paper-card);stroke:var(--ink);stroke-width:1.1;stroke-dasharray:3.2 2.4}
 .entry__gm{position:relative;margin:0;display:grid;justify-items:center;line-height:.8}
 .entry__gmv{display:grid;justify-items:center;gap:2px}
-.entry__gmv span{font:400 clamp(20px,5vw,30px)/1 var(--f-head);letter-spacing:.08em}
-.entry__gmv b{font:400 clamp(110px,30vw,220px)/.78 var(--f-display);font-weight:400;letter-spacing:-.03em}
-.entry__gm--word{font:400 clamp(40px,11vw,80px)/.9 var(--f-display);font-weight:400;text-transform:uppercase}
+.entry__gmv span{font:400 min(clamp(20px,5vw,30px),12cqi)/1 var(--f-head);letter-spacing:.08em}
+.entry__gmv b{font:400 min(clamp(110px,30vw,220px),48cqi)/.78 var(--f-display);font-weight:400;letter-spacing:-.03em}
+.entry__gm--word{font:400 min(clamp(40px,11vw,80px),18cqi)/.9 var(--f-display);font-weight:400;text-transform:uppercase}
 .arrive__status{position:absolute;right:-2%;bottom:6%;margin:0;padding:8px 12px 7px;rotate:-6deg;
-  background:var(--crimson);color:var(--paper-card);font:400 clamp(16px,3.4vw,22px)/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase}
+  background:var(--crimson);color:var(--paper-card);font:400 min(clamp(16px,3.4vw,22px),9cqi)/1 var(--f-head);letter-spacing:.08em;text-transform:uppercase}
 .view--arrive-done .arrive__status{background:var(--ink)}
 .view--arrive-open .entry__blank path{stroke-width:1.5}
 .view--arrive-done .entry__blank path{fill:var(--ink);stroke-dasharray:none;filter:url(#ks-ink)}
@@ -1574,7 +1633,8 @@ body{background:var(--paper);color:var(--ink)}
 .arrive__note{margin:0;font:400 11.5px/1.5 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
 .arrive .authp__act{justify-items:center;margin:6px 0 0;width:100%}
 .arrive .authp__go{width:100%}
-@media(min-width:900px) and (min-height:600px){
+/* wide, or a phone on its side: the seat and the way in side by side */
+@media(min-width:900px) and (min-height:600px),(orientation:landscape) and (min-width:560px) and (max-height:520px){
   .entry{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:clamp(32px,6vw,96px);
     align-items:center;padding-inline:clamp(40px,7vw,120px)}
   .entry__head{grid-column:1 / -1}
@@ -1582,6 +1642,12 @@ body{background:var(--paper);color:var(--ink)}
   .arrive{justify-self:start;justify-items:start;text-align:left}
   .arrive .authp__act{justify-items:start}
   .arrive__word{font-size:clamp(40px,4vw,56px)}
+}
+@media(orientation:landscape) and (min-width:560px) and (max-height:520px){
+  .entry{row-gap:10px;padding-block:calc(26px + env(safe-area-inset-top,0px)) calc(26px + env(safe-area-inset-bottom,0px))}
+  .entry__wm{font-size:clamp(32px,9vh,46px)}
+  .entry__seat{width:min(40vw,54vh,300px)}
+  .arrive__word{font-size:clamp(26px,7vh,36px)}
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1999,7 +2065,10 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .bwho{display:grid;gap:8px}
 .bwho__lab{margin:0;font:400 10.5px/1.2 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
 .bdetail__name{margin:0;font:400 clamp(52px,10vw,110px)/.82 var(--f-display);letter-spacing:-.02em;text-transform:uppercase;overflow-wrap:anywhere}
-.bmeet{display:grid;gap:10px}
+/* the display face's G and M run their tails below the line: the date
+   under a meeting's number is set clear of them */
+.bmeet{display:grid;gap:calc(10px + .16em);font-size:clamp(52px,10vw,110px)}
+.bmeet > .bdetail__name{font-size:1em}
 .bmeet__when{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:0;font:400 11px/1.4 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
 .bmeet__when b{padding:4px 8px 3px;background:var(--crimson);color:var(--paper-card);font:400 13px/1 var(--f-head);letter-spacing:.06em}
 .bdet__body{display:grid;gap:var(--sp-section);min-width:0}
@@ -2114,8 +2183,8 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 <div class="scene scene--open scene--play boot" id="boot" aria-hidden="true">
   <div class="scene__base"></div>
   <div class="scene__grid">
-    <div class="scene__panel scene__panel--a"><i class="scene__ink"></i><p class="scene__word">Keystamp</p></div>
-    <div class="scene__panel scene__panel--b"><i class="scene__ink"></i>
+    <div class="scene__panel scene__panel--a"><i class="scene__ink"></i><i class="scene__edge"></i><p class="scene__word">Keystamp</p></div>
+    <div class="scene__panel scene__panel--b"><i class="scene__ink"></i><i class="scene__edge"></i>
       <p class="scene__kick">Key Club attendance</p><p class="scene__tail"></p></div>
     <div class="scene__panel scene__panel--c"><i class="scene__ink scene__ink--tone"></i>
       <span class="scene__seal"><svg class="brandseal" viewBox="0 0 840 875" aria-hidden="true"><use href="#bootseal"/></svg></span></div>
@@ -15762,6 +15831,7 @@ const Store = {
   emit(){ this.listeners.forEach(fn => { try { fn(); } catch (_) {} }); },
 
   loadError: null,
+  SESSION_WAIT: 12000,
   seq: 0,        /* reads begun */
   applied: 0,    /* the newest read shown */
   /* whether this club records prize hand-overs (the migration has run) */
@@ -15787,7 +15857,15 @@ const Store = {
 
     let session = null;
     try {
-      session = await Backend.currentSession();
+      /* A stored session that needs refreshing while the auth server
+         cannot be reached is retried by supabase-js for half a minute;
+         the page says it could not load well before that, and Try again
+         (or the next read) picks the session up once it can. */
+      let fuse;
+      session = await Promise.race([
+        Backend.currentSession(),
+        new Promise((_, no) => { fuse = setTimeout(() => no(new Error('SESSION_SLOW')), this.SESSION_WAIT); }),
+      ]).finally(() => clearTimeout(fuse));
     } catch (_){
       if (held || stale()) return this;
       apply();
@@ -16215,7 +16293,8 @@ function toast({ title, detail, bad = false, key, about }){
     while (liveToasts.size >= TOAST_LIMIT) dropToast(liveToasts.keys().next().value, true);
     el = document.createElement('div');
     host.appendChild(el);
-    if (!Motion.off) animate(el, { opacity:[0,1], translateY:[6,0], duration:160, ease:'outQuad' });
+    /* printed onto the page, from its left edge */
+    if (typeof Ink !== 'undefined') Ink.print(el, { from:'left', dur:170 });
   }
 
   el.className = 'toast' + (bad ? ' toast--bad' : '');
@@ -17617,7 +17696,8 @@ const BoardUI = {
           <li class="mrow__month" aria-hidden="true"><span class="mrow__mname">${esc(onClock(`${g.key}-01`, { month:'long' }))}</span>
             <span class="mrow__mtotal">${g.rows.reduce((n, m) => n + count(m), 0)} checked in</span></li>
           ${g.rows.map(m => row(m)).join('')}`).join('')}</ul>
-        ${past.length ? `<p class="minutes__foot">${past.length} ${past.length === 1 ? 'meeting' : 'meetings'} · ${held} check-ins</p>` : ''}
+        ${past.length ? `<p class="minutes__foot">${past.length} ${past.length === 1 ? 'meeting' : 'meetings'} · ${held} check-ins</p>`
+          : `<p class="minutes__foot">No meetings held yet.</p>`}
       </section>
     </div>`;
   },
@@ -17971,38 +18051,214 @@ const BoardUI = {
 /* ── js/04-fx.js ── */
 "use strict";
 
-const STEP = n => (typeof steps === 'function' ? steps(n) : undefined);
+/* ══ THE MOTION VOCABULARY. Few things move in Keystamp, and they move the
+   way paper and ink do. Most of the page is still; when something moves
+   it is because something just happened.
 
+     CUT     a blade crosses: a page turned, a sheet cut away, a sign-out
+     STAMP   an object brought down onto paper: held, struck, pressed, set
+     PRESS   a control under a finger: down a little and back
+     PRINT   a line or a mark coming off the press
+     SNAP    a figure replaced: the new one set down hard
+     SETTLE  back to rest, and staying there
+
+   Every one of them does nothing with motion reduced (the state it
+   announces is already on the page), and every one cleans up after
+   itself. The curves are named for what they do, not how they look. ══ */
 const EASE = {
-  CUT:    cubicBezier(.03,.9,.1,1),
-  CALM:   cubicBezier(.22,.61,.36,1),
+  SNAP:   cubicBezier(.2, .9, .25, 1),    // away at once, a controlled stop
+  STRIKE: cubicBezier(.6, 0, .92, .4),    // faster and faster into a hit
+  SETTLE: cubicBezier(.18, 1.6, .4, 1),   // out of a hit: a hair past rest, then still
+  INK:    cubicBezier(.3, .75, .3, 1),    // a mark spreading into the stock
+  CUT:    cubicBezier(.45, 0, .1, 1),     // a blade: a short held start, then all at once
+  FALL:   cubicBezier(.5, 0, .95, .5),    // weight let go
+  CALM:   cubicBezier(.22, .61, .36, 1),
 };
 
-/* one shake, and it means no: a refused code */
-const Impact = {
-  shake(el, px = 5, dur = 110){
+const Ink = {
+  /* a control under a finger: down a little, a hair smaller, back */
+  press(el, depth = 2){
     if (!el || Motion.off) return;
-    animate(el, { translateX:[0, -px, px * .7, -px * .35, 0],
-      translateY:[0, px * .5, -px * .4, px * .2, 0],
-      duration:dur, ease:'linear', onComplete(){ Motion.settle(el); } });
+    animate(el, { translateY:[0, depth, 0], scale:[1, .97, 1], duration:160, ease:EASE.SNAP,
+      onComplete(){ Motion.settle(el); } });
+  },
+
+  /* An object brought down onto paper. It is held over its place a moment
+     (larger, turned, rising a hair: the hand lifting before it strikes),
+     then struck down faster and faster, pressed a little below its size
+     at the hit, and set. `hit` runs on the frame it lands. */
+  stamp(el, { lift = 1.5, turn = -9, hold = 70, strike = 100, settle = 160, hit = null, done = null } = {}){
+    if (!el) return;
+    let landed = false, ended = false;
+    const land = () => { if (landed) return; landed = true; if (hit) try { hit(); } catch (_) {} };
+    const end = () => { if (ended) return; ended = true; land(); Motion.settle(el); if (done) try { done(); } catch (_) {} };
+    if (Motion.off){ el.style.opacity = ''; end(); return; }
+    aset(el, { opacity:1, scale:lift, rotate:turn });
+    createTimeline({ onComplete:end })
+      .add(el, { scale:lift * 1.07, rotate:turn - 2, duration:hold, ease:EASE.SNAP })
+      .add(el, { scale:.92, rotate:0, duration:strike, ease:EASE.STRIKE, onComplete:land })
+      .add(el, { scale:1, duration:settle, ease:EASE.SETTLE });
+    /* whatever a dropped frame does, the hit is never lost and the
+       object never stays in the air */
+    setTimeout(land, hold + strike + 40);
+    setTimeout(end, hold + strike + settle + 300);
+  },
+
+  /* The ink a hit squeezes out: the mark's own shape (`shape`, a path
+     in the seal's 64-unit box) or its box, a little wider than the mark,
+     there on the hit and gone into the stock at once. Under the mark. */
+  bleed(host, { color = 'var(--ink)', grow = 1.14, dur = 220, from = .45, box = false, shape = null } = {}){
+    if (!host || Motion.off) return;
+    const s = document.createElement('i');
+    s.className = 'inkbleed' + (box ? ' inkbleed--box' : '') + (shape ? ' inkbleed--shape' : '');
+    s.setAttribute('aria-hidden', 'true');
+    s.style.color = color;
+    if (shape) s.innerHTML = `<svg viewBox="0 0 64 64"><path d="${shape}"/></svg>`;
+    host.appendChild(s);
+    const gone = () => { try { s.remove(); } catch (_) {} };
+    animate(s, { scale:[1, grow], opacity:[from, 0], duration:dur, ease:EASE.INK, onComplete:gone });
+    setTimeout(gone, dur + 250);
+  },
+
+  /* what was struck answers it: pressed toward its own shadow, and back */
+  jolt(el, px = 2){
+    if (!el || Motion.off) return;
+    animate(el, { translateX:[0, px, 0], translateY:[0, px, 0], '--press':['0px', `${px}px`, '0px'],
+      duration:200, ease:EASE.SNAP, onComplete(){ Motion.settle(el); el.style.removeProperty('--press'); } });
+  },
+
+  /* a line or a mark coming off the press: uncovered from where it
+     starts, the way a roller passes over it */
+  print(el, { from = 'left', dur = 220, delay = 0 } = {}){
+    if (!el || Motion.off) return;
+    /* every side in the same unit, so each one is carried across */
+    const shut = { left:'inset(0% 100% 0% 0%)', right:'inset(0% 0% 0% 100%)', top:'inset(0% 0% 100% 0%)', bottom:'inset(100% 0% 0% 0%)' }[from];
+    el.style.opacity = '';
+    el.style.clipPath = shut;
+    const open = () => { el.style.clipPath = ''; };
+    animate(el, { clipPath:[shut, 'inset(0% 0% 0% 0%)'], duration:dur, delay, ease:EASE.INK, onComplete:open });
+    setTimeout(open, dur + delay + 300);
+  },
+
+  /* an SVG line drawn by the pen, start to end, and left as it was */
+  draw(line, { dur = 180, delay = 0, ease = EASE.INK } = {}){
+    if (!line || Motion.off || typeof createDrawable !== 'function') return;
+    const clean = () => { ['pathLength', 'draw', 'stroke-dasharray', 'stroke-dashoffset'].forEach(a => line.removeAttribute(a));
+      line.style.strokeDasharray = line.style.strokeDashoffset = line.style.strokeLinecap = ''; };
+    /* the line's own stylesheet dashes win over the attributes anime
+       writes, so the pen's dashes are carried into its style */
+    const mirror = () => { line.style.strokeDasharray = line.getAttribute('stroke-dasharray') || '';
+      line.style.strokeDashoffset = line.getAttribute('stroke-dashoffset') || ''; };
+    try {
+      const [d] = createDrawable(line);
+      aset(d, { draw:'0 0' }); mirror();
+      animate(d, { draw:['0 0', '0 1'], duration:dur, delay, ease, onUpdate:mirror,
+        onComplete:clean });
+      setTimeout(clean, dur + delay + 300);
+    } catch (_) { clean(); }
+  },
+
+  /* a figure replaced: the new one set down hard, as type is */
+  snap(el){
+    if (!el || Motion.off) return;
+    animate(el, { translateY:[-7, 0], scale:[1.1, 1], duration:150, ease:EASE.STRIKE,
+      onComplete(){ Motion.settle(el); } });
+  },
+
+  /* A blade the height `H`, leaning `angle` degrees: a crimson hairline
+     on its cutting edge, the ink body behind it, a screentone trail
+     behind that, fading out. `dir` > 0 cuts leftward (its edge on its
+     left), < 0 rightward. Its cutting edge runs from `foot` (at the
+     bottom) to `foot + lean` (at the top), measured from its left. */
+  blade(H, dir, { angle = 10, body = 22, trail = 140, edge = 2 } = {}){
+    const off = Math.round(Math.tan(angle * Math.PI / 180) * H);
+    const W = edge + body + trail + off;
+    const el = document.createElement('div');
+    el.className = 'blade';
+    el.setAttribute('aria-hidden', 'true');
+    el.style.width = W + 'px';
+    const fx = x => dir > 0 ? x : W - x;
+    const strip = (cls, x0, x1) => {
+      const i = document.createElement('i');
+      i.className = cls;
+      i.style.cssText = `left:0;width:${W}px;clip-path:polygon(${fx(x0 + off)}px 0, ${fx(x1 + off)}px 0, ${fx(x1)}px 100%, ${fx(x0)}px 100%)`;
+      el.appendChild(i);
+      return i;
+    };
+    const t = strip('blade__trail', edge + body, edge + body + trail);
+    const fade = `linear-gradient(${dir > 0 ? 90 : 270}deg, #000 ${edge + body}px, transparent ${W}px)`;
+    t.style.webkitMaskImage = t.style.maskImage = fade;
+    strip('blade__body', edge, edge + body);
+    strip('blade__edge', 0, edge);
+    return { el, W, off, foot: dir > 0 ? 0 : W, lean: dir > 0 ? off : -off };
+  },
+
+  /* THE CUT. A blade crosses the rectangle `f` (fixed coordinates) in
+     direction `dir` and takes `sheet` away behind its edge: what is ahead
+     of the edge is still the sheet, what is behind it is whatever lies
+     under the sheet. The sheet must lie exactly over `f`. A short held
+     start and then all at once. Resolves when the blade is through; the
+     caller removes the sheet. */
+  cut(sheet, f, dir, { dur = 300, angle = 11, body = 22, trail = 150, z = null } = {}){
+    const box = document.createElement('div');
+    box.className = 'cutbox';
+    box.style.cssText = `left:${f.left}px;top:${f.top}px;width:${f.width}px;height:${f.height}px` + (z ? `;z-index:${z}` : '');
+    const b = Ink.blade(f.height, dir, { angle, body, trail });
+    box.appendChild(b.el);
+    document.body.appendChild(box);
+    const FW = f.width, BW = b.W;
+    const x0 = dir > 0 ? FW : -BW, x1 = dir > 0 ? -BW : FW;
+    /* the sheet (laid exactly over `f`) keeps only what is ahead of the
+       cutting edge, which runs from (x + foot, bottom) to (x + foot + lean, top) */
+    const place = x => {
+      b.el.style.transform = `translateX(${x}px)`;
+      const top = x + b.foot + b.lean, bottom = x + b.foot;
+      sheet.style.clipPath = dir > 0
+        ? `polygon(0 0, ${top}px 0, ${bottom}px 100%, 0 100%)`
+        : `polygon(${top}px 0, 100% 0, 100% 100%, ${bottom}px 100%)`;
+    };
+    place(x0);
+    return new Promise(res => {
+      let done = false;
+      const finish = () => {
+        if (done) return; done = true;
+        try { box.remove(); } catch (_) {}
+        sheet.style.clipPath = dir > 0 ? 'inset(0 100% 0 0)' : 'inset(0 0 0 100%)';
+        res();
+      };
+      const pos = { x:x0 };
+      animate(pos, { x:[x0, x1], duration:dur, ease:EASE.CUT, onUpdate(){ place(pos.x); }, onComplete:finish });
+      setTimeout(finish, dur + 250);
+    });
+  },
+
+  /* a thing set down where it belongs: from a little above, a hair
+     past rest, still */
+  settle(el, { y = 6, dur = 220 } = {}){
+    if (!el || Motion.off) return;
+    animate(el, { translateY:[y, 0], duration:dur, ease:EASE.SETTLE, onComplete(){ Motion.settle(el); } });
+  },
+
+  /* a word that means no: knocked once, sideways */
+  knock(el, px = 5){
+    if (!el || Motion.off) return;
+    animate(el, { translateX:[0, -px, px * .6, -px * .25, 0], duration:170, ease:'linear',
+      onComplete(){ Motion.settle(el); } });
   },
 };
 
 const FX = {
-  /* a claim presses the prize's medal the way a stamp lands on the card:
-     brought down large and turned, set square in a few hard steps; the
-     burgundy is the ink it leaves. The note under it is printed after. */
+  /* a claim strikes the prize's medal the way a stamp strikes the card:
+     held over it, brought down, pressed; the burgundy is the ink it
+     leaves. The note under it is printed after. */
   claimStamp(row){
     const medal = row && row.querySelector('.tier__medal');
     if (!medal || Motion.off) return;
-    aset(medal, { scale:1.45, rotate:-9 });
-    animate(medal, { scale:[1.45, 1], rotate:[-9, 0], duration:180, delay:40, ease:STEP(4),
-      onComplete(){ Motion.settle(medal); } });
+    const face = medal.querySelector('.tier__face');
+    Ink.stamp(medal, { lift:1.22, turn:-8, hold:50, strike:100, settle:190,
+      hit(){ Ink.bleed(medal, { color:'var(--seal)', shape: face && face.getAttribute('d'), grow:1.15, dur:280, from:.55 }); } });
     const note = row.querySelector('.tier__note');
-    if (note){
-      aset(note, { opacity:0 });
-      animate(note, { opacity:[0, 1], duration:1, delay:230, ease:STEP(1), onComplete(){ Motion.settle(note); } });
-    }
+    if (note) Ink.print(note, { from:'left', dur:200, delay:240 });
   },
 
   /* a code read: the seat over the camera swells, the way a stamp is
@@ -18010,23 +18266,30 @@ const FX = {
   scanLock(){
     if (Motion.off) return;
     const seat = $('#reticle .reticle__seat');
-    if (seat) animate(seat, { scale:[1, 1.12], duration:180, ease:EASE.CUT });
+    if (seat) animate(seat, { scale:[1, 1.12], duration:160, ease:EASE.SNAP });
   },
 
   scanReject(){
     if (Motion.off) return;
-    Impact.shake($('#viewer'), 4, 100);
+    Ink.knock($('#viewer'), 4);
     const seat = $('#reticle .reticle__seat');
     if (seat) animate(seat, { scale:1, duration:220, ease:EASE.CALM });
   },
 
+  /* The stamp acquired: a sheet over everything, the seal just earned
+     struck onto it (the first stamp an account ever earns is held a
+     little longer, and leaves crimson), impact lines rushing in to it
+     on the hit, its tag stamped, the meeting printed under it. Then
+     `lift`: a blade cuts the sheet away over the page under it while
+     the seal is carried, on a slight arc, to hang over its seat. */
   stampAcquire(meeting){
     /* the seal just earned, with the glyph it will carry on the card;
        read before the record refreshes, so the count is its ordinal */
     const n = Store.totalStamps();
+    const first = n === 0;
     const lift = (32 - 32 * STAMP_FIT).toFixed(1);
     const scene = document.createElement('div');
-    scene.className = 'acq';
+    scene.className = 'acq' + (first ? ' acq--first' : '');
     /* a paper sheet: the seal just pressed, the record line under it */
     scene.innerHTML = `
       <span class="acq__lines" aria-hidden="true"></span>
@@ -18039,22 +18302,43 @@ const FX = {
         <p class="acq__meet"><b>GM ${pad(meeting.no)}</b><span>${fmtDate(meeting.date || Schedule.today())}</span></p>
       </div>`;
     document.body.appendChild(scene);
+    const sealEl = scene.querySelector('.acq__seal');
+    let fly = null;
 
     let gone = false;
-    const clear = () => { if (gone) return; gone = true; try { scene.remove(); } catch (_) {} };
+    const clear = () => {
+      if (gone) return; gone = true;
+      try { scene.remove(); } catch (_) {}
+      try { if (fly) fly.remove(); } catch (_) {}
+    };
     const fuse = setTimeout(clear, 8000);
 
     if (!Motion.off){
-      const sealEl = scene.querySelector('.acq__seal');
-      aset(sealEl, { scale:1.16, rotate:-4 });
-      animate(sealEl, { scale:[1.16, 1], rotate:[-4, -1.5],
-        duration:110, delay:80, ease:STEP(2) });
+      const lines = scene.querySelector('.acq__lines');
+      const kick = scene.querySelector('.acq__kick');
+      const meet = scene.querySelector('.acq__meet');
+      aset(lines, { opacity:0, scale:1.2 });
+      aset(kick, { opacity:0 });
+      aset(meet, { opacity:0 });
+      Ink.stamp(sealEl, { lift: first ? 1.7 : 1.55, turn:-12, hold: first ? 90 : 50, strike:120, settle:220,
+        hit(){
+          if (gone) return;
+          /* the impact: lines rush in to the seal and stop */
+          animate(lines, { opacity:[0, .9], scale:[1.2, 1], duration:190, ease:EASE.SNAP });
+          Ink.bleed(sealEl, { color: first ? 'var(--crimson)' : 'var(--ink)', shape: stampShape(n + 1, 0),
+            grow: first ? 1.16 : 1.1, dur: first ? 340 : 240, from: first ? .7 : .45 });
+          setTimeout(() => { if (!gone) Ink.stamp(kick, { lift:1.3, turn:-5, hold:20, strike:80, settle:140 }); }, 50);
+          Ink.print(meet, { from:'left', dur:220, delay:110 });
+        } });
     }
 
     return {
+      first,
       clear(){ clearTimeout(fuse); clear(); },
-      /* the seal travels from the sheet into its seat on the card while
-         the sheet clears; without a seat in view the sheet just clears */
+      /* the sheet is cut away; the seal is carried to hang over its seat,
+         held a little above the card (larger) and turned, so the press
+         that follows continues the same movement. Without a seat in view
+         the seal goes with the sheet. */
       lift(then, cell = null){
         clearTimeout(fuse);
         let fired = false;
@@ -18064,23 +18348,37 @@ const FX = {
           if (typeof then === 'function') then();
         };
         if (Motion.off || gone){ done(); return; }
-        const sealEl = scene.querySelector('.acq__seal');
-        const to = cell && cell.querySelector('svg') ? cell.querySelector('svg').getBoundingClientRect() : null;
-        if (sealEl && to && to.width > 8 && to.top > -to.height && to.bottom < innerHeight + to.height){
+        scene.classList.add('acq--lift');
+        const svg = cell && cell.querySelector('svg');
+        const to = svg ? svg.getBoundingClientRect() : null;
+        const vw = document.documentElement.clientWidth, vh = innerHeight;
+        const frame = { left:0, top:0, width:vw, height:vh };
+        const blade = vw < 600 ? { dur:260, angle:8, body:16, trail:90 } : { dur:320, angle:11, body:24, trail:160 };
+        if (sealEl && to && to.width > 8 && to.top > -to.height && to.bottom < vh + to.height){
+          /* the seal is taken off the sheet, so the blade does not cut it */
           const from = sealEl.getBoundingClientRect();
+          fly = sealEl;
+          fly.classList.add('acq__seal--fly');
+          fly.style.cssText = `left:${from.left}px;top:${from.top}px;width:${from.width}px;height:${from.height}px`;
+          document.body.appendChild(fly);
+          const size = cell.offsetWidth || to.width;
           const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
           const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
-          scene.classList.add('acq--lift');
-          /* it arrives as the landing begins: over its seat, held a little
-             above the card (larger) and turned, so the press that follows
-             continues the same movement */
           const lean = parseFloat(getComputedStyle(cell).getPropertyValue('--lean')) || 0;
-          animate(sealEl, { translateX:[0, dx], translateY:[0, dy], scale:[1, 1.55 * to.width / from.width],
-            rotate:[-1.5, lean - 9], duration:320, ease:cubicBezier(.7, 0, .18, 1), onComplete:done });
+          Ink.cut(scene, frame, 1, { ...blade, z:161 }).then(() => { try { scene.remove(); } catch (_) {} });
+          /* carried, not slid: away quickly, the vertical lagging the
+             horizontal so the path bows, slowing over the seat */
+          animate(fly, {
+            translateX:{ to:dx, ease:cubicBezier(.45, 0, .55, 1) },
+            translateY:{ to:dy, ease:cubicBezier(.62, 0, .5, 1) },
+            scale:{ to:1.5 * size / from.width, ease:cubicBezier(.4, 0, .5, 1) },
+            rotate:{ from:0, to:lean - 9, ease:cubicBezier(.4, 0, .5, 1) },
+            duration: vw < 600 ? 300 : 340, delay:50, onComplete:done });
+          setTimeout(done, 900);
         } else {
-          animate(scene, { opacity:[1, 0], duration:220, ease:EASE.CALM, onComplete:done });
+          Ink.cut(scene, frame, 1, { ...blade, z:161 }).then(done);
+          setTimeout(done, 900);
         }
-        setTimeout(done, 600);
       },
     };
   },
@@ -18111,7 +18409,7 @@ const FX = {
       if (!line.isConnected) return;
       if (Motion.off || !rule) return show();
       /* the marks are set down by the pen itself: as the rule passes a
-         meeting's date its mark appears, a stamp pressed in two steps */
+         meeting's date its mark appears, a stamp struck down */
       const todo = marks.map(el => ({ el, x:(parseFloat(el.style.left) || 0) / 100 }))
         .sort((p, q) => p.x - q.x);
       let k = 0;
@@ -18119,7 +18417,7 @@ const FX = {
         while (k < todo.length && todo[k].x <= f * now + .0001){
           const { el } = todo[k++];
           Motion.settle(el);
-          if (el.classList.contains('yt--set')) animate(el, { scale:[1.5, 1], duration:90, ease:STEP(2),
+          if (el.classList.contains('yt--set')) animate(el, { scale:[1.5, 1], duration:90, ease:EASE.STRIKE,
             onComplete(){ Motion.settle(el); } });
         }
       };
@@ -18132,31 +18430,71 @@ const FX = {
     };
   },
 
-  stampLand(cell){
+  /* A stamp into its seat. The seat is already printed on the card; the
+     impression comes down onto it: held over the seat a moment, struck
+     faster and faster, pressed a hair below its size, set. On the hit
+     the ink spreads a little into the stock, the card gives under it,
+     the route has just reached the seat, and the newest-stamp ring is
+     wet (crimson) for a moment and dries to ink. A stamp that fills the
+     card is followed by the card's own rubber stamp. */
+  stampLand(cell, { lift = 1.5, first = false, hold = 50 } = {}){
     if (!cell) return;
-    if (Motion.off){ cell.style.opacity = ''; return; }
-
-    const lean = getComputedStyle(cell).getPropertyValue('--lean').trim() || '0deg';
-    const deg = parseFloat(lean) || 0;
-
-    aset(cell, { opacity:1, scale:1.55, rotate:`${deg - 9}deg` });
-    animate(cell, { scale:[1.55, 1], rotate:[`${deg - 9}deg`, `${deg}deg`],
-      duration:180, delay:70, ease:STEP(4),
-      onComplete(){ Motion.settle(cell); } });
+    const press = cell.querySelector('.sf-press');
+    const card = cell.closest('.card');
+    const end = () => { cell.classList.remove('seal--landing', 'seal--wet'); cell.style.opacity = '';
+      if (card) card.classList.remove('card--landing'); };
+    if (Motion.off || !press){ end(); return; }
+    const mile = cell.classList.contains('seal--mile');
+    const i = [...cell.parentElement.children].indexOf(cell);
+    const route = card && [...card.querySelectorAll('.card__route')].find(r => getComputedStyle(r).display !== 'none');
+    const seg = route && i > 0 ? route.querySelectorAll('.card__seg')[i - 1] : null;
+    cell.style.opacity = '';
+    cell.classList.add('seal--landing');
+    /* the route arrives as the stamp does */
+    Ink.draw(seg, { dur:first ? 190 : 150, ease:'outQuad' });
+    Ink.stamp(press, { lift, turn:-9, hold: first ? hold + 50 : hold, strike:100, settle:170,
+      hit(){
+        /* the impression now covers its seat, and the ring is wet */
+        cell.classList.remove('seal--landing');
+        cell.classList.add('seal--wet');
+        const face = cell.querySelector('.sf-face');
+        Ink.bleed(cell, { color: mile ? 'var(--seal)' : 'var(--ink)', shape: face && face.getAttribute('d'),
+          grow: first ? 1.2 : 1.13, dur: first ? 300 : 220 });
+        Ink.jolt(card, 2);
+        Ink.snap(card && card.querySelector('.card__num b'));
+        /* the wet ring dries */
+        setTimeout(() => cell.classList.remove('seal--wet'), 90);
+        const done = card && card.querySelector('.card__done');
+        if (done) setTimeout(() => FX.cardStruck(card), 150);
+        else if (card) card.classList.remove('card--landing');
+      },
+      done(){ cell.classList.remove('seal--landing'); } });
+    setTimeout(end, 1400);
   },
 
+  /* the card's rubber stamp, struck across a card the last stamp filled:
+     the prize it unlocks is then printed into the stub */
+  cardStruck(card){
+    const done = card && card.querySelector('.card__done');
+    if (!done || Motion.off){ if (card) card.classList.remove('card--landing'); return; }
+    aset(done, { opacity:0 });
+    const go = card.querySelector('.card__goal--go, .card__goal--done');
+    if (go) go.style.clipPath = 'inset(0% 100% 0% 0%)';
+    card.classList.remove('card--landing');
+    Ink.stamp(done, { lift:1.3, turn:-5, hold:60, strike:110, settle:190,
+      hit(){ Ink.bleed(done, { color:'currentColor', grow:1.06, dur:260, from:.25, box:true }); Ink.jolt(card, 3); } });
+    if (go) Ink.print(go, { from:'left', dur:240, delay:300 });
+  },
+
+  /* the meeting's state on the desk, struck like a rubber stamp when
+     it changes (the code, when check-in opens, is printed as it is
+     drawn: paintBoard) */
   boardSeal(){
     const word = $('.proj__word');
     if (!word || Motion.off) return;
-    let deg = 0;
-    try {
-      const m = new DOMMatrixReadOnly(getComputedStyle(word).transform);
-      deg = Math.atan2(m.b, m.a) * 180 / Math.PI;
-    } catch (_) {}
-    aset(word, { scale:1.2, rotate:deg, opacity:0 });
-    animate(word, { opacity:[0, 1], duration:1, delay:60, ease:STEP(1) });
-    animate(word, { scale:[1.2, 1], rotate:deg, duration:120, delay:60, ease:STEP(3) });
-    setTimeout(() => Motion.settle(word), 300);
+    aset(word, { opacity:0 });
+    Ink.stamp(word, { lift:1.22, turn:-5, hold:40, strike:90, settle:170,
+      hit(){ Ink.bleed(word, { color:'currentColor', grow:1.06, dur:240, from:.22, box:true }); } });
   }
 };
 
@@ -18168,8 +18506,8 @@ const FX = {
 const SCENE_MARKUP = tail => `
   <div class="scene__base"></div>
   <div class="scene__grid">
-    <div class="scene__panel scene__panel--a"><i class="scene__ink"></i><p class="scene__word">Keystamp</p></div>
-    <div class="scene__panel scene__panel--b"><i class="scene__ink"></i>
+    <div class="scene__panel scene__panel--a"><i class="scene__ink"></i><i class="scene__edge"></i><p class="scene__word">Keystamp</p></div>
+    <div class="scene__panel scene__panel--b"><i class="scene__ink"></i><i class="scene__edge"></i>
       <p class="scene__kick">Key Club attendance</p><p class="scene__tail">${esc(tail || '')}</p></div>
     <div class="scene__panel scene__panel--c"><i class="scene__ink scene__ink--tone"></i>
       <span class="scene__seal"><svg class="brandseal" viewBox="0 0 840 875" aria-hidden="true"><use href="#bootseal"/></svg></span></div>
@@ -18185,25 +18523,6 @@ const fadeAway = (el, dur, cb) => {
 const Scenes = {
   busy: false,
 
-  parts(root){
-    const q = s => root.querySelector(s);
-    const panel = k => { const el = q('.scene__panel--' + k); return { el, ink:el.querySelector('.scene__ink') }; };
-    return { root, base:q('.scene__base'), grid:q('.scene__grid'),
-             a:panel('a'), b:panel('b'), c:panel('c'),
-             word:q('.scene__word'), kick:q('.scene__kick'), tail:q('.scene__tail'), seal:q('.scene__seal') };
-  },
-
-  exitVector(p, W, H){
-    const g = p.grid.getBoundingClientRect();
-    const mid = g.left + g.width / 2;
-    return panel => {
-      const r = panel.el.getBoundingClientRect();
-      const cx = r.left + r.width / 2;
-      if (r.width > g.width * .8 || Math.abs(cx - mid) < g.width * .1) return { translateY:-(r.bottom + 12) };
-      return cx < mid ? { translateX:-(r.right + 12) } : { translateX:(W - r.left + 12) };
-    };
-  },
-
   opening({ root = null, tail = '', reveal = () => {} } = {}){
     const boot = Boolean(root);
     let el = root;
@@ -18217,7 +18536,6 @@ const Scenes = {
       const t = el.querySelector('.scene__tail');
       if (t) t.textContent = tail;
     }
-    const p = this.parts(el);
     /* the scene is opaque on its first frame, so the page renders under
        cover; it holds only until it has finished building */
     const t0 = boot ? 0 : performance.now();
@@ -18243,27 +18561,73 @@ const Scenes = {
 
     if (!boot) el.classList.add('scene--play');
 
-    const MIN = 600;
-    /* the cover takes taps until it is gone: its panels are opaque over
-       the page for most of the way out */
+    /* held until the title is stamped (the printing runs in CSS, from
+       the cover's first frame), a short pause, and never less than MIN */
+    const MIN = 520, PAUSE = 150;
+    const printed = () => {
+      const word = el.querySelector('.scene__word');
+      const run = word && word.getAnimations ? word.getAnimations() : [];
+      return Promise.race([Promise.all(run.map(a => a.finished)).catch(() => {}),
+                           new Promise(r => setTimeout(r, 900))]);
+    };
+    /* then one cut takes the cover away, the way a page is turned in the
+       book; the page under it takes taps from the moment the blade moves */
     const open = () => {
       if (done) return;
       el.classList.add('scene--set');
-      const W = innerWidth;
-      const vec = this.exitVector(p, W, innerHeight);
-      const EXIT = cubicBezier(.7, 0, .18, 1);
-      animate(p.a.el, Object.assign({ duration:380, ease:EXIT }, vec(p.a)));
-      animate(p.b.el, Object.assign({ duration:360, delay:40, ease:EXIT }, vec(p.b)));
-      animate(p.c.el, Object.assign({ duration:360, delay:70, ease:EXIT }, vec(p.c)));
-      animate(p.base, { translateY:[0, innerHeight + 24], duration:380, delay:60, ease:EXIT });
-      setTimeout(revealOnce, 100);
-      setTimeout(finish, 480);
+      el.style.pointerEvents = 'none';
+      const vw = document.documentElement.clientWidth;
+      const f = { left:0, top:0, width:vw, height:innerHeight };
+      setTimeout(revealOnce, 60);
+      Ink.cut(el, f, 1, vw < 600 ? { dur:280, angle:8, body:16, trail:90, z:201 } : { dur:340, angle:11, body:24, trail:160, z:201 })
+        .then(finish);
     };
 
     return { release(){
       if (released) return; released = true;
-      setTimeout(open, Math.max(0, MIN - (performance.now() - t0)));
+      printed().then(() => setTimeout(open, Math.max(PAUSE, MIN - (performance.now() - t0))));
     } };
+  },
+
+  /* the page as it is printed this moment: the shell and its tab bar
+     copied onto one sheet of the paper (no ids, no focus, no pointer),
+     at the scroll it is read at, clipped to `clip` */
+  snapshot(W, H, clip){
+    const wrap = document.createElement('div');
+    wrap.className = 'cutsheet outpiece';
+    wrap.setAttribute('aria-hidden', 'true');
+    wrap.inert = true;
+    wrap.style.cssText = `left:0;top:0;width:${W}px;height:${H}px;clip-path:${clip}`;
+    const y = scrollY;
+    const copy = src => {
+      const c = src.cloneNode(true);
+      c.removeAttribute('id');
+      c.querySelectorAll('[id]').forEach(x => x.removeAttribute('id'));
+      const from = src.querySelectorAll('canvas'), to = c.querySelectorAll('canvas');
+      from.forEach((cv, i) => { try { to[i].getContext('2d').drawImage(cv, 0, 0); } catch (_) {} });
+      return c;
+    };
+    const shell = $('#shell');
+    if (shell){
+      const c = copy(shell);
+      c.style.cssText = `position:absolute;left:0;top:${-y}px;width:${shell.offsetWidth}px;margin:0;` +
+        `grid-template-columns:${getComputedStyle(shell).gridTemplateColumns}`;
+      /* the page column's own measure is set on its id, which a copy has not */
+      const view = $('#view'), cv = c.querySelector('main');
+      if (view && cv){
+        const cs = getComputedStyle(view);
+        cv.style.cssText = `width:100%;max-width:${cs.maxWidth};margin-inline:auto;padding:${cs.padding};` +
+          `--safe-x:${cs.getPropertyValue('--safe-x') || '0px'}`;
+      }
+      /* the rail is held at the top of the window by sticking; on the
+         copy, which does not scroll, it is put there */
+      const rail = c.querySelector('.rail');
+      if (rail && getComputedStyle($('.rail')).display !== 'none') rail.style.cssText = `position:relative;top:${y}px`;
+      wrap.appendChild(c);
+    }
+    const tabs = $('#tabs');
+    if (tabs && getComputedStyle(tabs).display !== 'none') wrap.appendChild(copy(tabs));
+    return wrap;
   },
 
   exit({ swap, fail, btn = null } = {}){
@@ -18271,88 +18635,117 @@ const Scenes = {
     const oops = typeof fail === 'function' ? fail : () => {};
     if (this.busy) return;
     this.busy = true;
+    if (!Motion.off) return this.cutApart({ btn, doSwap, oops });
 
-    const el = document.createElement('div');
-    el.className = 'scene scene--exit scene--set';
-    el.setAttribute('aria-hidden', 'true');
-    el.innerHTML = SCENE_MARKUP('');
-    document.body.appendChild(el);
-    const p = this.parts(el);
-    p.word.textContent = 'Signing out';
-    p.kick.textContent = 'Keystamp / Key Club attendance';
-    [p.word, p.kick, p.tail, p.seal].forEach(x => { x.style.opacity = '0'; });
-
+    /* with motion reduced nothing is cut and nothing covers the page:
+       a still tag says it while the sign-out is made, taps are held,
+       and the sign-in page is the change */
+    const base = document.createElement('div');
+    base.className = 'outbase';
+    base.setAttribute('aria-hidden', 'true');
+    const tag = document.createElement('p');
+    tag.className = 'outtag';
+    tag.textContent = 'Signing out';
+    document.body.append(base, tag);
     let done = false;
     const finish = () => {
       if (done) return; done = true;
       clearTimeout(fuse);
-      try { el.remove(); } catch (_) {}
+      [base, tag].forEach(x => { try { x.remove(); } catch (_) {} });
       this.busy = false;
     };
     /* held as long as a sign-out can take (its start delay, the 5 s wait
        for the server, the re-read), so it never lifts onto a page that
        is still signed in */
     const fuse = setTimeout(finish, 8000);
-    const swapNow = () => Promise.resolve().then(doSwap).catch(err => { oops(err); return 'failed'; })
-      .then(res => { p.word.textContent = res === 'failed' ? 'Still signed in' : 'Signed out';
-                     if (res === 'failed') p.tail.textContent = ''; return res; });
+    Promise.resolve().then(doSwap).catch(err => { oops(err); }).then(finish);
+  },
 
-    if (Motion.off){
-      [p.word, p.kick, p.tail, p.seal].forEach(x => { x.style.opacity = '1'; });
-      setTimeout(async () => {
-        await swapNow();
-        setTimeout(() => fadeAway(el, 150, finish), 300);
-      }, 120);
-      return;
-    }
+  cutApart({ btn, doSwap, oops }){
+    /* The page is cut apart and dismissed. A crimson hairline is drawn
+       across it on one diagonal, faster and faster; on the hit the two
+       halves part around a slit of ink, and hold a moment while the
+       sign-out is made under them; then the lower half drops away and
+       the upper is thrown off up the cut, and the sign-in page is what
+       was under them. No cover, no wait for an animation: the session
+       was let go at the tap. */
+    Ink.press(btn, 2);
+    const W = document.documentElement.clientWidth, H = innerHeight;
+    const lean = Math.tan(17 * Math.PI / 180) * H;
+    const P1 = [W / 2 + lean / 2, 0], P2 = [W / 2 - lean / 2, H];
+    const len = Math.hypot(P2[0] - P1[0], H);
+    const n = [H / len, lean / len];          /* across the cut, toward the lower-right half */
+    const base = document.createElement('div');
+    base.className = 'outbase';
+    base.setAttribute('aria-hidden', 'true');
+    const A = this.snapshot(W, H, `polygon(0 0, ${P1[0]}px 0, ${P2[0]}px ${H}px, 0 ${H}px)`);
+    const B = this.snapshot(W, H, `polygon(${P1[0]}px 0, ${W}px 0, ${W}px ${H}px, ${P2[0]}px ${H}px)`);
+    const slash = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    slash.setAttribute('class', 'outslash');
+    slash.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    slash.setAttribute('aria-hidden', 'true');
+    const ext = 40 / len;                      /* past both edges, so its ends are never seen */
+    slash.innerHTML = `<line x1="${P1[0] - (P2[0] - P1[0]) * ext}" y1="${-H * ext}" x2="${P2[0] + (P2[0] - P1[0]) * ext}" y2="${H + H * ext}"/>`;
+    document.body.append(base, A, B, slash);
+    const line = slash.querySelector('line');
 
-    if (btn){
-      aset(btn, { scale:.94 });
-      setTimeout(() => animate(btn, { scale:1, duration:110, ease:'outQuad',
-        onComplete(){ btn.style.transform = ''; } }), 90);
-    }
+    let done = false, tag = null;
+    const finish = () => {
+      if (done) return; done = true;
+      clearTimeout(fuse);
+      [base, A, B, slash, tag].forEach(x => { try { if (x) x.remove(); } catch (_) {} });
+      this.busy = false;
+    };
+    const fuse = setTimeout(finish, 8000);
+    const t0 = performance.now();
+    const swapped = Promise.resolve().then(doSwap).then(() => 'ok', err => { oops(err); return 'failed'; });
 
-    const W = innerWidth, H = innerHeight;
-    const vec = this.exitVector(p, W, H);
-    const IN = cubicBezier(.5, 0, .12, 1);
-    const from = panel => { const v = vec(panel); const k = Object.keys(v)[0]; return [k, v[k]]; };
-    [[p.a, 0, 250], [p.b, 30, 230], [p.c, 60, 230]].forEach(([panel, delay, dur]) => {
-      const [k, v] = from(panel);
-      aset(panel.el, { [k]:v });
-      animate(panel.el, { [k]:[v, 0], duration:dur, delay, ease:IN });
-    });
-    aset(p.base, { opacity:0 });
-    animate(p.base, { opacity:[0, 1], duration:200, delay:110, ease:'linear' });
-
-    let swapped = null;
-    setTimeout(() => { swapped = swapNow(); }, 340);
-
-    createTimeline({ autoplay:true })
-      .add(p.seal, { opacity:[0, 1], duration:1 }, 360)
-      .add(p.word, { opacity:[0, 1], duration:1 }, 400)
-      .add(p.word, { scale:[1.3, 1], duration:110, ease:STEP(3) }, 400)
-      .add(p.kick, { opacity:[0, 1], duration:1 }, 470)
-      .add(p.tail, { opacity:[0, 1], duration:1 }, 530);
-
-    const drop = async () => {
+    /* the stroke: held a breath, then drawn across faster and faster */
+    Ink.draw(line, { dur:130, delay:40, ease:EASE.STRIKE });
+    let slow = null;
+    setTimeout(() => {
       if (done) return;
-      const res = swapped ? await swapped : null;
-      const FALL = cubicBezier(.55, 0, 1, .45);
-      const dist = panel => H - panel.el.getBoundingClientRect().top + 16;
-      [[p.b, 0], [p.c, 50], [p.a, 100]].forEach(([panel, delay]) => {
-        animate(panel.el, { translateY:[0, dist(panel)], duration:420, delay, ease:FALL });
-      });
-      animate(p.base, { translateY:[0, H + 24], duration:420, delay:130, ease:FALL });
-      if (res !== 'failed'){
+      /* the hit: the halves part around the slit */
+      const gap = 3;
+      base.classList.add('outbase--slit');
+      animate(A, { translateX:-n[0] * gap, translateY:-n[1] * gap, duration:140, ease:EASE.SNAP });
+      animate(B, { translateX:n[0] * gap, translateY:n[1] * gap, duration:140, ease:EASE.SNAP });
+      /* a sign-out that takes a while says so, on the slit */
+      slow = setTimeout(() => {
+        if (done) return;
+        tag = document.createElement('p');
+        tag.className = 'outtag';
+        tag.textContent = 'Signing out';
+        document.body.appendChild(tag);
+      }, 700);
+    }, 170);
+
+    swapped.then(res => {
+      const wait = Math.max(0, 330 - (performance.now() - t0));
+      setTimeout(() => {
+        if (done) return;
+        clearTimeout(slow);
+        if (tag){ tag.remove(); tag = null; }
+        if (res === 'failed'){
+          /* still signed in: the halves close back over the page it is */
+          [A, B].forEach(x => animate(x, { translateX:0, translateY:0, duration:140, ease:EASE.SNAP }));
+          animate(slash, { opacity:0, duration:120, ease:'linear' });
+          setTimeout(finish, 180);
+          return;
+        }
+        /* dismissed: the slit goes, the halves go, the page under is the
+           sign-in page */
+        base.remove();
+        animate(slash, { opacity:0, duration:90, ease:'linear' });
+        animate(B, { translateX:n[0] * 3 + W * .06, translateY:H * 1.08, rotate:5, duration:430, ease:EASE.FALL });
+        animate(A, { translateX:-W * .32, translateY:-H * .9, rotate:-3, duration:430, delay:40, ease:EASE.FALL });
         setTimeout(() => {
           const panel = $('.authp');
-          if (panel) animate(panel, { translateY:[6, 0], duration:160, ease:'outQuad',
-            onComplete(){ panel.style.transform = ''; } });
-        }, 200);
-      }
-      setTimeout(finish, 560);
-    };
-    setTimeout(drop, 640);
+          if (panel) Ink.settle(panel);
+        }, 220);
+        setTimeout(finish, 500);
+      }, wait);
+    });
   },
 };
 
@@ -18360,7 +18753,7 @@ const Transit = {
   running: false,
 
   /* Work that would be seen as a stutter waits for the cut to finish.
-     Under the slab there is nothing to see anyway, and the deadline means
+     Under the blade there is little to see anyway, and the deadline means
      a cut that never reports done cannot strand the work. */
   after(fn, wait = 1200){
     const deadline = performance.now() + wait;
@@ -18374,10 +18767,12 @@ const Transit = {
   ORDER: { home:0, record:1, scan:2, rewards:3, profile:4,
            board:0, bcheckin:1, bmeet:2, bmembers:3 },
 
-  /* one cut for every page turn: a narrow ink band crosses the column in
-     tab order, the page being left ahead of it and the new page behind
-     its trailing edge; only its direction says anything */
-  CUT: { dur:280, angle:6 },
+  /* one cut for every page turn: a blade crosses the column in tab order,
+     the page being left ahead of its cutting edge and the new page behind
+     it, a screentone trail fading over the new page as it goes. The page
+     itself never moves; the blade does. A held start and then all at
+     once, the way a slash is. */
+  CUT: { dur:300, narrowDur:240, angle:11, narrowAngle:8 },
 
   direction(from, to){
     const a = this.ORDER[from], b = this.ORDER[to];
@@ -18417,24 +18812,6 @@ const Transit = {
     return wrap;
   },
 
-  band(f, dir){
-    const box = document.createElement('div');
-    box.className = 'cutbox';
-    box.style.cssText = `left:${f.left}px;top:${f.top}px;width:${f.width}px;height:${f.height}px`;
-    const W = f.width, H = f.height;
-    const off = Math.round(Math.tan(this.CUT.angle * Math.PI / 180) * H);
-    const B = Math.round(Math.max(56, Math.min(140, W * .1)));
-    const el = document.createElement('div');
-    el.className = 'slab';
-    el.style.cssText = `left:0;top:0;width:${B + off}px;height:${H}px`;
-    el.style.clipPath = dir > 0
-      ? `polygon(${off}px 0, 100% 0, ${B}px 100%, 0 100%)`
-      : `polygon(0 0, ${B}px 0, 100% 100%, ${off}px 100%)`;
-    box.appendChild(el);
-    document.body.appendChild(box);
-    return { box, el, W, H, B, off };
-  },
-
   run(from, to, swap){
     const view = $('#view');
     const doSwap = typeof swap === 'function' ? swap : () => {};
@@ -18448,36 +18825,17 @@ const Transit = {
 
     this.running = true;
     const f = this.frame(view);
+    const narrow = f.width < 600;
     const old = this.sheet(view, f);
-    const b = this.band(f, dir);
-    /* the new page is set under the copy at once; the band uncovers it */
+    /* the new page is set under the copy at once; the blade uncovers it */
     try { doSwap(); } catch (_) {}
-    const { W, B, off } = b;
-    /* the band's left edge travels from beyond one side to beyond the
-       other; the copy of the old page keeps only what is ahead of it */
-    const x0 = dir > 0 ? W : -(B + off), x1 = dir > 0 ? -(B + off) : W;
-    const place = x => {
-      b.el.style.transform = `translateX(${x}px)`;
-      old.style.clipPath = dir > 0
-        ? `polygon(0 0, ${x + off}px 0, ${x}px 100%, 0 100%)`
-        : `polygon(${x + B}px 0, 100% 0, 100% 100%, ${x + B + off}px 100%)`;
-    };
-    place(x0);
-
-    return new Promise(res => {
-      let settled = false;
-      const finish = () => {
-        if (settled) return; settled = true;
-        Transit.running = false;
-        try { b.box.remove(); } catch (_) {}
-        try { old.remove(); } catch (_) {}
-        Motion.settle(view);
-        res();
-      };
-      const pos = { x:x0 };
-      animate(pos, { x:[x0, x1], duration:this.CUT.dur, ease:cubicBezier(.5, 0, .3, 1),
-        onUpdate(){ place(pos.x); }, onComplete:finish });
-      setTimeout(finish, this.CUT.dur + 250);
+    const cut = Ink.cut(old, f, dir, narrow
+      ? { dur:this.CUT.narrowDur, angle:this.CUT.narrowAngle, body:14, trail:80 }
+      : { dur:this.CUT.dur, angle:this.CUT.angle, body:22, trail:150 });
+    return cut.then(() => {
+      Transit.running = false;
+      try { old.remove(); } catch (_) {}
+      Motion.settle(view);
     });
   },
 };
@@ -18508,6 +18866,9 @@ let boardMeeting = null;
 let boardPicked = null;
 
 let qrRetry = null;
+/* the code just opened is printed onto the wall the first time it is
+   drawn; one already up is redrawn in place */
+let plateFresh = false;
 function paintBoard(attempt = 0){
   const box = $('#qrBox');
   clearTimeout(qrRetry);
@@ -18520,6 +18881,7 @@ function paintBoard(attempt = 0){
        Scan reads the same link */
     const svg = qrSVG(QRFormat.link(token));
     box.innerHTML = svg || `<p class="qrpanel__fail">The code could not be drawn. Reload the page.</p>`;
+    if (plateFresh && svg){ plateFresh = false; Ink.print(box, { from:'top', dur:300 }); }
   }).catch(() => {
     if (!document.body.contains(box)) return;
     /* a code already on the wall stays up; otherwise the wall says it is
@@ -18573,7 +18935,7 @@ function paintAttendanceCount(meetingId){
     if (!node) return clearInterval(countTimer);
     if (node.textContent !== text){
       node.textContent = text;
-      if (!Motion.off && window.animate) animate(node, { scale:[1.3, 1], duration:240, ease:STEP(3) });
+      Ink.snap(node);
     }
     if (open === false){ clearInterval(countTimer); boardStamp = true; loadBoard(); }
   };
@@ -18875,16 +19237,13 @@ const Scanner = {
     this.zoom = { el, drop };
   },
 
+  /* while the camera starts, the seat says so; nothing spins */
   showLoader(){
     const ret = $('#reticle');
     if (!ret || $('#camLoader')) return;
-    const l = document.createElement('div');
+    const l = document.createElement('p');
     l.className = 'loader'; l.id = 'camLoader';
-
-    l.innerHTML = `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor"
-        stroke-width="3" aria-hidden="true">
-      <circle cx="50" cy="50" r="42" stroke-dasharray="42 90"/>
-      <circle cx="50" cy="50" r="30" stroke-dasharray="24 70" opacity=".5"/></svg>`;
+    l.textContent = 'Starting camera';
     ret.appendChild(l);
   },
   hideLoader(){ $('#camLoader')?.remove(); },
@@ -19029,7 +19388,14 @@ const Landing = {
   prime(cell){
     if (!this.active || !cell) return;
     this.armed = cell;
-    if (!Motion.off) cell.style.opacity = '0';
+    /* the seat waits printed, its impression not yet pressed */
+    if (!Motion.off){
+      cell.classList.add('seal--landing');
+      /* a card this stamp fills is not struck, nor its prize announced,
+         before the stamp is down */
+      const card = cell.closest('.card');
+      if (card) card.classList.add('card--landing');
+    }
     /* only as far as needed: a full card's figure and punch stay in view */
     try { cell.scrollIntoView({ block:'nearest', inline:'nearest', behavior:'instant' }); }
     catch (_) { try { cell.scrollIntoView(); } catch (__) {} }
@@ -19055,7 +19421,9 @@ const Landing = {
 
     const scene = FX.stampAcquire(meeting);
     this.scene = scene;
-    const held = new Promise(r => setTimeout(r, Motion.off ? 750 : 900));
+    /* long enough to read the sheet, no longer: the first stamp an
+       account earns is given a moment more */
+    const held = new Promise(r => setTimeout(r, Motion.off ? 750 : scene.first ? 860 : 640));
     /* the record is waited for a bounded time, well inside the cover's
        own fuse; the stamp is on file either way */
     const read = Promise.race([this.refresh(3), new Promise(r => setTimeout(() => r(false), 5000))]);
@@ -19105,7 +19473,7 @@ const Landing = {
     /* the seal travels from the sheet into its seat on the card */
     scene.lift(() => {
       if (seq !== this.seq) return;
-      if (cell && document.body.contains(cell)) FX.stampLand(cell);
+      if (cell && document.body.contains(cell)) FX.stampLand(cell, { first:scene.first, hold:30 });
       if (!fresh) Store.hydrate({ keep:true });
     }, cell && document.body.contains(cell) ? cell : null);
   },
@@ -20003,11 +20371,9 @@ const Inspect = {
         ? `left:${Math.round(cx)}px;top:${Math.round(below)}px;width:2px;height:${Math.max(0, Math.round(f.height - below))}px`
         : `left:-24px;top:${Math.round(cy)}px;width:24px;height:2px`;
     }
-    if (!Motion.off && window.animate){
-      aset(rec, { opacity:0 });
-      animate(rec, { opacity:[0, 1], duration:1, delay:90, ease:STEP(1) });
-      if (lead){ aset(lead, { opacity:0 }); animate(lead, { opacity:[0, 1], duration:1, delay:60, ease:STEP(1) }); }
-    }
+    /* the leader is drawn out from the stamp, the record printed after */
+    Ink.print(lead, { from: mode === 'foot' ? 'top' : 'right', dur:110, delay:40 });
+    Ink.print(rec, { from:'left', dur:180, delay:90 });
   },
   close(){
     const was = this.open;
@@ -20182,9 +20548,13 @@ document.addEventListener('click', e => {
 
   const bstart = e.target.closest('[data-bstart]');
   if (bstart){
+    /* Close check-in leaves focus on Reopen: a second press of the same
+       key (or a held one) in the moment after is the close's, not a
+       request to reopen */
+    if (Date.now() - closedAt < 800) return;
     const id = bstart.dataset.bstart;
     const openNow = list => ((list && list.meetings) || []).filter(m => m.state === 'OPEN');
-    const opened = () => { dropToast('board', true); boardMeeting = id; boardStamp = true;
+    const opened = () => { dropToast('board', true); boardMeeting = id; boardStamp = true; plateFresh = true;
                            BoardUI.refocus = '[data-bfull]'; loadBoard(); };
     hold(bstart, 'Opening');
     const who = Store.user && Store.user.id;
@@ -20219,7 +20589,7 @@ document.addEventListener('click', e => {
     const who = Store.user && Store.user.id;
     const still = () => Store.user && Store.user.id === who;
     const closed = () => { dropToast('board', true); clearInterval(countTimer); boardStamp = true; boardPicked = id;
-                           BoardUI.refocus = '[data-bstart]'; loadBoard(); };
+                           closedAt = Date.now(); BoardUI.refocus = '[data-bstart]'; loadBoard(); };
     hold(bend, 'Closing');
     Backend.endAttendance(id)
       .then(() => { if (still()) closed(); })
@@ -20280,10 +20650,10 @@ document.addEventListener('click', e => {
   const out = e.target.closest('[data-signout]');
   if (out){
     if (Store.signingOut || Scenes.busy) return;
-    /* the device lets go of the session at the tap: a reload or a new
-       tab from here on is signed out, whatever the scene is doing */
-    Store.signingOut = true;
-    Backend.letGo();
+    /* the page is taken for the cut as it is printed, before anything
+       on it answers the sign-out; then, in the same moment, the device
+       lets go of the session: a reload or a new tab from here on is
+       signed out, whatever the scene is doing */
     Scenes.exit({
       btn: out,
       swap: () => Store.signOut().then(() => {
@@ -20298,6 +20668,8 @@ document.addEventListener('click', e => {
       fail: () => toast({ key:'auth', bad:true, title:'Could not sign out',
                           detail:'Check your connection and try again.' }),
     });
+    Store.signingOut = true;
+    Backend.letGo();
     return;
   }
 
@@ -20444,8 +20816,14 @@ document.addEventListener('click', e => {
          reader has queued meanwhile is theirs */
       if (here === 'rewards' && navigating) go('rewards', { instant:true, force:true, quiet:true });
       else if (here === 'rewards'){
+        /* a claim made from the keyboard keeps the reader on the prize
+           it claimed, not back at the top of the page */
+        const kept = Boolean(document.activeElement && document.activeElement.closest &&
+          document.activeElement.closest(`[data-reward="${rid}"]`));
         go('rewards', { instant:true, force:true });
-        FX.claimStamp($(`[data-reward="${rid}"]`));
+        const row = $(`[data-reward="${rid}"]`);
+        if (kept && row){ row.setAttribute('tabindex', '-1'); row.focus({ preventScroll:true }); }
+        FX.claimStamp(row);
       }
       setTimeout(() => toast({ key:'claim', title:`${r.name} claimed`,
         detail:r.handedAt ? 'An officer has already handed it to you.'
@@ -20498,6 +20876,8 @@ document.addEventListener('click', e => {
 });
 
 let boardStamp = false;
+/* when this page last closed a check-in (Reopen is not taken at once) */
+let closedAt = 0;
 
 /* A write refused because the session is gone (signed out on another
    device, a refresh the server refused, another account in another
@@ -20768,6 +21148,20 @@ document.addEventListener('keydown', e => {
 
 addEventListener('pagehide', () => {
   Scanner.stop(); clearInterval(countTimer); TodayWatch.stop();
+});
+
+/* A camera left running in a tab nobody is looking at keeps its light
+   on and the phone's battery going: hidden, Scan lets it go; shown
+   again, Scan opens it again if it was reading when the tab was left. */
+let scanWasLive = false;
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden'){
+    scanWasLive = current === 'scan' && Boolean(Scanner.stream || Scanner.armTimer);
+    if (scanWasLive) Scanner.stop();
+    return;
+  }
+  if (scanWasLive && current === 'scan' && !Scanner.stream && !Landing.active) Scanner.armStart();
+  scanWasLive = false;
 });
 
 let opening = null;

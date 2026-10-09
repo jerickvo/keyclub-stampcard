@@ -105,7 +105,8 @@ function toast({ title, detail, bad = false, key, about }){
     while (liveToasts.size >= TOAST_LIMIT) dropToast(liveToasts.keys().next().value, true);
     el = document.createElement('div');
     host.appendChild(el);
-    if (!Motion.off) animate(el, { opacity:[0,1], translateY:[6,0], duration:160, ease:'outQuad' });
+    /* printed onto the page, from its left edge */
+    if (typeof Ink !== 'undefined') Ink.print(el, { from:'left', dur:170 });
   }
 
   el.className = 'toast' + (bad ? ' toast--bad' : '');

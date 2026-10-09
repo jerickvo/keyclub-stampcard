@@ -43,8 +43,8 @@ body{
 main#view:focus,main#view:focus-visible{outline:none}
 
 @media(min-width:1024px){
-  [data-screen="auth"] .rail,[data-screen="checkin"] .rail{display:none}
-  [data-screen="auth"] .shell,[data-screen="checkin"] .shell{grid-template-columns:1fr}
+  [data-screen="auth"] #shell > .rail,[data-screen="checkin"] #shell > .rail{display:none}
+  [data-screen="auth"] #shell,[data-screen="checkin"] #shell{grid-template-columns:1fr}
 }
 
 .h2{font-family:var(--f-head)}
