@@ -572,9 +572,20 @@ const Landing = {
     const from = current;
     this.active = true;
     this.armed = null;
-    if (this.scene) this.scene.clear();
+    if (this.scene){ this.scene.clear(); this.scene = null; }
 
-    const scene = FX.stampAcquire(meeting);
+    /* A page still under its opening (a wall code's link opened at load,
+       or an account just made from one) is uncovered first: the stamp is
+       struck where it can be seen, and lands in its seat in view. */
+    await Scenes.clear();
+    if (seq !== this.seq) return;
+    if (!Store.user || Store.user.id !== who){ this.active = false; return; }
+
+    /* the stamp's number on the card: its place in the record if the
+       record already has it, else the next one */
+    const chrono = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
+    const known = chrono.findIndex(s => s.meetingId === meeting.id);
+    const scene = FX.stampAcquire(meeting, known >= 0 ? known : Store.totalStamps());
     this.scene = scene;
     /* long enough to read the sheet, no longer: the first stamp an
        account earns is given a moment more */

@@ -18292,10 +18292,9 @@ const FX = {
      on the hit, its tag stamped, the meeting printed under it. Then
      `lift`: a blade cuts the sheet away over the page under it while
      the seal is carried, on a slight arc, to hang over its seat. */
-  stampAcquire(meeting){
-    /* the seal just earned, with the glyph it will carry on the card;
-       read before the record refreshes, so the count is its ordinal */
-    const n = Store.totalStamps();
+  stampAcquire(meeting, n = Store.totalStamps()){
+    /* the seal just earned, with the glyph it will carry on the card:
+       `n` is its place on the record, counted from 0 */
     const first = n === 0;
     const lift = (32 - 32 * STAMP_FIT).toFixed(1);
     const scene = document.createElement('div');
@@ -18533,6 +18532,22 @@ const fadeAway = (el, dur, cb) => {
 const Scenes = {
   busy: false,
 
+  /* Opening scenes still on screen, and what waits for them to go. A
+     stamp earned under one (a wall code's link opened at load, or an
+     account made from one) is struck once the page can be seen, not
+     under the cover where nobody sees it land. */
+  covers: 0,
+  waiting: [],
+  clear(){
+    if (!this.covers) return Promise.resolve();
+    /* each opening ends itself within 7 s; nothing waits longer than that */
+    return Promise.race([new Promise(r => this.waiting.push(r)), new Promise(r => setTimeout(r, 8000))]);
+  },
+  uncover(){
+    this.covers = Math.max(0, this.covers - 1);
+    if (!this.covers) this.waiting.splice(0).forEach(r => { try { r(); } catch (_) {} });
+  },
+
   opening({ root = null, tail = '', reveal = () => {} } = {}){
     const boot = Boolean(root);
     let el = root;
@@ -18556,8 +18571,11 @@ const Scenes = {
       if (done) return; done = true;
       clearTimeout(fuse);
       try { el.remove(); } catch (_) {}
+      Scenes.uncover();
     };
     const fuse = setTimeout(() => { revealOnce(); finish(); }, 7000);
+    /* on screen from here until finish(), which the fuse guarantees */
+    Scenes.covers++;
 
     if (Motion.off){
       el.classList.remove('scene--play');
@@ -19427,9 +19445,20 @@ const Landing = {
     const from = current;
     this.active = true;
     this.armed = null;
-    if (this.scene) this.scene.clear();
+    if (this.scene){ this.scene.clear(); this.scene = null; }
 
-    const scene = FX.stampAcquire(meeting);
+    /* A page still under its opening (a wall code's link opened at load,
+       or an account just made from one) is uncovered first: the stamp is
+       struck where it can be seen, and lands in its seat in view. */
+    await Scenes.clear();
+    if (seq !== this.seq) return;
+    if (!Store.user || Store.user.id !== who){ this.active = false; return; }
+
+    /* the stamp's number on the card: its place in the record if the
+       record already has it, else the next one */
+    const chrono = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
+    const known = chrono.findIndex(s => s.meetingId === meeting.id);
+    const scene = FX.stampAcquire(meeting, known >= 0 ? known : Store.totalStamps());
     this.scene = scene;
     /* long enough to read the sheet, no longer: the first stamp an
        account earns is given a moment more */
