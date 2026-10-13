@@ -253,10 +253,11 @@ select test.ck('nor for a signed-in account',
 select test.ck('touch_updated_at has a fixed search_path',
   (select array_to_string(proconfig, ',') from pg_proc where oid = 'public.touch_updated_at()'::regprocedure),
   'search_path=pg_catalog, public');
+-- a new account, made now (gus was made with the fixtures above)
 insert into auth.users(id, email, raw_user_meta_data) values
-  ('70000000-0000-0000-0000-000000000006','gus@keystamp.invalid', '{"username":"gus"}');
+  ('70000000-0000-0000-0000-000000000007','hal@keystamp.invalid', '{"username":"hal"}');
 select test.ck('sign-up still makes a profile (trigger without EXECUTE)',
-  (select username from public.profiles where id='70000000-0000-0000-0000-000000000006'), 'gus');
+  (select username from public.profiles where id='70000000-0000-0000-0000-000000000007'), 'hal');
 select test.ck('a member still changes the case of their name (both triggers fire)',
   test.try('authenticated','70000000-0000-0000-0000-000000000003',
     $$update public.profiles set display_name = 'DANA' where id = auth.uid()$$), 'OK');
@@ -267,6 +268,35 @@ select test.ck('attendance.meeting_id is indexed',
   (select count(*)::text from pg_index i where i.indrelid = 'public.attendance'::regclass
      and (select array_agg(a.attname::text) from unnest(i.indkey) k join pg_attribute a
             on a.attrelid = i.indrelid and a.attnum = k)::text[] = array['meeting_id']), '1');
+
+
+-- ══ 5. A MEETING IS SCHEDULED CLOSED, AS ITS OFFICER ══
+select test.ck('an officer schedules a meeting, as themselves',
+  test.try('authenticated','70000000-0000-0000-0000-000000000001',
+    $$insert into public.meetings(meeting_number, meeting_date, start_time, end_time, created_by)
+      values (790, date '2026-03-01', '12:40 PM', '1:30 PM', '70000000-0000-0000-0000-000000000001')$$), 'OK');
+select test.ck('or with no creator named',
+  test.try('authenticated','70000000-0000-0000-0000-000000000001',
+    $$insert into public.meetings(meeting_number, meeting_date, start_time) values (791, date '2026-03-02', '12:40 PM')$$), 'OK');
+select test.ck('a meeting cannot be inserted already taking check-ins',
+  test.try('authenticated','70000000-0000-0000-0000-000000000001',
+    $$insert into public.meetings(meeting_number, meeting_date, start_time, check_in_open)
+      values (792, date '2026-03-03', '12:40 PM', true)$$), '42501');
+select test.ck('so no meeting is open without a session',
+  (select count(*)::text from public.meetings m where m.check_in_open
+     and not exists (select 1 from public.attendance_sessions s where s.meeting_id = m.id and s.ended_at is null)), '0');
+select test.ck('nor credited to another officer',
+  test.try('authenticated','70000000-0000-0000-0000-000000000001',
+    $$insert into public.meetings(meeting_number, meeting_date, start_time, created_by)
+      values (793, date '2026-03-04', '12:40 PM', '70000000-0000-0000-0000-000000000002')$$), '42501');
+select test.ck('nor to a member',
+  test.try('authenticated','70000000-0000-0000-0000-000000000001',
+    $$insert into public.meetings(meeting_number, meeting_date, start_time, created_by)
+      values (794, date '2026-03-05', '12:40 PM', '70000000-0000-0000-0000-000000000003')$$), '42501');
+select test.ck('a member still schedules nothing',
+  test.try('authenticated','70000000-0000-0000-0000-000000000003',
+    $$insert into public.meetings(meeting_number, meeting_date, start_time, created_by)
+      values (795, date '2026-03-06', '12:40 PM', '70000000-0000-0000-0000-000000000003')$$), '42501');
 
 
 \pset tuples_only on

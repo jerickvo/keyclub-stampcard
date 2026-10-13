@@ -337,8 +337,14 @@ create policy meetings_read on public.meetings
 -- instead of inheriting a blanket grant.
 drop policy if exists meetings_board_write on public.meetings;
 drop policy if exists meetings_board_insert on public.meetings;
+-- A meeting is created closed (check-in opens only through
+-- start_check_in(), with its session), and as the officer who made it.
 create policy meetings_board_insert on public.meetings
-  for insert with check (public.is_board());
+  for insert with check (
+    public.is_board()
+    and not check_in_open
+    and (created_by is null or created_by = auth.uid())
+  );
 -- No UPDATE: nothing edits a meeting after it is made, and check_in_open
 -- changes only through start_check_in() and end_check_in().
 drop policy if exists meetings_board_update on public.meetings;
