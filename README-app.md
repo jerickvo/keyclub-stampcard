@@ -384,42 +384,59 @@ over; until it is run, the client falls back to the old name.
 
 ## Motion
 
-One scene module, `04b-scenes.js`, owns the three moments that cover the whole
-screen, and one `Transit` object owns every page change.
+The vocabulary is in `04-fx.js` (`Ink`): CUT (a blade crosses), STAMP (held
+over its place, struck faster and faster, pressed a hair below its size,
+set), PRESS, PRINT (a line coming off the press), SNAP (a figure set down
+hard) and SETTLE. Most of the page is still; something moves because
+something just happened. `04b-scenes.js` owns the moments that cover the
+whole screen and every page change.
 
-- **Opening** (`Scenes.opening`) — a manga page: three outlined panels, ink
-  wiped into each in hard steps, the seal and the wordmark stamped in, then the
-  panels part and the paper sheet drops to reveal the app beneath. The cold
-  load uses the static markup in `dev.html` and CSS keyframes for the intro
-  beats, so the page composes itself from the first paint even before the
-  scripts arrive; JS only holds the composed page until the first render is
-  done and then opens it. Signing in builds the same scene and slides it over
-  the form. ~1.3s from first paint, never less than 1s on a fast load.
-- **Page transitions** (`Transit.run`) — the gutter cut. An ink panel with a
-  tilted leading edge sweeps in from the direction of travel (forward along
-  the tab strip from the right, back from the left) and pushes the leaving
-  page out; under full cover the page swaps and the destination's title is
-  stamped onto the panel at the exact position of the real title; the panel
-  sweeps off and the new page settles with its title already in place. Each
-  destination keeps the same cut with its own personality: Home quick with a
-  halftone edge, Record slow and straight, Scan short, Rewards a layered
-  halftone panel under the ink with a paper flash, Member slowest, board
-  tools crisp. 430–650ms. Reduced motion crossfades the snapshot in 140ms.
-- **Sign-out** (`Scenes.exit`) — the panels slam shut over the app, the paper
-  fills the gutters, SIGNED OUT is stamped, and the whole page drops away to
-  the sign-in spread. Distinct from both the opening and the transitions.
+- **Opening** (`Scenes.opening`) — a manga page: three outlined panels
+  inked one after another, the club's seal struck into the tone, the
+  wordmark stamped with its crimson plate pulled true. The cold load runs
+  this in CSS from the first paint, before the scripts arrive; it holds
+  until the title is printed (and at least 520ms), then one blade cut
+  takes the cover away (280–340ms) and the page under it takes taps as
+  soon as the blade moves. Signing in plays the same page.
+- **Page transitions** (`Transit.run`) — one blade (a crimson hairline on
+  its edge, the ink body, a screentone trail) crosses the page column in
+  tab order: forward from the right, back from the left. Ahead of its edge
+  is a copy of the page being left, behind it the new page, which is
+  already in place. 240ms on a phone, 300ms on a desk, a held start and
+  then all at once; a turn tapped during one waits for it. Scan is never
+  cut into (the camera image is the change).
+- **Sign-out** (`Scenes.exit`) — the session is let go at the tap, before
+  anything moves, so a reload or a closed tab during the scene is signed
+  out. A crimson hairline is drawn across the page on a diagonal; the two
+  halves part around an ink slit while the sign-out is made; then the
+  lower half drops and the upper is thrown off up the cut, and the
+  sign-in page is what was under them.
 - **Stamp landing** (`Landing` in `05-scan.js`, `FX.stampAcquire` and
-  `FX.stampLand` in `04-fx.js`) — one ordered sequence rather than parallel
-  timers. The moment the server confirms a scan the black "+1" interstitial
-  covers the screen; the store re-reads attendance underneath it (retrying a
-  few times if the network is slow) and the cover holds until the data is in
-  and at least 900ms have passed. Home is then rendered under the cover, the
-  cell that belongs to the verified meeting is found by that meeting's id in
-  the chronological record (so a stale count can never pick the wrong cell),
-  hidden, and scrolled into view; the cover lifts, and only when it has left
-  does the stamp slam onto the card. If the re-read never succeeds the cover
-  lifts without a landing and the page shows its normal load-failure state.
-  A second scan that starts mid-sequence supersedes the first cleanly.
+  `FX.stampLand`) — the server's answer drives it. The "Stamp acquired"
+  sheet is struck: the seal held over the sheet, brought down, impact
+  lines rushing in, its tag stamped, the meeting printed under it. The
+  record is re-read beneath it (the sheet holds at least 640ms, 860 for an
+  account's first stamp). Then a blade cuts the sheet away while the seal
+  is carried on a bowed path to hang over its seat, the seat found by the
+  verified meeting's id in the record, and it is struck into it: ink
+  bleeds into the stock, the card gives, the count snaps, the ring is wet
+  crimson and dries. A stamp that fills a card is followed by the card's
+  own rubber stamp and the prize line printed. If the re-read never gets
+  through, the stamp the verifier accepted is shown, with a note.
+  A stamp earned while an opening still covers the page (a wall code's
+  link opened at load, or an account made from one) waits for the
+  opening's cut (`Scenes.clear()`), so it is struck and lands in view,
+  never under the cover.
+- **Smaller things** — a claim strikes the prize's medal in burgundy; the
+  Record's year line is printed once a visit, its marks set down as the pen
+  reaches them; on the board, "Check-in open" is struck, the wall code is
+  printed from the top and the live count is snapped.
+
+With motion reduced (the system setting or Reduce motion on the page),
+nothing travels: pages change in place, the opening is a still that
+fades, the stamp sheet is shown still and gives way to the card with the
+stamp on it, and sign-out says Signing out while it is made. Every state
+is still said; only the movement goes. Without anime.js the same holds.
 
 Messages are toasts that cut in and out, one at a time. They wait while
 hovered or focused; a tap or Escape dismisses them. A refusal is the same
@@ -444,10 +461,6 @@ repaints nothing (`Store.stamp` against the last paint), so returning to the
 app does not reset the page under the reader; Scan only refreshes its
 meeting line, and nothing is re-read under a working button.
 
-Without anime.js the app still works: `Motion.off` turns every animation into an
-instant state change, and `prefers-reduced-motion` (or the account setting)
-shows the composed scenes as stills with a short fade and swaps pages with no
-movement.
 
 ---
 
@@ -488,4 +501,14 @@ python3 tools-overlap-check.py   # renders index.html, reports collisions
 node --test tools-test-meetings.mjs   # meeting-number, form-default and board-pane rules
 node --test tools-test-rewards.mjs    # the reward-tier rule
 node --test tools-test-scan.mjs       # the Scan meeting line, the store fingerprint, the Card's action
+node --test tools-test-store.mjs      # whose record is on the page; every stamp threshold
+node --test --test-concurrency=1 tools-test-browser.mjs   # the built page in Chromium, on the test double
 ```
+
+`tools-test-browser.mjs` needs Playwright (`npm i -D playwright`, or a
+global install on `NODE_PATH`) and skips itself without it; build first.
+It covers what the unit tests cannot reach: an account switched under a
+page, answers lost after the server acted, the arrival by a wall code
+(signed in, and making an account), focus on the inked panels, contrast,
+glyphs running into text, every page at 320–1920px, and the camera being
+let go.

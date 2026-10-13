@@ -154,7 +154,9 @@ refused (`ATTENDANCE_ALREADY_OPEN`) instead of closing the other one; two
 officers opening the same meeting at once both succeed with one session;
 a meeting's `check_in_open` and its session always change together. A
 board account cannot change check-in state around the function (its
-direct write policies are removed).
+direct write policies are removed, and with
+`migrations/2026-10-13-meeting-insert-guard.sql` it cannot create a
+meeting already open either).
 
 The browser cannot forge a token: the secret exists only in the
 functions' environment. There is no client-side verifier.
@@ -245,9 +247,16 @@ the prize list and searches names through the roster; without
 allows.
 
 `02-rls_test.sql`, `03-handover_test.sql` and `04-hardening_test.sql`
-(43 + 51 + 60 checks) run against local Postgres 16 with
+(43 + 51 + 67 checks) run against local Postgres 16 with
 `00-supabase.sql`, both for a fresh `schema.sql` and for the previous
-`schema.sql` plus the migrations run twice.
+`schema.sql` plus the migrations run twice. `05-concurrency_test.sh`
+(114 checks) runs the races for real, in separate connections released
+at the same instant: twelve simultaneous stamps for one member and
+meeting, six hand-overs of one prize, a claim against a hand-over, an
+Undo against a claim, five claims at once, two meetings opened at once,
+an open against a close, and an empty meeting deleted as someone is
+stamped into it. Run it on a database prepared as above:
+`PGDATABASE=<db> ./05-concurrency_test.sh`.
 
 ## Check-in, claims and the advisors (2026-09-24)
 
@@ -270,12 +279,28 @@ allows.
   Leaked-password protection is a dashboard setting (Authentication →
   password security), not SQL.
 
+## A meeting is scheduled closed (2026-10-13)
+
+`migrations/2026-10-13-meeting-insert-guard.sql`: a board account's own
+insert into `meetings` was checked only for being a board account, so a
+meeting could be created already "taking check-ins" with no session (it
+takes no scans, and refuses every other meeting's opening until someone
+closes it), or credited to another officer. The insert policy now
+requires the meeting to start closed and to name its creator as the
+account making it (or nobody). The page already schedules that way, so
+it works before and after the migration.
+
+**This migration has not been applied to the live project.** Run it in
+the SQL Editor (it is idempotent), then check that
+`select with_check from pg_policies where policyname = 'meetings_board_insert'`
+names `check_in_open`.
+
 A project on the schema before 2026-09-10 runs, in this order, each in
 the SQL Editor (each is idempotent): `2026-09-10-delete-meeting`,
 `2026-09-23-prizes-and-hand-stamps`, `2026-09-24-profile-names`,
 `2026-09-24-meeting-guards`, `2026-09-24-check-in-transitions`,
 `2026-09-24-claim-ownership`, `2026-09-24-advisor-fixes`,
-`2026-09-24-claim-indexes`. Every step
+`2026-09-24-claim-indexes`, `2026-10-13-meeting-insert-guard`. Every step
 works with the page and the functions already live. Then deploy
 `board-data`, `attendance-session` and `verify-attendance`, and publish
 the client.
@@ -289,19 +314,33 @@ trigger on `reward_claims`), so Undo cannot take it back either.
 
 ## Testing status — read before trusting
 
+**Verified against local Postgres 16:** `schema.sql` applies cleanly,
+fresh and as an upgrade; the RLS policies, triggers and functions refuse
+what they should, as real roles with real JWT claims (the SQL suites);
+and the races resolve to one outcome (`05-concurrency_test.sh`).
+
 **Verified against the mock harness (`mock-supabase.js`):** client
 wiring, error mapping, fail-closed behaviour, auth flows, board
-authorization, duplicate and concurrency handling *as the client sees
-them*, plus routing, empty/error states and the responsive matrix.
-These run as ad-hoc Playwright scripts driving the built `index.html`
-with `mock-supabase.js` injected; the harness ships in the repo, the
-scripts do not.
+authorization, duplicate, lost-answer and account-switch handling *as
+the client sees them*, the arrival by a wall code, routing, focus and
+contrast, and the responsive matrix. `tools-test-browser.mjs` drives the
+built `index.html` with the harness injected (and every request to a
+real project refused). The harness can delay a request or lose its
+answer after the work is done (`window.__fault`), keeps the session
+where supabase-js keeps it, and is shared between tabs.
 
-**NOT verified — needs your live project:**
+**Checked against the live project, read only (2026-10-13):** its
+tables, columns, constraints, indexes, policies, triggers and function
+bodies match `schema.sql` (two function bodies differ only in line
+endings; the platform adds its own `rls_auto_enable` event trigger and
+the default REFERENCES/TRIGGER table grants), and the source of the three
+deployed functions is the source in this repository. Nothing was
+written to it.
 
-- that `schema.sql` applies without error
-- that the RLS policies and triggers actually refuse what they should
-- that the deployed Deno functions behave as written
+**NOT verified:**
+
+- the deployed Deno functions' behaviour end to end (Deno, PostgREST and
+  the auth server were not available to run locally)
 - that `bootstrap-board.mjs` provisions a real board account
 - the end-to-end flow on real hardware with a real camera
 
