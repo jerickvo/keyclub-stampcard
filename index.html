@@ -888,9 +888,9 @@ body{background:var(--paper);color:var(--ink)}
 
 /* the standing: one figure in the brush face, the rest as a ledger */
 .stand{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:end;gap:0 20px;min-width:0}
-.stand__fig{display:grid;margin:0}
-.stand__fig b{font:400 clamp(80px,22vw,112px)/.74 var(--f-display);letter-spacing:-.03em;font-weight:400}
-.stand__fig span{margin-top:14px;font:400 11px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.stand__fig{display:grid;margin:0;font-size:clamp(80px,22vw,112px);row-gap:calc(3px + .11em)}
+.stand__fig b{font:400 1em/.74 var(--f-display);letter-spacing:-.03em;font-weight:400}
+.stand__fig span{font:400 11px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
 .stand__ledger{margin:0;display:grid;align-self:end}
 .stand__ledger div{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
   padding:8px 0 7px;border-bottom:1px solid var(--tint)}
@@ -913,7 +913,7 @@ body{background:var(--paper);color:var(--ink)}
   .idp__seal{right:-30%;width:min(110%,460px)}
   .idp__stamp{grid-column:1;grid-row:1;justify-self:end;align-self:start;font-size:clamp(15px,1.5vw,19px);padding:6px 12px 5px}
   .idp__who{grid-column:1;grid-row:3;gap:14px}
-  .stand__fig b{font-size:clamp(104px,9vw,150px)}
+  .stand__fig{font-size:clamp(104px,9vw,150px)}
   /* with cards on file the standing is a column under the panel */
   .mem--filed .stand{grid-template-columns:minmax(0,1fr);align-content:start;row-gap:var(--sp-group)}
   /* with none, the standing runs across under both */
@@ -1766,6 +1766,11 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .tools--open .tools__state::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--crimson);box-shadow:0 0 0 3px rgba(193,31,51,.3)}
 .tools--open .act--ink::before{background:radial-gradient(circle,var(--paper-card) 0 .95px,transparent 1.25px) 0 0/4px 4px}
 .tools--open .act--ink > span{background:var(--paper-card);color:var(--ink)}
+/* the face is paper here, so the ring under the keyboard is ink, and the
+   plate turns burgundy as it does anywhere else */
+.tools--open .act--ink:focus-visible > span,.proj--live .act--ink:focus-visible > span{outline-color:var(--ink)}
+.tools--open .act--ink:focus-visible::before,.proj--live .act--ink:focus-visible::before{background:var(--seal)}
+@media (hover:hover){ .tools--open .act--ink:hover::before,.proj--live .act--ink:hover::before{background:var(--seal)} }
 .tools--open .act--rule{color:var(--paper-card)}
 .tools--open .act--rule::after{background:var(--paper-card)}
 .tools__lines{position:absolute!important;inset:0;z-index:0!important;pointer-events:none;
@@ -1837,7 +1842,9 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
   grid-template-columns:minmax(0,1fr);grid-template-areas:"meet" "word" "plate" "count" "ctls";
   padding:clamp(18px,3vw,30px);border:3px solid var(--ink);background:var(--paper)}
 .proj > *{position:relative;z-index:1}
-.proj__meet{grid-area:meet;display:grid;gap:6px;min-width:0}
+/* the display face runs its 1 and its G down past the line: the date
+   under the number is set clear of them, the gap growing with it */
+.proj__meet{grid-area:meet;display:grid;gap:calc(6px + .14em);min-width:0;font-size:clamp(96px,16vw,170px)}
 .proj__no{display:flex;align-items:flex-end;gap:8px;margin:0;line-height:.78}
 .proj__no span{font:400 clamp(18px,2.6vw,26px)/1 var(--f-head);letter-spacing:.04em;padding-bottom:.35em}
 .proj__no b{font:400 clamp(96px,16vw,170px)/.76 var(--f-display);font-weight:400;letter-spacing:-.03em}
@@ -1983,9 +1990,17 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .minutes__fold{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .minutes__fold .mrow{border:0}
 .minutes__fold .mrow__go{min-height:84px;padding:14px 18px;background:var(--ink);color:var(--paper-card)}
-.minutes__fold .mrow__gm span,.minutes__fold .mrow__n span{color:#BDB6AA}
+/* the fold is inked: its quiet words are the light ink, not burgundy,
+   which reads 1.8:1 on black */
+.minutes__fold .mrow__gm span,.minutes__fold .mrow__n span,.minutes__fold .mrow__when{color:#BDB6AA}
 .minutes__fold .mrow__gm b{font-size:clamp(52px,7vw,72px)}
 .minutes__fold .mrow__day{font-size:clamp(20px,2.4vw,26px)}
+/* on a narrow phone the state's badge would squeeze today's date into two
+   lines ("Tue, Oct" / "13"): the day and its hours take the whole line,
+   the count and the state go under them */
+@media (max-width:400px){
+  .minutes__fold .mrow__go{grid-template-rows:auto auto auto;grid-template-areas:"gm day day" "gm when when" "gm n state";row-gap:6px}
+}
 .minutes__fold .mrow__state{color:var(--paper-card)}
 .minutes__fold .mrow--open .mrow__state{padding:5px 8px 4px;background:var(--crimson);color:var(--paper-card);font:400 13px/1 var(--f-head);letter-spacing:.06em}
 .minutes__fold .mrow__n b{font-size:clamp(30px,3.4vw,40px);font-family:var(--f-display)}
@@ -16484,12 +16499,12 @@ const C = {
             mtg.no}, ${fmtDate(mtg.date)}, ${byHand(rec) ? 'added by an officer' : `checked in at ${fmtTime(rec.at)}`}"`
         : now ? ` tabindex="0" role="button" data-go="scan" aria-label="Check in${liveNo ? ` at general meeting ${liveNo}` : ''}"` : '';
 
-      return `<li class="seal ${state ? 'seal--' + state : ''}${hero}${mile}${now}" data-seal="${state || 'empty'}" style="${seatStyle(i)}"${control}>
+      return `<div class="seal ${state ? 'seal--' + state : ''}${hero}${mile}${now}" data-seal="${state || 'empty'}" style="${seatStyle(i)}"${control}>
         ${seatSvg(p.floor + i, mile)}
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
         ${now && tag ? `<span class="seal__go" aria-hidden="true">Check in</span>` : ''}
         ${docket}
-      </li>`;
+      </div>`;
     }).join('');
 
     /* the stub: what the card is for. A prize ready to claim is the card's
@@ -16520,7 +16535,7 @@ const C = {
       <div class="card__field">
         <span class="card__wm" aria-hidden="true">${brandSeal('cnh')}</span>
         ${seatRoute(full ? p.span : p.filled)}
-        <ol class="seals" id="seals" aria-label="${p.filled} of ${p.span} stamps on this card">${cells}</ol>
+        <div class="seals" id="seals" role="group" aria-label="${p.filled} of ${p.span} stamps on this card">${cells}</div>
         ${done}
       </div>
       <div class="card__foot">${goalLine}</div>
@@ -17817,7 +17832,7 @@ const BoardUI = {
             const card = n && n % 10 === 0 ? n / 10 : Math.floor(n / 10) + 1;
             return `${index}<tr data-bmember="${esc(m.id)}">
             <th scope="row"><button class="roster__name" type="button" data-bmember="${esc(m.id)}">${esc(m.username)}</button></th>
-            <td class="roster__card"><span class="roster__cno">${pad(card)}</span><span class="roster__seats" aria-label="${on} of 10 on card ${pad(card)}">${
+            <td class="roster__card"><span class="roster__cno">${pad(card)}</span><span class="roster__seats" role="img" aria-label="${on} of 10 on card ${pad(card)}">${
               Array.from({ length:10 }, (_, i) => `<i${i < on ? ' class="is-on"' : ''}></i>`).join('')}</span></td>
             <td>${m.last_attendance ? esc(fmtDay(m.last_attendance)) : '<span class="brow__none">-</span>'}</td>
             <td>${n}</td>

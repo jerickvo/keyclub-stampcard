@@ -144,12 +144,12 @@ const C = {
             mtg.no}, ${fmtDate(mtg.date)}, ${byHand(rec) ? 'added by an officer' : `checked in at ${fmtTime(rec.at)}`}"`
         : now ? ` tabindex="0" role="button" data-go="scan" aria-label="Check in${liveNo ? ` at general meeting ${liveNo}` : ''}"` : '';
 
-      return `<li class="seal ${state ? 'seal--' + state : ''}${hero}${mile}${now}" data-seal="${state || 'empty'}" style="${seatStyle(i)}"${control}>
+      return `<div class="seal ${state ? 'seal--' + state : ''}${hero}${mile}${now}" data-seal="${state || 'empty'}" style="${seatStyle(i)}"${control}>
         ${seatSvg(p.floor + i, mile)}
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
         ${now && tag ? `<span class="seal__go" aria-hidden="true">Check in</span>` : ''}
         ${docket}
-      </li>`;
+      </div>`;
     }).join('');
 
     /* the stub: what the card is for. A prize ready to claim is the card's
@@ -180,7 +180,7 @@ const C = {
       <div class="card__field">
         <span class="card__wm" aria-hidden="true">${brandSeal('cnh')}</span>
         ${seatRoute(full ? p.span : p.filled)}
-        <ol class="seals" id="seals" aria-label="${p.filled} of ${p.span} stamps on this card">${cells}</ol>
+        <div class="seals" id="seals" role="group" aria-label="${p.filled} of ${p.span} stamps on this card">${cells}</div>
         ${done}
       </div>
       <div class="card__foot">${goalLine}</div>

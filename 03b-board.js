@@ -522,7 +522,7 @@ const BoardUI = {
             const card = n && n % 10 === 0 ? n / 10 : Math.floor(n / 10) + 1;
             return `${index}<tr data-bmember="${esc(m.id)}">
             <th scope="row"><button class="roster__name" type="button" data-bmember="${esc(m.id)}">${esc(m.username)}</button></th>
-            <td class="roster__card"><span class="roster__cno">${pad(card)}</span><span class="roster__seats" aria-label="${on} of 10 on card ${pad(card)}">${
+            <td class="roster__card"><span class="roster__cno">${pad(card)}</span><span class="roster__seats" role="img" aria-label="${on} of 10 on card ${pad(card)}">${
               Array.from({ length:10 }, (_, i) => `<i${i < on ? ' class="is-on"' : ''}></i>`).join('')}</span></td>
             <td>${m.last_attendance ? esc(fmtDay(m.last_attendance)) : '<span class="brow__none">-</span>'}</td>
             <td>${n}</td>
