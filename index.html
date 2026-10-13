@@ -14997,7 +14997,9 @@ const Handover = {
       INVALID_REWARD:      'That prize does not exist.',
       SELF_HANDOVER:       'Another officer has to hand you your prize.',
       NOT_INSTALLED:       'Prize hand-overs are not set up on this project yet.',
-      NETWORK_ERROR:       'Not saved. Check your connection and try again.',
+      /* no answer came back: it may or may not have been recorded, and
+         trying again cannot record it twice */
+      NETWORK_ERROR:       'No answer came back. Check your connection and try again; it is never recorded twice.',
     })[code] || 'Not saved. Try again.';
   },
 };
@@ -15022,7 +15024,7 @@ const HandStamp = {
       MEETING_NOT_FOUND:  'That meeting no longer exists.',
       MEMBER_NOT_FOUND:   'That account no longer exists.',
       NOT_AUTHORIZED:     'Only a board account can add a stamp.',
-      NETWORK_ERROR:      'Not saved. Check your connection and try again.',
+      NETWORK_ERROR:      'No answer came back. Check your connection and try again; no one is stamped twice.',
     })[code] || 'Not saved. Try again.';
   },
 };
@@ -16312,12 +16314,13 @@ function toast({ title, detail, bad = false, key, about }){
 
   /* A message waits while it is hovered or focused, and a tap, Enter or
      Escape dismisses it, so a reader is never racing the timer. */
-  const rec = { el, timer:null, held:prev ? prev.held : false, title, about };
+  const rec = { el, timer:null, held:prev ? prev.held : false, title, about, bad };
   const cur = () => liveToasts.get(k);
   const arm = r => { clearTimeout(r.timer); r.timer = setTimeout(() => dropToast(k), TOAST_LIFE); };
   if (!prev){
     const hold = () => { const r = cur(); if (r){ r.held = true; clearTimeout(r.timer); } };
-    const free = () => { const r = cur(); if (r){ r.held = false; if (!bad) arm(r); } };
+    /* the message on the strip now decides, not the first one it held */
+    const free = () => { const r = cur(); if (r){ r.held = false; if (!r.bad) arm(r); } };
     el.addEventListener('mouseenter', hold);
     el.addEventListener('focus', hold);
     el.addEventListener('mouseleave', free);
@@ -17858,7 +17861,7 @@ const BoardUI = {
             <li class="brow brow--att"><${a.meeting_id ? `button class="brow__go" type="button" data-bmeeting="${esc(a.meeting_id)}"` : 'div class="brow__go"'}>
               <span class="brow__no">GM <b>${a.meeting_number ? pad(a.meeting_number) : '-'}</b></span>
               <span class="brow__mid"><b>${esc(fmtDay(a.meeting_date))}</b></span>
-              <span class="brow__cell">${esc(fmtTime(a.checked_in_at))}${a.location && a.location !== Schedule.PLACE ? ` / ${esc(a.location)}` : ''}</span>
+              <span class="brow__cell">${esc(fmtTime(a.checked_in_at))}${a.method === 'board' || a.method === 'manual' ? ' / by hand' : ''}${a.location && a.location !== Schedule.PLACE ? ` / ${esc(a.location)}` : ''}</span>
             </${a.meeting_id ? 'button' : 'div'}></li>`).join('')}</ul>${total > d.attendance.length
             ? `<p class="muted bempty">The newest ${d.attendance.length} check-ins are shown.</p>` : ''}`
         : this.empty('No attendance yet')}
@@ -20467,7 +20470,8 @@ document.addEventListener('click', e => {
       if (code === 'ALREADY_CHECKED_IN'){
         mark();
         toast({ key:'board', title:'Already checked in', detail:`${who} has a stamp for GM ${no}.` });
-      } else toast({ key:'board', bad:true, title:'Not checked in', detail:HandStamp.message(code) });
+      } else toast({ key:'board', bad:true, title:code === 'NETWORK_ERROR' ? 'Not confirmed' : 'Not checked in',
+                     detail:HandStamp.message(code) });
       if (Handover.OFFLINE.includes(code)) return unarm(stamp, 'Add');
       reloadBoardHere('#bhq');
     });
@@ -20749,7 +20753,8 @@ document.addEventListener('click', e => {
       }
       if (code === 'ALREADY_HANDED_OVER')
         toast({ key:'board', title:'Already handed over', detail:`${prize} for ${who} is already on the record.` });
-      else toast({ key:'board', bad:true, title:'Not handed over', detail:Handover.message(code) });
+      else toast({ key:'board', bad:true, title:code === 'NETWORK_ERROR' ? 'Not confirmed' : 'Not handed over',
+                   detail:Handover.message(code) });
       /* nothing reached the database, or its answer never came back: the
          row stays as it was, ready to try again, rather than re-reading
          a list over a dead connection */
@@ -20786,9 +20791,26 @@ document.addEventListener('click', e => {
       if (!still()) return;
       const code = String((err && err.message) || '');
       if ((code === 'NOT_AUTHORIZED' || code === 'NOT_AUTHENTICATED') && await sessionGone()) return;
-      if (code === 'UNDO_EXPIRED') delete BoardUI.handed[undo.dataset.bundo];
-      toast({ key:'board', bad:true, title:'Not taken back', detail:Handover.message(code) });
-      if (Handover.OFFLINE.includes(code)) return release(undo, 'Undo');
+      const key = undo.dataset.bundo;
+      /* the first try may have landed with its answer lost: then the
+         hand-over is already gone, and "too late" would be wrong. The
+         member's record says which. */
+      if (code === 'UNDO_EXPIRED' && BoardUI.lost.has('undo:' + key)){
+        BoardUI.lost.delete('undo:' + key);
+        const m = await Backend.board('member', { id:uid }).catch(() => null);
+        if (!still()) return;
+        const r = m && (m.rewards || []).find(x => x.id === rid);
+        if (r && m.handovers && !r.handed_at){
+          delete BoardUI.handed[key];
+          toast({ key:'board', title:'Hand-over taken back', detail:'The first try had gone through.' });
+          BoardUI.owedAll = true;
+          return reloadBoardHere(`[data-bhand="${key}"]`);
+        }
+      }
+      if (code === 'UNDO_EXPIRED') delete BoardUI.handed[key];
+      toast({ key:'board', bad:true, title:code === 'NETWORK_ERROR' ? 'Not confirmed' : 'Not taken back',
+              detail:code === 'NETWORK_ERROR' ? 'No answer came back. Check your connection and try again.' : Handover.message(code) });
+      if (Handover.OFFLINE.includes(code)){ if (code === 'NETWORK_ERROR') BoardUI.lost.add('undo:' + key); return release(undo, 'Undo'); }
       reloadBoardHere(AFTER_REFUSAL);
     });
     return;

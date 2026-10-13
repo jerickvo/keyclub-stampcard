@@ -566,7 +566,7 @@ const BoardUI = {
             <li class="brow brow--att"><${a.meeting_id ? `button class="brow__go" type="button" data-bmeeting="${esc(a.meeting_id)}"` : 'div class="brow__go"'}>
               <span class="brow__no">GM <b>${a.meeting_number ? pad(a.meeting_number) : '-'}</b></span>
               <span class="brow__mid"><b>${esc(fmtDay(a.meeting_date))}</b></span>
-              <span class="brow__cell">${esc(fmtTime(a.checked_in_at))}${a.location && a.location !== Schedule.PLACE ? ` / ${esc(a.location)}` : ''}</span>
+              <span class="brow__cell">${esc(fmtTime(a.checked_in_at))}${a.method === 'board' || a.method === 'manual' ? ' / by hand' : ''}${a.location && a.location !== Schedule.PLACE ? ` / ${esc(a.location)}` : ''}</span>
             </${a.meeting_id ? 'button' : 'div'}></li>`).join('')}</ul>${total > d.attendance.length
             ? `<p class="muted bempty">The newest ${d.attendance.length} check-ins are shown.</p>` : ''}`
         : this.empty('No attendance yet')}

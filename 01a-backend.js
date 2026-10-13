@@ -238,7 +238,9 @@ const Handover = {
       INVALID_REWARD:      'That prize does not exist.',
       SELF_HANDOVER:       'Another officer has to hand you your prize.',
       NOT_INSTALLED:       'Prize hand-overs are not set up on this project yet.',
-      NETWORK_ERROR:       'Not saved. Check your connection and try again.',
+      /* no answer came back: it may or may not have been recorded, and
+         trying again cannot record it twice */
+      NETWORK_ERROR:       'No answer came back. Check your connection and try again; it is never recorded twice.',
     })[code] || 'Not saved. Try again.';
   },
 };
@@ -263,7 +265,7 @@ const HandStamp = {
       MEETING_NOT_FOUND:  'That meeting no longer exists.',
       MEMBER_NOT_FOUND:   'That account no longer exists.',
       NOT_AUTHORIZED:     'Only a board account can add a stamp.',
-      NETWORK_ERROR:      'Not saved. Check your connection and try again.',
+      NETWORK_ERROR:      'No answer came back. Check your connection and try again; no one is stamped twice.',
     })[code] || 'Not saved. Try again.';
   },
 };
