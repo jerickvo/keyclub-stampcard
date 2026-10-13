@@ -1030,13 +1030,18 @@ document.addEventListener('click', e => {
     if (busy(undo)) return;
     const [uid, rid] = undo.dataset.bundo.split(':');
     hold(undo, 'Undoing');
+    /* signed out (or another account in) since: not this page's news */
+    const officer = Store.user && Store.user.id;
+    const still = () => Boolean(Store.user) && Store.user.id === officer;
     Backend.undoHandOver(uid, rid).then(() => {
+      if (!still()) return;
       delete BoardUI.handed[undo.dataset.bundo];
       toast({ key:'board', title:'Hand-over taken back' });
       /* the row comes back where it sorts, which may be past the fold */
       BoardUI.owedAll = true;
       reloadBoardHere(`[data-bhand="${undo.dataset.bundo}"]`);
     }).catch(async err => {
+      if (!still()) return;
       const code = String((err && err.message) || '');
       if ((code === 'NOT_AUTHORIZED' || code === 'NOT_AUTHENTICATED') && await sessionGone()) return;
       if (code === 'UNDO_EXPIRED') delete BoardUI.handed[undo.dataset.bundo];
@@ -1162,7 +1167,10 @@ async function sessionGone(){
 async function loadBoard(){
   if (!Store.isBoard) return;
   const seq = ++loadSeq;
-  const pane = () => (seq === loadSeq ? $('#boardPane') : null);
+  /* a read begun under one officer's account is not shown under the
+     next one's (its Undo list is the first officer's own) */
+  const officer = Store.user.id;
+  const pane = () => (seq === loadSeq && Store.user && Store.user.id === officer ? $('#boardPane') : null);
   BoardUI.error = null;
 
   /* A pane that already holds this chapter's content keeps it while the
@@ -1225,7 +1233,7 @@ async function loadBoard(){
     error = String(err.message || 'SERVER_ERROR');
   }
 
-  if (seq !== loadSeq) return;
+  if (seq !== loadSeq || !Store.user || Store.user.id !== officer) return;
   BoardUI.error = error;
   if (!error){
     if (kind === 'member') BoardUI.memberDetail = got;

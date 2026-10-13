@@ -152,6 +152,13 @@ const Store = {
     if (scans === null || meetings === null || claims === null){
       if (held && session.id === before) return this;
       apply();
+      /* another account is signed in now and its record could not be
+         read: what the last account loaded is not shown under its name
+         (Scan would print the last account's stamp as this one's) */
+      if (!this.user || this.user.id !== session.id){
+        this.meetings = []; this.scans = []; this.handovers = false;
+        this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:false }));
+      }
       this.user = session;
       this.loadError = 'DATA';
       this.ready = true; this.emit();
