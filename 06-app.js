@@ -725,7 +725,8 @@ document.addEventListener('click', e => {
       if (code === 'ALREADY_CHECKED_IN'){
         mark();
         toast({ key:'board', title:'Already checked in', detail:`${who} has a stamp for GM ${no}.` });
-      } else toast({ key:'board', bad:true, title:'Not checked in', detail:HandStamp.message(code) });
+      } else toast({ key:'board', bad:true, title:code === 'NETWORK_ERROR' ? 'Not confirmed' : 'Not checked in',
+                     detail:HandStamp.message(code) });
       if (Handover.OFFLINE.includes(code)) return unarm(stamp, 'Add');
       reloadBoardHere('#bhq');
     });
@@ -1007,7 +1008,8 @@ document.addEventListener('click', e => {
       }
       if (code === 'ALREADY_HANDED_OVER')
         toast({ key:'board', title:'Already handed over', detail:`${prize} for ${who} is already on the record.` });
-      else toast({ key:'board', bad:true, title:'Not handed over', detail:Handover.message(code) });
+      else toast({ key:'board', bad:true, title:code === 'NETWORK_ERROR' ? 'Not confirmed' : 'Not handed over',
+                   detail:Handover.message(code) });
       /* nothing reached the database, or its answer never came back: the
          row stays as it was, ready to try again, rather than re-reading
          a list over a dead connection */
@@ -1030,18 +1032,40 @@ document.addEventListener('click', e => {
     if (busy(undo)) return;
     const [uid, rid] = undo.dataset.bundo.split(':');
     hold(undo, 'Undoing');
+    /* signed out (or another account in) since: not this page's news */
+    const officer = Store.user && Store.user.id;
+    const still = () => Boolean(Store.user) && Store.user.id === officer;
     Backend.undoHandOver(uid, rid).then(() => {
+      if (!still()) return;
       delete BoardUI.handed[undo.dataset.bundo];
       toast({ key:'board', title:'Hand-over taken back' });
       /* the row comes back where it sorts, which may be past the fold */
       BoardUI.owedAll = true;
       reloadBoardHere(`[data-bhand="${undo.dataset.bundo}"]`);
     }).catch(async err => {
+      if (!still()) return;
       const code = String((err && err.message) || '');
       if ((code === 'NOT_AUTHORIZED' || code === 'NOT_AUTHENTICATED') && await sessionGone()) return;
-      if (code === 'UNDO_EXPIRED') delete BoardUI.handed[undo.dataset.bundo];
-      toast({ key:'board', bad:true, title:'Not taken back', detail:Handover.message(code) });
-      if (Handover.OFFLINE.includes(code)) return release(undo, 'Undo');
+      const key = undo.dataset.bundo;
+      /* the first try may have landed with its answer lost: then the
+         hand-over is already gone, and "too late" would be wrong. The
+         member's record says which. */
+      if (code === 'UNDO_EXPIRED' && BoardUI.lost.has('undo:' + key)){
+        BoardUI.lost.delete('undo:' + key);
+        const m = await Backend.board('member', { id:uid }).catch(() => null);
+        if (!still()) return;
+        const r = m && (m.rewards || []).find(x => x.id === rid);
+        if (r && m.handovers && !r.handed_at){
+          delete BoardUI.handed[key];
+          toast({ key:'board', title:'Hand-over taken back', detail:'The first try had gone through.' });
+          BoardUI.owedAll = true;
+          return reloadBoardHere(`[data-bhand="${key}"]`);
+        }
+      }
+      if (code === 'UNDO_EXPIRED') delete BoardUI.handed[key];
+      toast({ key:'board', bad:true, title:code === 'NETWORK_ERROR' ? 'Not confirmed' : 'Not taken back',
+              detail:code === 'NETWORK_ERROR' ? 'No answer came back. Check your connection and try again.' : Handover.message(code) });
+      if (Handover.OFFLINE.includes(code)){ if (code === 'NETWORK_ERROR') BoardUI.lost.add('undo:' + key); return release(undo, 'Undo'); }
       reloadBoardHere(AFTER_REFUSAL);
     });
     return;
@@ -1162,7 +1186,10 @@ async function sessionGone(){
 async function loadBoard(){
   if (!Store.isBoard) return;
   const seq = ++loadSeq;
-  const pane = () => (seq === loadSeq ? $('#boardPane') : null);
+  /* a read begun under one officer's account is not shown under the
+     next one's (its Undo list is the first officer's own) */
+  const officer = Store.user.id;
+  const pane = () => (seq === loadSeq && Store.user && Store.user.id === officer ? $('#boardPane') : null);
   BoardUI.error = null;
 
   /* A pane that already holds this chapter's content keeps it while the
@@ -1225,7 +1252,7 @@ async function loadBoard(){
     error = String(err.message || 'SERVER_ERROR');
   }
 
-  if (seq !== loadSeq) return;
+  if (seq !== loadSeq || !Store.user || Store.user.id !== officer) return;
   BoardUI.error = error;
   if (!error){
     if (kind === 'member') BoardUI.memberDetail = got;

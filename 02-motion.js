@@ -117,12 +117,13 @@ function toast({ title, detail, bad = false, key, about }){
 
   /* A message waits while it is hovered or focused, and a tap, Enter or
      Escape dismisses it, so a reader is never racing the timer. */
-  const rec = { el, timer:null, held:prev ? prev.held : false, title, about };
+  const rec = { el, timer:null, held:prev ? prev.held : false, title, about, bad };
   const cur = () => liveToasts.get(k);
   const arm = r => { clearTimeout(r.timer); r.timer = setTimeout(() => dropToast(k), TOAST_LIFE); };
   if (!prev){
     const hold = () => { const r = cur(); if (r){ r.held = true; clearTimeout(r.timer); } };
-    const free = () => { const r = cur(); if (r){ r.held = false; if (!bad) arm(r); } };
+    /* the message on the strip now decides, not the first one it held */
+    const free = () => { const r = cur(); if (r){ r.held = false; if (!r.bad) arm(r); } };
     el.addEventListener('mouseenter', hold);
     el.addEventListener('focus', hold);
     el.addEventListener('mouseleave', free);

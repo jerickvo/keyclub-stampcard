@@ -20,6 +20,22 @@ const fadeAway = (el, dur, cb) => {
 const Scenes = {
   busy: false,
 
+  /* Opening scenes still on screen, and what waits for them to go. A
+     stamp earned under one (a wall code's link opened at load, or an
+     account made from one) is struck once the page can be seen, not
+     under the cover where nobody sees it land. */
+  covers: 0,
+  waiting: [],
+  clear(){
+    if (!this.covers) return Promise.resolve();
+    /* each opening ends itself within 7 s; nothing waits longer than that */
+    return Promise.race([new Promise(r => this.waiting.push(r)), new Promise(r => setTimeout(r, 8000))]);
+  },
+  uncover(){
+    this.covers = Math.max(0, this.covers - 1);
+    if (!this.covers) this.waiting.splice(0).forEach(r => { try { r(); } catch (_) {} });
+  },
+
   opening({ root = null, tail = '', reveal = () => {} } = {}){
     const boot = Boolean(root);
     let el = root;
@@ -43,8 +59,11 @@ const Scenes = {
       if (done) return; done = true;
       clearTimeout(fuse);
       try { el.remove(); } catch (_) {}
+      Scenes.uncover();
     };
     const fuse = setTimeout(() => { revealOnce(); finish(); }, 7000);
+    /* on screen from here until finish(), which the fuse guarantees */
+    Scenes.covers++;
 
     if (Motion.off){
       el.classList.remove('scene--play');

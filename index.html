@@ -888,9 +888,9 @@ body{background:var(--paper);color:var(--ink)}
 
 /* the standing: one figure in the brush face, the rest as a ledger */
 .stand{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:end;gap:0 20px;min-width:0}
-.stand__fig{display:grid;margin:0}
-.stand__fig b{font:400 clamp(80px,22vw,112px)/.74 var(--f-display);letter-spacing:-.03em;font-weight:400}
-.stand__fig span{margin-top:14px;font:400 11px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+.stand__fig{display:grid;margin:0;font-size:clamp(80px,22vw,112px);row-gap:calc(3px + .11em)}
+.stand__fig b{font:400 1em/.74 var(--f-display);letter-spacing:-.03em;font-weight:400}
+.stand__fig span{font:400 11px/1.3 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
 .stand__ledger{margin:0;display:grid;align-self:end}
 .stand__ledger div{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
   padding:8px 0 7px;border-bottom:1px solid var(--tint)}
@@ -913,7 +913,7 @@ body{background:var(--paper);color:var(--ink)}
   .idp__seal{right:-30%;width:min(110%,460px)}
   .idp__stamp{grid-column:1;grid-row:1;justify-self:end;align-self:start;font-size:clamp(15px,1.5vw,19px);padding:6px 12px 5px}
   .idp__who{grid-column:1;grid-row:3;gap:14px}
-  .stand__fig b{font-size:clamp(104px,9vw,150px)}
+  .stand__fig{font-size:clamp(104px,9vw,150px)}
   /* with cards on file the standing is a column under the panel */
   .mem--filed .stand{grid-template-columns:minmax(0,1fr);align-content:start;row-gap:var(--sp-group)}
   /* with none, the standing runs across under both */
@@ -1766,6 +1766,11 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .tools--open .tools__state::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--crimson);box-shadow:0 0 0 3px rgba(193,31,51,.3)}
 .tools--open .act--ink::before{background:radial-gradient(circle,var(--paper-card) 0 .95px,transparent 1.25px) 0 0/4px 4px}
 .tools--open .act--ink > span{background:var(--paper-card);color:var(--ink)}
+/* the face is paper here, so the ring under the keyboard is ink, and the
+   plate turns burgundy as it does anywhere else */
+.tools--open .act--ink:focus-visible > span,.proj--live .act--ink:focus-visible > span{outline-color:var(--ink)}
+.tools--open .act--ink:focus-visible::before,.proj--live .act--ink:focus-visible::before{background:var(--seal)}
+@media (hover:hover){ .tools--open .act--ink:hover::before,.proj--live .act--ink:hover::before{background:var(--seal)} }
 .tools--open .act--rule{color:var(--paper-card)}
 .tools--open .act--rule::after{background:var(--paper-card)}
 .tools__lines{position:absolute!important;inset:0;z-index:0!important;pointer-events:none;
@@ -1837,7 +1842,9 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
   grid-template-columns:minmax(0,1fr);grid-template-areas:"meet" "word" "plate" "count" "ctls";
   padding:clamp(18px,3vw,30px);border:3px solid var(--ink);background:var(--paper)}
 .proj > *{position:relative;z-index:1}
-.proj__meet{grid-area:meet;display:grid;gap:6px;min-width:0}
+/* the display face runs its 1 and its G down past the line: the date
+   under the number is set clear of them, the gap growing with it */
+.proj__meet{grid-area:meet;display:grid;gap:calc(6px + .14em);min-width:0;font-size:clamp(96px,16vw,170px)}
 .proj__no{display:flex;align-items:flex-end;gap:8px;margin:0;line-height:.78}
 .proj__no span{font:400 clamp(18px,2.6vw,26px)/1 var(--f-head);letter-spacing:.04em;padding-bottom:.35em}
 .proj__no b{font:400 clamp(96px,16vw,170px)/.76 var(--f-display);font-weight:400;letter-spacing:-.03em}
@@ -1983,9 +1990,17 @@ select.input{cursor:pointer;padding-right:22px;appearance:none;-webkit-appearanc
 .minutes__fold{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .minutes__fold .mrow{border:0}
 .minutes__fold .mrow__go{min-height:84px;padding:14px 18px;background:var(--ink);color:var(--paper-card)}
-.minutes__fold .mrow__gm span,.minutes__fold .mrow__n span{color:#BDB6AA}
+/* the fold is inked: its quiet words are the light ink, not burgundy,
+   which reads 1.8:1 on black */
+.minutes__fold .mrow__gm span,.minutes__fold .mrow__n span,.minutes__fold .mrow__when{color:#BDB6AA}
 .minutes__fold .mrow__gm b{font-size:clamp(52px,7vw,72px)}
 .minutes__fold .mrow__day{font-size:clamp(20px,2.4vw,26px)}
+/* on a narrow phone the state's badge would squeeze today's date into two
+   lines ("Tue, Oct" / "13"): the day and its hours take the whole line,
+   the count and the state go under them */
+@media (max-width:400px){
+  .minutes__fold .mrow__go{grid-template-rows:auto auto auto;grid-template-areas:"gm day day" "gm when when" "gm n state";row-gap:6px}
+}
 .minutes__fold .mrow__state{color:var(--paper-card)}
 .minutes__fold .mrow--open .mrow__state{padding:5px 8px 4px;background:var(--crimson);color:var(--paper-card);font:400 13px/1 var(--f-head);letter-spacing:.06em}
 .minutes__fold .mrow__n b{font-size:clamp(30px,3.4vw,40px);font-family:var(--f-display)}
@@ -14997,7 +15012,9 @@ const Handover = {
       INVALID_REWARD:      'That prize does not exist.',
       SELF_HANDOVER:       'Another officer has to hand you your prize.',
       NOT_INSTALLED:       'Prize hand-overs are not set up on this project yet.',
-      NETWORK_ERROR:       'Not saved. Check your connection and try again.',
+      /* no answer came back: it may or may not have been recorded, and
+         trying again cannot record it twice */
+      NETWORK_ERROR:       'No answer came back. Check your connection and try again; it is never recorded twice.',
     })[code] || 'Not saved. Try again.';
   },
 };
@@ -15022,7 +15039,7 @@ const HandStamp = {
       MEETING_NOT_FOUND:  'That meeting no longer exists.',
       MEMBER_NOT_FOUND:   'That account no longer exists.',
       NOT_AUTHORIZED:     'Only a board account can add a stamp.',
-      NETWORK_ERROR:      'Not saved. Check your connection and try again.',
+      NETWORK_ERROR:      'No answer came back. Check your connection and try again; no one is stamped twice.',
     })[code] || 'Not saved. Try again.';
   },
 };
@@ -15895,6 +15912,13 @@ const Store = {
     if (scans === null || meetings === null || claims === null){
       if (held && session.id === before) return this;
       apply();
+      /* another account is signed in now and its record could not be
+         read: what the last account loaded is not shown under its name
+         (Scan would print the last account's stamp as this one's) */
+      if (!this.user || this.user.id !== session.id){
+        this.meetings = []; this.scans = []; this.handovers = false;
+        this.rewards = REWARD_TIERS.map(r => ({ ...r, claimed:false }));
+      }
       this.user = session;
       this.loadError = 'DATA';
       this.ready = true; this.emit();
@@ -16305,12 +16329,13 @@ function toast({ title, detail, bad = false, key, about }){
 
   /* A message waits while it is hovered or focused, and a tap, Enter or
      Escape dismisses it, so a reader is never racing the timer. */
-  const rec = { el, timer:null, held:prev ? prev.held : false, title, about };
+  const rec = { el, timer:null, held:prev ? prev.held : false, title, about, bad };
   const cur = () => liveToasts.get(k);
   const arm = r => { clearTimeout(r.timer); r.timer = setTimeout(() => dropToast(k), TOAST_LIFE); };
   if (!prev){
     const hold = () => { const r = cur(); if (r){ r.held = true; clearTimeout(r.timer); } };
-    const free = () => { const r = cur(); if (r){ r.held = false; if (!bad) arm(r); } };
+    /* the message on the strip now decides, not the first one it held */
+    const free = () => { const r = cur(); if (r){ r.held = false; if (!r.bad) arm(r); } };
     el.addEventListener('mouseenter', hold);
     el.addEventListener('focus', hold);
     el.addEventListener('mouseleave', free);
@@ -16474,12 +16499,12 @@ const C = {
             mtg.no}, ${fmtDate(mtg.date)}, ${byHand(rec) ? 'added by an officer' : `checked in at ${fmtTime(rec.at)}`}"`
         : now ? ` tabindex="0" role="button" data-go="scan" aria-label="Check in${liveNo ? ` at general meeting ${liveNo}` : ''}"` : '';
 
-      return `<li class="seal ${state ? 'seal--' + state : ''}${hero}${mile}${now}" data-seal="${state || 'empty'}" style="${seatStyle(i)}"${control}>
+      return `<div class="seal ${state ? 'seal--' + state : ''}${hero}${mile}${now}" data-seal="${state || 'empty'}" style="${seatStyle(i)}"${control}>
         ${seatSvg(p.floor + i, mile)}
         <span class="seal__no">${pad(p.floor + i + 1)}</span>
         ${now && tag ? `<span class="seal__go" aria-hidden="true">Check in</span>` : ''}
         ${docket}
-      </li>`;
+      </div>`;
     }).join('');
 
     /* the stub: what the card is for. A prize ready to claim is the card's
@@ -16510,7 +16535,7 @@ const C = {
       <div class="card__field">
         <span class="card__wm" aria-hidden="true">${brandSeal('cnh')}</span>
         ${seatRoute(full ? p.span : p.filled)}
-        <ol class="seals" id="seals" aria-label="${p.filled} of ${p.span} stamps on this card">${cells}</ol>
+        <div class="seals" id="seals" role="group" aria-label="${p.filled} of ${p.span} stamps on this card">${cells}</div>
         ${done}
       </div>
       <div class="card__foot">${goalLine}</div>
@@ -17807,7 +17832,7 @@ const BoardUI = {
             const card = n && n % 10 === 0 ? n / 10 : Math.floor(n / 10) + 1;
             return `${index}<tr data-bmember="${esc(m.id)}">
             <th scope="row"><button class="roster__name" type="button" data-bmember="${esc(m.id)}">${esc(m.username)}</button></th>
-            <td class="roster__card"><span class="roster__cno">${pad(card)}</span><span class="roster__seats" aria-label="${on} of 10 on card ${pad(card)}">${
+            <td class="roster__card"><span class="roster__cno">${pad(card)}</span><span class="roster__seats" role="img" aria-label="${on} of 10 on card ${pad(card)}">${
               Array.from({ length:10 }, (_, i) => `<i${i < on ? ' class="is-on"' : ''}></i>`).join('')}</span></td>
             <td>${m.last_attendance ? esc(fmtDay(m.last_attendance)) : '<span class="brow__none">-</span>'}</td>
             <td>${n}</td>
@@ -17851,7 +17876,7 @@ const BoardUI = {
             <li class="brow brow--att"><${a.meeting_id ? `button class="brow__go" type="button" data-bmeeting="${esc(a.meeting_id)}"` : 'div class="brow__go"'}>
               <span class="brow__no">GM <b>${a.meeting_number ? pad(a.meeting_number) : '-'}</b></span>
               <span class="brow__mid"><b>${esc(fmtDay(a.meeting_date))}</b></span>
-              <span class="brow__cell">${esc(fmtTime(a.checked_in_at))}${a.location && a.location !== Schedule.PLACE ? ` / ${esc(a.location)}` : ''}</span>
+              <span class="brow__cell">${esc(fmtTime(a.checked_in_at))}${a.method === 'board' || a.method === 'manual' ? ' / by hand' : ''}${a.location && a.location !== Schedule.PLACE ? ` / ${esc(a.location)}` : ''}</span>
             </${a.meeting_id ? 'button' : 'div'}></li>`).join('')}</ul>${total > d.attendance.length
             ? `<p class="muted bempty">The newest ${d.attendance.length} check-ins are shown.</p>` : ''}`
         : this.empty('No attendance yet')}
@@ -18282,10 +18307,9 @@ const FX = {
      on the hit, its tag stamped, the meeting printed under it. Then
      `lift`: a blade cuts the sheet away over the page under it while
      the seal is carried, on a slight arc, to hang over its seat. */
-  stampAcquire(meeting){
-    /* the seal just earned, with the glyph it will carry on the card;
-       read before the record refreshes, so the count is its ordinal */
-    const n = Store.totalStamps();
+  stampAcquire(meeting, n = Store.totalStamps()){
+    /* the seal just earned, with the glyph it will carry on the card:
+       `n` is its place on the record, counted from 0 */
     const first = n === 0;
     const lift = (32 - 32 * STAMP_FIT).toFixed(1);
     const scene = document.createElement('div');
@@ -18523,6 +18547,22 @@ const fadeAway = (el, dur, cb) => {
 const Scenes = {
   busy: false,
 
+  /* Opening scenes still on screen, and what waits for them to go. A
+     stamp earned under one (a wall code's link opened at load, or an
+     account made from one) is struck once the page can be seen, not
+     under the cover where nobody sees it land. */
+  covers: 0,
+  waiting: [],
+  clear(){
+    if (!this.covers) return Promise.resolve();
+    /* each opening ends itself within 7 s; nothing waits longer than that */
+    return Promise.race([new Promise(r => this.waiting.push(r)), new Promise(r => setTimeout(r, 8000))]);
+  },
+  uncover(){
+    this.covers = Math.max(0, this.covers - 1);
+    if (!this.covers) this.waiting.splice(0).forEach(r => { try { r(); } catch (_) {} });
+  },
+
   opening({ root = null, tail = '', reveal = () => {} } = {}){
     const boot = Boolean(root);
     let el = root;
@@ -18546,8 +18586,11 @@ const Scenes = {
       if (done) return; done = true;
       clearTimeout(fuse);
       try { el.remove(); } catch (_) {}
+      Scenes.uncover();
     };
     const fuse = setTimeout(() => { revealOnce(); finish(); }, 7000);
+    /* on screen from here until finish(), which the fuse guarantees */
+    Scenes.covers++;
 
     if (Motion.off){
       el.classList.remove('scene--play');
@@ -19417,9 +19460,20 @@ const Landing = {
     const from = current;
     this.active = true;
     this.armed = null;
-    if (this.scene) this.scene.clear();
+    if (this.scene){ this.scene.clear(); this.scene = null; }
 
-    const scene = FX.stampAcquire(meeting);
+    /* A page still under its opening (a wall code's link opened at load,
+       or an account just made from one) is uncovered first: the stamp is
+       struck where it can be seen, and lands in its seat in view. */
+    await Scenes.clear();
+    if (seq !== this.seq) return;
+    if (!Store.user || Store.user.id !== who){ this.active = false; return; }
+
+    /* the stamp's number on the card: its place in the record if the
+       record already has it, else the next one */
+    const chrono = [...Store.scans].sort((a, b) => String(a.at) < String(b.at) ? -1 : 1);
+    const known = chrono.findIndex(s => s.meetingId === meeting.id);
+    const scene = FX.stampAcquire(meeting, known >= 0 ? known : Store.totalStamps());
     this.scene = scene;
     /* long enough to read the sheet, no longer: the first stamp an
        account earns is given a moment more */
@@ -20460,7 +20514,8 @@ document.addEventListener('click', e => {
       if (code === 'ALREADY_CHECKED_IN'){
         mark();
         toast({ key:'board', title:'Already checked in', detail:`${who} has a stamp for GM ${no}.` });
-      } else toast({ key:'board', bad:true, title:'Not checked in', detail:HandStamp.message(code) });
+      } else toast({ key:'board', bad:true, title:code === 'NETWORK_ERROR' ? 'Not confirmed' : 'Not checked in',
+                     detail:HandStamp.message(code) });
       if (Handover.OFFLINE.includes(code)) return unarm(stamp, 'Add');
       reloadBoardHere('#bhq');
     });
@@ -20742,7 +20797,8 @@ document.addEventListener('click', e => {
       }
       if (code === 'ALREADY_HANDED_OVER')
         toast({ key:'board', title:'Already handed over', detail:`${prize} for ${who} is already on the record.` });
-      else toast({ key:'board', bad:true, title:'Not handed over', detail:Handover.message(code) });
+      else toast({ key:'board', bad:true, title:code === 'NETWORK_ERROR' ? 'Not confirmed' : 'Not handed over',
+                   detail:Handover.message(code) });
       /* nothing reached the database, or its answer never came back: the
          row stays as it was, ready to try again, rather than re-reading
          a list over a dead connection */
@@ -20765,18 +20821,40 @@ document.addEventListener('click', e => {
     if (busy(undo)) return;
     const [uid, rid] = undo.dataset.bundo.split(':');
     hold(undo, 'Undoing');
+    /* signed out (or another account in) since: not this page's news */
+    const officer = Store.user && Store.user.id;
+    const still = () => Boolean(Store.user) && Store.user.id === officer;
     Backend.undoHandOver(uid, rid).then(() => {
+      if (!still()) return;
       delete BoardUI.handed[undo.dataset.bundo];
       toast({ key:'board', title:'Hand-over taken back' });
       /* the row comes back where it sorts, which may be past the fold */
       BoardUI.owedAll = true;
       reloadBoardHere(`[data-bhand="${undo.dataset.bundo}"]`);
     }).catch(async err => {
+      if (!still()) return;
       const code = String((err && err.message) || '');
       if ((code === 'NOT_AUTHORIZED' || code === 'NOT_AUTHENTICATED') && await sessionGone()) return;
-      if (code === 'UNDO_EXPIRED') delete BoardUI.handed[undo.dataset.bundo];
-      toast({ key:'board', bad:true, title:'Not taken back', detail:Handover.message(code) });
-      if (Handover.OFFLINE.includes(code)) return release(undo, 'Undo');
+      const key = undo.dataset.bundo;
+      /* the first try may have landed with its answer lost: then the
+         hand-over is already gone, and "too late" would be wrong. The
+         member's record says which. */
+      if (code === 'UNDO_EXPIRED' && BoardUI.lost.has('undo:' + key)){
+        BoardUI.lost.delete('undo:' + key);
+        const m = await Backend.board('member', { id:uid }).catch(() => null);
+        if (!still()) return;
+        const r = m && (m.rewards || []).find(x => x.id === rid);
+        if (r && m.handovers && !r.handed_at){
+          delete BoardUI.handed[key];
+          toast({ key:'board', title:'Hand-over taken back', detail:'The first try had gone through.' });
+          BoardUI.owedAll = true;
+          return reloadBoardHere(`[data-bhand="${key}"]`);
+        }
+      }
+      if (code === 'UNDO_EXPIRED') delete BoardUI.handed[key];
+      toast({ key:'board', bad:true, title:code === 'NETWORK_ERROR' ? 'Not confirmed' : 'Not taken back',
+              detail:code === 'NETWORK_ERROR' ? 'No answer came back. Check your connection and try again.' : Handover.message(code) });
+      if (Handover.OFFLINE.includes(code)){ if (code === 'NETWORK_ERROR') BoardUI.lost.add('undo:' + key); return release(undo, 'Undo'); }
       reloadBoardHere(AFTER_REFUSAL);
     });
     return;
@@ -20897,7 +20975,10 @@ async function sessionGone(){
 async function loadBoard(){
   if (!Store.isBoard) return;
   const seq = ++loadSeq;
-  const pane = () => (seq === loadSeq ? $('#boardPane') : null);
+  /* a read begun under one officer's account is not shown under the
+     next one's (its Undo list is the first officer's own) */
+  const officer = Store.user.id;
+  const pane = () => (seq === loadSeq && Store.user && Store.user.id === officer ? $('#boardPane') : null);
   BoardUI.error = null;
 
   /* A pane that already holds this chapter's content keeps it while the
@@ -20960,7 +21041,7 @@ async function loadBoard(){
     error = String(err.message || 'SERVER_ERROR');
   }
 
-  if (seq !== loadSeq) return;
+  if (seq !== loadSeq || !Store.user || Store.user.id !== officer) return;
   BoardUI.error = error;
   if (!error){
     if (kind === 'member') BoardUI.memberDetail = got;

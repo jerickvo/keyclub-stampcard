@@ -8,14 +8,61 @@
    (persistSession:true), so the boot-time restoration path is really
    exercised rather than trivially passing on a fresh in-memory store. */
 const MOCK_KEY = '__keystamp_mock_db';
+/* The signed-in session lives where supabase-js keeps it (the client's
+   storageKey, shared by every tab of the origin), not in the record: so
+   the page's own "forget this device's session" really forgets it, and
+   another tab signing in or out reaches this one as a storage event, as
+   it does in production. */
+const MOCK_AUTH_KEY = 'sb-mock-auth-token';
 function loadDB(){
   try { const raw = localStorage.getItem(MOCK_KEY); if (raw) return JSON.parse(raw); } catch (_) {}
-  return { users:[], profiles:[], meetings:[], attendance:[], reward_claims:[], reward_handovers:[], sessions:[], session:null };
+  return { users:[], profiles:[], meetings:[], attendance:[], reward_claims:[], reward_handovers:[], sessions:[] };
 }
 window.__mockDB = loadDB();
+delete window.__mockDB.session;
+Object.defineProperty(window.__mockDB, 'session', {
+  configurable:true, enumerable:false,
+  get(){
+    try {
+      const s = JSON.parse(localStorage.getItem(MOCK_AUTH_KEY) || 'null');
+      return s && s.access_token && s.user ? { user:s.user } : null;
+    } catch (_) { return null; }
+  },
+  set(v){
+    try {
+      if (v && v.user) localStorage.setItem(MOCK_AUTH_KEY, JSON.stringify({
+        access_token:'mock.' + v.user.id, refresh_token:'mock-refresh',
+        expires_at:Math.floor(Date.now() / 1000) + 3600, user:v.user }));
+      else localStorage.removeItem(MOCK_AUTH_KEY);
+    } catch (_) {}
+  },
+});
 window.saveDB = saveDB;
 function saveDB(){
   try { localStorage.setItem(MOCK_KEY, JSON.stringify(window.__mockDB)); } catch (_) {}
+}
+/* another tab's write is this tab's record too (one database) */
+addEventListener('storage', e => {
+  if (e.key !== MOCK_KEY || !e.newValue) return;
+  try { Object.assign(window.__mockDB, JSON.parse(e.newValue)); } catch (_) {}
+});
+
+/* Fault injection, set by a test on window.__fault:
+     delay: { '<name>': ms, '*': ms }   the call waits this long first
+     lose:  { '<name>': n }             the next n calls do their work and
+                                        then lose the answer (no response)
+   Names: 'fn:<function>' (and 'fn:board-data:<action>'), 'rpc:<name>',
+   'auth:signIn', 'auth:signUp', 'from:<table>'. */
+const fault = () => window.__fault || {};
+async function pause(name){
+  const d = fault().delay || {};
+  const ms = d[name] !== undefined ? d[name] : (d['*'] || 0);
+  if (ms) await new Promise(r => setTimeout(r, ms));
+}
+function loses(name){
+  const l = fault().lose || {};
+  if (l[name] > 0){ l[name]--; return true; }
+  return false;
 }
 
 function mkClient(){
@@ -29,8 +76,8 @@ function mkClient(){
   const NEED = { r1:10, r2:20, r3:30 };
   const raise = m => ({ data:null, error:{ code:'P0001', message:m } });
   /* stands in for stamp_by_hand(), same order of checks */
-  function stampByHand({ p_user_id:uid, p_meeting_id:mid }){
-    const me = db.session && db.profiles.find(p => p.id === db.session.user.id);
+  function stampByHand({ p_user_id:uid, p_meeting_id:mid }, sess){
+    const me = sess && db.profiles.find(p => p.id === sess.user.id);
     if (!me || me.role !== 'board') return raise('NOT_AUTHORIZED');
     if (uid === me.id) return raise('SELF_STAMP');
     const m = (db.meetings || []).find(x => x.id === mid);
@@ -48,8 +95,8 @@ function mkClient(){
     return { data:at, error:null };
   }
 
-  function handover(name, { p_user_id:uid, p_reward_id:rid }){
-    const me = db.session && db.profiles.find(p => p.id === db.session.user.id);
+  function handover(name, { p_user_id:uid, p_reward_id:rid }, sess){
+    const me = sess && db.profiles.find(p => p.id === sess.user.id);
     if (!me || me.role !== 'board') return raise('NOT_AUTHORIZED');
     if (name === 'hand_over_reward' && uid === me.id) return raise('SELF_HANDOVER');
     db.reward_handovers = db.reward_handovers || [];
@@ -82,8 +129,8 @@ function mkClient(){
   }
 
   /* stands in for claim_reward (migrations/2026-09-24-claim-ownership.sql) */
-  function claimReward({ p_user_id:who, p_reward_id:rid }){
-    const uid = db.session && db.session.user.id;
+  function claimReward({ p_user_id:who, p_reward_id:rid }, sess){
+    const uid = sess && sess.user.id;
     if (!uid || who !== uid) return raise('NOT_AUTHENTICATED');
     if (!NEED[rid]) return raise('INVALID_REWARD');
     db.reward_claims = db.reward_claims || [];
@@ -97,16 +144,25 @@ function mkClient(){
     return { data:at, error:null };
   }
 
-  return {
+  /* the client's own listeners (onAuthStateChange) */
+  const heard = new Set();
+  const tell = (event, session) => heard.forEach(fn => setTimeout(() => fn(event, session), 0));
+  const full = () => { const s = db.session; return s ? { ...JSON.parse(localStorage.getItem(MOCK_AUTH_KEY)), user:s.user } : null; };
+
+  const mockClient = {
     auth: {
-      async getSession(){ return { data:{ session: db.session }, error:null }; },
+      async getSession(){ return { data:{ session: full() }, error:null }; },
       async signInWithPassword({ email, password }){
+        await pause('auth:signIn');
         const u = db.users.find(x => x.email === email && x.password === password);
-        if (!u) return { data:null, error:{ message:'Invalid login credentials' } };
-        db.session = { user:{ id:u.id, email:u.email } }; saveDB();
-        return { data:{ user:{ id:u.id, email:u.email }, session:db.session }, error:null };
+        if (!u) return { data:null, error:{ message:'Invalid login credentials', status:400, code:'invalid_credentials' } };
+        db.session = { user:{ id:u.id, email:u.email } };
+        tell('SIGNED_IN', full());
+        if (loses('auth:signIn')) return { data:null, error:{ name:'AuthRetryableFetchError', message:'Failed to fetch', status:0 } };
+        return { data:{ user:{ id:u.id, email:u.email }, session:full() }, error:null };
       },
       async signUp({ email, password, options }){
+        await pause('auth:signUp');
         if (db.users.some(x => x.email === email))
           return { data:null, error:{ message:'User already registered', status:422 } };
         if (String(password).length < 6)
@@ -125,14 +181,22 @@ function mkClient(){
         // after the auth row is visible
         if (window.__profileDelayMs) setTimeout(() => { db.profiles.push(row); saveDB(); }, window.__profileDelayMs);
         else db.profiles.push(row);
-        db.session = { user:{ id, email } }; saveDB();
-        return { data:{ user:{ id, email }, session:db.session }, error:null };
+        saveDB();
+        db.session = { user:{ id, email } };
+        tell('SIGNED_IN', full());
+        if (loses('auth:signUp')) return { data:null, error:{ name:'AuthRetryableFetchError', message:'Failed to fetch', status:0 } };
+        return { data:{ user:{ id, email }, session:full() }, error:null };
       },
-      async signOut(){ db.session = null; saveDB(); return { error:null }; },
-      /* the real client tells the page about sessions changing under it;
-         the test double has nothing to tell */
-      onAuthStateChange(){ return { data:{ subscription:{ unsubscribe(){} } } }; },
-      storageKey: 'sb-mock-auth-token',
+      async signOut(){ db.session = null; tell('SIGNED_OUT', null); return { error:null }; },
+      /* what supabase-js 2.x does locally on sign-out (the page calls it
+         when it exists) */
+      async _removeSession(){ db.session = null; tell('SIGNED_OUT', null); },
+      onAuthStateChange(fn){
+        heard.add(fn);
+        setTimeout(() => fn('INITIAL_SESSION', full()), 0);
+        return { data:{ subscription:{ unsubscribe(){ heard.delete(fn); } } } };
+      },
+      storageKey: MOCK_AUTH_KEY,
     },
 
     from(table){
@@ -151,34 +215,47 @@ function mkClient(){
       /* a project that has not run the hand-over migration: PostgREST
          answers PGRST205 for a table it does not know */
       q._absent = function(){ return this._table === 'reward_handovers' && window.__noHandovers; };
+      q.abortSignal = function(){ return this; };
       q.maybeSingle = async function(){
+        await pause('from:' + this._table);
         if (this._fail()) return { data:null, error:{ message:'network' } };
         return { data:this._rows()[0] || null, error:null };
       };
       q.single = async function(){
+        await pause('from:' + this._table);
         const r = this._rows()[0];
         return r ? { data:r, error:null } : { data:null, error:{ message:'no rows' } };
       };
-      q.then = function(res){
-        if (this._absent()) return Promise.resolve({ data:null,
-          error:{ code:'PGRST205', message:"Could not find the table 'public.reward_handovers' in the schema cache" } }).then(res);
-        if (this._fail()) return Promise.resolve({ data:null, error:{ message:'network' } }).then(res);
-        const found = this._rows();
-        if (this._count) return Promise.resolve({ data:this._head ? null : found, count:found.length, error:null }).then(res);
-        return Promise.resolve({ data:found, error:null }).then(res);
+      q.then = function(res, rej){
+        const self = this;
+        return (async () => {
+          await pause('from:' + self._table);
+          if (self._absent()) return { data:null,
+            error:{ code:'PGRST205', message:"Could not find the table 'public.reward_handovers' in the schema cache" } };
+          if (self._fail()) return { data:null, error:{ message:'network' } };
+          const found = self._rows();
+          if (self._count) return { data:self._head ? null : found, count:found.length, error:null };
+          return { data:found, error:null };
+        })().then(res, rej);
+      };
+      /* the legacy claim path (a database from before claim_reward) */
+      q.upsert = function(payload){
+        const self = this;
+        return { then(res, rej){ return self.insert(payload).then(r =>
+          r.error && r.error.code === '23505' ? { data:null, error:null } : r).then(res, rej); } };
       };
       /* Mirrors the meetings_board_delete policy: board only, and only a
          meeting nothing has been checked in to. A meeting with attendance
          is invisible to the statement, so it removes nothing rather than
          erroring -- which is exactly how Postgres behaves. */
       q.delete = function(){
-        const self = this;
+        const self = this, asOf = db.session;
         return {
           _f: self._f,
           eq(col, val){ this._f = this._f.concat([[col, val]]); return this; },
           select(){ return this; },
           then(res){
-            const me = db.session && db.profiles.find(p => p.id === db.session.user.id);
+            const me = asOf && db.profiles.find(p => p.id === asOf.user.id);
             if (self._table !== 'meetings' || !me || me.role !== 'board')
               return Promise.resolve({ data:[], error:null }).then(res);
             const match = (db.meetings || []).filter(r => this._f.every(([c, v]) => r[c] === v));
@@ -199,16 +276,18 @@ function mkClient(){
         return row;
       };
       q.insert = function(payload){
-        const self = this;
+        const self = this, asOf = db.session;
         return {
           select(){ return this; },
+          abortSignal(){ return this; },
           async single(){
+            await pause('from:' + self._table);
             // RLS stand-in: members may not insert attendance directly.
             // Only the verify-attendance function (service role) writes.
             if (self._table === 'attendance')
               return { data:null, error:{ message:'row-level security', code:'42501' } };
             if (self._table === 'meetings'){
-              const me = db.session && db.profiles.find(p => p.id === db.session.user.id);
+              const me = asOf && db.profiles.find(p => p.id === asOf.user.id);
               if (!me || me.role !== 'board')
                 return { data:null, error:{ message:'row-level security', code:'42501' } };
               if (db.meetings.some(m => m.meeting_number === payload.meeting_number))
@@ -244,7 +323,7 @@ function mkClient(){
                it, nobody inserts directly; stamp_by_hand() does. The
                unique key refuses a second stamp either way. */
             if (self._table === 'attendance'){
-              const me = db.session && db.profiles.find(p => p.id === db.session.user.id);
+              const me = asOf && db.profiles.find(p => p.id === asOf.user.id);
               if (!window.__noHandovers || !me || me.role !== 'board' || !['manual','board'].includes(payload.verification_method))
                 return Promise.resolve({ data:null, error:{ message:'new row violates row-level security policy', code:'42501' } }).then(res);
               if (!(db.meetings || []).some(m => m.id === payload.meeting_id))
@@ -263,7 +342,7 @@ function mkClient(){
                unique key on (user_id, reward_id), which is why the
                client tolerates 23505 — so the mock enforces it too. */
             if (self._table === 'reward_claims'){
-              const uid = db.session && db.session.user.id;
+              const uid = asOf && asOf.user.id;
               const need = { r1:10, r2:20, r3:30 }[payload.reward_id];
               const have = (db.attendance || []).filter(a => a.user_id === uid).length;
               if (!uid || payload.user_id !== uid || !need || have < need)
@@ -288,15 +367,25 @@ function mkClient(){
     async rpc(name, args){
       /* the connection drops mid-request */
       if (window.__failRpc) return { data:null, error:{ message:'TypeError: Failed to fetch' } };
+      /* the request carries the session it was sent with */
+      const sess = db.session;
+      await pause('rpc:' + name);
+      const out = await this._rpcDo(name, args, sess);
+      /* the work was done; its answer never came back */
+      if (loses('rpc:' + name)) return { data:null, error:{ message:'TypeError: Failed to fetch' } };
+      return out;
+    },
+
+    async _rpcDo(name, args, sess){
       if ((name === 'hand_over_reward' || name === 'undo_hand_over') && !window.__noHandovers)
-        return handover(name, args || {});
-      if (name === 'stamp_by_hand' && !window.__noHandovers) return stampByHand(args || {});
-      if (name === 'claim_reward' && !window.__noHandovers && !window.__noClaimFn) return claimReward(args || {});
+        return handover(name, args || {}, sess);
+      if (name === 'stamp_by_hand' && !window.__noHandovers) return stampByHand(args || {}, sess);
+      if (name === 'claim_reward' && !window.__noHandovers && !window.__noClaimFn) return claimReward(args || {}, sess);
       if (name !== 'delete_meeting_and_stamps')
         return { data:null, error:{ message:
           'Could not find the function public.' + name + ' in the schema cache',
           code:'PGRST202' } };
-      const me = db.session && db.profiles.find(p => p.id === db.session.user.id);
+      const me = sess && db.profiles.find(p => p.id === sess.user.id);
       if (!me || me.role !== 'board')
         return { data:null, error:{ message:'only board accounts can delete a meeting', code:'P0001' } };
       const today = new Intl.DateTimeFormat('en-CA', { timeZone:'America/Los_Angeles',
@@ -319,12 +408,26 @@ function mkClient(){
        the RLS policies behave the same way. Only a live project proves
        that. */
     functions: {
+      /* fault injection around the stand-ins below: a delay first, then
+         the work, then (if asked) the answer lost on its way back, the way
+         supabase-js reports a request that never answered */
       invoke: async (name, opts) => {
+        const body = (opts && opts.body) || {};
+        const tag = 'fn:' + name + (name === 'board-data' && body.action ? ':' + body.action : '');
+        const sess = db.session;
+        await pause('fn:' + name);
+        if (tag !== 'fn:' + name) await pause(tag);
+        const out = await mockClient.functions._invoke(name, opts, sess);
+        if (loses('fn:' + name) || (tag !== 'fn:' + name && loses(tag)))
+          return { data:null, error:{ name:'FunctionsFetchError', message:'Failed to send a request to the Edge Function', context:{} } };
+        return out;
+      },
+      _invoke: async (name, opts, sess) => {
         const body = (opts && opts.body) || {};
         if (window.__failFunctions) return { data:null, error:{ context:{ status:404 } } };
 
         if (name === 'attendance-session'){
-          const me = db.session && db.profiles.find(p => p.id === db.session.user.id);
+          const me = sess && db.profiles.find(p => p.id === sess.user.id);
           if (!me) return { data:null, error:{ context:{ status:401 } } };
           if (me.role !== 'board') return { data:null, error:{ context:{ status:403 } } };
           const mid = body.meeting_id;
@@ -350,8 +453,8 @@ function mkClient(){
             return { data:{ ok:true, open:false }, error:null };
           }
           if (body.action === 'token'){
-            const sess = (db.sessions || []).find(x => x.meeting_id === mid && !x.ended_at);
-            if (!sess || !meeting.check_in_open)
+            const live = (db.sessions || []).find(x => x.meeting_id === mid && !x.ended_at);
+            if (!live || !meeting.check_in_open)
               return { data:{ ok:false, code:'ATTENDANCE_CLOSED' }, error:null };
             /* mirrors the real function: one code per session, its expiry
                the end of the meeting's day, so the same meeting always
@@ -362,7 +465,7 @@ function mkClient(){
             /* base64url and a signature as long as a real one, so the page's own
                shape check (QRFormat.BARE) takes it from a link as well */
             const b64u = t => btoa(t).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-            const token = `keystamp://a/${b64u(sess.id+'.'+mid+'.'+exp)}.SERVERSIGNATURE0000`;
+            const token = `keystamp://a/${b64u(live.id+'.'+mid+'.'+exp)}.SERVERSIGNATURE0000`;
             return { data:{ ok:true, token, expires_at:new Date(exp).toISOString(),
                             static:true }, error:null };
           }
@@ -370,7 +473,7 @@ function mkClient(){
         }
 
         if (name === 'board-data'){
-          const me = db.session && db.profiles.find(p => p.id === db.session.user.id);
+          const me = sess && db.profiles.find(p => p.id === sess.user.id);
           if (!me) return { data:null, error:{ context:{ status:401 } } };
           // the gate under test: role read from stored data, not the request
           if (me.role !== 'board') return { data:null, error:{ context:{ status:403 } } };
@@ -518,7 +621,7 @@ function mkClient(){
         }
 
         if (name === 'verify-attendance'){
-          const uid = db.session && db.session.user.id;
+          const uid = sess && sess.user.id;
           const peek = body.peek === true;
           if (!uid && !peek) return { data:null, error:{ context:{ status:401 } } };
           const raw = String(body.code || '');
@@ -532,16 +635,20 @@ function mkClient(){
           const [sid, mid, expStr] = payload.split('.');
           if (Date.now() > Number(expStr))
             return { data:{ ok:false, code:'EXPIRED_TOKEN' }, error:null };
-          const sess = (db.sessions || []).find(x => x.id === sid);
-          if (!sess) return { data:{ ok:false, code:'INVALID_TOKEN' }, error:null };
-          if (sess.ended_at) return { data:{ ok:false, code:'ATTENDANCE_CLOSED' }, error:null };
+          const live = (db.sessions || []).find(x => x.id === sid);
+          if (!live) return { data:{ ok:false, code:'INVALID_TOKEN' }, error:null };
+          if (live.ended_at) return { data:{ ok:false, code:'ATTENDANCE_CLOSED' }, error:null };
+          if (live.meeting_id !== mid) return { data:{ ok:false, code:'INVALID_TOKEN' }, error:null };
           const meeting = (db.meetings || []).find(m => m.id === mid);
           if (!meeting) return { data:{ ok:false, code:'MEETING_NOT_FOUND' }, error:null };
           if (!meeting.check_in_open) return { data:{ ok:false, code:'MEETING_NOT_ACTIVE' }, error:null };
+          const clubToday = new Intl.DateTimeFormat('en-CA', { timeZone:'America/Los_Angeles',
+            year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date());
+          if (meeting.meeting_date !== clubToday) return { data:{ ok:false, code:'WRONG_DAY' }, error:null };
           if (peek) return { data:{ ok:true, peek:true, meeting_number:meeting.meeting_number }, error:null };
           db.attendance = db.attendance || [];
           if (db.attendance.some(a => a.user_id === uid && a.meeting_id === mid))
-            return { data:{ ok:false, code:'ALREADY_CHECKED_IN', meeting_id:mid }, error:null };
+            return { data:{ ok:false, code:'ALREADY_CHECKED_IN', meeting_id:mid, meeting_number:meeting.meeting_number }, error:null };
           db.attendance.push({ id:'att_'+Math.random().toString(36).slice(2,8), user_id:uid,
                                meeting_id:mid, checked_in_at:new Date().toISOString(),
                                verification_method:'qr' });
@@ -552,6 +659,7 @@ function mkClient(){
       },
     },
   };
+  return mockClient;
 }
 
 /* supabase-js is vendored into the page now, so unlike the CDN era it

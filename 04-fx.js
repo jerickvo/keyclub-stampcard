@@ -231,10 +231,9 @@ const FX = {
      on the hit, its tag stamped, the meeting printed under it. Then
      `lift`: a blade cuts the sheet away over the page under it while
      the seal is carried, on a slight arc, to hang over its seat. */
-  stampAcquire(meeting){
-    /* the seal just earned, with the glyph it will carry on the card;
-       read before the record refreshes, so the count is its ordinal */
-    const n = Store.totalStamps();
+  stampAcquire(meeting, n = Store.totalStamps()){
+    /* the seal just earned, with the glyph it will carry on the card:
+       `n` is its place on the record, counted from 0 */
     const first = n === 0;
     const lift = (32 - 32 * STAMP_FIT).toFixed(1);
     const scene = document.createElement('div');
