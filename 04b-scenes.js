@@ -339,19 +339,26 @@ const Transit = {
       return Promise.resolve();
     }
 
+    /* While this is set, Scan reads nothing; so it is cleared however the
+       cut ends, even one that could not be drawn — the page still turns */
     this.running = true;
-    const f = this.frame(view);
-    const narrow = f.width < 600;
-    const old = this.sheet(view, f);
-    /* the new page is set under the copy at once; the blade uncovers it */
-    try { doSwap(); } catch (_) {}
-    const cut = Ink.cut(old, f, dir, narrow
-      ? { dur:this.CUT.narrowDur, angle:this.CUT.narrowAngle, body:14, trail:80 }
-      : { dur:this.CUT.dur, angle:this.CUT.angle, body:22, trail:150 });
-    return cut.then(() => {
+    let old = null, swapped = false, cut;
+    const swapNow = () => { if (swapped) return; swapped = true; try { doSwap(); } catch (_) {} };
+    try {
+      const f = this.frame(view);
+      const narrow = f.width < 600;
+      old = this.sheet(view, f);
+      /* the new page is set under the copy at once; the blade uncovers it */
+      swapNow();
+      cut = Ink.cut(old, f, dir, narrow
+        ? { dur:this.CUT.narrowDur, angle:this.CUT.narrowAngle, body:14, trail:80 }
+        : { dur:this.CUT.dur, angle:this.CUT.angle, body:22, trail:150 });
+    } catch (_) { swapNow(); cut = Promise.resolve(); }
+    const done = () => {
       Transit.running = false;
-      try { old.remove(); } catch (_) {}
+      try { if (old) old.remove(); } catch (_) {}
       Motion.settle(view);
-    });
+    };
+    return cut.then(done, done);
   },
 };

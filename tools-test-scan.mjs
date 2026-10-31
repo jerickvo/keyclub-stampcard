@@ -119,6 +119,19 @@ test('the wall code is a link to the app carrying the same signed code, and noth
   assert.equal(QRFormat.looksLikeKeystamp('keystamp://a/' + BARE), true);
 });
 
+test('the wall code drawn by an app opened at ./index.html is the same link, without those letters', () => {
+  const at = (origin, pathname) => { ctx.location = { protocol:origin.split('//')[0], origin, pathname, host:origin.split('//')[1] }; };
+  try {
+    at('https://keystamp.vercel.app', '/index.html');
+    assert.equal(QRFormat.link('keystamp://a/' + BARE), 'https://keystamp.vercel.app/#/a/' + BARE);
+    at('https://keystamp.vercel.app', '/');
+    assert.equal(QRFormat.link('keystamp://a/' + BARE), 'https://keystamp.vercel.app/#/a/' + BARE);
+    // an app served from a folder keeps the folder
+    at('https://club.example', '/keystamp/index.html');
+    assert.equal(QRFormat.link('keystamp://a/' + BARE), 'https://club.example/keystamp/#/a/' + BARE);
+  } finally { delete ctx.location; }
+});
+
 test('a link is taken only from the app, over https, with a code of the right shape', () => {
   assert.equal(QRFormat.fromLink('https://keystamp.example/#/a/' + BARE), null);
   assert.equal(QRFormat.fromLink('http://keystamp.vercel.app/#/a/' + BARE), null);

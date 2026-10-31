@@ -16152,9 +16152,12 @@ const QRFormat = {
   HOME: 'https://keystamp.vercel.app/',
   BARE: /^[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{16,}$/,
 
+  /* the app's own address; an installed app opens at ./index.html, and
+     the code it draws does not carry those ten letters (the denser the
+     code, the nearer a phone has to be to read it) */
   here(){
     try {
-      if (/^https?:$/.test(location.protocol)) return location.origin + location.pathname;
+      if (/^https?:$/.test(location.protocol)) return location.origin + location.pathname.replace(/index\.html$/, '');
     } catch (_) {}
     return this.HOME;
   },
@@ -18866,20 +18869,27 @@ const Transit = {
       return Promise.resolve();
     }
 
+    /* While this is set, Scan reads nothing; so it is cleared however the
+       cut ends, even one that could not be drawn — the page still turns */
     this.running = true;
-    const f = this.frame(view);
-    const narrow = f.width < 600;
-    const old = this.sheet(view, f);
-    /* the new page is set under the copy at once; the blade uncovers it */
-    try { doSwap(); } catch (_) {}
-    const cut = Ink.cut(old, f, dir, narrow
-      ? { dur:this.CUT.narrowDur, angle:this.CUT.narrowAngle, body:14, trail:80 }
-      : { dur:this.CUT.dur, angle:this.CUT.angle, body:22, trail:150 });
-    return cut.then(() => {
+    let old = null, swapped = false, cut;
+    const swapNow = () => { if (swapped) return; swapped = true; try { doSwap(); } catch (_) {} };
+    try {
+      const f = this.frame(view);
+      const narrow = f.width < 600;
+      old = this.sheet(view, f);
+      /* the new page is set under the copy at once; the blade uncovers it */
+      swapNow();
+      cut = Ink.cut(old, f, dir, narrow
+        ? { dur:this.CUT.narrowDur, angle:this.CUT.narrowAngle, body:14, trail:80 }
+        : { dur:this.CUT.dur, angle:this.CUT.angle, body:22, trail:150 });
+    } catch (_) { swapNow(); cut = Promise.resolve(); }
+    const done = () => {
       Transit.running = false;
-      try { old.remove(); } catch (_) {}
+      try { if (old) old.remove(); } catch (_) {}
       Motion.settle(view);
-    });
+    };
+    return cut.then(done, done);
   },
 };
 
@@ -18891,7 +18901,11 @@ const Transit = {
 function qrSVG(text){
   if (!window.qrcode) return null;
   let qr;
-  try { qr = qrcode(0, 'M'); qr.addData(text); qr.make(); }
+  /* Error correction L: the code is lit on a screen, not printed on
+     something that gets scratched, and at M the same link takes 57
+     modules a side instead of 49 — every module a seventh smaller, and
+     a seat that much nearer before a phone can read it. */
+  try { qr = qrcode(0, 'L'); qr.addData(text); qr.make(); }
   catch (_) { return null; }
   const n = qr.getModuleCount(), q = 4, size = n + q * 2;   /* the spec's quiet zone */
   let d = '';
@@ -19006,6 +19020,34 @@ function paintScanStanding(){
   if (at) at.outerHTML = standingAt(s);
 }
 
+/* What one read looks at, in a picture W x H. The wall's code is dense
+   (a signed link, 49 modules a side), and from a seat it is a fifth of
+   the frame or less: a few pixels a module, which reads only near the
+   camera's own resolution. So one read takes the middle of the frame,
+   where the seat is aimed, at nearly full size; the next takes the whole
+   frame, smaller, for a code held close that is bigger than the middle.
+   The box is worked out from the picture actually being read, never from
+   the <video>'s size: a phone held upright can hand over its camera's
+   landscape frame, and sized from the video it was squeezed a third as
+   wide and read only from arm's length. */
+function readBox(W, H, pass){
+  if (pass === 'centre'){
+    var s = Math.round(Math.min(W, H) * .75), d = Math.min(s, 800);
+    return { sx:Math.round((W - s) / 2), sy:Math.round((H - s) / 2), sw:s, sh:s, w:d, h:d };
+  }
+  var w = Math.min(480, W);
+  return { sx:0, sy:0, sw:W, sh:H, w:w, h:Math.max(1, Math.round(H / W * w)) };
+}
+const READ_PASSES = ['centre', 'whole'];
+
+/* a picture with no contrast in it: what a browser that cannot really
+   read a frame hands over (black, or one flat colour) */
+function flatPicture(d){
+  var lo = 255, hi = 0, n = d.length / 4, step = Math.max(1, Math.floor(n / 97));
+  for (var i = 0; i < n; i += step){ var g = d[i * 4 + 1]; if (g < lo) lo = g; if (g > hi) hi = g; }
+  return hi - lo < 10;
+}
+
 /* The decode is the one thing on this page heavy enough to drop frames:
    drawImage + getImageData + jsQR ran on the main thread every third
    frame and took about three quarters of it. It runs in a worker now.
@@ -19017,33 +19059,48 @@ function paintScanStanding(){
    a page opened off a zip mount keeps its fast decode too. The worker
    gets the decoder by reading the text of the <script> the build
    inlined it into, and each frame is handed over rather than copied
-   (see `send`), so the pixels never cross the wire.
+   (see `send`), so the pixels never cross the wire. A VideoFrame is made
+   a bitmap in the worker first, so the size it is read at is the size it
+   draws at, however the browser has turned it.
 
    Every piece of that is checked before it is used, and a worker that
    throws or goes quiet is dropped for good: `loop` below then does the
-   old inline decode, which is what the page always did. */
+   old inline decode, which is what the page always did. A worker that
+   answers but cannot see (blank frames, or frames it cannot read) is
+   caught too: the page reads a frame itself now and then, and a code it
+   finds that the worker did not, or a picture it sees while the worker
+   is handed blanks, ends the worker. */
 const DECODE_WORKER = `
+${readBox}
+${flatPicture}
 var cv = null, cx = null;
-self.onmessage = function(e){
-  var m = e.data, img;
+self.onmessage = async function(e){
+  var m = e.data, src = m.frame, b = null, img;
   try {
-    if (!cv || cv.width !== m.w || cv.height !== m.h){
-      cv = new OffscreenCanvas(m.w, m.h);
+    if (typeof src.displayWidth === 'number'){
+      var bmp = await createImageBitmap(src);
+      src.close(); src = bmp;
+    }
+    b = readBox(src.width, src.height, m.pass);
+    if (!cv || cv.width !== b.w || cv.height !== b.h){
+      cv = new OffscreenCanvas(b.w, b.h);
       cx = cv.getContext('2d', { willReadFrequently:true });
     }
-    cx.drawImage(m.frame, 0, 0, m.w, m.h);
-    m.frame.close();
-    img = cx.getImageData(0, 0, m.w, m.h);
-  } catch (_){ try { m.frame.close(); } catch (__){} self.postMessage({ fail:1 }); return; }
+    cx.drawImage(src, b.sx, b.sy, b.sw, b.sh, 0, 0, b.w, b.h);
+    src.close();
+    img = cx.getImageData(0, 0, b.w, b.h);
+  } catch (_){ try { src.close(); } catch (__){} self.postMessage({ fail:1 }); return; }
   var hit = null;
-  try { hit = jsQR(img.data, m.w, m.h, { inversionAttempts:'dontInvert' }); }
+  try { hit = jsQR(img.data, b.w, b.h, { inversionAttempts:'dontInvert' }); }
   catch (_){}
-  self.postMessage({ text: hit && hit.data ? hit.data : null });
+  self.postMessage({ text: hit && hit.data ? hit.data : null, flat: flatPicture(img.data) });
 };
 `;
 
 const Decoder = {
   worker:null, url:null, off:false, sent:null, handoff:null,
+  /* answers in a row that were a blank picture */
+  flats:0, proven:false,
 
   /* The decoder's source, read back from the inlined <script>. In the
      multi-file dev layout that script has a src and no text of its own,
@@ -19073,9 +19130,21 @@ const Decoder = {
       const msg = e.data || {}, sent = this.sent;
       this.sent = null;
       if (msg.fail) return this.drop();
+      this.flats = msg.flat ? this.flats + 1 : 0;
+      /* a worker that has read a code can see: the page stops checking it */
+      if (msg.text) this.proven = true;
       if (!sent || sent.run !== Scanner.run) return;
       if (msg.text) Scanner.hit(msg.text, sent.run);
     };
+  },
+
+  /* handed blanks while the camera shows something: a VideoFrame this
+     browser will not let the worker see into is copied as a bitmap
+     instead; blanks after that, and the worker is let go */
+  demote(){
+    this.flats = 0;
+    if (this.handoff === 'frame' && typeof createImageBitmap === 'function') this.handoff = 'bitmap';
+    else this.drop();
   },
 
   /* One frame in flight at a time. A phone that cannot keep up should
@@ -19092,11 +19161,12 @@ const Decoder = {
   /* Getting the frame out of the <video> is the only main-thread work
      left, and the two ways of doing it are not close. A VideoFrame is a
      handle on the frame the video already holds and costs nothing;
-     createImageBitmap has to copy and rescale the frame here first,
-     about 25ms on a throttled phone — still far better than the 35ms
-     drawImage alone used to cost, so it stays as the second choice.
-     Either one is transferred, so no pixels are copied to the worker. */
-  send(video, w, h, run){
+     createImageBitmap has to copy the frame here first — still far
+     better than the 35ms drawImage alone used to cost, so it stays as
+     the second choice. It is the frame as the page shows it, whole: the
+     worker cuts out the part a pass reads. Either one is transferred, so
+     no pixels are copied to the worker. */
+  send(video, pass, run){
     this.sent = { run, at:performance.now() };
     if (this.handoff === 'frame'){
       let frame = null;
@@ -19105,20 +19175,20 @@ const Decoder = {
          <video>; one refusal settles it on the copy for good, because a
          handoff that always throws would scan nothing and say nothing. */
       catch (_) { this.handoff = typeof createImageBitmap === 'function' ? 'bitmap' : null; }
-      if (frame) return this.hand(frame, w, h, run);
+      if (frame) return this.hand(frame, pass, run);
       if (!this.handoff){ this.sent = null; return this.drop(); }
     }
-    createImageBitmap(video, { resizeWidth:w, resizeHeight:h, resizeQuality:'low' })
-      .then(frame => this.hand(frame, w, h, run))
+    createImageBitmap(video)
+      .then(frame => this.hand(frame, pass, run))
       /* A frame that failed because the camera was stopped out from
          under it is a race, not a broken worker; only a run that is
          still live condemns it. */
       .catch(() => { if (run === Scanner.run) this.drop(); else this.sent = null; });
   },
 
-  hand(frame, w, h, run){
+  hand(frame, pass, run){
     if (!this.worker || run !== Scanner.run){ frame.close(); this.sent = null; return; }
-    try { this.worker.postMessage({ frame, w, h }, [frame]); }
+    try { this.worker.postMessage({ frame, pass }, [frame]); }
     catch (_) { try { frame.close(); } catch (__) {} this.drop(); }
   },
 
@@ -19126,12 +19196,16 @@ const Decoder = {
     this.off = true;
     if (this.worker){ this.worker.terminate(); this.worker = null; }
     if (this.url){ URL.revokeObjectURL(this.url); this.url = null; }
-    this.sent = null;
+    this.sent = null; this.flats = 0;
   },
 };
 
 const Scanner = {
   stream:null, raf:null, cv:null, ctx:null, locked:false, frame:0, zoom:null, run:0, armTimer:null,
+  tone:null, hintTimer:null,
+  /* how long the camera reads nothing before the strip says what gets a
+     read: closer first, then the phone's own camera */
+  HINTS:[8000, 20000],
   /* the last code the server refused; while it stays in view it is not
      sent again, so a refusal is said once, not every two seconds */
   refused:null, forgive:null, lastBad:null,
@@ -19147,9 +19221,10 @@ const Scanner = {
   setState(state, msg){
     const ret = $('#reticle'), el = $('#scanMsg'), line = $('#scanLine');
     if (el) el.textContent = msg;
+    /* a code read is not yet a stamp: it reads Checking until the server says so */
+    const tone = state === 'hit' ? 'busy' : state;
+    this.tone = tone;
     if (line){
-      /* a code read is not yet a stamp: it reads Checking until the server says so */
-      const tone = state === 'hit' ? 'busy' : state;
       ['boot', 'live', 'busy', 'good', 'bad', 'off'].forEach(s =>
         line.classList.toggle('scanline--' + s, s === tone));
     }
@@ -19190,8 +19265,10 @@ const Scanner = {
     const slow = setTimeout(() => { if (run === this.run) this.stall('failed'); }, 10000);
     let stream;
     try {
+      /* as many pixels as the camera gives at 1080p: a code across the
+         room is read from the middle of the frame at full size */
       stream = await navigator.mediaDevices.getUserMedia({
-        video:{ facingMode:{ ideal:'environment' }, width:{ ideal:1280 } }, audio:false });
+        video:{ facingMode:{ ideal:'environment' }, width:{ ideal:1920 } }, audio:false });
     } catch (err) {
       clearTimeout(slow);
       if (run !== this.run) return;
@@ -19232,7 +19309,25 @@ const Scanner = {
     /* the state tag says Ready; the strip needs no second word for it */
     this.setState('live', '');
     this.mountZoom();
+    this.hint(run);
     this.loop(video, run);
+  },
+
+  /* Nothing read for a while: the strip says what gets a read. Closer
+     first — the code has to fill more of the frame than it seems to.
+     Then the phone's own camera, which opens the same code as a link and
+     checks in the same way. A refusal on the strip is left as it is. */
+  hint(run){
+    clearTimeout(this.hintTimer);
+    const [first, then] = this.HINTS;
+    /* only while there is a check-in to scan into: with none open, the
+       line over the camera already says so */
+    const say = msg => { if (run === this.run && !this.locked && this.tone === 'live'
+                             && Store.openMeeting() && !this.stamped()) this.setState('live', msg); };
+    this.hintTimer = setTimeout(() => {
+      say('Move closer, so the code fills the seat');
+      this.hintTimer = setTimeout(() => say('Not reading? Open the code with your phone\'s Camera app'), then - first);
+    }, first);
   },
 
   mountZoom(){
@@ -19313,35 +19408,55 @@ const Scanner = {
   loop(video, run){
     const REST = 1;        /* the inline fallback rests 1x its last read */
     const FLOOR = 40;
-    let next = 0;
+    /* while the worker reads, the page reads one frame itself this often */
+    const CHECK = 1500;
+    let next = 0, check = performance.now() + CHECK, pass = 0;
     /* What the page always did, kept for a browser the worker cannot
-       serve. There the read is expensive, so it is the one that rests. */
-    const inline = (w, h) => {
+       serve. There the read is expensive, so it is the one that rests.
+       Answers 'hit', 'flat' (a blank picture) or 'seen'. */
+    const inline = which => {
       const at = performance.now();
-      this.cv.width = w; this.cv.height = h;
-      this.ctx.drawImage(video, 0, 0, w, h);
+      const W = video.videoWidth, H = video.videoHeight;
+      if (!W || !H) return 'flat';
+      const b = readBox(W, H, which);
+      if (this.cv.width !== b.w || this.cv.height !== b.h){ this.cv.width = b.w; this.cv.height = b.h; }
+      this.ctx.drawImage(video, b.sx, b.sy, b.sw, b.sh, 0, 0, b.w, b.h);
       let img;
-      try { img = this.ctx.getImageData(0, 0, w, h); }
-      catch (_) { next = performance.now() + FLOOR; return; }
-      const found = jsQR(img.data, w, h, { inversionAttempts:'dontInvert' });
+      try { img = this.ctx.getImageData(0, 0, b.w, b.h); }
+      catch (_) { next = performance.now() + FLOOR; return 'flat'; }
+      const found = jsQR(img.data, b.w, b.h, { inversionAttempts:'dontInvert' });
       next = performance.now() + Math.max(FLOOR, (performance.now() - at) * REST);
-      if (found && found.data) this.hit(found.data, run);
+      if (found && found.data){ this.hit(found.data, run); return 'hit'; }
+      return flatPicture(img.data) ? 'flat' : 'seen';
     };
     const step = () => {
       if (run !== this.run) return;
       this.raf = requestAnimationFrame(step);
-      if (this.locked || video.readyState !== 4 || !window.jsQR) return;
+      /* a frame is drawable from HAVE_CURRENT_DATA on */
+      if (this.locked || video.readyState < 2 || !window.jsQR) return;
       if (this.paused()) return;
-      const w = 480, h = Math.round(video.videoHeight / video.videoWidth * w) || 480;
+      /* The worker cannot say it is blind: a browser can hand it frames
+         it cannot see into, and it answers "nothing" for ever. So until
+         it has read a code, the page reads a frame itself now and then,
+         the other pass from the worker's last. A code it finds that the
+         worker did not means the worker is not seeing the camera; a
+         picture it sees while the worker is handed blanks means the same. */
+      if (!Decoder.off && Decoder.worker && !Decoder.proven && performance.now() >= check){
+        check = performance.now() + CHECK;
+        const got = inline(READ_PASSES[pass % 2]);
+        if (got === 'hit') Decoder.drop();
+        else if (got === 'seen' && Decoder.flats >= 6) Decoder.demote();
+        return;
+      }
       if (Decoder.ready()){
         if ((this.frame++ % 3) !== 0) return;
-        Decoder.send(video, w, h, run);
+        Decoder.send(video, READ_PASSES[pass++ % 2], run);
         return;
       }
       if (!Decoder.off) return;                   /* a frame is still with the worker */
       if (performance.now() < next) return;
       this.frame++;
-      inline(w, h);
+      inline(READ_PASSES[pass++ % 2]);
     };
     step();
   },
@@ -19396,6 +19511,7 @@ const Scanner = {
   stop(){
     this.run++;
     clearTimeout(this.armTimer); this.armTimer = null;
+    clearTimeout(this.hintTimer); this.hintTimer = null;
     cancelAnimationFrame(this.raf); this.raf = null;
     if (this.zoom) this.zoom.drop();
     this.stream?.getTracks().forEach(t => t.stop());
@@ -19453,7 +19569,19 @@ const Landing = {
     return false;
   },
 
-  async run(meeting){
+  /* While a landing is active Scan reads nothing, so one that throws
+     part-way is put away: the stamp is on file, and the card is shown */
+  run(meeting){
+    const seq = this.seq + 1;
+    return this.play(meeting).catch(() => {
+      if (seq !== this.seq) return;
+      this.active = false; this.armed = null;
+      if (this.scene){ try { this.scene.clear(); } catch (_) {} this.scene = null; }
+      if (Store.signedIn) Store.hydrate({ keep:true }).then(() => { if (Store.signedIn) go('home', { instant:true, force:true }); });
+    });
+  },
+
+  async play(meeting){
     const seq = ++this.seq;
     const who = Store.user && Store.user.id;
     /* where the stamp was earned: the camera, or a wall code's link */

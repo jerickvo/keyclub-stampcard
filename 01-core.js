@@ -392,9 +392,12 @@ const QRFormat = {
   HOME: 'https://keystamp.vercel.app/',
   BARE: /^[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{16,}$/,
 
+  /* the app's own address; an installed app opens at ./index.html, and
+     the code it draws does not carry those ten letters (the denser the
+     code, the nearer a phone has to be to read it) */
   here(){
     try {
-      if (/^https?:$/.test(location.protocol)) return location.origin + location.pathname;
+      if (/^https?:$/.test(location.protocol)) return location.origin + location.pathname.replace(/index\.html$/, '');
     } catch (_) {}
     return this.HOME;
   },
