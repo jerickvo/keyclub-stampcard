@@ -328,6 +328,19 @@ built `index.html` with the harness injected (and every request to a
 real project refused). The harness can delay a request or lose its
 answer after the work is done (`window.__fault`), keeps the session
 where supabase-js keeps it, and is shared between tabs.
+`tools-test-camera.mjs` puts the projector's own code through Chromium's
+camera: a code from a seat, close up, a blind decoder worker, a frame
+handed over on its side.
+
+**Checked against the live project's logs, read only (2026-10-31):** on
+Sep 23, Oct 7 and Oct 14, every check-in call that reached
+`verify-attendance` landed a stamp: 12, 9 and 17 calls, against 12, 9 and
+19 stamps (two of Oct 14's calls are missing from the logs). There were
+also 11 signed-out "what is this code" calls on Oct 7 and 14, and no call
+failed. So the reports of Scan not working were about the phone not
+reading the code, not about the server. Scan read a code only from about
+half as far away as it now does (see `README-app.md`, on how far away a
+code can be read).
 
 **Checked against the live project, read only (2026-10-13):** its
 tables, columns, constraints, indexes, policies, triggers and function
@@ -342,7 +355,10 @@ written to it.
 - the deployed Deno functions' behaviour end to end (Deno, PostgREST and
   the auth server were not available to run locally)
 - that `bootstrap-board.mjs` provisions a real board account
-- the end-to-end flow on real hardware with a real camera
+- the end-to-end flow on real hardware with a real camera — in
+  particular Scan on an iPhone (Safari, where every iOS browser runs):
+  how it hands a camera frame to the worker could only be guarded
+  against, not watched
 
 The mock mirrors the *decision order* of the real functions, which makes
 it useful for catching client bugs. It is not evidence that production

@@ -202,8 +202,26 @@ range and step come from the device, it starts at the track's current zoom,
 and dragging it calls `applyConstraints` on the live track — the camera is
 never restarted and the frame loop keeps decoding. Cameras and browsers that
 expose no zoom capability get no control and no errors; a track that rejects
-the constraint drops the control quietly. The decoder samples the feed at
-480px wide so a small code at the back of the room still resolves.
+the constraint drops the control quietly.
+
+How far away a code can be read is set by pixels per module. The wall's
+code is a full signed link (about 190 characters), so it is dense: 49
+modules a side at error correction L, which it is drawn at (at M it was
+57, every module a seventh smaller; a lit screen does not need M's
+damage margin). The camera is asked for 1080p, and reads alternate
+between two passes (`readBox` in `05-scan.js`): the middle 75% square of
+the frame, where the seat is aimed, at up to 800px — a code across the
+room — and the whole frame at 480px wide — a code held close, bigger than
+the middle. The box is worked out from the picture actually being read,
+never from the `<video>`'s size, because a phone held upright can hand over
+its camera's landscape frame; sized from the video, that frame was squeezed
+a third as wide. With a projected code's grey blacks, blur and grain
+(`tools-test-camera.mjs`), the code is read once it is about 18% of the
+frame's width at 1080p, and 26% at 720p. Before, it had to be 36% at the
+720p the camera used to be asked for — a seat about half as far away. When
+the camera has read nothing for 8 seconds while check-in is open, the strip
+says to move closer; at 20, to open the code with the phone's own Camera
+app, which takes the same code as a link.
 
 Reading a frame is the most expensive thing the app does on a phone. Done
 on the main thread it costs tens of milliseconds and it is spent where the
@@ -220,15 +238,23 @@ opened off a zip mount keeps its fast decode. The worker gets the decoder
 by reading the text of the `<script>` the build inlined jsQR into, which is
 why `build.py` tags each inlined block with `data-file`. Frames are
 *transferred*, not copied: a `VideoFrame` where WebCodecs exists (a handle
-on the frame the video already holds, costing nothing to make), otherwise
-an `ImageBitmap`. Only one frame is in flight at a time, so a slow phone
-decodes less often instead of stacking frames up.
+on the frame the video already holds, costing nothing to make; the worker
+makes it a bitmap, so it is read at the size it draws at however the
+browser has turned it), otherwise an `ImageBitmap`. Only one frame is in
+flight at a time, so a slow phone decodes less often instead of stacking
+frames up.
 
 Every piece of that is checked before it is used, and anything missing or
 misbehaving latches `Decoder.off` for good and falls back to the inline
 decode the page always did -- a browser without `Worker`, without either
 handoff, or the multi-file dev layout where that `<script>` has a src and
-no text to read. Two rules keep that fallback out of the way, and they are
+no text to read. A worker that answers but cannot see is caught as well,
+because it cannot say so itself. Until the worker has read a code, every
+1.5 seconds the page reads one frame on its own, the other pass from the
+worker's. If that read finds a code,
+the worker is let go; if it sees a picture while the worker keeps reporting
+blank ones, the handoff falls back from `VideoFrame` to `ImageBitmap`, and
+then to the inline decode. Two rules keep that fallback out of the way, and they are
 worth understanding because they are what the slow path relies on: a read
 never starts while the page is moving (`Transit.running`, `Scenes.busy`,
 `Landing.active`), and between reads the loop rests for as long as the last
@@ -503,7 +529,16 @@ node --test tools-test-rewards.mjs    # the reward-tier rule
 node --test tools-test-scan.mjs       # the Scan meeting line, the store fingerprint, the Card's action
 node --test tools-test-store.mjs      # whose record is on the page; every stamp threshold
 node --test --test-concurrency=1 tools-test-browser.mjs   # the built page in Chromium, on the test double
+node --test tools-test-camera.mjs     # Scan reading the projector's own code through a camera feed
 ```
+
+`tools-test-camera.mjs` writes its own camera feeds (`.y4m`, no ffmpeg
+needed): the code the projector draws, at full length, in a portrait
+1080x1920 frame with a projected code's contrast, blur, grain and tilt.
+It checks a code read from a seat (21% of the frame), close up, through a
+decoder worker that never sees anything, from a frame handed over on its
+side, and the strip's advice when nothing reads. Like the browser suite it
+needs Playwright and skips itself without it.
 
 `tools-test-browser.mjs` needs Playwright (`npm i -D playwright`, or a
 global install on `NODE_PATH`) and skips itself without it; build first.
